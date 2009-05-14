@@ -39,7 +39,7 @@ import net.sf.samtools.BAMFileIndex;
  */
 public class BAMFileIndexTest
 {
-    private File BAM_FILE = new File("etc/testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam");
+    private File BAM_FILE = new File("testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam");
     private boolean mVerbose = false;
 
     @Test

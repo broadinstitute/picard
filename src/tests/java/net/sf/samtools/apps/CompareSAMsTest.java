@@ -31,7 +31,7 @@ import java.io.File;
 import net.sf.samtools.apps.CompareSAMs;
 
 public class CompareSAMsTest {
-    private static final File TEST_FILES_DIR = new File("etc/testdata/net/sf/samtools/apps/CompareSAMs");
+    private static final File TEST_FILES_DIR = new File("testdata/net/sf/samtools/apps/CompareSAMs");
 
     private void testHelper(final String f1, final String f2, final int expectedMatch, final int expectedDiffer,
                             final int expectedUnmappedBoth,
