@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<project name="picard-public" basedir="." default="all">
+
+    <property name="src" value="src/java"/>
+    <property name="src.test" value="src/tests"/>
+    <property name="lib" value="lib"/>
+    <property name="dist" value="dist"/>
+    <property name="classes" value="classes"/>
+    <property name="classes.test" value="testclasses"/>
+    <property name="test.output" value="dist/test"/>
+    <property name="javac.debug" value="true"/>
+    <property name="sam-version" value="1.0"/>
+    <property name="picard-version" value="1.0"/>
+    <property name="command_tmp" value=".command_tmp"/>
+
+<!-- INIT -->
+    <target name="init">
+        <path id="classpath">
+            <fileset dir="${lib}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </path>
+    </target>
+
+<!-- CLEAN -->
+    <target name="clean">
+        <delete dir="${classes}"/>
+        <delete dir="${classes.test}"/>
+        <delete dir="${test.output}"/>
+    </target>
+
+<!-- COMPILE -->
+    <target name="compile" depends="compile-src, compile-tests"
+            description="Compile files without cleaning">
+    </target>
+
+    <target name="compile-src" depends="init" description="Compile files without cleaning">
+        <mkdir dir="${classes}"/>
+        <javac destdir="${classes}"
+               optimize="${javac.opt}"
+               debug="${javac.debug}">
+            <!--<compilerarg value="-Xlint:all"/>-->
+            <!--<compilerarg value="-Xlint:unchecked"/>-->
+            <src path="${src}"/>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <target name="compile-tests" depends="init" description="Compile test files without cleaning">
+        <mkdir dir="${classes.test}"/>
+        <javac destdir="${classes.test}"
+               optimize="${javac.opt}"
+               debug="${javac.debug}">
+            <!--<compilerarg value="-Xlint:unchecked"/>-->
+            <src path="${src.test}"/>
+            <classpath>
+                <path refid="classpath"/>
+                <pathelement location="${classes}"/>
+            </classpath>
+        </javac>
+    </target>
+
+<!-- TEST -->
+    <target name="test" depends="compile" description="Run unit tests">
+        <taskdef resource="testngtasks" classpathref="classpath"/>
+        <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
+                failureproperty="tests.failed" excludedgroups="slow">
+            <classpath>
+                <pathelement path="${classes}"/>
+                <pathelement path="${classes.test}"/>
+            </classpath>
+            <classfileset dir="${classes.test}">
+                <include name="**/Test*.class"/>
+                <include name="**/*Test.class"/>
+            </classfileset>
+            <jvmarg value="-Xmx1G"/>
+        </testng>
+        <fail if="tests.failed" message="There were failed unit tests"/>
+    </target>
+
+    <target name="single-test"
+            depends="compile, compile-tests"
+            description="Compile and run a single test.">
+        <taskdef resource="testngtasks" classpathref="classpath"/>
+        <fail unless="name" message="Please provide input test: -Dname=..." />
+        <testng suitename="cnv-single-test" classpathref="classpath" outputdir="${test.output}">
+            <jvmarg line="-Xmx512M"/>
+            <classpath>
+                <pathelement path="${classes}"/>
+                <pathelement path="${classes.test}"/>
+            </classpath>
+            <classfileset dir="${classes.test}">
+                <include name="**/${name}.class"/>
+            </classfileset>
+        </testng>
+    </target>
+
+    <target name="sam-jar" depends="compile"
+            description="Builds sam-${sam-version}.jar for inclusion in other projects">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
+            <fileset dir="${classes}" includes ="net/sf/samtools/**/*.*"/>
+        </jar>
+    </target>
+
+    <target name="picard-jar" depends="compile"
+            description="Builds picard-${picard-version}.jar for inclusion in other projects">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
+            <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
+        </jar>
+    </target>
+
+    <target name="javadoc" depends="init" description="Generates the project javadoc.">
+        <javadoc
+           sourcepath="${src}"
+           destdir="javadoc"
+           packagenames="net.sf.samtools.*"
+           windowtitle="SAM JDK API Documentation"
+           doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
+           author="true"
+           protected="true"
+           use="true"
+           version="true">
+          <classpath location="${java.home}/../lib/tools.jar"/>
+          <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+          </javadoc>
+        </target>
+
+    <target name="package-commands" depends="compile">
+        <delete dir="${command_tmp}"/>
+
+        <mkdir dir="${command_tmp}"/>
+        <copy todir="${command_tmp}">
+            <fileset dir="${classes}" includes="**/*"/>
+        </copy>
+
+
+        <package-command main-class="net.sf.picard.sam.MarkDuplicates" title="MarkDuplicates"/>
+        <package-command main-class="net.sf.picard.sam.MergeSamFiles" title="MergeSamFiles"/>
+        <package-command main-class="net.sf.picard.sam.ViewSam" title="ViewSam"/>
+        <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
+        <package-command main-class="net.sf.picard.sam.ValidateSamFile" title="ValidateSamFile"/>
+    </target>
+
+<!-- ALL -->
+    <target name="all" depends="compile, sam-jar, picard-jar, package-commands" description="Default build target"/>
+
+    <!-- ************************************************************************************** -->
+    <!-- ************************************************************************************** -->
+    <!-- Beginning of taskdefs that are used elsewhere in the build file                        -->
+    <!-- ************************************************************************************** -->
+    <!-- ************************************************************************************** -->
+
+    <!-- Create a jar for a command-line class so it can be run java -jar jarfile -->
+    <macrodef name="package-command">
+        <attribute name="main-class"/>
+        <attribute name="title"/>
+        <element name="filesets" optional="yes"/>
+        <sequential>
+            <jar destfile="${dist}/@{title}.jar">
+                <classfileset dir="${command_tmp}">
+                    <root classname="@{main-class}"/>
+                </classfileset>
+                <manifest>
+                    <attribute name="Implementation-Title" value="@{title}"/>
+                    <attribute name="Main-Class" value="@{main-class}"/>
+                </manifest>
+            </jar>
+        </sequential>
+    </macrodef>
+
+</project>
