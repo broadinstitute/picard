@@ -27,6 +27,8 @@
         <delete dir="${classes}"/>
         <delete dir="${classes.test}"/>
         <delete dir="${test.output}"/>
+        <delete  dir="${dist}"/>
+        <delete  dir="${command_tmp}"/>
     </target>
 
 <!-- COMPILE -->
