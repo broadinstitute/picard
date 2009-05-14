@@ -66,7 +66,7 @@
     <target name="test" depends="compile" description="Run unit tests">
         <taskdef resource="testngtasks" classpathref="classpath"/>
         <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
-                failureproperty="tests.failed" excludedgroups="slow">
+                failureproperty="tests.failed" excludedgroups="slow" workingDir="${basedir}">
             <classpath>
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>
