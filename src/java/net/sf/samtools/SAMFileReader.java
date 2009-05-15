@@ -324,6 +324,7 @@ public class SAMFileReader implements Iterable<SAMRecord>
      * @return Index file name, or null if not found.
      */
     private File findIndexFile(final File dataFile) {
+        // If input is foo.bam, look for foo.bai
         final String bamExtension = ".bam";
         File indexFile;
         final String fileName = dataFile.getName();
@@ -334,10 +335,13 @@ public class SAMFileReader implements Iterable<SAMRecord>
                 return indexFile;
             }
         }
+
+        // If foo.bai doesn't exist look for foo.bam.bai
         indexFile = new File(dataFile.getParent(), dataFile.getName() + ".bai");
         if (indexFile.exists()) {
             return indexFile;
-        } else {
+        }
+        else {
             return null;
         }
     }
