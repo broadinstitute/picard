@@ -119,7 +119,38 @@
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="SvnBranchConfigurationManager">
-    <option name="myVersion" value="123" />
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchMap">
+                <map>
+                  <entry key="https://picard.svn.sourceforge.net/svnroot/picard/branches">
+                    <value>
+                      <list />
+                    </value>
+                  </entry>
+                  <entry key="https://picard.svn.sourceforge.net/svnroot/picard/tags">
+                    <value>
+                      <list />
+                    </value>
+                  </entry>
+                </map>
+              </option>
+              <option name="branchUrls">
+                <list>
+                  <option value="https://picard.svn.sourceforge.net/svnroot/picard/branches" />
+                  <option value="https://picard.svn.sourceforge.net/svnroot/picard/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="https://picard.svn.sourceforge.net/svnroot/picard/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="myVersion" value="124" />
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">
