@@ -36,10 +36,27 @@
             description="Compile files without cleaning">
     </target>
 
-    <target name="compile-src" depends="init" description="Compile files without cleaning">
+    <target name="compile-src" depends="compile-sam-jdk, compile-picard" description="Compile files without cleaning"/>
+
+    <target name="compile-sam-jdk" depends="init" description="Compile sam-jdk files without cleaning">
         <mkdir dir="${classes}"/>
         <javac destdir="${classes}"
                optimize="${javac.opt}"
+               debug="${javac.debug}"
+               includes ="net/sf/samtools/**/*.*"
+               compiler="javac1.5"> <!-- force SAM-JDK to be built with 1.5 -->
+            <!--<compilerarg value="-Xlint:all"/>-->
+            <!--<compilerarg value="-Xlint:unchecked"/>-->
+            <src path="${src}"/>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
+        <mkdir dir="${classes}"/>
+        <javac destdir="${classes}"
+               optimize="${javac.opt}"
+               excludes ="net/sf/samtools/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:all"/>-->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
@@ -48,10 +65,29 @@
         </javac>
     </target>
 
-    <target name="compile-tests" depends="init" description="Compile test files without cleaning">
+    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
+
+    <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
         <mkdir dir="${classes.test}"/>
         <javac destdir="${classes.test}"
                optimize="${javac.opt}"
+               debug="${javac.debug}"
+               includes ="net/sf/samtools/**/*.*"
+                compiler="javac1.5"> <!-- Force SAM-JDK to be built with 1.5 -->
+            <!--<compilerarg value="-Xlint:unchecked"/>-->
+            <src path="${src.test}"/>
+            <classpath>
+                <path refid="classpath"/>
+                <pathelement location="${classes}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="compile-picard-tests" depends="init" description="Compile picard test files without cleaning">
+        <mkdir dir="${classes.test}"/>
+        <javac destdir="${classes.test}"
+               optimize="${javac.opt}"
+               excludes ="net/sf/samtools/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:unchecked"/>-->
             <src path="${src.test}"/>
@@ -97,7 +133,7 @@
         </testng>
     </target>
 
-    <target name="sam-jar" depends="compile"
+    <target name="sam-jar" depends="compile-sam-jdk"
             description="Builds sam-${sam-version}.jar for inclusion in other projects">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
