@@ -293,6 +293,10 @@ public class SAMFileReader implements Iterable<SAMRecord>
                 if (indexFile != null) {
                     mFileIndex = new BAMFileIndex(indexFile);
                     reader.setFileIndex(mFileIndex);
+                    if (indexFile.lastModified() < file.lastModified()) {
+                        System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
+                        " is older than BAM " + file.getAbsolutePath());
+                    }
                 }
             }
             else if (isGzippedSAMFile(bufferedStream)) {
