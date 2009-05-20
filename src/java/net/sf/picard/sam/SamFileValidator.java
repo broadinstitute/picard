@@ -70,7 +70,9 @@ public class SamFileValidator {
 
     /** Sets one or more error types that should not be reported on. */
     public void setErrorsToIgnore(Collection<Type> types) {
-        this.errorsToIgnore = EnumSet.copyOf(types);
+        if (!types.isEmpty()) {
+            this.errorsToIgnore = EnumSet.copyOf(types);
+        }
     }
 
     /**
@@ -146,9 +148,7 @@ public class SamFileValidator {
         default:
             // dummy SAMRecordComparator that always says records are equal
             this.recordComparator = new SAMRecordComparator() {
-                @Override
                 public int fileOrderCompare(SAMRecord samRecord1, SAMRecord samRecord2) { return 0; }
-                @Override
                 public int compare(SAMRecord o1, SAMRecord o2) { return 0; }    
             };
             break;
