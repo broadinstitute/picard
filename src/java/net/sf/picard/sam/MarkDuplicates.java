@@ -65,7 +65,6 @@ public class MarkDuplicates extends CommandLineProgram {
     private SortingCollection<ReadEnds> fragSort;
     private SortingLongCollection duplicateIndexes;
     private int numDuplicateIndices = 0;
-    private int nextIndex = 0; // The next offset into duplicateIndexes to use
 
 
     /** Stock main method. */
@@ -96,7 +95,6 @@ public class MarkDuplicates extends CommandLineProgram {
         // Now copy over the file while marking all the necessary indexes as duplicates
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
-        int  arrayIndex = 1;
 
         for (final SAMRecord rec : in) {
             // First bring the simple metrics up to date
@@ -128,7 +126,6 @@ public class MarkDuplicates extends CommandLineProgram {
                 } else {
                     // Only happens once we've marked all the duplicates
                     nextDuplicateIndex = -1;
-                    arrayIndex = -1;
                 }
             }
             else {
