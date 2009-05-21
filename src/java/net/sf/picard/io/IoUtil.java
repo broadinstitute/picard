@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import net.sf.picard.PicardException;
 
@@ -295,9 +296,14 @@ public class IoUtil {
      * @return
      */
     public static File[] getFilesMatchingRegexp(final File directory, final String regexp) {
+        final Pattern pattern = Pattern.compile(regexp);
+        return getFilesMatchingRegexp(directory, pattern);
+    }
+
+    public static File[] getFilesMatchingRegexp(final File directory, final Pattern regexp) {
         return directory.listFiles( new FilenameFilter() {
             public boolean accept(final File dir, final String name) {
-                return name.matches(regexp);
+                return regexp.matcher(name).matches();
             }
         });
     }
@@ -339,7 +345,7 @@ public class IoUtil {
     }
 
     /** Checks that a file exists and is readable, and then returns a buffered reader for it. */
-    public static BufferedReader openFileForBufferedReading(File file) throws IOException {
+    public static BufferedReader openFileForBufferedReading(final File file) throws IOException {
         return new BufferedReader(new InputStreamReader(openFileForReading(file)));
 	}
 
