@@ -33,6 +33,7 @@ import net.sf.picard.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.samtools.*;
 import net.sf.samtools.util.SortingCollection;
+import net.sf.samtools.util.SortingLongCollection;
 
 import java.io.*;
 import java.util.*;
@@ -62,7 +63,8 @@ public class MarkDuplicates extends CommandLineProgram {
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
-    private long[] duplicateIndexes = new long[1000000];
+    private SortingLongCollection duplicateIndexes;
+    private int numDuplicateIndices = 0;
     private int nextIndex = 0; // The next offset into duplicateIndexes to use
 
 
@@ -84,7 +86,7 @@ public class MarkDuplicates extends CommandLineProgram {
         reportMemoryStats("After buildSortedReadEndLists");
         generateDuplicateIndexes();
         reportMemoryStats("After generateDuplicateIndexes");
-        log.info("Marking " + this.duplicateIndexes.length + " records as duplicates.");
+        log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
         final DuplicationMetrics metrics = new DuplicationMetrics();
         final SAMFileReader in  = new SAMFileReader(INPUT);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(),
@@ -93,7 +95,7 @@ public class MarkDuplicates extends CommandLineProgram {
 
         // Now copy over the file while marking all the necessary indexes as duplicates
         long recordInFileIndex = 0;
-        long nextDuplicateIndex = (this.duplicateIndexes.length == 0 ? -1 :  this.duplicateIndexes[0]);
+        long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
         int  arrayIndex = 1;
 
         for (final SAMRecord rec : in) {
@@ -121,10 +123,9 @@ public class MarkDuplicates extends CommandLineProgram {
                 }
 
                 // Now try and figure out the next duplicate index
-                try {
-                    nextDuplicateIndex = this.duplicateIndexes[arrayIndex++];
-                }
-                catch (ArrayIndexOutOfBoundsException e) {
+                if (this.duplicateIndexes.hasNext()) {
+                    nextDuplicateIndex = this.duplicateIndexes.next();
+                } else {
                     // Only happens once we've marked all the duplicates
                     nextDuplicateIndex = -1;
                     arrayIndex = -1;
@@ -307,6 +308,10 @@ public class MarkDuplicates extends CommandLineProgram {
      * @return an array with an ordered list of indexes into the source file
      */
     private void generateDuplicateIndexes() {
+        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF);
+        log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
+        this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR);
+
         ReadEnds firstOfNextChunk = null;
         final List<ReadEnds> nextChunk  = new ArrayList<ReadEnds>(200);
 
@@ -359,12 +364,8 @@ public class MarkDuplicates extends CommandLineProgram {
         markDuplicateFragments(nextChunk, containsPairs);
         this.fragSort = null;
 
-        // Now shrink down the array and sort it
         log.info("Sorting list of duplicate records.");
-        final long[] tmp = new long[this.nextIndex];
-        System.arraycopy(this.duplicateIndexes, 0, tmp, 0, this.nextIndex);
-        this.duplicateIndexes = tmp;
-        Arrays.sort(this.duplicateIndexes);
+        this.duplicateIndexes.doneAddingStartIteration();
     }
 
     private boolean areComparableForDuplicates(final ReadEnds lhs, final ReadEnds rhs, final boolean compareRead2) {
@@ -381,14 +382,8 @@ public class MarkDuplicates extends CommandLineProgram {
     }
 
     private void addIndexAsDuplicate(final long bamIndex) {
-        if (this.nextIndex > this.duplicateIndexes.length - 1) {
-            log.info("Growing duplicateIndexes to " + this.duplicateIndexes.length * 2);
-            final long[] tmp = new long[this.duplicateIndexes.length * 2];
-            System.arraycopy(this.duplicateIndexes, 0, tmp, 0, this.nextIndex);
-            this.duplicateIndexes = tmp;
-        }
-
-        this.duplicateIndexes[this.nextIndex++] = bamIndex;
+        this.duplicateIndexes.add(bamIndex);
+        ++this.numDuplicateIndices;
     }
 
     /**
