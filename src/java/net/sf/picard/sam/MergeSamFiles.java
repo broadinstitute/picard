@@ -60,6 +60,9 @@ public class MergeSamFiles extends CommandLineProgram {
     shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
+    @Option(shortName="MSD", doc="Merge the seqeunce dictionaries", optional=true)
+    public boolean MERGE_SEQUENCE_DICTIONARIES = false;
+
     /** Required main method implementation. */
     public static void main(final String[] argv) {
         System.exit(new MergeSamFiles().instanceMain(argv));
@@ -87,13 +90,15 @@ public class MergeSamFiles extends CommandLineProgram {
 
         if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED) {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SORT_ORDER);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SORT_ORDER,
+                    MERGE_SEQUENCE_DICTIONARIES);
             iterator = new MergingSamRecordIterator(headerMerger, ASSUME_SORTED);
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerMerger.getMergedHeader(), true, OUTPUT);
         }
         else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted,
+                    MERGE_SEQUENCE_DICTIONARIES);
             iterator = new MergingSamRecordIterator(headerMerger, false);
             final SAMFileHeader header = headerMerger.getMergedHeader();
             header.setSortOrder(SORT_ORDER);

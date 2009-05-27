@@ -86,6 +86,9 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
         }
 
         record.setHeader(samHeaderMerger.getMergedHeader());
+        if (this.samHeaderMerger.hasMergedSequenceDictionary()) {
+            record.setReferenceIndex(this.samHeaderMerger.getNewSequenceMapping(iterator.getReader(),record.getReferenceIndex()));
+        }
         return record;
     }
 

@@ -24,6 +24,7 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.util.SequenceUtil;
+import net.sf.picard.PicardException;
 
 import java.util.*;
 
@@ -52,23 +53,48 @@ public class SamFileHeaderMerger {
     private final Map<SAMFileReader, Map<String, String>> samProgramGroupIdTranslation =
             new HashMap<SAMFileReader, Map<String, String>>();
 
+    private boolean hasMergedSequenceDictionary = false;
+
+    //Translation of old sequence dictionary ids to new dictionary ids
+    private final Map<SAMFileReader, Map<Integer, Integer>> samSeqDictionaryIdTranslation =
+            new HashMap<SAMFileReader, Map<Integer, Integer>>();
+
+
     //Letters to construct new ids from a counter
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 
     /**
-     * Create SAMFileHeader with additional information
+     * Create SAMFileHeader with additional information.  Required that sequence dictionaries agree.
      *
-     * @param readers same file readers to combine
+     * @param readers sam file readers to combine
      * @param sortOrder sort order new header should have
      */
     public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder) {
+        this(readers, sortOrder, false);
+    }
+
+    /**
+     * Create SAMFileHeader with additional information.
+     *
+     * @param readers sam file readers to combine
+     * @param sortOrder sort order new header should have
+     * @param mergeDictionaries If true, merge sequence dictionaries in new header.  If false, require that
+     * all input sequence dictionaries be identical.
+     */
+    public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder, boolean mergeDictionaries) {
         this.readers = readers;
         this.mergedHeader = new SAMFileHeader();
 
+        SAMSequenceDictionary sequences = null;
         // Set sequences first because if it throws exception there is no need to continue
-        final SAMSequenceDictionary sequences = getSAMSequences(readers);
+        if (mergeDictionaries) {
+            sequences = mergeSAMSequences(readers);
+        } else {
+            sequences = getSAMSequences(readers);
+        }
         this.mergedHeader.setSequenceDictionary(sequences);
+        this.hasMergedSequenceDictionary = mergeDictionaries;
 
         // Set program that creates input alignments
         for (final SAMProgramRecord program : mergeSAMProgramRecordLists(readers)) {
@@ -143,7 +169,7 @@ public class SamFileHeaderMerger {
 
     /**
      * Get the sequences off the SAMFileReader header.  Throws runtime exception if the sequence
-     * are different from one another
+     * are different from one another.
      *
      * @param readers readers to pull sequences from
      * @return sequences from files.  Each file should have the same sequence
@@ -163,6 +189,79 @@ public class SamFileHeaderMerger {
         }
         return sequences;
     }
+
+    /**
+     * Get the sequences from the SAMFileReader header, and merge the resulting sequence dictionaries.
+     *
+     * @param readers readers to pull sequences from
+     * @return sequences from files.  Each file should have the same sequence
+     */
+    private SAMSequenceDictionary mergeSAMSequences(final Collection<SAMFileReader> readers) {
+        SAMSequenceDictionary sequences = new SAMSequenceDictionary();
+        for (final SAMFileReader reader : readers) {
+            final SAMSequenceDictionary currentSequences = reader.getFileHeader().getSequenceDictionary();
+            sequences = mergeSequences(sequences, currentSequences);
+        }
+        // second pass, make a map of the original seqeunce id -> new sequence id
+        createSequenceMapping(readers, sequences);
+        return sequences;
+    }
+
+    /**
+     * They've asked to merge the sequence headers.  What we support right now is finding the sequence name superset.
+     *
+     * @param currentDict the current dictionary, though merged entries are the superset of both dictionaries
+     * @param mergingDict the sequence dictionary to merge
+     * @return the superset dictionary, by sequence names
+     */
+    private SAMSequenceDictionary mergeSequences(SAMSequenceDictionary currentDict, SAMSequenceDictionary mergingDict) {
+        LinkedList<SAMSequenceRecord> resultingDict = new LinkedList<SAMSequenceRecord>();
+        LinkedList<String> resultingDictStr = new LinkedList<String>();
+
+        // a place to hold the sequences that we haven't found a home for
+        LinkedList<SAMSequenceRecord> holder = new LinkedList<SAMSequenceRecord>();
+
+        resultingDict.addAll(currentDict.getSequences());
+        for (SAMSequenceRecord r : resultingDict) {
+            resultingDictStr.add(r.getSequenceName());
+        }
+        for (SAMSequenceRecord record : mergingDict.getSequences()) {
+            if (resultingDictStr.contains(record.getSequenceName())) {
+                int loc = resultingDictStr.indexOf(record.getSequenceName());
+                resultingDict.addAll(loc, holder);
+                holder.clear();
+            } else {
+                holder.add(record);
+            }
+        }
+        if (holder.size() != 0) {
+            resultingDict.addAll(holder);
+        }
+        return new SAMSequenceDictionary(resultingDict);
+    }
+
+
+    /**
+     * create the sequence mapping.  This map is used to convert the unmerged header sequence ID's to the merged
+     * list of sequence id's.
+     * @param readers the collections of readers.
+     * @param masterDictionary the superset dictionary we've created.
+     */
+    private void createSequenceMapping(final Collection<SAMFileReader> readers, SAMSequenceDictionary masterDictionary) {
+        LinkedList<String> resultingDictStr = new LinkedList<String>();
+        for (SAMSequenceRecord r : masterDictionary.getSequences()) {
+            resultingDictStr.add(r.getSequenceName());
+        }
+        for (final SAMFileReader reader : readers) {
+            Map<Integer, Integer> seqMap = new HashMap<Integer, Integer>();
+            SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
+            for (SAMSequenceRecord rec : dict.getSequences()) {
+                seqMap.put(rec.getSequenceIndex(), resultingDictStr.indexOf(rec.getSequenceName()));
+            }
+            this.samSeqDictionaryIdTranslation.put(reader, seqMap);
+        }
+    }
+
 
     /**
      * Find the alignment program that produced the readers.  If there are more than one
@@ -267,6 +366,11 @@ public class SamFileHeaderMerger {
         return this.hasGroupIdDuplicates;
     }
 
+    /** @return if we've merged the sequence dictionaries, return true */
+    public boolean hasMergedSequenceDictionary() {
+        return hasMergedSequenceDictionary;
+    }
+
     /** Returns the merged header that should be written to any output merged file. */
     public SAMFileHeader getMergedHeader() {
         return this.mergedHeader;
@@ -275,5 +379,19 @@ public class SamFileHeaderMerger {
     /** Returns the collection of readers that this header merger is working with. */
     public Collection<SAMFileReader> getReaders() {
         return this.readers;
+    }
+
+    /**
+     * returns the new mapping for a specified reader, given it's old sequence index
+     * @param reader the reader
+     * @param oldSequence the old sequence (also called reference) index
+     * @return the new index value
+     */
+    public Integer getNewSequenceMapping(SAMFileReader reader, Integer oldSequence) {
+        if (!this.samSeqDictionaryIdTranslation.containsKey(reader) ||
+                !this.samSeqDictionaryIdTranslation.get(reader).containsKey(oldSequence)) {
+            throw new PicardException("Attemping to retrieve new sequence mapping failed " + reader.toString() + " oldSeq " + oldSequence);
+        }
+        return this.samSeqDictionaryIdTranslation.get(reader).get(oldSequence);
     }
 }
