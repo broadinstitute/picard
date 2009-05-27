@@ -206,6 +206,9 @@ public class SAMFileReader implements Iterable<SAMRecord>
      * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
      * and then discarded because they do not match the interval of interest.
      *
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
+     *
      * @param sequence Reference sequence of interest.
      * @param start 1-based, inclusive start of interval of interest. Zero implies start of the reference sequence.
      * @param end 1-based, inclusive end of interval of interest. Zero implies end of the reference sequence.
@@ -226,6 +229,9 @@ public class SAMFileReader implements Iterable<SAMRecord>
      * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
      * and then discarded because they do not match the interval of interest.
      *
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
+     *
      * @param sequence Reference sequence of interest.
      * @param start 1-based, inclusive start of interval of interest. Zero implies start of the reference sequence.
      * @param end 1-based, inclusive end of interval of interest. Zero implies end of the reference sequence.
@@ -243,6 +249,9 @@ public class SAMFileReader implements Iterable<SAMRecord>
      *
      * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
      * and then discarded because they do not match the interval of interest.
+     *
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
      *
      * @param sequence Reference sequence of interest.
      * @param start 1-based, inclusive start of interval of interest. Zero implies start of the reference sequence.
