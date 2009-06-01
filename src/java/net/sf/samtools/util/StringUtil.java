@@ -211,6 +211,13 @@ public class StringUtil {
         return byteBuffer;
     }
 
+    @SuppressWarnings("deprecation")
+    public static byte[] stringToBytes(final String s, final int offset, int length) {
+        final byte[] byteBuffer = new byte[length];
+        s.getBytes(offset, offset + length, byteBuffer, 0);
+        return byteBuffer;
+    }
+
     // This method might more appropriately live in BinaryCodec, but all the byte <=> char conversion
     // should be in the same place.
     public static String readNullTerminatedString(final BinaryCodec binaryCodec) {
