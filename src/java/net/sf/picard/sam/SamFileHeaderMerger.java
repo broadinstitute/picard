@@ -82,19 +82,26 @@ public class SamFileHeaderMerger {
      * @param mergeDictionaries If true, merge sequence dictionaries in new header.  If false, require that
      * all input sequence dictionaries be identical.
      */
-    public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder, boolean mergeDictionaries) {
+    public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder, final boolean mergeDictionaries) {
         this.readers = readers;
         this.mergedHeader = new SAMFileHeader();
 
-        SAMSequenceDictionary sequences = null;
-        // Set sequences first because if it throws exception there is no need to continue
-        if (mergeDictionaries) {
-            sequences = mergeSAMSequences(readers);
-        } else {
-            sequences = getSAMSequences(readers);
+        SAMSequenceDictionary sequenceDictionary = null;
+        try {
+            sequenceDictionary = getSequenceDictionary(readers);
+            this.hasMergedSequenceDictionary = false;
         }
-        this.mergedHeader.setSequenceDictionary(sequences);
-        this.hasMergedSequenceDictionary = mergeDictionaries;
+        catch (PicardException pe) {
+            if (mergeDictionaries) {
+                sequenceDictionary = mergeSequenceDictionaries(readers);
+                this.hasMergedSequenceDictionary = true;
+            }
+            else {
+                throw pe;
+            }
+        }
+
+        this.mergedHeader.setSequenceDictionary(sequenceDictionary);
 
         // Set program that creates input alignments
         for (final SAMProgramRecord program : mergeSAMProgramRecordLists(readers)) {
@@ -174,7 +181,7 @@ public class SamFileHeaderMerger {
      * @param readers readers to pull sequences from
      * @return sequences from files.  Each file should have the same sequence
      */
-    private SAMSequenceDictionary getSAMSequences(final Collection<SAMFileReader> readers) {
+    private SAMSequenceDictionary getSequenceDictionary(final Collection<SAMFileReader> readers) {
         SAMSequenceDictionary sequences = null;
         for (final SAMFileReader reader : readers) {
             final SAMFileHeader header = reader.getFileHeader();
@@ -187,6 +194,7 @@ public class SamFileHeaderMerger {
                 SequenceUtil.assertSequenceDictionariesEqual(sequences, currentSequences);
             }
         }
+
         return sequences;
     }
 
@@ -196,7 +204,7 @@ public class SamFileHeaderMerger {
      * @param readers readers to pull sequences from
      * @return sequences from files.  Each file should have the same sequence
      */
-    private SAMSequenceDictionary mergeSAMSequences(final Collection<SAMFileReader> readers) {
+    private SAMSequenceDictionary mergeSequenceDictionaries(final Collection<SAMFileReader> readers) {
         SAMSequenceDictionary sequences = new SAMSequenceDictionary();
         for (final SAMFileReader reader : readers) {
             final SAMSequenceDictionary currentSequences = reader.getFileHeader().getSequenceDictionary();
@@ -384,14 +392,20 @@ public class SamFileHeaderMerger {
     /**
      * returns the new mapping for a specified reader, given it's old sequence index
      * @param reader the reader
-     * @param oldSequence the old sequence (also called reference) index
+     * @param oldReferenceSequenceIndex the old sequence (also called reference) index
      * @return the new index value
      */
-    public Integer getNewSequenceMapping(SAMFileReader reader, Integer oldSequence) {
-        if (!this.samSeqDictionaryIdTranslation.containsKey(reader) ||
-                !this.samSeqDictionaryIdTranslation.get(reader).containsKey(oldSequence)) {
-            throw new PicardException("Attemping to retrieve new sequence mapping failed " + reader.toString() + " oldSeq " + oldSequence);
+    public Integer getMergedSequenceIndex(SAMFileReader reader, Integer oldReferenceSequenceIndex) {
+        final Map<Integer, Integer> mapping = this.samSeqDictionaryIdTranslation.get(reader);
+        if (mapping == null) {
+            throw new PicardException("No sequence dictionary mapping available for reader: " + reader);
         }
-        return this.samSeqDictionaryIdTranslation.get(reader).get(oldSequence);
+
+        final Integer newIndex = mapping.get(oldReferenceSequenceIndex);
+        if (newIndex == null) {
+            throw new PicardException("No mapping for reference index " + oldReferenceSequenceIndex + " from reader: " + reader);
+        }
+
+        return newIndex;
     }
 }

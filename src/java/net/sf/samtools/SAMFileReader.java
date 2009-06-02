@@ -36,8 +36,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * Class for reading and querying SAM/BAM files.  Delegates to appropriate concrete implementation.
  */
-public class SAMFileReader implements Iterable<SAMRecord>
-{
+public class SAMFileReader implements Iterable<SAMRecord> {
 
     private static ValidationStringency defaultValidationStringency = ValidationStringency.DEFAULT_STRINGENCY;
 
@@ -55,6 +54,7 @@ public class SAMFileReader implements Iterable<SAMRecord>
     private boolean mIsBinary = false;
     private BAMFileIndex mFileIndex = null;
     private ReaderImplementation mReader = null;
+    private File samFile = null;
 
     /**
      * How strict to be when reading a SAM or BAM, beyond bare minimum validation.
@@ -288,6 +288,7 @@ public class SAMFileReader implements Iterable<SAMRecord>
     }
 
     private void init(final File file, File indexFile, final boolean eagerDecode) {
+        this.samFile = file;
 
         try {
             final BufferedInputStream bufferedStream = new BufferedInputStream(new FileInputStream(file));
@@ -396,5 +397,15 @@ public class SAMFileReader implements Iterable<SAMRecord>
     private boolean isSAMFile(final InputStream stream) {
         // For now, assume every non-binary file is a SAM text file.
         return true;
+    }
+
+    @Override
+    public String toString() {
+        if (this.samFile == null) {
+            return getClass().getSimpleName() + "{initialized with stream}";
+        }
+        else {
+            return getClass().getSimpleName() + "{" + this.samFile.getAbsolutePath() + "}";
+        }
     }
 }

@@ -90,15 +90,15 @@ public class MergeSamFiles extends CommandLineProgram {
 
         if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED) {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SORT_ORDER,
-                    MERGE_SEQUENCE_DICTIONARIES);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SORT_ORDER, MERGE_SEQUENCE_DICTIONARIES);
             iterator = new MergingSamRecordIterator(headerMerger, ASSUME_SORTED);
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerMerger.getMergedHeader(), true, OUTPUT);
         }
         else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted,
-                    MERGE_SEQUENCE_DICTIONARIES);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers,
+                                                                             SAMFileHeader.SortOrder.unsorted,
+                                                                             MERGE_SEQUENCE_DICTIONARIES);
             iterator = new MergingSamRecordIterator(headerMerger, false);
             final SAMFileHeader header = headerMerger.getMergedHeader();
             header.setSortOrder(SORT_ORDER);

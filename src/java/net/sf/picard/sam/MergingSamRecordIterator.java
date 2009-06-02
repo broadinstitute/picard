@@ -73,21 +73,31 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
         final ComparableSamRecordIterator iterator = this.pq.poll();
         final SAMRecord record = iterator.next();
         addIfNotEmpty(iterator);
+        record.setHeader(this.samHeaderMerger.getMergedHeader());
 
+        // Fix the read group if needs be
         if (this.samHeaderMerger.hasGroupIdDuplicates()) {
             final String id = (String) record.getAttribute(ReservedTagConstants.READ_GROUP_ID);
             final String newId = this.samHeaderMerger.getReadGroupId(iterator.getReader(), id);
             record.setAttribute(ReservedTagConstants.READ_GROUP_ID, newId);
         }
+
+        // Fix the program group if needs be
         final String oldProgramGroupId = (String) record.getAttribute(SAMTag.PG.toString());
         if (oldProgramGroupId != null) {
             final String newProgramGroupId = this.samHeaderMerger.getProgramGroupId(iterator.getReader(), oldProgramGroupId);
             record.setAttribute(SAMTag.PG.toString(), newProgramGroupId);
         }
 
-        record.setHeader(samHeaderMerger.getMergedHeader());
+        // Fix up the sequence indexes if needs be
         if (this.samHeaderMerger.hasMergedSequenceDictionary()) {
-            record.setReferenceIndex(this.samHeaderMerger.getNewSequenceMapping(iterator.getReader(),record.getReferenceIndex()));
+            if (!record.getReadUnmappedFlag()) {
+                record.setReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(),record.getReferenceIndex()));
+            }
+
+            if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
+                record.setMateReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(), record.getMateReferenceIndex()));
+            }
         }
         return record;
     }
