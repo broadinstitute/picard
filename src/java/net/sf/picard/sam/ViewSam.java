@@ -41,8 +41,18 @@ import net.sf.samtools.*;
  * @author tfennell@broad.mit.edu
  */
 public class ViewSam extends CommandLineProgram {
+    public static enum AlignmentStatus { Aligned, Unaligned, All }
+    public static enum PfStatus { PF, NonPF, All }
+
     @Usage public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
+    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The SAM or BAM file to view.")
+    public File INPUT;
+
+    @Option(doc="Print out all reads, just the aligned reads or just the unaligned reads.")
+    public AlignmentStatus ALIGNMENT_STATUS = AlignmentStatus.All;
+
+    @Option(doc="Print out all reads, just the PF reads or just the non-PF reads.")
+    public PfStatus PF_STATUS = PfStatus.All;
 
     public static void main(String[] args) {
         new ViewSam().instanceMain(args);
@@ -59,7 +69,13 @@ public class ViewSam extends CommandLineProgram {
             if (System.out.checkError()) {
                 return 0;
             }
-            
+
+            if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned   && rec.getReadUnmappedFlag()) continue;
+            if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
+
+            if (this.PF_STATUS == PfStatus.PF    && rec.getReadFailsVendorQualityCheckFlag()) continue;
+            if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
+
             out.addAlignment(rec);
         }
 
