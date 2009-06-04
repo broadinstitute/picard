@@ -21,12 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.sf.samtools.util;
 
 /**
  * Grab-bag of stateless String-oriented utilities.
  */
 public class StringUtil {
+    private static final byte UPPER_CASE_OFFSET = 'A' - 'a';
+
     /**
      *
      * @param separator String to interject between each string in strings arg
@@ -93,7 +96,19 @@ public class StringUtil {
         if (b < 'a' || b > 'z') {
             return b;
         }
-        return (byte)(b + ('A' - 'a'));
+        return (byte)(b + UPPER_CASE_OFFSET);
+    }
+
+    /**
+     * Converts in place all lower case letters to upper case in the byte array provided.
+     */
+    public static void toUpperCase(final byte[] bytes) {
+        final int length = bytes.length;
+        for (int i=0; i<length; ++i) {
+            if (bytes[i] >= 'a' && bytes[i] <= 'z') {
+                bytes[i] = (byte) (bytes[i] + UPPER_CASE_OFFSET);
+            }
+        }
     }
 
 
