@@ -142,6 +142,7 @@ public class SAMRecord implements Cloneable
     private byte[] mBaseQualities = NULL_QUALS;
     private String mReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
     private int mAlignmentStart = NO_ALIGNMENT_START;
+    private transient int mAlignmentEnd = NO_ALIGNMENT_START;
     private int mMappingQuality = NO_MAPPING_QUALITY;
     private String mCigarString = NO_ALIGNMENT_CIGAR;
     private Cigar mCigar = null;
@@ -382,9 +383,13 @@ public class SAMRecord implements Cloneable
      */
     public int getAlignmentEnd() {
         if (getReadUnmappedFlag()) {
-            return -1;
+            return NO_ALIGNMENT_START;
         }
-        return mAlignmentStart + getCigar().getReferenceLength() - 1;
+        else if (this.mAlignmentEnd == NO_ALIGNMENT_START) {
+            this.mAlignmentEnd = getCigar().getReferenceLength() - 1;
+        }
+
+        return this.mAlignmentEnd;
     }
 
     /**
