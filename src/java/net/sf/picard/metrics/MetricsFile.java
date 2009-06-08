@@ -271,6 +271,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 }
             }
 
+            if (line == null) {
+                throw new PicardException("No lines in metrics file after header.");
+            }
             // Then read the metrics if there are any
             while (!line.startsWith(MAJOR_HEADER_PREFIX)) {
                 line = in.readLine().trim();

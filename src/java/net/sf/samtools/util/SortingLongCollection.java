@@ -237,7 +237,7 @@ public class SortingLongCollection {
     /**
      * Read a file of longs
      */
-    class FileValueIterator {
+    private static class FileValueIterator {
         private final File file;
         private LongBuffer longBuffer;
 
@@ -279,7 +279,7 @@ public class SortingLongCollection {
     /**
      * Add peek() functionality to FileValueIterator
      */
-    class PeekFileValueIterator {
+    private static class PeekFileValueIterator {
         private FileValueIterator underlyingIterator;
         private long peekValue;
         private boolean hasPeekedValue = false;
@@ -321,7 +321,7 @@ public class SortingLongCollection {
         }
     }
 
-    class PeekFileValueIteratorComparator implements Comparator<PeekFileValueIterator> {
+    private static class PeekFileValueIteratorComparator implements Comparator<PeekFileValueIterator> {
 
         public int compare(final PeekFileValueIterator it1, final PeekFileValueIterator it2) {
             if (it1.peek() < it2.peek()) {

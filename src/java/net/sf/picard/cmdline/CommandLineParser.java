@@ -33,6 +33,7 @@ import java.util.*;
 
 import net.sf.samtools.util.StringUtil;
 import net.sf.picard.PicardException;
+import net.sf.picard.util.CloserUtil;
 
 /**
  * Annotation-driven utility for parsing command-line arguments, checking for errors, and producing usage message.
@@ -353,8 +354,9 @@ public class CommandLineParser {
      * @return false if a fatal error occurred
      */
     private boolean parseOptionsFile(final String optionsFile) {
+        BufferedReader reader = null;
         try {
-            final BufferedReader reader = new BufferedReader(new FileReader(optionsFile));
+            reader = new BufferedReader(new FileReader(optionsFile));
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("#")) {
@@ -378,6 +380,8 @@ public class CommandLineParser {
 
         } catch (IOException e) {
             throw new PicardException("I/O error loading OPTIONS_FILE=" + optionsFile, e);
+        } finally {
+            CloserUtil.close(reader);
         }
     }
 
@@ -646,7 +650,7 @@ public class CommandLineParser {
         return argv;
     }
 
-    private class OptionDefinition {
+    private static class OptionDefinition {
         final Field field;
         final String name;
         final String shortName;

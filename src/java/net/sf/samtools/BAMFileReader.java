@@ -186,6 +186,34 @@ class BAMFileReader
         return mCurrentIterator;
     }
 
+    public CloseableIterator<SAMRecord> queryUnmapped() {
+        if (mStream == null) {
+            throw new IllegalStateException("File reader is closed");
+        }
+        if (mCurrentIterator != null) {
+            throw new IllegalStateException("Iteration in progress");
+        }
+        if (!mIsSeekable) {
+            throw new UnsupportedOperationException("Cannot query stream-based BAM file");
+        }
+        if (mFileIndex == null) {
+            throw new IllegalStateException("No BAM file index is available");
+        }
+        try {
+            final long startOfLastLinearBin = mFileIndex.getStartOfLastLinearBin();
+            if (startOfLastLinearBin != -1) {
+                mCompressedInputStream.seek(startOfLastLinearBin);
+            } else {
+                // No mapped reads in file, just start at the first read in file.
+                mCompressedInputStream.seek(mFirstRecordPointer);
+            }
+            mCurrentIterator = new BAMFileIndexUnmappedIterator();
+            return mCurrentIterator;
+        } catch (IOException e) {
+            throw new RuntimeException("IOException seeking to unmapped reads", e);
+        }
+    }
+
     /**
      * Reads the header from the file or stream
      * @param file Note that this is used only for reporting errors.
@@ -323,6 +351,13 @@ class BAMFileReader
         SAMRecord getNextRecord() throws IOException {
             return bamRecordCodec.decode();
         }
+
+        /**
+         * @return The record that will be return by the next call to next()
+         */
+        protected SAMRecord peek() {
+            return mNextRecord;
+        }
     }
 
     private class BAMFileIndexIterator
@@ -413,4 +448,13 @@ class BAMFileReader
             }
         }
     }
+
+    private class BAMFileIndexUnmappedIterator extends BAMFileIterator  {
+        private BAMFileIndexUnmappedIterator() {
+            while (this.hasNext() && peek().getReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                advance();
+            }
+        }
+    }
+
 }

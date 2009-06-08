@@ -25,6 +25,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.PicardException;
+import net.sf.picard.util.CloserUtil;
 
 import java.io.*;
 import java.util.Map;
@@ -81,7 +82,6 @@ class DiskReadEndsMap implements ReadEndsMap {
         workDir.deleteOnExit();
     }
 
-    @Override
     public ReadEnds remove(final int mateSequenceIndex, final String key) {
         ensureSequenceLoaded(mateSequenceIndex);
         return mapInRam.remove(key);
@@ -120,11 +120,16 @@ class DiskReadEndsMap implements ReadEndsMap {
                 final int numRecords = sizeOfMapOnDisk.get(mateSequenceIndex);
                 sizeOfMapOnDisk.set(mateSequenceIndex, 0);
                 final File file = makeFileForSequence(mateSequenceIndex);
-                final FileInputStream is = new FileInputStream(file);
-                elementCodec.setInputStream(is);
-                for (int i = 0; i < numRecords; ++i) {
-                    final MapEntry entry = elementCodec.decode();
-                    mapInRam.put(entry.key, entry.readEnds);
+                FileInputStream is = null;
+                try {
+                    is = new FileInputStream(file);
+                    elementCodec.setInputStream(is);
+                    for (int i = 0; i < numRecords; ++i) {
+                        final MapEntry entry = elementCodec.decode();
+                        mapInRam.put(entry.key, entry.readEnds);
+                    }
+                } finally {
+                    CloserUtil.close(is);
                 }
                 file.delete();
             }
@@ -133,7 +138,6 @@ class DiskReadEndsMap implements ReadEndsMap {
         }
     }
 
-    @Override
     public void put(final int mateSequenceIndex, final String key, final ReadEnds readEnds) {
         if (mateSequenceIndex == sequenceIndexOfMapInRam) {
             // Store in RAM map
@@ -172,7 +176,6 @@ class DiskReadEndsMap implements ReadEndsMap {
         }
     }
 
-    @Override
     public int size() {
         int total = sizeInRam();
         for (final Integer mapSize : sizeOfMapOnDisk) {
@@ -186,7 +189,6 @@ class DiskReadEndsMap implements ReadEndsMap {
     /**
      * @return number of elements stored in RAM.  Always <= size()
      */
-    @Override
     public int sizeInRam() {
         return mapInRam != null? mapInRam.size(): 0;
     }

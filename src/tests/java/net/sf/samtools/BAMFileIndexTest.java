@@ -23,30 +23,31 @@
  */
 package net.sf.samtools;
 
-import org.testng.annotations.Test;
+import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.StopWatch;
+import org.testng.Assert;
 import static org.testng.Assert.*;
+import org.testng.annotations.Test;
 
-import java.io.*;
-import java.util.*;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMSequenceRecord;
-import net.sf.samtools.BAMFileIndex;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Test BAM file indexing.
  */
 public class BAMFileIndexTest
 {
-    private File BAM_FILE = new File("testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam");
-    private boolean mVerbose = false;
+    private final File BAM_FILE = new File("testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam");
+    private final boolean mVerbose = false;
 
     @Test
     public void testGetSearchBins()
         throws Exception {
-        BAMFileIndex bfi = new BAMFileIndex(new File(BAM_FILE.getPath() + ".bai"));
-        long[] bins = bfi.getSearchBins(1, 0, 0);
+        final BAMFileIndex bfi = new BAMFileIndex(new File(BAM_FILE.getPath() + ".bai"));
+        final long[] bins = bfi.getSearchBins(1, 0, 0);
         /***
         if (bins == null) {
             System.out.println("Search bins: " + bins);
@@ -105,22 +106,71 @@ public class BAMFileIndexTest
         ***/
     }
 
-    private void checkChromosome(String name, int expectedCount) {
+    @Test
+    public void testQueryUnmapped() {
+        final StopWatch linearScan = new StopWatch();
+        final StopWatch queryUnmapped = new StopWatch();
+        int unmappedCountFromLinearScan = 0;
+        final File bamFile =
+                BAM_FILE;
+                //new File("/Users/alecw/tmp/30ED6AAXX.1.aligned.duplicates_marked.bam");
+        final SAMFileReader reader = new SAMFileReader(bamFile);
+        linearScan.start();
+        CloseableIterator<SAMRecord> it = reader.iterator();
+        int mappedCount = 0;
+        while (it.hasNext()) {
+            final SAMRecord rec = it.next();
+            if (rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                unmappedCountFromLinearScan = 1;
+                break;
+            }
+            ++mappedCount;
+        }
+        linearScan.stop();
+        System.out.println("Found start of unmapped reads.  Num mapped reads: " + mappedCount);
+        System.out.println("Time so far: " + linearScan.getElapsedTimeSecs());
+        linearScan.start();
+        
+        while (it.hasNext()) {
+            final SAMRecord rec = it.next();
+            Assert.assertEquals(rec.getReferenceIndex().intValue(), SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            ++unmappedCountFromLinearScan;
+        }
+        it.close();
+        linearScan.stop();
+        queryUnmapped.start();
+        it = reader.queryUnmapped();
+        int unmappedCountFromQueryUnmapped = 0;
+        while (it.hasNext()) {
+            final SAMRecord rec = it.next();
+            Assert.assertEquals(rec.getReferenceIndex().intValue(), SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            ++unmappedCountFromQueryUnmapped;
+        }
+        it.close();
+        queryUnmapped.stop();
+        System.out.println("Linear scan total time: " + linearScan.getElapsedTimeSecs());
+        System.out.println("queryUnmapped time: " + queryUnmapped.getElapsedTimeSecs());
+        System.out.println("Number of unmapped reads:" + unmappedCountFromQueryUnmapped);
+        Assert.assertEquals(unmappedCountFromQueryUnmapped, unmappedCountFromLinearScan);
+        reader.close();
+    }
+
+    private void checkChromosome(final String name, final int expectedCount) {
         int count = runQueryTest(BAM_FILE, name, 0, 0, true);
         assertEquals(count, expectedCount);
         count = runQueryTest(BAM_FILE, name, 0, 0, false);
         assertEquals(count, expectedCount);
     }
 
-    private void runRandomTest(File bamFile, int count, Random generator) {
-        int maxCoordinate = 10000000;
-        List<String> referenceNames = getReferenceNames(bamFile);
+    private void runRandomTest(final File bamFile, final int count, final Random generator) {
+        final int maxCoordinate = 10000000;
+        final List<String> referenceNames = getReferenceNames(bamFile);
         for (int i = 0; i < count; i++) {
-            String refName = referenceNames.get(generator.nextInt(referenceNames.size()));
-            int coord1 = generator.nextInt(maxCoordinate+1);
-            int coord2 = generator.nextInt(maxCoordinate+1);
-            int startPos = Math.min(coord1, coord2);
-            int endPos = Math.max(coord1, coord2);
+            final String refName = referenceNames.get(generator.nextInt(referenceNames.size()));
+            final int coord1 = generator.nextInt(maxCoordinate+1);
+            final int coord2 = generator.nextInt(maxCoordinate+1);
+            final int startPos = Math.min(coord1, coord2);
+            final int endPos = Math.max(coord1, coord2);
             System.out.println("Testing query " + refName + ":" + startPos + "-" + endPos + " ...");
             try {
                 runQueryTest(bamFile, refName, startPos, endPos, true);
@@ -133,11 +183,11 @@ public class BAMFileIndexTest
         }
     }
 
-    private List<String> getReferenceNames(File bamFile) {
-        SAMFileReader reader = new SAMFileReader(bamFile);
-        List<String> result = new ArrayList<String>();
-        List<SAMSequenceRecord> seqRecords = reader.getFileHeader().getSequenceDictionary().getSequences();
-        for (SAMSequenceRecord seqRecord : seqRecords) {
+    private List<String> getReferenceNames(final File bamFile) {
+        final SAMFileReader reader = new SAMFileReader(bamFile);
+        final List<String> result = new ArrayList<String>();
+        final List<SAMSequenceRecord> seqRecords = reader.getFileHeader().getSequenceDictionary().getSequences();
+        for (final SAMSequenceRecord seqRecord : seqRecords) {
             if (seqRecord.getSequenceName() != null) {
                 result.add(seqRecord.getSequenceName());
             }
@@ -146,12 +196,12 @@ public class BAMFileIndexTest
         return result;
     }
 
-    private int runQueryTest(File bamFile, String sequence, int startPos, int endPos, boolean contained) {
+    private int runQueryTest(final File bamFile, final String sequence, final int startPos, final int endPos, final boolean contained) {
         verbose("Testing query " + sequence + ":" + startPos + "-" + endPos + " ...");
-        SAMFileReader reader1 = new SAMFileReader(bamFile);
-        SAMFileReader reader2 = new SAMFileReader(bamFile);
-        Iterator<SAMRecord> iter1 = reader1.query(sequence, startPos, endPos, contained);
-        Iterator<SAMRecord> iter2 = reader2.iterator();
+        final SAMFileReader reader1 = new SAMFileReader(bamFile);
+        final SAMFileReader reader2 = new SAMFileReader(bamFile);
+        final Iterator<SAMRecord> iter1 = reader1.query(sequence, startPos, endPos, contained);
+        final Iterator<SAMRecord> iter2 = reader2.iterator();
         // Compare ordered iterators.
         // Confirm that iter1 is a subset of iter2 that properly filters.
         SAMRecord record1 = null;
@@ -182,7 +232,7 @@ public class BAMFileIndexTest
                 continue;
             }
             assertNotNull(record2);
-            int ordering = compareCoordinates(record1, record2);
+            final int ordering = compareCoordinates(record1, record2);
             if (ordering > 0) {
                 checkPassesFilter(false, record2, sequence, startPos, endPos, contained);
                 record2 = null;
@@ -206,8 +256,8 @@ public class BAMFileIndexTest
         return count1;
     }
 
-    private void checkPassesFilter(boolean expected, SAMRecord record, String sequence, int startPos, int endPos, boolean contained) {
-        boolean passes = passesFilter(record, sequence, startPos, endPos, contained);
+    private void checkPassesFilter(final boolean expected, final SAMRecord record, final String sequence, final int startPos, final int endPos, final boolean contained) {
+        final boolean passes = passesFilter(record, sequence, startPos, endPos, contained);
         if (passes != expected) {
             System.out.println("Error: Record erroneously " +
                                (passes ? "passed" : "failed") +
@@ -220,14 +270,14 @@ public class BAMFileIndexTest
         }
     }
 
-    private boolean passesFilter(SAMRecord record, String sequence, int startPos, int endPos, boolean contained) {
+    private boolean passesFilter(final SAMRecord record, final String sequence, final int startPos, final int endPos, final boolean contained) {
         if (record == null) {
             return false;
         }
         if (!safeEquals(record.getReferenceName(), sequence)) {
             return false;
         }
-        int alignmentStart = record.getAlignmentStart();
+        final int alignmentStart = record.getAlignmentStart();
         int alignmentEnd = record.getAlignmentEnd();
         if (alignmentStart <= 0) {
             assertTrue(record.getReadUnmappedFlag());
@@ -256,9 +306,9 @@ public class BAMFileIndexTest
         return true;
     }
 
-    private int compareCoordinates(SAMRecord record1, SAMRecord record2) {
-        int seqIndex1 = record1.getReferenceIndex();
-        int seqIndex2 = record2.getReferenceIndex();
+    private int compareCoordinates(final SAMRecord record1, final SAMRecord record2) {
+        final int seqIndex1 = record1.getReferenceIndex();
+        final int seqIndex2 = record2.getReferenceIndex();
         if (seqIndex1 == -1) {
             return ((seqIndex2 == -1) ? 0 : -1);
         } else if (seqIndex2 == -1) {
@@ -272,7 +322,7 @@ public class BAMFileIndexTest
         return result;
     }
 
-    private boolean safeEquals(Object o1, Object o2) {
+    private boolean safeEquals(final Object o1, final Object o2) {
         if (o1 == o2) {
             return true;
         } else if (o1 == null || o2 == null) {
@@ -282,7 +332,7 @@ public class BAMFileIndexTest
         }
     }
 
-    private void verbose(String text) {
+    private void verbose(final String text) {
         if (mVerbose) {
             System.out.println("# " + text);
         }

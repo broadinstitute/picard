@@ -47,7 +47,7 @@ public class SequenceUtil {
     }
 
     /** Returns the complement of a single byte. */
-    public static final byte complement(final byte b) {
+    public static byte complement(final byte b) {
         switch (b) {
             case a: return t;
             case c: return g;

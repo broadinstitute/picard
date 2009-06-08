@@ -132,6 +132,10 @@ class SAMTextReader
         throw new UnsupportedOperationException("Cannot query SAM text files");
     }
 
+    public CloseableIterator<SAMRecord> queryUnmapped() {
+        throw new UnsupportedOperationException("Cannot query SAM text files");
+    }
+
     private void readHeader() {
         final SAMTextHeaderCodec headerCodec = new SAMTextHeaderCodec();
         mFileHeader = headerCodec.decode(mReader, mFile);

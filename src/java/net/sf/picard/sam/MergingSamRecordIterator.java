@@ -44,7 +44,7 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
      * Constructs a new merging iterator with the same set of readers and sort order as
      * provided by the header merger parameter.
      */
-    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, boolean forcePresorted) {
+    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, final boolean forcePresorted) {
         this.samHeaderMerger = headerMerger;
         this.sortOrder = headerMerger.getMergedHeader().getSortOrder();
         final SAMRecordComparator comparator = getComparator();

@@ -79,20 +79,7 @@ class BAMFileIndex
             return null;
         }
 
-        for (int i = 0; i < referenceIndex; i++) {
-            // System.out.println("# Sequence TID: " + i);
-            final int nBins = readInteger();
-            // System.out.println("# nBins: " + nBins);
-            for (int j = 0; j < nBins; j++) {
-                final int bin = readInteger();
-                final int nChunks = readInteger();
-                // System.out.println("# bin[" + j + "] = " + bin + ", nChunks = " + nChunks);
-                skipBytes(16 * nChunks);
-            }
-            final int nLinearBins = readInteger();
-            // System.out.println("# nLinearBins: " + nLinearBins);
-            skipBytes(8 * nLinearBins);
-        }
+        skipToSequence(referenceIndex);
 
         // System.out.println("# Sequence target TID: " + referenceIndex);
         final int nIndexBins = readInteger();
@@ -133,6 +120,58 @@ class BAMFileIndex
         }
         chunkList = optimizeChunkList(chunkList, minimumOffset);
         return convertToArray(chunkList);
+    }
+
+    /**
+     * Use to get close to the unmapped reads at the end of a BAM file.
+     * @return The file offset of the first record in the last linear bin, or -1
+     * if there are no elements in linear bins (i.e. no mapped reads).
+     */
+    long getStartOfLastLinearBin() {
+        openIndex();
+        seek(4);
+
+        final int sequenceCount = readInteger();
+        // Because no reads may align to the last sequence in the sequence dictionary,
+        // grab the last element of the linear index for each sequence, and return
+        // the last one from the last sequence that has one.
+        long lastLinearIndexPointer = -1;
+        for (int i = 0; i < sequenceCount; i++) {
+            // System.out.println("# Sequence TID: " + i);
+            final int nBins = readInteger();
+            // System.out.println("# nBins: " + nBins);
+            for (int j1 = 0; j1 < nBins; j1++) {
+                // Skip bin #
+                skipBytes(4);
+                final int nChunks = readInteger();
+                // Skip chunks
+                skipBytes(16 * nChunks);
+            }
+            final int nLinearBins = readInteger();
+            if (nLinearBins > 0) {
+                // Skip to last element of list of linear bins
+                skipBytes(8 * (nLinearBins - 1));
+                lastLinearIndexPointer = readLong();
+            }
+        }
+        return lastLinearIndexPointer;
+    }
+
+    private void skipToSequence(final int sequenceIndex) {
+        for (int i = 0; i < sequenceIndex; i++) {
+            // System.out.println("# Sequence TID: " + i);
+            final int nBins = readInteger();
+            // System.out.println("# nBins: " + nBins);
+            for (int j = 0; j < nBins; j++) {
+                final int bin = readInteger();
+                final int nChunks = readInteger();
+                // System.out.println("# bin[" + j + "] = " + bin + ", nChunks = " + nChunks);
+                skipBytes(16 * nChunks);
+            }
+            final int nLinearBins = readInteger();
+            // System.out.println("# nLinearBins: " + nLinearBins);
+            skipBytes(8 * nLinearBins);
+        }
     }
 
     private List<Chunk> optimizeChunkList(final List<Chunk> chunkList, final long minimumOffset) {

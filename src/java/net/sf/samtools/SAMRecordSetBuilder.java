@@ -54,7 +54,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private SAMFileHeader header;
     private Collection<SAMRecord> records;
 
-    private final int readLength = 36 ;
+    private int readLength = 36 ;
 
     private SAMProgramRecord programRecord = null;
 

@@ -84,6 +84,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         abstract SAMFileHeader getFileHeader();
         abstract CloseableIterator<SAMRecord> getIterator();
         abstract CloseableIterator<SAMRecord> query(String sequence, int start, int end, boolean contained);
+        abstract public CloseableIterator<SAMRecord> queryUnmapped();
         abstract void close();
         // If true, emit warnings about format errors rather than throwing exceptions;
         abstract void setValidationStringency(final ValidationStringency validationStringency);
@@ -262,6 +263,9 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         return query(sequence, start, end, true);
     }
 
+    public CloseableIterator<SAMRecord> queryUnmapped() {
+        return mReader.queryUnmapped();
+    }
     private void init(final InputStream stream, final boolean eagerDecode) {
 
         try {
