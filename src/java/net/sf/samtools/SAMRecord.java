@@ -374,6 +374,8 @@ public class SAMRecord implements Cloneable
      */
     public void setAlignmentStart(final int value) {
         mAlignmentStart = value;
+        // Clear cached alignment end
+        mAlignmentEnd = NO_ALIGNMENT_START;
         // Change to alignmentStart could change indexing bin
         setIndexingBin(null);
     }
@@ -386,7 +388,7 @@ public class SAMRecord implements Cloneable
             return NO_ALIGNMENT_START;
         }
         else if (this.mAlignmentEnd == NO_ALIGNMENT_START) {
-            this.mAlignmentEnd = getCigar().getReferenceLength() - 1;
+            this.mAlignmentEnd = mAlignmentStart + getCigar().getReferenceLength() - 1;
         }
 
         return this.mAlignmentEnd;
@@ -492,6 +494,8 @@ public class SAMRecord implements Cloneable
         mCigarString = value;
         mCigar = null;
         mAlignmentBlocks = null;
+        // Clear cached alignment end
+        mAlignmentEnd = NO_ALIGNMENT_START;
         // Change to cigar could change alignmentEnd, and thus indexing bin
         setIndexingBin(null);
     }
@@ -534,6 +538,8 @@ public class SAMRecord implements Cloneable
         this.mCigar = cigar;
         mCigarString = null;
         mAlignmentBlocks = null;
+        // Clear cached alignment end
+        mAlignmentEnd = NO_ALIGNMENT_START;
     }
 
     /**
