@@ -91,14 +91,15 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
 
         // Fix up the sequence indexes if needs be
         if (this.samHeaderMerger.hasMergedSequenceDictionary()) {
-            if (!record.getReadUnmappedFlag()) {
+            if (record.getReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 record.setReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(),record.getReferenceIndex()));
             }
 
-            if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
+            if (record.getReadPairedFlag() && record.getMateReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 record.setMateReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(), record.getMateReferenceIndex()));
             }
         }
+
         return record;
     }
 
