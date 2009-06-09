@@ -23,9 +23,13 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.Iso8601Date;
 import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.util.DateParser;
 
 import java.util.Map;
+import java.text.DateFormat;
+import java.text.ParseException;
 
 /**
  * Converter between SAM text representation of a tag, and in-memory Object representation.
@@ -161,5 +165,17 @@ class TextTagCodec {
             throw new SAMFormatException("Unrecognized tag type: " + type);
         }
         return val;
+    }
+
+    Iso8601Date decodeDate(final String dateStr) {
+        try {
+            return new Iso8601Date(dateStr);
+        } catch (DateParser.InvalidDateException ex) {
+            try {
+                return new Iso8601Date(DateFormat.getDateTimeInstance().parse(dateStr));
+            } catch (ParseException e) {
+                throw new RuntimeException("Could not parse as date: " + dateStr, e);
+            }
+        }
     }
 }

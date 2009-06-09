@@ -26,15 +26,13 @@ package net.sf.samtools;
 import net.sf.samtools.util.LineReader;
 import net.sf.samtools.util.RuntimeIOException;
 import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.util.Iso8601Date;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Parser for a SAM text header, and a generator of SAM text header.
@@ -99,7 +97,7 @@ public class SAMTextHeaderCodec {
     }
 
     private String advanceLine() {
-        int nextChar = mReader.peek();
+        final int nextChar = mReader.peek();
         if (nextChar != '@') {
             return null;
         }
@@ -158,19 +156,11 @@ public class SAMTextHeaderCodec {
             }
         }
 
-/*
-TODO: Need an ISO 6801 date parser
-        String dateRunProduced = (String)samReadGroupRecord.getAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG);
+        final String dateRunProduced = (String)samReadGroupRecord.getAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG);
         if (dateRunProduced != null) {
-            try {
-                Date date = dateParser.parse(dateRunProduced);
-                samReadGroupRecord.setAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, date);
-            } catch (ParseException e) {
-                throw new SAMFormatException(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG + " cannot be parsed as a date: " +
-                        dateRunProduced, e);
-            }
+            final Iso8601Date date = mTagCodec.decodeDate(dateRunProduced);
+            samReadGroupRecord.setAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, date);
         }
-*/
 
         readGroups.add(samReadGroupRecord);
     }
@@ -302,7 +292,6 @@ TODO: Need an ISO 6801 date parser
         final String[] fields = new String[2 + readGroup.getAttributes().size()];
         fields[0] = HEADER_LINE_START + HeaderRecordType.RG;
         fields[1] = SAMReadGroupRecord.READ_GROUP_ID_TAG + TAG_KEY_VALUE_SEPARATOR + readGroup.getReadGroupId();
-        int i = 2;
         encodeTags(readGroup, fields, 2);
         println(StringUtil.join(FIELD_SEPARATOR, fields));
     }
@@ -330,9 +319,9 @@ TODO: Need an ISO 6801 date parser
      * @param fields where to put the text representation of the tags.  Must be big enough to hold all tags.
      * @param offset where to start putting text tag representations.
      */
-    private void encodeTags(AbstractSAMHeaderRecord rec, String[] fields, int offset) {
+    private void encodeTags(final AbstractSAMHeaderRecord rec, final String[] fields, int offset) {
         for (final Map.Entry<String, Object> entry: rec.getAttributes()) {
-            String textTagRepresentation;
+            final String textTagRepresentation;
             if (rec.getStandardTags().contains(entry.getKey())) {
                 textTagRepresentation = mTagCodec.encodeUntypedTag(entry.getKey(), entry.getValue());
             } else {
