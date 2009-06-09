@@ -138,6 +138,7 @@ class SAMTextReader
 
     private void readHeader() {
         final SAMTextHeaderCodec headerCodec = new SAMTextHeaderCodec();
+        headerCodec.setValidationStringency(validationStringency);
         mFileHeader = headerCodec.decode(mReader, mFile);
         advanceLine();
     }

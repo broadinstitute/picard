@@ -229,7 +229,9 @@ class BAMFileReader
 
         final int headerTextLength = mStream.readInt();
         final String textHeader = mStream.readString(headerTextLength);
-        mFileHeader = new SAMTextHeaderCodec().decode(new StringLineReader(textHeader),
+        final SAMTextHeaderCodec headerCodec = new SAMTextHeaderCodec();
+        headerCodec.setValidationStringency(mValidationStringency);
+        mFileHeader = headerCodec.decode(new StringLineReader(textHeader),
                 file);
 
         final int sequenceCount = mStream.readInt();

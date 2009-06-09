@@ -174,7 +174,7 @@ class TextTagCodec {
             try {
                 return new Iso8601Date(DateFormat.getDateTimeInstance().parse(dateStr));
             } catch (ParseException e) {
-                throw new RuntimeException("Could not parse as date: " + dateStr, e);
+                throw new DateParser.InvalidDateException("Could not parse as date: " + dateStr, e);
             }
         }
     }

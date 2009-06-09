@@ -23,10 +23,7 @@
  */
 package net.sf.samtools;
 
-import net.sf.samtools.util.LineReader;
-import net.sf.samtools.util.RuntimeIOException;
-import net.sf.samtools.util.StringUtil;
-import net.sf.samtools.util.Iso8601Date;
+import net.sf.samtools.util.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -50,6 +47,9 @@ public class SAMTextHeaderCodec {
     private File mFile;
     private List<SAMSequenceRecord> sequences;
     private List<SAMReadGroupRecord> readGroups;
+
+    // For error reporting when parsing
+    private SAMFileReader.ValidationStringency validationStringency = SAMFileReader.ValidationStringency.SILENT;
 
     // These attributes are populated when generating text
     private BufferedWriter writer;
@@ -158,7 +158,24 @@ public class SAMTextHeaderCodec {
 
         final String dateRunProduced = (String)samReadGroupRecord.getAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG);
         if (dateRunProduced != null) {
-            final Iso8601Date date = mTagCodec.decodeDate(dateRunProduced);
+            Object date;
+            try {
+                date = mTagCodec.decodeDate(dateRunProduced);
+            } catch (DateParser.InvalidDateException e) {
+                switch (validationStringency) {
+                    case LENIENT:
+                        System.err.println("Ignored error attempting to parse ISO-8601 date string for RG:DT tag: " + dateRunProduced);
+                        date = dateRunProduced;
+                        break;
+                    case SILENT:
+                        date = dateRunProduced;
+                        break;
+                    case STRICT:
+                        throw e;
+                    default:
+                        throw new RuntimeException("Unrecognized validation stringency");
+                }
+            }
             samReadGroupRecord.setAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, date);
         }
 
@@ -329,5 +346,9 @@ public class SAMTextHeaderCodec {
             }
             fields[offset++] = textTagRepresentation;
         }
+    }
+
+    public void setValidationStringency(final SAMFileReader.ValidationStringency validationStringency) {
+        this.validationStringency = validationStringency;
     }
 }

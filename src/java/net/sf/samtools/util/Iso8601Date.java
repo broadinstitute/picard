@@ -23,11 +23,9 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.samtools.util.DateParser;
-
-import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Use this type rather than java.util.Date in command-line options in order to get ISO 8601 parsing.
@@ -35,17 +33,17 @@ import java.text.SimpleDateFormat;
  * @author alecw@broadinstitute.org
  */
 public class Iso8601Date extends Date {
-    private static ThreadLocal<DateFormat> iso8601DateFormatter = new ThreadLocal<DateFormat>() {
+    private static final ThreadLocal<DateFormat> iso8601DateFormatter = new ThreadLocal<DateFormat>() {
         protected synchronized DateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         }
     };
 
-    public Iso8601Date(String dateStr) {
+    public Iso8601Date(final String dateStr) {
         super(DateParser.parse(dateStr).getTime());
     }
 
-    public Iso8601Date(Date date) {
+    public Iso8601Date(final Date date) {
         super(date.getTime());
     }
 
