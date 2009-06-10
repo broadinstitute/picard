@@ -57,7 +57,7 @@ class BAMFileReader
     // If true, all SAMRecords are fully decoded as they are read.
     private final boolean eagerDecode;
     // For error-checking.
-    private ValidationStringency mValidationStringency;
+    private ValidationStringency mValidationStringency = SAMFileReader.ValidationStringency.SILENT;
 
     /**
      * Prepare to read BAM from a stream (not seekable)

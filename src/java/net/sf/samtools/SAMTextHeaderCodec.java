@@ -349,6 +349,9 @@ public class SAMTextHeaderCodec {
     }
 
     public void setValidationStringency(final SAMFileReader.ValidationStringency validationStringency) {
+        if (validationStringency == null) {
+            throw new IllegalArgumentException("null validationStringency not allowed");
+        }
         this.validationStringency = validationStringency;
     }
 }
