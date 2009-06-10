@@ -28,6 +28,8 @@ import java.util.List;
 import net.sf.picard.PicardException;
 import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.AlignmentBlock;
 
 public class SequenceUtil {
     /** Byte typed variables for all normal bases. */
@@ -201,5 +203,25 @@ public class SequenceUtil {
             return "";
         }
         return Integer.toString(clipLength) + "S";
+    }
+
+    /** Calculates the number of mismatches between the read and the reference sequence provided. */
+    public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
+        int mismatches = 0;
+        final byte[] readBases = read.getReadBases();
+
+        for (AlignmentBlock block : read.getAlignmentBlocks()) {
+            final int readBlockStart = block.getReadStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1;
+            final int length = block.getLength();
+
+            for (int i=0; i<length; ++i) {
+                if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                    ++mismatches;
+                }
+            }
+        }
+
+        return mismatches;
     }
 }
