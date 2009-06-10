@@ -187,9 +187,7 @@ public class SortingLongCollection {
         this.cleanedUp = true;
         this.ramValues = null;
 
-        for (final File f : this.files) {
-            f.delete();
-        }
+        IOUtil.deleteFiles(this.files);
     }
 
 
@@ -270,7 +268,7 @@ public class SortingLongCollection {
         }
 
         void close() {
-            file.delete();
+            IOUtil.deleteFiles(file);
             longBuffer = null;
         }
     }

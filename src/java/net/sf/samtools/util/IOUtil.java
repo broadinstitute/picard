@@ -23,8 +23,10 @@
  */
 package net.sf.samtools.util;
 
+
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.File;
 
 /**
  * Miscellaneous stateless static IO-oriented methods.
@@ -40,6 +42,26 @@ public class IOUtil {
             return (BufferedInputStream) stream;
         } else {
             return new BufferedInputStream(stream);
+        }
+    }
+
+    /**
+     * Delete a list of files, and write a warning message if one could not be deleted.
+     * @param files Files to be deleted.
+     */
+    public static void deleteFiles(final File... files) {
+        for (final File f : files) {
+            if (!f.delete()) {
+                System.err.println("Could not delete file " + f);
+            }
+        }
+    }
+
+    public static void deleteFiles(final Iterable<File> files) {
+        for (final File f : files) {
+            if (!f.delete()) {
+                System.err.println("Could not delete file " + f);
+            }
         }
     }
 }

@@ -344,5 +344,25 @@ class BAMFileIndex
             }
             return result;
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            final Chunk chunk = (Chunk) o;
+
+            if (mChunkEnd != chunk.mChunkEnd) return false;
+            if (mChunkStart != chunk.mChunkStart) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = (int) (mChunkStart ^ (mChunkStart >>> 32));
+            result = 31 * result + (int) (mChunkEnd ^ (mChunkEnd >>> 32));
+            return result;
+        }
     }
 }

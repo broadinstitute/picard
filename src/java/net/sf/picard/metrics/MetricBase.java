@@ -42,16 +42,16 @@ public class MetricBase {
      * @param o an instance to compare to
      * @return true if they are equal, false otherwise
      */
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o == null) return false;
         if (o.getClass() != getClass()) return false;
 
         // Loop through all the fields and check that they are either
         // null in both objects or equal in both objects
-        for (Field f : getClass().getFields()) {
+        for (final Field f : getClass().getFields()) {
             try {
-                Object lhs = f.get(this);
-                Object rhs = f.get(o);
+                final Object lhs = f.get(this);
+                final Object rhs = f.get(o);
 
                 if (lhs == null) {
                     if (rhs == null) {
@@ -79,12 +79,24 @@ public class MetricBase {
         return true;
     }
 
+    public int hashCode() {
+        int result = 0;
+        for (final Field f : getClass().getFields()) {
+            try {
+                result = 31 * result + f.get(this).hashCode();
+            } catch (IllegalAccessException e) {
+                throw new PicardException("Could not read field " + f.getName() + " from a " + getClass().getSimpleName());
+            }
+        }
+        return result;
+    }
+
     /** Converts the metric class to a human readable string. */
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
-        FormatUtil formatter = new FormatUtil();
+        final StringBuilder buffer = new StringBuilder();
+        final FormatUtil formatter = new FormatUtil();
 
-        for (Field f : getClass().getFields()) {
+        for (final Field f : getClass().getFields()) {
             try {
                 buffer.append(f.getName());
                 buffer.append("\t");

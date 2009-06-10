@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.picard.util.CloserUtil;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -44,7 +46,7 @@ public class SortingCollection<T>
      * Client must implement this class, which defines the way in which records are written to and
      * read from file.
      */
-    public interface Codec<T> {
+    public interface Codec<T> extends Cloneable {
         /**
          * Where to write encoded output
          * @param os
@@ -227,9 +229,7 @@ public class SortingCollection<T>
         this.iterationStarted = true;
         this.cleanedUp = true;
 
-        for (final File f : this.files) {
-            f.delete();
-        }
+        IOUtil.deleteFiles(this.files);
     }
 
     /**
@@ -409,8 +409,7 @@ public class SortingCollection<T>
         }
 
         public void close() {
-            try { this.is.close(); }
-            catch (IOException e) { }
+            CloserUtil.close(this.is);
         }
     }
 

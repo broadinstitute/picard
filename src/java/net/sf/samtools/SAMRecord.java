@@ -286,7 +286,7 @@ public class SAMRecord implements Cloneable
     }
 
     public void setReferenceName(final String value) {
-        mReferenceName = value;
+        mReferenceName = value.intern();
         mReferenceIndex = null;
     }
 
@@ -316,7 +316,7 @@ public class SAMRecord implements Cloneable
         if (mReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName().intern();
         }
     }
 
@@ -328,7 +328,7 @@ public class SAMRecord implements Cloneable
     }
 
     public void setMateReferenceName(final String mateReferenceName) {
-        this.mMateReferenceName = mateReferenceName;
+        this.mMateReferenceName = mateReferenceName.intern();
         mMateReferenceIndex = null;
     }
 
@@ -358,7 +358,7 @@ public class SAMRecord implements Cloneable
         if (mMateReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName().intern();
         }
     }
 
@@ -1038,29 +1038,32 @@ public class SAMRecord implements Cloneable
         if (!(o instanceof SAMRecord)) return false;
 
         final SAMRecord samRecord = (SAMRecord) o;
-        eagerDecode();
-        samRecord.eagerDecode();
 
+        // First check all the elements that do not require decoding
         if (mAlignmentStart != samRecord.mAlignmentStart) return false;
         if (mFlags != samRecord.mFlags) return false;
         if (mInferredInsertSize != samRecord.mInferredInsertSize) return false;
         if (mMappingQuality != samRecord.mMappingQuality) return false;
         if (mMateAlignmentStart != samRecord.mMateAlignmentStart) return false;
+        if (mIndexingBin != null ? !mIndexingBin.equals(samRecord.mIndexingBin) : samRecord.mIndexingBin != null)
+            return false;
+        if (mMateReferenceIndex != null ? !mMateReferenceIndex.equals(samRecord.mMateReferenceIndex) : samRecord.mMateReferenceIndex != null)
+            return false;
+        if (mReferenceIndex != null ? !mReferenceIndex.equals(samRecord.mReferenceIndex) : samRecord.mReferenceIndex != null)
+            return false;
+
+        eagerDecode();
+        samRecord.eagerDecode();
+
         if (mAttributes != null ? !mAttributes.equals(samRecord.mAttributes) : samRecord.mAttributes != null)
             return false;
         if (!Arrays.equals(mBaseQualities, samRecord.mBaseQualities)) return false;
         if (mCigar != null ? !mCigar.equals(samRecord.mCigar) : samRecord.mCigar != null)
             return false;
-        if (mIndexingBin != null ? !mIndexingBin.equals(samRecord.mIndexingBin) : samRecord.mIndexingBin != null)
-            return false;
-        if (mMateReferenceIndex != null ? !mMateReferenceIndex.equals(samRecord.mMateReferenceIndex) : samRecord.mMateReferenceIndex != null)
-            return false;
         if (mMateReferenceName != null ? !mMateReferenceName.equals(samRecord.mMateReferenceName) : samRecord.mMateReferenceName != null)
             return false;
         if (!Arrays.equals(mReadBases, samRecord.mReadBases)) return false;
         if (mReadName != null ? !mReadName.equals(samRecord.mReadName) : samRecord.mReadName != null) return false;
-        if (mReferenceIndex != null ? !mReferenceIndex.equals(samRecord.mReferenceIndex) : samRecord.mReferenceIndex != null)
-            return false;
         if (mReferenceName != null ? !mReferenceName.equals(samRecord.mReferenceName) : samRecord.mReferenceName != null)
             return false;
 

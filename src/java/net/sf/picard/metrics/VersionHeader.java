@@ -71,4 +71,11 @@ public class VersionHeader implements Header {
 
         return true;
     }
+
+    @Override
+    public int hashCode() {
+        int result = versionedItem != null ? versionedItem.hashCode() : 0;
+        result = 31 * result + (versionString != null ? versionString.hashCode() : 0);
+        return result;
+    }
 }

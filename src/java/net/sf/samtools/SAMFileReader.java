@@ -73,7 +73,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
          */
         SILENT;
 
-        public static ValidationStringency DEFAULT_STRINGENCY = STRICT;
+        public static final ValidationStringency DEFAULT_STRINGENCY = STRICT;
     }
 
     /**

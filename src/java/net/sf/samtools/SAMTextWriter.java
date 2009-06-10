@@ -83,7 +83,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
             out.write(alignment.getCigarString());
             out.write(FIELD_SEPARATOR);
 
-            // I think == is OK here.  If not, it isn't an error, just less efficient storage
+            //  == is OK here because these strings are interned
             if (alignment.getReferenceName() == alignment.getMateReferenceName() &&
                     SAMRecord.NO_ALIGNMENT_REFERENCE_NAME != alignment.getReferenceName()) {
                 out.write("=");

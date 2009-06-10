@@ -76,4 +76,17 @@ class ComparableSamRecordIterator extends PeekableIterator<SAMRecord> implements
         final SAMRecord record2 = that.peek();
         return comparator.compare(record, record2);
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        return compareTo((ComparableSamRecordIterator)o) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        throw new UnsupportedOperationException("ComparableSamRecordIterator should not be hashed because it can change value");
+    }
 }

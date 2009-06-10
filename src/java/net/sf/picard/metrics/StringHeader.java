@@ -64,4 +64,9 @@ public class StringHeader implements Header {
             return false;
         }
     }
+
+    @Override
+    public int hashCode() {
+        return value != null ? value.hashCode() : 0;
+    }
 }

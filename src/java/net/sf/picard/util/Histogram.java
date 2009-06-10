@@ -43,18 +43,18 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     public Histogram() { }
 
     /** Constructs a new Histogram with supplied bin and value labels. */
-    public Histogram(String binLabel, String valueLabel) {
+    public Histogram(final String binLabel, final String valueLabel) {
         this.binLabel = binLabel;
         this.valueLabel = valueLabel;
     }
 
     /** Copy constructor for a histogram. */
-    public Histogram(Histogram<K> in) {
+    public Histogram(final Histogram<K> in) {
         this.binLabel = in.binLabel;
         this.valueLabel = in.valueLabel;
         this.mean = in.mean;
 
-        for (Bin bin : in.values()) {
+        for (final Bin bin : in.values()) {
             increment(bin.id, bin.value);
         }
     }
@@ -65,7 +65,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         private double value = 0;
 
         /** Constructs a new bin with the given ID. */
-        private Bin(K id) { this.id = id; }
+        private Bin(final K id) { this.id = id; }
 
         /** Gets the ID of this bin. */
         public K getId() { return id; }
@@ -77,18 +77,28 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         public String toString() { return String.valueOf(this.value); }
 
         /** Checks the equality of the bin by ID and value. */
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            Bin bin = (Bin) o;
+            final Bin bin = (Bin) o;
 
             if (Double.compare(bin.value, value) != 0) return false;
             if (!id.equals(bin.id)) return false;
 
             return true;
         }
-        
+
+        @Override
+        public int hashCode() {
+            int result;
+            final long temp;
+            result = id.hashCode();
+            temp = value != +0.0d ? Double.doubleToLongBits(value) : 0L;
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            return result;
+        }
+
         public double getIdValue() {
             if (id instanceof Number) {
                 return ((Number) id).doubleValue();
@@ -99,19 +109,19 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     }
 
     /** Prefill the histogram with the supplied set of bins. */
-    public void prefillBins(K... ids) {
-        for (K id : ids) {
+    public void prefillBins(final K... ids) {
+        for (final K id : ids) {
             put(id, new Bin(id));
         }
     }
 
     /** Increments the value in the designated bin by 1. */
-    public void increment(K id) {
+    public void increment(final K id) {
         increment(id, 1d);
     }
 
     /** Increments the value in the designated bin by the supplied increment. */
-    public void increment(K id, double increment) {
+    public void increment(final K id, final double increment) {
         Bin bin = get(id);
         if (bin == null) {
             bin = new Bin(id);
@@ -123,13 +133,13 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     }
 
     public String getBinLabel() { return binLabel; }
-    public void setBinLabel(String binLabel) { this.binLabel = binLabel; }
+    public void setBinLabel(final String binLabel) { this.binLabel = binLabel; }
 
     public String getValueLabel() { return valueLabel; }
-    public void setValueLabel(String valueLabel) { this.valueLabel = valueLabel; }
+    public void setValueLabel(final String valueLabel) { this.valueLabel = valueLabel; }
 
     /** Checks that the labels and values in the two histograms are identical. */
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return o != null &&
                 (o instanceof Histogram) &&
                 ((Histogram) o).binLabel.equals(this.binLabel) &&
@@ -140,7 +150,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     public double getMean() {
         if (mean == null) {
             double total = 0;
-            for (Bin bin : values()) {
+            for (final Bin bin : values()) {
                 total += bin.getValue() * bin.getIdValue();
             }
     
@@ -152,7 +162,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     
     public double getStandardDeviation() {
         double total = 0;
-        for (Bin bin : values()) {
+        for (final Bin bin : values()) {
             total += bin.getValue() * bin.getIdValue() * bin.getIdValue();
         }
 
@@ -161,8 +171,8 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     
     public double getMedian() {
         double total = 0;
-        double halfCount = getCount() / 2;
-        for (Bin bin : values()) {
+        final double halfCount = getCount() / 2;
+        for (final Bin bin : values()) {
             total += bin.getValue();
             if (total >= halfCount) {
                 return bin.getIdValue();
@@ -175,7 +185,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     public double getMode() {
         Bin mode = null;
 
-        for (Bin bin : values()) {
+        for (final Bin bin : values()) {
             if (mode == null || mode.value < bin.value) {
                 mode = bin;
             }
@@ -194,7 +204,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     
     public double getCount() {
         double count = 0;
-        for (Bin bin : values()) {
+        for (final Bin bin : values()) {
             count += bin.value;
         }
 

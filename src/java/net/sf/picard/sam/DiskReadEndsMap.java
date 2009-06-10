@@ -131,7 +131,7 @@ class DiskReadEndsMap implements ReadEndsMap {
                 } finally {
                     CloserUtil.close(is);
                 }
-                file.delete();
+                net.sf.samtools.util.IOUtil.deleteFiles(file);
             }
         } catch (IOException e) {
             throw new PicardException("Error loading new map from disk.", e);

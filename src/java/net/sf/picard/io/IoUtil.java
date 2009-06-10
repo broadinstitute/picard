@@ -23,13 +23,13 @@
  */
 package net.sf.picard.io;
 
+import net.sf.picard.PicardException;
+
 import java.io.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-
-import net.sf.picard.PicardException;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * A class for utility methods that wrap or aggregate functionality in Java IO.
@@ -317,7 +317,7 @@ public class IoUtil {
                 deleteDirectoryTree(child);
             }
         }
-        fileOrDirectory.delete();
+        net.sf.samtools.util.IOUtil.deleteFiles(fileOrDirectory);
     }
 
     /**

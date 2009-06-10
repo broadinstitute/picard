@@ -367,6 +367,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     /** Checks that the headers, metrics and histogram are all equal. */
     @Override
     public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
         if (getClass() != o.getClass()) {
             return false;
         }
@@ -387,5 +390,13 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         }
 
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = headers.hashCode();
+        result = 31 * result + metrics.hashCode();
+        result = 31 * result + (histogram != null ? histogram.hashCode() : 0);
+        return result;
     }
 }
