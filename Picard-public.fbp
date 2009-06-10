@@ -1,0 +1,18 @@
+<Project filename="&lt;&lt;unnamed project&gt;&gt;" projectName="Picard-public">
+  <Jar>/Users/alecw/Documents/Picard/Picard-public/classes</Jar>
+  <SrcDir>/Users/alecw/Documents/Picard/Picard-public/src/java</SrcDir>
+  <SuppressionFilter>
+    <LastVersion value="-1" relOp="NEQ"/>
+    <Designation designation="NOT_A_BUG"/>
+    <And>
+      <Priority value="2"/>
+      <Bug category="MALICIOUS_CODE"/>
+      <Bug code="EI"/>
+    </And>
+    <And>
+      <Priority value="2"/>
+      <Bug category="MALICIOUS_CODE"/>
+      <Bug code="EI2"/>
+    </And>
+  </SuppressionFilter>
+</Project>
