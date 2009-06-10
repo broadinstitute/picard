@@ -63,6 +63,13 @@ public class CloserUtil {
             } else if (o instanceof CloseableIterator) {
                 ((CloseableIterator)o).close();
             }
+            else {
+                try {
+                    java.lang.reflect.Method m = o.getClass().getMethod("close");
+                    m.invoke(o);
+                }
+                catch (Exception e) { /** Ignore */ }
+            }
         }
     }
 }
