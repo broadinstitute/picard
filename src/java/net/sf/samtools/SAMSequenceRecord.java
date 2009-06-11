@@ -30,7 +30,7 @@ import java.math.BigInteger;
 /**
  * Header information about a reference sequence.  Corresponds to @SQ header record in SAM text header.
  */
-public class SAMSequenceRecord extends AbstractSAMHeaderRecord
+public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Cloneable
 {
     private String mSequenceName = null;
     private int mSequenceIndex = -1;
@@ -166,6 +166,15 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord
 
     Set<String> getStandardTags() {
         return STANDARD_TAGS;
+    }
+
+    public final SAMSequenceRecord clone() {
+        SAMSequenceRecord ret = new SAMSequenceRecord(this.mSequenceName, this.mSequenceLength);
+        ret.mSequenceIndex = this.mSequenceIndex;
+        for (Map.Entry<String, Object> entry : this.getAttributes()) {
+            ret.setAttribute(entry.getKey(), entry.getValue());
+        }
+        return ret;
     }
 }
 

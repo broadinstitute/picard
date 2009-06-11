@@ -239,7 +239,7 @@ public class SamFileHeaderMerger {
                 resultingDict.addAll(loc, holder);
                 holder.clear();
             } else {
-                holder.add(record);
+                holder.add(record.clone());
             }
         }
         if (holder.size() != 0) {
