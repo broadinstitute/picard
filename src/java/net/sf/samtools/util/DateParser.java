@@ -5,7 +5,7 @@
 /*
 W3C IPR SOFTWARE NOTICE
 
-Copyright © 1995-1998 World Wide Web Consortium, (Massachusetts Institute of
+Copyright 1995-1998 World Wide Web Consortium, (Massachusetts Institute of
 Technology, Institut National de Recherche en Informatique et en
 Automatique, Keio University). All Rights Reserved.
 http://www.w3.org/Consortium/Legal/
@@ -27,7 +27,7 @@ that you make:
   2. Any pre-existing intellectual property disclaimers, notices, or terms
      and conditions. If none exist, a short notice of the following form
      (hypertext is preferred, text is permitted) should be used within the
-     body of any redistributed or derivative code: "Copyright © World Wide
+     body of any redistributed or derivative code: "Copyright World Wide
      Web Consortium, (Massachusetts Institute of Technology, Institut
      National de Recherche en Informatique et en Automatique, Keio
      University). All Rights Reserved. http://www.w3.org/Consortium/Legal/"
@@ -86,7 +86,7 @@ import java.util.TimeZone;
  * Date parser for ISO 8601 format
  * http://www.w3.org/TR/1998/NOTE-datetime-19980827
  * @version $Revision: 1.3 $
- * @author  Benoît Mahé (bmahe@w3.org)
+ * @author  bmahe@w3.org
  */
 public class DateParser {
 
