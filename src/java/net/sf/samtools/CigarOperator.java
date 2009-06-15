@@ -27,14 +27,17 @@ package net.sf.samtools;
  * The operators that can appear in a cigar string, and information about their disk representations.
  */
 public enum CigarOperator {
-    M,
-    I,
-    D,
-    N,
-    S,
-    H,
-    P,
-    C; // I don't know what C means, but it is in the BAM spec
+    M(true, true),
+    I(true, false),
+    D(false, true),
+    N(false, true),
+    S(true, false),
+    H(false, false),
+    P(false, false),
+    C(false, false); // I don't know what C means, but it is in the BAM spec
+
+    private boolean consumesReadBases;
+    private boolean consumesReferenceBases;
 
     // Readable synonyms of the above enums
     public static final CigarOperator MATCH_OR_MISMATCH = M;
@@ -55,6 +58,16 @@ public enum CigarOperator {
     private static final byte OP_P = 6;
     private static final byte OP_C = 7;
 
+    CigarOperator(boolean consumesReadBases, boolean consumesReferenceBases) {
+        this.consumesReadBases = consumesReadBases;
+        this.consumesReferenceBases = consumesReferenceBases;
+    }
+
+    /** If true, represents that this cigar operator "consumes" bases from the read bases. */
+    public boolean consumesReadBases() { return consumesReadBases; }
+
+    /** If true, represents that this cigar operator "consumes" bases from the reference sequence. */
+    public boolean consumesReferenceBases() { return consumesReferenceBases; }
 
     /**
      * @param b CIGAR operator in character form as appears in a text CIGAR string
