@@ -159,6 +159,14 @@ class BAMRecord
     }
 
     @Override
+    public void setCigarString(final String value) {
+        super.setCigarString(value);
+        mBinaryDataStale = true;
+        mCigarLengthValid = false;
+        mCigarDecoded = true;
+    }
+
+    @Override
     public void setReadBases(final byte[] value) {
         super.setReadBases(value);
         mBinaryDataStale = true;
