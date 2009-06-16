@@ -116,7 +116,7 @@ public class DuplicationMetrics extends MetricBase {
      * @return a number z <= x that estimates if you had pairs*x as your sequencing then you
      *         would observe uniquePairs*z unique pairs.
      */
-    private double estimateRoi(long estimatedLibrarySize, double x, long pairs, long uniquePairs) {
+    public static double estimateRoi(long estimatedLibrarySize, double x, long pairs, long uniquePairs) {
         return estimatedLibrarySize * ( 1 - Math.exp(-(x*pairs)/estimatedLibrarySize) ) / uniquePairs;
     }
 
