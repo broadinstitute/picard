@@ -32,5 +32,6 @@ public class ReservedTagConstants {
     public static final String READ_GROUP_ID = SAMTag.RG.name(); // Specified in the SAM spec doc
     public static final String PROGRAM_GROUP_ID =  SAMTag.PG.name(); // Specified in the SAM spec doc
     public static final String XN = "XN";    // Present and set to 1 if a read is a noise read
-    public static final String NM = "NM";    // Number of nucleotide differences (Specified in the SAM spec doc)
+    public static final String NM = SAMTag.NM.name();    // Number of nucleotide differences (Specified in the SAM spec doc)
+    public static final String XQ = "XQ";   // The sum of the mismatched qualities.
 }
