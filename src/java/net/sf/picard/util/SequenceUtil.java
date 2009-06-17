@@ -26,10 +26,7 @@ package net.sf.picard.util;
 import java.util.List;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.SAMSequenceRecord;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.AlignmentBlock;
+import net.sf.samtools.*;
 
 public class SequenceUtil {
     /** Byte typed variables for all normal bases. */
@@ -208,6 +205,7 @@ public class SequenceUtil {
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
         int mismatches = 0;
+
         final byte[] readBases = read.getReadBases();
 
         for (AlignmentBlock block : read.getAlignmentBlocks()) {
@@ -221,7 +219,44 @@ public class SequenceUtil {
                 }
             }
         }
-
         return mismatches;
+    }
+
+    /**
+     * Calculates the sum of qualities for mismatched bases in the read.
+     */
+    public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases) {
+        int qualities = 0;
+
+        final byte[] readBases = read.getReadBases();
+        final byte[] readQualities = read.getBaseQualities();
+
+        for (AlignmentBlock block : read.getAlignmentBlocks()) {
+            final int readBlockStart = block.getReadStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1;
+            final int length = block.getLength();
+
+            for (int i=0; i<length; ++i) {
+                if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                    qualities += readQualities[readBlockStart+i];
+                }
+            }
+        }
+
+        return qualities;
+    }
+
+    /**
+     * Calculates the for the predefined NM tag from the SAM spec. To the result of
+     * countMismatches() it adds 1 for each indel.
+     */
+    public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases) {
+        int samNm = countMismatches(read, referenceBases);
+        for (CigarElement el : read.getCigar().getCigarElements()) {
+            if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
+                samNm += el.getLength();
+            }
+        }
+        return samNm;
     }
 }
