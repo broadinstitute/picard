@@ -109,10 +109,16 @@ public class FormatUtil {
     public long parseLong(String value) { return Long.parseLong(value); }
 
     /** Parses a String into a float. */
-    public float parseFloat(String value) { return Float.parseFloat(value); }
+    public float parseFloat(String value) {
+        if ("?".equals(value)) return Float.NaN;
+        else return Float.parseFloat(value);
+    }
 
     /** Parses a String into a double. */
-    public double parseDouble(String value) { return Double.parseDouble(value); }
+    public double parseDouble(String value) {
+        if ("?".equals(value)) return Double.NaN;        
+        else return Double.parseDouble(value);
+    }
 
     /** Parses a String into an Enum of the given type. */
     public <E extends Enum> E parseEnum(String value, Class<E> type) { return (E) Enum.valueOf(type, value); }
