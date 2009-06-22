@@ -145,7 +145,7 @@
             description="Compile and run a single test.">
         <taskdef resource="testngtasks" classpathref="classpath"/>
         <fail unless="name" message="Please provide input test: -Dname=..." />
-        <testng suitename="cnv-single-test" classpathref="classpath" outputdir="${test.output}">
+        <testng suitename="samtools-single-test" classpathref="classpath" outputdir="${test.output}">
             <jvmarg line="-Xmx512M"/>
             <classpath>
                 <pathelement path="${classes}"/>

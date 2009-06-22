@@ -29,8 +29,9 @@ import org.testng.Assert;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class BlockCompressedOutputStreamTest {
 
@@ -59,10 +60,34 @@ public class BlockCompressedOutputStreamTest {
         final BlockCompressedInputStream bcis = new BlockCompressedInputStream(f);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(bcis));
         String line;
-        // I don't understand why I need to check ready(), but waiting for null return
-        // causes an exception.
-        for(int i = 0; reader.ready() && (line = reader.readLine()) != null; ++i) {
+        for(int i = 0; (line = reader.readLine()) != null; ++i) {
             Assert.assertEquals(line + "\n", linesWritten.get(i));
         }
+    }
+
+    @Test
+    public void testOverflow() throws Exception {
+        final File f = File.createTempFile("BCOST.", ".gz");
+        f.deleteOnExit();
+        final List<String> linesWritten = new ArrayList<String>();
+        System.out.println("Creating file " + f);
+        final BlockCompressedOutputStream bcos = new BlockCompressedOutputStream(f);
+        Random r = new Random(15555);
+        final int INPUT_SIZE = 64 * 1024;
+        byte[] input = new byte[INPUT_SIZE];
+        r.nextBytes(input);
+        bcos.write(input);
+        bcos.close();
+
+        final BlockCompressedInputStream bcis = new BlockCompressedInputStream(f);
+        byte[] output = new byte[INPUT_SIZE];
+        int len;
+        int i = 0;
+        while ((len = bcis.read(output, 0, output.length)) != -1) {
+            for (int j = 0; j < len; j++) {
+               Assert.assertEquals(output[j], input[i++]);
+            }
+        }
+        Assert.assertEquals(i, INPUT_SIZE);
     }
 }

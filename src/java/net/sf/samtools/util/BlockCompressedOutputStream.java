@@ -167,10 +167,11 @@ public class BlockCompressedOutputStream
     @Override
     public void close() throws IOException {
         flush();
-        if (numberOfThrottleBacks > 0) {
-            System.err.println("In BlockCompressedOutputStream, had to throttle back " + numberOfThrottleBacks +
-            " times for file " + codec.getOutputFileName());
-        }
+        // For debugging...
+        // if (numberOfThrottleBacks > 0) {
+        //     System.err.println("In BlockCompressedOutputStream, had to throttle back " + numberOfThrottleBacks +
+        //                        " times for file " + codec.getOutputFileName());
+        // }
         codec.close();
     }
 
@@ -207,7 +208,7 @@ public class BlockCompressedOutputStream
 
             // If it didn't all fit in compressedBuffer.length, reduce the amount to
             // be compressed and try again.
-            if (deflater.getBytesRead() < bytesToCompress) {
+            if (!deflater.finished()) {
                 bytesToCompress -= BlockCompressedStreamConstants.UNCOMPRESSED_THROTTLE_AMOUNT;
                 ++numberOfThrottleBacks;
                 assert(bytesToCompress > 0);
