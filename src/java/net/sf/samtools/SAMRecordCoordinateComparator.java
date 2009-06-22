@@ -28,10 +28,6 @@ package net.sf.samtools;
  * the order of sequences in the header defines the major sort order.
  */
 public class SAMRecordCoordinateComparator implements SAMRecordComparator {
-    private final SAMFileHeader header;
-    public SAMRecordCoordinateComparator(final SAMFileHeader header) {
-        this.header = header;
-    }
     public int compare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
         final int cmp = fileOrderCompare(samRecord1, samRecord2);
         if (cmp != 0) {
@@ -43,9 +39,6 @@ public class SAMRecordCoordinateComparator implements SAMRecordComparator {
         else {
             return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
         }
-
-
-
     }
 
     /**

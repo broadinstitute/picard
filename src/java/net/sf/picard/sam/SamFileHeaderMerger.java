@@ -59,6 +59,10 @@ public class SamFileHeaderMerger {
     private final Map<SAMFileReader, Map<Integer, Integer>> samSeqDictionaryIdTranslation =
             new HashMap<SAMFileReader, Map<Integer, Integer>>();
 
+    // We don't always have access to the SAMFileReader in order to find the right mapping,
+    // so also store the mapping using theSAMFileHeader
+    private final Map<SAMFileHeader,  Map<Integer, Integer>> samSeqDictionaryIdTranslationViaHeader =
+            new HashMap<SAMFileHeader, Map<Integer, Integer>>();
 
     //Letters to construct new ids from a counter
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -267,6 +271,7 @@ public class SamFileHeaderMerger {
                 seqMap.put(rec.getSequenceIndex(), resultingDictStr.indexOf(rec.getSequenceName()));
             }
             this.samSeqDictionaryIdTranslation.put(reader, seqMap);
+            this.samSeqDictionaryIdTranslationViaHeader.put(reader.getFileHeader(), seqMap);
         }
     }
 
@@ -404,6 +409,27 @@ public class SamFileHeaderMerger {
         final Integer newIndex = mapping.get(oldReferenceSequenceIndex);
         if (newIndex == null) {
             throw new PicardException("No mapping for reference index " + oldReferenceSequenceIndex + " from reader: " + reader);
+        }
+
+        return newIndex;
+    }
+
+    /**
+     * Another mechanism for getting the new sequence index, for situations in which the reader is not available.
+     * Note that if the SAMRecord has already had its header replaced with the merged header, this won't work.
+     * @param header The original header for the input record in question.
+     * @param oldReferenceSequenceIndex The original sequence index.
+     * @return the new index value that is compatible with the merged sequence index.
+     */
+    public Integer getMergedSequenceIndex(final SAMFileHeader header, Integer oldReferenceSequenceIndex) {
+        final Map<Integer, Integer> mapping = this.samSeqDictionaryIdTranslationViaHeader.get(header);
+        if (mapping == null) {
+            throw new PicardException("No sequence dictionary mapping available for header: " + header);
+        }
+
+        final Integer newIndex = mapping.get(oldReferenceSequenceIndex);
+        if (newIndex == null) {
+            throw new PicardException("No mapping for reference index " + oldReferenceSequenceIndex + " from header: " + header);
         }
 
         return newIndex;

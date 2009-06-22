@@ -140,7 +140,7 @@ public class SamFileValidator {
         this.sortOrder = fileHeader.getSortOrder();
         switch (this.sortOrder) {
         case coordinate:
-            this.recordComparator = new SAMRecordCoordinateComparator(fileHeader);
+            this.recordComparator = new SAMRecordCoordinateComparator();
             break;
         case queryname:
             this.recordComparator = new SAMRecordQueryNameComparator();

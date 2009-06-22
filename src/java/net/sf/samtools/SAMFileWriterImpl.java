@@ -95,7 +95,7 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
     private SAMRecordComparator makeComparator() {
         switch (sortOrder) {
             case coordinate:
-                return new SAMRecordCoordinateComparator(header);
+                return new SAMRecordCoordinateComparator();
             case queryname:
                 return new SAMRecordQueryNameComparator();
             case unsorted:

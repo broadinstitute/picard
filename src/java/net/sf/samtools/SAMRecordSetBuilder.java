@@ -87,7 +87,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
             if (sortOrder == SAMFileHeader.SortOrder.queryname) {
                 comparator = new SAMRecordQueryNameComparator();
             } else {
-                comparator = new SAMRecordCoordinateComparator(header);
+                comparator = new SAMRecordCoordinateComparator();
             }
             this.records = new TreeSet<SAMRecord>(comparator);
         } else {

@@ -139,27 +139,61 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
                 }
             };
         }
+        if (samHeaderMerger.hasMergedSequenceDictionary() && sortOrder.equals(SAMFileHeader.SortOrder.coordinate)) {
+            return new MergedSequenceDictionaryCoordinateOrderComparator();
+        }
 
         // Otherwise try and figure out what kind of comparator to return and build it
         final Class<? extends SAMRecordComparator> type = this.sortOrder.getComparator();
 
         try {
-            final Constructor<? extends SAMRecordComparator> ctor = type.getConstructor(SAMFileHeader.class);
-            return ctor.newInstance(this.samHeaderMerger.getMergedHeader());
+            final Constructor<? extends SAMRecordComparator> ctor = type.getConstructor();
+            return ctor.newInstance();
         }
         catch (Exception e) {
-            try {
-                final Constructor<? extends SAMRecordComparator> ctor = type.getConstructor();
-                return ctor.newInstance();
-            }
-            catch (Exception e2) {
-                throw new PicardException("Could not instantiate a comparator for sort order: " + this.sortOrder, e2);
-            }
+            throw new PicardException("Could not instantiate a comparator for sort order: " + this.sortOrder, e);
         }
     }
 
     /** Returns the merged header that the merging iterator is working from. */
     public SAMFileHeader getMergedHeader() {
         return this.samHeaderMerger.getMergedHeader();
+    }
+
+    /**
+     * Ugh.  Basically does a regular coordinate compare, but looks up the sequence indices in the merged
+     * sequence dictionary.  I hate the fact that this extends SAMRecordCoordinateComparator, but it avoids
+     * more copy & paste.
+     */
+    private class MergedSequenceDictionaryCoordinateOrderComparator extends SAMRecordCoordinateComparator {
+
+        public int fileOrderCompare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
+            final int referenceIndex1 = getReferenceIndex(samRecord1);
+            final int referenceIndex2 = getReferenceIndex(samRecord2);
+            if (referenceIndex1 != referenceIndex2) {
+                if (referenceIndex1 == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                    return 1;
+                } else if (referenceIndex2 == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                    return -1;
+                } else {
+                    return referenceIndex1 - referenceIndex2;
+                }
+            }
+            if (referenceIndex1 == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                // Both are unmapped.
+                return 0;
+            }
+            return samRecord1.getAlignmentStart() - samRecord2.getAlignmentStart();
+        }
+
+        private int getReferenceIndex(final SAMRecord samRecord) {
+            if (samRecord.getReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                return samHeaderMerger.getMergedSequenceIndex(samRecord.getHeader(), samRecord.getReferenceIndex());
+            }
+            if (samRecord.getMateReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+                return samHeaderMerger.getMergedSequenceIndex(samRecord.getHeader(), samRecord.getMateReferenceIndex());
+            }
+            return SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX;
+        }
     }
 }
