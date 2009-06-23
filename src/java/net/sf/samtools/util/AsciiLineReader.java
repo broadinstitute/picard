@@ -166,7 +166,7 @@ public class AsciiLineReader implements LineReader {
     /**
      * Peek ahead one character, filling from the underlying stream if neccessary.
      * 
-     * @return
+     * @return peeked character.
      * @throws java.io.IOException
      */
     public int peek(){

@@ -34,7 +34,7 @@ public interface SAMRecordComparator extends Comparator<SAMRecord> {
      * Less stringent compare method than the regular compare.  If the two records
      * are equal enough that their ordering in a sorted SAM file would be arbitrary,
      * this method returns 0.
-     * @return
+     * @return negative if samRecord1 < samRecord2,  0 if equal, else positive
      */
     public int fileOrderCompare(SAMRecord samRecord1, SAMRecord samRecord2);
 }

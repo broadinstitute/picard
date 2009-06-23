@@ -53,7 +53,7 @@ public class SAMRecordQueryNameComparator implements SAMRecordComparator {
      * are equal enough that their ordering in a sorted SAM file would be arbitrary,
      * this method returns 0.
      *
-     * @return
+     * @return negative if samRecord1 < samRecord2,  0 if equal, else positive
      */
     public int fileOrderCompare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
         return samRecord1.getReadName().compareTo(samRecord2.getReadName());
