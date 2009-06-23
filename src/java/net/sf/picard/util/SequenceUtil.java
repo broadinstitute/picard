@@ -41,38 +41,8 @@ public class SequenceUtil {
      */
     public static String reverseComplement(final String sequenceData) {
         final byte[] bases = net.sf.samtools.util.StringUtil.stringToBytes(sequenceData);
-        reverseComplement(bases);
+        SAMRecordUtil.reverseComplement(bases);
         return net.sf.samtools.util.StringUtil.bytesToString(bases);
-    }
-
-    /** Returns the complement of a single byte. */
-    public static byte complement(final byte b) {
-        switch (b) {
-            case a: return t;
-            case c: return g;
-            case g: return c;
-            case t: return a;
-            case A: return T;
-            case C: return G;
-            case G: return C;
-            case T: return A;
-            default: return b;
-        }
-    }
-
-    /** Reverses and complements the bases in place. */
-    public static void reverseComplement(final byte[] bases) {
-        final int lastIndex = bases.length - 1;
-
-        int i, j;
-        for (i=0, j=lastIndex; i<j; ++i, --j) {
-            final byte tmp = complement(bases[i]);
-            bases[i] = complement(bases[j]);
-            bases[j] = tmp;
-        }
-        if (bases.length % 2 == 1) {
-            bases[i] = complement(bases[i]);
-        }
     }
 
     /** Attempts to efficiently compare two bases stored as bytes for equality. */
