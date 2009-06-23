@@ -53,6 +53,7 @@
         <delete dir="${test.output}"/>
         <delete  dir="${dist}"/>
         <delete  dir="${command_tmp}"/>
+        <delete  dir="javadoc"/>
     </target>
 
 <!-- COMPILE -->
@@ -177,7 +178,7 @@
         <javadoc
            sourcepath="${src}"
            destdir="javadoc"
-           packagenames="net.sf.samtools.*"
+           packagenames="net.sf.samtools.*, net.sf.picard.*"
            windowtitle="SAM JDK API Documentation"
            doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
            author="true"
