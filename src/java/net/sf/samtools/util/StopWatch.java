@@ -45,6 +45,11 @@ public class StopWatch {
         this.running = false;
     }
 
+    public void reset() {
+        stop();
+        elapsedTime = 0;
+        startTime = 0;
+    }
 
     /**
      * Returns the cumulative time between all the start() and stop() calls made to this object.  If the
