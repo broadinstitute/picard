@@ -24,6 +24,7 @@
 package net.sf.picard.util;
 
 import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.CloserUtil;
 
 import java.util.Iterator;
 

@@ -32,8 +32,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.util.CloserUtil;
 import net.sf.picard.PicardException;
-import net.sf.picard.util.CloserUtil;
 
 /**
  * Annotation-driven utility for parsing command-line arguments, checking for errors, and producing usage message.

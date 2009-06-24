@@ -24,7 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.util.CloserUtil;
+import net.sf.samtools.util.CloserUtil;
 
 import java.io.InputStream;
 import java.io.IOException;

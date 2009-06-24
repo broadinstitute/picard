@@ -23,7 +23,7 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.picard.util.CloserUtil;
+import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
 import java.lang.reflect.Array;

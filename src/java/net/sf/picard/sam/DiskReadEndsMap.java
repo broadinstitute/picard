@@ -25,7 +25,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.PicardException;
-import net.sf.picard.util.CloserUtil;
+import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
 import java.util.Map;

@@ -29,17 +29,20 @@ import net.sf.picard.util.SequenceUtil;
  * @author alecw@broadinstitute.org
  */
 public class SAMRecordUtil {
+    /** Byte typed variables for all normal bases. */
+    private static final byte a='a', c='c', g='g', t='t', A='A', C='C', G='G', T='T';
+
     /** Returns the complement of a single byte. */
     public static byte complement(final byte b) {
         switch (b) {
-            case SequenceUtil.a: return SequenceUtil.t;
-            case SequenceUtil.c: return SequenceUtil.g;
-            case SequenceUtil.g: return SequenceUtil.c;
-            case SequenceUtil.t: return SequenceUtil.a;
-            case SequenceUtil.A: return SequenceUtil.T;
-            case SequenceUtil.C: return SequenceUtil.G;
-            case SequenceUtil.G: return SequenceUtil.C;
-            case SequenceUtil.T: return SequenceUtil.A;
+            case a: return t;
+            case c: return g;
+            case g: return c;
+            case t: return a;
+            case A: return T;
+            case C: return G;
+            case G: return C;
+            case T: return A;
             default: return b;
         }
     }

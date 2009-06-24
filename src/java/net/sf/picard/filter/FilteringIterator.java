@@ -23,7 +23,7 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.picard.util.CloserUtil;
+import net.sf.samtools.util.CloserUtil;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
