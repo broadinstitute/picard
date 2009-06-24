@@ -70,6 +70,11 @@ class TextTagCodec {
         }
         if (tagType == 'H') {
             value = SAMUtils.bytesToHexString((byte[])value);
+        } else if (tagType == 'i') {
+            final long longVal = ((Number) value).longValue();
+            if (longVal > Integer.MAX_VALUE || longVal < Integer.MIN_VALUE) {
+                throw new SAMFormatException("Value for tag " + tagName + " cannot be stored in an Integer: " + longVal);
+            }
         }
         sb.append(tagType);
         sb.append(':');

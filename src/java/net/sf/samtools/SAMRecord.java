@@ -774,6 +774,69 @@ public class SAMRecord implements Cloneable
         return getAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag));
     }
 
+    /**
+     * Get the tag value and attempt to coerce it into the requested type.
+     * @param tag The requested tag.
+     * @return The value of a tag, converted into an Integer if possible.
+     * @throws RuntimeException If the value is not an integer type, or will not fit in an Integer.
+     */
+    public final Integer getIntegerAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val instanceof Integer) {
+            return (Integer)val;
+        }
+        if (!(val instanceof Number)) {
+            throw new RuntimeException("Value for tag " + tag + " is not Number: " + val.getClass());
+        }
+        final long longVal = ((Number)val).longValue();
+        if (longVal < Integer.MIN_VALUE || longVal > Integer.MAX_VALUE) {
+            throw new RuntimeException("Value for tag " + tag + " is not in Integer range: " + longVal);
+        }
+        return (int)longVal;
+    }
+
+    /**
+     * Get the tag value and attempt to coerce it into the requested type.
+     * @param tag The requested tag.
+     * @return The value of a tag, converted into a Short if possible.
+     * @throws RuntimeException If the value is not an integer type, or will not fit in a Short.
+     */
+    public final Short getShortAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val instanceof Short) {
+            return (Short)val;
+        }
+        if (!(val instanceof Number)) {
+            throw new RuntimeException("Value for tag " + tag + " is not Number: " + val.getClass());
+        }
+        final long longVal = ((Number)val).longValue();
+        if (longVal < Short.MIN_VALUE || longVal > Short.MAX_VALUE) {
+            throw new RuntimeException("Value for tag " + tag + " is not in Short range: " + longVal);
+        }
+        return (short)longVal;
+    }
+
+    /**
+     * Get the tag value and attempt to coerce it into the requested type.
+     * @param tag The requested tag.
+     * @return The value of a tag, converted into a Byte if possible.
+     * @throws RuntimeException If the value is not an integer type, or will not fit in a Byte.
+     */
+    public final Byte getByteAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val instanceof Byte) {
+            return (Byte)val;
+        }
+        if (!(val instanceof Number)) {
+            throw new RuntimeException("Value for tag " + tag + " is not Number: " + val.getClass());
+        }
+        final long longVal = ((Number)val).longValue();
+        if (longVal < Byte.MIN_VALUE || longVal > Byte.MAX_VALUE) {
+            throw new RuntimeException("Value for tag " + tag + " is not in Short range: " + longVal);
+        }
+        return (byte)longVal;
+    }
+
     protected Object getAttribute(final short tag) {
         if (mAttributes == null) {
             return null;
@@ -789,8 +852,14 @@ public class SAMRecord implements Cloneable
     /**
      * Set a named attribute onto the SAMRecord.  Passing a null value causes the attribute to be cleared.
      * @param tag two-character tag name.  See http://samtools.sourceforge.net/SAM1.pdf for standard and user-defined tags.
-     * @param value Supported types are String, Integer, Long (only to support unsigned 32-bit int), Float, byte[].
+     * @param value Supported types are String, Char, Integer, Float, byte[].
      * If value == null, tag is cleared.
+     *
+     * Byte and Short are allowed but discouraged.  If written to a SAM file, these will be converted to Integer,
+     * whereas if written to BAM, getAttribute() will return as Byte or Short, respectively.
+     *
+     * Long with value between 0 and MAX_UINT is allowed for BAM but discouraged.  Attempting to write such a value
+     * to SAM will cause an exception to be thrown.
      */
     final public void setAttribute(final String tag, final Object value) {
         setAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag), value);

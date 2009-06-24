@@ -41,6 +41,8 @@ public abstract class AbstractSAMHeaderRecord {
     /**
      * Set the given value for the attribute named 'key'.  Replaces an existing value, if any.
      * If value is null, the attribute is removed.
+     * Supported types are Character, Integer, Float and String.  Byte and Short may also be
+     * passed in but they will be converted to Integer.
      * @param key attribute name
      * @param value attribute value
      */
