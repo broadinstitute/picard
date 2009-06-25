@@ -34,7 +34,18 @@ public class SQTagUtil {
      * Note that these have the convenient property that the binary complement of each ordinal, masked to
      * the two low-order bits, is the complementary base.
      */
-    public enum SQBase {SQ_A, SQ_C, SQ_G, SQ_T}
+    public enum SQBase {
+        SQ_A('A'), SQ_C('C'), SQ_G('G'), SQ_T('T');
+        private final Character base;
+
+        SQBase(final Character base) {
+            this.base = base;
+        }
+
+        public Character getBase() {
+            return base;
+        }
+    }
 
     /**
      * For complementing SQBase ordinals.
@@ -109,7 +120,7 @@ public class SQTagUtil {
      * @return Ordinal of 2nd-best base call.
      */
     public static int sqValueToBaseOrdinal(final byte sqValue) {
-        return sqValue >>> BASE_INDEX_SHIFT;
+        return (sqValue & 0xff) >>> BASE_INDEX_SHIFT;
     }
 
 

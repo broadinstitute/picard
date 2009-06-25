@@ -69,7 +69,7 @@ class TextTagCodec {
                 tagType = 'i';
         }
         if (tagType == 'H') {
-            value = SAMUtils.bytesToHexString((byte[])value);
+            value = StringUtil.bytesToHexString((byte[])value);
         } else if (tagType == 'i') {
             final long longVal = ((Number) value).longValue();
             if (longVal > Integer.MAX_VALUE || longVal < Integer.MIN_VALUE) {
@@ -162,7 +162,7 @@ class TextTagCodec {
             }
         } else if (type.equals("H")) {
             try {
-                val = SAMUtils.hexStringToBytes(stringVal);
+                val = StringUtil.hexStringToBytes(stringVal);
             } catch (NumberFormatException e) {
                 throw new SAMFormatException("Tag of type H should have valid hex string with even number of digits");
             }

@@ -1037,7 +1037,7 @@ public class SAMRecord implements Cloneable
         } else if (value instanceof Float) {
             return tagString + ":f:" + value;
         } else if (value instanceof byte[]) {
-            return tagString + ":H:" + SAMUtils.bytesToHexString((byte[]) value);
+            return tagString + ":H:" + StringUtil.bytesToHexString((byte[]) value);
         } else {
             throw new RuntimeException("Unexpected value type for tag " + tagString +
                                        ": " + value);

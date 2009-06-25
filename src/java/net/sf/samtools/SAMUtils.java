@@ -199,39 +199,6 @@ final class SAMUtils
     }
 
     /**
-     * Convert a byte array into a String hex representation.
-     * @param data Input to be converted.
-     * @return String twice as long as data.length with hex representation of data.
-     */
-    static String bytesToHexString(final byte[] data) {
-        final char[] chars = new char[2 * data.length];
-        for (int i = 0; i < data.length; i++) {
-            final byte b = data[i];
-            chars[2*i] = toHexDigit((b >> 4) & 0xF);
-            chars[2*i+1] = toHexDigit(b & 0xF);
-        }
-        return new String(chars);
-    }
-
-    /**
-     * Convert a String containing hex characters into an array of bytes with the binary representation
-     * of the hex string
-     * @param s Hex string.  Length must be even because each pair of hex chars is converted into a byte.
-     * @return byte array with binary representation of hex string.
-     * @throws NumberFormatException
-     */
-    static byte[] hexStringToBytes(final String s)  throws NumberFormatException {
-        if (s.length() % 2 != 0) {
-            throw new NumberFormatException("Hex representation of byte string does not have even number of hex chars: " + s);
-        }
-        final byte[] ret = new byte[s.length() / 2];
-        for (int i = 0; i < ret.length; ++i) {
-            ret[i] = (byte) ((fromHexDigit(s.charAt(i * 2)) << 4) | fromHexDigit(s.charAt(i * 2 + 1)));
-        }
-        return ret;
-    }
-
-    /**
      * Convert bases in place into canonical form, upper case, and with no-call represented as N.
      * @param bases
      */
@@ -316,18 +283,6 @@ final class SAMUtils
             throw new IllegalArgumentException("Invalid fastq character: " + ch);
         }
         return (ch - 33);
-    }
-
-    private static char toHexDigit(final int value) {
-        return (char) ((value < 10) ? ('0' + value) : ('A' + value - 10));
-    }
-
-    private static int fromHexDigit(final char c) throws NumberFormatException {
-        final int ret = Character.digit(c, 16);
-        if (ret == -1) {
-            throw new NumberFormatException("Not a valid hex digit: " + c);
-        }
-        return ret;
     }
 
     /**

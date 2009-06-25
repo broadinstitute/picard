@@ -160,7 +160,7 @@ class BinaryTagCodec {
                 break;
             case 'H':
                 final byte[] byteArray = (byte[])value;
-                binaryCodec.writeString(SAMUtils.bytesToHexString(byteArray), false, true);
+                binaryCodec.writeString(StringUtil.bytesToHexString(byteArray), false, true);
                 break;
             // Note that we don't really support S or C anymore.  getTagValueType will never return that type.
             case 'S':
@@ -225,7 +225,7 @@ class BinaryTagCodec {
                 return byteBuffer.getFloat();
             case 'H':
                 final String hexRep = readNullTerminatedString(byteBuffer);
-                return SAMUtils.hexStringToBytes(hexRep);
+                return StringUtil.hexStringToBytes(hexRep);
             default:
                 throw new SAMFormatException("Unrecognized tag type: " + (char)tagType);
         }
