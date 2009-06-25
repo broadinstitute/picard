@@ -53,6 +53,7 @@ public class SQTagUtil {
     private static final int COMPLEMENT_MASK = 3;
 
     private static final int QUALITY_MASK = 0x3f;
+    public static final byte MAX_QUALITY = QUALITY_MASK;
     private static final int BASE_INDEX_SHIFT = 6;
 
     /**
@@ -89,11 +90,11 @@ public class SQTagUtil {
      *
      * @param base  the 2nd-best base (A=0, C=1, G=2, T=3).
      * @param probRatio   the log probability difference between the secondary and tertiary bases (-10log10(p3/p2)),
-     * rounded to an integer and capped so it fits in 6 bits.
+     * rounded to an integer and capped so it fits in 6 bits.  If this value is > MAX_QUALITY, it is truncated to that.
      * @return a byte containing the index and the log probability difference.
      */
     public static byte baseAndProbDiffToSqValue(final int base, final byte probRatio) {
-        return (byte)((base << BASE_INDEX_SHIFT) | probRatio);
+        return (byte)((base << BASE_INDEX_SHIFT) | Math.min(probRatio, QUALITY_MASK));
     }
 
     /**
