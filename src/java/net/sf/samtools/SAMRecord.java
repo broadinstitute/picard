@@ -1030,7 +1030,8 @@ public class SAMRecord implements Cloneable
         final String tagString = SAMTagUtil.getSingleton().makeStringTag(tag);
         if (value == null || value instanceof String) {
             return tagString + ":Z:" + value;
-        } else if (value instanceof Integer) {
+        } else if (value instanceof Integer || value instanceof Long ||
+                   value instanceof Short || value instanceof Byte) {
             return tagString + ":i:" + value;
         } else if (value instanceof Character) {
             return tagString + ":A:" + value;
@@ -1040,7 +1041,7 @@ public class SAMRecord implements Cloneable
             return tagString + ":H:" + StringUtil.bytesToHexString((byte[]) value);
         } else {
             throw new RuntimeException("Unexpected value type for tag " + tagString +
-                                       ": " + value);
+                                       ": " + value + " of class " + value.getClass().getName());
         }
     }
 
