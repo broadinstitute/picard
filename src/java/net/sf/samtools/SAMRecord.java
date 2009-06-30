@@ -782,6 +782,7 @@ public class SAMRecord implements Cloneable
      */
     public final Integer getIntegerAttribute(final String tag) {
         final Object val = getAttribute(tag);
+        if (val == null) return null;
         if (val instanceof Integer) {
             return (Integer)val;
         }
@@ -803,6 +804,7 @@ public class SAMRecord implements Cloneable
      */
     public final Short getShortAttribute(final String tag) {
         final Object val = getAttribute(tag);
+        if (val == null) return null;
         if (val instanceof Short) {
             return (Short)val;
         }
@@ -824,6 +826,7 @@ public class SAMRecord implements Cloneable
      */
     public final Byte getByteAttribute(final String tag) {
         final Object val = getAttribute(tag);
+        if (val == null) return null;
         if (val instanceof Byte) {
             return (Byte)val;
         }
