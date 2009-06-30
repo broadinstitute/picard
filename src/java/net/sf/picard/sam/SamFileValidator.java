@@ -231,7 +231,7 @@ public class SamFileValidator {
 
     private void validateNmTag(SAMRecord record, long recordNumber) {
         if (!record.getReadUnmappedFlag()) {
-            Integer tagNucleotideDiffs = (Integer) record.getAttribute(ReservedTagConstants.NM);
+            Integer tagNucleotideDiffs = record.getIntegerAttribute(ReservedTagConstants.NM);
             if (tagNucleotideDiffs == null) {
                 addError(new SAMValidationError(
                         Type.MISSING_TAG_NM, 
