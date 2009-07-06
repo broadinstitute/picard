@@ -381,7 +381,7 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @return 1-based inclusive rightmost position of the clippped sequence, or -1 read if unmapped.
+     * @return 1-based inclusive rightmost position of the clippped sequence, or 0 read if unmapped.
      */
     public int getAlignmentEnd() {
         if (getReadUnmappedFlag()) {
