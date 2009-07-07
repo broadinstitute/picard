@@ -38,4 +38,5 @@ public class StandardOptionDefinitions {
     public static final String SEQUENCE_DICTIONARY_SHORT_NAME = "SD";
     public static final String METRICS_FILE_SHORT_NAME = "M";
     public static final String ASSUME_SORTED_SHORT_NAME = "AS";
+    public static final String PF_READS_ONLY_SHORT_NAME = "PF";
 }
