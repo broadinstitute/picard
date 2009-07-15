@@ -29,6 +29,7 @@ import net.sf.samtools.util.SortingCollection;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * Class for translating between in-memory and disk representation of BAMRecord.
@@ -118,7 +119,8 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
             // when the record was read from a BAM file.
             this.binaryCodec.writeBytes(variableLengthBinaryBlock);
         } else {
-            if (alignment.getReadLength() != alignment.getBaseQualities().length) {
+            if (alignment.getReadLength() != alignment.getBaseQualities().length &&
+                alignment.getBaseQualities().length != 0) {
                 throw new RuntimeException("Mismatch between read length and quals length writing read " +
                 alignment.getReadName() + "; read length: " + alignment.getReadLength() +
                 "; quals length: " + alignment.getBaseQualities().length);
@@ -131,7 +133,12 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
                 this.binaryCodec.writeInt(cigarElement);
             }
             this.binaryCodec.writeBytes(SAMUtils.bytesToCompressedBases(alignment.getReadBases()));
-            this.binaryCodec.writeBytes(alignment.getBaseQualities());
+            byte[] qualities = alignment.getBaseQualities();
+            if (qualities.length == 0) {
+                qualities = new byte[alignment.getReadLength()];
+                Arrays.fill(qualities, (byte) 0xFF);
+            }
+            this.binaryCodec.writeBytes(qualities);
             if (alignment.getBinaryAttributes() != null) {
                 for (final SAMBinaryTagAndValue attribute : alignment.getBinaryAttributes()) {
                     this.binaryTagCodec.writeTag(attribute.tag, attribute.value);

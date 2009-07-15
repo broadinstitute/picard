@@ -302,6 +302,13 @@ class BAMRecord
         final int qualsOffset = readNameSize() + cigarSize() + basesSize();
         final byte[] ret = new byte[qualsSize()];
         System.arraycopy(mRestOfBinaryData, qualsOffset, ret, 0, qualsSize());
+        if (ret.length > 0 && ret[0] == (byte) 0xFF) {
+            // BAM files store missing qualities as an array of 0xFF bytes.
+            // 0xFF is an illegal quality score value (it cannot be encoded in SAM)
+            // and so the first byte is a suitable marker.
+            // We hide this quirk of the BAM encoding so that the BAM interface looks the same as SAM.
+            return NULL_QUALS;
+        }
         return ret;
     }
 
