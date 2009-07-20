@@ -31,6 +31,8 @@ import java.io.OutputStream;
  */
 public class SAMFileWriterFactory {
 
+    private Integer maxRecordsInRam;
+
     /**
      * Create a BAMFileWriter that is ready to receive SAMRecords.  Uses default compression level.
      * @param header entire header. Sort order is determined by the sortOrder property of this arg.
@@ -40,6 +42,9 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
         final BAMFileWriter ret = new BAMFileWriter(outputFile);
         ret.setSortOrder(header.getSortOrder(), presorted);
+        if (maxRecordsInRam != null) {
+            ret.setMaxRecordsInRam(maxRecordsInRam);
+        }
         ret.setHeader(header);
         return ret;
     }
@@ -56,6 +61,9 @@ public class SAMFileWriterFactory {
                                        final int compressionLevel) {
         final BAMFileWriter ret = new BAMFileWriter(outputFile, compressionLevel);
         ret.setSortOrder(header.getSortOrder(), presorted);
+        if (maxRecordsInRam != null) {
+            ret.setMaxRecordsInRam(maxRecordsInRam);
+        }
         ret.setHeader(header);
         return ret;
     }
@@ -69,6 +77,9 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
         final SAMTextWriter ret = new SAMTextWriter(outputFile);
         ret.setSortOrder(header.getSortOrder(), presorted);
+        if (maxRecordsInRam != null) {
+            ret.setMaxRecordsInRam(maxRecordsInRam);
+        }
         ret.setHeader(header);
         return ret;
     }
@@ -82,6 +93,9 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final OutputStream stream) {
         final SAMTextWriter ret = new SAMTextWriter(stream);
         ret.setSortOrder(header.getSortOrder(), presorted);
+        if (maxRecordsInRam != null) {
+            ret.setMaxRecordsInRam(maxRecordsInRam);
+        }
         ret.setHeader(header);
         return ret;
     }
@@ -103,5 +117,20 @@ public class SAMFileWriterFactory {
             return makeSAMWriter(header, presorted, outputFile);
         }
         throw new IllegalArgumentException("SAM/BAM file should end with .sam or .bam: " + outputFile);
+    }
+
+    /**
+     * Before creating a writer that is not presorted, this method may be called in order to override
+     * the default number of SAMRecords stored in RAM before spilling to disk
+     * (c.f. SAMFileWriterImpl.MAX_RECORDS_IN_RAM).  When writing very large sorted SAM files, you may need
+     * call this method in order to avoid running out of file handles.  The RAM available to the JVM may need
+     * to be increased in order to hold the specified number of records in RAM.  This value affects the number
+     * of records stored in subsequent calls to one of the make...() methods.
+     *
+     * @param maxRecordsInRam Number of records to store in RAM before spilling to temporary file when
+     * creating a sorted SAM or BAM file.
+     */
+    public void setMaxRecordsInRam(int maxRecordsInRam) {
+        this.maxRecordsInRam = maxRecordsInRam;
     }
 }

@@ -36,6 +36,8 @@ import java.io.StringWriter;
 abstract class SAMFileWriterImpl implements SAMFileWriter
 {
     private static final int MAX_RECORDS_IN_RAM = 500000;
+
+    private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private SAMFileHeader.SortOrder sortOrder;
     private SAMFileHeader header;
     private SortingCollection<SAMRecord> alignmentSorter;
@@ -58,6 +60,18 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
         }
         this.sortOrder = sortOrder;
         this.presorted = presorted;
+    }
+
+    /**
+     * When writing records that are not presorted, specify the number of records stored in RAM
+     * before spilling to disk.  Must be called before setHeader().
+     * @param maxRecordsInRam
+     */
+    void setMaxRecordsInRam(final int maxRecordsInRam) {
+        if (this.header != null) {
+            throw new IllegalStateException("setMaxRecordsInRam must be called before setHeader()");
+        }
+        this.maxRecordsInRam = maxRecordsInRam;
     }
 
     /**
@@ -84,7 +98,7 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
             }
         } else if (!sortOrder.equals(SAMFileHeader.SortOrder.unsorted)) {
             alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
-                    new BAMRecordCodec(header), makeComparator(), MAX_RECORDS_IN_RAM);
+                    new BAMRecordCodec(header), makeComparator(), maxRecordsInRam);
         }
     }
 
