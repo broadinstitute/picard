@@ -35,7 +35,7 @@ import java.util.HashSet;
  * @author Tim Fennell
  */
 public class ReferenceSequenceFileFactory {
-    private static final Set<String> FASTA_EXTENSIONS = new HashSet<String>() {{
+    public static final Set<String> FASTA_EXTENSIONS = new HashSet<String>() {{
         add(".fasta");
         add(".fasta.gz");
         add(".fa");

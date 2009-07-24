@@ -60,7 +60,18 @@ class FastaSequenceFile implements ReferenceSequenceFile {
 
         // Try and locate the dictionary
         String dictionaryName = file.getAbsolutePath();
-        dictionaryName = dictionaryName.substring(0, dictionaryName.lastIndexOf(".fasta"));
+        boolean fileTypeSupported = false;
+        for (String extension : ReferenceSequenceFileFactory.FASTA_EXTENSIONS) {
+            if (dictionaryName.endsWith(extension)) {
+                  dictionaryName = dictionaryName.substring(0, dictionaryName.lastIndexOf(extension));
+                  dictionaryName += ".dict";
+                  fileTypeSupported = true;
+                  break;
+            }
+        }
+        if (!fileTypeSupported)
+            throw new IllegalArgumentException("File is not a supported reference file type: " + file.getAbsolutePath());
+
         dictionaryName += ".dict";
         final File dictionary = new File(dictionaryName);
         if (dictionary.exists()) {
