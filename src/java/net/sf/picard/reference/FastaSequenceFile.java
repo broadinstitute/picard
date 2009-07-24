@@ -72,7 +72,6 @@ class FastaSequenceFile implements ReferenceSequenceFile {
         if (!fileTypeSupported)
             throw new IllegalArgumentException("File is not a supported reference file type: " + file.getAbsolutePath());
 
-        dictionaryName += ".dict";
         final File dictionary = new File(dictionaryName);
         if (dictionary.exists()) {
             IoUtil.assertFileIsReadable(dictionary);
