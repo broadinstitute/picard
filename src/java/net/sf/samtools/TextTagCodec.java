@@ -28,6 +28,7 @@ import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.DateParser;
 
 import java.util.Map;
+import java.util.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 
@@ -179,7 +180,11 @@ class TextTagCodec {
             try {
                 return new Iso8601Date(DateFormat.getDateTimeInstance().parse(dateStr));
             } catch (ParseException e) {
-                throw new DateParser.InvalidDateException("Could not parse as date: " + dateStr, e);
+                try {
+                    return new Iso8601Date(new Date(dateStr));
+                } catch (Exception e1) {
+                    throw new DateParser.InvalidDateException("Could not parse as date: " + dateStr, e);
+                }
             }
         }
     }
