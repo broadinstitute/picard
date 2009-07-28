@@ -97,7 +97,7 @@ public class SamFileValidator {
         }
         cleanup();
     }
-    
+
     /**
      * Outputs validation error details to out.
      * 
@@ -128,7 +128,7 @@ public class SamFileValidator {
             initComparator(samReader.getFileHeader());
             validateSamRecords(samReader);
             
-            if (errorsByType.getCount() == 0) {
+            if (errorsByType.isEmpty()) {
                 out.println("No errors found");
             }
         } finally {
@@ -287,6 +287,9 @@ public class SamFileValidator {
     }
 
     private void validateHeader(SAMFileHeader fileHeader) {
+        if (fileHeader.getVersion() == null) {
+            addError(new SAMValidationError(Type.MISSING_VERSION_NUMBER, "Header has no version number", null));
+        }
         if (fileHeader.getSequenceDictionary().isEmpty()) {
             addError(new SAMValidationError(Type.MISSING_SEQUENCE_DICTIONARY, "Sequence dictionary is empty", null));
         }

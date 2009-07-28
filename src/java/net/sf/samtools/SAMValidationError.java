@@ -30,6 +30,10 @@ package net.sf.samtools;
  * @author Doug Voet
  */
 public class SAMValidationError {
+    public enum Severity {
+        WARNING, ERROR
+    }
+
     public enum Type {
         /** proper pair flag set for unpaired read */
         INVALID_FLAG_PROPER_PAIR,
@@ -95,7 +99,7 @@ public class SAMValidationError {
         INVALID_TAG_NM,
         
         /** the NM tag (nucleotide differences) is missing */
-        MISSING_TAG_NM,
+        MISSING_TAG_NM(Severity.WARNING),
         
         /** the sam/bam file is missing the header */
         MISSING_HEADER,
@@ -113,8 +117,21 @@ public class SAMValidationError {
         READ_GROUP_NOT_FOUND,
 
         /** Indexing bin set on SAMRecord does not agree with computed value. */
-        INVALID_INDEXING_BIN
+        INVALID_INDEXING_BIN,
 
+        MISSING_VERSION_NUMBER,
+
+        INVALID_VERSION_NUMBER;
+
+        public final Severity severity;
+
+        private Type() {
+            this.severity = Severity.ERROR;
+        }
+
+        private Type(final Severity severity) {
+            this.severity = severity;
+        }
     }
 
     private final Type type;
@@ -148,6 +165,8 @@ public class SAMValidationError {
 
     public String toString() {
         final StringBuilder builder = new StringBuilder();
+        builder.append(type.severity.toString());
+        builder.append(": ");
         if (recordNumber > 0) {
             builder.append("Record ").append(recordNumber).append(", ");
         }
