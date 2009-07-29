@@ -24,6 +24,8 @@
 package net.sf.samtools.util;
 
 
+import net.sf.samtools.FileTruncatedException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -252,7 +254,7 @@ public class BlockCompressedInputStream
         final int remaining = blockLength - BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH;
         count = readBytes(mFileBuffer, BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH, remaining);
         if (count != remaining) {
-            throw new IOException("Premature end of file");
+            throw new FileTruncatedException("Premature end of file");
         }
         inflateBlock(mFileBuffer, blockLength);
         mCurrentOffset = 0;

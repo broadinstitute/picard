@@ -24,31 +24,21 @@
 
 package net.sf.picard.sam;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Iterator;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordSetBuilder;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMValidationError;
-import net.sf.samtools.SAMValidationError.Type;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import net.sf.picard.metrics.MetricBase;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.sam.SamFileValidator;
-import net.sf.picard.sam.ReservedTagConstants;
 import net.sf.picard.util.Histogram;
+import net.sf.picard.PicardException;
+import net.sf.samtools.*;
+import net.sf.samtools.SAMValidationError.Type;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.io.*;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Tests almost all error conditions detected by the sam file validator. The
@@ -57,7 +47,7 @@ import net.sf.picard.util.Histogram;
  * @author Doug Voet
  */
 public class ValidateSamFileTest {
-    private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/ValidateSamFileTest");
 
     @Test
     public void testSortOrder() throws IOException {
@@ -104,7 +94,7 @@ public class ValidateSamFileTest {
         records.next().setSecondOfPairFlag(true);
         records.next().setMateReferenceIndex(1);
         
-        Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
+        final Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_PROPER_PAIR).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_MATE_UNMAPPED).getValue(), 1.0);
@@ -130,7 +120,7 @@ public class ValidateSamFileTest {
         records.next().setMateUnmappedFlag(!records.next().getReadUnmappedFlag());
 
         
-        Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
+        final Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_ALIGNMENT_START).getValue(), 3.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_MATE_UNMAPPED).getValue(), 1.0);
@@ -153,7 +143,7 @@ public class ValidateSamFileTest {
         records.next().setMappingQuality(10);
         records.next().setCigarString("36M");
         
-        Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
+        final Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_READ_NEG_STRAND).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_NOT_PRIM_ALIGNMENT).getValue(), 1.0);
@@ -172,7 +162,7 @@ public class ValidateSamFileTest {
         records.next().setCigarString("");
         records.next().setReferenceName("*");
         
-        Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
+        final Histogram<Type> results = executeValidation(samBuilder.getSamReader(), null);
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_CIGAR).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_READ_UNMAPPED).getValue(), 1.0);
@@ -188,14 +178,12 @@ public class ValidateSamFileTest {
         final Iterator<SAMRecord> records = samBuilder.iterator();
         records.next().setAttribute(ReservedTagConstants.NM, 4);
         
-        Histogram<Type> results = executeValidation(samBuilder.getSamReader(), new ReferenceSequenceFile() {
+        final Histogram<Type> results = executeValidation(samBuilder.getSamReader(), new ReferenceSequenceFile() {
             private int index=0;
-            @Override
             public SAMSequenceDictionary getSequenceDictionary() {
                 return null;
             }
 
-            @Override
             public ReferenceSequence nextSequence() {
                 final byte[] bases = new byte[10000];
                 Arrays.fill(bases, (byte) 'A'); 
@@ -208,11 +196,47 @@ public class ValidateSamFileTest {
         Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_TAG_NM).getValue(), 1.0);
     }
 
-    private Histogram<Type> executeValidation(SAMFileReader samReader, ReferenceSequenceFile reference) throws IOException {
-        File outFile = File.createTempFile("validation", ".txt");
-        PrintWriter out = new PrintWriter(outFile);
+    @Test(dataProvider = "testTruncatedScenarios")
+    public void testTruncated(final String scenario, final String inputFile, final SAMValidationError.Type expectedError)
+            throws Exception {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, inputFile));
+        final Histogram<Type> results = executeValidation(reader, null);
+        Assert.assertNotNull(results.get(expectedError));
+        Assert.assertEquals(results.get(expectedError).getValue(), 1.0);
+    }
+
+    @DataProvider(name = "testTruncatedScenarios")
+    public Object[][] testTruncatedScenarios() {
+        return new Object[][] {
+                {"truncated bam", "truncated.bam", SAMValidationError.Type.TRUNCATED_FILE},
+                {"truncated quals", "truncated_quals.sam", SAMValidationError.Type.MISMATCH_READ_LENGTH_AND_QUALS_LENGTH},
+                // TODO: Because validation is turned off when parsing, this error is not detectable currently by validator.
+                //{"truncated tag", "truncated_tag.sam", SAMValidationError.Type.TRUNCATED_FILE},
+                // TODO: Currently, this is not considered an error.  Should it be?
+                //{"hanging tab", "hanging_tab.sam", SAMValidationError.Type.TRUNCATED_FILE},
+        };
+    }
+
+    @Test(expectedExceptions = PicardException.class, dataProvider = "testFatalParsingErrors")
+    public void testFatalParsingErrors(final String scenario, final String inputFile) throws Exception {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, inputFile));
+        executeValidation(reader, null);
+        Assert.fail("Exception should have been thrown.");
+    }
+
+    @DataProvider(name = "testFatalParsingErrors")
+    public Object[][] testFatalParsingErrorScenarios() {
+        return new Object[][] {
+                {"missing fields", "missing_fields.sam"},
+                {"zero length read", "zero_length_read.sam"}
+        };
+    }
+
+    private Histogram<Type> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
+        final File outFile = File.createTempFile("validation", ".txt");
+        final PrintWriter out = new PrintWriter(outFile);
         new SamFileValidator().validateSamFileSummary(samReader, out, reference);
-        MetricsFile<MetricBase, Type> outputFile = new MetricsFile<MetricBase, Type>();
+        final MetricsFile<MetricBase, Type> outputFile = new MetricsFile<MetricBase, Type>();
         outputFile.read(new FileReader(outFile));
         Assert.assertNotNull(outputFile.getHistogram());
         return outputFile.getHistogram();

@@ -121,7 +121,13 @@ public class SAMValidationError {
 
         MISSING_VERSION_NUMBER,
 
-        INVALID_VERSION_NUMBER;
+        INVALID_VERSION_NUMBER,
+
+        TRUNCATED_FILE,
+
+        MISMATCH_READ_LENGTH_AND_QUALS_LENGTH,
+
+        EMPTY_READ;
 
         public final Severity severity;
 

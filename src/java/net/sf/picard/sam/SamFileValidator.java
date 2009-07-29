@@ -181,6 +181,8 @@ public class SamFileValidator {
             // reads one record ahead so we will get this failure one record ahead
             out.println("SAMFormatException on record " + ++recordNumber);
             throw new PicardException("SAMFormatException on record " + recordNumber, e);
+        } catch (FileTruncatedException e) {
+            addError(new SAMValidationError(Type.TRUNCATED_FILE, "File is truncated", null));
         }
     }
 

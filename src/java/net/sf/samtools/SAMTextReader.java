@@ -254,7 +254,7 @@ class SAMTextReader
         private void parseLine() {
             final int numFields = StringUtil.split(mCurrentLine, mFields, '\t');
             if (numFields < NUM_REQUIRED_FIELDS) {
-                reportErrorParsingLine("Not enough fields");
+                throw reportFatalErrorParsingLine("Not enough fields");
             }
             if (numFields == mFields.length) {
                 reportErrorParsingLine("Too many fields in SAM text record.");

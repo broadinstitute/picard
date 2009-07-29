@@ -1,0 +1,3 @@
+@HD	VN:1.0	SO:queryname
+@RG	ID:0	PL:illumina	PU:300TDAAXX090429.8	LB:Solexa-3536	DT:Wed Apr 29 00:00:00 EDT 2009	SM:CLONED Phi-X Control	CN:broad
+300TDAAXX090429:8:100:0:1001#0	589	*	0	0	*	*	0	0	NNNNNNNNNNNNNNNNNNNNNNNNN	#########################	XN:i:1	RG:Z:0	
