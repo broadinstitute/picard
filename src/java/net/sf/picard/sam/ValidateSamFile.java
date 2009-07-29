@@ -68,7 +68,7 @@ public class ValidateSamFile extends CommandLineProgram {
     public File REFERENCE_SEQUENCE;
 
     @Option(doc="If true, only report errors, and ignore warnings.")
-    public boolean IGNORE_WARNINGS = true;
+    public boolean IGNORE_WARNINGS = false;
 
     
     
