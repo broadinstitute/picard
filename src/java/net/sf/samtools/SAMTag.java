@@ -27,5 +27,6 @@ package net.sf.samtools;
  * The standard tags defined in the SAM spec.
  */
 public enum SAMTag {
-    RG, LB, PU, PG, AS, SQ, MQ, NM, H0, H1, H2, UQ, PQ, NH, IH, HI, MD, CS, CQ, CM, R2, Q2, S2, CC, CP, SM, AM, MF
+    RG, LB, PU, PG, AS, SQ, MQ, NM, H0, H1, H2, UQ, PQ, NH, IH, HI, MD, CS, CQ, CM, R2, Q2, S2, CC, CP, SM, AM, MF,
+    E2, U2
 }

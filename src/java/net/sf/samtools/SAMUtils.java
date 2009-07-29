@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * Utilty methods.
  */
-final class SAMUtils
+public final class SAMUtils
 {
     // Representation of bases, one for when in low-order nybble, one for when in high-order nybble.
     private static final byte COMPRESSED_EQUAL_LOW = 0;
@@ -75,7 +75,7 @@ final class SAMUtils
      * @param compressedOffset Byte offset in compressedBases to start.
      * @return New byte array with bases as ASCII bytes.
      */
-    static byte[] compressedBasesToBytes(final int length, final byte[] compressedBases, final int compressedOffset) {
+    public static byte[] compressedBasesToBytes(final int length, final byte[] compressedBases, final int compressedOffset) {
         final byte[] ret = new byte[length];
         int i;
         for (i = 1; i < length; i+=2) {
@@ -220,7 +220,7 @@ final class SAMUtils
      * @param data Array of bytes in which each byte is a binar phred score.
      * @return String with ASCII representation of those quality scores.
      */
-    static String phredToFastq(final byte[] data) {
+    public static String phredToFastq(final byte[] data) {
         if (data == null) {
             return null;
         }
