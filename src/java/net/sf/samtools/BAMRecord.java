@@ -260,7 +260,7 @@ class BAMRecord
     @Override
     public byte[] getBaseQualities() {
         byte[] ret = super.getBaseQualities();
-        if (mRestOfBinaryData != null && ret == null && mReadLength > 0) {
+        if (mRestOfBinaryData != null && ret == null) {
             ret = decodeBaseQualities();
             super.setBaseQualities(ret);
         }
@@ -297,7 +297,7 @@ class BAMRecord
 
     private byte[] decodeBaseQualities() {
         if (mReadLength == 0) {
-            return null;
+            return SAMRecord.NULL_QUALS;
         }
         final int qualsOffset = readNameSize() + cigarSize() + basesSize();
         final byte[] ret = new byte[qualsSize()];
