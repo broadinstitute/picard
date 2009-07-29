@@ -67,6 +67,9 @@ public class ValidateSamFile extends CommandLineProgram {
             optional=true)
     public File REFERENCE_SEQUENCE;
 
+    @Option(doc="If true, only report errors, and ignore warnings.")
+    public boolean IGNORE_WARNINGS = true;
+
     
     
     public static void main(String[] args) {
@@ -100,6 +103,9 @@ public class ValidateSamFile extends CommandLineProgram {
         SAMFileReader samReader = new SAMFileReader(INPUT);
         SamFileValidator validator = new SamFileValidator();
         validator.setErrorsToIgnore(IGNORE);
+        if (IGNORE_WARNINGS) {
+            validator.setIgnoreWarnings(IGNORE_WARNINGS);
+        }
 
         switch (MODE) {
             case SUMMARY:

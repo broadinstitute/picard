@@ -67,12 +67,17 @@ public class SamFileValidator {
     private SAMRecordComparator recordComparator;
     private SortOrder sortOrder;
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
+    private boolean ignoreWarnings = false;
 
     /** Sets one or more error types that should not be reported on. */
     public void setErrorsToIgnore(Collection<Type> types) {
         if (!types.isEmpty()) {
             this.errorsToIgnore = EnumSet.copyOf(types);
         }
+    }
+
+    public void setIgnoreWarnings(final boolean ignoreWarnings) {
+        this.ignoreWarnings = ignoreWarnings;
     }
 
     /**
@@ -303,6 +308,8 @@ public class SamFileValidator {
     private void addError(SAMValidationError error) {
         // Just ignore an error if it's of a type we're not interested in
         if (this.errorsToIgnore.contains(error.getType())) return;
+
+        if (this.ignoreWarnings && error.getType().severity == SAMValidationError.Severity.WARNING) return;
 
         this.errorsByType.increment(error.getType());
         if (verbose) {
