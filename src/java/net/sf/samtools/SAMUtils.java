@@ -46,6 +46,7 @@ public final class SAMUtils
     private static final byte COMPRESSED_G_HIGH = COMPRESSED_G_LOW << 4;
     private static final byte COMPRESSED_T_HIGH = (byte)(COMPRESSED_T_LOW << 4);
     private static final byte COMPRESSED_N_HIGH = (byte)(COMPRESSED_N_LOW << 4);
+    public static final int MAX_PHRED_SCORE = 63;
 
     /**
      * Convert from a byte array containing =AaCcGgTtNn represented as ASCII, to a byte array half as long,
@@ -249,7 +250,7 @@ public final class SAMUtils
      * @return Printable ASCII representation of phred score.
      */
     static char phredToFastq(final int phredScore) {
-        if (phredScore < 0 || phredScore > 63) {
+        if (phredScore < 0 || phredScore > MAX_PHRED_SCORE) {
             throw new IllegalArgumentException("Cannot encode phred score: " + phredScore);
         }
         return (char) (33 + phredScore);

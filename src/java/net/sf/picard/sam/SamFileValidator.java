@@ -94,10 +94,15 @@ public class SamFileValidator {
         validateSamFile(samReader, out);
         
         if (errorsByType.getCount() > 0) {
-            MetricsFile<ValidationMetrics, Type> metricsFile = new MetricsFile<ValidationMetrics, Type>();;
+            // Convert to a histogram with String IDs so that WARNING: or ERROR: can be prepended to the error type.
+            final Histogram<String> errorsAndWarningsByType = new Histogram<String>("Error Type", "Count");
+            for (final Histogram<SAMValidationError.Type>.Bin bin : errorsByType.values()) {
+                errorsAndWarningsByType.increment(bin.getId().getHistogramString(), bin.getValue());
+            }
+            MetricsFile<ValidationMetrics, String> metricsFile = new MetricsFile<ValidationMetrics, String>();;
             errorsByType.setBinLabel("Error Type");
             errorsByType.setValueLabel("Count");
-            metricsFile.setHistogram(errorsByType);
+            metricsFile.setHistogram(errorsAndWarningsByType);
             metricsFile.write(out);
         }
         cleanup();

@@ -138,6 +138,13 @@ public class SAMValidationError {
         private Type(final Severity severity) {
             this.severity = severity;
         }
+
+        /**
+         * @return Format for writing to histogram summary output.
+         */
+        public String getHistogramString() {
+            return this.severity.name() + ":" + this.name();
+        }
     }
 
     private final Type type;
