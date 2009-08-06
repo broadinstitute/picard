@@ -32,6 +32,9 @@ import net.sf.picard.util.Histogram;
  * within a stream of SAMRecords.
  */
 public class DuplicationMetrics extends MetricBase {
+    /** The library on which the duplicate marking was performed. */
+    public String LIBRARY;
+
     /** The number of mapped reads examined which did not have a mapped mate pair. */
     public long UNPAIRED_READS_EXAMINED;
 

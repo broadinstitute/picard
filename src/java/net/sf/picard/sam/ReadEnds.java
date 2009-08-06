@@ -29,6 +29,7 @@ class ReadEnds {
                                                                  13; // This is determined experimentally with JProfiler
     public static final byte F=0, R=1, FF=2, FR=3, RR=4, RF=5;
 
+    short libraryId;
     short score = 0;
     byte orientation;
     int read1Sequence     = -1;

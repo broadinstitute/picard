@@ -47,7 +47,6 @@ import java.util.*;
 public class MarkDuplicates extends CommandLineProgram {
     private static final Log log = Log.getInstance(MarkDuplicates.class);
 
-
     /**
      * If more than this many sequences in SAM file, don't spill to disk because there will not
      * be enough file handles.
@@ -60,12 +59,15 @@ public class MarkDuplicates extends CommandLineProgram {
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to analyze.  Must be coordinate sorted.") public File INPUT;
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to right marked records to") public File OUTPUT;
     @Option(shortName="M", doc="File to write duplication metrics to") public File METRICS_FILE;
+    @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.") public boolean REMOVE_DUPLICATES = false;
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
     private SortingLongCollection duplicateIndexes;
     private int numDuplicateIndices = 0;
 
+    private Map<String,Short> libraryIds = new HashMap<String,Short>();
+    private short nextLibraryId = 1;
 
     /** Stock main method. */
     public static void main(final String[] args) {
@@ -86,17 +88,29 @@ public class MarkDuplicates extends CommandLineProgram {
         generateDuplicateIndexes();
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
-        final DuplicationMetrics metrics = new DuplicationMetrics();
+
+        Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SAMFileReader in  = new SAMFileReader(INPUT);
+        final SAMFileHeader header = in.getFileHeader();
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(),
                                                                           true,
                                                                           OUTPUT);
 
         // Now copy over the file while marking all the necessary indexes as duplicates
+        long pairedReadsExamined = 0;
+        long pairedReadDuplicates = 0;
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
 
         for (final SAMRecord rec : in) {
+            String library = getLibraryName(header, rec);
+            DuplicationMetrics metrics = metricsByLibrary.get(library);
+            if (metrics == null) {
+                metrics = new DuplicationMetrics();
+                metrics.LIBRARY = library;
+                metricsByLibrary.put(library, metrics);
+            }
+
             // First bring the simple metrics up to date
             if (rec.getReadUnmappedFlag()) {
                 ++metrics.UNMAPPED_READS;
@@ -104,8 +118,8 @@ public class MarkDuplicates extends CommandLineProgram {
             else if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
                 ++metrics.UNPAIRED_READS_EXAMINED;
             }
-            else if (rec.getFirstOfPairFlag()){
-                ++metrics.READ_PAIRS_EXAMINED;
+            else {
+                ++pairedReadsExamined;
             }
 
 
@@ -116,8 +130,8 @@ public class MarkDuplicates extends CommandLineProgram {
                 if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
                     ++metrics.UNPAIRED_READ_DUPLICATES;
                 }
-                else if (rec.getFirstOfPairFlag()) {
-                    ++metrics.READ_PAIR_DUPLICATES;
+                else {
+                    ++pairedReadDuplicates;
                 }
 
                 // Now try and figure out the next duplicate index
@@ -132,7 +146,12 @@ public class MarkDuplicates extends CommandLineProgram {
                 rec.setDuplicateReadFlag(false);
             }
 
-            out.addAlignment(rec);
+            if (this.REMOVE_DUPLICATES && rec.getDuplicateReadFlag()) {
+                // do nothing
+            }
+            else {
+                out.addAlignment(rec);
+            }
         }
 
         reportMemoryStats("Before output close");
@@ -141,11 +160,19 @@ public class MarkDuplicates extends CommandLineProgram {
 
 
         // Write out the metrics
-        metrics.calculateDerivedMetrics();
         final MetricsFile<DuplicationMetrics,Double> file = getMetricsFile();
-        file.addMetric(metrics);
-        file.setHistogram(metrics.calculateRoiHistogram());
-        file.write(METRICS_FILE);        
+        for (DuplicationMetrics metrics : metricsByLibrary.values()) {
+            metrics.READ_PAIRS_EXAMINED = pairedReadsExamined / 2;
+            metrics.READ_PAIR_DUPLICATES = pairedReadDuplicates / 2;
+            metrics.calculateDerivedMetrics();
+            file.addMetric(metrics);
+        }
+
+        if (metricsByLibrary.size() == 1) {
+            file.setHistogram(metricsByLibrary.values().iterator().next().calculateRoiHistogram());
+        }
+
+        file.write(METRICS_FILE);
 
         return 0;
     }
@@ -269,7 +296,41 @@ public class MarkDuplicates extends CommandLineProgram {
             ends.read2Sequence = rec.getMateReferenceIndex();
         }
 
+        // Fill in the library ID
+        ends.libraryId = getLibraryId(header, rec);
+
         return ends;
+    }
+
+    /** Get the library ID for the given SAM record. */
+    private short getLibraryId(SAMFileHeader header, SAMRecord rec) {
+        final String library = getLibraryName(header, rec);
+        Short libraryId = this.libraryIds.get(library);
+
+        if (libraryId == null) {
+            libraryId = this.nextLibraryId++;
+            this.libraryIds.put(library, libraryId);
+        }
+
+        return libraryId;
+    }
+
+    /**
+     * Gets the library name from the header for the record. If the RG tag is not present on
+     * the record, or the library isn't denoted on the read group, a constant string is
+     * returned.
+     */
+    private String getLibraryName(SAMFileHeader header, SAMRecord rec) {
+        final String readGroupId = (String) rec.getAttribute("RG");
+
+        if (readGroupId != null) {
+            SAMReadGroupRecord rg = header.getReadGroup(readGroupId);
+            if (rg != null) {
+                return rg.getLibrary();
+            }
+        }
+
+        return "Unknown Library";
     }
 
     /**
@@ -366,7 +427,8 @@ public class MarkDuplicates extends CommandLineProgram {
     }
 
     private boolean areComparableForDuplicates(final ReadEnds lhs, final ReadEnds rhs, final boolean compareRead2) {
-        boolean retval =  lhs.read1Sequence   == rhs.read1Sequence &&
+        boolean retval =  lhs.libraryId       == rhs.libraryId &&
+                          lhs.read1Sequence   == rhs.read1Sequence &&
                           lhs.read1Coordinate == rhs.read1Coordinate &&
                           lhs.orientation     == rhs.orientation;
 
@@ -441,7 +503,8 @@ public class MarkDuplicates extends CommandLineProgram {
     /** Comparator for ReadEnds that orders by read1 position then pair orientation then read2 position. */
     static class ReadEndsComparator implements Comparator<ReadEnds> {
         public int compare(final ReadEnds lhs, final ReadEnds rhs) {
-            int retval = lhs.read1Sequence - rhs.read1Sequence;
+            int retval = lhs.libraryId - rhs.libraryId;
+            if (retval == 0) retval = lhs.read1Sequence - rhs.read1Sequence;
             if (retval == 0) retval = lhs.read1Coordinate - rhs.read1Coordinate;
             if (retval == 0) retval = lhs.orientation - rhs.orientation;
             if (retval == 0) retval = lhs.read2Sequence   - rhs.read2Sequence;
