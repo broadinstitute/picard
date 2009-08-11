@@ -101,8 +101,6 @@ public class MarkDuplicates extends CommandLineProgram {
                                                                           OUTPUT);
 
         // Now copy over the file while marking all the necessary indexes as duplicates
-        long pairedReadsExamined = 0;
-        long pairedReadDuplicates = 0;
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
 
@@ -123,7 +121,7 @@ public class MarkDuplicates extends CommandLineProgram {
                 ++metrics.UNPAIRED_READS_EXAMINED;
             }
             else {
-                ++pairedReadsExamined;
+                ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
             }
 
 
@@ -135,7 +133,7 @@ public class MarkDuplicates extends CommandLineProgram {
                     ++metrics.UNPAIRED_READ_DUPLICATES;
                 }
                 else {
-                    ++pairedReadDuplicates;
+                    ++metrics.READ_PAIR_DUPLICATES;// will need to be divided by 2 at the end
                 }
 
                 // Now try and figure out the next duplicate index
@@ -166,8 +164,8 @@ public class MarkDuplicates extends CommandLineProgram {
         // Write out the metrics
         final MetricsFile<DuplicationMetrics,Double> file = getMetricsFile();
         for (DuplicationMetrics metrics : metricsByLibrary.values()) {
-            metrics.READ_PAIRS_EXAMINED = pairedReadsExamined / 2;
-            metrics.READ_PAIR_DUPLICATES = pairedReadDuplicates / 2;
+            metrics.READ_PAIRS_EXAMINED = metrics.READ_PAIRS_EXAMINED / 2;
+            metrics.READ_PAIR_DUPLICATES = metrics.READ_PAIR_DUPLICATES / 2;
             metrics.calculateDerivedMetrics();
             file.addMetric(metrics);
         }

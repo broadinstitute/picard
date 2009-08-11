@@ -51,6 +51,7 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
     public void encode(final ReadEnds read) {
         try {
             this.out.writeShort(read.score);
+            this.out.writeShort(read.libraryId);
             this.out.writeByte(read.orientation);
             this.out.writeInt(read.read1Sequence);
             this.out.writeInt(read.read1Coordinate);
@@ -75,6 +76,7 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
             try { read.score = this.in.readShort(); }
             catch (EOFException eof) { return null; }
 
+            read.libraryId        = this.in.readShort();
             read.orientation      = this.in.readByte();
             read.read1Sequence    = this.in.readInt();
             read.read1Coordinate  = this.in.readInt();
