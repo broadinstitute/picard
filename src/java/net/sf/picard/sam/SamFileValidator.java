@@ -252,23 +252,8 @@ public class SamFileValidator {
                         recordNumber));
             } else if (refFileWalker != null) {
                 ReferenceSequence refSequence = refFileWalker.get(record.getReferenceIndex());
-                byte[] readBases = record.getReadBases();
-                byte[] refBases = refSequence.getBases();
-                int actualNucleotideDiffs = 0;
-                
-                for (AlignmentBlock alignmentBlock : record.getAlignmentBlocks()) {
-                    int readStartIndex = alignmentBlock.getReadStart() - 1;
-                    int refStartIndex = alignmentBlock.getReferenceStart() - 1;
-                    
-                    for (int i=0; i<alignmentBlock.getLength(); i++) {
-                        if (!SequenceUtil.basesEqual(
-                                readBases[readStartIndex + i], 
-                                refBases[refStartIndex + i])) {
-                            actualNucleotideDiffs++;
-                        }
-                    }
-                }
-                
+                final int actualNucleotideDiffs = SequenceUtil.calculateSamNmTag(record, refSequence.getBases());
+
                 if (!tagNucleotideDiffs.equals(actualNucleotideDiffs)) {
                     addError(new SAMValidationError(
                             Type.INVALID_TAG_NM, 

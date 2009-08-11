@@ -171,11 +171,19 @@ public class ValidateSamFileTest {
     public void testNmFlagValidation() throws IOException {
         final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder();
         
-        for (int i=0; i<2; i++) {
+        for (int i=0; i<3; i++) {
             samBuilder.addFrag(String.valueOf(i), i, i+1, false);
         }
         final Iterator<SAMRecord> records = samBuilder.iterator();
         records.next().setAttribute(ReservedTagConstants.NM, 4);
+
+        // PIC-215: Confirm correct NM value when there is an insertion and a deletion.
+        final SAMRecord recordWithInsert = records.next();
+        final byte[] sequence = recordWithInsert.getReadBases();
+        Arrays.fill(sequence, (byte)'A');
+        recordWithInsert.setReadBases(sequence);
+        recordWithInsert.setCigarString("1D" + Integer.toString(sequence.length-1) + "M1I");
+        recordWithInsert.setAttribute(ReservedTagConstants.NM, 2);
         
         final Histogram<String> results = executeValidation(samBuilder.getSamReader(), new ReferenceSequenceFile() {
             private int index=0;
