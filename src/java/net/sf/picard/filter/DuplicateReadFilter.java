@@ -33,7 +33,6 @@ public class DuplicateReadFilter implements SamRecordFilter {
      * @param record the SAMRecord to evaluate
      * @return true if the SAMRecord matches the filter, otherwise false
      */
-    @Override
     public boolean filterOut(final SAMRecord record) {
         return record.getDuplicateReadFlag();
     }

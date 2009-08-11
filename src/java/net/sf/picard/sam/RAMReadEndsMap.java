@@ -66,7 +66,6 @@ class RAMReadEndsMap implements ReadEndsMap {
     /**
      * @return number of elements stored in RAM.  Always <= size()
      */
-    @Override
     public int sizeInRam() {
         return size();
     }

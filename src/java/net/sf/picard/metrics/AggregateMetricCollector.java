@@ -39,28 +39,24 @@ public class AggregateMetricCollector<T extends MetricBase, R> implements Metric
         this.collectors = collectors;
     }
 
-    @Override
     public void addRecord(final R record) {
         for (final MetricCollector<T, R> collector : this.collectors) {
             collector.addRecord(record);
         }
     }
 
-    @Override
     public void onComplete() {
         for (final MetricCollector<T, R> collector : this.collectors) {
             collector.onComplete();
         }
     }
 
-    @Override
     public void setMetrics(final T metrics) {
         for (final MetricCollector<T, R> collector : this.collectors) {
             collector.setMetrics(metrics);
         }
     }
     
-    @Override
     public T getMetrics() {
         return this.collectors[0].getMetrics();
     }
