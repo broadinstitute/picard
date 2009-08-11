@@ -188,7 +188,10 @@ public class ValidateSamFileTest {
                 Arrays.fill(bases, (byte) 'A'); 
                 return new ReferenceSequence("foo", index++, bases);
             }
-            
+
+            public void reset() {
+                this.index = 0;
+            }
         });
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_TAG_NM.getHistogramString()).getValue(), 1.0);

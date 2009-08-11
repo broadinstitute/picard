@@ -49,6 +49,12 @@ public interface ReferenceSequenceFile {
     public ReferenceSequence nextSequence();
 
     /**
+     * Resets the ReferenceSequenceFile so that the next call to nextSequence() will return
+     * the first sequence in the file.
+     */
+    public void reset();
+
+    /**
      * @return Reference name, file name, or something other human-readable representation.
      */
     public String toString();

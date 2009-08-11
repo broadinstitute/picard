@@ -47,7 +47,7 @@ class FastaSequenceFile implements ReferenceSequenceFile {
 
     private final File file;
     private final boolean truncateNamesAtWhitespace;
-    private final FastLineReader in;
+    private FastLineReader in;
     private SAMSequenceDictionary sequenceDictionary;
     private int sequenceIndex = -1;
 
@@ -119,6 +119,13 @@ class FastaSequenceFile implements ReferenceSequenceFile {
         final byte[] bases = readSequence(knownLength);
 
         return new ReferenceSequence(name, this.sequenceIndex, bases);
+    }
+
+    public void reset() {
+        this.sequenceIndex = -1;
+        this.in.close();
+        this.in = new FastLineReader(IoUtil.openFileForReading(file));
+
     }
 
     private String readSequenceName() {
