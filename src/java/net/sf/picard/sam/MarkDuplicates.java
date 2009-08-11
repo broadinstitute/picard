@@ -61,6 +61,10 @@ public class MarkDuplicates extends CommandLineProgram {
     @Option(shortName="M", doc="File to write duplication metrics to") public File METRICS_FILE;
     @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.") public boolean REMOVE_DUPLICATES = false;
 
+    @Option(doc="If true, assume that the input file is coordinate sorted, even if the header says otherwise.",
+    shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+    public boolean ASSUME_SORTED = false;
+
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
     private SortingLongCollection duplicateIndexes;
@@ -206,7 +210,11 @@ public class MarkDuplicates extends CommandLineProgram {
         final SAMFileReader sam = new SAMFileReader(INPUT);
         final SAMFileHeader header = sam.getFileHeader();
         if (header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new PicardException(INPUT + " is not coordinate sorted.");
+            if (ASSUME_SORTED) {
+                log.info("Assuming input is coordinate sorted.");
+            } else {
+                throw new PicardException(INPUT + " is not coordinate sorted.");
+            }
         }
         final ReadEndsMap tmp;
         if (header.getSequenceDictionary().getSequences().size() > MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP) {
