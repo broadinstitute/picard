@@ -286,6 +286,10 @@ public class SamFileValidator {
     private void validateHeader(SAMFileHeader fileHeader) {
         if (fileHeader.getVersion() == null) {
             addError(new SAMValidationError(Type.MISSING_VERSION_NUMBER, "Header has no version number", null));
+        } else if (!fileHeader.getVersion().equals(SAMFileHeader.CURRENT_VERSION)) {
+            addError(new SAMValidationError(Type.INVALID_VERSION_NUMBER, "Header version: " +
+                    fileHeader.getVersion() + " does not match expected version: " + SAMFileHeader.CURRENT_VERSION,
+                    null));
         }
         if (fileHeader.getSequenceDictionary().isEmpty()) {
             addError(new SAMValidationError(Type.MISSING_SEQUENCE_DICTIONARY, "Sequence dictionary is empty", null));

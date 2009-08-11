@@ -31,6 +31,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.util.Histogram;
 import net.sf.samtools.*;
+import net.sf.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -240,6 +241,15 @@ public class ValidateSamFileTest {
                 {"missing fields", "missing_fields.sam"},
                 {"zero length read", "zero_length_read.sam"}
         };
+    }
+
+    @Test
+    public void testHeaderVersionValidation() throws Exception {
+        String header = "@HD	VN:Hi,Mom!	SO:queryname";
+        InputStream strm = new ByteArrayInputStream(StringUtil.stringToBytes(header));
+        SAMFileReader samReader = new SAMFileReader(strm);
+        Histogram<String> results = executeValidation(samReader, null);
+        Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()).getValue(), 1.0);
     }
 
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
