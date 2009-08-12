@@ -229,7 +229,7 @@ class BAMRecord
             mCigarDecoded = true;
             if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT && !this.getReadUnmappedFlag()) {
                 // Don't know line number, and don't want to force read name to be decoded.
-                SAMUtils.processValidationErrors(super.getCigar().isValid(super.getReadName(), -1L), -1L, getValidationStringency());
+                SAMUtils.processValidationErrors(validateCigar(-1L), -1, getValidationStringency());
             }
         }
         return super.getCigar();

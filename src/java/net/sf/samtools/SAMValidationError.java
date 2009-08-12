@@ -127,7 +127,12 @@ public class SAMValidationError {
 
         MISMATCH_READ_LENGTH_AND_QUALS_LENGTH,
 
-        EMPTY_READ;
+        EMPTY_READ,
+
+        /**
+         * Bases corresponding to M operator in CIGAR are beyond the end of the reference.
+         */
+        CIGAR_MAPS_OFF_REFERENCE;
 
         public final Severity severity;
 

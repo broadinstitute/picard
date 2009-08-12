@@ -510,7 +510,7 @@ public class SAMRecord implements Cloneable
             mCigar = TextCigarCodec.getSingleton().decode(mCigarString);
             if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT && !this.getReadUnmappedFlag()) {
                 // Don't know line number, and don't want to force read name to be decoded.
-                SAMUtils.processValidationErrors(mCigar.isValid(mReadName, -1L), -1L, getValidationStringency());
+                SAMUtils.processValidationErrors(validateCigar(-1L), -1L, getValidationStringency());
             }
         }
         return mCigar;
@@ -1103,6 +1103,34 @@ public class SAMRecord implements Cloneable
         this.mAlignmentBlocks = Collections.unmodifiableList(alignmentBlocks);
 
         return this.mAlignmentBlocks;
+    }
+
+    /**
+     * Run all validations of CIGAR.  These include validation that the CIGAR makes sense independent of
+     * placement, plus validation that CIGAR + placement yields all bases with M operator within the range of the reference.
+     * @param recordNumber For error reporting.  -1 if not known.
+     * @return List of errors, or null if no errors.
+     */
+    public List<SAMValidationError> validateCigar(final long recordNumber) {
+        List<SAMValidationError> ret = null;
+
+        if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT && !this.getReadUnmappedFlag()) {
+            // Don't know line number, and don't want to force read name to be decoded.
+            ret = getCigar().isValid(getReadName(), recordNumber);
+            if (getReferenceIndex() != NO_ALIGNMENT_REFERENCE_INDEX) {
+                final SAMSequenceRecord sequence = getHeader().getSequence(getReferenceIndex());
+                final int referenceSequenceLength = sequence.getSequenceLength();
+                for (final AlignmentBlock alignmentBlock : getAlignmentBlocks()) {
+                    if (alignmentBlock.getReferenceStart() + alignmentBlock.getLength() - 1 > referenceSequenceLength) {
+                        if (ret == null) ret = new ArrayList<SAMValidationError>();
+                        ret.add(new SAMValidationError(SAMValidationError.Type.CIGAR_MAPS_OFF_REFERENCE,
+                                "CIGAR M operator maps off end of reference", getReadName(), recordNumber));
+                        break;
+                    }
+                }
+            }
+        }
+        return ret;
     }
 
     @Override

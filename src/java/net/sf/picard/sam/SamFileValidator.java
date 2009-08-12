@@ -201,7 +201,10 @@ public class SamFileValidator {
             return;
         }
         final Cigar cigar = record.getCigar();
-        final List<SAMValidationError> errors = cigar.isValid(record.getReadName(), recordNumber);
+        ValidationStringency savedStringency = record.getValidationStringency();
+        record.setValidationStringency(ValidationStringency.LENIENT);
+        final List<SAMValidationError> errors = record.validateCigar(recordNumber);
+        record.setValidationStringency(savedStringency);
         if (errors == null) {
             return;
         }

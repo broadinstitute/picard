@@ -299,5 +299,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         return reader;
     }
 
-
+    public SAMFileHeader getHeader() {
+        return header;
+    }
 }
