@@ -45,7 +45,7 @@ import java.util.*;
  * @author Tim Fennell
  */
 public class MarkDuplicates extends CommandLineProgram {
-    private static final Log log = Log.getInstance(MarkDuplicates.class);
+    private Log log;
 
     /**
      * If more than this many sequences in SAM file, don't spill to disk because there will not
@@ -85,6 +85,7 @@ public class MarkDuplicates extends CommandLineProgram {
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
+        log = Log.getInstance(MarkDuplicates.class);
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists();
