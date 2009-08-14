@@ -149,15 +149,23 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
     public double getMean() {
         if (mean == null) {
-            double total = 0;
-            for (final Bin bin : values()) {
-                total += bin.getValue() * bin.getIdValue();
-            }
-    
-            mean = total / getCount();
+            mean = getSum() / getCount();
         }
         
         return mean;
+    }
+
+    /**
+     * Returns the sum of values that were placed into the histogram, or the product of the
+     * histgram bin and the number of entries in each bin.
+     */
+    public double getSum() {
+        double total = 0;
+        for (final Bin bin : values()) {
+            total += bin.getValue() * bin.getIdValue();
+        }
+
+        return total;
     }
     
     public double getStandardDeviation() {
@@ -167,6 +175,26 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         }
 
         return Math.sqrt((total / getCount()) - (getMean() * getMean()));
+    }
+
+    /**
+     * Gets the bin in which the given percentile falls.
+     *
+     * @param percentile a value between 0 and 1
+     * @return the bin value in which the percentile falls
+     */
+    public double getPercentile(double percentile) {
+        if (percentile <= 0) throw new IllegalArgumentException("Cannot query percentiles of 0 or below");
+        if (percentile >= 1) throw new IllegalArgumentException("Cannot query percentiles of 1 or above");
+
+        double total = getCount();
+        double sofar = 0;
+        for (Bin bin : values()) {
+            sofar += bin.getValue();
+            if (sofar / total >= percentile) return bin.getIdValue();
+        }
+
+        throw new IllegalStateException("Could not find percentile: " + percentile);
     }
     
     public double getMedian() {
