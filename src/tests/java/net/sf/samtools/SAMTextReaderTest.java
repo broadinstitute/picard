@@ -28,6 +28,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 public class SAMTextReaderTest {
     // Simple input, spot check that parsed correctly, and make sure nothing blows up.
@@ -107,5 +108,28 @@ public class SAMTextReaderTest {
         }
         iterator.close();
 
+    }
+
+    /**
+     * Colon separates fields of a text tag, but colon is also valid in a tag value, so assert that works properly.
+     */
+    @Test
+    public void testTagWithColon() {
+        // Create a SAMRecord with a String tag containing a colon
+        final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder();
+        samBuilder.addUnmappedFragment("Hi,Mom!");
+        final SAMRecord rec = samBuilder.iterator().next();
+        final String valueWithColons = "A:B::C:::";
+        rec.setAttribute(SAMTag.CQ.name(),  valueWithColons);
+        // Write the record as SAM Text
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final SAMFileWriter textWriter = new SAMFileWriterFactory().makeSAMWriter(samBuilder.getHeader(),
+                true, os);
+        textWriter.addAlignment(rec);
+        textWriter.close();
+
+        final SAMFileReader reader = new SAMFileReader(new ByteArrayInputStream(os.toByteArray()));
+        final SAMRecord recFromText = reader.iterator().next();
+        Assert.assertEquals(recFromText.getAttribute(SAMTag.CQ.name()), valueWithColons);
     }
 }

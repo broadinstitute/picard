@@ -49,7 +49,7 @@ public class StringUtil {
     }
 
     /**
-     * Split the string into tokesn separated by the given delimiter.  Profiling has
+     * Split the string into tokens separated by the given delimiter.  Profiling has
      * revealed that the standard string.split() method typically takes > 1/2
      * the total time when used for parsing ascii files.
      * Note that if tokens arg is not large enough to all the tokens in the string, excess tokens are discarded.
@@ -84,6 +84,44 @@ public class StringUtil {
             {
                 tokens[nTokens++] = trailingString;
             }
+        }
+        return nTokens;
+    }
+
+    /**
+     * Split the string into tokens separated by the given delimiter.  Profiling has
+     * revealed that the standard string.split() method typically takes > 1/2
+     * the total time when used for parsing ascii files.
+     * Note that the string is split into no more elements than tokens arg will hold, so the final tokenized
+     * element may contain delimiter chars.
+     *
+     * @param aString  the string to split
+     * @param tokens an array to hold the parsed tokens
+     * @param delim  character that delimits tokens
+     * @return the number of tokens parsed
+     */
+    public static int splitConcatenateExcessTokens(final String aString, final String[] tokens, final char delim) {
+
+        final int maxTokens = tokens.length;
+        int nTokens = 0;
+        int start = 0;
+        int end = aString.indexOf(delim);
+        if(end < 0) {
+            tokens[nTokens++] = aString;
+            return nTokens;
+        }
+        while ((end > 0) && (nTokens < maxTokens - 1))
+        {
+            tokens[nTokens++] = aString.substring(start, end);
+            start = end + 1;
+            end = aString.indexOf(delim, start);
+
+        }
+        // Add the trailing string,  if it is not empty.
+        final String trailingString = aString.substring(start);
+        if (trailingString.length() > 0)
+        {
+            tokens[nTokens++] = trailingString;
         }
         return nTokens;
     }

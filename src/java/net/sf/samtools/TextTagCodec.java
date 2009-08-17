@@ -103,7 +103,7 @@ class TextTagCodec {
      * @return Tag name as 2-character String, and tag value in appropriate class based on tag type.
      */
     Map.Entry<String, Object> decode(final String tag) {
-        final int numFields = StringUtil.split(tag, fields, ':');
+        final int numFields = StringUtil.splitConcatenateExcessTokens(tag, fields, ':');
         if (numFields != TextTagCodec.NUM_TAG_FIELDS) {
             throw new SAMFormatException("Not enough fields in tag '" + tag + "'");
         }
@@ -132,7 +132,8 @@ class TextTagCodec {
      * @return Value converted into the appropriate type.
      */
     Object decodeTypeAndValue(final String typeAndValue) {
-        final int numFields = StringUtil.split(typeAndValue,  typeAndValueFields, ':');
+        // Allow colon in tag value
+        final int numFields = StringUtil.splitConcatenateExcessTokens(typeAndValue,  typeAndValueFields, ':');
         if (numFields == 1) {
             // For backward compatibility, if no colon, treat as String type
             return typeAndValue;
