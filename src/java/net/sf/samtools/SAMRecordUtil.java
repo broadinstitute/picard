@@ -23,7 +23,7 @@
  */
 package net.sf.samtools;
 
-import net.sf.picard.util.SequenceUtil;
+import net.sf.samtools.util.StringUtil;
 
 /**
  * @author alecw@broadinstitute.org
@@ -66,7 +66,9 @@ public class SAMRecordUtil {
      * Reverse-complement all attributes of the SAMRecord that are known to be reversible.
      */
     public static void reverseComplement(final SAMRecord rec) {
-        reverseComplement(rec.getReadBases());
+        final byte[] readBases = rec.getReadBases();
+        reverseComplement(readBases);
+        rec.setReadBases(readBases);
         final byte qualities[] = rec.getBaseQualities();
         reverseArray(qualities);
         rec.setBaseQualities(qualities);
@@ -74,6 +76,18 @@ public class SAMRecordUtil {
         if (sqTagValue != null) {
             SQTagUtil.reverseComplementSqArray(sqTagValue);
             rec.setAttribute(SAMTagUtil.getSingleton().SQ, sqTagValue);
+        }
+        final String e2TagValue = (String)rec.getAttribute(SAMTagUtil.getSingleton().E2);
+        if (e2TagValue != null) {
+            final byte[] secondaryBases = StringUtil.stringToBytes(e2TagValue);
+            reverseComplement(secondaryBases);
+            rec.setAttribute(SAMTagUtil.getSingleton().E2, StringUtil.bytesToString(secondaryBases));
+        }
+        final String u2TagValue = (String)rec.getAttribute(SAMTagUtil.getSingleton().U2);
+        if (u2TagValue != null) {
+            final byte[] secondaryQualities = StringUtil.stringToBytes(u2TagValue);
+            reverseArray(secondaryQualities);
+            rec.setAttribute(SAMTagUtil.getSingleton().U2, StringUtil.bytesToString(secondaryQualities));
         }
     }
 
