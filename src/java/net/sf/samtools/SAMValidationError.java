@@ -132,7 +132,14 @@ public class SAMValidationError {
         /**
          * Bases corresponding to M operator in CIGAR are beyond the end of the reference.
          */
-        CIGAR_MAPS_OFF_REFERENCE;
+        CIGAR_MAPS_OFF_REFERENCE,
+
+        /** Length of E2 (secondary base calls) and U2 (secondary base quals) tag values should match read length */
+        MISMATCH_READ_LENGTH_AND_E2_LENGTH,
+        MISMATCH_READ_LENGTH_AND_U2_LENGTH,
+
+        /** Secondary base calls should not be the same as primary, unless one or the other is N */
+        E2_BASE_EQUALS_PRIMARY_BASE(Severity.WARNING);
 
         public final Severity severity;
 
