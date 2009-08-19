@@ -63,7 +63,7 @@ public class SAMRecordUtil {
     }
 
     /**
-     * Reverse-complement all attributes of the SAMRecord that are known to be reversible.
+     * Reverse-complement all known sequence and base quality attributes of the SAMRecord.
      */
     public static void reverseComplement(final SAMRecord rec) {
         final byte[] readBases = rec.getReadBases();
