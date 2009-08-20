@@ -23,7 +23,7 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.picard.util.SequenceUtil;
+import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.SAMRecord;
 
 /**

@@ -24,6 +24,7 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.util.SequenceUtil;
 
 /**
  * @author alecw@broadinstitute.org
@@ -36,45 +37,12 @@ public class SAMRecordUtil {
             SAMTagUtil.getSingleton().OQ
     };
 
-    /** Byte typed variables for all normal bases. */
-    private static final byte a='a', c='c', g='g', t='t', A='A', C='C', G='G', T='T';
-
-    /** Returns the complement of a single byte. */
-    public static byte complement(final byte b) {
-        switch (b) {
-            case a: return t;
-            case c: return g;
-            case g: return c;
-            case t: return a;
-            case A: return T;
-            case C: return G;
-            case G: return C;
-            case T: return A;
-            default: return b;
-        }
-    }
-
-    /** Reverses and complements the bases in place. */
-    public static void reverseComplement(final byte[] bases) {
-        final int lastIndex = bases.length - 1;
-
-        int i, j;
-        for (i=0, j=lastIndex; i<j; ++i, --j) {
-            final byte tmp = complement(bases[i]);
-            bases[i] = complement(bases[j]);
-            bases[j] = tmp;
-        }
-        if (bases.length % 2 == 1) {
-            bases[i] = complement(bases[i]);
-        }
-    }
-
     /**
      * Reverse-complement all known sequence and base quality attributes of the SAMRecord.
      */
     public static void reverseComplement(final SAMRecord rec) {
         final byte[] readBases = rec.getReadBases();
-        reverseComplement(readBases);
+        SequenceUtil.reverseComplement(readBases);
         rec.setReadBases(readBases);
         final byte qualities[] = rec.getBaseQualities();
         reverseArray(qualities);
@@ -87,7 +55,7 @@ public class SAMRecordUtil {
         final String e2TagValue = (String)rec.getAttribute(SAMTagUtil.getSingleton().E2);
         if (e2TagValue != null) {
             final byte[] secondaryBases = StringUtil.stringToBytes(e2TagValue);
-            reverseComplement(secondaryBases);
+            SequenceUtil.reverseComplement(secondaryBases);
             rec.setAttribute(SAMTagUtil.getSingleton().E2, StringUtil.bytesToString(secondaryBases));
         }
         for (final short stringTag : STRING_TAGS_TO_REVERSE) {

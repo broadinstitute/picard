@@ -23,7 +23,7 @@
  */
 package net.sf.picard.sam;
 
-import net.sf.picard.util.SequenceUtil;
+import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.PicardException;
 
 import java.util.*;

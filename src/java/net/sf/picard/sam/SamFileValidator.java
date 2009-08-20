@@ -29,6 +29,7 @@ import java.util.*;
 
 import net.sf.samtools.*;
 import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMValidationError.Type;
@@ -39,7 +40,6 @@ import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.SequenceUtil;
 
 /**
  * Validates SAM files as follows:

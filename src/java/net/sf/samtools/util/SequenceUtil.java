@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package net.sf.samtools.util;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ public class SequenceUtil {
      */
     public static String reverseComplement(final String sequenceData) {
         final byte[] bases = net.sf.samtools.util.StringUtil.stringToBytes(sequenceData);
-        SAMRecordUtil.reverseComplement(bases);
+        reverseComplement(bases);
         return net.sf.samtools.util.StringUtil.bytesToString(bases);
     }
 
@@ -178,7 +178,7 @@ public class SequenceUtil {
 
         final byte[] readBases = read.getReadBases();
 
-        for (AlignmentBlock block : read.getAlignmentBlocks()) {
+        for (final AlignmentBlock block : read.getAlignmentBlocks()) {
             final int readBlockStart = block.getReadStart() - 1;
             final int referenceBlockStart = block.getReferenceStart() - 1;
             final int length = block.getLength();
@@ -201,7 +201,7 @@ public class SequenceUtil {
         final byte[] readBases = read.getReadBases();
         final byte[] readQualities = read.getBaseQualities();
 
-        for (AlignmentBlock block : read.getAlignmentBlocks()) {
+        for (final AlignmentBlock block : read.getAlignmentBlocks()) {
             final int readBlockStart = block.getReadStart() - 1;
             final int referenceBlockStart = block.getReferenceStart() - 1;
             final int length = block.getLength();
@@ -222,11 +222,41 @@ public class SequenceUtil {
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases) {
         int samNm = countMismatches(read, referenceBases);
-        for (CigarElement el : read.getCigar().getCigarElements()) {
+        for (final CigarElement el : read.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
                 samNm += el.getLength();
             }
         }
         return samNm;
+    }
+
+    /** Returns the complement of a single byte. */
+    public static byte complement(final byte b) {
+        switch (b) {
+            case a: return t;
+            case c: return g;
+            case g: return c;
+            case t: return a;
+            case A: return T;
+            case C: return G;
+            case G: return C;
+            case T: return A;
+            default: return b;
+        }
+    }
+
+    /** Reverses and complements the bases in place. */
+    public static void reverseComplement(final byte[] bases) {
+        final int lastIndex = bases.length - 1;
+
+        int i, j;
+        for (i=0, j=lastIndex; i<j; ++i, --j) {
+            final byte tmp = complement(bases[i]);
+            bases[i] = complement(bases[j]);
+            bases[j] = tmp;
+        }
+        if (bases.length % 2 == 1) {
+            bases[i] = complement(bases[i]);
+        }
     }
 }
