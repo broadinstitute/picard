@@ -265,7 +265,7 @@ public class StringUtil {
     }
 
     @SuppressWarnings("deprecation")
-    public static byte[] stringToBytes(final String s, final int offset, int length) {
+    public static byte[] stringToBytes(final String s, final int offset, final int length) {
         final byte[] byteBuffer = new byte[length];
         s.getBytes(offset, offset + length, byteBuffer, 0);
         return byteBuffer;
@@ -339,5 +339,16 @@ public class StringUtil {
             throw new NumberFormatException("Not a valid hex digit: " + c);
         }
         return ret;
+    }
+
+    /**
+     * Reverse the given string.  Does not check for null.
+     * @param s String to be reversed.
+     * @return New string that is the reverse of the input string.
+     */
+    public static String reverseString(final String s) {
+        final StringBuilder sb = new StringBuilder(s);
+        sb.reverse();
+        return sb.toString();
     }
 }

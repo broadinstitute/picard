@@ -29,6 +29,13 @@ import net.sf.samtools.util.StringUtil;
  * @author alecw@broadinstitute.org
  */
 public class SAMRecordUtil {
+
+    /** List of String tags that must be reversed if present when a SAMRecord is reverseComplemented */
+    private static final short[] STRING_TAGS_TO_REVERSE = {
+            SAMTagUtil.getSingleton().U2,
+            SAMTagUtil.getSingleton().OQ
+    };
+
     /** Byte typed variables for all normal bases. */
     private static final byte a='a', c='c', g='g', t='t', A='A', C='C', G='G', T='T';
 
@@ -83,11 +90,11 @@ public class SAMRecordUtil {
             reverseComplement(secondaryBases);
             rec.setAttribute(SAMTagUtil.getSingleton().E2, StringUtil.bytesToString(secondaryBases));
         }
-        final String u2TagValue = (String)rec.getAttribute(SAMTagUtil.getSingleton().U2);
-        if (u2TagValue != null) {
-            final byte[] secondaryQualities = StringUtil.stringToBytes(u2TagValue);
-            reverseArray(secondaryQualities);
-            rec.setAttribute(SAMTagUtil.getSingleton().U2, StringUtil.bytesToString(secondaryQualities));
+        for (final short stringTag : STRING_TAGS_TO_REVERSE) {
+            final String value = (String)rec.getAttribute(stringTag);
+            if (value != null) {
+                rec.setAttribute(stringTag, StringUtil.reverseString(value));
+            }
         }
     }
 
@@ -103,4 +110,5 @@ public class SAMRecordUtil {
             array[j] = tmp;
         }
     }
+
 }
