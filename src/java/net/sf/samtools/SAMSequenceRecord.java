@@ -26,6 +26,8 @@ package net.sf.samtools;
 
 import java.util.*;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Header information about a reference sequence.  Corresponds to @SQ header record in SAM text header.
@@ -125,11 +127,26 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
                     if (entry.getKey().equals(SAMSequenceRecord.MD5_TAG)) {
                         // handle the fact that sometimes the MD5 had leading zeroes trimmed, by converting
                         // to BigInteger before comparing.
-                        BigInteger thisMd5 = new BigInteger((String)entry.getValue(), 16);
-                        BigInteger thatMd5 = new BigInteger((String)thatAttribute, 16);
+                        final BigInteger thisMd5 = new BigInteger((String)entry.getValue(), 16);
+                        final BigInteger thatMd5 = new BigInteger((String)thatAttribute, 16);
                         if (!thisMd5.equals(thatMd5)) {
                             return false;
                         }
+                    } else if (entry.getKey().equals(SAMSequenceRecord.URI_TAG)) {
+                        final String thisURTag = (String)entry.getValue();
+                        final String thatURTag = (String)thatAttribute;
+                        try {
+                            final URI thisURI = makeURI(thisURTag);
+                            final URI thatURI = makeURI(thatURTag);
+                            if (thisURI.equals(thatURI)) {
+                                continue;
+                            }
+                        } catch (URISyntaxException e) {
+                            // Drop through to warning below.
+                        }
+                        System.err.println("WARNING: Mismatch in UR tags in SAMSequenceRecords: " +
+                                thisURTag + " != " + thatURTag);
+
                     } else if (!entry.getValue().equals(thatAttribute)) {
                         return false;
                     }
@@ -137,6 +154,14 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         }
 
         return true;
+    }
+
+    private URI makeURI(final String s) throws URISyntaxException {
+        URI uri = new URI(s);
+        if (uri.getScheme() == null) {
+            uri = new URI("file", uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+        }
+        return uri;
     }
 
     @Override
@@ -169,9 +194,9 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     }
 
     public final SAMSequenceRecord clone() {
-        SAMSequenceRecord ret = new SAMSequenceRecord(this.mSequenceName, this.mSequenceLength);
+        final SAMSequenceRecord ret = new SAMSequenceRecord(this.mSequenceName, this.mSequenceLength);
         ret.mSequenceIndex = this.mSequenceIndex;
-        for (Map.Entry<String, Object> entry : this.getAttributes()) {
+        for (final Map.Entry<String, Object> entry : this.getAttributes()) {
             ret.setAttribute(entry.getKey(), entry.getValue());
         }
         return ret;
