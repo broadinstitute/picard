@@ -47,29 +47,29 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
         DESCRIPTION_TAG, PLATFORM_UNIT_TAG, PREDICTED_MEDIAN_INSERT_SIZE_TAG, SEQUENCING_CENTER_TAG,
             DATE_RUN_PRODUCED_TAG, PLATFORM_TAG));
 
-    public SAMReadGroupRecord(final String id) {
-        mReadGroupId = id;
-    }
+    public SAMReadGroupRecord(final String id) { mReadGroupId = id; }
+    public String getReadGroupId() { return mReadGroupId; }
 
-    public String getReadGroupId() {
-        return mReadGroupId;
-    }
+    public String getSample() { return (String) getAttribute("SM"); }
+    public void setSample(final String value) { setAttribute("SM", value); }
 
-    public String getSample() {
-        return (String) getAttribute("SM");
-    }
+    public String getLibrary() { return (String) getAttribute("LB"); }
+    public void setLibrary(final String value) { setAttribute("LB", value); }
 
-    public void setSample(final String value) {
-        setAttribute("SM", value);
-    }
+    public String getPlatformUnit() { return (String) getAttribute(PLATFORM_UNIT_TAG); }
+    public void setPlatformUnit(String pu) { setAttribute(PLATFORM_UNIT_TAG, pu); }
 
-    public String getLibrary() {
-        return (String) getAttribute("LB");
-    }
+    public String getPlatform() { return (String) getAttribute(PLATFORM_TAG); }
+    public void setPlatform(String platform) { setAttribute(PLATFORM_TAG, platform); }
 
-    public void setLibrary(final String value) {
-        setAttribute("LB", value);
-    }
+    public Date getRunDate() { return (Date) getAttribute(DATE_RUN_PRODUCED_TAG); }
+    public void setRunDate(Date runDate) { setAttribute(DATE_RUN_PRODUCED_TAG, runDate); }
+
+    public String getSequencingCenter() { return (String) getAttribute(SEQUENCING_CENTER_TAG); }
+    public void setSequencingCenter(String center) { setAttribute(SEQUENCING_CENTER_TAG, center); }
+
+    public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
+    public void setDescription(String description) { setAttribute(DESCRIPTION_TAG, description); }
 
     @Override
     public boolean equals(final Object o) {
