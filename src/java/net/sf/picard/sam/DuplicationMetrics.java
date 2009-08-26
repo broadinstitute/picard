@@ -69,12 +69,18 @@ public class DuplicationMetrics extends MetricBase {
     /**
      * Estimates the size of a library based on the number of paired end molecules observed
      * and the number of unique pairs ovserved.
+     *
+     * Based on the Lander-Waterman equation that states:
+     *     C/X = 1 - exp( -N/X )
+     * where
+     *     X = number of distinct molecules in library
+     *     N = number of read pairs
+     *     C = number of distinct fragments observed in read pairs
      */
     public static Long estimateLibrarySize(final long readPairs, final long uniqueReadPairs) {
         final long readPairDuplicates = readPairs - uniqueReadPairs;
 
         if (readPairs > 0 && readPairDuplicates > 0) {
-            // Following code "borrowed" from CRD codebase
             long n = readPairs;
             long c = uniqueReadPairs;
 
