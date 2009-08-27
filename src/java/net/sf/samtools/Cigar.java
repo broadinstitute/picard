@@ -128,13 +128,14 @@ public class Cigar {
                 // There should be an M operator between any pair of IDN operators
                 if (isInDelOperator(op)) {
                     for (int j = i+1; j < cigarElements.size(); ++j) {
-                        if (cigarElements.get(j).getOperator() == CigarOperator.M) {
+                        final CigarOperator nextOperator = cigarElements.get(j).getOperator();
+                        if (isRealOperator(nextOperator) && !isInDelOperator(nextOperator)) {
                             break;
                         }
-                        if (isInDelOperator(cigarElements.get(j).getOperator())) {
+                        if (isInDelOperator(nextOperator)) {
                             if (ret == null) ret = new ArrayList<SAMValidationError>();
                             ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
-                                    "No M operator between pair of IDN operators in CIGAR", readName, recordNumber));
+                                    "No M or N operator between pair of ID operators in CIGAR", readName, recordNumber));
                         }
                     }
                 }
@@ -164,7 +165,7 @@ public class Cigar {
     }
 
     private static boolean isInDelOperator(final CigarOperator op) {
-        return op == CigarOperator.I || op == CigarOperator.D || op == CigarOperator.N;
+        return op == CigarOperator.I || op == CigarOperator.D;
     }
 
     private static boolean isClippingOperator(final CigarOperator op) {
