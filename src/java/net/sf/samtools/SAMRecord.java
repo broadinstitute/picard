@@ -259,6 +259,28 @@ public class SAMRecord implements Cloneable
         mBaseQualities = value;
     }
 
+    /**
+     * If the original base quality scores have been store in the "OQ" tag will return the numeric
+     * score as a byte[]
+     */
+    public byte[] getOriginalBaseQualities() {
+        String oqString = (String) getAttribute("OQ");
+        if (oqString != null && oqString.length() > 0) {
+            return SAMUtils.fastqToPhred(oqString);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Sets the original base quality scores into the "OQ" tag as a String.  Supplied value should be
+     * as phred-scaled numeric qualities.
+     */
+    public void setOriginalBaseQualities(byte[] oq) {
+        setAttribute("OQ", SAMUtils.phredToFastq(oq));
+    }
+
     private static boolean hasReferenceName(final Integer referenceIndex, final String referenceName) {
         return (referenceIndex != null && referenceIndex != NO_ALIGNMENT_REFERENCE_INDEX) ||
                 !NO_ALIGNMENT_REFERENCE_NAME.equals(referenceName);
