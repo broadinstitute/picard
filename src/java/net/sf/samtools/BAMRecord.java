@@ -319,7 +319,7 @@ class BAMRecord
 
     private byte[] decodeReadBases() {
         if (mReadLength == 0) {
-            return null;
+            return NULL_SEQUENCE;
         }
         final int basesOffset = readNameSize() + cigarSize();
         return SAMUtils.compressedBasesToBytes(mReadLength, mRestOfBinaryData, basesOffset);
