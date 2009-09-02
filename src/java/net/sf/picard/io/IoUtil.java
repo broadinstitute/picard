@@ -143,6 +143,15 @@ public class IoUtil {
     }
 
     /**
+     * Checks that a file is of non-zero length
+     */
+    public static void assertFileSizeNonZero(final File file) {
+        if (file.length() == 0) {
+            throw new PicardException(file.getAbsolutePath() + " has length 0");
+        }
+    }
+
+    /**
      * Opens a file for reading, decompressing it if necessary
      *
      * @param file  The file to open
