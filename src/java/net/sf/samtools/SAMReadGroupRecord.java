@@ -24,6 +24,8 @@
 package net.sf.samtools;
 
 
+import net.sf.samtools.util.Iso8601Date;
+
 import java.util.*;
 
 /**
@@ -57,19 +59,28 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public void setLibrary(final String value) { setAttribute("LB", value); }
 
     public String getPlatformUnit() { return (String) getAttribute(PLATFORM_UNIT_TAG); }
-    public void setPlatformUnit(String pu) { setAttribute(PLATFORM_UNIT_TAG, pu); }
+    public void setPlatformUnit(final String pu) { setAttribute(PLATFORM_UNIT_TAG, pu); }
 
     public String getPlatform() { return (String) getAttribute(PLATFORM_TAG); }
-    public void setPlatform(String platform) { setAttribute(PLATFORM_TAG, platform); }
+    public void setPlatform(final String platform) { setAttribute(PLATFORM_TAG, platform); }
 
     public Date getRunDate() { return (Date) getAttribute(DATE_RUN_PRODUCED_TAG); }
-    public void setRunDate(Date runDate) { setAttribute(DATE_RUN_PRODUCED_TAG, runDate); }
+
+    /**
+     * Converts to Iso8601Date if not already in that form.
+     */
+    public void setRunDate(Date runDate) {
+        if (!(runDate instanceof Iso8601Date)) {
+            runDate = new Iso8601Date(runDate);
+        }
+        setAttribute(DATE_RUN_PRODUCED_TAG, runDate);
+    }
 
     public String getSequencingCenter() { return (String) getAttribute(SEQUENCING_CENTER_TAG); }
-    public void setSequencingCenter(String center) { setAttribute(SEQUENCING_CENTER_TAG, center); }
+    public void setSequencingCenter(final String center) { setAttribute(SEQUENCING_CENTER_TAG, center); }
 
     public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
-    public void setDescription(String description) { setAttribute(DESCRIPTION_TAG, description); }
+    public void setDescription(final String description) { setAttribute(DESCRIPTION_TAG, description); }
 
     @Override
     public boolean equals(final Object o) {

@@ -264,7 +264,7 @@ public class SAMRecord implements Cloneable
      * score as a byte[]
      */
     public byte[] getOriginalBaseQualities() {
-        String oqString = (String) getAttribute("OQ");
+        final String oqString = (String) getAttribute("OQ");
         if (oqString != null && oqString.length() > 0) {
             return SAMUtils.fastqToPhred(oqString);
         }
@@ -277,7 +277,7 @@ public class SAMRecord implements Cloneable
      * Sets the original base quality scores into the "OQ" tag as a String.  Supplied value should be
      * as phred-scaled numeric qualities.
      */
-    public void setOriginalBaseQualities(byte[] oq) {
+    public void setOriginalBaseQualities(final byte[] oq) {
         setAttribute("OQ", SAMUtils.phredToFastq(oq));
     }
 
@@ -562,6 +562,22 @@ public class SAMRecord implements Cloneable
         mAlignmentBlocks = null;
         // Clear cached alignment end
         mAlignmentEnd = NO_ALIGNMENT_START;
+    }
+
+    /**
+     * Get the SAMReadGroupRecord for this SAMRecord.
+     * @return The SAMReadGroupRecord from the SAMFileHeader for this SAMRecord, or null if
+     * 1) this record has no RG tag, or 2) the header doesn't contain the read group with
+     * the given ID.
+     * @throws NullPointerException if this.getHeader() returns null.
+     * @throws ClassCastException if RG tag does not have a String value.
+     */
+    public SAMReadGroupRecord getReadGroup() {
+        final String rgId = (String)getAttribute(SAMTagUtil.getSingleton().RG);
+        if (rgId == null) {
+            return null;
+        }
+        return getHeader().getReadGroup(rgId);
     }
 
     /**
