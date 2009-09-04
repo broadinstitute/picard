@@ -70,7 +70,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
      * Converts to Iso8601Date if not already in that form.
      */
     public void setRunDate(Date runDate) {
-        if (!(runDate instanceof Iso8601Date)) {
+        if (runDate != null && !(runDate instanceof Iso8601Date)) {
             runDate = new Iso8601Date(runDate);
         }
         setAttribute(DATE_RUN_PRODUCED_TAG, runDate);
