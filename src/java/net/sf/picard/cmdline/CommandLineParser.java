@@ -62,7 +62,7 @@ import net.sf.picard.PicardException;
 public class CommandLineParser {
     // For formatting option section of usage message.
     private static final int OPTION_COLUMN_WIDTH = 30;
-    private static final int DESCRIPTION_COLUMN_WIDTH = 50;
+    private static final int DESCRIPTION_COLUMN_WIDTH = 90;
 
     private static final Boolean[] TRUE_FALSE_VALUES = {Boolean.TRUE, Boolean.FALSE};
 
