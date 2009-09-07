@@ -25,6 +25,10 @@ package net.sf.picard.util;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * <p>A <em>wafer thin</em> wrapper around System.out that uses var-args to make it
@@ -86,6 +90,8 @@ public final class Log {
         if (isEnabled(level)) {
             this.out.print(level.name());
             this.out.print('\t');
+            this.out.print(getTimestamp());
+            this.out.print('\t');
             this.out.print(this.className);
             this.out.print('\t');
 
@@ -114,6 +120,15 @@ public final class Log {
                 throwable.printStackTrace(this.out);
             }
         }
+    }
+
+    /**
+     * Creates a date string for insertion into the log.  Given that logs are sometimes held statically
+     * and SimpleDateFormat is not thread safe, currently creates an instance each time :/
+     */
+    protected String getTimestamp() {
+        DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return fmt.format(new Date());
     }
 
     /**
