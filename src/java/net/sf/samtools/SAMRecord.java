@@ -28,8 +28,6 @@ import net.sf.samtools.util.StringUtil;
 
 import java.util.*;
 
-import sun.jvm.hotspot.jdi.SACoreAttachingConnector;
-
 /**
  * Java binding for a SAM file record.  c.f. http://samtools.sourceforge.net/SAM1.pdf
  *
