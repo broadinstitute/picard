@@ -28,6 +28,8 @@ import net.sf.samtools.util.StringUtil;
 
 import java.util.*;
 
+import sun.jvm.hotspot.jdi.SACoreAttachingConnector;
+
 /**
  * Java binding for a SAM file record.  c.f. http://samtools.sourceforge.net/SAM1.pdf
  *
@@ -1420,6 +1422,34 @@ public class SAMRecord implements Cloneable
             newRecord.mAttributes = (ArrayList)((ArrayList)mAttributes).clone();
         }
         return newRecord;
+    }
+
+    /** Simple toString() that gives a little bit of useful info about the read. */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder(64);
+        builder.append(getReadName());
+        if (getReadPairedFlag()) {
+            if (getFirstOfPairFlag()) {
+                builder.append(" 1/2");
+            }
+            else {
+                builder.append(" 2/2");
+            }
+        }
+
+        builder.append(" ");
+        builder.append(String.valueOf(getReadLength()));
+        builder.append("b");
+
+        if (getReadUnmappedFlag()) {
+            builder.append(" unmapped read.");
+        }
+        else {
+            builder.append(" aligned read.");
+        }
+
+        return builder.toString();
     }
 }
 
