@@ -29,6 +29,8 @@ import java.util.Date;
 
 /**
  * Use this type rather than java.util.Date in command-line options in order to get ISO 8601 parsing.
+ * The ctors below truncate milliseconds, since our formatter does not write them.  Note that it is possible
+ * to modify an Iso8601Date so that it has fractional seconds, but that is discouraged.
  *
  * @author alecw@broadinstitute.org
  */
@@ -41,13 +43,23 @@ public class Iso8601Date extends Date {
 
     public Iso8601Date(final String dateStr) {
         super(DateParser.parse(dateStr).getTime());
+        truncateMilliseconds();
     }
 
     public Iso8601Date(final Date date) {
         super(date.getTime());
+        truncateMilliseconds();
     }
 
     public String toString() {
         return iso8601DateFormatter.get().format(this);
+    }
+
+    private void truncateMilliseconds() {
+        long time = getTime();
+        long mod = time % 1000;
+        if (mod != 0) {
+            setTime(time - mod);
+        }
     }
 }

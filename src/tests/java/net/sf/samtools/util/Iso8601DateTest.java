@@ -26,6 +26,8 @@ package net.sf.samtools.util;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 
+import java.util.Date;
+
 /**
  * @author alecw@broadinstitute.org
  */
@@ -39,5 +41,17 @@ public class Iso8601DateTest {
         Assert.assertEquals(first, second);
         String secondFormatted = second.toString();
         Assert.assertEquals(firstFormatted, secondFormatted);
+    }
+
+    @Test
+    public void testMillisecondTruncation() {
+        // Create a Date with milliseconds
+        final Date now = new Date();
+        if (now.getTime() % 1000 == 0) {
+            now.setTime(now.getTime() + 3);
+        }
+        Iso8601Date isoDate = new Iso8601Date(now);
+        Assert.assertEquals(isoDate.getTime() % 1000, 0);
+        Assert.assertEquals(isoDate.getTime() / 1000, now.getTime() / 1000);
     }
 }
