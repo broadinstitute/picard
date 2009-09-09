@@ -139,7 +139,10 @@ public class SAMValidationError {
         MISMATCH_READ_LENGTH_AND_U2_LENGTH,
 
         /** Secondary base calls should not be the same as primary, unless one or the other is N */
-        E2_BASE_EQUALS_PRIMARY_BASE(Severity.WARNING);
+        E2_BASE_EQUALS_PRIMARY_BASE(Severity.WARNING),
+
+        /** BAM appears to be healthy, but is an older file so doesn't have terminator block. */
+        BAM_FILE_MISSING_TERMINATOR_BLOCK(Severity.WARNING);
 
         public final Severity severity;
 

@@ -24,12 +24,11 @@
 
 package net.sf.picard.sam;
 
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 import net.sf.samtools.*;
-import net.sf.samtools.util.StringUtil;
-import net.sf.samtools.util.SequenceUtil;
+import net.sf.samtools.util.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMValidationError.Type;
@@ -59,8 +58,8 @@ import net.sf.picard.reference.ReferenceSequenceFileWalker;
  * @author Doug Voet
  */
 public class SamFileValidator {
-    private Histogram<Type> errorsByType;
-    private PrintWriter out;
+    private Histogram<Type> errorsByType = new Histogram<Type>();
+    private final PrintWriter out;
     private Map<String, PairEndInfo> pairEndInfoByName;
     private ReferenceSequenceFileWalker refFileWalker = null;
     private boolean verbose = false;
@@ -69,6 +68,10 @@ public class SamFileValidator {
     private SortOrder sortOrder;
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
     private boolean ignoreWarnings = false;
+
+    public SamFileValidator(final PrintWriter out) {
+        this.out = out;
+    }
 
     /** Sets one or more error types that should not be reported on. */
     public void setErrorsToIgnore(final Collection<Type> types) {
@@ -85,13 +88,11 @@ public class SamFileValidator {
      * Outputs validation summary report to out.
      * 
      * @param samReader records to validate
-     * @param out destination of report
      * @param reference if null, NM tag validation is skipped
      */
-    public void validateSamFileSummary(final SAMFileReader samReader, final PrintWriter out, final ReferenceSequenceFile reference) {
-        init(out, reference);
-        this.verbose = false;
-        
+    public void validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
+        init(reference);
+
         validateSamFile(samReader, out);
         
         if (errorsByType.getCount() > 0) {
@@ -113,16 +114,12 @@ public class SamFileValidator {
      * Outputs validation error details to out.
      * 
      * @param samReader records to validate
-     * @param out destination of report
      * @param reference if null, NM tag validation is skipped
-     * @param maxOutput maximum number of lines of output,
-     * processing will stop after this threshold has been reached 
+     * processing will stop after this threshold has been reached
      */
-    public void validateSamFileVerbose(final SAMFileReader samReader, final PrintWriter out, final ReferenceSequenceFile reference, final int maxOutput) {
-        init(out, reference);
-        this.verbose = true;
-        this.maxVerboseOutput = maxOutput;
-        
+    public void validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
+        init(reference);
+
         try {
             validateSamFile(samReader, out);
         } catch (MaxOutputExceededException e) {
@@ -131,7 +128,34 @@ public class SamFileValidator {
         
         cleanup();
     }
-    
+
+    public void validateBamFileTermination(final File inputFile) {
+        BufferedInputStream inputStream = null;
+        try {
+            inputStream = IOUtil.toBufferedStream(new FileInputStream(inputFile));
+            if (!BlockCompressedInputStream.isValidFile(inputStream)) {
+                return;
+            }
+            final BlockCompressedInputStream.FileTermination terminationState =
+                    BlockCompressedInputStream.checkTermination(inputFile);
+            if (terminationState.equals(BlockCompressedInputStream.FileTermination.DEFECTIVE)) {
+                addError(new SAMValidationError(Type.TRUNCATED_FILE, "BAM file has defective last gzip block",
+                        inputFile.getPath()));
+            } else if (terminationState.equals(BlockCompressedInputStream.FileTermination.HAS_HEALTHY_LAST_BLOCK)) {
+                addError(new SAMValidationError(Type.BAM_FILE_MISSING_TERMINATOR_BLOCK,
+                        "Older BAM file -- does not have terminator block",
+                        inputFile.getPath()));
+
+            }
+        } catch (IOException e) {
+            throw new PicardException("IOException", e);
+        } finally {
+            if (inputStream != null) {
+                CloserUtil.close(inputStream);
+            }
+        }
+    }
+
     private void validateSamFile(final SAMFileReader samReader, final PrintWriter out) {
         try {
             samReader.setValidationStringency(ValidationStringency.SILENT);
@@ -260,10 +284,8 @@ public class SamFileValidator {
         }
     }
     
-    private void init(final PrintWriter out, final ReferenceSequenceFile reference) {
-        this.errorsByType = new Histogram<Type>();
+    private void init(final ReferenceSequenceFile reference) {
         this.pairEndInfoByName = new HashMap<String, PairEndInfo>();
-        this.out = out;
         if (reference != null) {
             this.refFileWalker = new ReferenceSequenceFileWalker(reference);
         }
@@ -272,7 +294,6 @@ public class SamFileValidator {
     private void cleanup() {
         this.errorsByType = null;
         this.pairEndInfoByName = null;
-        this.out = null;
         this.refFileWalker = null;
     }
 
@@ -348,7 +369,17 @@ public class SamFileValidator {
             }
         }
     }
-    
+
+    /**
+     * Control verbosity
+     * @param verbose True in order to emit a message per error or warning.
+     * @param maxVerboseOutput If verbose, emit no more than this many messages.  Ignored if !verbose.
+     */
+    public void setVerbose(final boolean verbose, final int maxVerboseOutput) {
+        this.verbose = verbose;
+        this.maxVerboseOutput = maxVerboseOutput;
+    }
+
     public static class ValidationMetrics extends MetricBase {
     }
     

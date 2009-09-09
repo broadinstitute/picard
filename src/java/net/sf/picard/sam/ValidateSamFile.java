@@ -72,7 +72,7 @@ public class ValidateSamFile extends CommandLineProgram {
 
     
     
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
 
@@ -85,7 +85,7 @@ public class ValidateSamFile extends CommandLineProgram {
             reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
         }
-        PrintWriter out;
+        final PrintWriter out;
         if (OUTPUT != null) {
             IoUtil.assertFileIsWritable(OUTPUT);
             try {
@@ -100,19 +100,25 @@ public class ValidateSamFile extends CommandLineProgram {
             out = new PrintWriter(System.out);
         }
         
-        SAMFileReader samReader = new SAMFileReader(INPUT);
-        SamFileValidator validator = new SamFileValidator();
+        final SAMFileReader samReader = new SAMFileReader(INPUT);
+        final SamFileValidator validator = new SamFileValidator(out);
         validator.setErrorsToIgnore(IGNORE);
         if (IGNORE_WARNINGS) {
             validator.setIgnoreWarnings(IGNORE_WARNINGS);
         }
+        if (MODE == ValidateSamFile.Mode.SUMMARY) {
+            validator.setVerbose(false, 0);
+        } else {
+            validator.setVerbose(true, MAX_OUTPUT);
+        }
+        validator.validateBamFileTermination(INPUT);
 
         switch (MODE) {
             case SUMMARY:
-                validator.validateSamFileSummary(samReader, out, reference);
+                validator.validateSamFileSummary(samReader, reference);
                 break;
             case VERBOSE:
-                validator.validateSamFileVerbose(samReader, out, reference, MAX_OUTPUT);
+                validator.validateSamFileVerbose(samReader, reference);
                 break;
         }
         

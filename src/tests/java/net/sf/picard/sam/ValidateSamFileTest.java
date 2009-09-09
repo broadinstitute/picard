@@ -69,11 +69,11 @@ public class ValidateSamFileTest {
         }
         
         final StringWriter results = new StringWriter();
-        new SamFileValidator().validateSamFileVerbose(
+        final SamFileValidator validator = new SamFileValidator(new PrintWriter(results));
+        validator.setVerbose(true, 10);
+        validator.validateSamFileVerbose(
                 samBuilder.getSamReader(), 
-                new PrintWriter(results), 
-                null, 
-                10);
+                null);
         
         final int lineCount = results.toString().split("\n").length;
         Assert.assertEquals(lineCount, 11);
@@ -245,10 +245,10 @@ public class ValidateSamFileTest {
 
     @Test
     public void testHeaderVersionValidation() throws Exception {
-        String header = "@HD	VN:Hi,Mom!	SO:queryname";
-        InputStream strm = new ByteArrayInputStream(StringUtil.stringToBytes(header));
-        SAMFileReader samReader = new SAMFileReader(strm);
-        Histogram<String> results = executeValidation(samReader, null);
+        final String header = "@HD	VN:Hi,Mom!	SO:queryname";
+        final InputStream strm = new ByteArrayInputStream(StringUtil.stringToBytes(header));
+        final SAMFileReader samReader = new SAMFileReader(strm);
+        final Histogram<String> results = executeValidation(samReader, null);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()).getValue(), 1.0);
     }
 
@@ -256,10 +256,10 @@ public class ValidateSamFileTest {
     public void testCigarOffEndOfReferenceValidation() throws Exception {
         final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder();
         samBuilder.addFrag(String.valueOf(0), 0, 1, false);
-        int contigLength = samBuilder.getHeader().getSequence(0).getSequenceLength();
+        final int contigLength = samBuilder.getHeader().getSequence(0).getSequenceLength();
         // Should hang off the end.
         samBuilder.addFrag(String.valueOf(1), 0, contigLength - 1, false);
-        Histogram<String> results = executeValidation(samBuilder.getSamReader(), null);
+        final Histogram<String> results = executeValidation(samBuilder.getSamReader(), null);
         Assert.assertNotNull(results.get(SAMValidationError.Type.CIGAR_MAPS_OFF_REFERENCE.getHistogramString()));
         Assert.assertEquals(results.get(SAMValidationError.Type.CIGAR_MAPS_OFF_REFERENCE.getHistogramString()).getValue(), 1.0);
     }
@@ -267,7 +267,7 @@ public class ValidateSamFileTest {
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
-        new SamFileValidator().validateSamFileSummary(samReader, out, reference);
+        new SamFileValidator(out).validateSamFileSummary(samReader, reference);
         final MetricsFile<MetricBase, String> outputFile = new MetricsFile<MetricBase, String>();
         outputFile.read(new FileReader(outFile));
         Assert.assertNotNull(outputFile.getHistogram());
