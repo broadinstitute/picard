@@ -431,7 +431,10 @@ class BAMFileReader
                     return record;
                 }
                 final int alignmentStart = record.getAlignmentStart();
-                final int alignmentEnd = record.getAlignmentEnd();
+                // If read is unmapped but has a coordinate, return it if the coordinate is within
+                // the query region, regardless of whether the mapped mate will be returned.
+                final int alignmentEnd = (record.getAlignmentEnd() != SAMRecord.NO_ALIGNMENT_START?
+                        record.getAlignmentEnd(): alignmentStart);
                 if (alignmentStart > mRegionEnd) {
                     // If scanned beyond target region, end iteration
                     mFilePointers = null;
