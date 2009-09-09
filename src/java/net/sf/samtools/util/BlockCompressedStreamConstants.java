@@ -76,4 +76,38 @@ public class BlockCompressedStreamConstants {
 
     // subfield length in bytes
     public static final byte BGZF_LEN = 2;
+
+    public static final byte[] EMPTY_GZIP_BLOCK = {
+            BlockCompressedStreamConstants.GZIP_ID1,
+            (byte)BlockCompressedStreamConstants.GZIP_ID2,
+            BlockCompressedStreamConstants.GZIP_CM_DEFLATE,
+            BlockCompressedStreamConstants.GZIP_FLG,
+            0, 0, 0, 0, // Modification time
+            BlockCompressedStreamConstants.GZIP_XFL,
+            (byte)BlockCompressedStreamConstants.GZIP_OS_UNKNOWN,
+            BlockCompressedStreamConstants.GZIP_XLEN, 0, // Little-endian short
+            BlockCompressedStreamConstants.BGZF_ID1,
+            BlockCompressedStreamConstants.BGZF_ID2,
+            BlockCompressedStreamConstants.BGZF_LEN, 0, // Little-endian short
+            // Total block size - 1
+            BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH +
+                    BlockCompressedStreamConstants.BLOCK_FOOTER_LENGTH - 1 + 2, 0, // Little-endian short
+            // Dummy payload?
+            3, 0,
+            0, 0, 0, 0, // crc
+            0, 0, 0, 0, // uncompressedSize
+    };
+    public static final byte[] GZIP_BLOCK_PREAMBLE = {
+            BlockCompressedStreamConstants.GZIP_ID1,
+            (byte)BlockCompressedStreamConstants.GZIP_ID2,
+            BlockCompressedStreamConstants.GZIP_CM_DEFLATE,
+            BlockCompressedStreamConstants.GZIP_FLG,
+            0, 0, 0, 0, // Modification time
+            BlockCompressedStreamConstants.GZIP_XFL,
+            (byte)BlockCompressedStreamConstants.GZIP_OS_UNKNOWN,
+            BlockCompressedStreamConstants.GZIP_XLEN, 0, // Little-endian short
+            BlockCompressedStreamConstants.BGZF_ID1,
+            BlockCompressedStreamConstants.BGZF_ID2,
+            BlockCompressedStreamConstants.BGZF_LEN, 0, // Little-endian short
+    };
 }

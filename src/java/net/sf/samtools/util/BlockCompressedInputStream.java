@@ -30,6 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /*
  * Utility class for reading BGZF block compressed files.  The caller can treat this file like any other InputStream.
@@ -321,6 +324,53 @@ public class BlockCompressedInputStream
                 ((buffer[offset+1] & 0xFF) << 8) |
                 ((buffer[offset+2] & 0xFF) << 16) |
                 ((buffer[offset+3] & 0xFF) << 24));
+    }
+
+    public enum FileTermination {HAS_TERMINATOR_BLOCK, HAS_HEALTHY_LAST_BLOCK, DEFECTIVE}
+
+    public static FileTermination checkTermination(final File file)
+        throws IOException {
+        final long fileSize = file.length();
+        if (fileSize < BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length) {
+            return FileTermination.DEFECTIVE;
+        }
+        final RandomAccessFile raFile = new RandomAccessFile(file, "r");
+        raFile.seek(fileSize - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length);
+        byte[] buf = new byte[BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length];
+        // TODO: check return value
+        raFile.read(buf);
+        if (Arrays.equals(buf, BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK)) {
+            return FileTermination.HAS_TERMINATOR_BLOCK;
+        }
+        final int bufsize = (int)Math.min(fileSize, BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE);
+        buf = new byte[bufsize];
+        raFile.seek(fileSize - bufsize);
+        raFile.read(buf);
+        for (int i = buf.length - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length;
+                i >= 0; --i) {
+            if (!preambleEqual(BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE,
+                    buf, i, BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length)) {
+                continue;
+            }
+            final ByteBuffer byteBuffer = ByteBuffer.wrap(buf, i + BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length, 4);
+            byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+            final int totalBlockSizeMinusOne =  byteBuffer.getShort() & 0xFFFF;
+            if (buf.length - i == totalBlockSizeMinusOne + 1) {
+                return FileTermination.HAS_HEALTHY_LAST_BLOCK;
+            } else {
+                return FileTermination.DEFECTIVE;
+            }
+        }
+        return FileTermination.DEFECTIVE;
+    }
+
+    private static boolean preambleEqual(final byte[] preamble, final byte[] buf, final int startOffset, final int length) {
+        for (int i = 0; i < length; ++i) {
+            if (preamble[i] != buf[i + startOffset]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

@@ -172,6 +172,7 @@ public class BlockCompressedOutputStream
         //     System.err.println("In BlockCompressedOutputStream, had to throttle back " + numberOfThrottleBacks +
         //                        " times for file " + codec.getOutputFileName());
         // }
+        codec.writeBytes(BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK);
         codec.close();
     }
 
