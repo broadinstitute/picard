@@ -202,7 +202,7 @@ public class SAMRecord implements Cloneable
         } else {
             final byte[] bases = StringUtil.stringToBytes(value);
             SAMUtils.normalizeBases(bases);
-            mReadBases = bases;
+            setReadBases(bases);
         }
     }
 
