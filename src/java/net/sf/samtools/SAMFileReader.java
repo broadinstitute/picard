@@ -288,6 +288,15 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         return mReader.queryAlignmentStart(sequence, start);
     }
 
+    /**
+     * Fetch the mate for the given read.  Only valid to call this if hasIndex() == true.
+     * This will work whether the mate has a coordinate or not, so long as the given read has correct
+     * mate information.  This method iterates over the SAM file, so there may not be an unclosed
+     * iterator on the SAM file when this method is called.
+     *
+     * @param rec Record for which mate is sought.  Must be a paired read.
+     * @return rec's mate, or null if it cannot be found.
+     */
     public SAMRecord queryMate(final SAMRecord rec) {
         if (!rec.getReadPairedFlag()) {
             throw new IllegalArgumentException("queryMate called for unpaired read.");
