@@ -155,6 +155,86 @@ public class BAMFileIndexTest
         reader.close();
     }
 
+    @Test
+    public void testQueryAlignmentStart() {
+        final SAMFileReader reader = new SAMFileReader(BAM_FILE);
+        CloseableIterator<SAMRecord> it = reader.queryAlignmentStart("chr1", 202160268);
+        Assert.assertEquals(countElements(it), 2);
+        it.close();
+        it = reader.queryAlignmentStart("chr1", 201595153);
+        Assert.assertEquals(countElements(it), 1);
+        it.close();
+        // There are records that overlap this position, but none that start here
+        it = reader.queryAlignmentStart("chrM", 10400);
+        Assert.assertEquals(countElements(it), 0);
+        it.close();
+        // One past the last chr1 record
+        it = reader.queryAlignmentStart("chr1", 246817509);
+        Assert.assertEquals(countElements(it), 0);
+        it.close();
+    }
+
+    @Test
+    public void testQueryMate() {
+        final SAMFileReader reader = new SAMFileReader(BAM_FILE);
+
+        // Both ends mapped
+        SAMRecord rec = getSingleRecordStartingAt(reader, "chrM", 1687);
+        SAMRecord mate = reader.queryMate(rec);
+        assertMate(rec, mate);
+        SAMRecord originalRec = reader.queryMate(mate);
+        Assert.assertEquals(originalRec, rec);
+
+        // One end mapped
+        rec = getSingleRecordStartingAt(reader, "chr11", 48720338);
+        mate = reader.queryMate(rec);
+        assertMate(rec, mate);
+        originalRec = reader.queryMate(mate);
+        Assert.assertEquals(originalRec, rec);
+
+        // Both ends mapped
+        CloseableIterator<SAMRecord> it = reader.queryUnmapped();
+        rec = null;
+        while (it.hasNext()) {
+            SAMRecord next = it.next();
+            if (next.getReadName().equals("2615")) {
+                rec = next;
+                break;
+            }
+        }
+        it.close();
+        Assert.assertNotNull(rec);
+        mate = reader.queryMate(rec);
+        assertMate(rec, mate);
+        originalRec = reader.queryMate(mate);
+        Assert.assertEquals(originalRec, rec);
+    }
+
+    private void assertMate(final SAMRecord rec, final SAMRecord mate) {
+        Assert.assertNotNull(mate);
+        Assert.assertEquals(mate.getReadName(), rec.getReadName());
+        Assert.assertEquals(mate.getReferenceIndex(), rec.getMateReferenceIndex());
+        Assert.assertEquals(mate.getAlignmentStart(), rec.getMateAlignmentStart());
+        Assert.assertFalse(mate.getFirstOfPairFlag() == rec.getFirstOfPairFlag());
+    }
+
+    private SAMRecord getSingleRecordStartingAt(final SAMFileReader reader, final String sequence, final int alignmentStart) {
+        CloseableIterator<SAMRecord> it = reader.queryAlignmentStart(sequence, alignmentStart);
+        Assert.assertTrue(it.hasNext());
+        SAMRecord rec = it.next();
+        Assert.assertNotNull(rec);
+        Assert.assertFalse(it.hasNext());
+        it.close();
+        return rec;
+    }
+
+    private int countElements(final CloseableIterator<SAMRecord> it) {
+        int num;
+        for (num = 0; it.hasNext(); ++num, it.next()) {
+        }
+        return num;
+    }
+
     private void checkChromosome(final String name, final int expectedCount) {
         int count = runQueryTest(BAM_FILE, name, 0, 0, true);
         assertEquals(count, expectedCount);

@@ -182,7 +182,40 @@ class BAMFileReader
         if (mFileIndex == null) {
             throw new IllegalStateException("No BAM file index is available");
         }
-        mCurrentIterator = new BAMFileIndexIterator(sequence, start, end, contained);
+        mCurrentIterator = new BAMFileIndexIterator(sequence, start, end, contained? QueryType.CONTAINED: QueryType.OVERLAPPING);
+        return mCurrentIterator;
+    }
+
+    /**
+     * Prepare to iterate through the SAMRecords with the given alignment start.
+     * Only a single iterator on a BAMFile can be extant at a time.  The previous one must be closed
+     * before calling any of the methods that return an iterator.
+     *
+     * Note that an unmapped SAMRecord may still have a reference name and an alignment start for sorting
+     * purposes (typically this is the coordinate of its mate), and will be found by this method if the coordinate
+     * matches the specified interval.
+     *
+     * Note that this method is not necessarily efficient in terms of disk I/O.  The index does not have perfect
+     * resolution, so some SAMRecords may be read and then discarded because they do not match the specified interval.
+     *
+     * @param sequence Reference sequence sought.
+     * @param start Alignment start sought.
+     * @return Iterator for the matching SAMRecords.
+     */
+    CloseableIterator<SAMRecord> queryAlignmentStart(final String sequence, final int start) {
+        if (mStream == null) {
+            throw new IllegalStateException("File reader is closed");
+        }
+        if (mCurrentIterator != null) {
+            throw new IllegalStateException("Iteration in progress");
+        }
+        if (!mIsSeekable) {
+            throw new UnsupportedOperationException("Cannot query stream-based BAM file");
+        }
+        if (mFileIndex == null) {
+            throw new IllegalStateException("No BAM file index is available");
+        }
+        mCurrentIterator = new BAMFileIndexIterator(sequence, start, -1, QueryType.STARTING_AT);
         return mCurrentIterator;
     }
 
@@ -362,16 +395,18 @@ class BAMFileReader
         }
     }
 
+    enum QueryType {CONTAINED, OVERLAPPING, STARTING_AT};
+
     private class BAMFileIndexIterator
         extends BAMFileIterator {
 
         private long[] mFilePointers = null;
         private int mFilePointerIndex = 0;
         private long mFilePointerLimit = -1;
-        private int mReferenceIndex = -1;
-        private int mRegionStart = 0;
-        private int mRegionEnd = 0;
-        private boolean mReturnContained = false;
+        private final int mReferenceIndex;
+        private final int mRegionStart;
+        private final int mRegionEnd;
+        private final QueryType mQueryType;
 
 
         /**
@@ -379,10 +414,9 @@ class BAMFileReader
          * @param sequence Desired reference sequence.
          * @param start 1-based start of target interval, inclusive.
          * @param end 1-based end of target interval, inclusive.
-         * @param contained If true, SAMRecord must be contained in the target interval.  If false, SAMRecord need
-         * only overlap the target interval.
+         * @param queryType contained, overlapping, or starting-at query.
          */
-        BAMFileIndexIterator(final String sequence, final int start, final int end, final boolean contained) {
+        BAMFileIndexIterator(final String sequence, final int start, final int end, final QueryType queryType) {
             super(false);  // delay advance() until after construction
             final SAMFileHeader fileHeader = getFileHeader();
             mReferenceIndex = fileHeader.getSequenceIndex(sequence);
@@ -391,8 +425,12 @@ class BAMFileReader
                 mFilePointers = fileIndex.getSearchBins(mReferenceIndex, start, end);
             }
             mRegionStart = start;
-            mRegionEnd = (end <= 0) ? Integer.MAX_VALUE : end;
-            mReturnContained = contained;
+            if (queryType == QueryType.STARTING_AT) {
+                mRegionEnd = mRegionStart;
+            } else {
+                mRegionEnd = (end <= 0) ? Integer.MAX_VALUE : end;
+            }
+            mQueryType = queryType;
             advance();
         }
 
@@ -433,20 +471,30 @@ class BAMFileReader
                 final int alignmentStart = record.getAlignmentStart();
                 // If read is unmapped but has a coordinate, return it if the coordinate is within
                 // the query region, regardless of whether the mapped mate will be returned.
-                final int alignmentEnd = (record.getAlignmentEnd() != SAMRecord.NO_ALIGNMENT_START?
-                        record.getAlignmentEnd(): alignmentStart);
+                final int alignmentEnd;
+                if (mQueryType == QueryType.STARTING_AT) {
+                    alignmentEnd = -1;
+                } else {
+                    alignmentEnd = (record.getAlignmentEnd() != SAMRecord.NO_ALIGNMENT_START?
+                            record.getAlignmentEnd(): alignmentStart);
+                }
+
                 if (alignmentStart > mRegionEnd) {
                     // If scanned beyond target region, end iteration
                     mFilePointers = null;
                     return null;
                 }
                 // Filter for overlap with region
-                if (mReturnContained) {
+                if (mQueryType == QueryType.CONTAINED) {
                     if (alignmentStart >= mRegionStart && alignmentEnd <= mRegionEnd) {
                         return record;
                     }
-                } else {
+                } else if (mQueryType == QueryType.OVERLAPPING) {
                     if (alignmentEnd >= mRegionStart && alignmentStart <= mRegionEnd) {
+                        return record;
+                    }
+                } else {
+                    if (alignmentStart == mRegionStart) {
                         return record;
                     }
                 }

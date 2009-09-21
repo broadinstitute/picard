@@ -132,6 +132,13 @@ class SAMTextReader
         throw new UnsupportedOperationException("Cannot query SAM text files");
     }
 
+    /**
+     * Unsupported for SAM text files.
+     */
+    CloseableIterator<SAMRecord> queryAlignmentStart(final String sequence, final int start) {
+        throw new UnsupportedOperationException("Cannot query SAM text files");
+    }
+
     public CloseableIterator<SAMRecord> queryUnmapped() {
         throw new UnsupportedOperationException("Cannot query SAM text files");
     }

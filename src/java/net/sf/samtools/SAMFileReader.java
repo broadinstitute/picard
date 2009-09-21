@@ -84,6 +84,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         abstract SAMFileHeader getFileHeader();
         abstract CloseableIterator<SAMRecord> getIterator();
         abstract CloseableIterator<SAMRecord> query(String sequence, int start, int end, boolean contained);
+        abstract CloseableIterator<SAMRecord> queryAlignmentStart(String sequence, int start);
         abstract public CloseableIterator<SAMRecord> queryUnmapped();
         abstract void close();
         // If true, emit warnings about format errors rather than throwing exceptions;
@@ -266,6 +267,70 @@ public class SAMFileReader implements Iterable<SAMRecord> {
     public CloseableIterator<SAMRecord> queryUnmapped() {
         return mReader.queryUnmapped();
     }
+
+    /**
+     * Iterate over records that map to the given sequence and start at the given position.  Only valid to call this if hasIndex() == true.
+     *
+     * Only a single open iterator on a given SAMFileReader may be extant at any one time.  If you want to start
+     * a second iteration, the first one must be closed first.
+     *
+     * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
+     * and then discarded because they do not match the interval of interest.
+     *
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * matches the arguments.
+     *
+     * @param sequence Reference sequence of interest.
+     * @param start Alignment start of interest.
+     * @return Iterator over the SAMRecords with the given alignment start.
+     */
+    public CloseableIterator<SAMRecord> queryAlignmentStart(final String sequence, final int start) {
+        return mReader.queryAlignmentStart(sequence, start);
+    }
+
+    public SAMRecord queryMate(final SAMRecord rec) {
+        if (!rec.getReadPairedFlag()) {
+            throw new IllegalArgumentException("queryMate called for unpaired read.");
+        }
+        if (rec.getFirstOfPairFlag() == rec.getSecondOfPairFlag()) {
+            throw new IllegalArgumentException("SAMRecord must be either first and second of pair, but not both.");
+        }
+        final boolean firstOfPair = rec.getFirstOfPairFlag();
+        final CloseableIterator<SAMRecord> it;
+        if (rec.getMateReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            it = queryUnmapped();
+        } else {
+            it = queryAlignmentStart(rec.getMateReferenceName(), rec.getMateAlignmentStart());
+        }
+        try {
+            SAMRecord mateRec = null;
+            while (it.hasNext()) {
+                final SAMRecord next = it.next();
+                if (!next.getReadPairedFlag()) {
+                    if (rec.getReadName().equals(next.getReadName())) {
+                        throw new SAMFormatException("Paired and unpaired reads with same name: " + rec.getReadName());
+                    }
+                    continue;
+                }
+                if (firstOfPair) {
+                    if (next.getFirstOfPairFlag()) continue;
+                } else {
+                    if (next.getSecondOfPairFlag()) continue;
+                }
+                if (rec.getReadName().equals(next.getReadName())) {
+                    if (mateRec != null) {
+                        throw new SAMFormatException("Multiple SAMRecord with read name " + rec.getReadName() +
+                        " for " + (firstOfPair? "second": "first") + " end.");
+                    }
+                    mateRec = next;
+                }
+            }
+            return mateRec;
+        } finally {
+            it.close();
+        }
+    }
+
     private void init(final InputStream stream, final boolean eagerDecode) {
 
         try {
