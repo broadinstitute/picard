@@ -31,6 +31,7 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.util.Log;
 import net.sf.picard.PicardException;
+import net.sf.picard.io.IoUtil;
 import net.sf.samtools.*;
 import net.sf.samtools.util.SortingCollection;
 import net.sf.samtools.util.SortingLongCollection;
@@ -45,7 +46,7 @@ import java.util.*;
  * @author Tim Fennell
  */
 public class MarkDuplicates extends CommandLineProgram {
-    private Log log;
+    private final Log log = Log.getInstance(MarkDuplicates.class);;
 
     /**
      * If more than this many sequences in SAM file, don't spill to disk because there will not
@@ -85,7 +86,10 @@ public class MarkDuplicates extends CommandLineProgram {
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
-        log = Log.getInstance(MarkDuplicates.class);
+        IoUtil.assertFileIsReadable(INPUT);
+        IoUtil.assertFileIsWritable(OUTPUT);
+        IoUtil.assertFileIsWritable(METRICS_FILE);
+
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists();
