@@ -50,6 +50,8 @@ class FastaSequenceFile implements ReferenceSequenceFile {
     private FastLineReader in;
     private SAMSequenceDictionary sequenceDictionary;
     private int sequenceIndex = -1;
+    private final static int BUFFER_SIZE = 5000 ;
+    private final byte[] basesBuffer = new byte[BUFFER_SIZE];
 
 
     /** Constructs a FastaSequenceFile that reads from the specified file. */
@@ -165,8 +167,8 @@ class FastaSequenceFile implements ReferenceSequenceFile {
      * @return ASCII bases for sequence
      */
     private byte[] readSequence(final int knownLength) {
-        final int lengthByteArray = (knownLength != -1) ? knownLength : 250000000;
-        byte[] bases = new byte[lengthByteArray];
+        byte[] bases = (knownLength == -1) ?  basesBuffer : new byte[knownLength] ;
+
         int sequenceLength = 0;
         while (!in.eof()) {
             final boolean sawEoln = in.skipNewlines();
@@ -187,7 +189,7 @@ class FastaSequenceFile implements ReferenceSequenceFile {
             }
         }
         // And lastly resize the array down to the right size
-        if (sequenceLength != bases.length) {
+        if (sequenceLength != bases.length || bases == basesBuffer) {
             final byte[] tmp = new byte[sequenceLength];
             System.arraycopy(bases, 0, tmp, 0, sequenceLength);
             bases = tmp;
@@ -200,4 +202,3 @@ class FastaSequenceFile implements ReferenceSequenceFile {
         return this.file.getAbsolutePath();
     }
 }
-
