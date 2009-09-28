@@ -1353,9 +1353,27 @@ public class SAMRecord implements Cloneable
             ret.addAll(errors);
         }
         if (this.getReadLength() == 0) {
-            if (ret == null) ret = new ArrayList<SAMValidationError>();
-            ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
-                    "Zero-length read", getReadName()));
+            String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
+            String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
+            if (cq == null || cq.length() == 0 || cs == null || cs.length() == 0) {
+                if (ret == null) ret = new ArrayList<SAMValidationError>();
+                ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
+                        "Zero-length read without CS or CQ tag", getReadName()));
+            } else if (!getReadUnmappedFlag()) {
+                boolean hasIndel = false;
+                for (CigarElement cigarElement : getCigar().getCigarElements()) {
+                    if (cigarElement.getOperator() == CigarOperator.DELETION ||
+                            cigarElement.getOperator() == CigarOperator.INSERTION) {
+                        hasIndel = true;
+                        break;
+                    }
+                }
+                if (!hasIndel) {
+                    if (ret == null) ret = new ArrayList<SAMValidationError>();
+                    ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
+                            "Colorspace read with zero-length bases but no indel", getReadName()));
+                }
+            }
         }
         if (this.getReadLength() != getBaseQualities().length) {
             if (ret == null) ret = new ArrayList<SAMValidationError>();

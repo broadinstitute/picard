@@ -250,7 +250,7 @@ class BAMRecord
     @Override
     public byte[] getReadBases() {
         byte[] result = super.getReadBases();
-        if (mRestOfBinaryData != null && result == null && mReadLength > 0) {
+        if (mRestOfBinaryData != null && result == null) {
             result = decodeReadBases();
             super.setReadBases(result);
         }

@@ -353,6 +353,8 @@ class SAMTextReader
             if (!mFields[SEQ_COL].equals("*")) {
                 validateReadBases(mFields[SEQ_COL]);
                 mCurrentRecord.setReadString(mFields[SEQ_COL]);
+            } else {
+                mCurrentRecord.setReadBases(SAMRecord.NULL_SEQUENCE);
             }
             if (!mFields[QUAL_COL].equals("*")) {
                 if (mCurrentRecord.getReadString() == null) {
@@ -362,6 +364,8 @@ class SAMTextReader
                     reportErrorParsingLine("length(QUAL) != length(SEQ)");
                 }
                 mCurrentRecord.setBaseQualityString(mFields[QUAL_COL]);
+            } else {
+                mCurrentRecord.setBaseQualities(SAMRecord.NULL_QUALS);
             }
 
             for (int i = NUM_REQUIRED_FIELDS; i < numFields; ++i) {
