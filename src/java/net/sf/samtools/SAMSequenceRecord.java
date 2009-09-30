@@ -34,7 +34,7 @@ import java.net.URISyntaxException;
  */
 public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Cloneable
 {
-    private String mSequenceName = null;
+    private String mSequenceName = null; // Value must be interned() if it's ever set/modified
     private int mSequenceIndex = -1;
     private int mSequenceLength = 0;
     public static final String SEQUENCE_NAME_TAG = "SN";
@@ -56,11 +56,13 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
      * sequenceLength is required for the object to be considered valid.
      */
     public SAMSequenceRecord(final String name) {
-        mSequenceName = name;
+        this(name, 0);
     }
 
     public SAMSequenceRecord(final String name, final int sequenceLength) {
-        mSequenceName = name;
+        if (name != null) {
+            mSequenceName = name.intern();
+        }
         mSequenceLength = sequenceLength;
     }
 
@@ -117,8 +119,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
         if (mSequenceIndex != that.mSequenceIndex) return false;
         if (mSequenceLength != that.mSequenceLength) return false;
-        if (mSequenceName != null ? !mSequenceName.equals(that.mSequenceName) : that.mSequenceName != null)
-            return false;
+        if (mSequenceName != that.mSequenceName) return false; // Compare using == since we intern() the Strings
         // If one record has an optional attribute and the other does not, that is not considered inequality.
         
             for (final Map.Entry<String, Object> entry: getAttributes()) {
@@ -174,8 +175,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         if (mSequenceIndex != that.mSequenceIndex) return false;
         if (mSequenceLength != that.mSequenceLength) return false;
         if (!attributesEqual(that)) return false;
-        if (mSequenceName != null ? !mSequenceName.equals(that.mSequenceName) : that.mSequenceName != null)
-            return false;
+        if (mSequenceName != that.mSequenceName) return false; // Compare using == since we intern() the name
 
         return true;
     }

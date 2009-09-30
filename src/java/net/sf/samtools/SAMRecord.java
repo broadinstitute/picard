@@ -338,7 +338,7 @@ public class SAMRecord implements Cloneable
         if (mReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName().intern();
+            mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
         }
     }
 
@@ -380,7 +380,7 @@ public class SAMRecord implements Cloneable
         if (mMateReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName().intern();
+            mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
         }
     }
 
