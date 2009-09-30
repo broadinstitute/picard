@@ -26,7 +26,7 @@ package net.sf.picard.util;
 
 import net.sf.picard.util.Histogram.Bin;
 
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Class for computing and accessing histogram type data.  Stored internally in
@@ -237,5 +237,42 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         }
 
         return count;
+    }
+
+    /**
+     * Trims the histogram when the bins in the tail of the distribution contain fewer than mode/tailLimit items
+     */
+    public void trim(int tailLimit) {
+        if (isEmpty()) {
+            return;
+        }
+
+        double mode = getMode();
+        double sizeOfModeBin = get((int) mode).getValue();
+        double minimumBinSize = sizeOfModeBin/tailLimit;
+        Histogram<K>.Bin lastBin = null;
+
+        List<K> binsToKeep = new ArrayList<K>();
+        for (Histogram<K>.Bin bin : values()) {
+            double binId = ((Number)bin.getId()).doubleValue();
+
+            if (binId <= mode) {
+                binsToKeep.add(bin.getId());
+            }
+            else if ((lastBin != null && ((Number)lastBin.getId()).doubleValue() != binId - 1) || bin.getValue() < minimumBinSize) {
+                break;
+            }
+            else {
+                binsToKeep.add(bin.getId());
+            }
+            lastBin = bin;
+        }
+
+       Object keys[] = keySet().toArray();
+        for (Object binId : keys) {
+            if (!binsToKeep.contains((K)binId)) {
+                remove(binId);
+            }
+        }
     }
 }
