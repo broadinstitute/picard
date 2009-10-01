@@ -66,46 +66,33 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         mSequenceLength = sequenceLength;
     }
 
-    public String getSequenceName() {
-        return mSequenceName;
+    public String getSequenceName() { return mSequenceName; }
+    public void setSequenceName(final String name) {
+        if (name != null) {
+            mSequenceName = name.intern();
+        }
+        else {
+            mSequenceName = null;
+        }
     }
+    
+    public int getSequenceLength() { return mSequenceLength; }
+    public void setSequenceLength(final int value) { mSequenceLength = value; }
 
-    public int getSequenceLength() {
-        return mSequenceLength;
-    }
+    public String getAssembly() { return (String) getAttribute("AS"); }
+    public void setAssembly(final String value) { setAttribute("AS", value); }
 
-    public void setSequenceLength(final int value) {
-        mSequenceLength = value;
-    }
-
-    public String getAssembly() {
-        return (String) getAttribute("AS");
-    }
-
-    public void setAssembly(final String value) {
-        setAttribute("AS", value);
-    }
-
-    public String getSpecies() {
-        return (String) getAttribute("SP");
-    }
-
-    public void setSpecies(final String value) {
-        setAttribute("SP", value);
-    }
+    public String getSpecies() { return (String) getAttribute("SP"); }
+    public void setSpecies(final String value) { setAttribute("SP", value); }
 
 
     /**
      * @return Index of this record in the sequence dictionary it lives in. 
      */
-    public int getSequenceIndex() {
-        return mSequenceIndex;
-    }
+    public int getSequenceIndex() { return mSequenceIndex; }
 
     // Private state used only by SAM implementation.
-    void setSequenceIndex(final int value) {
-        mSequenceIndex = value;
-    }
+    void setSequenceIndex(final int value) { mSequenceIndex = value; }
 
     /**
      * Looser comparison than equals().  If one SAMSequenceRecord has an attribute that the other does not
