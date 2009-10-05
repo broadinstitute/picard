@@ -63,7 +63,7 @@ class FastaSequenceFile implements ReferenceSequenceFile {
         // Try and locate the dictionary
         String dictionaryName = file.getAbsolutePath();
         boolean fileTypeSupported = false;
-        for (String extension : ReferenceSequenceFileFactory.FASTA_EXTENSIONS) {
+        for (final String extension : ReferenceSequenceFileFactory.FASTA_EXTENSIONS) {
             if (dictionaryName.endsWith(extension)) {
                   dictionaryName = dictionaryName.substring(0, dictionaryName.lastIndexOf(extension));
                   dictionaryName += ".dict";
@@ -80,7 +80,8 @@ class FastaSequenceFile implements ReferenceSequenceFile {
 
             try {
                 final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
-                final SAMFileHeader header = codec.decode(new AsciiLineReader(new FileInputStream(dictionary)), dictionary);
+                final SAMFileHeader header = codec.decode(new AsciiLineReader(new FileInputStream(dictionary)),
+                        dictionary.toString());
                 if (header.getSequenceDictionary() != null && header.getSequenceDictionary().size() > 0) {
                     this.sequenceDictionary = header.getSequenceDictionary();
                 }

@@ -33,6 +33,7 @@ import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.net.URL;
 
 /*
  * Utility class for reading BGZF block compressed files.  The caller can treat this file like any other InputStream.
@@ -47,7 +48,7 @@ public class BlockCompressedInputStream
 {
 
     private InputStream mStream = null;
-    private RandomAccessFile mFile = null;
+    private SeekableStream mFile = null;
     private byte[] mFileBuffer = null;
     private byte[] mCurrentBlock = null;
     private int mCurrentOffset = 0;
@@ -69,7 +70,13 @@ public class BlockCompressedInputStream
      */
     public BlockCompressedInputStream(final File file)
         throws IOException {
-        mFile = new RandomAccessFile(file, "r");
+        mFile = new SeekableFileStream(file);
+        mStream = null;
+
+    }
+
+    public BlockCompressedInputStream(final URL url) {
+        mFile = new SeekableHTTPStream(url);
         mStream = null;
     }
 
@@ -200,7 +207,7 @@ public class BlockCompressedInputStream
     }
 
     private boolean eof() throws IOException {
-        return mFile.length() == mFile.getFilePointer();
+        return mFile.eof();
     }
 
     /**
@@ -288,7 +295,7 @@ public class BlockCompressedInputStream
         }
     }
 
-    private static int readBytes(final RandomAccessFile file, final byte[] buffer, final int offset, final int length)
+    private static int readBytes(final SeekableStream file, final byte[] buffer, final int offset, final int length)
         throws IOException {
         int bytesRead = 0;
         while (bytesRead < length) {
@@ -337,8 +344,7 @@ public class BlockCompressedInputStream
         final RandomAccessFile raFile = new RandomAccessFile(file, "r");
         raFile.seek(fileSize - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length);
         byte[] buf = new byte[BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length];
-        // TODO: check return value
-        raFile.read(buf);
+        raFile.readFully(buf);
         if (Arrays.equals(buf, BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK)) {
             return FileTermination.HAS_TERMINATOR_BLOCK;
         }

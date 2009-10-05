@@ -30,13 +30,11 @@ import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.StringLineReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.net.URL;
 
 /**
  * Internal class for reading and querying BAM files.
@@ -80,11 +78,23 @@ class BAMFileReader
      */
     BAMFileReader(final File file, final boolean eagerDecode)
         throws IOException {
+        this(new BlockCompressedInputStream(file), eagerDecode, file.getAbsolutePath());
+    }
+
+
+    BAMFileReader(final URL url, final boolean eagerDecode)
+        throws IOException {
+        this(new BlockCompressedInputStream(url), eagerDecode, url.toString());
+    }
+
+    private BAMFileReader(final BlockCompressedInputStream compressedInputStream, final boolean eagerDecode,
+                          final String source)
+        throws IOException {
         mIsSeekable = true;
-        mCompressedInputStream = new BlockCompressedInputStream(file);
+        mCompressedInputStream = compressedInputStream;
         mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
         this.eagerDecode = eagerDecode;
-        readHeader(file);
+        readHeader(source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }
 
@@ -249,9 +259,9 @@ class BAMFileReader
 
     /**
      * Reads the header from the file or stream
-     * @param file Note that this is used only for reporting errors.
+     * @param source Note that this is used only for reporting errors.
      */
-    private void readHeader(final File file)
+    private void readHeader(final String source)
         throws IOException {
 
         final byte[] buffer = new byte[4];
@@ -265,7 +275,7 @@ class BAMFileReader
         final SAMTextHeaderCodec headerCodec = new SAMTextHeaderCodec();
         headerCodec.setValidationStringency(mValidationStringency);
         mFileHeader = headerCodec.decode(new StringLineReader(textHeader),
-                file);
+                source);
 
         final int sequenceCount = mStream.readInt();
         if (mFileHeader.getSequenceDictionary().size() > 0) {
@@ -273,25 +283,25 @@ class BAMFileReader
             if (sequenceCount != mFileHeader.getSequenceDictionary().size()) {
                 throw new SAMFormatException("Number of sequences in text header (" +
                         mFileHeader.getSequenceDictionary().size() +
-                        ") != number of sequences in binary header (" + sequenceCount + ") for file " + file);
+                        ") != number of sequences in binary header (" + sequenceCount + ") for file " + source);
             }
             for (int i = 0; i < sequenceCount; i++) {
-                final SAMSequenceRecord binarySequenceRecord = readSequenceRecord(file);
+                final SAMSequenceRecord binarySequenceRecord = readSequenceRecord(source);
                 final SAMSequenceRecord sequenceRecord = mFileHeader.getSequence(i);
                 if (!sequenceRecord.getSequenceName().equals(binarySequenceRecord.getSequenceName())) {
                     throw new SAMFormatException("For sequence " + i + ", text and binary have different names in file " +
-                            file);
+                            source);
                 }
                 if (sequenceRecord.getSequenceLength() != binarySequenceRecord.getSequenceLength()) {
                     throw new SAMFormatException("For sequence " + i + ", text and binary have different lengths in file " +
-                            file);
+                            source);
                 }
             }
         } else {
             // If only binary sequences are present, copy them into mFileHeader
             final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>(sequenceCount);
             for (int i = 0; i < sequenceCount; i++) {
-                sequences.add(readSequenceRecord(file));
+                sequences.add(readSequenceRecord(source));
             }
             mFileHeader.setSequenceDictionary(new SAMSequenceDictionary(sequences));
         }
@@ -299,12 +309,12 @@ class BAMFileReader
 
     /**
      * Reads a single binary sequence record from the file or stream
-     * @param file Note that this is used only for reporting errors.
+     * @param source Note that this is used only for reporting errors.
      */
-    private SAMSequenceRecord readSequenceRecord(final File file) {
+    private SAMSequenceRecord readSequenceRecord(final String source) {
         final int nameLength = mStream.readInt();
         if (nameLength <= 1) {
-            throw new SAMFormatException("Invalid BAM file header: missing sequence name in file " + file);
+            throw new SAMFormatException("Invalid BAM file header: missing sequence name in file " + source);
         }
         final String sequenceName = mStream.readString(nameLength - 1);
         // Skip the null terminator
@@ -395,7 +405,7 @@ class BAMFileReader
         }
     }
 
-    enum QueryType {CONTAINED, OVERLAPPING, STARTING_AT};
+    enum QueryType {CONTAINED, OVERLAPPING, STARTING_AT}
 
     private class BAMFileIndexIterator
         extends BAMFileIterator {

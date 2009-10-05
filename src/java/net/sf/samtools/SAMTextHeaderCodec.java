@@ -23,13 +23,18 @@
  */
 package net.sf.samtools;
 
-import net.sf.samtools.util.*;
+import net.sf.samtools.util.DateParser;
+import net.sf.samtools.util.LineReader;
+import net.sf.samtools.util.RuntimeIOException;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Parser for a SAM text header, and a generator of SAM text header.
@@ -44,7 +49,7 @@ public class SAMTextHeaderCodec {
     // These attributes are populated when parsing text
     private String mCurrentLine;
     private LineReader mReader;
-    private File mFile;
+    private String mSource;
     private List<SAMSequenceRecord> sequences;
     private List<SAMReadGroupRecord> readGroups;
 
@@ -60,13 +65,13 @@ public class SAMTextHeaderCodec {
     /**
      * Reads text SAM header and converts to a SAMFileHeader object.
      * @param reader Where to get header text from.
-     * @param file Name of the input file, for error messages.  May be null.
+     * @param source Name of the input file, for error messages.  May be null.
      * @return complete header object.
      */
-    public SAMFileHeader decode(final LineReader reader, final File file) {
+    public SAMFileHeader decode(final LineReader reader, final String source) {
         mFileHeader = new SAMFileHeader();
         mReader = reader;
-        mFile = file;
+        mSource = source;
         sequences = new ArrayList<SAMSequenceRecord>();
         readGroups = new ArrayList<SAMReadGroupRecord>();
 
@@ -200,8 +205,8 @@ public class SAMTextHeaderCodec {
 
     private RuntimeException reportErrorParsingLine(final String reason) {
         String fileMessage = "";
-        if (mFile != null) {
-            fileMessage = "File " + mFile + "; ";
+        if (mSource != null) {
+            fileMessage = "File " + mSource + "; ";
         }
         return new SAMFormatException("Error parsing text SAM file. " + reason + "; " + fileMessage +
                 "Line " + mReader.getLineNumber() + "\nLine: " + mCurrentLine);
