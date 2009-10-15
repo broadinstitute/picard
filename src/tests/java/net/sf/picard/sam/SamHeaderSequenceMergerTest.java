@@ -25,11 +25,11 @@
 
 package net.sf.picard.sam;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.util.SequenceUtil;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
@@ -53,7 +53,7 @@ public class SamHeaderSequenceMergerTest {
     private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
 
     /** tests that if we've set the merging to false, we get a PicardException for bam's with different dictionaries. */
-    @Test(expectedExceptions = PicardException.class)
+    @Test(expectedExceptions = SequenceUtil.SequenceListsDifferException.class)
     public void testMergedException() {
         File INPUT[] = {new File(TEST_DATA_DIR, "Chromosome1to10.bam"),
                         new File(TEST_DATA_DIR, "Chromosome5to9.bam")};

@@ -23,10 +23,9 @@
  */
 package net.sf.samtools.util;
 
-import java.util.List;
-
-import net.sf.picard.PicardException;
 import net.sf.samtools.*;
+
+import java.util.List;
 
 public class SequenceUtil {
     /** Byte typed variables for all normal bases. */
@@ -72,7 +71,7 @@ public class SequenceUtil {
         if (s1 == null || s2 == null) return;
         
         if (s1.size() != s2.size()) {
-            throw new PicardException("Sequence dictionaries are not the same size (" +
+            throw new SequenceListsDifferException("Sequence dictionaries are not the same size (" +
                     s1.size() + ", " + s2.size() + ")");
         }
         for (int i = 0; i < s1.size(); ++i) {
@@ -85,10 +84,27 @@ public class SequenceUtil {
                 for (final java.util.Map.Entry<String, Object> entry : s2.get(i).getAttributes()) {
                     s2Attrs += "/" + entry.getKey() + "=" + entry.getValue();
                 }
-                throw new PicardException("Sequences at index " + i + " don't match: " +
+                throw new SequenceListsDifferException("Sequences at index " + i + " don't match: " +
                     s1.get(i).getSequenceIndex() + "/" + s1.get(i).getSequenceLength() + "/" + s1.get(i).getSequenceName() + s1Attrs +
                     " " + s2.get(i).getSequenceIndex() + "/" + s2.get(i).getSequenceLength() + "/" + s2.get(i).getSequenceName() + s2Attrs);
             }
+        }
+    }
+
+    public static class SequenceListsDifferException extends SAMException {
+        public SequenceListsDifferException() {
+        }
+
+        public SequenceListsDifferException(final String s) {
+            super(s);
+        }
+
+        public SequenceListsDifferException(final String s, final Throwable throwable) {
+            super(s, throwable);
+        }
+
+        public SequenceListsDifferException(final Throwable throwable) {
+            super(throwable);
         }
     }
 
@@ -119,7 +135,7 @@ public class SequenceUtil {
         // CIGAR is trivial because there are no indels or clipping in Gerald
         final int matchLength = readLength - leftSoftClip - rightSoftClip;
         if (matchLength < 1) {
-            throw new PicardException("Unexpected cigar string with no M op for read.");
+            throw new SAMException("Unexpected cigar string with no M op for read.");
         }
         return makeSoftClipCigar(leftSoftClip) + Integer.toString(matchLength) + "M" + makeSoftClipCigar(rightSoftClip);
     }
@@ -157,7 +173,7 @@ public class SequenceUtil {
         final int firstMatchLength = indelPosition - leftSoftClip;
         final int secondMatchLength = readLength - indelPosition - (indelLength > 0? indelLength: 0) - rightSoftClip;
         if (secondMatchLength < 1) {
-            throw new PicardException("Unexpected cigar string with no M op for read.");
+            throw new SAMException("Unexpected cigar string with no M op for read.");
         }
         return makeSoftClipCigar(leftSoftClip) + Integer.toString(firstMatchLength) + "M" +
                 Math.abs(indelLength) + (indelLength > 0? "I": "D") +

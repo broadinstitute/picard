@@ -23,18 +23,20 @@
  */
 package net.sf.picard;
 
+import net.sf.samtools.SAMException;
+
 /**
  * Basic Picard runtime exception that, for now, does nothing much
  *
  * @author Kathleen Tibbetts
  */
-public class PicardException extends RuntimeException
+public class PicardException extends SAMException
 {
-    public PicardException(String message) {
+    public PicardException(final String message) {
         super(message);
     }
 
-    public PicardException(String message, Throwable throwable) {
+    public PicardException(final String message, final Throwable throwable) {
         super(message, throwable);
     }
 

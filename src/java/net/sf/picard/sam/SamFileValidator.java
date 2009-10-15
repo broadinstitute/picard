@@ -454,5 +454,9 @@ public class SamFileValidator {
     }
     
     /** Thrown in addError indicating that maxVerboseOutput has been exceeded and processing should stop */
-    private static class MaxOutputExceededException extends RuntimeException { }
+    private static class MaxOutputExceededException extends PicardException {
+        MaxOutputExceededException() {
+            super("maxVerboseOutput exceeded.");
+        }
+    }
 }

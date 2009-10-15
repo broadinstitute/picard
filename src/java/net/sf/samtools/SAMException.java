@@ -24,23 +24,21 @@
 package net.sf.samtools;
 
 /**
- * Thrown when it is possible to detect that a SAM or BAM file is truncated.
- *
  * @author alecw@broadinstitute.org
  */
-public class FileTruncatedException extends SAMException {
-    public FileTruncatedException() {
+public class SAMException extends RuntimeException {
+    public SAMException() {
     }
 
-    public FileTruncatedException(final String s) {
+    public SAMException(final String s) {
         super(s);
     }
 
-    public FileTruncatedException(final String s, final Throwable throwable) {
+    public SAMException(final String s, final Throwable throwable) {
         super(s, throwable);
     }
 
-    public FileTruncatedException(final Throwable throwable) {
+    public SAMException(final Throwable throwable) {
         super(throwable);
     }
 }

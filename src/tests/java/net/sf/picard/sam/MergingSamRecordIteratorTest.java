@@ -24,15 +24,13 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.sam.SamFileHeaderMerger;
-import net.sf.picard.sam.MergingSamRecordIterator;
+import net.sf.samtools.*;
+import net.sf.samtools.util.SequenceUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import net.sf.samtools.*;
 
 /**
  * Tests for MultiIterator
@@ -160,7 +158,7 @@ public class MergingSamRecordIteratorTest {
         samReader.close();
     }
 
-    @Test(expectedExceptions = PicardException.class)
+    @Test(expectedExceptions = SequenceUtil.SequenceListsDifferException.class)
     public void testConflictingHeaders() throws Exception {
         final SAMRecordSetBuilder builder1 = new SAMRecordSetBuilder();
         builder1.addFrag("read_28833_29006_6945", 20, 28833, false); // ok

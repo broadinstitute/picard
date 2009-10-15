@@ -95,7 +95,7 @@ public class SamFileHeaderMerger {
             sequenceDictionary = getSequenceDictionary(readers);
             this.hasMergedSequenceDictionary = false;
         }
-        catch (PicardException pe) {
+        catch (SequenceUtil.SequenceListsDifferException pe) {
             if (mergeDictionaries) {
                 sequenceDictionary = mergeSequenceDictionaries(readers);
                 this.hasMergedSequenceDictionary = true;

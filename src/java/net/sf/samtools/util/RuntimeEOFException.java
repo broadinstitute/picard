@@ -23,10 +23,12 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.SAMException;
+
 /**
  * Thrown by various codecs to indicate EOF without having to clutter the API with throws clauses
  */
-public class RuntimeEOFException extends RuntimeException {
+public class RuntimeEOFException extends SAMException {
     public RuntimeEOFException() {
     }
 

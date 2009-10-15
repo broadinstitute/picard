@@ -633,7 +633,7 @@ public class CommandLineParser {
             return ctor.newInstance(s);
         } catch (NoSuchMethodException e) {
             // Shouldn't happen because we've checked for presence of ctor
-            throw new CommandLineParseException(e);
+            throw new CommandLineParseException("Cannot find string ctor for " + clazz.getName(), e);
         } catch (InstantiationException e) {
             throw new CommandLineParseException("Abstract class '" + clazz.getSimpleName() +
                     "'cannot be used for an option value type.", e);

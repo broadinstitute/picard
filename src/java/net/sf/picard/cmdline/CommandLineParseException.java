@@ -23,19 +23,14 @@
  */
 package net.sf.picard.cmdline;
 
-public class CommandLineParseException extends RuntimeException{
-    public CommandLineParseException() {
-    }
+import net.sf.picard.PicardException;
 
-    public CommandLineParseException(String s) {
+public class CommandLineParseException extends PicardException {
+    public CommandLineParseException(final String s) {
         super(s);
     }
 
-    public CommandLineParseException(String s, Throwable throwable) {
+    public CommandLineParseException(final String s, final Throwable throwable) {
         super(s, throwable);
-    }
-
-    public CommandLineParseException(Throwable throwable) {
-        super(throwable);
     }
 }

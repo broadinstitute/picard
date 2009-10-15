@@ -72,6 +72,8 @@ webmaster
 
 package net.sf.samtools.util;
 
+import net.sf.samtools.SAMException;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -322,7 +324,7 @@ public class DateParser {
         test(new Date());
     }
 
-    public static class InvalidDateException extends RuntimeException {
+    public static class InvalidDateException extends SAMException {
         public InvalidDateException() {
         }
 

@@ -26,7 +26,7 @@ package net.sf.samtools;
 /**
  * Thrown when a SAM file being read or decoded (text or binary) looks bad.
  */
-public class SAMFormatException extends RuntimeException {
+public class SAMFormatException extends SAMException {
     public SAMFormatException() {
     }
 

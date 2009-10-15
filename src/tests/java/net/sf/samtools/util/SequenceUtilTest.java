@@ -23,11 +23,10 @@
  */
 package net.sf.samtools.util;
 
-import org.testng.annotations.Test;
-import org.testng.Assert;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.SAMTextHeaderCodec;
-import net.sf.picard.PicardException;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author alecw@broadinstitute.org
@@ -46,7 +45,7 @@ public class SequenceUtilTest {
         SequenceUtil.assertSequenceDictionariesEqual(sd1, sd2);
     }
 
-    @Test(expectedExceptions = PicardException.class)
+    @Test(expectedExceptions = SequenceUtil.SequenceListsDifferException.class)
     public void testMismatch() {
         final SAMSequenceDictionary sd1 = makeSequenceDictionary(5386, "/seq/references/PhiX174/v0/PhiX174.fasta",
                 "3332ed720ac7eaa9b3655c06f6b9e196");
