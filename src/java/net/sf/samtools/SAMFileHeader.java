@@ -24,7 +24,10 @@
 package net.sf.samtools;
 
 
+import net.sf.samtools.util.StringLineReader;
+
 import java.util.*;
+import java.io.StringWriter;
 
 /**
  * Header information from a SAM or BAM file.
@@ -245,5 +248,13 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
         result = 31 * result + (mReadGroupMap != null ? mReadGroupMap.hashCode() : 0);
         result = 31 * result + (mProgramRecords != null ? mProgramRecords.hashCode() : 0);
         return result;
+    }
+
+    public final SAMFileHeader clone() {
+        final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
+        codec.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        final StringWriter stringWriter = new StringWriter();
+        codec.encode(stringWriter, this);
+        return codec.decode(new StringLineReader(stringWriter.toString()), "SAMFileHeader.clone");
     }
 }
