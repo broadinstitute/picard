@@ -159,13 +159,14 @@ public class ValidateSamFileTest {
             samBuilder.addFrag(String.valueOf(i), i, i, false);
         }
         final Iterator<SAMRecord> records = samBuilder.iterator();
-        records.next().setCigarString("");
+        records.next().setCigarString("25M3S25M");
         records.next().setReferenceName("*");
         
         final Histogram<String> results = executeValidation(samBuilder.getSamReader(), null);
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_CIGAR.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_READ_UNMAPPED.getHistogramString()).getValue(), 1.0);
+        Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_TAG_NM.getHistogramString()).getValue(), 1.0);
     }
     
     @Test

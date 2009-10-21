@@ -204,9 +204,11 @@ public class SamFileValidator {
                 }
                 
                 validateMateFields(record, recordNumber);
-                validateNmTag(record, recordNumber);
                 validateSortOrder(lastRecord, record, recordNumber);
-                validateCigar(record, recordNumber);
+                boolean cigarIsValid = validateCigar(record, recordNumber);
+                if (cigarIsValid) {
+                    validateNmTag(record, recordNumber);
+                }
                 validateSecondaryBaseCalls(record, recordNumber);
 
                 recordNumber++;
@@ -253,20 +255,23 @@ public class SamFileValidator {
         }
     }
 
-    private void validateCigar(final SAMRecord record, final long recordNumber) {
+    private boolean validateCigar(final SAMRecord record, final long recordNumber) {
         if (record.getReadUnmappedFlag()) {
-            return;
+            return true;
         }
         final ValidationStringency savedStringency = record.getValidationStringency();
         record.setValidationStringency(ValidationStringency.LENIENT);
         final List<SAMValidationError> errors = record.validateCigar(recordNumber);
         record.setValidationStringency(savedStringency);
         if (errors == null) {
-            return;
+            return true;
         }
+        boolean valid = true;
         for (final SAMValidationError error : errors) {
             addError(error);
+            valid = false;
         }
+        return valid;
     }
 
     private void validateSortOrder(final SAMRecord lastRecord, final SAMRecord record, final long recordNumber) {
