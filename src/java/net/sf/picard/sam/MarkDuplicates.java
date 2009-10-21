@@ -46,7 +46,7 @@ import java.util.*;
  * @author Tim Fennell
  */
 public class MarkDuplicates extends CommandLineProgram {
-    private final Log log = Log.getInstance(MarkDuplicates.class);;
+    private final Log log = Log.getInstance(MarkDuplicates.class);
 
     /**
      * If more than this many sequences in SAM file, don't spill to disk because there will not
@@ -71,7 +71,7 @@ public class MarkDuplicates extends CommandLineProgram {
     private SortingLongCollection duplicateIndexes;
     private int numDuplicateIndices = 0;
 
-    private Map<String,Short> libraryIds = new HashMap<String,Short>();
+    final private Map<String,Short> libraryIds = new HashMap<String,Short>();
     private short nextLibraryId = 1;
 
     /** Stock main method. */
@@ -98,10 +98,12 @@ public class MarkDuplicates extends CommandLineProgram {
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
 
-        Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
+        final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SAMFileReader in  = new SAMFileReader(INPUT);
         final SAMFileHeader header = in.getFileHeader();
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(),
+        final SAMFileHeader outputHeader = header.clone();
+        outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
                                                                           true,
                                                                           OUTPUT);
 
@@ -110,7 +112,7 @@ public class MarkDuplicates extends CommandLineProgram {
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
 
         for (final SAMRecord rec : in) {
-            String library = getLibraryName(header, rec);
+            final String library = getLibraryName(header, rec);
             DuplicationMetrics metrics = metricsByLibrary.get(library);
             if (metrics == null) {
                 metrics = new DuplicationMetrics();
@@ -168,7 +170,7 @@ public class MarkDuplicates extends CommandLineProgram {
 
         // Write out the metrics
         final MetricsFile<DuplicationMetrics,Double> file = getMetricsFile();
-        for (DuplicationMetrics metrics : metricsByLibrary.values()) {
+        for (final DuplicationMetrics metrics : metricsByLibrary.values()) {
             metrics.READ_PAIRS_EXAMINED = metrics.READ_PAIRS_EXAMINED / 2;
             metrics.READ_PAIR_DUPLICATES = metrics.READ_PAIR_DUPLICATES / 2;
             metrics.calculateDerivedMetrics();
@@ -314,7 +316,7 @@ public class MarkDuplicates extends CommandLineProgram {
     }
 
     /** Get the library ID for the given SAM record. */
-    private short getLibraryId(SAMFileHeader header, SAMRecord rec) {
+    private short getLibraryId(final SAMFileHeader header, final SAMRecord rec) {
         final String library = getLibraryName(header, rec);
         Short libraryId = this.libraryIds.get(library);
 
@@ -331,11 +333,11 @@ public class MarkDuplicates extends CommandLineProgram {
      * the record, or the library isn't denoted on the read group, a constant string is
      * returned.
      */
-    private String getLibraryName(SAMFileHeader header, SAMRecord rec) {
+    private String getLibraryName(final SAMFileHeader header, final SAMRecord rec) {
         final String readGroupId = (String) rec.getAttribute("RG");
 
         if (readGroupId != null) {
-            SAMReadGroupRecord rg = header.getReadGroup(readGroupId);
+            final SAMReadGroupRecord rg = header.getReadGroup(readGroupId);
             if (rg != null) {
                 return rg.getLibrary();
             }
