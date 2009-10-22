@@ -124,8 +124,8 @@ public class FastLineReader {
 
             // Roll back if went past the amount that can be stored in the output buffer.
             // Assumption is that lines are relatively short so this won't happen very often.
-            if (lengthOfChunk > outputBuffer.length - startOutputIndex) {
-                lengthOfChunk = outputBuffer.length - startOutputIndex;
+            if (lengthOfChunk > outputBuffer.length - (startOutputIndex + totalGrabbed)) {
+                lengthOfChunk = outputBuffer.length - (startOutputIndex + totalGrabbed);
                 nextByte = startInputIndex + lengthOfChunk;
             }
             System.arraycopy(fileBuffer, startInputIndex, outputBuffer, startOutputIndex + totalGrabbed, lengthOfChunk);
