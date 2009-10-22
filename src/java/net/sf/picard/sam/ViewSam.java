@@ -54,18 +54,18 @@ public class ViewSam extends CommandLineProgram {
     @Option(doc="Print out all reads, just the PF reads or just the non-PF reads.")
     public PfStatus PF_STATUS = PfStatus.All;
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         new ViewSam().instanceMain(args);
     }
 
     @Override
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
-        SAMFileReader in = new SAMFileReader(INPUT);
-        SAMFileHeader header = in.getFileHeader();
+        final SAMFileReader in = new SAMFileReader(INPUT);
+        final SAMFileHeader header = in.getFileHeader();
 
-        SAMFileWriter out = new SAMFileWriterFactory().makeSAMWriter(header, true, System.out);
-        for (SAMRecord rec : in) {
+        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMWriter(header, true, System.out);
+        for (final SAMRecord rec : in) {
             if (System.out.checkError()) {
                 return 0;
             }
@@ -78,6 +78,7 @@ public class ViewSam extends CommandLineProgram {
 
             out.addAlignment(rec);
         }
+        out.close();
 
         return 0;
     }
