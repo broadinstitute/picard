@@ -265,6 +265,22 @@ public class ValidateSamFileTest {
         Assert.assertEquals(results.get(SAMValidationError.Type.CIGAR_MAPS_OFF_REFERENCE.getHistogramString()).getValue(), 1.0);
     }
 
+    @Test(expectedExceptions = SAMFormatException.class)
+    public void testConflictingTags() throws Exception {
+        final String header = "@HD	VN:1.0	SO:queryname	SO:coordinate";
+        final InputStream strm = new ByteArrayInputStream(StringUtil.stringToBytes(header));
+        final SAMFileReader samReader = new SAMFileReader(strm);
+        Assert.fail("Exception should have been thrown.");
+    }
+
+    @Test
+    public void testRedundantTags() throws Exception {
+        final String header = "@HD	VN:1.0	SO:coordinate	SO:coordinate";
+        final InputStream strm = new ByteArrayInputStream(StringUtil.stringToBytes(header));
+        final SAMFileReader samReader = new SAMFileReader(strm);
+        Assert.assertEquals(SAMFileHeader.SortOrder.coordinate, samReader.getFileHeader().getSortOrder());
+    }
+ 
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);

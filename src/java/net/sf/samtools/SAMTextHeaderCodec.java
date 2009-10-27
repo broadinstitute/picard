@@ -234,6 +234,14 @@ public class SAMTextHeaderCodec {
                     throw reportErrorParsingLine("Problem parsing " + HEADER_LINE_START + mHeaderRecordType +
                             " key:value pair");
                 }
+                if (mKeyValuePairs.containsKey(keyAndValue[0]) &&
+                        ! mKeyValuePairs.get(keyAndValue[0]).equals(keyAndValue[1])) {
+                    // TODO: It would be nice to respect validation stringency here, but it is not possible to
+                    // to set it on the header parsing.  This should be changed.
+                    throw reportErrorParsingLine("Problem parsing " + HEADER_LINE_START + mHeaderRecordType +
+                            " key:value pair " + keyAndValue[0] + ":" + keyAndValue[1] +
+                            " clashes with " + keyAndValue[0] + ":" + mKeyValuePairs.get(keyAndValue[0]));
+                }
                 mKeyValuePairs.put(keyAndValue[0], keyAndValue[1]);
             }
         }
