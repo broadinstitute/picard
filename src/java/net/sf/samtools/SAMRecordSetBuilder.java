@@ -57,6 +57,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private int readLength = 36 ;
 
     private SAMProgramRecord programRecord = null;
+    private SAMReadGroupRecord readGroup = null; 
 
 
     /**
@@ -73,6 +74,9 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
      * @param sortOrder If sortForMe, defines the sort order.
      */
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder) {
+        this(sortForMe, sortOrder, true) ;
+    }
+    public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, boolean addReadGroup) {
         final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>();
         for (final String chrom : chroms) {
             final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, 1000000);
@@ -93,11 +97,14 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         } else {
             this.records = new ArrayList<SAMRecord>();
         }
-        final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
-        readGroupRecord.setSample(SAMPLE);
-        final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
-        readGroups.add(readGroupRecord);
-        this.header.setReadGroups(readGroups);
+
+        if (addReadGroup) {
+            final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
+            readGroupRecord.setSample(SAMPLE);
+            final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
+            readGroups.add(readGroupRecord);
+            this.header.setReadGroups(readGroups);
+        }
     }
 
     /**
@@ -110,6 +117,13 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         this.programRecord = programRecord;
         if (programRecord != null) {
             this.header.addProgramRecord(programRecord);
+        }
+    }
+
+    public void setReadGroup(final SAMReadGroupRecord readGroup) { 
+        this.readGroup = readGroup;
+        if (readGroup != null) {
+            this.header.addReadGroup(readGroup);
         }
     }
 
@@ -144,6 +158,9 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         if (programRecord != null) {
             rec.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
         }
+        if (readGroup != null) {
+            rec.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId()); 
+        }
 
         fillInBasesAndQualities(rec);
         this.records.add(rec);
@@ -157,6 +174,9 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         rec.setAttribute(SAMTag.RG.name(), READ_GROUP_ID);
         if (programRecord != null) {
             rec.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
+        }
+        if (readGroup != null) {
+            rec.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId()); 
         }
         fillInBasesAndQualities(rec);
         this.records.add(rec);

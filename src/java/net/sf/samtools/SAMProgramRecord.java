@@ -40,6 +40,13 @@ public class SAMProgramRecord extends AbstractSAMHeaderRecord {
         this.mProgramGroupId = programGroupId;
     }
 
+    public SAMProgramRecord(final String id, SAMProgramRecord srcProgramRecord) {
+        mProgramGroupId = id;
+        for (final Map.Entry<String, Object> entry : srcProgramRecord.getAttributes()) {
+            setAttribute(entry.getKey(), entry.getValue());
+        }
+    }
+
     public String getProgramGroupId() {
         return mProgramGroupId;
     }

@@ -50,6 +50,14 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
             DATE_RUN_PRODUCED_TAG, PLATFORM_TAG));
 
     public SAMReadGroupRecord(final String id) { mReadGroupId = id; }
+
+    public SAMReadGroupRecord(final String id, SAMReadGroupRecord srcProgramRecord) {
+        mReadGroupId = id;
+        for (final Map.Entry<String, Object> entry : srcProgramRecord.getAttributes()) {
+            setAttribute(entry.getKey(), entry.getValue());
+        }
+    }
+
     public String getReadGroupId() { return mReadGroupId; }
 
     public String getSample() { return (String) getAttribute("SM"); }
@@ -81,6 +89,13 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
 
     public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
     public void setDescription(final String description) { setAttribute(DESCRIPTION_TAG, description); }
+
+    /**
+     * @return true if this == that except for the read group ID, which is arbitrary
+     */
+    public boolean equivalent(final SAMReadGroupRecord that) { 
+        return attributesEqual(that);
+    }
 
     @Override
     public boolean equals(final Object o) {

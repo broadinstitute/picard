@@ -69,24 +69,28 @@ public class MergingSamRecordIterator implements Iterator<SAMRecord> {
     }
 
     /** Returns the next record from the top most iterator during merging. */
-    public SAMRecord next() {
+    public SAMRecord next() {;
         final ComparableSamRecordIterator iterator = this.pq.poll();
         final SAMRecord record = iterator.next();
         addIfNotEmpty(iterator);
         record.setHeader(this.samHeaderMerger.getMergedHeader());
 
         // Fix the read group if needs be
-        if (this.samHeaderMerger.hasGroupIdDuplicates()) {
-            final String id = (String) record.getAttribute(ReservedTagConstants.READ_GROUP_ID);
-            final String newId = this.samHeaderMerger.getReadGroupId(iterator.getReader(), id);
-            record.setAttribute(ReservedTagConstants.READ_GROUP_ID, newId);
+        if (this.samHeaderMerger.hasReadGroupCollisions()) {
+            final String oldGroupId = (String) record.getAttribute(ReservedTagConstants.READ_GROUP_ID);
+            if (oldGroupId != null ) {
+                final String newGroupId = this.samHeaderMerger.getReadGroupId(iterator.getReader(), oldGroupId);
+                record.setAttribute(ReservedTagConstants.READ_GROUP_ID, newGroupId); 
+                }
         }
 
         // Fix the program group if needs be
-        final String oldProgramGroupId = (String) record.getAttribute(SAMTag.PG.toString());
-        if (oldProgramGroupId != null) {
-            final String newProgramGroupId = this.samHeaderMerger.getProgramGroupId(iterator.getReader(), oldProgramGroupId);
-            record.setAttribute(SAMTag.PG.toString(), newProgramGroupId);
+        if (this.samHeaderMerger.hasProgramGroupCollisions()) { 
+            final String oldGroupId = (String) record.getAttribute(ReservedTagConstants.PROGRAM_GROUP_ID);
+            if (oldGroupId != null ) {
+                final String newGroupId = this.samHeaderMerger.getProgramGroupId(iterator.getReader(), oldGroupId);
+                record.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, newGroupId); 
+                }
         }
 
         // Fix up the sequence indexes if needs be
