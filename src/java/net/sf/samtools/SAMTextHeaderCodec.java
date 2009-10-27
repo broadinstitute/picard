@@ -319,9 +319,19 @@ public class SAMTextHeaderCodec {
     }
 
     private void writeHDLine() {
-        final String[] fields = new String[1 + mFileHeader.getAttributes().size()];
+        // Make a copy of the header, excluding the version from the input header, so that
+        // output get CURRENT_VERSION instead of whatever the version of the input header was.
+        final SAMFileHeader newHeader = new SAMFileHeader();
+
+        for (final Map.Entry<String, Object> entry : mFileHeader.getAttributes()) {
+            if (!entry.getKey().equals(SAMFileHeader.VERSION_TAG)) {
+                newHeader.setAttribute(entry.getKey(), entry.getValue());
+            }
+        }
+
+        final String[] fields = new String[1 + newHeader.getAttributes().size()];
         fields[0] = HEADER_LINE_START + HeaderRecordType.HD;
-        encodeTags(mFileHeader, fields, 1);
+        encodeTags(newHeader, fields, 1);
         println(StringUtil.join(FIELD_SEPARATOR, fields));
     }
 
