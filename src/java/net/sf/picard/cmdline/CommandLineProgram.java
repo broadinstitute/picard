@@ -56,7 +56,7 @@ import java.util.List;
  * 4. Implement the following static method in the concrete class:
  *
  *     public static void main(String[] argv) {
-        System.exit(new MyConcreteClass().instanceMain(argv));
+        new MyConcreteClass().instanceMainWithExit(argv);
     }
 
 
@@ -96,6 +96,10 @@ public abstract class CommandLineProgram {
      * @return program exit status.
      */
     protected abstract int doWork();
+
+    public void instanceMainWithExit(final String[] argv) {
+        System.exit(instanceMain(argv));
+    }
 
     public int instanceMain(final String[] argv) {
         // Build the default headers
