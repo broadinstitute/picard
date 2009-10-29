@@ -485,8 +485,7 @@ public class CommandLineParser {
                             ", minElements cannot be > maxElements");
                 }
                 if (field.get(callerOptions) == null) {
-                    throw new CommandLineParserDefinitionException("In collection @Option member " + field.getName() +
-                            ", collection must be initialized");
+                    createCollection(field, callerOptions, "@Option");
                 }
             }
             if (!canBeMadeFromString(getUnderlyingType(field))) {
@@ -566,6 +565,15 @@ public class CommandLineParser {
         if (minPositionalArguments > maxPositionalArguments) {
             throw new CommandLineParserDefinitionException("In @PositionalArguments, minElements cannot be > maxElements");
         }
+        try {
+            if (field.get(callerOptions) == null) {
+                createCollection(field, callerOptions, "@PositionalParameters");
+            }
+        } catch (IllegalAccessException e) {
+            throw new CommandLineParserDefinitionException(field.getName() +
+                    " must have public visibility to have @PositionalParameters annotation");
+            
+        }
     }
 
     private boolean isCollectionField(final Field field) {
@@ -575,6 +583,21 @@ public class CommandLineParser {
         } catch (ClassCastException e) {
             return false;
         }
+    }
+
+    private void createCollection(final Field field, final Object callerOptions, String annotationType) throws IllegalAccessException {
+        try {
+            field.set(callerOptions, field.getType().newInstance());
+        } catch (Exception ex) {
+            try {
+                field.set(callerOptions, new ArrayList());
+            } catch (IllegalArgumentException e) {
+                throw new CommandLineParserDefinitionException("In collection " + annotationType + " member " + field.getName() +
+                        " cannot be constructed or auto-initialized with ArrayList, so collection must be initialized explicitly.");
+            }
+
+        }
+
     }
 
     /**

@@ -29,8 +29,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CommandLineParserTest {
     enum FrobnicationFlavor {
@@ -345,7 +344,7 @@ public class CommandLineParserTest {
     @Test(expectedExceptions = CommandLineParserDefinitionException.class)
     public void testOptionDefinitionCaseClash() {
         final OptionsWithCaseClash options = new OptionsWithCaseClash();
-        final CommandLineParser clp = new CommandLineParser(options);
+        new CommandLineParser(options);
         Assert.fail("Should not be reached.");
     }
 
@@ -435,11 +434,39 @@ public class CommandLineParserTest {
         Assert.assertEquals(clp.parseOptions(System.err, args), expected);
     }
 
+    class UninitializedCollectionOptions {
+        @Option
+        public List<String> LIST;
+        @Option
+        public ArrayList<String> ARRAY_LIST;
+        @Option
+        public HashSet<String> HASH_SET;
+        @PositionalArguments
+        public Collection<File> COLLECTION;
+
+    }
+
+    @Test
+    public void testUninitializedCollections() {
+        final UninitializedCollectionOptions o = new UninitializedCollectionOptions();
+        final CommandLineParser clp = new CommandLineParser(o);
+        final String[] args = {"LIST=L1", "LIST=L2", "ARRAY_LIST=S1", "HASH_SET=HS1", "P1", "P2"};
+        Assert.assertTrue(clp.parseOptions(System.err, args));
+        Assert.assertEquals(o.LIST.size(), 2);
+        Assert.assertEquals(o.ARRAY_LIST.size(), 1);
+        Assert.assertEquals(o.HASH_SET.size(), 1);
+        Assert.assertEquals(o.COLLECTION.size(), 2);
+    }
+
+    class UninitializedCollectionThatCannotBeAutoInitializedOptions {
+        @Option
+        public Set<String> SET;
+    }
+
     @Test(expectedExceptions = CommandLineParserDefinitionException.class)
-    public void testExceptionIfUninitializedCollection() {
-        final FrobnicateOptions fo = new FrobnicateOptions();
-        fo.SHMIGGLE_TYPE = null;
-        new CommandLineParser(fo);
+    public void testCollectionThatCannotBeAutoInitialized() {
+        final UninitializedCollectionThatCannotBeAutoInitializedOptions o = new UninitializedCollectionThatCannotBeAutoInitializedOptions();
+        new CommandLineParser(o);
         Assert.fail("Exception should have been thrown");
     }
 }
