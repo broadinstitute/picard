@@ -67,7 +67,8 @@ public class CigarCodecTest {
                 case 'S': return 4;
                 case 'H': return 5;
                 case 'P': return 6;
-                case 'C': return 7;
+                case '=': return 7;
+                case 'X' : return 8;
                 default: Assert.assertTrue(false);
             }
             return -1;
@@ -101,7 +102,8 @@ public class CigarCodecTest {
                 new Cigarette(12, 'S'),
                 new Cigarette(99, 'H'),
                 new Cigarette(20, 'P'),
-                new Cigarette(2, 'C'),
+                new Cigarette(2, '='),
+                new Cigarette(2, 'X')
         };
         final String textCigar = makeTextCigar(cigarettes);
         final int[] binaryCigar = makeBinaryCigar(cigarettes);
