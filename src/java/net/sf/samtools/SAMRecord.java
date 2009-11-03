@@ -1375,7 +1375,7 @@ public class SAMRecord implements Cloneable
                 }
             }
         }
-        if (this.getReadLength() != getBaseQualities().length) {
+        if (this.getReadLength() != getBaseQualities().length &&  !Arrays.equals(getBaseQualities(), NULL_QUALS)) {
             if (ret == null) ret = new ArrayList<SAMValidationError>();
             ret.add(new SAMValidationError(SAMValidationError.Type.MISMATCH_READ_LENGTH_AND_QUALS_LENGTH,
                     "Read length does not match quals length", getReadName()));
