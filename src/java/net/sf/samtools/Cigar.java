@@ -193,4 +193,8 @@ public class Cigar {
     public int hashCode() {
         return cigarElements != null ? cigarElements.hashCode() : 0;
     }
+
+    public String toString() {
+        return TextCigarCodec.getSingleton().encode(this);
+    }
 }
