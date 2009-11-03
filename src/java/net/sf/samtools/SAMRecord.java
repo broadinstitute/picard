@@ -1130,6 +1130,8 @@ public class SAMRecord implements Cloneable
                 case D : refBase += e.getLength(); break;
                 case I : readBase += e.getLength(); break;
                 case M :
+                case EQ :
+                case X :
                     final int length = e.getLength();
                     alignmentBlocks.add(new AlignmentBlock(readBase, refBase, length));
                     readBase += length;

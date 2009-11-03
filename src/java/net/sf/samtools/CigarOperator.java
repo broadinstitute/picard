@@ -27,17 +27,41 @@ package net.sf.samtools;
  * The operators that can appear in a cigar string, and information about their disk representations.
  */
 public enum CigarOperator {
-    M(true, true),
-    I(true, false),
-    D(false, true),
-    N(false, true),
-    S(true, false),
-    H(false, false),
-    P(false, false),
-    C(false, false); // I don't know what C means, but it is in the BAM spec
+    /** Match or mismatch */
+    M(true, true,   'M'),
+    /** Insertion vs. the reference. */
+    I(true, false,  'I'),
+    /** Deletion vs. the reference. */
+    D(false, true,  'D'),
+    /** Skipped region from the reference. */
+    N(false, true,  'N'),
+    /** Soft clip. */
+    S(true, false,  'S'),
+    /** Hard clip. */
+    H(false, false, 'H'),
+    /** Padding. */
+    P(false, false, 'P'),
+    /** Matches the reference. */
+    EQ(true, true,  '='),
+    /** Mismatches the reference. */
+    X(true, true,   'X')
+    ;
 
-    private boolean consumesReadBases;
-    private boolean consumesReferenceBases;
+    // Representation of CigarOperator in BAM file
+    private static final byte OP_M = 0;
+    private static final byte OP_I = 1;
+    private static final byte OP_D = 2;
+    private static final byte OP_N = 3;
+    private static final byte OP_S = 4;
+    private static final byte OP_H = 5;
+    private static final byte OP_P = 6;
+    private static final byte OP_EQ = 7;
+    private static final byte OP_X = 8;
+
+    private final boolean consumesReadBases;
+    private final boolean consumesReferenceBases;
+    private final byte character;
+    private final String string;
 
     // Readable synonyms of the above enums
     public static final CigarOperator MATCH_OR_MISMATCH = M;
@@ -48,19 +72,12 @@ public enum CigarOperator {
     public static final CigarOperator HARD_CLIP = H;
     public static final CigarOperator PADDING = P;
 
-    // Representation of CigarOperator in BAM file
-    private static final byte OP_M = 0;
-    private static final byte OP_I = 1;
-    private static final byte OP_D = 2;
-    private static final byte OP_N = 3;
-    private static final byte OP_S = 4;
-    private static final byte OP_H = 5;
-    private static final byte OP_P = 6;
-    private static final byte OP_C = 7;
-
-    CigarOperator(boolean consumesReadBases, boolean consumesReferenceBases) {
+    /** Default constructor. */
+    CigarOperator(boolean consumesReadBases, boolean consumesReferenceBases, char character) {
         this.consumesReadBases = consumesReadBases;
         this.consumesReferenceBases = consumesReferenceBases;
+        this.character = (byte) character;
+        this.string = new String(new char[] {character}).intern();
     }
 
     /** If true, represents that this cigar operator "consumes" bases from the read bases. */
@@ -89,8 +106,10 @@ public enum CigarOperator {
             return H;
         case 'P':
             return P;
-        case 'C':
-            return C;
+        case '=':
+            return EQ;
+        case 'X':
+            return X;
         default:
             throw new IllegalArgumentException("Unrecognized CigarOperator: " + b);
         }
@@ -116,8 +135,10 @@ public enum CigarOperator {
                 return H;
             case OP_P:
                 return P;
-            case OP_C:
-                return C;
+            case OP_EQ:
+                return EQ;
+            case OP_X:
+                return X;
             default:
                 throw new IllegalArgumentException("Unrecognized CigarOperator: " + i);
         }
@@ -144,10 +165,22 @@ public enum CigarOperator {
                 return OP_H;
             case P:
                 return OP_P;
-            case C:
-                return OP_C;
+            case EQ:
+                return OP_EQ;
+            case X:
+                return OP_X;
             default:
                 throw new IllegalArgumentException("Unrecognized CigarOperator: " + e);
         }
+    }
+
+    /** Returns the character that should be used within a SAM file. */
+    public static byte enumToCharacter(final CigarOperator e) {
+        return e.character;
+    }
+
+    /** Returns the cigar operator as it would be seen in a SAM file. */
+    @Override public String toString() {
+        return this.string;
     }
 }

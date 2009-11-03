@@ -26,6 +26,7 @@ package net.sf.samtools;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 
 /**
  * A list of CigarElements, which describes how a read aligns with the reference.
@@ -76,6 +77,8 @@ public class Cigar {
                 case M:
                 case D:
                 case N:
+                case EQ:
+                case X:
                     length += element.getLength();
             }
         }
@@ -92,6 +95,8 @@ public class Cigar {
                 case M:
                 case D:
                 case N:
+                case EQ:
+                case X:
                 case P:
                     length += element.getLength();
             }
@@ -161,7 +166,8 @@ public class Cigar {
     }
 
     private static boolean isRealOperator(final CigarOperator op) {
-        return op == CigarOperator.M || op == CigarOperator.I || op == CigarOperator.D || op == CigarOperator.N;
+        return op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X || 
+               op == CigarOperator.I || op == CigarOperator.D || op == CigarOperator.N;
     }
 
     private static boolean isInDelOperator(final CigarOperator op) {
