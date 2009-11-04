@@ -48,6 +48,18 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         this.valueLabel = valueLabel;
     }
 
+    /** Constructs a new Histogram that'll use the supplied comparator to sort keys. */
+    public Histogram(final Comparator<K> comparator) {
+        super(comparator);
+    }
+
+    /** Constructor that takes labels for the bin and values and a comparator to sort the bins. */
+    public Histogram(final String binLabel, final String valueLabel, final Comparator<K> comparator) {
+        this(comparator);
+        this.binLabel = binLabel;
+        this.valueLabel = valueLabel;
+    }
+
     /** Copy constructor for a histogram. */
     public Histogram(final Histogram<K> in) {
         this.binLabel = in.binLabel;
