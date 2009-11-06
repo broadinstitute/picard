@@ -41,4 +41,5 @@ public class StandardOptionDefinitions {
     public static final String PF_READS_ONLY_SHORT_NAME = "PF";
     public static final String MINIMUM_MAPPING_QUALITY_SHORT_NAME = "MQ";
     public static final String READ_GROUP_ID_SHORT_NAME = "RG";
+    public static final String MINIMUM_LOD_SHORT_NAME = "LOD";
 }
