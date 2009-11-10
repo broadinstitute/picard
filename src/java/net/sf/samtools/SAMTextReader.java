@@ -357,7 +357,7 @@ class SAMTextReader
                 mCurrentRecord.setReadBases(SAMRecord.NULL_SEQUENCE);
             }
             if (!mFields[QUAL_COL].equals("*")) {
-                if (mCurrentRecord.getReadString() == null) {
+                if (mCurrentRecord.getReadBases() == SAMRecord.NULL_SEQUENCE) {
                     reportErrorParsingLine("QUAL should not be specified if SEQ is not specified");
                 }
                 if (mCurrentRecord.getReadString().length() != mFields[QUAL_COL].length()) {
