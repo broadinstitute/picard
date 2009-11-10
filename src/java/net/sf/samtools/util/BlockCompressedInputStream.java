@@ -207,7 +207,11 @@ public class BlockCompressedInputStream
     }
 
     private boolean eof() throws IOException {
-        return mFile.eof();
+        if (mFile.eof()) {
+            return true;
+        }
+        // If the last remaining block is the size of the EMPTY_GZIP_BLOCK, this is the same as being at EOF.
+        return (mFile.length() - (mBlockAddress + mLastBlockLength) == BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length);
     }
 
     /**
