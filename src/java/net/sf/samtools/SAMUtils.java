@@ -275,6 +275,15 @@ public final class SAMUtils
     }
 
     /**
+     * Converts printable qualities in Sanger fastq format to binary phred scores.
+     */
+    public static void fastqToPhred(final byte[] fastq) {
+        for (int i = 0; i < fastq.length; ++i) {
+            fastq[i] = (byte)fastqToPhred((char)(fastq[i] & 0xff));
+        }
+    }
+
+    /**
      * Convert a single printable ASCII FASTQ format phred score to binary phred score.
      * @param ch Printable ASCII FASTQ format phred score.
      * @return Binary phred score.
