@@ -31,7 +31,20 @@ import net.sf.samtools.SAMTag;
 public class ReservedTagConstants {
     public static final String READ_GROUP_ID = SAMTag.RG.name(); // Specified in the SAM spec doc
     public static final String PROGRAM_GROUP_ID =  SAMTag.PG.name(); // Specified in the SAM spec doc
-    public static final String XN = "XN";    // Present and set to 1 if a read is a noise read
-    public static final String NM = SAMTag.NM.name();    // Number of nucleotide differences (Specified in the SAM spec doc)
-    public static final String XQ = "XQ";   // The sum of the mismatched qualities.
+
+    /** Present and set to 1 if a read is a noise read. */
+    public static final String XN = "XN";
+
+    /** Number of nucleotide differences (Specified in the SAM spec doc) */
+    public static final String NM = SAMTag.NM.name();
+
+    /** The sum of the mismatched qualities. */
+    public static final String XQ = "XQ";
+
+    /**
+     * The name of an attribute which stores the 1-based index of the start of
+     * sequence within a read (in original orientation) that should be clipped
+     * or trimmed before alignment and downstream use.
+     */
+    public static final String XT = "XT";
 }
