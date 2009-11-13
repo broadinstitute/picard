@@ -1290,10 +1290,6 @@ public class SAMRecord implements Cloneable
             ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_INSERT_SIZE, "Insert size out of range", getReadName()));
         }
         if (getReadUnmappedFlag()) {
-            if (getReadNegativeStrandFlag()) {
-                if (ret == null) ret = new ArrayList<SAMValidationError>();
-                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_READ_NEG_STRAND, "Read negative strand flag should not be set for unmapped read.", getReadName()));
-            }
             if (getNotPrimaryAlignmentFlag()) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_NOT_PRIM_ALIGNMENT, "Not primary alignment flag should not be set for unmapped read.", getReadName()));

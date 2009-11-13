@@ -145,7 +145,6 @@ public class ValidateSamFileTest {
         
         final Histogram<String> results = executeValidation(samBuilder.getSamReader(), null);
         
-        Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_READ_NEG_STRAND.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_NOT_PRIM_ALIGNMENT.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_MAPPING_QUALITY.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_CIGAR.getHistogramString()).getValue(), 1.0);

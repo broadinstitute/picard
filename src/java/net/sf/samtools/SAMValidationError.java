@@ -56,9 +56,6 @@ public class SAMValidationError {
         /** second of pair flag set for unpaired read */
         INVALID_FLAG_SECOND_OF_PAIR,
 
-        /** read negative strand flag set for unmapped read */
-        INVALID_FLAG_READ_NEG_STRAND,
-
         /** not primary alignment flag set for unmapped read */
         INVALID_FLAG_NOT_PRIM_ALIGNMENT,
 
