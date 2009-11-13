@@ -44,7 +44,7 @@ import java.io.File;
  * Three fastq versions are supported: FastqSanger, FastqSolexa and FastqIllumina.
  * Input files can be in GZip format (end in .gz).
  */
-public class FastqToBam extends CommandLineProgram {
+public class FastqToSam extends CommandLineProgram {
 
     @Usage(programVersion="1.0") 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
@@ -79,7 +79,7 @@ public class FastqToBam extends CommandLineProgram {
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
     public static void main(final String[] argv) {
-        System.exit(new FastqToBam().instanceMain(argv));
+        System.exit(new FastqToSam().instanceMain(argv));
     }
 
     protected int doWork() {

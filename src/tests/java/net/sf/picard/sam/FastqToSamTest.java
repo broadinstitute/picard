@@ -37,7 +37,7 @@ import java.io.IOException;
 /**
  * Tests for FastqToBam
  */
-public class FastqToBamTest {
+public class FastqToSamTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/fastq2bam");
 
     // fastq files with legal values for each fastq version
@@ -136,7 +136,7 @@ public class FastqToBamTest {
         final File fastqFile1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File samFile = newTempSamFile(fastqFile1.getName());
 
-        final FastqToBam program = new FastqToBam();
+        final FastqToSam program = new FastqToSam();
         program.FASTQ = fastqFile1;
         if (fastqFilename2 != null) program.SECOND_END_FASTQ = new File(TEST_DATA_DIR, fastqFilename2);
         program.OUTPUT = samFile;
@@ -160,11 +160,11 @@ public class FastqToBamTest {
         return file; 
     }
 
-//  Test for legal syntax for pair read names for FastqToBam.getBaseName()
+//  Test for legal syntax for pair read names for FastqToSam.getBaseName()
 //  We create a dummy file to test the getBaseName() method since it expects 
 //  an existing file.
 
-    private static final FastqToBam fastqToBam = new FastqToBam();
+    private static final FastqToSam fastqToSam = new FastqToSam();
     private static File dummyFile ;
     private static FastqReader freader1 ;
     private static FastqReader freader2 ;
@@ -203,12 +203,12 @@ public class FastqToBamTest {
 
     @Test(dataProvider = "okPairNames")
     public void readPairNameOk(final String name1, final String name2) throws IOException {
-        fastqToBam.getBaseName(name1, name2, freader1, freader2);
+        fastqToSam.getBaseName(name1, name2, freader1, freader2);
     }
 
     @Test(dataProvider = "badPairNames", expectedExceptions= PicardException.class) 
     public void readPairNameBad(final String name1, final String name2) throws IOException {
-        fastqToBam.getBaseName(name1, name2, freader1, freader2);
+        fastqToSam.getBaseName(name1, name2, freader1, freader2);
     }
 }
 

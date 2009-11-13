@@ -43,7 +43,7 @@ import java.util.Set;
 /**
  * Tests for BamToFastq
  */
-public class BamToFastqTest {
+public class SamToFastqTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/bam2fastq/paired");
 
     @DataProvider(name = "okFiles")
@@ -68,7 +68,7 @@ public class BamToFastqTest {
     }
 
     private void convertFile(final File samFile, final File fastqFile1, final File fastqFile2) throws IOException {
-        final BamToFastq program = new BamToFastq();
+        final SamToFastq program = new SamToFastq();
         program.INPUT = samFile ;
         program.FASTQ = fastqFile1;
         program.SECOND_END_FASTQ = fastqFile2;

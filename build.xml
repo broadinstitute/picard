@@ -206,6 +206,8 @@
         <package-command main-class="net.sf.picard.sam.ViewSam" title="ViewSam"/>
         <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
         <package-command main-class="net.sf.picard.sam.ValidateSamFile" title="ValidateSamFile"/>
+        <package-command main-class="net.sf.picard.sam.SamToFastq" title="SamToFastq"/>
+        <package-command main-class="net.sf.picard.sam.FastqToSam" title="FastqToSam"/>
     </target>
 
 <!-- ALL -->
