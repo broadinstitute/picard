@@ -65,7 +65,7 @@ public class SamToFastq extends CommandLineProgram {
     public File SECOND_END_FASTQ ;
 
 
-    @Option(shortName="RC", doc="Re-reverse bases and qualities of reads aligned to the negative strand before writing them to fastq", optional=true)
+    @Option(shortName="RC", doc="Re-reverse bases and qualities of reads with negative strand flag set before writing them to fastq", optional=true)
     public Boolean RE_REVERSE = true;
 
     public static void main(final String[] argv) {
@@ -141,7 +141,7 @@ public class SamToFastq extends CommandLineProgram {
         final String seqHeader = mateNumber==null ? read.getReadName() : read.getReadName() + "/"+ mateNumber;
         String readString = read.getReadString();
         String baseQualities = read.getBaseQualityString();
-        if ( !read.getReadUnmappedFlag() && RE_REVERSE && read.getReadNegativeStrandFlag() ) {
+        if ( RE_REVERSE && read.getReadNegativeStrandFlag() ) {
             readString = SequenceUtil.reverseComplement(read.getReadString());
             baseQualities = StringUtil.reverseString(read.getBaseQualityString());
         }
