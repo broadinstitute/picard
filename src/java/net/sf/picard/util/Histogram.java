@@ -168,8 +168,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     }
 
     /**
-     * Returns the sum of values that were placed into the histogram, or the product of the
-     * histgram bin and the number of entries in each bin.
+     * Returns the sum of the products of the histgram bin ids and the number of entries in each bin.
      */
     public double getSum() {
         double total = 0;
@@ -179,7 +178,19 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
         return total;
     }
-    
+
+    /**
+     * Returns the sum of the number of entries in each bin.
+     */
+    public double getSumOfValues() {
+        double total = 0;
+        for (final Bin bin : values()) {
+            total += bin.getValue();
+        }
+
+        return total;
+    }
+
     public double getStandardDeviation() {
         double total = 0;
         for (final Bin bin : values()) {
