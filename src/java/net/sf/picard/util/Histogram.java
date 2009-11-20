@@ -219,6 +219,23 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
         throw new IllegalStateException("Could not find percentile: " + percentile);
     }
+
+    /**
+     * Returns the cumulative probability of observing a value <= v when sampling the
+     * distribution represented by this histogram.
+     */
+    public double getCumulativeProbability(final double v) {
+        double count = 0;
+        double total = 0;
+
+        for (final Bin bin : values()) {
+            final double binValue = bin.getIdValue();
+            if (binValue <= v) count += bin.getValue();
+            total += bin.getValue();
+        }
+
+        return count / total;
+    }
     
     public double getMedian() {
         double total = 0;
