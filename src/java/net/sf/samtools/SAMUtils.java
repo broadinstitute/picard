@@ -325,7 +325,7 @@ public final class SAMUtils
     static void processValidationErrors(final List<SAMValidationError> validationErrors,
                                         final long samRecordIndex,
                                         final SAMFileReader.ValidationStringency validationStringency) {
-        if (validationErrors != null) {
+        if (validationErrors != null && validationErrors.size() > 0) {
             for (final SAMValidationError validationError : validationErrors) {
                 validationError.setRecordNumber(samRecordIndex);
             }
