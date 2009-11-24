@@ -31,9 +31,10 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.ReadableQualityFormatType;
+import net.sf.picard.util.FastqQualityFormat;
 import net.sf.picard.util.SolexaQualityConverter;
 import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
@@ -49,53 +50,62 @@ public class FastqToSam extends CommandLineProgram {
     @Usage(programVersion="1.0") 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
         + " Input files can be in GZip format (end in .gz).\n" 
-        + "Following quality formats are supported: \n"
-        + "  FastqSanger - refers to Sanger style FASTQ files which encode PHRED qualities using an ASCII offset of 33 \n"
-        + "  FastqSolexa - refers to (early) Solexa/Illumina style FASTQ files (from Illumina pipeline version prior to 1.3) which encode Solexa qualities using an ASCII offset of 64 \n"
-        + "  FastqIllumina  - refers to recent Solexa/Illumina style FASTQ files (from Illumina pipeline version 1.3+) which encode PHRED qualities using an ASCII offset of 64"
         ;
 
-    @Option(shortName="F", doc="Input file (fastq.gz) to extract reads from (single-end fastq or, if paired, first end of the pair fastq).")
-    public File FASTQ ;
+    @Option(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
+    public File FASTQ;
 
-    @Option(shortName="F2", doc="Input file (fastq.gz) to extract reads from (if paired, second end of the pair fastq).", optional=true) 
-    public File SECOND_END_FASTQ ;
+    @Option(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
+    public File FASTQ2;
+
+    @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 " +
+            "style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled " +
+            "scores with a character shift of 33.")
+    public FastqQualityFormat QUALITY_FORMAT;
 
     @Option(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) 
     public File OUTPUT ;
 
-    @Option(shortName="RB", doc="Run barcode")
-    public String RUN_BARCODE;
-
     @Option(shortName="RG", doc="Read group name")
-    public String READ_GROUP_NAME;
+    public String READ_GROUP_NAME = "A";
 
-    @Option(shortName="SM", doc="Sample name")
+    @Option(shortName="SM", doc="Sample name to insert into the read group header")
     public String SAMPLE_NAME;
 
-    @Option(shortName="V", doc="FASTQ version")
-    public ReadableQualityFormatType FASTQ_VERSION ;
+    @Option(shortName="LB", doc="The library name to place into the LB attribute in the read group header")
+    public String LIBRARY_NAME;
+
+    @Option(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header")
+    public String PLATFORM_UNIT;
+
+    @Option(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header")
+    public String PLATFORM;
+
+    @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
+    public SortOrder SORT_ORDER = SortOrder.queryname;
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
+    /** Stock main method. */
     public static void main(final String[] argv) {
         System.exit(new FastqToSam().instanceMain(argv));
     }
 
+    /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
-        final int readCount = (SECOND_END_FASTQ == null) ?  doUnpaired() : doPaired();
-        System.out.println("Processed "+readCount+" fastq reads");
+        final int readCount = (FASTQ2 == null) ?  doUnpaired() : doPaired();
+        System.out.println("Processed " + readCount + " fastq reads");
         return 0;
     }
 
-
+    /** Creates a simple SAM file from a single fastq file. */
     protected int doUnpaired() {
         IoUtil.assertFileIsReadable(FASTQ);
         IoUtil.assertFileIsWritable(OUTPUT);
         
         final FastqReader freader = new FastqReader(FASTQ);
-        final SAMFileHeader header = createFileHeader() ;
-        final SAMFileWriter writer = (new SAMFileWriterFactory()).makeSAMOrBAMWriter(header, false, OUTPUT);
+        final SAMFileHeader header = createFileHeader();
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
 
         int readCount = 0;
         for ( ; freader.hasNext()  ; readCount++) {
@@ -103,18 +113,20 @@ public class FastqToSam extends CommandLineProgram {
             final SAMRecord srec = createSamRecord(header, getReadName(frec.getReadHeader()) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
-            }
+        }
+
         writer.close();
         return readCount;
     }
 
+    /** More complicated method that takes two fastq files and builds pairing information in the SAM. */
     protected int doPaired() {
         IoUtil.assertFileIsReadable(FASTQ);
-        IoUtil.assertFileIsReadable(SECOND_END_FASTQ);
+        IoUtil.assertFileIsReadable(FASTQ2);
         IoUtil.assertFileIsWritable(OUTPUT);
         
         final FastqReader freader1 = new FastqReader(FASTQ);
-        final FastqReader freader2 = new FastqReader(SECOND_END_FASTQ);
+        final FastqReader freader2 = new FastqReader(FASTQ2);
         final SAMFileHeader header = createFileHeader() ;
         final SAMFileWriter writer = (new SAMFileWriterFactory()).makeSAMOrBAMWriter(header, false, OUTPUT);
 
@@ -138,24 +150,25 @@ public class FastqToSam extends CommandLineProgram {
             writer.addAlignment(srec2);
         }
 
+        writer.close();
+
         if (freader1.hasNext() || freader2.hasNext()) {
             throw new PicardException("Input paired fastq files must be the same length");
         }
 
-        writer.close();
         return readCount;
     }
 
-    private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec,
-                                      final boolean paired) {
+    private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec, final boolean paired) {
         final SAMRecord srec = new SAMRecord(header);
-        srec.setReadName(RUN_BARCODE + ":" + baseName);
+        srec.setReadName(baseName);
         srec.setReadString(frec.getReadString());
         srec.setReadUmappedFlag(true);
         srec.setAttribute(ReservedTagConstants.READ_GROUP_ID, READ_GROUP_NAME);
         final byte[] quals = StringUtil.stringToBytes(frec.getBaseQualityString());
-        convertQuality(quals, FASTQ_VERSION);
+        convertQuality(quals, QUALITY_FORMAT);
         srec.setBaseQualities(quals);
+
         if (paired) {
             srec.setReadPairedFlag(true);
             srec.setMateUnmappedFlag(true);
@@ -163,29 +176,32 @@ public class FastqToSam extends CommandLineProgram {
         return srec ;
     }
 
+    /** Creates a simple header with the values provided on the command line. */
     private SAMFileHeader createFileHeader() {
-        final SAMReadGroupRecord rgroup = new SAMReadGroupRecord(READ_GROUP_NAME);
-        rgroup.setSample(SAMPLE_NAME);
+        final SAMReadGroupRecord rgroup = new SAMReadGroupRecord(this.READ_GROUP_NAME);
+        rgroup.setSample(this.SAMPLE_NAME);
+        if (this.LIBRARY_NAME != null) rgroup.setLibrary(this.LIBRARY_NAME);
+        if (this.PLATFORM != null) rgroup.setPlatform(this.PLATFORM);
+        if (this.PLATFORM_UNIT != null) rgroup.setPlatformUnit(this.PLATFORM_UNIT);
+
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
-        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+        header.setSortOrder(this.SORT_ORDER);
         return header ;
     }
 
-    void convertQuality(final byte[] quals, final ReadableQualityFormatType version) {
-
+    /** Based on the type of quality scores coming in, converts them to a numeric byte[] in prhred scale. */
+    void convertQuality(final byte[] quals, final FastqQualityFormat version) {
         switch (version)  {
-            case FastqSanger : 
+            case Standard:
                 SAMUtils.fastqToPhred(quals);
                 break ;
-            case FastqSolexa : {
+            case Solexa:
                 solexaQualityConverter.convertSolexaQualityCharsToPhredBinary(quals);
                 break ;
-                }
-            case FastqIllumina  : {
+            case Illumina:
                 solexaQualityConverter.convertSolexa_1_3_QualityCharsToPhredBinary(quals);
                 break ;
-                }
             }
     }
 
@@ -227,6 +243,7 @@ public class FastqToSam extends CommandLineProgram {
         return result ;
     }
 
+    /** Little utility to give error messages corresponding to line numbers in the input files. */
     private String error(final FastqReader freader, final String str) {
         return str +" at line "+freader.getLineNumber() +" in file "+freader.getFile().getAbsolutePath();
     }

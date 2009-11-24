@@ -24,15 +24,13 @@
 package net.sf.picard.util;
 
 /**
- * Enumeration for FastQ formats. The names are based on the BioPython nomenclature <a href="http://www.biopython.org/wiki/SeqIO#File_Formats">BioPython nomenclature</a>.
- * <ul> 
- * <li> FastqIllumina  - refers to recent Solexa/Illumina style FASTQ files (from pipeline version 1.3+) which encode PHRED qualities using an ASCII offset of 64
- * <li> FastqSolexa - refers to (early) Solexa/Illumina style FASTQ files which encode Solexa qualities using an ASCII offset of 64
- * <li> FastqSanger - refers to Sanger style FASTQ files which encode PHRED qualities using an ASCII offset of 33
- * </ul> 
+ * Enumeration for FastQ quality score formats formats.
  */
-public enum ReadableQualityFormatType {
-    FastqIllumina,
-    FastqSolexa, 
-    FastqSanger
-} ; 
+public enum FastqQualityFormat {
+    /** Early Solexa/Illumina (pre pipeline 1.3) style scores  which encode Solexa qualities using an ASCII offset of 64 */
+    Solexa,
+    /** Recent Solexa/Illumina (pipeline 1.3+) style scores which encode PHRED qualities using an ASCII offset of 64 */
+    Illumina,
+    /** Sanger style FASTQ files which encode PHRED qualities using an ASCII offset of 33 */
+    Standard
+}

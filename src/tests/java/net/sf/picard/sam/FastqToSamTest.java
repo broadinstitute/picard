@@ -25,7 +25,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.util.ReadableQualityFormatType;
+import net.sf.picard.util.FastqQualityFormat;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -44,16 +44,16 @@ public class FastqToSamTest {
     @DataProvider(name = "okVersionFiles")
     public Object[][] okVersionFiles() {
         return new Object[][] {
-            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq",      ReadableQualityFormatType.FastqSanger },
-            {"fastq-sanger/5k-30BB2AAXX.3.aligned.sam.fastq",     ReadableQualityFormatType.FastqSanger },
-            {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", ReadableQualityFormatType.FastqSanger }, // all sanger chars
+            {"fastq-sanger/5k-v1-Rhodobacter_LW1.sam.fastq",      FastqQualityFormat.Standard },
+            {"fastq-sanger/5k-30BB2AAXX.3.aligned.sam.fastq",     FastqQualityFormat.Standard },
+            {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", FastqQualityFormat.Standard }, // all sanger chars
 
-            {"fastq-solexa/s_1_sequence.txt", ReadableQualityFormatType.FastqSolexa },
-            {"fastq-solexa/solexa_full_range_as_solexa.fastq", ReadableQualityFormatType.FastqSolexa }, // all solexa chars
+            {"fastq-solexa/s_1_sequence.txt", FastqQualityFormat.Solexa},
+            {"fastq-solexa/solexa_full_range_as_solexa.fastq", FastqQualityFormat.Solexa}, // all solexa chars
 
-            {"fastq-illumina/s_1_2_sequence.txt", ReadableQualityFormatType.FastqIllumina },
-            {"fastq-illumina/s_1_2_sequence.txt", ReadableQualityFormatType.FastqIllumina },
-            {"fastq-illumina/s_1_sequence.txt", ReadableQualityFormatType.FastqIllumina },
+            {"fastq-illumina/s_1_2_sequence.txt", FastqQualityFormat.Illumina},
+            {"fastq-illumina/s_1_2_sequence.txt", FastqQualityFormat.Illumina},
+            {"fastq-illumina/s_1_sequence.txt", FastqQualityFormat.Illumina},
         };
     }
 
@@ -61,8 +61,8 @@ public class FastqToSamTest {
     @DataProvider(name = "badVersionFiles")
     public Object[][] badVersionFiles() {
         return new Object[][] {
-            {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", ReadableQualityFormatType.FastqIllumina },
-            {"fastq-solexa/s_1_sequence.txt", ReadableQualityFormatType.FastqIllumina },
+            {"fastq-sanger/sanger_full_range_as_sanger-63.fastq", FastqQualityFormat.Illumina},
+            {"fastq-solexa/s_1_sequence.txt", FastqQualityFormat.Illumina},
         };
     }
 
@@ -84,8 +84,8 @@ public class FastqToSamTest {
     @DataProvider(name = "okPairedFiles")
     public Object[][] okPairedFiles() {
         return new Object[][] {
-            {"ok-paired/pair1.txt",          "ok-paired/pair2.txt", ReadableQualityFormatType.FastqSanger },
-            {"fastq-illumina/s_1_1_sequence.txt", "fastq-illumina/s_1_2_sequence.txt", ReadableQualityFormatType.FastqIllumina }
+            {"ok-paired/pair1.txt",          "ok-paired/pair2.txt", FastqQualityFormat.Standard },
+            {"fastq-illumina/s_1_1_sequence.txt", "fastq-illumina/s_1_2_sequence.txt", FastqQualityFormat.Illumina}
         };
     }
 
@@ -104,44 +104,43 @@ public class FastqToSamTest {
 
 
     @Test(dataProvider = "okVersionFiles")
-    public void testFastqVersionOk(final String fastqVersionFilename, final ReadableQualityFormatType version) throws IOException {
+    public void testFastqVersionOk(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
         final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
     }
 
     @Test(dataProvider = "badVersionFiles", expectedExceptions= IllegalArgumentException.class)
-    public void testFastqVersionBad(final String fastqVersionFilename, final ReadableQualityFormatType version) throws IOException {
+    public void testFastqVersionBad(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
         final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
     }
 
     @Test(dataProvider = "badFormatFiles", expectedExceptions= PicardException.class) 
     public void testBadFile(final String filename) throws IOException {
-        convertFile(filename, null, ReadableQualityFormatType.FastqSanger);
+        convertFile(filename, null, FastqQualityFormat.Standard);
     }
 
     @Test(dataProvider = "badPairedFiles", expectedExceptions= PicardException.class) 
     public void testPairedBad(final String filename1, final String filename2) throws IOException {
-        convertFile(filename1, filename2, ReadableQualityFormatType.FastqSanger);
+        convertFile(filename1, filename2, FastqQualityFormat.Standard);
     }
 
     @Test(dataProvider = "okPairedFiles")
-    public void testPairedOk(final String filename1, final String filename2, final ReadableQualityFormatType version) throws IOException {
+    public void testPairedOk(final String filename1, final String filename2, final FastqQualityFormat version) throws IOException {
         convertFile(filename1, filename2, version);
     }
 
-    private File convertFile(final String filename, final ReadableQualityFormatType version) throws IOException {
+    private File convertFile(final String filename, final FastqQualityFormat version) throws IOException {
         return convertFile(filename, null, version);
     }
 
-    private File convertFile(final String fastqFilename1, final String fastqFilename2, final ReadableQualityFormatType version) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version) throws IOException {
         final File fastqFile1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File samFile = newTempSamFile(fastqFile1.getName());
 
         final FastqToSam program = new FastqToSam();
         program.FASTQ = fastqFile1;
-        if (fastqFilename2 != null) program.SECOND_END_FASTQ = new File(TEST_DATA_DIR, fastqFilename2);
+        if (fastqFilename2 != null) program.FASTQ2 = new File(TEST_DATA_DIR, fastqFilename2);
         program.OUTPUT = samFile;
-        program.FASTQ_VERSION = version;
-        program.RUN_BARCODE = "bar" ;
+        program.QUALITY_FORMAT = version;
         program.READ_GROUP_NAME = "rg" ;
         program.SAMPLE_NAME = "s1" ;
         Assert.assertEquals(program.doWork(), 0);
