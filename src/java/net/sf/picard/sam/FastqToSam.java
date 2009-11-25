@@ -72,13 +72,13 @@ public class FastqToSam extends CommandLineProgram {
     @Option(shortName="SM", doc="Sample name to insert into the read group header")
     public String SAMPLE_NAME;
 
-    @Option(shortName="LB", doc="The library name to place into the LB attribute in the read group header")
+    @Option(shortName="LB", doc="The library name to place into the LB attribute in the read group header", optional=true)
     public String LIBRARY_NAME;
 
-    @Option(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header")
+    @Option(shortName="PU", doc="The platform unit (often run_barcode.lane) to insert into the read group header", optional=true)
     public String PLATFORM_UNIT;
 
-    @Option(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header")
+    @Option(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header", optional=true)
     public String PLATFORM;
 
     @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
