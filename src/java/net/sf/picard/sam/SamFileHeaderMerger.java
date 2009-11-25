@@ -121,6 +121,12 @@ public class SamFileHeaderMerger {
         this.mergedHeader.setGroupOrder(SAMFileHeader.GroupOrder.none);
 
         this.mergedHeader.setSortOrder(sortOrder);
+
+        for (final SAMFileReader reader : readers) {
+            for (final String comment : reader.getFileHeader().getComments()) {
+                this.mergedHeader.addComment(comment);
+            }
+        }
     }
 
     /**

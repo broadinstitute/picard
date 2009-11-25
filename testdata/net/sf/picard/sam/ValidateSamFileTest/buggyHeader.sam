@@ -1,0 +1,30 @@
+@HD VN:1.0  SO:coordinate
+@SQ	SN:chr1	SN:chr123	LN:247249719	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:9ebc6df9496613f373e73396d5b3b6b6 SP:Homo sapiens
+@SQ	SN:chr2	LN:242951149	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:b12c7373e3882120332983be99aeb18d SP:Homo sapiens
+@SQ	SN:chr3	LN:199501827	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:4e390df72c70f259b074be639d8f9578 SP:Homo sapiens
+@SQ	SN:chr4	LN:191273063	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:cf37020337904229dca8401907b626c2 SP:Homo sapiens
+@SQ	SN:chr5	LN:180857866	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:031c851664e31b2c17337fd6f9004858 SP:Homo sapiens
+@SQ	SN:chr6	LN:170899992	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:bfe8005c536131276d448ead33f1b583 SP:Homo sapiens
+@SQ	SN:chr7	LN:158821424	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:74239c5ceee3b28f0038123d958114cb SP:Homo sapiens
+@SQ	SN:chr8	LN:146274826	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:1eb00fe1ce26ce6701d2cd75c35b5ccb SP:Homo sapiens
+@SQ	SN:chr9	LN:140273252	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:ea244473e525dde0393d353ef94f974b SP:Homo sapiens
+@SQ	SN:chr10	LN:135374737	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:4ca41bf2d7d33578d2cd7ee9411e1533 SP:Homo sapiens
+@SQ	SN:chr11	LN:134452384	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:425ba5eb6c95b60bafbf2874493a56c3 SP:Homo sapiens
+@SQ	SN:chr12	LN:132349534	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:d17d70060c56b4578fa570117bf19716 SP:Homo sapiens
+@SQ	SN:chr13	LN:114142980	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:c4f3084a20380a373bbbdb9ae30da587 SP:Homo sapiens
+@SQ	SN:chr14	LN:106368585	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:c1ff5d44683831e9c7c1db23f93fbb45 SP:Homo sapiens
+@SQ	SN:chr15	LN:100338915	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:5cd9622c459fe0a276b27f6ac06116d8 SP:Homo sapiens
+@SQ	SN:chr16	LN:88827254	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:3e81884229e8dc6b7f258169ec8da246 SP:Homo sapiens
+@SQ	SN:chr17	LN:78774742	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:2a5c95ed99c5298bb107f313c7044588 SP:Homo sapiens
+@SQ	SN:chr18	LN:76117153	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:3d11df432bcdc1407835d5ef2ce62634 SP:Homo sapiens
+@SQ	SN:chr19	LN:63811651	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:2f1a59077cfad51df907ac25723bff28 SP:Homo sapiens
+@SQ	SN:chr20	LN:62435964	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:f126cdf8a6e0c7f379d618ff66beb2da SP:Homo sapiens
+@SQ	SN:chr21	LN:46944323	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:f1b74b7f9f4cdbaeb6832ee86cb426c6 SP:Homo sapiens
+@SQ	SN:chr22	LN:49691432	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:2041e6a0c914b48dd537922cca63acb8 SP:Homo sapiens
+@SQ	SN:chrX	LN:154913754	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:d7e626c80ad172a4d7c95aadb94d9040 SP:Homo sapiens
+@SQ	SN:chrY	LN:57772954	UR:file:/stornext/snfs1/next-gen/solid/reference/full_hsap36.fasta	M5:62f69d0e82a12af74bad85e2e4a8bd91 SP:Homo sapiens
+@RG     ID:A    PL:solid        PU:083_20090618_2_SL_notag      LB:ANG_TCGA-OVA.09.T_000sA      DT:2009-06-18T19:00:00-0500     SM:TCGA-09-0364-01A-02W-0370-010     CN:Baylor
+@RG     ID:B    PL:solid        PU:083_20090618_2_SL_detag      LB:ANG_TCGA-OVA.09.T_000sA      DT:2009-06-18T19:00:00-0500     SM:TCGA-09-0364-01A-02W-0370-010     CN:Baylor
+@PG	ID:0	VN:4.0r2.0 CL:/data/bucket2/corona_lite_v4.0r2.0 -t 50 or 30 -z 10 -e 6:50 or 3:30
+@CO	Hi, Mom!
+1003_834_22	0	chr1	7330	255	50M	*	0	0	CCCAGGCCTCCCGAGCCGAGCCATCCGTCACCCCCTGGCTCCTGGCCGCT	@@@@@?@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@>9@@@?9<@@(((!	RG:Z:0	CS:Z:T20012030220032230322301320312110000210322021030332	CQ:Z:499;=,4988	MD:Z:23C23TA1

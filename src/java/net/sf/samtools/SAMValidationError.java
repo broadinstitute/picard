@@ -139,7 +139,21 @@ public class SAMValidationError {
         E2_BASE_EQUALS_PRIMARY_BASE(Severity.WARNING),
 
         /** BAM appears to be healthy, but is an older file so doesn't have terminator block. */
-        BAM_FILE_MISSING_TERMINATOR_BLOCK(Severity.WARNING);
+        BAM_FILE_MISSING_TERMINATOR_BLOCK(Severity.WARNING),
+
+        /** Header record is not one of the standard types */
+        UNRECOGNIZED_HEADER_TYPE,
+
+        /** Header tag does not have colon */
+        POORLY_FORMATTED_HEADER_TAG,
+
+        /** Header tag appears more than once in header line with different value */
+        HEADER_TAG_MULTIPLY_DEFINED,
+
+        HEADER_RECORD_MISSING_REQUIRED_TAG,
+
+        /** Date string is not ISO-8601 */
+        INVALID_DATE_STRING(Severity.WARNING);
 
         public final Severity severity;
 
@@ -163,6 +177,7 @@ public class SAMValidationError {
     private final String message;
     private final String readName;
     private long recordNumber = -1;
+    private String source;
 
     /**
      * Construct a SAMValidationError with unknown record number.
@@ -192,6 +207,9 @@ public class SAMValidationError {
         final StringBuilder builder = new StringBuilder();
         builder.append(type.severity.toString());
         builder.append(": ");
+        if (source != null) {
+            builder.append("File ").append(source.toString()).append(", ");
+        }
         if (recordNumber > 0) {
             builder.append("Record ").append(recordNumber).append(", ");
         }
@@ -212,4 +230,11 @@ public class SAMValidationError {
 
     public void setRecordNumber(final long recordNumber) { this.recordNumber = recordNumber; }
 
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(final String source) {
+        this.source = source;
+    }
 }

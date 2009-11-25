@@ -205,7 +205,7 @@ public class SamFileValidator {
                 
                 validateMateFields(record, recordNumber);
                 validateSortOrder(lastRecord, record, recordNumber);
-                boolean cigarIsValid = validateCigar(record, recordNumber);
+                final boolean cigarIsValid = validateCigar(record, recordNumber);
                 if (cigarIsValid) {
                     validateNmTag(record, recordNumber);
                 }
@@ -345,6 +345,9 @@ public class SamFileValidator {
     }
 
     private void validateHeader(final SAMFileHeader fileHeader) {
+        for (final SAMValidationError error : fileHeader.getValidationErrors()) {
+            addError(error);
+        }
         if (fileHeader.getVersion() == null) {
             addError(new SAMValidationError(Type.MISSING_VERSION_NUMBER, "Header has no version number", null));
         } else if (!fileHeader.getVersion().equals(SAMFileHeader.CURRENT_VERSION)) {

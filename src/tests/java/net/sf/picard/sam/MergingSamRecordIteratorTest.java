@@ -29,8 +29,7 @@ import net.sf.samtools.util.SequenceUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Tests for MultiIterator
@@ -217,4 +216,29 @@ public class MergingSamRecordIteratorTest {
         Assert.fail("This method should throw exception before getting to this point");
     }
 
+    @Test
+    public void testHeaderCommentMerge() throws Exception {
+        final String[] comments1 = {"@CO\tHi, Mom!", "@CO\tHi, Dad!"};
+        final String[] comments2 = {"@CO\tHello, World!", "@CO\tGoodbye, Cruel World!"};
+        final Set<String> bothComments = new HashSet<String>();
+        bothComments.addAll(Arrays.asList(comments1));
+        bothComments.addAll(Arrays.asList(comments2));
+        final SAMRecordSetBuilder builder1 = new SAMRecordSetBuilder(false, SAMFileHeader.SortOrder.coordinate);
+        SAMFileHeader header = builder1.getHeader();
+        for (final String comment : comments1) {
+            header.addComment(comment);
+        }
+        final SAMRecordSetBuilder builder2 = new SAMRecordSetBuilder(false, SAMFileHeader.SortOrder.coordinate);
+        header = builder2.getHeader();
+        for (final String comment : comments2) {
+            header.addComment(comment);
+        }
+        final SamFileHeaderMerger merger = new SamFileHeaderMerger(Arrays.asList(builder1.getSamReader(), builder2.getSamReader()),
+                SAMFileHeader.SortOrder.coordinate);
+        final List<String> mergedComments = merger.getMergedHeader().getComments();
+        Assert.assertEquals(mergedComments.size(), bothComments.size());
+        for (final String comment : mergedComments) {
+            Assert.assertTrue(bothComments.contains(comment));
+        }
+    }
 }

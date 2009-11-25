@@ -99,7 +99,8 @@ public class ValidateSamFile extends CommandLineProgram {
         else {
             out = new PrintWriter(System.out);
         }
-        
+
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
         final SAMFileReader samReader = new SAMFileReader(INPUT);
         final SamFileValidator validator = new SamFileValidator(out);
         validator.setErrorsToIgnore(IGNORE);

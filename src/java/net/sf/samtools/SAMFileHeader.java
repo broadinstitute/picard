@@ -83,6 +83,9 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
         new HashMap<String, SAMReadGroupRecord>();
     private final Map<String, SAMProgramRecord> mProgramRecordMap = new HashMap<String, SAMProgramRecord>();
     private SAMSequenceDictionary mSequenceDictionary = new SAMSequenceDictionary();
+    final private List<String> mComments = new ArrayList<String>();
+    private String textHeader;
+    private final List<SAMValidationError> mValidationErrors = new ArrayList<SAMValidationError>();
 
     public SAMFileHeader() {
         setAttribute(VERSION_TAG, CURRENT_VERSION);
@@ -221,6 +224,56 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
 
     public void setGroupOrder(final GroupOrder go) {
         setAttribute("GO", go.name());
+    }
+
+    /**
+     * If this SAMHeader was read from a file, this property contains the header
+     * as it appeared in the file, otherwise it is null.
+     */
+    public String getTextHeader() {
+        return textHeader;
+    }
+
+    public void setTextHeader(final String textHeader) {
+        this.textHeader = textHeader;
+    }
+
+    public List<String> getComments() {
+        return Collections.unmodifiableList(mComments);
+    }
+
+    public void addComment(String comment) {
+        if (!comment.startsWith(SAMTextHeaderCodec.COMMENT_PREFIX)) {
+            comment = SAMTextHeaderCodec.COMMENT_PREFIX + comment;
+        }
+        mComments.add(comment);
+    }
+
+
+    /**
+     * Replace existing comments with the contents of the given collection.
+     */
+    public void setComments(final Collection<String> comments) {
+        mComments.clear();
+        for (final String comment : comments) {
+            addComment(comment);
+        }
+    }
+
+    public List<SAMValidationError> getValidationErrors() {
+        return Collections.unmodifiableList(mValidationErrors);
+    }
+
+    public void addValidationError(final SAMValidationError error) {
+        mValidationErrors.add(error);
+    }
+
+    /**
+     * Replace list of validation errors with the elements of the given list.
+     */
+    public void setValidationErrors(final Collection<SAMValidationError> errors) {
+        mValidationErrors.clear();
+        mValidationErrors.addAll(errors);
     }
 
     @Override

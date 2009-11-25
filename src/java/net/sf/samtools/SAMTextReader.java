@@ -70,8 +70,9 @@ class SAMTextReader
      * Prepare to read a SAM text file.
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
-    SAMTextReader(final InputStream stream) {
+    SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
         mReader = new AsciiLineReader(stream);
+        this.validationStringency = validationStringency;
         readHeader();
     }
 
@@ -80,8 +81,8 @@ class SAMTextReader
      * @param stream Need not be buffered, as this class provides buffered reading.
      * @param file For error reporting only.
      */
-    SAMTextReader(final InputStream stream, final File file) {
-        this(stream);
+    SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
+        this(stream, validationStringency);
         mFile = file;
     }
 

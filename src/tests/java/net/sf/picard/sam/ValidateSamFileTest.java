@@ -279,6 +279,20 @@ public class ValidateSamFileTest {
         final SAMFileReader samReader = new SAMFileReader(strm);
         Assert.assertEquals(SAMFileHeader.SortOrder.coordinate, samReader.getFileHeader().getSortOrder());
     }
+
+    @Test
+    public void testHeaderValidation() throws Exception {
+        SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "buggyHeader.sam"));
+            Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertEquals(results.get(SAMValidationError.Type.UNRECOGNIZED_HEADER_TYPE.getHistogramString()).getValue(), 3.0);
+            Assert.assertEquals(results.get(SAMValidationError.Type.HEADER_TAG_MULTIPLY_DEFINED.getHistogramString()).getValue(), 1.0);
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
  
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");

@@ -46,7 +46,8 @@ public class SAMFileReader implements Iterable<SAMRecord> {
     }
 
     /**
-     * Set validation stringency for all subsequently-created SAMFileReaders
+     * Set validation stringency for all subsequently-created SAMFileReaders.  This is the only way to
+     * change the validation stringency for SAM header.
      */
     public static void setDefaultValidationStringency(final ValidationStringency defaultValidationStringency) {
         SAMFileReader.defaultValidationStringency = defaultValidationStringency;
@@ -128,7 +129,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
      * @param eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final InputStream stream, final boolean eagerDecode) {
-        init(stream, eagerDecode);
+        init(stream, eagerDecode, defaultValidationStringency);
     }
 
     /**
@@ -139,7 +140,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
      * @param eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final File file, final boolean eagerDecode) {
-        init(file, null, eagerDecode);
+        init(file, null, eagerDecode, defaultValidationStringency);
     }
 
     /**
@@ -151,7 +152,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
      * @param eagerDecode eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final File file, final File indexFile, final boolean eagerDecode){
-        init(file, indexFile, eagerDecode);
+        init(file, indexFile, eagerDecode, defaultValidationStringency);
     }
 
     /**
@@ -163,7 +164,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
      * @param eagerDecode eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final URL url, final File indexFile, final boolean eagerDecode) {
-        init(url, indexFile, eagerDecode);
+        init(url, indexFile, eagerDecode, defaultValidationStringency);
     }
 
     public void close() {
@@ -197,6 +198,8 @@ public class SAMFileReader implements Iterable<SAMRecord> {
 
     /**
      * Control validation of SAMRecords as they are read from file.
+     * In order to control validation stringency for SAM Header, call SAMFileReader.setDefaultValidationStringency
+     * before constructing a SAMFileReader.
      */
     public void setValidationStringency(final ValidationStringency validationStringency) {
         mReader.setValidationStringency(validationStringency);
@@ -356,23 +359,23 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         }
     }
 
-    private void init(final InputStream stream, final boolean eagerDecode) {
+    private void init(final InputStream stream, final boolean eagerDecode, final ValidationStringency validationStringency) {
 
         try {
             final BufferedInputStream bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;
-                mReader = new BAMFileReader(bufferedStream, eagerDecode);
+                mReader = new BAMFileReader(bufferedStream, eagerDecode, validationStringency);
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream));
+                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
             } else if (isSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(bufferedStream);
+                mReader = new SAMTextReader(bufferedStream, validationStringency);
             } else {
                 throw new SAMFormatException("Unrecognized file format");
             }
-            setValidationStringency(defaultValidationStringency);
+            setValidationStringency(validationStringency);
         } catch (IOException e) {
             throw new RuntimeIOException(e);
         }
@@ -383,14 +386,14 @@ public class SAMFileReader implements Iterable<SAMRecord> {
      * @param indexFile
      * @param eagerDecode
      */
-    private void init(final URL url, final File indexFile, final boolean eagerDecode) {
+    private void init(final URL url, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
 
         try {
             // Its too expensive to examine the remote file to determine type.
             // Rely on file extension.
             if (url.toString().toLowerCase().endsWith(".bam")) {
                 mIsBinary = true;
-                final BAMFileReader reader = new BAMFileReader(url, eagerDecode);
+                final BAMFileReader reader = new BAMFileReader(url, eagerDecode, validationStringency);
                 mReader = reader;
                 if (indexFile != null) {
                     mFileIndex = new BAMFileIndex(indexFile);
@@ -399,7 +402,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
             } else {
                 throw new SAMFormatException("Unrecognized file format: " + url);
             }
-            setValidationStringency(defaultValidationStringency);
+            setValidationStringency(validationStringency);
         }
         catch (IOException e) {
             throw new RuntimeIOException(e);
@@ -408,7 +411,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
     }
 
 
-    private void init(final File file, File indexFile, final boolean eagerDecode) {
+    private void init(final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
         this.samFile = file;
 
         try {
@@ -416,7 +419,7 @@ public class SAMFileReader implements Iterable<SAMRecord> {
             if (isBAMFile(bufferedStream)) {
                 bufferedStream.close();
                 mIsBinary = true;
-                final BAMFileReader reader = new BAMFileReader(file, eagerDecode);
+                final BAMFileReader reader = new BAMFileReader(file, eagerDecode, validationStringency);
                 mReader = reader;
                 if (indexFile == null) {
                     indexFile = findIndexFile(file);
@@ -431,19 +434,19 @@ public class SAMFileReader implements Iterable<SAMRecord> {
                 }
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream));
+                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
             } else if (isSAMFile(bufferedStream)) {
                 if (indexFile != null) {
                     bufferedStream.close();
                     throw new RuntimeException("Cannot use index file with textual SAM file");
                 }
                 mIsBinary = false;
-                mReader = new SAMTextReader(bufferedStream, file);
+                mReader = new SAMTextReader(bufferedStream, file, validationStringency);
             } else {
                 bufferedStream.close();
                 throw new SAMFormatException("Unrecognized file format");
             }
-            setValidationStringency(defaultValidationStringency);
+            setValidationStringency(validationStringency);
         }
         catch (IOException e) {
             throw new RuntimeIOException(e);

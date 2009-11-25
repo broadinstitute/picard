@@ -55,19 +55,21 @@ class BAMFileReader
     // If true, all SAMRecords are fully decoded as they are read.
     private final boolean eagerDecode;
     // For error-checking.
-    private ValidationStringency mValidationStringency = SAMFileReader.ValidationStringency.SILENT;
+    private ValidationStringency mValidationStringency;
 
     /**
      * Prepare to read BAM from a stream (not seekable)
      * @param stream source of bytes.
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
+     * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final InputStream stream, final boolean eagerDecode)
+    BAMFileReader(final InputStream stream, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
         mIsSeekable = false;
         mCompressedInputStream = new BlockCompressedInputStream(stream);
         mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
         this.eagerDecode = eagerDecode;
+        this.mValidationStringency = validationStringency;
         readHeader(null);
     }
 
@@ -75,25 +77,27 @@ class BAMFileReader
      * Prepare to read BAM from a file (seekable)
      * @param file source of bytes.
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
+     * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final File file, final boolean eagerDecode)
+    BAMFileReader(final File file, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        this(new BlockCompressedInputStream(file), eagerDecode, file.getAbsolutePath());
+        this(new BlockCompressedInputStream(file), eagerDecode, file.getAbsolutePath(), validationStringency);
     }
 
 
-    BAMFileReader(final URL url, final boolean eagerDecode)
+    BAMFileReader(final URL url, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        this(new BlockCompressedInputStream(url), eagerDecode, url.toString());
+        this(new BlockCompressedInputStream(url), eagerDecode, url.toString(), validationStringency);
     }
 
     private BAMFileReader(final BlockCompressedInputStream compressedInputStream, final boolean eagerDecode,
-                          final String source)
+                          final String source, final ValidationStringency validationStringency)
         throws IOException {
         mIsSeekable = true;
         mCompressedInputStream = compressedInputStream;
         mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
         this.eagerDecode = eagerDecode;
+        this.mValidationStringency = validationStringency;
         readHeader(source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }
@@ -123,7 +127,7 @@ class BAMFileReader
     }
 
     /**
-     * error-checking level for subsequent SAMRecord reads.
+     * Set error-checking level for subsequent SAMRecord reads.
      */
     void setValidationStringency(final SAMFileReader.ValidationStringency validationStringency) {
         this.mValidationStringency = validationStringency;
