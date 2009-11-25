@@ -228,7 +228,9 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
 
     /**
      * If this SAMHeader was read from a file, this property contains the header
-     * as it appeared in the file, otherwise it is null.
+     * as it appeared in the file, otherwise it is null.  Note that this is not a toString()
+     * operation.  Changes to the SAMFileHeader object after reading from the file are not reflected in this value.
+     * Invalid header lines may appear in value but are not stored in the SAMFileHeader object.
      */
     public String getTextHeader() {
         return textHeader;
