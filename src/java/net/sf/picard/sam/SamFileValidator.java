@@ -24,21 +24,20 @@
 
 package net.sf.picard.sam;
 
-import java.io.*;
-import java.util.*;
-
-import net.sf.samtools.*;
-import net.sf.samtools.util.*;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMValidationError.Type;
 import net.sf.picard.PicardException;
-import net.sf.picard.util.Histogram;
 import net.sf.picard.metrics.MetricBase;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
+import net.sf.picard.util.Histogram;
+import net.sf.samtools.*;
+import net.sf.samtools.SAMFileReader.ValidationStringency;
+import net.sf.samtools.SAMValidationError.Type;
+import net.sf.samtools.util.*;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * Validates SAM files as follows:
@@ -64,8 +63,7 @@ public class SamFileValidator {
     private ReferenceSequenceFileWalker refFileWalker = null;
     private boolean verbose = false;
     private int maxVerboseOutput = 100;
-    private SAMRecordComparator recordComparator;
-    private SortOrder sortOrder;
+    private SAMSortOrderChecker orderChecker;
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
     private boolean ignoreWarnings = false;
 
@@ -160,7 +158,7 @@ public class SamFileValidator {
         try {
             samReader.setValidationStringency(ValidationStringency.SILENT);
             validateHeader(samReader.getFileHeader());
-            initComparator(samReader.getFileHeader());
+            orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
             validateSamRecords(samReader);
             
             if (errorsByType.isEmpty()) {
@@ -171,28 +169,8 @@ public class SamFileValidator {
         }
     }
 
-    private void initComparator(final SAMFileHeader fileHeader) {
-        this.sortOrder = fileHeader.getSortOrder();
-        switch (this.sortOrder) {
-        case coordinate:
-            this.recordComparator = new SAMRecordCoordinateComparator();
-            break;
-        case queryname:
-            this.recordComparator = new SAMRecordQueryNameComparator();
-            break;
-        default:
-            // dummy SAMRecordComparator that always says records are equal
-            this.recordComparator = new SAMRecordComparator() {
-                public int fileOrderCompare(final SAMRecord samRecord1, final SAMRecord samRecord2) { return 0; }
-                public int compare(final SAMRecord o1, final SAMRecord o2) { return 0; }    
-            };
-            break;
-        }
-    }
-
     private void validateSamRecords(final Iterable<SAMRecord> samRecords) {
         long recordNumber = 1;
-        SAMRecord lastRecord = null;
         try {
             for (final SAMRecord record : samRecords) {
                 final Collection<SAMValidationError> errors = record.isValid();
@@ -204,7 +182,7 @@ public class SamFileValidator {
                 }
                 
                 validateMateFields(record, recordNumber);
-                validateSortOrder(lastRecord, record, recordNumber);
+                validateSortOrder(record, recordNumber);
                 final boolean cigarIsValid = validateCigar(record, recordNumber);
                 if (cigarIsValid) {
                     validateNmTag(record, recordNumber);
@@ -212,7 +190,6 @@ public class SamFileValidator {
                 validateSecondaryBaseCalls(record, recordNumber);
 
                 recordNumber++;
-                lastRecord = record;
             }
         } catch (SAMFormatException e) {
             // increment record number because the iterator behind the SAMFileReader
@@ -274,16 +251,16 @@ public class SamFileValidator {
         return valid;
     }
 
-    private void validateSortOrder(final SAMRecord lastRecord, final SAMRecord record, final long recordNumber) {
-        if (lastRecord != null && recordComparator.fileOrderCompare(lastRecord, record) > 0) {
+    private void validateSortOrder(final SAMRecord record, final long recordNumber) {
+        if (!orderChecker.isSorted(record)) {
             addError(new SAMValidationError(
                     Type.RECORD_OUT_OF_ORDER, 
                     String.format(
                             "The record is out of [%s] order, prior read name [%s], prior coodinates [%d:%d]",
-                            this.sortOrder.name(),
-                            lastRecord.getReadName(),
-                            lastRecord.getReferenceIndex(),
-                            lastRecord.getAlignmentStart()),
+                            record.getHeader().getSortOrder().name(),
+                            orderChecker.getPreviousRecord().getReadName(),
+                            orderChecker.getPreviousRecord().getReferenceIndex(),
+                            orderChecker.getPreviousRecord().getAlignmentStart()),
                     record.getReadName(), 
                     recordNumber));
         }

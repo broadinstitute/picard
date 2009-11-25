@@ -45,9 +45,8 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
     // If true, records passed to addAlignment are already in the order specified by sortOrder
     private boolean presorted;
 
-    // These two fields are for validating presorted records.
-    private SAMRecord prevAlignment;
-    private SAMRecordComparator presortedComparator;
+    // For validating presorted records.
+    private SAMSortOrderChecker sortOrderChecker;
 
     /**
      * Must be called before calling setHeader().  SortOrder value in the header passed
@@ -94,7 +93,7 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
             if (sortOrder.equals(SAMFileHeader.SortOrder.unsorted)) {
                 presorted = false;
             } else {
-                presortedComparator = makeComparator();
+                sortOrderChecker = new SAMSortOrderChecker(sortOrder);
             }
         } else if (!sortOrder.equals(SAMFileHeader.SortOrder.unsorted)) {
             alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
@@ -134,15 +133,13 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
     }
 
     private void assertPresorted(final SAMRecord alignment) {
-        if (prevAlignment != null) {
-            if (presortedComparator.fileOrderCompare(prevAlignment, alignment) > 0) {
-                throw new IllegalArgumentException("Alignments added out of order in SAMFileWriterImpl.addAlignment for " +
-                getFilename() + ". Sort order is " + this.sortOrder + ". Offending records are at ["
-                        + prevAlignment.getReferenceName() + ":" + prevAlignment.getAlignmentStart() + "] and ["
-                        + alignment.getReferenceName() + ":" + alignment.getAlignmentStart() + "]");
-            }
+        if (!sortOrderChecker.isSorted(alignment)) {
+            throw new IllegalArgumentException("Alignments added out of order in SAMFileWriterImpl.addAlignment for " +
+                    getFilename() + ". Sort order is " + this.sortOrder + ". Offending records are at ["
+                    + sortOrderChecker.getPreviousRecord().getReferenceName() + ":" +
+                    sortOrderChecker.getPreviousRecord().getAlignmentStart() + "] and ["
+                    + alignment.getReferenceName() + ":" + alignment.getAlignmentStart() + "]");
         }
-        prevAlignment = alignment;
     }
 
     /**
