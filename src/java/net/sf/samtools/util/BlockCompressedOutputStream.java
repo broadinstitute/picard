@@ -69,6 +69,8 @@ public class BlockCompressedOutputStream
                     BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH];
     private final Deflater deflater;
     private final CRC32 crc32 = new CRC32();
+    private final File file;
+
 
     // Really a local variable, but allocate once to reduce GC burden.
     private final byte[] singleByteArray = new byte[1];
@@ -97,8 +99,7 @@ public class BlockCompressedOutputStream
      * @param compressionLevel 1 <= compressionLevel <= 9
      */
     public BlockCompressedOutputStream(final String filename, final int compressionLevel) {
-        codec = new BinaryCodec(filename, true);
-        deflater = new Deflater(compressionLevel, true);
+        this(new File(filename), compressionLevel);
     }
 
     /**
@@ -106,6 +107,7 @@ public class BlockCompressedOutputStream
      * @param compressionLevel 1 <= compressionLevel <= 9
      */
     public BlockCompressedOutputStream(final File file, final int compressionLevel) {
+        this.file = file;
         codec = new BinaryCodec(file, true);
         deflater = new Deflater(compressionLevel, true);
     }
@@ -174,6 +176,10 @@ public class BlockCompressedOutputStream
         // }
         codec.writeBytes(BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK);
         codec.close();
+        if (BlockCompressedInputStream.checkTermination(this.file) !=
+                BlockCompressedInputStream.FileTermination.HAS_TERMINATOR_BLOCK) {
+            throw new IOException("Terminator block not found after closing BGZF file " + this.file);
+        }
     }
 
     /**
