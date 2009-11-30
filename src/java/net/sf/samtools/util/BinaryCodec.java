@@ -579,7 +579,13 @@ public class BinaryCodec {
      */
     public void close() {
         try {
-            if (this.isWriting) this.outputStream.close();
+            if (this.isWriting) {
+                if (this.outputStream instanceof FileOutputStream) {
+                    FileOutputStream fos = (FileOutputStream)this.outputStream;
+                    fos.getFD().sync();
+                }
+                this.outputStream.close();
+            }
             else this.inputStream.close();
         } catch (IOException e) {
             throw new RuntimeIOException(e.getMessage(), e);
