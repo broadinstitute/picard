@@ -580,7 +580,10 @@ public class BinaryCodec {
     public void close() {
         try {
             if (this.isWriting) {
+                // To the degree possible, make sure the bytes get forced to the file system,
+                // or else cause an exception to be thrown.
                 if (this.outputStream instanceof FileOutputStream) {
+                    this.outputStream.flush();
                     FileOutputStream fos = (FileOutputStream)this.outputStream;
                     fos.getFD().sync();
                 }
