@@ -133,12 +133,12 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
     }
 
     private void assertPresorted(final SAMRecord alignment) {
+        final SAMRecord prev = sortOrderChecker.getPreviousRecord();
         if (!sortOrderChecker.isSorted(alignment)) {
             throw new IllegalArgumentException("Alignments added out of order in SAMFileWriterImpl.addAlignment for " +
                     getFilename() + ". Sort order is " + this.sortOrder + ". Offending records are at ["
-                    + sortOrderChecker.getPreviousRecord().getReferenceName() + ":" +
-                    sortOrderChecker.getPreviousRecord().getAlignmentStart() + "] and ["
-                    + alignment.getReferenceName() + ":" + alignment.getAlignmentStart() + "]");
+                    + sortOrderChecker.getSortKey(prev) + "] and ["
+                    + sortOrderChecker.getSortKey(alignment) + "]");
         }
     }
 

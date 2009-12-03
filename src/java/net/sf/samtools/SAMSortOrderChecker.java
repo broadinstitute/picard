@@ -28,10 +28,12 @@ package net.sf.samtools;
  * @author alecw@broadinstitute.org
  */
 public class SAMSortOrderChecker {
+    private final SAMFileHeader.SortOrder sortOrder;
     private SAMRecord prev;
     private final SAMRecordComparator comparator;
 
     public SAMSortOrderChecker(final SAMFileHeader.SortOrder sortOrder) {
+        this.sortOrder = sortOrder;
         switch (sortOrder) {
             case coordinate:
                 comparator = new SAMRecordCoordinateComparator();
@@ -64,5 +66,21 @@ public class SAMSortOrderChecker {
 
     public SAMRecord getPreviousRecord() {
         return prev;
+    }
+
+    /**
+     * Return the sort key used for the given sort order.  Useful in error messages.
+     */
+    public String getSortKey(final SAMRecord rec) {
+        switch (sortOrder) {
+
+            case coordinate:
+                return rec.getReferenceName() + ":" + rec.getAlignmentStart();
+            case queryname:
+                return rec.getReadName();
+            case unsorted:
+            default:
+                return null;
+        }
     }
 }

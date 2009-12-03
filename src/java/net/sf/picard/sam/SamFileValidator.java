@@ -252,15 +252,16 @@ public class SamFileValidator {
     }
 
     private void validateSortOrder(final SAMRecord record, final long recordNumber) {
+        final SAMRecord prev = orderChecker.getPreviousRecord();
         if (!orderChecker.isSorted(record)) {
             addError(new SAMValidationError(
                     Type.RECORD_OUT_OF_ORDER, 
                     String.format(
                             "The record is out of [%s] order, prior read name [%s], prior coodinates [%d:%d]",
                             record.getHeader().getSortOrder().name(),
-                            orderChecker.getPreviousRecord().getReadName(),
-                            orderChecker.getPreviousRecord().getReferenceIndex(),
-                            orderChecker.getPreviousRecord().getAlignmentStart()),
+                            prev.getReadName(),
+                            prev.getReferenceIndex(),
+                            prev.getAlignmentStart()),
                     record.getReadName(), 
                     recordNumber));
         }
