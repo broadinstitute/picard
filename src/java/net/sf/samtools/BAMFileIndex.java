@@ -37,7 +37,7 @@ import java.util.*;
 class BAMFileIndex
 {
     private static final int MAX_BINS = 37450; // =(8^6-1)/7+1
-    private static final int BAM_LIDX_SHIFT = 16;
+    private static final int BAM_LIDX_SHIFT = 14;
 
     private File mFile = null;
     private FileInputStream mFileStream = null;
