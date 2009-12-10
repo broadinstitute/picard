@@ -165,6 +165,7 @@ public abstract class CommandLineProgram {
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }
+            commandLineParser.usage(System.err);
             return false;
         }
         return true;
