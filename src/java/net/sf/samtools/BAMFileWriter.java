@@ -49,7 +49,7 @@ class BAMFileWriter extends SAMFileWriterImpl {
 
     private void prepareToWriteAlignments() {
         if (bamRecordCodec == null) {
-            bamRecordCodec = new BAMRecordCodec(getHeader());
+            bamRecordCodec = new BAMRecordCodec(getFileHeader());
             bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream());
         }
     }
@@ -66,8 +66,8 @@ class BAMFileWriter extends SAMFileWriterImpl {
         outputBinaryCodec.writeString(textHeader, true, false);
 
         // write the sequences binarily.  This is redundant with the text header
-        outputBinaryCodec.writeInt(getHeader().getSequenceDictionary().size());
-        for (final SAMSequenceRecord sequenceRecord: getHeader().getSequenceDictionary().getSequences()) {
+        outputBinaryCodec.writeInt(getFileHeader().getSequenceDictionary().size());
+        for (final SAMSequenceRecord sequenceRecord: getFileHeader().getSequenceDictionary().getSequences()) {
             outputBinaryCodec.writeString(sequenceRecord.getSequenceName(), true, true);
             outputBinaryCodec.writeInt(sequenceRecord.getSequenceLength());
         }

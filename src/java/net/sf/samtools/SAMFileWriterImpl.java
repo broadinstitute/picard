@@ -101,7 +101,7 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
         }
     }
 
-    protected SAMFileHeader getHeader() {
+    public SAMFileHeader getFileHeader() {
         return header;
     }
 

@@ -30,6 +30,8 @@ package net.sf.samtools;
 public interface SAMFileWriter {
     void addAlignment(SAMRecord alignment);
 
+    SAMFileHeader getFileHeader();
+
     /**
      * Must be called to flush or file will likely be defective. 
      */
