@@ -24,11 +24,10 @@
 package net.sf.picard.util;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * <p>A <em>wafer thin</em> wrapper around System.out that uses var-args to make it
@@ -48,7 +47,6 @@ public final class Log {
 
     private final Class<?> clazz;
     private final String className;
-    private final LogLevel level = globalLogLevel;
     private final PrintStream out = System.out;
 
     /**
@@ -75,7 +73,7 @@ public final class Log {
 
     /** Returns true if the specified log level is enabled otherwise false. */
     public final boolean isEnabled(final LogLevel level) {
-        return level.ordinal() <= this.level.ordinal();
+        return level.ordinal() <= globalLogLevel.ordinal();
     }
 
     /**
@@ -86,7 +84,7 @@ public final class Log {
      * @param throwable a Throwable if one is available otherwise null
      * @param parts the parts of the message to be concatenated
      */
-    private final void emit(final LogLevel level, final Throwable throwable, final Object... parts) {
+    private void emit(final LogLevel level, final Throwable throwable, final Object... parts) {
         if (isEnabled(level)) {
             this.out.print(level.name());
             this.out.print('\t');
@@ -127,7 +125,7 @@ public final class Log {
      * and SimpleDateFormat is not thread safe, currently creates an instance each time :/
      */
     protected String getTimestamp() {
-        DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        final DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return fmt.format(new Date());
     }
 
