@@ -26,7 +26,6 @@ package net.sf.samtools;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 
 /**
  * A list of CigarElements, which describes how a read aligns with the reference.
@@ -104,6 +103,18 @@ public class Cigar {
         return length;
     }
 
+    /**
+     * @return The number of read bases that the read covers.
+     */
+    public int getReadLength() {
+        int length = 0;
+        for (final CigarElement element : cigarElements) {
+            if (element.getOperator().consumesReadBases()){
+                    length += element.getLength();
+            }
+        }
+        return length;
+    }
 
     /**
      * Exhaustive validation of CIGAR
