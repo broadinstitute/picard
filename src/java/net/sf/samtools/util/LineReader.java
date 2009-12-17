@@ -30,15 +30,9 @@ public interface LineReader {
 
     /**
      * Read a line and remove the line terminator
-     */
-    String readLine();
-
-    /**
-     * Read a line and optionally include the line terminator
-     * @param includeTerminators
      * @return the line read, or null if EOF has been reached.
      */
-    String readLine(boolean includeTerminators);
+    String readLine();
 
     /**
      * @return 1-based number of line most recently read
@@ -50,4 +44,6 @@ public interface LineReader {
      * @return If not eof, the next character that would be read.  If eof, -1.
      */
     int peek();
+
+    public void close();
 }

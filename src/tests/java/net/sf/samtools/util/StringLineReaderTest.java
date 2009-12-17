@@ -29,7 +29,6 @@ import org.testng.annotations.Test;
 public class StringLineReaderTest {
 
     private static final String[] TERMINATORS = {"\r", "\n", "\r\n"};
-    private static final boolean[] TERMINATOR_INCLUSION = {false, true};
     private static final boolean[] LAST_LINE_TERMINATED = {false, true};
 
     enum EmptyLineState {
@@ -42,14 +41,12 @@ public class StringLineReaderTest {
     @Test
     public void testBasic() {
         for (final String terminator : TERMINATORS) {
-            for (final boolean includeTerminators : TERMINATOR_INCLUSION) {
-                for (final boolean lastLineTerminated : LAST_LINE_TERMINATED) {
-                    for (final EmptyLineState emptyLineState : EmptyLineState.values()) {
-                        if (emptyLineState == EmptyLineState.COMPLETELY_EMPTY) {
-                            emptyTestHelper(terminator, includeTerminators, lastLineTerminated);
-                        } else {
-                            testHelper(terminator, includeTerminators, lastLineTerminated, emptyLineState);
-                        }
+            for (final boolean lastLineTerminated : LAST_LINE_TERMINATED) {
+                for (final EmptyLineState emptyLineState : EmptyLineState.values()) {
+                    if (emptyLineState == EmptyLineState.COMPLETELY_EMPTY) {
+                        emptyTestHelper(terminator, lastLineTerminated);
+                    } else {
+                        testHelper(terminator, lastLineTerminated, emptyLineState);
                     }
                 }
             }
@@ -59,10 +56,9 @@ public class StringLineReaderTest {
     /**
      * various test cases where there is no input, except perhaps a line terminator
      * @param terminator what the terminator should be in the input
-     * @param includeTerminators should the test ask for terminators to be included
      * @param lastLineTerminated does the input have a terminator
      */
-    private void emptyTestHelper(final String terminator, final boolean includeTerminators, final boolean lastLineTerminated) {
+    private void emptyTestHelper(final String terminator, final boolean lastLineTerminated) {
         final String input;
         if (lastLineTerminated) {
             input = terminator;
@@ -70,23 +66,20 @@ public class StringLineReaderTest {
             input = "";
         }
         final StringLineReader slr = new StringLineReader(input);
-        final String output = slr.readLine(includeTerminators);
-        if (lastLineTerminated && includeTerminators) {
-            Assert.assertEquals(output, "\n");
-        } else if (lastLineTerminated) {
+        final String output = slr.readLine();
+        if (lastLineTerminated) {
             Assert.assertEquals(output, "");
         }
-        Assert.assertNull(slr.readLine(includeTerminators));
+        Assert.assertNull(slr.readLine());
     }
 
     /**
      * Test a variety of test cases in which there is more than one line.
      * @param terminator to use in the input
-     * @param includeTerminators passed to readLine()
      * @param lastLineTerminated should the input end with a terminator
      * @param emptyLineState where in the input should an empty line be.
      */
-    private void testHelper(final String terminator, final boolean includeTerminators, final boolean lastLineTerminated, final EmptyLineState emptyLineState) {
+    private void testHelper(final String terminator, final boolean lastLineTerminated, final EmptyLineState emptyLineState) {
         final String[] lines = new String[3];
         if (emptyLineState == EmptyLineState.FIRST_LINE) {
             lines[0] = "";
@@ -107,26 +100,20 @@ public class StringLineReaderTest {
         }
         final StringLineReader slr = new StringLineReader(input);
         for (int i = 0; i < lines.length - 1; ++i) {
-            final String s = slr.readLine(includeTerminators);
+            final String s = slr.readLine();
             String expected = lines[i];
-            if (includeTerminators) {
-                expected = expected.concat("\n");
-            }
             Assert.assertEquals(s, expected);
         }
 
         // Last line may need to be handled specially
-        String s = slr.readLine(includeTerminators);
+        String s = slr.readLine();
         if (!lastLineTerminated && emptyLineState == EmptyLineState.LAST_LINE) {
             Assert.assertNull(s);
         } else {
             String expected = lines[lines.length - 1];
-            if (includeTerminators && lastLineTerminated) {
-                expected = expected.concat("\n");
-            }
             Assert.assertEquals(s, expected);
         }
-        s = slr.readLine(includeTerminators);
+        s = slr.readLine();
         Assert.assertNull(s);
     }
 }

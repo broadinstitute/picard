@@ -52,7 +52,7 @@ public class StringLineReader implements LineReader {
      * @param includeTerminators
      * @return the next line from the input, with \n terminator if present and requested, or null if no more input.
      */
-    public String readLine(final boolean includeTerminators) {
+    private String readLine(final boolean includeTerminators) {
         if (curPos == theString.length()) {
             return null;
         }
@@ -87,5 +87,9 @@ public class StringLineReader implements LineReader {
             return -1;
         }
         return theString.charAt(curPos);
+    }
+
+    public void close() {
+        curPos = theString.length();
     }
 }
