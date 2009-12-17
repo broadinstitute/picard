@@ -346,32 +346,36 @@ public class BlockCompressedInputStream
             return FileTermination.DEFECTIVE;
         }
         final RandomAccessFile raFile = new RandomAccessFile(file, "r");
-        raFile.seek(fileSize - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length);
-        byte[] buf = new byte[BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length];
-        raFile.readFully(buf);
-        if (Arrays.equals(buf, BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK)) {
-            return FileTermination.HAS_TERMINATOR_BLOCK;
-        }
-        final int bufsize = (int)Math.min(fileSize, BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE);
-        buf = new byte[bufsize];
-        raFile.seek(fileSize - bufsize);
-        raFile.read(buf);
-        for (int i = buf.length - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length;
-                i >= 0; --i) {
-            if (!preambleEqual(BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE,
-                    buf, i, BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length)) {
-                continue;
+        try {
+            raFile.seek(fileSize - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length);
+            byte[] buf = new byte[BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length];
+            raFile.readFully(buf);
+            if (Arrays.equals(buf, BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK)) {
+                return FileTermination.HAS_TERMINATOR_BLOCK;
             }
-            final ByteBuffer byteBuffer = ByteBuffer.wrap(buf, i + BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length, 4);
-            byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-            final int totalBlockSizeMinusOne =  byteBuffer.getShort() & 0xFFFF;
-            if (buf.length - i == totalBlockSizeMinusOne + 1) {
-                return FileTermination.HAS_HEALTHY_LAST_BLOCK;
-            } else {
-                return FileTermination.DEFECTIVE;
+            final int bufsize = (int)Math.min(fileSize, BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE);
+            buf = new byte[bufsize];
+            raFile.seek(fileSize - bufsize);
+            raFile.read(buf);
+            for (int i = buf.length - BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK.length;
+                    i >= 0; --i) {
+                if (!preambleEqual(BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE,
+                        buf, i, BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length)) {
+                    continue;
+                }
+                final ByteBuffer byteBuffer = ByteBuffer.wrap(buf, i + BlockCompressedStreamConstants.GZIP_BLOCK_PREAMBLE.length, 4);
+                byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                final int totalBlockSizeMinusOne =  byteBuffer.getShort() & 0xFFFF;
+                if (buf.length - i == totalBlockSizeMinusOne + 1) {
+                    return FileTermination.HAS_HEALTHY_LAST_BLOCK;
+                } else {
+                    return FileTermination.DEFECTIVE;
+                }
             }
+            return FileTermination.DEFECTIVE;
+        } finally {
+            raFile.close();
         }
-        return FileTermination.DEFECTIVE;
     }
 
     private static boolean preambleEqual(final byte[] preamble, final byte[] buf, final int startOffset, final int length) {
