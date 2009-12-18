@@ -74,7 +74,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Option(doc = "Make sequence name the first word from the > line in the fasta file.  " +
             "By default the entire contents of the > line is used, excluding leading and trailing whitespace.")
-    public boolean TRUNCATE_NAMES_AT_WHITESPACE = false;
+    public boolean TRUNCATE_NAMES_AT_WHITESPACE = true;
 
     @Option(doc = "Stop after writing this many sequences.  For testing.")
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
