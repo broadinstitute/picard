@@ -46,7 +46,7 @@ public class FastqWriter {
         writer.println(rec.getReadHeader());
         writer.println(rec.getReadString());
         writer.print(FastqConstants.QUALITY_HEADER);
-        writer.println(rec.getBaseQualityHeader());
+        writer.println(rec.getBaseQualityHeader() == null ? "" : rec.getBaseQualityHeader());
         writer.println(rec.getBaseQualityString());
         if (writer.checkError()) {
             throw new PicardException("Error in writing file "+file);

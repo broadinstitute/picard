@@ -64,9 +64,11 @@ public class SamToFastq extends CommandLineProgram {
     @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true)
     public File SECOND_END_FASTQ ;
 
-
     @Option(shortName="RC", doc="Re-reverse bases and qualities of reads with negative strand flag set before writing them to fastq", optional=true)
     public Boolean RE_REVERSE = true;
+
+    @Option(shortName="NON_PF", doc="Include non-PF reads from the SAM file into the output FASTQ files.")
+    public boolean INCLUDE_NON_PF_READS = false;
 
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
@@ -90,7 +92,12 @@ public class SamToFastq extends CommandLineProgram {
         final FastqWriter writer = new FastqWriter(FASTQ);
 
         for (final SAMRecord record : reader ) {
-            writeRecord(record, null, writer);
+            if (record.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) {
+                // do nothing
+            }
+            else {
+                writeRecord(record, null, writer);
+            }
         }
         reader.close();
         writer.close();
@@ -108,6 +115,9 @@ public class SamToFastq extends CommandLineProgram {
         final Map<String,SAMRecord> firstSeenMates = new HashMap<String,SAMRecord>();
 
         for (final SAMRecord currentRecord : reader ) {
+            // Skip non-PF reads as necessary
+            if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) continue;
+
             final String currentReadName = currentRecord.getReadName() ;
             final SAMRecord firstRecord = firstSeenMates.get(currentReadName);
             if (firstRecord == null) {
