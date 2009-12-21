@@ -43,7 +43,8 @@ public class CreateSequenceDictionaryTest {
         outputFasta.deleteOnExit();
         final String[] argv = {
                 "REFERENCE=" + INPUT_FASTA,
-                "OUTPUT=" + outputFasta
+                "OUTPUT=" + outputFasta,
+                "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
         Assert.assertEquals(new CreateSequenceDictionary().instanceMain(argv), 0);
     }
