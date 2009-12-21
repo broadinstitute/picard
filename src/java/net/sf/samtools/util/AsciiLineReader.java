@@ -35,10 +35,14 @@ public class AsciiLineReader implements LineReader {
 
     private final LineReader readerImpl;
 
-    private static boolean useAsciiLineReaderImpl = isMacOs();
+    private static boolean useAsciiLineReaderImpl = !isLinux();
 
     private static boolean isMacOs() {
         return "Mac OS X".equals(System.getProperty("os.name"));
+    }
+
+    private static boolean isLinux() {
+        return "Linux".equals(System.getProperty("os.name"));
     }
 
     /**
