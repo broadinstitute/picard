@@ -24,7 +24,6 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.sam.CreateSequenceDictionary;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
