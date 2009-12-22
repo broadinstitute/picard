@@ -97,10 +97,8 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     void setSequenceIndex(final int value) { mSequenceIndex = value; }
 
     /**
-     * Looser comparison than equals().  If one SAMSequenceRecord has an attribute that the other does not
-     * have, that is not considered inequality.  However, if they both have an attribute, but have different
-     * values for that atttribute, then they are considered unequal.  This results in an intransitive equality test,
-     * i.e. a.isSameSequence(b) && b.isSameSequence(c) does not necessarily imply a.isSameSequence(c)
+     * Looser comparison than equals().  We look only at sequence index, sequence length, and MD5 tag value
+     * (or sequence names, if there is no MD5 tag in either record.
      */
     public boolean isSameSequence(final SAMSequenceRecord that) {
         if (this == that) return true;
@@ -108,39 +106,15 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
         if (mSequenceIndex != that.mSequenceIndex) return false;
         if (mSequenceLength != that.mSequenceLength) return false;
-        if (mSequenceName != that.mSequenceName) return false; // Compare using == since we intern() the Strings
-        // If one record has an optional attribute and the other does not, that is not considered inequality.
-        
-            for (final Map.Entry<String, Object> entry: getAttributes()) {
-                final Object thatAttribute = that.getAttribute(entry.getKey());
-                if (thatAttribute != null) {
-                    if (entry.getKey().equals(SAMSequenceRecord.MD5_TAG)) {
-                        // handle the fact that sometimes the MD5 had leading zeroes trimmed, by converting
-                        // to BigInteger before comparing.
-                        final BigInteger thisMd5 = new BigInteger((String)entry.getValue(), 16);
-                        final BigInteger thatMd5 = new BigInteger((String)thatAttribute, 16);
-                        if (!thisMd5.equals(thatMd5)) {
-                            return false;
-                        }
-                    } else if (entry.getKey().equals(SAMSequenceRecord.URI_TAG)) {
-                        final String thisURTag = (String)entry.getValue();
-                        final String thatURTag = (String)thatAttribute;
-                        try {
-                            final URI thisURI = makeURI(thisURTag);
-                            final URI thatURI = makeURI(thatURTag);
-                            if (thisURI.equals(thatURI)) {
-                                continue;
-                            }
-                        } catch (URISyntaxException e) {
-                            // Drop through to warning below.
-                        }
-                        System.err.println("WARNING: Mismatch in UR tags in SAMSequenceRecords: " +
-                                thisURTag + " != " + thatURTag);
-
-                    } else if (!entry.getValue().equals(thatAttribute)) {
-                        return false;
-                    }
-                }
+        if (this.getAttribute(SAMSequenceRecord.MD5_TAG) != null && that.getAttribute(SAMSequenceRecord.MD5_TAG) != null) {
+            final BigInteger thisMd5 = new BigInteger((String)this.getAttribute(SAMSequenceRecord.MD5_TAG), 16);
+            final BigInteger thatMd5 = new BigInteger((String)that.getAttribute(SAMSequenceRecord.MD5_TAG), 16);
+            if (!thisMd5.equals(thatMd5)) {
+                return false;
+            }
+        }
+        else {
+            if (mSequenceName != that.mSequenceName) return false; // Compare using == since we intern() the Strings
         }
 
         return true;
