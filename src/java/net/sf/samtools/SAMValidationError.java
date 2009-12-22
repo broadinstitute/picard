@@ -153,7 +153,10 @@ public class SAMValidationError {
         HEADER_RECORD_MISSING_REQUIRED_TAG,
 
         /** Date string is not ISO-8601 */
-        INVALID_DATE_STRING(Severity.WARNING);
+        INVALID_DATE_STRING(Severity.WARNING),
+
+        /** Unsigned integer tag value is deprecated in BAM. */
+        TAG_VALUE_TOO_LARGE;
 
         public final Severity severity;
 

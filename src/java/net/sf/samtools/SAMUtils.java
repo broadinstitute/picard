@@ -340,4 +340,13 @@ public final class SAMUtils
         }
     }
 
+    static void processValidationError(final SAMValidationError validationError,
+                                       SAMFileReader.ValidationStringency validationStringency) {
+        if (validationStringency == SAMFileReader.ValidationStringency.STRICT) {
+            throw new RuntimeException("SAM validation error: " + validationError);
+        }
+        else if (validationStringency == SAMFileReader.ValidationStringency.LENIENT) {
+            System.err.println("Ignoring SAM validation error: " + validationError);
+        }
+    }
 }

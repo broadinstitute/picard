@@ -53,7 +53,7 @@ public class MergeSamFiles extends CommandLineProgram {
     @Option(shortName="O", doc="SAM or BAM file to write merged result to")
     public File OUTPUT;
 
-    @Option(shortName="SO", doc="Sort order of output file", optional=true)
+    @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc="Sort order of output file", optional=true)
     public SAMFileHeader.SortOrder SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
 
     @Option(doc="If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",

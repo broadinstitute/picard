@@ -188,7 +188,7 @@ public class SamFileValidator {
                     validateNmTag(record, recordNumber);
                 }
                 validateSecondaryBaseCalls(record, recordNumber);
-
+                validateTags(record, recordNumber);
                 recordNumber++;
             }
         } catch (SAMFormatException e) {
@@ -198,6 +198,19 @@ public class SamFileValidator {
             throw new PicardException("SAMFormatException on record " + recordNumber, e);
         } catch (FileTruncatedException e) {
             addError(new SAMValidationError(Type.TRUNCATED_FILE, "File is truncated", null));
+        }
+    }
+
+    /**
+     * Report error if a tag value is a Long.
+     */
+    private void validateTags(final SAMRecord record, final long recordNumber) {
+        for (final SAMRecord.SAMTagAndValue tagAndValue : record.getAttributes()) {
+            if (tagAndValue.value instanceof Long) {
+                addError(new SAMValidationError(Type.TAG_VALUE_TOO_LARGE,
+                        "Numeric value too large for tag " + tagAndValue.tag,
+                        record.getReadName(), recordNumber));
+            }
         }
     }
 

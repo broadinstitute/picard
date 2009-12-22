@@ -907,6 +907,13 @@ public class SAMRecord implements Cloneable
     }
 
     protected void setAttribute(final short tag, final Object value) {
+        if (value != null &&
+                !(value instanceof Byte || value instanceof Short || value instanceof Integer ||
+                value instanceof String || value instanceof Character || value instanceof Float ||
+                value instanceof byte[])) {
+            throw new SAMException("Attribute type " + value.getClass() + " not supported. Tag: " +
+                    SAMTagUtil.getSingleton().makeStringTag(tag));
+        }
         if (mAttributes == null) {
             mAttributes = new ArrayList<SAMBinaryTagAndValue>();
         }
@@ -939,7 +946,7 @@ public class SAMRecord implements Cloneable
      */
     protected List<SAMBinaryTagAndValue> getBinaryAttributes() {
         if (mAttributes == null || mAttributes.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
         return Collections.unmodifiableList(mAttributes);
     }

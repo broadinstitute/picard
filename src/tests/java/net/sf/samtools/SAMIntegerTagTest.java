@@ -28,6 +28,8 @@ import org.testng.Assert;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Confirm that integer tag types are stored and retrieved properly.
@@ -35,6 +37,8 @@ import java.io.IOException;
  * @author alecw@broadinstitute.org
  */
 public class SAMIntegerTagTest {
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/samtools/SAMIntegerTagTest");
+
     private static final String BYTE_TAG = "BY";
     private static final String SHORT_TAG = "SH";
     private static final String INTEGER_TAG = "IN";
@@ -44,9 +48,9 @@ public class SAMIntegerTagTest {
     @Test
     public void testBAM() throws Exception {
         final SAMRecord rec = writeAndReadSamRecord("bam");
-        Assert.assertTrue(rec.getAttribute(BYTE_TAG) instanceof Byte);
+        Assert.assertTrue(rec.getAttribute(BYTE_TAG) instanceof Integer);
         Assert.assertEquals(((Number)rec.getAttribute(BYTE_TAG)).intValue(), 1);
-        Assert.assertTrue(rec.getAttribute(SHORT_TAG) instanceof Short);
+        Assert.assertTrue(rec.getAttribute(SHORT_TAG) instanceof Integer);
         Assert.assertEquals(((Number)rec.getAttribute(SHORT_TAG)).intValue(), 1);
         Assert.assertTrue(rec.getAttribute(INTEGER_TAG) instanceof Integer);
         Assert.assertEquals(((Number)rec.getAttribute(INTEGER_TAG)).intValue(), 1);
@@ -63,26 +67,22 @@ public class SAMIntegerTagTest {
         Assert.assertEquals(((Number)rec.getAttribute(INTEGER_TAG)).intValue(), 1);
     }
 
-    @Test
+    @Test(expectedExceptions = SAMException.class)
     public void testUnsignedIntegerBAM() throws Exception {
         SAMRecord rec = createSamRecord();
         final long val = 1l + Integer.MAX_VALUE;
         rec.setAttribute(UNSIGNED_INTEGER_TAG, val);
-        rec = writeAndReadSamRecord("bam", rec);
-        Assert.assertTrue(rec.getAttribute(UNSIGNED_INTEGER_TAG) instanceof Long);
-        Assert.assertEquals(rec.getAttribute(UNSIGNED_INTEGER_TAG), val);
+        Assert.fail("Exception should have been thrown.");
     }
 
     /**
      * Cannot store unsigned int in SAM text format.
      */
-    @Test(expectedExceptions = SAMFormatException.class)
+    @Test(expectedExceptions = SAMException.class)
     public void testUnsignedIntegerSAM() throws Exception {
         final SAMRecord rec = createSamRecord();
         final long val = 1l + Integer.MAX_VALUE;
         rec.setAttribute(UNSIGNED_INTEGER_TAG, val);
-        writeAndReadSamRecord("sam", rec);
-        Assert.fail("Exception should have been thrown.");
     }
 
     @Test
@@ -169,5 +169,40 @@ public class SAMIntegerTagTest {
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(false, SAMFileHeader.SortOrder.unsorted);
         builder.addFrag("readA", 20, 140, false);
         return builder.iterator().next();
+    }
+
+    @Test(expectedExceptions = {SAMFormatException.class})
+    public void testBadSamStrict() {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, "variousAttributes.sam"));
+        reader.iterator().next();
+        Assert.fail("Should not reach.");
+    }
+
+    @Test(expectedExceptions = {RuntimeException.class})
+    public void testBadBamStrict() {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, "variousAttributes.bam"), true);
+        reader.iterator().next();
+        Assert.fail("Should not reach.");
+
+    }
+
+    @Test
+    public void testBadBamLenient() {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, "variousAttributes.bam"), true);
+        reader.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
+        final SAMRecord rec = reader.iterator().next();
+        final Map<String, Number> expectedTags = new HashMap<String, Number>();
+        expectedTags.put("SB", -128);
+        expectedTags.put("UB", 129);
+        expectedTags.put("SS", 32767);
+        expectedTags.put("US", 65535);
+        expectedTags.put("SI", 2147483647);
+        expectedTags.put("I2", -2147483647);
+        expectedTags.put("UI", 4294967295L);
+        for (final Map.Entry<String, Number> entry : expectedTags.entrySet()) {
+            final Object value = rec.getAttribute(entry.getKey());
+            Assert.assertEquals(value, entry.getValue());
+        }
+        reader.close();
     }
 }

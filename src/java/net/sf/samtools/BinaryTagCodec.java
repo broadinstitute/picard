@@ -41,13 +41,10 @@ class BinaryTagCodec {
     // Integers are stored in the smallest size that will hold them.
     private static final long MAX_INT = Integer.MAX_VALUE;
     private static final long MAX_UINT = MAX_INT * 2 + 1;
-
-    // It was a bad idea to auto-detect the smallest integer type that could store
-    // a tag value, so these are no longer necessary.
-    //private static final long MAX_SHORT = Short.MAX_VALUE;
-    //private static final long MAX_USHORT = MAX_SHORT * 2 + 1;
-    //private static final long MAX_BYTE = Byte.MAX_VALUE;
-    //private static final long MAX_UBYTE = MAX_BYTE * 2 + 1;
+    private static final long MAX_SHORT = Short.MAX_VALUE;
+    private static final long MAX_USHORT = MAX_SHORT * 2 + 1;
+    private static final long MAX_BYTE = Byte.MAX_VALUE;
+    private static final long MAX_UBYTE = MAX_BYTE * 2 + 1;
 
     // Source or sink for disk representation.
     final BinaryCodec binaryCodec;
@@ -66,8 +63,6 @@ class BinaryTagCodec {
      * @return Size in bytes to store the value on disk.
      */
     private static int getBinaryValueSize(final Object attributeValue) {
-        // Note that the unsigned types are no longer supported, except for unsigned int,
-        // and that is discouraged since it isn't supported by SAM text format.
         switch (getTagValueType(attributeValue)) {
             case 'Z':
                 return ((String)attributeValue).length() + 1;
@@ -110,22 +105,54 @@ class BinaryTagCodec {
             return 'Z';
         } else if (value instanceof Character) {
             return 'A';
-        } else if (value instanceof Long && (Long)value < MAX_UINT) {
-            return 'I';
-        } else if (value instanceof Integer) {
-            return 'i';
-        } else if (value instanceof Short) {
-            return 's';
-        } else if (value instanceof Byte) {
-            return 'c';
         } else if (value instanceof Float) {
             return 'f';
+        } else if (value instanceof Number) {
+            if (!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)) {
+                throw new IllegalArgumentException("Unrecognized tag type " + value.getClass().getName());
+            }
+            return getIntegerType(((Number)value).longValue());
         } else if (value instanceof byte[]) {
             return 'H';
         } else {
             throw new IllegalArgumentException("When writing BAM, unrecognized tag type " +
                     value.getClass().getName());
         }
+    }
+
+    /**
+     * @param val Integer tag value.
+     * @return Tag type corresponding to the smallest integer type that will hold the given value.
+     */
+    static private char getIntegerType(final long val) {
+        if (val > MAX_UINT) {
+            throw new IllegalArgumentException("Integer attribute value too large to be encoded in BAM");
+        }
+        if (val > MAX_INT) {
+            return 'I';
+        }
+        if (val > MAX_USHORT) {
+            return 'i';
+        }
+        if (val > MAX_SHORT) {
+            return 'S';
+        }
+        if (val > MAX_UBYTE) {
+            return 's';
+        }
+        if (val > MAX_BYTE) {
+            return 'C';
+        }
+        if (val >= Byte.MIN_VALUE) {
+            return 'c';
+        }
+        if (val >= Short.MIN_VALUE) {
+            return 's';
+        }
+        if (val >= Integer.MIN_VALUE) {
+            return 'i';
+        }
+        throw new IllegalArgumentException("Integer attribute value too negative to be encoded in BAM");
     }
 
     /**
@@ -147,13 +174,19 @@ class BinaryTagCodec {
                 binaryCodec.writeUInt((Long)value);
                 break;
             case 'i':
-                binaryCodec.writeInt((Integer)value);
+                binaryCodec.writeInt(((Number)value).intValue());
                 break;
             case 's':
                 binaryCodec.writeShort(((Number)value).shortValue());
                 break;
+            case 'S':
+                binaryCodec.writeUShort(((Number)value).intValue());
+                break;
             case 'c':
                 binaryCodec.writeByte(((Number)value).byteValue());
+                break;
+            case 'C':
+                binaryCodec.writeUByte(((Integer)value).shortValue());
                 break;
             case 'f':
                 binaryCodec.writeFloat((Float)value);
@@ -161,13 +194,6 @@ class BinaryTagCodec {
             case 'H':
                 final byte[] byteArray = (byte[])value;
                 binaryCodec.writeString(StringUtil.bytesToHexString(byteArray), false, true);
-                break;
-            // Note that we don't really support S or C anymore.  getTagValueType will never return that type.
-            case 'S':
-                binaryCodec.writeUShort((Integer)value);
-                break;
-            case 'C':
-                binaryCodec.writeUByte(((Integer)value).shortValue());
                 break;
             default:
                 throw new IllegalArgumentException("When writing BAM, unrecognized tag type " +
@@ -182,14 +208,15 @@ class BinaryTagCodec {
      * @param offset Where in binaryRep tags start.
      * @param length How many bytes in binaryRep are tag storage.
      */
-    static void readTags(final List<SAMBinaryTagAndValue> tagCollection, final byte[] binaryRep, final int offset, final int length) {
+    static void readTags(final List<SAMBinaryTagAndValue> tagCollection, final byte[] binaryRep, final int offset,
+                         final int length, final SAMFileReader.ValidationStringency validationStringency) {
         final ByteBuffer byteBuffer = ByteBuffer.wrap(binaryRep, offset, length);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         
         while (byteBuffer.hasRemaining()) {
             final short tag = byteBuffer.getShort();
             final byte tagType = byteBuffer.get();
-            final Object value = readValue(tagType, byteBuffer);
+            final Object value = readValue(tagType, byteBuffer, validationStringency);
             tagCollection.add(new SAMBinaryTagAndValue(tag, value));
         }
     }
@@ -200,27 +227,34 @@ class BinaryTagCodec {
      * @param byteBuffer Little-ending byte buffer to read value from.
      * @return Value in in-memory Object form.
      */
-    private static  Object readValue(final byte tagType, final ByteBuffer byteBuffer) {
+    private static  Object readValue(final byte tagType, final ByteBuffer byteBuffer,
+                                     final SAMFileReader.ValidationStringency validationStringency) {
         switch (tagType) {
             case 'Z':
                 return readNullTerminatedString(byteBuffer);
             case 'A':
                 return (char)byteBuffer.get();
             case 'I':
+                final long val = byteBuffer.getInt() & 0xffffffffL;
+                if (val <= Integer.MAX_VALUE) {
+                    return (int)val;
+                }
+                SAMUtils.processValidationError(new SAMValidationError(SAMValidationError.Type.TAG_VALUE_TOO_LARGE,
+                        "Tag value " + val + " too large to store as signed integer.", null), validationStringency);
                 // convert to unsigned int stored in a long
-                return byteBuffer.getInt() & 0xffffffffL;
+                return val;
             case 'i':
                 return byteBuffer.getInt();
             case 's':
-                return byteBuffer.getShort();
+                return (int)byteBuffer.getShort();
             case 'S':
                 // Convert to unsigned short stored in an int
                 return byteBuffer.getShort() & 0xffff;
             case 'c':
-                return byteBuffer.get();
+                return (int)byteBuffer.get();
             case 'C':
-                // Convert to unsigned byte stored in a short
-                return (short)((int)byteBuffer.get() & 0xff);
+                // Convert to unsigned byte stored in an int
+                return (int)byteBuffer.get() & 0xff;
             case 'f':
                 return byteBuffer.getFloat();
             case 'H':

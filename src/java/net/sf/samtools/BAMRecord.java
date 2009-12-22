@@ -291,7 +291,7 @@ class BAMRecord
         final List<SAMBinaryTagAndValue> attributes = new ArrayList<SAMBinaryTagAndValue>();
         final int tagsOffset = readNameSize() + cigarSize() + basesSize() + qualsSize();
         final int tagsSize = mRestOfBinaryData.length - tagsOffset;
-        BinaryTagCodec.readTags(attributes, mRestOfBinaryData, tagsOffset, tagsSize);
+        BinaryTagCodec.readTags(attributes, mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
         setAttributes(attributes);
     }
 
