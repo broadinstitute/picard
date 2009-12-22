@@ -43,4 +43,5 @@ public class StandardOptionDefinitions {
     public static final String READ_GROUP_ID_SHORT_NAME = "RG";
     public static final String PROGRAM_RECORD_ID_SHORT_NAME = "PG";
     public static final String MINIMUM_LOD_SHORT_NAME = "LOD";
+    public static final String SORT_ORDER_SHORT_NAME = "SO";
 }

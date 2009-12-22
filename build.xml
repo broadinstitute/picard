@@ -199,6 +199,7 @@
         </copy>
 
 
+        <package-command main-class="net.sf.picard.sam.SortSam" title="SortSam"/>
         <package-command main-class="net.sf.picard.sam.SamFormatConverter" title="SamFormatConverter"/>
         <package-command main-class="net.sf.samtools.apps.CompareSAMs" title="CompareSAMs"/>
         <package-command main-class="net.sf.picard.sam.MarkDuplicates" title="MarkDuplicates"/>
