@@ -878,6 +878,42 @@ public class SAMRecord implements Cloneable
         return (byte)longVal;
     }
 
+    public final String getStringAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof String) {
+            return (String)val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a String: " + val.getClass());
+    }
+
+    public final Character getCharacterAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof Character) {
+            return (Character)val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a Character: " + val.getClass());
+    }
+
+    public final Float getFloatAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof Float) {
+            return (Float)val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a Float: " + val.getClass());
+    }
+
+    public final byte[] getByteArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof byte[]) {
+            return (byte[])val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a byte[]: " + val.getClass());
+    }
+
     protected Object getAttribute(final short tag) {
         if (mAttributes == null) {
             return null;
