@@ -297,6 +297,20 @@ public class StringUtil {
     }
 
     /**
+     * Convert ASCII char to byte.
+     */
+    public static byte charToByte(final char c) {
+        return (byte)c;
+    }
+
+    /**
+     * Convert ASCII byte to ASCII char.
+     */
+    public static char byteToChar(final char b) {
+        return (char)(b & 0xff);
+    }
+
+    /**
      * Convert a byte array into a String hex representation.
      * @param data Input to be converted.
      * @return String twice as long as data.length with hex representation of data.

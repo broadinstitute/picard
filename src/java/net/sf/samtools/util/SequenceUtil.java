@@ -252,6 +252,39 @@ public class SequenceUtil {
     }
 
     /**
+     * Sadly, this is a duplicate of the method above, except that it takes char[] for referenceBases rather
+     * than byte[].  This is because GATK needs it this way.
+     *
+     * TODO: Remove this method when GATK map method is changed to take refseq as byte[].
+     */
+    public static int sumQualitiesOfMismatches(final SAMRecord read, final char[] referenceBases,
+                                               final int referenceOffset) {
+        int qualities = 0;
+
+        final byte[] readBases = read.getReadBases();
+        final byte[] readQualities = read.getBaseQualities();
+
+        if (read.getAlignmentStart() <= referenceOffset) {
+            throw new IllegalArgumentException("read.getAlignmentStart(" + read.getAlignmentStart() +
+                    ") <= referenceOffset(" + referenceOffset + ")");
+        }
+
+        for (final AlignmentBlock block : read.getAlignmentBlocks()) {
+            final int readBlockStart = block.getReadStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
+            final int length = block.getLength();
+
+            for (int i=0; i<length; ++i) {
+                if (!basesEqual(readBases[readBlockStart+i], StringUtil.charToByte(referenceBases[referenceBlockStart+i]))) {
+                    qualities += readQualities[readBlockStart+i];
+                }
+            }
+        }
+
+        return qualities;
+    }
+
+    /**
      * Calculates the for the predefined NM tag from the SAM spec. To the result of
      * countMismatches() it adds 1 for each indel.
      */
