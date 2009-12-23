@@ -117,7 +117,9 @@ public class Cigar {
     }
 
     /**
-     * Exhaustive validation of CIGAR
+     * Exhaustive validation of CIGAR.
+     * Note that this method deliberately returns null rather than Collections.emptyList() if there
+     * are no validation errors, because callers tend to assume that if a non-null list is returned, it is modifiable.
      * @param readName For error reporting only.  May be null if not known.
      * @param recordNumber For error reporting only.  May be -1 if not known.
      * @return List of validation errors, or null if no errors.

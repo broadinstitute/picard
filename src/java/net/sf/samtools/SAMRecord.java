@@ -1277,6 +1277,8 @@ public class SAMRecord implements Cloneable
 
     /**
      * Perform various validations of SAMRecord.
+     * Note that this method deliberately returns null rather than Collections.emptyList() if there
+     * are no validation errors, because callers tend to assume that if a non-null list is returned, it is modifiable.
      * @return null if valid.  If invalid, returns a list of error messages.
      */
     public List<SAMValidationError> isValid() {
