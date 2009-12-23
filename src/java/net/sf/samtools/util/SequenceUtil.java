@@ -210,16 +210,35 @@ public class SequenceUtil {
 
     /**
      * Calculates the sum of qualities for mismatched bases in the read.
+     * @param referenceBases Array of ASCII bytes in which the 0th position in the array corresponds
+     * to the first element of the reference sequence to which read is aligned. 
      */
     public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases) {
+        return sumQualitiesOfMismatches(read, referenceBases, 0);
+    }
+
+    /**
+     * Calculates the sum of qualities for mismatched bases in the read.
+     * @param referenceBases Array of ASCII bytes that covers at least the the portion of the reference sequence
+     * to which read is aligned from getReferenceStart to getReferenceEnd.
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence. 
+     */
+    public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases,
+                                               final int referenceOffset) {
         int qualities = 0;
 
         final byte[] readBases = read.getReadBases();
         final byte[] readQualities = read.getBaseQualities();
 
+        if (read.getAlignmentStart() <= referenceOffset) {
+            throw new IllegalArgumentException("read.getAlignmentStart(" + read.getAlignmentStart() +
+                    ") <= referenceOffset(" + referenceOffset + ")");
+        }
+
         for (final AlignmentBlock block : read.getAlignmentBlocks()) {
             final int readBlockStart = block.getReadStart() - 1;
-            final int referenceBlockStart = block.getReferenceStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
             final int length = block.getLength();
 
             for (int i=0; i<length; ++i) {
