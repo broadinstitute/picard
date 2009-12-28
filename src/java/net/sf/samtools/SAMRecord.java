@@ -971,6 +971,13 @@ public class SAMRecord implements Cloneable
     }
 
     /**
+     * Removes all attributes.
+     */
+    public void clearAttributes() {
+        mAttributes.clear();
+    }
+
+    /**
      * Replace any existing attributes with the given list.  Does not copy the list
      * but installs it directly.
      */

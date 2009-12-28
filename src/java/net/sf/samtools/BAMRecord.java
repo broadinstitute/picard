@@ -188,6 +188,16 @@ class BAMRecord
     }
 
     /**
+     * Removes all attributes.
+     */
+    @Override
+    public void clearAttributes() {
+        mAttributesDecoded = true;
+        mBinaryDataStale = true;
+        super.clearAttributes();
+    }
+
+    /**
      * Avoids decoding binary block to get read length.
      */
     @Override
