@@ -190,17 +190,54 @@ public class SequenceUtil {
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
+        return countMismatches(read, referenceBases, 0);
+    }
+
+    /**
+     * Calculates the number of mismatches between the read and the reference sequence provided.
+     *
+     * @param referenceBases Array of ASCII bytes that covers at least the the portion of the reference sequence
+     * to which read is aligned from getReferenceStart to getReferenceEnd.
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence.
+     */
+    public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
         int mismatches = 0;
 
         final byte[] readBases = read.getReadBases();
 
         for (final AlignmentBlock block : read.getAlignmentBlocks()) {
             final int readBlockStart = block.getReadStart() - 1;
-            final int referenceBlockStart = block.getReferenceStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
             final int length = block.getLength();
 
             for (int i=0; i<length; ++i) {
                 if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                    ++mismatches;
+                }
+            }
+        }
+        return mismatches;
+    }
+
+    /**
+     * Sadly, this is a duplicate of the method above, except that it takes char[] for referenceBases rather
+     * than byte[].  This is because GATK needs it this way.
+     *
+     * TODO: Remove this method when GATK map method is changed to take refseq as byte[].
+     */
+    private static int countMismatches(final SAMRecord read, final char[] referenceBases, final int referenceOffset) {
+        int mismatches = 0;
+
+        final byte[] readBases = read.getReadBases();
+
+        for (final AlignmentBlock block : read.getAlignmentBlocks()) {
+            final int readBlockStart = block.getReadStart() - 1;
+            final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
+            final int length = block.getLength();
+
+            for (int i=0; i<length; ++i) {
+                if (!basesEqual(readBases[readBlockStart+i], StringUtil.charToByte(referenceBases[referenceBlockStart+i]))) {
                     ++mismatches;
                 }
             }
@@ -289,7 +326,36 @@ public class SequenceUtil {
      * countMismatches() it adds 1 for each indel.
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases) {
-        int samNm = countMismatches(read, referenceBases);
+        return calculateSamNmTag(read, referenceBases, 0);
+    }
+
+    /**
+     * Calculates the for the predefined NM tag from the SAM spec. To the result of
+     * countMismatches() it adds 1 for each indel.
+
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence.
+     */
+    public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
+                                               final int referenceOffset) {
+        int samNm = countMismatches(read, referenceBases, referenceOffset);
+        for (final CigarElement el : read.getCigar().getCigarElements()) {
+            if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
+                samNm += el.getLength();
+            }
+        }
+        return samNm;
+    }
+
+    /**
+     * Sadly, this is a duplicate of the method above, except that it takes char[] for referenceBases rather
+     * than byte[].  This is because GATK needs it this way.
+     *
+     * TODO: Remove this method when GATK map method is changed to take refseq as byte[].
+     */
+    public static int calculateSamNmTag(final SAMRecord read, final char[] referenceBases,
+                                               final int referenceOffset) {
+        int samNm = countMismatches(read, referenceBases, referenceOffset);
         for (final CigarElement el : read.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
                 samNm += el.getLength();
