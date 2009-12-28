@@ -46,7 +46,7 @@ public final class SAMUtils
     private static final byte COMPRESSED_G_HIGH = COMPRESSED_G_LOW << 4;
     private static final byte COMPRESSED_T_HIGH = (byte)(COMPRESSED_T_LOW << 4);
     private static final byte COMPRESSED_N_HIGH = (byte)(COMPRESSED_N_LOW << 4);
-    public static final int MAX_PHRED_SCORE = 63;
+    public static final int MAX_PHRED_SCORE = 93;
 
     /**
      * Convert from a byte array containing =AaCcGgTtNn represented as ASCII, to a byte array half as long,
