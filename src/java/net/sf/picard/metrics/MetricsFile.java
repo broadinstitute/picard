@@ -75,8 +75,12 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
     /** Sets the histogram contained in the metrics file. */
     public void setHistogram(Histogram<HKEY> histogram) {
-        if (this.histograms.isEmpty()) this.histograms.add(histogram);
-        else this.histograms.set(0, histogram);
+        if (this.histograms.isEmpty()) {
+            if (histogram != null) this.histograms.add(histogram);
+        }
+        else {
+            this.histograms.set(0, histogram);
+        }
     }
 
     /** Adds a histogram to the list of histograms in the metrics file. */
@@ -215,7 +219,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         // Build a combined key set
         java.util.Set<HKEY> keys = new TreeSet<HKEY>();
         for (Histogram<HKEY> histo : histograms) {
-            keys.addAll(histo.keySet());
+            if (histo != null) keys.addAll(histo.keySet());
         }
 
         // Add a header for the histogram key type
