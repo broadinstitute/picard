@@ -170,6 +170,19 @@ public class CommandLineParser {
         printOptionUsage(stream, optionsFileOptionDefinition);
     }
 
+    public void htmlUsage(final PrintStream stream, final String programName) {
+        stream.println("<a name=\"" + programName + "\"/>");
+        stream.println("<h3>" + programName + "</h3>");
+        stream.println("<p>" + usagePreamble + "</p>");
+        stream.println("<table>");
+        stream.println("<tr><th>Option</th><th>Description</th></tr>");
+        for (final OptionDefinition optionDefinition : optionDefinitions) {
+            printHtmlOptionUsage(stream, optionDefinition);
+        }
+        stream.println("</table>");
+        stream.println("<br/>");
+    }
+
     /**
      * Parse command-line options, and store values in callerOptions object passed to ctor.
      * @param messageStream Where to write error messages.
@@ -385,6 +398,13 @@ public class CommandLineParser {
         }
     }
 
+    private void printHtmlOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
+        final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
+        String optionLabel = optionDefinition.name + "=" + type;
+        stream.println("<tr><td>" + optionLabel + "</td><td>" +
+                makeOptionDescription(optionDefinition) + "</td></tr>");
+    }
+
     private void printOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
         final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
         String optionLabel = optionDefinition.name + "=" + type;
@@ -402,6 +422,19 @@ public class CommandLineParser {
             numSpaces = OPTION_COLUMN_WIDTH;
         }
         printSpaces(stream, numSpaces);
+        final String optionDescription = makeOptionDescription(optionDefinition);
+        final String wrappedDescription = StringUtil.wordWrap(optionDescription, DESCRIPTION_COLUMN_WIDTH);
+        final String[] descriptionLines = wrappedDescription.split("\n");
+        for (int i = 0; i < descriptionLines.length; ++i) {
+            if (i > 0) {
+                printSpaces(stream, OPTION_COLUMN_WIDTH);
+            }
+            stream.println(descriptionLines[i]);
+        }
+        stream.println();
+    }
+
+    private String makeOptionDescription(final OptionDefinition optionDefinition) {
         final StringBuilder sb = new StringBuilder();
         if (optionDefinition.doc.length() > 0) {
             sb.append(optionDefinition.doc);
@@ -452,15 +485,7 @@ public class CommandLineParser {
                 }
             }
         }
-        final String wrappedDescription = StringUtil.wordWrap(sb.toString(), DESCRIPTION_COLUMN_WIDTH);
-        final String[] descriptionLines = wrappedDescription.split("\n");
-        for (int i = 0; i < descriptionLines.length; ++i) {
-            if (i > 0) {
-                printSpaces(stream, OPTION_COLUMN_WIDTH);
-            }
-            stream.println(descriptionLines[i]);
-        }
-        stream.println();
+        return sb.toString();
     }
 
     private void printSpaces(final PrintStream stream, final int numSpaces) {
