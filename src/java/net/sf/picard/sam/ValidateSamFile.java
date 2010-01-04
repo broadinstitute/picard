@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.sf.picard.cmdline.Usage;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMValidationError;
 import net.sf.picard.PicardException;
@@ -46,6 +47,9 @@ import net.sf.picard.reference.ReferenceSequenceFileFactory;
  * @author Doug Voet
  */
 public class ValidateSamFile extends CommandLineProgram {
+    @Usage
+    public final String usage = getStandardUsagePreamble() + "Read a SAM or BAM file and report on its validity.";
+    
     public enum Mode { VERBOSE, SUMMARY }
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM/BAM file")
     public File INPUT;
