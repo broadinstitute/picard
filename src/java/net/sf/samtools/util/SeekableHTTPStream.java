@@ -47,45 +47,41 @@ public class SeekableHTTPStream extends SeekableStream {
         this.position = position;
     }
 
-    public int read(final byte[] buffer, final int offset, final int length) throws IOException {
-        if (offset < 0 || length < 0 || (offset + length) > buffer.length) {
+    public static int readCount = 0;
+
+    public int read(byte[] buffer, int offset, int len) throws IOException {
+
+        if (offset < 0 || len < 0 || (offset + len) > buffer.length) {
             throw new IndexOutOfBoundsException();
         }
+        if (len == 0) {
+            return 0;
+        }
+
+        readCount++;
 
         HttpURLConnection connection = null;
         InputStream is = null;
-
+        String byteRange = "";
         int n = 0;
         try {
-
             connection = (HttpURLConnection) url.openConnection();
-            final String byteRange = "bytes=" + position + "-" + (position + length - 1);
+            byteRange = "bytes=" + position + "-" + (position + len - 1);
             connection.setRequestProperty("Range", byteRange);
             is = connection.getInputStream();
 
-            while (n < length) {
-                final int count = is.read(buffer, offset + n, length - n);
+            while (n < len) {
+                int count = is.read(buffer, offset + n, len - n);
                 if (count < 0) {
-                    throw new EOFException();
+                    return (n == 0 ? -1 : n);
                 }
                 n += count;
             }
 
             position += n;
-            
+
             return n;
 
-        } catch (IOException e) {
-            // THis is a bit of a hack, but its not clear how else to handle this.  If a byte range is specified
-            // that goes past the end of the file the response code will be 416.  The MAC os translates this to
-            // an IOException with the 416 code in the message.  Windows translates the error to an EOFException.
-            //
-            //  The BAM file iterator  uses the return value to detect end of file (specifically looks for n == 0).
-            if (e.getMessage().contains("416") || (e instanceof EOFException)) {
-                return n;
-            } else {
-                throw e;
-            }
         }
 
         finally {
@@ -103,17 +99,6 @@ public class SeekableHTTPStream extends SeekableStream {
         // Nothing to do
     }
 
-
-    public byte[] readBytes(final long position, final int nBytes) throws IOException {
-        this.position = position;
-        final byte[] buffer = new byte[nBytes];
-        final int bytesRead = read(buffer, 0, nBytes);
-        if (bytesRead != nBytes) {
-            throw new EOFException("Trying to read " + nBytes + " from " + url + " at position " + position +
-            ", but only read " + bytesRead + " bytes.");
-        }
-        return buffer;
-    }
 
     public int read() throws IOException {
         throw new UnsupportedOperationException("read() not support for SeekableHTTPStreams");
