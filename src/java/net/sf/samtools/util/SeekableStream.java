@@ -27,7 +27,5 @@ public abstract class SeekableStream extends InputStream {
 
     public abstract void close() throws IOException;
 
-    public abstract byte[] readBytes(long position, int nBytes) throws IOException;
-
     public abstract boolean eof() throws IOException;
 }

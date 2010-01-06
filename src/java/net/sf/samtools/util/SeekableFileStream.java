@@ -54,18 +54,6 @@ public class SeekableFileStream extends SeekableStream {
 
     }
 
-    public byte[] readBytes(final long position, final int nBytes) throws IOException {
-        seek(position);
-
-        final byte[] buffer = new byte[nBytes];
-        final int bytesRead = read(buffer, 0, nBytes);
-        if (bytesRead != nBytes) {
-            throw new EOFException("Trying to read " + nBytes + " from " + file + " at position " + position +
-            ", but only read " + bytesRead + " bytes.");
-        }
-        return buffer;
-    }
-
     public int read() throws IOException {
         return fis.read();  
     }
