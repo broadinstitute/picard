@@ -24,11 +24,11 @@ public class SeekableHTTPStream extends SeekableStream {
 
         // Try to get the file length
         final String contentLengthString = HttpUtils.getHeaderField(url, "Content-Length");
-        if(contentLengthString != null) {
+        if (contentLengthString != null) {
             try {
                 contentLength = Long.parseLong(contentLengthString);
             }
-            catch(NumberFormatException ignored) {
+            catch (NumberFormatException ignored) {
 
             }
         }
@@ -82,6 +82,19 @@ public class SeekableHTTPStream extends SeekableStream {
 
             return n;
 
+        }
+
+        catch (IOException e) {
+            // THis is a bit of a hack, but its not clear how else to handle this.  If a byte range is specified
+            // that goes past the end of the file the response code will be 416.  The MAC os translates this to
+            // an IOException with the 416 code in the message.  Windows translates the error to an EOFException.
+            //
+            //  The BAM file iterator  uses the return value to detect end of file (specifically looks for n == 0).
+            if (e.getMessage().contains("416") || (e instanceof EOFException)) {
+                return n;
+            } else {
+                throw e;
+            }
         }
 
         finally {
