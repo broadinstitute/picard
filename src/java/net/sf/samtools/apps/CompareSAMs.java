@@ -349,7 +349,7 @@ public class CompareSAMs {
     private boolean compareProgramRecords(final SAMFileHeader h1, final SAMFileHeader h2) {
         final List<SAMProgramRecord> l1 = h1.getProgramRecords();
         final List<SAMProgramRecord> l2 = h2.getProgramRecords();
-        if (!compareValues(l1.size(), l2.size(), "Number of read groups")) {
+        if (!compareValues(l1.size(), l2.size(), "Number of program records")) {
             return false;
         }
         boolean ret = true;
