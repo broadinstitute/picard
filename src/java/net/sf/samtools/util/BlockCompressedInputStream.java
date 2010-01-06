@@ -76,7 +76,7 @@ public class BlockCompressedInputStream
     }
 
     public BlockCompressedInputStream(final URL url) {
-        mFile = new SeekableHTTPStream(url);
+        mFile = new SeekableBufferedStream(new SeekableHTTPStream(url));
         mStream = null;
     }
 
@@ -273,7 +273,7 @@ public class BlockCompressedInputStream
         inflateBlock(mFileBuffer, blockLength);
         mCurrentOffset = 0;
         mBlockAddress += mLastBlockLength;
-        mLastBlockLength = blockLength; 
+        mLastBlockLength = blockLength;
     }
 
     private void inflateBlock(final byte[] compressedBlock, final int compressedLength)
