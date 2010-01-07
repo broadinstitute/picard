@@ -63,7 +63,13 @@ public class SeekableHTTPStream extends SeekableStream {
         int n = 0;
         try {
             connection = (HttpURLConnection) url.openConnection();
-            byteRange = "bytes=" + position + "-" + (position + len - 1);
+
+            long endRange = position + len - 1;
+            // IF we know the total content length, limit the end range to that.
+            if(contentLength > 0) {
+                endRange = Math.min(endRange, contentLength);
+            }
+            byteRange = "bytes=" + position + "-" + endRange;
             connection.setRequestProperty("Range", byteRange);
             is = connection.getInputStream();
 
@@ -96,6 +102,8 @@ public class SeekableHTTPStream extends SeekableStream {
                     return -1;
                 } else {
                     position += n;
+                    // As we are at EOF, the contentLength and position are by definition =
+                    contentLength = position;
                     return n;
                 }
             } else {
