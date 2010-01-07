@@ -76,8 +76,8 @@ public class BlockCompressedInputStream
     }
 
     public BlockCompressedInputStream(final URL url) {
-        //mFile = new SeekableBufferedStream(new SeekableHTTPStream(url));
-        mFile = new SeekableHTTPStream(url);
+        mFile = new SeekableBufferedStream(new SeekableHTTPStream(url));
+        //mFile = new SeekableHTTPStream(url);
         mStream = null;
     }
 

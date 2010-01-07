@@ -29,7 +29,8 @@ public class SeekableHTTPStream extends SeekableStream {
                 contentLength = Long.parseLong(contentLengthString);
             }
             catch (NumberFormatException ignored) {
-
+                System.out.println("WARNING: Invalid content length (" + contentLengthString + "  for: " + url);
+                contentLength = -1;
             }
         }
 
@@ -47,8 +48,6 @@ public class SeekableHTTPStream extends SeekableStream {
         this.position = position;
     }
 
-    public static int readCount = 0;
-
     public int read(byte[] buffer, int offset, int len) throws IOException {
 
         if (offset < 0 || len < 0 || (offset + len) > buffer.length) {
@@ -57,8 +56,6 @@ public class SeekableHTTPStream extends SeekableStream {
         if (len == 0) {
             return 0;
         }
-
-        readCount++;
 
         HttpURLConnection connection = null;
         InputStream is = null;
@@ -73,7 +70,11 @@ public class SeekableHTTPStream extends SeekableStream {
             while (n < len) {
                 int count = is.read(buffer, offset + n, len - n);
                 if (count < 0) {
-                    return (n == 0 ? -1 : n);
+                    if (n == 0) {
+                        return -1;
+                    } else {
+                        break;
+                    }
                 }
                 n += count;
             }
@@ -91,10 +92,16 @@ public class SeekableHTTPStream extends SeekableStream {
             //
             //  The BAM file iterator  uses the return value to detect end of file (specifically looks for n == 0).
             if (e.getMessage().contains("416") || (e instanceof EOFException)) {
-                return n;
+                if (n < 0) {
+                    return -1;
+                } else {
+                    position += n;
+                    return n;
+                }
             } else {
                 throw e;
             }
+
         }
 
         finally {

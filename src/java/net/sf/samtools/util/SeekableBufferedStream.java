@@ -56,13 +56,16 @@ public class SeekableBufferedStream extends SeekableStream {
     }
 
     public int read() throws IOException {
+        int b = bufferedStream.read();
         position++;
-        return bufferedStream.read();
+        return b;
     }
 
     public int read(byte[] buffer, int offset, int length) throws IOException {
         int nBytesRead = bufferedStream.read(buffer, offset, length);
-        position += nBytesRead;
+        if (nBytesRead > 0) {
+            position += nBytesRead;
+        }
         return nBytesRead;
     }
 
