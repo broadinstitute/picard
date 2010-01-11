@@ -324,7 +324,7 @@ class BAMFileReader
         // Skip the null terminator
         mStream.readByte();
         final int sequenceLength = mStream.readInt();
-        return new SAMSequenceRecord(sequenceName, sequenceLength);
+        return new SAMSequenceRecord(SAMSequenceRecord.truncateSequenceName(sequenceName), sequenceLength);
     }
 
     /**

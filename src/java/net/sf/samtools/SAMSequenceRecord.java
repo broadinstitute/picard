@@ -28,6 +28,7 @@ import java.util.*;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Pattern;
 
 /**
  * Header information about a reference sequence.  Corresponds to @SQ header record in SAM text header.
@@ -44,12 +45,22 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     public static final String URI_TAG = "UR";
     public static final String SPECIES_TAG = "SP";
 
+
+    /**
+     * This is not a valid sequence name, because it is reserved in the MRNM field of SAM text format
+     * to mean "same reference as RNAME field."
+     */
+    public static final String RESERVED_MRNM_SEQUENCE_NAME = "=";
+
     /**
      * The standard tags are stored in text header without type information, because the type of these tags is known.
      */
     public static final Set<String> STANDARD_TAGS =
             new HashSet<String>(Arrays.asList(SEQUENCE_NAME_TAG, SEQUENCE_LENGTH_TAG, ASSEMBLY_TAG, MD5_TAG, URI_TAG,
                                                 SPECIES_TAG));
+
+    // Split on any whitespace
+    private static Pattern SEQUENCE_NAME_SPLITTER = Pattern.compile("\\s");
 
     /**
      * @deprecated Use SAMSequenceRecord(final String name, final int sequenceLength) instead.
@@ -61,6 +72,10 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
     public SAMSequenceRecord(final String name, final int sequenceLength) {
         if (name != null) {
+            if (SEQUENCE_NAME_SPLITTER.matcher(name).find()) {
+                throw new SAMException("Sequence name contains invalid character: " + name);
+            }
+            validateSequenceName(name);
             mSequenceName = name.intern();
         }
         mSequenceLength = sequenceLength;
@@ -164,5 +179,22 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         }
         return ret;
     }
+
+    /**
+     * Truncate sequence name at first space, @ or =.
+     */
+    public static String truncateSequenceName(final String sequenceName) {
+        return SEQUENCE_NAME_SPLITTER.split(sequenceName, 2)[0];
+    }
+
+    /**
+     * Throw an exception if the sequence name is not valid.
+     */
+    public static void validateSequenceName(final String name) {
+        if (RESERVED_MRNM_SEQUENCE_NAME.equals(name)) {
+            throw new SAMException("'" + RESERVED_MRNM_SEQUENCE_NAME + "' is not a valid sequence name");
+        }
+    }
+
 }
 

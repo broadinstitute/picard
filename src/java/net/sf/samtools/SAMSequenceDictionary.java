@@ -58,13 +58,16 @@ public class SAMSequenceDictionary {
         int index = 0;
         for (final SAMSequenceRecord record : list) {
             record.setSequenceIndex(index++);
-            mSequenceMap.put(record.getSequenceName(), record);
+            if (mSequenceMap.put(record.getSequenceName(), record) != null) {
+                throw new IllegalArgumentException("Cannot add sequence that already exists in SAMSequenceDictionary: " +
+                        record.getSequenceName());
+            }
         }
     }
 
     public void addSequence(final SAMSequenceRecord sequenceRecord) {
         if (mSequenceMap.containsKey(sequenceRecord.getSequenceName())) {
-            throw new IllegalArgumentException("Cannot add sequence that already exists in SAMFileHeader: " +
+            throw new IllegalArgumentException("Cannot add sequence that already exists in SAMSequenceDictionary: " +
                     sequenceRecord.getSequenceName());
         }
         sequenceRecord.setSequenceIndex(mSequences.size());

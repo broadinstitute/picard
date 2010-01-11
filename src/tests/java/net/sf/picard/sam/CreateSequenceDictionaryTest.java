@@ -34,14 +34,15 @@ import java.io.File;
  */
 public class CreateSequenceDictionaryTest {
     public static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
-    public static File INPUT_FASTA = new File(TEST_DATA_DIR, "duplicate_sequence_names.fasta");
+    public static File BASIC_FASTA = new File(TEST_DATA_DIR, "basic.fasta");
+    public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR, "duplicate_sequence_names.fasta");
 
     @Test
     public void testBasic() throws Exception {
         final File outputFasta = File.createTempFile("CreateSequenceDictionaryTest.", ".fasta");
         outputFasta.deleteOnExit();
         final String[] argv = {
-                "REFERENCE=" + INPUT_FASTA,
+                "REFERENCE=" + BASIC_FASTA,
                 "OUTPUT=" + outputFasta,
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
@@ -56,7 +57,7 @@ public class CreateSequenceDictionaryTest {
         final File outputFasta = File.createTempFile("CreateSequenceDictionaryTest.", ".fasta");
         outputFasta.deleteOnExit();
         final String[] argv = {
-                "REFERENCE=" + INPUT_FASTA,
+                "REFERENCE=" + DUPLICATE_FASTA,
                 "OUTPUT=" + outputFasta,
                 "TRUNCATE_NAMES_AT_WHITESPACE=true"
         };

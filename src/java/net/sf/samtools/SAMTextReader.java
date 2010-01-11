@@ -249,8 +249,11 @@ class SAMTextReader
         }
 
         void validateReferenceName(final String rname, final String fieldName) {
-            if (fieldName.equals("MRNM") && rname.equals("=")) {
-                return;
+            if (rname.equals("=")) {
+                if (fieldName.equals("MRNM")) {
+                    return;
+                }
+                reportErrorParsingLine("= is not a valid value for " + fieldName + " field.");
             }
             if (getFileHeader().getSequenceDictionary().size() != 0) {
                 if (getFileHeader().getSequence(rname) == null) {
@@ -280,8 +283,9 @@ class SAMTextReader
             final int flags = parseInt(mFields[FLAG_COL], "FLAG");
             mCurrentRecord.setFlags(flags);
 
-            final String rname = mFields[RNAME_COL];
+            String rname = mFields[RNAME_COL];
             if (!rname.equals("*")) {
+                rname = SAMSequenceRecord.truncateSequenceName(rname);
                 validateReferenceName(rname, "RNAME");
                 mCurrentRecord.setReferenceName(rname);
             } else if (!mCurrentRecord.getReadUnmappedFlag()) {
@@ -313,7 +317,7 @@ class SAMTextReader
             mCurrentRecord.setMappingQuality(mapq);
             mCurrentRecord.setCigarString(cigar);
 
-            final String mateRName = mFields[MRNM_COL];
+            String mateRName = mFields[MRNM_COL];
             if (mateRName.equals("*")) {
                 if (mCurrentRecord.getReadPairedFlag() && !mCurrentRecord.getMateUnmappedFlag()) {
                     reportErrorParsingLine("MRNM not specified but flags indicate mate mapped");
@@ -323,7 +327,9 @@ class SAMTextReader
                 if (!mCurrentRecord.getReadPairedFlag()) {
                     reportErrorParsingLine("MRNM specified but flags indicate unpaired");
                 }
-
+                if (!"=".equals(mateRName)) {
+                    mateRName = SAMSequenceRecord.truncateSequenceName(mateRName);
+                }
                 validateReferenceName(mateRName, "MRNM");
                 if (mateRName.equals("=")) {
                     if (mCurrentRecord.getReferenceName() == null) {

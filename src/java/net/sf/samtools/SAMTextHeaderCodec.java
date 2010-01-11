@@ -200,7 +200,9 @@ public class SAMTextHeaderCodec {
                 !parsedHeaderLine.requireTag(SAMSequenceRecord.SEQUENCE_LENGTH_TAG)) {
             return;
         }
-        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord(parsedHeaderLine.removeValue(SAMSequenceRecord.SEQUENCE_NAME_TAG),
+        String sequenceName = parsedHeaderLine.removeValue(SAMSequenceRecord.SEQUENCE_NAME_TAG);
+        sequenceName = SAMSequenceRecord.truncateSequenceName(sequenceName);
+        final SAMSequenceRecord samSequenceRecord = new SAMSequenceRecord(sequenceName,
                 Integer.parseInt(parsedHeaderLine.removeValue(SAMSequenceRecord.SEQUENCE_LENGTH_TAG)));
         transferAttributes(samSequenceRecord, parsedHeaderLine.mKeyValuePairs);
         sequences.add(samSequenceRecord);
