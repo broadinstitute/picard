@@ -72,7 +72,9 @@ public abstract class CommandLineProgram {
     @Option(doc = "Whether to suppress job-summary info on System.out.")
     public Boolean QUIET = false;
 
-    @Option(doc = "Validation stringency for all SAM files read by this program")
+    @Option(doc = "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT " +
+            "can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) " +
+            "do not otherwise need to be decoded.")
     public SAMFileReader.ValidationStringency VALIDATION_STRINGENCY = SAMFileReader.ValidationStringency.DEFAULT_STRINGENCY;
 
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).")
