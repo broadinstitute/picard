@@ -139,7 +139,7 @@ class FastaSequenceFile implements ReferenceSequenceFile {
         final byte b = in.getByte();
         if (b != '>') {
             throw new PicardException("Format exception reading FASTA " + file + ".  Expected > but saw chr(" +
-            b + ").");
+            b + ") at start of sequence with index " + this.sequenceIndex);
         }
         final byte[] nameBuffer = new byte[4096];
         int nameLength = 0;
