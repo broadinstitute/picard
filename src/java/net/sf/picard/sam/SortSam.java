@@ -63,7 +63,7 @@ public class SortSam extends CommandLineProgram {
     }
 
     public static void main(String[] argv) {
-        System.exit(new SortSam().instanceMain(argv));
+        new SortSam().instanceMainWithExit(argv);
     }
 
 }
