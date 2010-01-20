@@ -56,6 +56,26 @@ public class CommandLineParserTest {
         public Boolean TRUTHINESS;
     }
 
+    class FrobnicateOptionsWithNullList {
+        @Usage(programVersion="1.0")
+        public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
+
+        @PositionalArguments(minElements=2, maxElements=2)
+        public List<File> positionalArguments = new ArrayList<File>();
+
+        @Option(shortName="T", doc="Frobnication threshold setting.")
+        public Integer FROBNICATION_THRESHOLD = 20;
+
+        @Option
+        public FrobnicationFlavor FROBNICATION_FLAVOR;
+
+        @Option(doc="Allowed shmiggle types.", minElements=0, maxElements = 3)
+        public List<String> SHMIGGLE_TYPE = new ArrayList<String>();
+
+        @Option
+        public Boolean TRUTHINESS;
+    }
+
     class OptionsWithoutPositional {
         @Usage
         public static final String USAGE = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n";
@@ -358,6 +378,43 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertFalse(clp.parseOptions(System.err, args));
     }
+
+    @Test
+    public void testNullValue() {
+    	final String[] args = {
+    			"FROBNICATION_THRESHOLD=null",  
+                "FROBNICATION_FLAVOR=BAR",
+                "TRUTHINESS=False",
+                "SHMIGGLE_TYPE=null",                
+                "positional1",
+                "positional2",
+        };
+    	
+        final FrobnicateOptionsWithNullList fownl = new FrobnicateOptionsWithNullList();
+        fownl.SHMIGGLE_TYPE.add("shmiggle1"); //providing null value should clear this list
+        
+        final CommandLineParser clp = new CommandLineParser(fownl);
+        Assert.assertTrue(clp.parseOptions(System.err, args));
+        Assert.assertEquals(fownl.positionalArguments.size(), 2);
+        final File[] expectedPositionalArguments = { new File("positional1"), new File("positional2")};
+        Assert.assertEquals(fownl.positionalArguments.toArray(), expectedPositionalArguments);
+        Assert.assertEquals(fownl.FROBNICATION_THRESHOLD, null); //test null value         
+        Assert.assertEquals(fownl.SHMIGGLE_TYPE.size(), 0); //test null value for list        
+        Assert.assertFalse(fownl.TRUTHINESS);
+     
+        //verify that required arg can't be set to null
+        args[2] = "TRUTHINESS=null"; 
+        final CommandLineParser clp2 = new CommandLineParser(fownl);
+        Assert.assertFalse(clp2.parseOptions(System.err, args));
+
+        //verify that positional arg can't be set to null
+        args[2] = "TRUTHINESS=False"; 
+        args[4] = "null";
+        final CommandLineParser clp3 = new CommandLineParser(fownl);
+        Assert.assertFalse(clp3.parseOptions(System.err, args));
+        
+    }
+
 
     @Test
     public void testOptionsFile() throws Exception {
