@@ -330,9 +330,22 @@ public class CommandLineParser {
                 return false;
             }
         }
-        final Object value;
+		final Object value;
         try {
-            value = constructFromString(getUnderlyingType(optionDefinition.field), stringValue);
+        	if(stringValue.equals("null")) {
+        		//"null" is a special value that allows the user to override any default 
+            	//value set for this arg. It can only be used for optional args. When  
+        		//used for a list arg, it will clear the list.
+        		if(optionDefinition.optional) {
+        			value = null;
+        		} else {
+        			messageStream.println("ERROR: non-null value must be provided for '" + key + "'.");
+        			return false;
+        		}
+        	} else {
+        		value = constructFromString(getUnderlyingType(optionDefinition.field), stringValue);
+        	}
+        	
         } catch (CommandLineParseException e) {
             messageStream.println("ERROR: " + e.getMessage());
             return false;
@@ -340,12 +353,16 @@ public class CommandLineParser {
         try {
             if (optionDefinition.isCollection) {
                 final Collection c = (Collection)optionDefinition.field.get(callerOptions);
-                if (c.size() >= optionDefinition.maxElements) {
+                if(value == null) {
+                	//user specified this arg=null which is interpreted as empty list
+                	c.clear();
+                } else if (c.size() >= optionDefinition.maxElements) {
                     messageStream.println("ERROR: Option '" + key + "' cannot be used more than " +
                             optionDefinition.maxElements + " times.");
                     return false;
+                } else {
+                	c.add(value);
                 }
-                c.add(value);
             } else {
                 optionDefinition.field.set(callerOptions, value);
                 optionDefinition.hasBeenSet = true;
@@ -444,6 +461,9 @@ public class CommandLineParser {
             sb.append("Default value: ");
             sb.append(optionDefinition.defaultValue);
             sb.append(". ");
+            if(!optionDefinition.defaultValue.equals("null")) {
+            	sb.append("This option can be set to 'null' to clear the default value. ");
+            }
         } else if (!optionDefinition.isCollection){
             sb.append("Required. ");
         }
@@ -464,16 +484,21 @@ public class CommandLineParser {
         if (optionDefinition.isCollection) {
             if (optionDefinition.minElements == 0) {
                 if (optionDefinition.maxElements == Integer.MAX_VALUE) {
-                    sb.append("This option may be specified 0 or more times.");
+                    sb.append("This option may be specified 0 or more times. ");
                 } else {
-                    sb.append("This option must be specified no more than " + optionDefinition.maxElements + "times.");
+                    sb.append("This option must be specified no more than " + optionDefinition.maxElements + " times. ");
                 }
             } else  if (optionDefinition.maxElements == Integer.MAX_VALUE) {
-                sb.append("This option must be specified at least " + optionDefinition.minElements + " times.");
+                sb.append("This option must be specified at least " + optionDefinition.minElements + " times. ");
             } else {
                 sb.append("This option may be specified between " + optionDefinition.minElements +
-                " and " + optionDefinition.maxElements + " times.");
+                " and " + optionDefinition.maxElements + " times. ");
             }
+            
+            if(!optionDefinition.defaultValue.equals("null")) {
+            	sb.append("This option can be set to 'null' to clear the default list. ");
+            }
+            
         }
         if (!optionDefinition.mutuallyExclusive.isEmpty()) {
             sb.append(" Cannot be used in conjuction with option(s)");
@@ -723,7 +748,13 @@ public class CommandLineParser {
             this.minElements = minElements;
             this.maxElements = maxElements;
             if (defaultValue != null) {
-                this.defaultValue = defaultValue.toString();
+            	if( isCollection && ((Collection) defaultValue).isEmpty()) {
+            		//treat empty collections the same as uninitialized primitive types
+            		this.defaultValue = "null";
+            	} else {
+            		//this is an intialized primitive type or a non-empty collection
+            		this.defaultValue = defaultValue.toString();
+            	}
             } else {
                 this.defaultValue = "null";
             }
