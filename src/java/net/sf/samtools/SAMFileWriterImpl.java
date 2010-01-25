@@ -33,11 +33,10 @@ import java.io.StringWriter;
  * and produces the text version of the header, since that seems to be a popular item
  * in both text and binary file formats.
  */
-abstract class SAMFileWriterImpl implements SAMFileWriter
+public abstract class SAMFileWriterImpl implements SAMFileWriter
 {
-    private static final int MAX_RECORDS_IN_RAM = 500000;
-
-    private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
+    private static int DEAFULT_MAX_RECORDS_IN_RAM = 500000;      
+    private int maxRecordsInRam = DEAFULT_MAX_RECORDS_IN_RAM;
     private SAMFileHeader.SortOrder sortOrder;
     private SAMFileHeader header;
     private SortingCollection<SAMRecord> alignmentSorter;
@@ -48,6 +47,26 @@ abstract class SAMFileWriterImpl implements SAMFileWriter
     // For validating presorted records.
     private SAMSortOrderChecker sortOrderChecker;
 
+    /**
+     * When writing records that are not presorted, specify the number of records stored in RAM
+     * before spilling to disk.  This method sets the default value for all SamFileWriterImpl
+     * instances. Must be called before the constructor is called.
+     * @param maxRecordsInRam
+     */
+    public static void setDefaultMaxRecordsInRam(final int maxRecordsInRam) {
+    	DEAFULT_MAX_RECORDS_IN_RAM = maxRecordsInRam;	
+    }
+    
+    /**
+     * When writing records that are not presorted, this number determines the 
+     * number of records stored in RAM before spilling to disk.
+     * @return DEAFULT_MAX_RECORDS_IN_RAM 
+     */
+    public static int getDefaultMaxRecordsInRam() {
+    	return DEAFULT_MAX_RECORDS_IN_RAM;	
+    }
+    
+    
     /**
      * Must be called before calling setHeader().  SortOrder value in the header passed
      * to setHeader() is ignored.  If setSortOrder is not called, default is SortOrder.unsorted.
