@@ -23,20 +23,21 @@
  */
 package net.sf.picard.cmdline;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import net.sf.picard.metrics.Header;
 import net.sf.picard.metrics.MetricBase;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.metrics.StringHeader;
 import net.sf.picard.util.Log;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.BlockCompressedStreamConstants;
 import net.sf.samtools.util.StringUtil;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -80,6 +81,9 @@ public abstract class CommandLineProgram {
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).")
     public int COMPRESSION_LEVEL = BlockCompressedStreamConstants.DEFAULT_COMPRESSION_LEVEL;
 
+    @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true)
+    public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
+    
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
     /**
@@ -118,6 +122,11 @@ public abstract class CommandLineProgram {
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
+        if(MAX_RECORDS_IN_RAM != null)
+        {
+        	SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
+        }
+        
         if (!TMP_DIR.exists()) {
             // Intentially not checking the return value, because it may be that the program does not
             // need a tmp_dir.  If this fails, the problem will be discovered downstream.
