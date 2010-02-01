@@ -27,10 +27,7 @@ package net.sf.picard.util;
 import net.sf.picard.PicardException;
 
 import java.security.InvalidParameterException;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.Date;
 import java.math.RoundingMode;
 
@@ -55,6 +52,13 @@ public class FormatUtil {
         this.floatFormat.setGroupingUsed(false);
         this.floatFormat.setMaximumFractionDigits(6);
         this.floatFormat.setRoundingMode(RoundingMode.HALF_DOWN);
+        if (this.floatFormat instanceof DecimalFormat) {
+            final DecimalFormat decimalFormat = (DecimalFormat)this.floatFormat;
+            final DecimalFormatSymbols decimalFormatSymbols = decimalFormat.getDecimalFormatSymbols();
+            decimalFormatSymbols.setNaN("?");
+            decimalFormatSymbols.setInfinity("?");
+            decimalFormat.setDecimalFormatSymbols(decimalFormatSymbols);
+        }
     }
 
     /** Formats a short to an integer string. */
