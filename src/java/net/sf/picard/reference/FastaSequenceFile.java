@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  *
  * @author Tim Fennell
  */
-class FastaSequenceFile implements ReferenceSequenceFile {
+public class FastaSequenceFile implements ReferenceSequenceFile {
     private static final Pattern WHITESPACE_SPLITTER = Pattern.compile("\\s+");
 
     private final File file;
@@ -55,7 +55,7 @@ class FastaSequenceFile implements ReferenceSequenceFile {
 
 
     /** Constructs a FastaSequenceFile that reads from the specified file. */
-    FastaSequenceFile(final File file, final boolean truncateNamesAtWhitespace) {
+    public FastaSequenceFile(final File file, final boolean truncateNamesAtWhitespace) {
         this.file = file;
         this.truncateNamesAtWhitespace = truncateNamesAtWhitespace;
         this.in = new FastLineReader(IoUtil.openFileForReading(file));
