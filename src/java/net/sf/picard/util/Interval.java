@@ -105,6 +105,17 @@ public class Interval implements Comparable<Interval>, Cloneable {
     }
 
 
+    /** Returns a new Interval that represents the intersection between the two intervals. */
+    public Interval intersect(final Interval that) {
+        if (!intersects(that)) throw new IllegalArgumentException(that + " does not intersect " + this);
+        return new Interval(this.sequence,
+                            Math.max(this.start, that.start),
+                            Math.min(this.end, that.end),
+                            this.negativeStrand,
+                            this.name + " intersection " + that.name);
+    }
+
+
     /** Returns true if this interval overlaps the other interval, otherwise false. */
     public boolean abuts(final Interval other) {
         return this.getSequence().equals(other.getSequence()) &&
