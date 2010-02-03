@@ -306,7 +306,7 @@ public class StringUtil {
     /**
      * Convert ASCII byte to ASCII char.
      */
-    public static char byteToChar(final char b) {
+    public static char byteToChar(final byte b) {
         return (char)(b & 0xff);
     }
 

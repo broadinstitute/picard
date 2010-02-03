@@ -180,6 +180,9 @@ public class FastaSequenceFile implements ReferenceSequenceFile {
                 break;
             }
             sequenceLength += in.readToEndOfOutputBufferOrEoln(bases, sequenceLength);
+            while (sequenceLength > 0 && Character.isWhitespace(StringUtil.byteToChar(bases[sequenceLength - 1]))) {
+                --sequenceLength;
+            }
             if (sequenceLength == knownLength) {
                 break;
             }
