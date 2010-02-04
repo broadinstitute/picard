@@ -152,8 +152,13 @@ public class Cigar {
                         }
                         if (isInDelOperator(nextOperator)) {
                             if (ret == null) ret = new ArrayList<SAMValidationError>();
-                            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
-                                    "No M or N operator between pair of ID operators in CIGAR", readName, recordNumber));
+                            if (op == nextOperator) {
+                                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                                        "No M or N operator between pair of " + op.name() + " operators in CIGAR", readName, recordNumber));
+                            } else {
+                                ret.add(new SAMValidationError(SAMValidationError.Type.ADJACENCT_INDEL_IN_CIGAR,
+                                        "No M or N operator between pair of ID operators in CIGAR", readName, recordNumber));
+                            }
                         }
                     }
                 }

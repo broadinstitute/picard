@@ -74,6 +74,9 @@ public class SAMValidationError {
         /** CIGAR string is empty for mapped read or not empty of unmapped read, or other CIGAR badness. */
         INVALID_CIGAR,
 
+        /** CIGAR string contains I followed by D, or vice versa, with no intervening M */
+        ADJACENCT_INDEL_IN_CIGAR(Severity.WARNING),
+
         /** mate reference index (MRNM) set for unpaired read */    
         INVALID_MATE_REF_INDEX,
 
