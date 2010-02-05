@@ -190,7 +190,12 @@ public class SequenceUtil {
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
-        return countMismatches(read, referenceBases, 0);
+        return countMismatches(read, referenceBases, 0, false);
+    }
+
+    /** Calculates the number of mismatches between the read and the reference sequence provided. */
+    public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
+        return countMismatches(read, referenceBases, referenceOffset, false);
     }
 
     /**
@@ -200,8 +205,12 @@ public class SequenceUtil {
      * to which read is aligned from getReferenceStart to getReferenceEnd.
      * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
      * of that reference sequence.
+     * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
+     *      and C->T on the positive strand and G->A on the negative strand will not be counted
+     *      as mismatches.
      */
-    public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
+    public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset,
+                                      final boolean bisulfiteSequence) {
         int mismatches = 0;
 
         final byte[] readBases = read.getReadBases();
@@ -212,8 +221,16 @@ public class SequenceUtil {
             final int length = block.getLength();
 
             for (int i=0; i<length; ++i) {
-                if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
-                    ++mismatches;
+                if (!bisulfiteSequence) {
+                    if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                        ++mismatches;
+                    }
+                }
+                else {
+                    if (!bisulfiteBasesEqual(read.getReadNegativeStrandFlag(), readBases[readBlockStart+i],
+                            referenceBases[referenceBlockStart+i])) {
+                        ++mismatches;
+                    }
                 }
             }
         }
@@ -251,7 +268,19 @@ public class SequenceUtil {
      * to the first element of the reference sequence to which read is aligned. 
      */
     public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases) {
-        return sumQualitiesOfMismatches(read, referenceBases, 0);
+        return sumQualitiesOfMismatches(read, referenceBases, 0, false);
+    }
+
+    /**
+     * Calculates the sum of qualities for mismatched bases in the read.
+     * @param referenceBases Array of ASCII bytes that covers at least the the portion of the reference sequence
+     * to which read is aligned from getReferenceStart to getReferenceEnd.
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence.
+     */
+    public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases,
+                                               final int referenceOffset) {
+        return sumQualitiesOfMismatches(read, referenceBases, referenceOffset);
     }
 
     /**
@@ -260,9 +289,12 @@ public class SequenceUtil {
      * to which read is aligned from getReferenceStart to getReferenceEnd.
      * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
      * of that reference sequence. 
+     * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
+     *      and C->T on the positive strand and G->A on the negative strand will not be counted
+     *      as mismatches.
      */
     public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases,
-                                               final int referenceOffset) {
+                                               final int referenceOffset, final boolean bisulfiteSequence) {
         int qualities = 0;
 
         final byte[] readBases = read.getReadBases();
@@ -279,8 +311,17 @@ public class SequenceUtil {
             final int length = block.getLength();
 
             for (int i=0; i<length; ++i) {
-                if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
-                    qualities += readQualities[readBlockStart+i];
+                if (!bisulfiteSequence) {
+                    if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                        qualities += readQualities[readBlockStart+i];
+                    }
+
+                }
+                else {
+                    if (!bisulfiteBasesEqual(read.getReadNegativeStrandFlag(), readBases[readBlockStart+i],
+                            referenceBases[referenceBlockStart+i])) {
+                        qualities += readQualities[readBlockStart+i];
+                    }
                 }
             }
         }
@@ -326,7 +367,7 @@ public class SequenceUtil {
      * countMismatches() it adds 1 for each indel.
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases) {
-        return calculateSamNmTag(read, referenceBases, 0);
+        return calculateSamNmTag(read, referenceBases, 0, false);
     }
 
     /**
@@ -337,8 +378,22 @@ public class SequenceUtil {
      * of that reference sequence.
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
-                                               final int referenceOffset) {
-        int samNm = countMismatches(read, referenceBases, referenceOffset);
+                                        final int referenceOffset) {
+        return calculateSamNmTag(read, referenceBases, referenceOffset, false);
+    }
+    /**
+     * Calculates the for the predefined NM tag from the SAM spec. To the result of
+     * countMismatches() it adds 1 for each indel.
+
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence.
+     * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
+     *      and C->T on the positive strand and G->A on the negative strand will not be counted
+     *      as mismatches.
+     */
+    public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
+                                        final int referenceOffset, final boolean bisulfiteSequence) {
+        int samNm = countMismatches(read, referenceBases, referenceOffset, bisulfiteSequence);
         for (final CigarElement el : read.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
                 samNm += el.getLength();
@@ -393,4 +448,27 @@ public class SequenceUtil {
             bases[i] = complement(bases[i]);
         }
     }
+
+    /** Returns true if the bases are equal OR if the mismatch cannot be accounted for by
+     * bisfulite treatment.  C->T on the positive strand and G->A on the negative strand
+     * do not count as mismatches */
+    public static boolean bisulfiteBasesEqual(boolean negativeStrand, byte read, byte reference) {
+
+        if (basesEqual(read, reference)) {
+            return true;
+        }
+
+        if (negativeStrand) {
+            if (basesEqual(reference, (byte)'G') && basesEqual(read, (byte)'A')) {
+                return true;
+            }
+        }
+        else {
+            if (basesEqual(reference, (byte)'C') && basesEqual(read, (byte)'T')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
