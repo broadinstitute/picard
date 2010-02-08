@@ -107,6 +107,13 @@ public class Cigar {
      * @return The number of read bases that the read covers.
      */
     public int getReadLength() {
+        return getReadLength(cigarElements);
+    }
+
+    /**
+     * @return The number of read bases that the read covers.
+     */
+    public static int getReadLength(final List<CigarElement> cigarElements) {
         int length = 0;
         for (final CigarElement element : cigarElements) {
             if (element.getOperator().consumesReadBases()){
@@ -150,15 +157,10 @@ public class Cigar {
                         if (isRealOperator(nextOperator) && !isInDelOperator(nextOperator)) {
                             break;
                         }
-                        if (isInDelOperator(nextOperator)) {
+                        if (isInDelOperator(nextOperator) && op == nextOperator) {
                             if (ret == null) ret = new ArrayList<SAMValidationError>();
-                            if (op == nextOperator) {
-                                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
-                                        "No M or N operator between pair of " + op.name() + " operators in CIGAR", readName, recordNumber));
-                            } else {
-                                ret.add(new SAMValidationError(SAMValidationError.Type.ADJACENCT_INDEL_IN_CIGAR,
-                                        "No M or N operator between pair of ID operators in CIGAR", readName, recordNumber));
-                            }
+                            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                                    "No M or N operator between pair of " + op.name() + " operators in CIGAR", readName, recordNumber));
                         }
                     }
                 }

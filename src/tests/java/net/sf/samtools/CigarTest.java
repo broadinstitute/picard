@@ -41,6 +41,10 @@ public class CigarTest {
         Assert.assertNull(codec.decode("10M5N1I12M").isValid(null, -1));
         Assert.assertNull(codec.decode("10M1I5N1I12M").isValid(null, -1));
         Assert.assertNull(codec.decode("9M1D5N1I12M").isValid(null, -1));
+
+        // I followed by D and vice versa is now allowed.
+        Assert.assertNull(codec.decode("1M1I1D1M").isValid(null, -1));
+        Assert.assertNull(codec.decode("1M1D1I1M").isValid(null, -1));
     }
 
     @Test
@@ -55,14 +59,5 @@ public class CigarTest {
         Assert.assertEquals(errors.size(), 1);
         Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
 
-        // I followed by D is a warning.
-        errors = codec.decode("1M1I1D1M").isValid(null, -1);
-        Assert.assertEquals(errors.size(), 1);
-        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.ADJACENCT_INDEL_IN_CIGAR);
-
-        // D followed by I is a warning.
-        errors = codec.decode("1M1D1I1M").isValid(null, -1);
-        Assert.assertEquals(errors.size(), 1);
-        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.ADJACENCT_INDEL_IN_CIGAR);
     }
 }
