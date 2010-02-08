@@ -37,7 +37,6 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.BlockCompressedStreamConstants;
-import net.sf.samtools.util.StringUtil;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -83,24 +82,28 @@ public abstract class CommandLineProgram {
 
     @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
-    
+
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
     /**
-     * Initialized in parseArgs.  Subclasses may want to access this to do
-     * their own validation, and then print usage using commandLineParser.
-     */
+    * Initialized in parseArgs.  Subclasses may want to access this to do their
+    * own validation, and then print usage using commandLineParser.
+    */
     private CommandLineParser commandLineParser;
 
     private final List<Header> defaultHeaders = new ArrayList<Header>();
 
+    /**
+    * The reconstructed commandline used to run this program. Used for logging
+    * and debugging.
+    */
     private String commandLine;
 
     /**
-     * Do the work after command line has been parsed.
-     * RuntimeException may be thrown by this method, and are reported appropriately.
-     * @return program exit status.
-     */
+    * Do the work after command line has been parsed. RuntimeException may be
+    * thrown by this method, and are reported appropriately.
+    * @return program exit status.
+    */
     protected abstract int doWork();
 
     public void instanceMainWithExit(final String[] argv) {
@@ -108,28 +111,26 @@ public abstract class CommandLineProgram {
     }
 
     public int instanceMain(final String[] argv) {
-        // Build the default headers
-        final Date startDate = new Date();
-        commandLine = getClass().getName() + " " + StringUtil.join(" ", argv);
-        this.defaultHeaders.add(new StringHeader(commandLine));
-        this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
-
         if (!parseArgs(argv)) {
             return 1;
         }
+
+        // Build the default headers
+        final Date startDate = new Date();
+        this.defaultHeaders.add(new StringHeader(commandLine));
+        this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
-        if(MAX_RECORDS_IN_RAM != null)
-        {
-        	SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
+        if (MAX_RECORDS_IN_RAM != null) {
+            SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         }
-        
+
         if (!TMP_DIR.exists()) {
             // Intentially not checking the return value, because it may be that the program does not
-            // need a tmp_dir.  If this fails, the problem will be discovered downstream.
+            // need a tmp_dir. If this fails, the problem will be discovered downstream.
             TMP_DIR.mkdir();
         }
         System.setProperty("java.io.tmpdir", TMP_DIR.getAbsolutePath());
@@ -151,23 +152,25 @@ public abstract class CommandLineProgram {
     }
 
     /**
-     * Put any custom command-line validation in an override of this method.
-     * clp is initialized at this point and can be used to print usage and access argv.
+    * Put any custom command-line validation in an override of this method.
+    * clp is initialized at this point and can be used to print usage and access argv.
      * Any options set by command-line parser can be validated.
-     * @return null if command line is valid.  If command line is invalid, returns an array of error message
-     * to be written to the appropriate place.
-     */
+    * @return null if command line is valid.  If command line is invalid, returns an array of error message
+    * to be written to the appropriate place.
+    */
     protected String[] customCommandLineValidation() {
         return null;
     }
 
     /**
-     *
-     * @return true if command line is valid
-     */
+    *
+    * @return true if command line is valid
+    */
     protected boolean parseArgs(final String[] argv) {
+
         commandLineParser = new CommandLineParser(this);
         final boolean ret = commandLineParser.parseOptions(System.err, argv);
+        commandLine = commandLineParser.getCommandLine();
         if (!ret) {
             return false;
         }
@@ -199,7 +202,7 @@ public abstract class CommandLineProgram {
     public CommandLineParser getCommandLineParser() {
         return commandLineParser;
     }
-    
+
     public String getProgramVersion() {
         return commandLineParser.getProgramVersion();
     }
@@ -208,3 +211,4 @@ public abstract class CommandLineProgram {
         return commandLine;
     }
 }
+

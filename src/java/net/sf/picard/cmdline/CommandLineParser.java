@@ -105,9 +105,12 @@ public class CommandLineParser {
 
     // In case implementation wants to get at arg for some reason.
     private String[] argv;
-    
+
     private String programVersion = "";
 
+    // The command line used to launch this program, including non-null default options that
+    // weren't explicitly specified. This is used for logging and debugging.
+    private String commandLine;
 
     /**
      * This attribute is here just to facilitate printing usage for OPTIONS_FILE
@@ -230,6 +233,7 @@ public class CommandLineParser {
             usage(messageStream);
             return false;
         }
+
         return true;
     }
 
@@ -239,6 +243,9 @@ public class CommandLineParser {
      * @return true if valid
      */
     private boolean checkNumArguments() {
+        //Also, since we're iterating over all options and args, use this opportunity to recreate the commandLineString
+        final StringBuffer commandLineString = new StringBuffer();
+        commandLineString.append( callerOptions.getClass().getName() );
         try {
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 final StringBuilder mutextOptionNames = new StringBuilder();
@@ -249,7 +256,7 @@ public class CommandLineParser {
                     }
                 }
                 if (optionDefinition.hasBeenSet && mutextOptionNames.length() > 0) {
-                    messageStream.println("ERROR: Option '" + optionDefinition.name + 
+                    messageStream.println("ERROR: Option '" + optionDefinition.name +
                             "' cannot be used in conjunction with option(s)" +
                             mutextOptionNames.toString());
                     return false;
@@ -270,6 +277,7 @@ public class CommandLineParser {
                     }
                     return false;
                 }
+
             }
             if (positionalArguments != null) {
                 final Collection c = (Collection)positionalArguments.get(callerOptions);
@@ -278,12 +286,31 @@ public class CommandLineParser {
                             " positional arguments must be specified.");
                     return false;
                 }
+                for( Object posArg : c ) {
+                    commandLineString.append(" " + posArg.toString());
+                }
             }
+            //first, append args that were explicitly set
+            for (final OptionDefinition optionDefinition : optionDefinitions) {
+                if(optionDefinition.hasBeenSet) {
+                    commandLineString.append(" " + optionDefinition.name + "=" + optionDefinition.field.get(callerOptions));
+                }
+            }
+            commandLineString.append("   "); //separator to tell the 2 apart
+            //next, append args that weren't explicitly set, but have a default value
+            for (final OptionDefinition optionDefinition : optionDefinitions) {
+                if(!optionDefinition.hasBeenSet && !optionDefinition.defaultValue.equals("null")) {
+                    commandLineString.append(" " + optionDefinition.name + "=" + optionDefinition.defaultValue);
+                }
+            }
+            this.commandLine = commandLineString.toString();
             return true;
         } catch (IllegalAccessException e) {
             // Should never happen because lack of publicness has already been checked.
             throw new RuntimeException(e);
         }
+
+
     }
 
     private boolean parsePositionalArgument(final String stringValue) {
@@ -330,22 +357,22 @@ public class CommandLineParser {
                 return false;
             }
         }
-		final Object value;
+        final Object value;
         try {
-        	if(stringValue.equals("null")) {
-        		//"null" is a special value that allows the user to override any default 
-            	//value set for this arg. It can only be used for optional args. When  
-        		//used for a list arg, it will clear the list.
-        		if(optionDefinition.optional) {
-        			value = null;
-        		} else {
-        			messageStream.println("ERROR: non-null value must be provided for '" + key + "'.");
-        			return false;
-        		}
-        	} else {
-        		value = constructFromString(getUnderlyingType(optionDefinition.field), stringValue);
-        	}
-        	
+            if(stringValue.equals("null")) {
+                //"null" is a special value that allows the user to override any default
+                //value set for this arg. It can only be used for optional args. When
+                //used for a list arg, it will clear the list.
+                if(optionDefinition.optional) {
+                    value = null;
+                } else {
+                    messageStream.println("ERROR: non-null value must be provided for '" + key + "'.");
+                    return false;
+                }
+            } else {
+                value = constructFromString(getUnderlyingType(optionDefinition.field), stringValue);
+            }
+
         } catch (CommandLineParseException e) {
             messageStream.println("ERROR: " + e.getMessage());
             return false;
@@ -354,14 +381,14 @@ public class CommandLineParser {
             if (optionDefinition.isCollection) {
                 final Collection c = (Collection)optionDefinition.field.get(callerOptions);
                 if(value == null) {
-                	//user specified this arg=null which is interpreted as empty list
-                	c.clear();
+                    //user specified this arg=null which is interpreted as empty list
+                    c.clear();
                 } else if (c.size() >= optionDefinition.maxElements) {
                     messageStream.println("ERROR: Option '" + key + "' cannot be used more than " +
                             optionDefinition.maxElements + " times.");
                     return false;
                 } else {
-                	c.add(value);
+                    c.add(value);
                 }
             } else {
                 optionDefinition.field.set(callerOptions, value);
@@ -462,7 +489,7 @@ public class CommandLineParser {
             sb.append(optionDefinition.defaultValue);
             sb.append(". ");
             if(!optionDefinition.defaultValue.equals("null")) {
-            	sb.append("This option can be set to 'null' to clear the default value. ");
+                sb.append("This option can be set to 'null' to clear the default value. ");
             }
         } else if (!optionDefinition.isCollection){
             sb.append("Required. ");
@@ -494,11 +521,11 @@ public class CommandLineParser {
                 sb.append("This option may be specified between " + optionDefinition.minElements +
                 " and " + optionDefinition.maxElements + " times. ");
             }
-            
+
             if(!optionDefinition.defaultValue.equals("null")) {
-            	sb.append("This option can be set to 'null' to clear the default list. ");
+                sb.append("This option can be set to 'null' to clear the default list. ");
             }
-            
+
         }
         if (!optionDefinition.mutuallyExclusive.isEmpty()) {
             sb.append(" Cannot be used in conjuction with option(s)");
@@ -550,7 +577,7 @@ public class CommandLineParser {
                     isCollection, optionAnnotation.minElements(),
                     optionAnnotation.maxElements(), field.get(callerOptions),
                     optionAnnotation.mutex());
-            
+
             for (final String option : optionAnnotation.mutex()) {
                 final OptionDefinition mutextOptionDef = optionMap.get(option);
                 if (mutextOptionDef != null) {
@@ -584,7 +611,7 @@ public class CommandLineParser {
             final Usage usageAnnotation = field.getAnnotation(Usage.class);
             if (usageAnnotation.programVersion().length() > 0) {
                 this.programVersion = usageAnnotation.programVersion();
-            	usagePreamble += "Version: " + usageAnnotation.programVersion() + "\n";
+                usagePreamble += "Version: " + usageAnnotation.programVersion() + "\n";
             }
         } catch (IllegalAccessException e) {
             throw new CommandLineParserDefinitionException("@Usage data member must be public");
@@ -622,7 +649,7 @@ public class CommandLineParser {
         } catch (IllegalAccessException e) {
             throw new CommandLineParserDefinitionException(field.getName() +
                     " must have public visibility to have @PositionalParameters annotation");
-            
+
         }
     }
 
@@ -663,7 +690,7 @@ public class CommandLineParser {
                 throw new CommandLineParserDefinitionException("Strange collection type for field " + field.getName());
             }
             return (Class)genericTypes[0];
-            
+
         }
         else {
             final Class type = field.getType();
@@ -748,13 +775,13 @@ public class CommandLineParser {
             this.minElements = minElements;
             this.maxElements = maxElements;
             if (defaultValue != null) {
-            	if( isCollection && ((Collection) defaultValue).isEmpty()) {
-            		//treat empty collections the same as uninitialized primitive types
-            		this.defaultValue = "null";
-            	} else {
-            		//this is an intialized primitive type or a non-empty collection
-            		this.defaultValue = defaultValue.toString();
-            	}
+                if( isCollection && ((Collection) defaultValue).isEmpty()) {
+                    //treat empty collections the same as uninitialized primitive types
+                    this.defaultValue = "null";
+                } else {
+                    //this is an intialized primitive type or a non-empty collection
+                    this.defaultValue = defaultValue.toString();
+                }
             } else {
                 this.defaultValue = "null";
             }
@@ -763,4 +790,16 @@ public class CommandLineParser {
     }
 
     public String getProgramVersion() { return programVersion; }
+
+    /**
+     * The commandline used to run this program, including any default args that
+     * weren't necessarily specified. This is used for logging and debugging.
+     *
+     * NOTE: {@link #parseOptions(PrintStream, String[])} must be called before
+     * calling this method.
+     *
+     * @return The commandline, or null if {@link #parseOptions(PrintStream, String[])}
+     * hasn't yet been called, or didn't complete successfully.
+     */
+    public String getCommandLine() { return commandLine; }
 }
