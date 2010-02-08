@@ -195,6 +195,7 @@ public class CommandLineParser {
     public boolean parseOptions(final PrintStream messageStream, final String[] args) {
         this.argv = args;
         this.messageStream = messageStream;
+        commandLine = callerOptions.getClass().getName();
         for (int i = 0; i < args.length; ++i) {
             final String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
@@ -215,6 +216,7 @@ public class CommandLineParser {
                         usage(messageStream);
                         return false;
                     }
+                    commandLine += " " + OPTIONS_FILE + "=" + pair[1];
                 } else {
                     if (!parseOption(pair[0], pair[1], false)) {
                         messageStream.println();
@@ -245,7 +247,6 @@ public class CommandLineParser {
     private boolean checkNumArguments() {
         //Also, since we're iterating over all options and args, use this opportunity to recreate the commandLineString
         final StringBuffer commandLineString = new StringBuffer();
-        commandLineString.append( callerOptions.getClass().getName() );
         try {
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 final StringBuilder mutextOptionNames = new StringBuilder();
@@ -303,7 +304,7 @@ public class CommandLineParser {
                     commandLineString.append(" " + optionDefinition.name + "=" + optionDefinition.defaultValue);
                 }
             }
-            this.commandLine = commandLineString.toString();
+            this.commandLine += commandLineString.toString();
             return true;
         } catch (IllegalAccessException e) {
             // Should never happen because lack of publicness has already been checked.
