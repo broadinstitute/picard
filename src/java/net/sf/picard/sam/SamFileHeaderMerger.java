@@ -53,7 +53,7 @@ public class SamFileHeaderMerger {
     private boolean hasProgramGroupCollisions = false;
 
     //Translation of old program group ids to new program group ids
-    private Map<SAMFileReader, Map<String, String>> samProgramGroupIdTranslation = 
+    private Map<SAMFileReader, Map<String, String>> samProgramGroupIdTranslation =
             new HashMap<SAMFileReader, Map<String, String>>();
 
     private boolean hasMergedSequenceDictionary = false;
@@ -111,7 +111,7 @@ public class SamFileHeaderMerger {
         this.mergedHeader.setSequenceDictionary(sequenceDictionary);
 
         // Set program that creates input alignments
-        for (final SAMProgramRecord program : mergeProgramGroups(readers)) { 
+        for (final SAMProgramRecord program : mergeProgramGroups(readers)) {
             this.mergedHeader.addProgramRecord(program);
         }
 
@@ -138,43 +138,69 @@ public class SamFileHeaderMerger {
      * @return new list of readgroups constructed from all the readers
      */
     private List<SAMReadGroupRecord> mergeReadGroups(final Collection<SAMFileReader> readers) {
-        final Map<String,SAMReadGroupRecord> seenGroups = new TreeMap<String,SAMReadGroupRecord>();
 
-        // Check groups for duplicate entries 
+        // Check groups for duplicate entries and renumber these
+        final Map<String,SAMReadGroupRecord> seenGroupIds = new TreeMap<String,SAMReadGroupRecord>(); //maps groupId to record
+        int idx=0;
         for (final SAMFileReader reader : readers) {
+            final Map<String, String> groupIdTranslation = new HashMap<String, String> ();
+            samReadGroupIdTranslation.put(reader, groupIdTranslation);
             for (final SAMReadGroupRecord group : reader.getFileHeader().getReadGroups()) {
-                final String groupId = group.getReadGroupId() ;
-                final SAMReadGroupRecord seenGroup = seenGroups.get(groupId);
+                final String groupId = group.getReadGroupId();
+                final SAMReadGroupRecord seenGroup = seenGroupIds.get(groupId);
                 if (seenGroup == null) {
-                    seenGroups.put(groupId, group);
+                    seenGroupIds.put(groupId, group);
+                    groupIdTranslation.put(groupId, groupId); //no change
                 }
                 else if (!group.equivalent(seenGroup)) { // same ID but different attributes
                     hasReadGroupCollisions = true;
-                    break;
+                    String newGroupId;
+                    while(seenGroupIds.containsKey(newGroupId = Integer.toString(idx++)))
+                        ; //find a new unique groupId
+                    seenGroupIds.put(newGroupId, new SAMReadGroupRecord(newGroupId, group));
+                    groupIdTranslation.put(groupId, newGroupId);
                 }
             }
-            if (hasReadGroupCollisions) break;
         }
 
-        // If found no duplicates entries
-        if (!hasReadGroupCollisions ) {
-            return new ArrayList<SAMReadGroupRecord>(seenGroups.values());
-        }
+        return new ArrayList<SAMReadGroupRecord>(seenGroupIds.values());
+     }
 
-        // If found duplicates entries, renumber group IDs
-        final List<SAMReadGroupRecord> newGroups = new ArrayList<SAMReadGroupRecord>();
+    /**
+     * Checks to see if there are clashes where different readers are using the same program
+     * group IDs. If they are then a new set of unique program group IDs are generated (across all
+     * program groups) otherwise the original program group headers are returned.
+     *
+     * @param readers readers to combine
+     * @return new list of program groups constructed from all the readers
+     */
+
+    private List<SAMProgramRecord> mergeProgramGroups(final Collection<SAMFileReader> readers) {
+        // Check groups for duplicate entries and renumber these
+        final Map<String,SAMProgramRecord> seenGroupIds = new TreeMap<String,SAMProgramRecord>(); //maps groupId to record
         int idx=0;
         for (final SAMFileReader reader : readers) {
-            final Map<String, String> idTranslation = new HashMap<String, String> ();
-            samReadGroupIdTranslation.put(reader, idTranslation);
-            for (final SAMReadGroupRecord group : reader.getFileHeader().getReadGroups()) {
-                final String newGroupId = Integer.toString(idx);
-                newGroups.add(new SAMReadGroupRecord(newGroupId, group));
-                idTranslation.put(group.getReadGroupId(), newGroupId);
-                idx++;
+            final Map<String, String> groupIdTranslation = new HashMap<String, String> ();
+            samProgramGroupIdTranslation.put(reader, groupIdTranslation);
+            for (final SAMProgramRecord group : reader.getFileHeader().getProgramRecords()) {
+                final String groupId = group.getProgramGroupId();
+                final SAMProgramRecord seenGroup = seenGroupIds.get(groupId);
+                if (seenGroup == null) {
+                    seenGroupIds.put(groupId, group);
+                    groupIdTranslation.put(groupId, groupId); //no change
+                }
+                else if (!group.equivalent(seenGroup)) { // same ID but different attributes
+                    hasProgramGroupCollisions = true;
+                    String newGroupId;
+                    while(seenGroupIds.containsKey(newGroupId = Integer.toString(idx++)))
+                        ; //find a new unique groupId
+                    seenGroupIds.put(newGroupId, new SAMProgramRecord(newGroupId, group));
+                    groupIdTranslation.put(groupId, newGroupId);
+                }
             }
-        } 
-        return newGroups ;
+        }
+
+        return new ArrayList<SAMProgramRecord>(seenGroupIds.values());
     }
 
     /**
@@ -274,55 +300,8 @@ public class SamFileHeaderMerger {
         }
     }
 
-    /**
-     * Checks to see if there are clashes where different readers are using the same program
-     * group IDs. If they are then a new set of unique program group IDs are generated (across all
-     * program groups) otherwise the original program group headers are returned. 
-     *
-     * @param readers readers to combine
-     * @return new list of program groups constructed from all the readers
-     */
 
-    private List<SAMProgramRecord> mergeProgramGroups(final Collection<SAMFileReader> readers) {
-        final Map<String,SAMProgramRecord> seenGroups = new TreeMap<String,SAMProgramRecord>();
 
-        // Check groups for duplicate entries 
-        for (final SAMFileReader reader : readers) {
-            for (final SAMProgramRecord group : reader.getFileHeader().getProgramRecords()) {
-                final String groupId = group.getProgramGroupId() ;
-                final SAMProgramRecord seenGroup = seenGroups.get(groupId);
-                if (seenGroup == null) {
-                    seenGroups.put(groupId, group);
-                }
-                else if (!group.equivalent(seenGroup)) { // same ID but different attributes
-                    hasProgramGroupCollisions = true;
-                    break;
-                }
-            }
-            if (hasProgramGroupCollisions) break;
-        }
-
-        // If found no duplicates entries
-        if (!hasProgramGroupCollisions ) {
-            return new ArrayList<SAMProgramRecord>(seenGroups.values());
-        }
-
-        // If found duplicates entries, renumber group IDs
-        final List<SAMProgramRecord> newGroups = new ArrayList<SAMProgramRecord>();
-        int idx=0;
-        for (final SAMFileReader reader : readers) {
-            final Map<String, String> idTranslation = new TreeMap<String, String> ();
-            samProgramGroupIdTranslation.put(reader, idTranslation);
-            for (final SAMProgramRecord group : reader.getFileHeader().getProgramRecords()) {
-                final String newGroupId = Integer.toString(idx);
-                newGroups.add(new SAMProgramRecord(newGroupId, group));
-                idTranslation.put(group.getProgramGroupId(), newGroupId);
-                idx++;
-            }
-        } 
-        return newGroups ;
-    }
-  
     /** Returns the read group id that should be used for the input read and RG id. */
     public String getReadGroupId(final SAMFileReader reader, final String originalReadGroupId) {
         return this.samReadGroupIdTranslation.get(reader).get(originalReadGroupId);
@@ -334,7 +313,7 @@ public class SamFileHeaderMerger {
      * @return new ID from the merged list of program groups in the output file
      */
     public String getProgramGroupId(final SAMFileReader reader, final String originalProgramGroupId) {
-        return this.samProgramGroupIdTranslation.get(reader).get(originalProgramGroupId); 
+        return this.samProgramGroupIdTranslation.get(reader).get(originalProgramGroupId);
         }
 
     /** Returns true if there are read group duplicates within the merged headers. */
