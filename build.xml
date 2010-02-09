@@ -199,6 +199,7 @@
         </copy>
 
 
+        <package-command main-class="net.sf.picard.sam.CleanSam" title="CleanSam"/>
         <package-command main-class="net.sf.picard.sam.ReplaceSamHeader" title="ReplaceSamHeader"/>
         <package-command main-class="net.sf.picard.sam.SortSam" title="SortSam"/>
         <package-command main-class="net.sf.picard.sam.SamFormatConverter" title="SamFormatConverter"/>
