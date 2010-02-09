@@ -67,10 +67,6 @@ public class SamFileHeaderMerger {
     private final Map<SAMFileHeader,  Map<Integer, Integer>> samSeqDictionaryIdTranslationViaHeader =
             new HashMap<SAMFileHeader, Map<Integer, Integer>>();
 
-    //Letters to construct new ids from a counter
-    private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-
     /**
      * Create SAMFileHeader with additional information.  Required that sequence dictionaries agree.
      *
@@ -93,7 +89,7 @@ public class SamFileHeaderMerger {
         this.readers = readers;
         this.mergedHeader = new SAMFileHeader();
 
-        SAMSequenceDictionary sequenceDictionary = null;
+        SAMSequenceDictionary sequenceDictionary;
         try {
             sequenceDictionary = getSequenceDictionary(readers);
             this.hasMergedSequenceDictionary = false;
@@ -247,36 +243,69 @@ public class SamFileHeaderMerger {
     /**
      * They've asked to merge the sequence headers.  What we support right now is finding the sequence name superset.
      *
-     * @param currentDict the current dictionary, though merged entries are the superset of both dictionaries
-     * @param mergingDict the sequence dictionary to merge
-     * @return the superset dictionary, by sequence names
+     * @param mergeIntoDict the result of merging so far.  All SAMSequenceRecords in here have been cloned from the originals.
+     * @param mergeFromDict A new sequence dictionary to merge into mergeIntoDict.
+     * @return A new sequence dictionary that resulting from merging the two inputs.
      */
-    private SAMSequenceDictionary mergeSequences(SAMSequenceDictionary currentDict, SAMSequenceDictionary mergingDict) {
-        LinkedList<SAMSequenceRecord> resultingDict = new LinkedList<SAMSequenceRecord>();
-        LinkedList<String> resultingDictStr = new LinkedList<String>();
+    private SAMSequenceDictionary mergeSequences(SAMSequenceDictionary mergeIntoDict, SAMSequenceDictionary mergeFromDict) {
 
-        // a place to hold the sequences that we haven't found a home for
+        // a place to hold the sequences that we haven't found a home for, in the order the appear in mergeFromDict.
         LinkedList<SAMSequenceRecord> holder = new LinkedList<SAMSequenceRecord>();
 
-        resultingDict.addAll(currentDict.getSequences());
-        for (SAMSequenceRecord r : resultingDict) {
-            resultingDictStr.add(r.getSequenceName());
+        // Return value will be created from this.
+        LinkedList<SAMSequenceRecord> resultingDict = new LinkedList<SAMSequenceRecord>();
+        for (final SAMSequenceRecord sequenceRecord : mergeIntoDict.getSequences()) {
+            resultingDict.add(sequenceRecord);
         }
-        for (SAMSequenceRecord record : mergingDict.getSequences()) {
-            if (resultingDictStr.contains(record.getSequenceName())) {
-                int loc = resultingDictStr.indexOf(record.getSequenceName());
-                resultingDict.addAll(loc, holder);
-                holder.clear();
+
+        // Index into resultingDict of previous SAMSequenceRecord from mergeFromDict that already existed in mergeIntoDict.
+        int prevloc = -1;
+        // Previous SAMSequenceRecord from mergeFromDict that already existed in mergeIntoDict.
+        SAMSequenceRecord previouslyMerged = null;
+
+        for (SAMSequenceRecord sequenceRecord : mergeFromDict.getSequences()) {
+            // Does it already exist in resultingDict?
+            int loc = getIndexOfSequenceName(resultingDict, sequenceRecord.getSequenceName());
+            if (loc == -1) {
+                // If doesn't already exist in resultingDict, save it an decide where to insert it later.
+                holder.add(sequenceRecord.clone());
+            } else if (prevloc > loc) {
+                // If sequenceRecord already exists in resultingDict, but prior to the previous one
+                // from mergeIntoDict that already existed, cannot merge.
+                throw new PicardException("Cannot merge sequence dictionaries because sequence " +
+                        sequenceRecord.getSequenceName() + " and " + previouslyMerged.getSequenceName() +
+                " are in different orders in two input sequence dictionaries.");
             } else {
-                holder.add(record.clone());
+                // Since sequenceRecord already exists in resultingDict, don't need to add it.
+                // Add in all the sequences prior to it that have been held in holder.
+                resultingDict.addAll(loc, holder);
+                // Remember the index of sequenceRecord so can check for merge imcompatibility.
+                prevloc = loc + holder.size();
+                previouslyMerged = sequenceRecord;
+                holder.clear();
             }
         }
+        // Append anything left in holder.
         if (holder.size() != 0) {
             resultingDict.addAll(holder);
         }
         return new SAMSequenceDictionary(resultingDict);
     }
 
+    /**
+     * Find sequence in list.
+     * @param list List to search for the sequence name.
+     * @param sequenceName Name to search for.
+     * @return Index of SAMSequenceRecord with the given name in list, or -1 if not found.
+     */
+    private static int getIndexOfSequenceName(final List<SAMSequenceRecord> list, final String sequenceName) {
+        for (int i = 0; i < list.size(); ++i) {
+            if (list.get(i).getSequenceName().equals(sequenceName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     /**
      * create the sequence mapping.  This map is used to convert the unmerged header sequence ID's to the merged
