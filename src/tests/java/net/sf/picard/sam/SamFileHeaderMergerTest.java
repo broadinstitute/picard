@@ -25,19 +25,22 @@
 
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.util.SequenceUtil;
 import static org.testng.Assert.assertEquals;
+
+import net.sf.samtools.util.StringUtil;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -49,7 +52,7 @@ import java.util.Map;
  * <p/>
  * Tests the ability of the SamFileHeaderMerger class to merge sequence dictionaries.
  */
-public class SamHeaderSequenceMergerTest {
+public class SamFileHeaderMergerTest {
     private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
 
     /** tests that if we've set the merging to false, we get a PicardException for bam's with different dictionaries. */
@@ -63,9 +66,7 @@ public class SamHeaderSequenceMergerTest {
             final SAMFileReader in = new SAMFileReader(inFile);
             readers.add(in);
         }
-        final MergingSamRecordIterator iterator;
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted, false);
-
+        new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted, false);
     }
 
     /** Tests that we can successfully merge two files with */
@@ -84,7 +85,7 @@ public class SamHeaderSequenceMergerTest {
         final MergingSamRecordIterator iterator;
         final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted, true);
         iterator = new MergingSamRecordIterator(headerMerger, false);
-        final SAMFileHeader header = headerMerger.getMergedHeader();
+        headerMerger.getMergedHeader();
 
         // count the total reads, and record read counts for each sequence
         Map<Integer, Integer> seqCounts = new HashMap<Integer, Integer>();
@@ -111,4 +112,40 @@ public class SamHeaderSequenceMergerTest {
         }
     }
 
+    private static final String sq1 = "@SQ\tSN:chr1\tLN:1000\n";
+    private static final String sq2 = "@SQ\tSN:chr2\tLN:1000\n";
+    private static final String sq3 = "@SQ\tSN:chr3\tLN:1000\n";
+    private static final String sq4 = "@SQ\tSN:chr4\tLN:1000\n";
+    private static final String sq5 = "@SQ\tSN:chr5\tLN:1000\n";
+
+    @Test
+    public void testSequenceDictionaryMerge() {
+        final String sd1 = sq1 + sq2 + sq5;
+        final String sd2 = sq2 + sq3 + sq4;
+        SAMFileReader reader1 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd1)));
+        SAMFileReader reader2 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd2)));
+        final List<SAMFileReader> inputReaders = Arrays.asList(reader1, reader2);
+        SamFileHeaderMerger merger = new SamFileHeaderMerger(inputReaders,
+                SAMFileHeader.SortOrder.coordinate, true);
+        final SAMFileHeader mergedHeader = merger.getMergedHeader();
+        for (final SAMFileReader inputReader : inputReaders) {
+            int prevTargetIndex = -1;
+            for (final SAMSequenceRecord sequenceRecord : inputReader.getFileHeader().getSequenceDictionary().getSequences()) {
+                final int targetIndex = mergedHeader.getSequenceIndex(sequenceRecord.getSequenceName());
+                Assert.assertNotSame(targetIndex, -1);
+                Assert.assertTrue(prevTargetIndex < targetIndex);
+                prevTargetIndex = targetIndex;
+            }
+        }
+    }
+
+    @Test(expectedExceptions = {PicardException.class})
+    public void testUnmergeableSequenceDictionary() {
+        final String sd1 = sq1 + sq2 + sq5;
+        final String sd2 = sq2 + sq3 + sq4 + sq1;
+        SAMFileReader reader1 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd1)));
+        SAMFileReader reader2 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd2)));
+        final List<SAMFileReader> inputReaders = Arrays.asList(reader1, reader2);
+        new SamFileHeaderMerger(inputReaders, SAMFileHeader.SortOrder.coordinate, true);
+    }
 }
