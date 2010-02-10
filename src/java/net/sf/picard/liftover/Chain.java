@@ -24,6 +24,7 @@
 package net.sf.picard.liftover;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Interval;
 import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.util.AsciiLineReader;
@@ -35,13 +36,22 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Holds a single chain from a UCSC chain file.  In a chain file, a chain consists of a header line followed by
- * alignment data lines.  Chain class embodies the header line, and the list of ContinuousBlocks embodies the
- * alignment data lines.
+ * Holds a single chain from a UCSC chain file.  Chain file format is described here: http://genome.ucsc.edu/goldenPath/help/chain.html
+ *
+ * In a chain file, a chain consists of a header line followed by alignment data lines.  Chain class embodies the header
+ * line, and the list of ContinuousBlocks embodies the alignment data lines.
+ *
+ * A continuous block represents a continuous range of the "from" genome that maps to a continuous range of the "to"
+ * genome of the same length.  A chain is an ordered list of continuous blocks, with gaps between the continuous blocks.
+ * All the continuous blocks in a chain must map from a single "from" sequence to a single "to" sequence.  All the
+ * continuous blocks in a chain map from the positive strand in the "from" genome build to the same strand in the
+ * "to" genome build.  The gaps in between the continuous blocks in a chain represent un-lift-overable regions.
+ * A gap in a chain must not be found in another chain.  If so, the chain containing the gap should be split into
+ * two chains.
  *
  * In UCSC liftOver terminology, the "target" is the "from" genome build, and the "query" is the "to" genome build.
- * E.g. when mapping from HG18 to HG19, the HG18 coordinates are "target" and HG19 is "query."  The terminology
- * confuses me but I'm trying to be faithful to the C liftOver implementation.
+ * E.g. when mapping from HG18 to HG19, the HG18 coordinates are "target" and HG19 is "query."  The USCS terminology
+ * is not used here because it confuses me.
  *
  * Chain coordinates are zero-based, half open.  However, there is also an Interval attribute of Chain that is in
  * standard Picard coordinates, i.e. one-based inclusive.
@@ -52,52 +62,52 @@ class Chain {
     // For parsing chain file
     private static final Pattern SPLITTER = Pattern.compile("\\s");
 
-    /** on-based, inclusive, so that Chain can be stored in an OverlapDetector */
+    /** one-based, inclusive, so that Chain can be stored in an OverlapDetector */
     final Interval interval;
-    /** Total score for chain. */
-    final double score;
-    /** target name. */
-    final String tName;
-    /** Overall size of target. */
-    final int tSize;
+    /** Total score for chain is not used in basic liftover so not stored. */
+    // final double score;
+    final String fromSequenceName;
+    /** Overall size of the "from" sequence. */
+    final int fromSequenceSize;
     /* tStrand always +, so not stored */
-    /** Start of range covered in target. */
-    final int tStart;
-    /** End of range covered in target. */
-    final int tEnd;
-    /** query name. */
-    final String qName;
-    /** Overall size of query. */
-    final int qSize;
-    /** Query strand. */
-    final boolean qNegativeStrand;
-    /** Start of range covered in query. */
-    final int qStart;
-    /** End of range covered in query. */
-    final int qEnd;
-    /** ID of chain in file. */
-    final int id;
+    /** Start of range covered in "from" sequence. */
+    final int fromChainStart;
+    /** End of range covered in "from" sequence. */
+    final int fromChainEnd;
+    final String toSequenceName;
+    /** Overall size of the "to" sequence. */
+    final int toSequenceSize;
+    /** "to" strand. If this is true, then the region covered by this chain is flipped in the "to" genome.  */
+    final boolean toNegativeStrand;
+    /** Start of range covered in "to" sequence. */
+    final int toChainStart;
+    /** End of range covered in "to" sequence. */
+    final int toChainEnd;
+    /** ID of chain in file. Not used, so not stored. */
+    //final int id;
     private final List<ContinuousBlock> blockList = new ArrayList<ContinuousBlock>();
 
     /**
      * Construct a Chain from the parsed header fields.
      */
-    private Chain(final double score, final String tName, final int tSize, final int tStart, final int tEnd,
-          final String qName, final int qSize, final boolean qNegativeStrand,
-          final int qStart, final int qEnd, final int id) {
+    private Chain(final double score, final String fromSequenceName, final int fromSequenceSize, final int fromChainStart, final int fromChainEnd,
+          final String toSequenceName, final int toSequenceSize, final boolean toNegativeStrand,
+          final int toChainStart, final int toChainEnd, final int id) {
         // Convert  to one-based, inclusive for Interval.
-        interval = new Interval(tName, tStart + 1, tEnd);
-        this.id = id;
-        this.qEnd = qEnd;
-        this.qName = qName;
-        this.qNegativeStrand = qNegativeStrand;
-        this.qSize = qSize;
-        this.qStart = qStart;
-        this.score = score;
-        this.tEnd = tEnd;
-        this.tName = tName;
-        this.tSize = tSize;
-        this.tStart = tStart;
+        interval = new Interval(fromSequenceName, fromChainStart + 1, fromChainEnd);
+        // Not used
+        //this.id = id;
+        this.toChainEnd = toChainEnd;
+        this.toSequenceName = toSequenceName;
+        this.toNegativeStrand = toNegativeStrand;
+        this.toSequenceSize = toSequenceSize;
+        this.toChainStart = toChainStart;
+        // not used
+        //this.score = score;
+        this.fromChainEnd = fromChainEnd;
+        this.fromSequenceName = fromSequenceName;
+        this.fromSequenceSize = fromSequenceSize;
+        this.fromChainStart = fromChainStart;
     }
 
 
@@ -106,20 +116,34 @@ class Chain {
      * Indices are 0-based, half-open.
      */
     static class ContinuousBlock {
-        final int tStart,tEnd;		/* Range covered in target. */
-        final int qStart,qEnd;		/* Range covered in query. */
-        //int score;	 	 	/* Score of block. */
+        final int fromStart;	  /* Start of range covered in "from". */
+        final int toStart;		  /* Range covered in "to". */
+        final int blockLength;    /* length of continuous block of that maps btw from and to */
+        //int score;	 	 	  /* Score of block. */
 
-        private ContinuousBlock(final int tStart, final int tEnd, final int qStart, final int qEnd) {
-            this.tStart = tStart;
-            this.tEnd = tEnd;
-            this.qStart = qStart;
-            this.qEnd = qEnd;
+        private ContinuousBlock(final int fromStart, final int toStart, final int blockLength) {
+            this.fromStart = fromStart;
+            this.toStart = toStart;
+            this.blockLength = blockLength;
+        }
+
+        /**
+         * @return 0-based, half-open end of region in "from"
+         */
+        int getFromEnd() {
+            return fromStart + blockLength;
+        }
+
+        /**
+         * @return 0-based, half-open end of region in "to"
+         */
+        int getToEnd() {
+            return toStart + blockLength;
         }
     }
 
-    private void addBlock(final int tStart, final int tEnd, final int qStart, final int qEnd) {
-        blockList.add(new ContinuousBlock(tStart, tEnd, qStart, qEnd));
+    private void addBlock(final int tStart, final int qStart, final int blockLength) {
+        blockList.add(new ContinuousBlock(tStart, qStart, blockLength));
     }
 
     /**
@@ -138,16 +162,17 @@ class Chain {
 
     /**
      * Read all the chains and load into an OverlapDetector.
-     * @param reader Text representation of chains.
-     * @param chainFile For error messages only.
+     * @param chainFile File in UCSC chain format.
      * @return OverlapDetector will all Chains from reader loaded into it.
      */
-    static OverlapDetector<Chain> loadChains(final AsciiLineReader reader, final String chainFile) {
+    static OverlapDetector<Chain> loadChains(final File chainFile) {
+        AsciiLineReader reader = new AsciiLineReader(IoUtil.openFileForReading(chainFile));
         final OverlapDetector<Chain> ret = new OverlapDetector<Chain>(0, 0);
         Chain chain;
-        while ((chain = Chain.loadChain(reader, chainFile)) != null) {
+        while ((chain = Chain.loadChain(reader, chainFile.toString())) != null) {
             ret.addLhs(chain, chain.interval);
         }
+        reader.close();
         return ret;
     }
 
@@ -170,36 +195,36 @@ class Chain {
             throwChainFileParseException("chain line does not start with 'chain'", chainFile, reader.getLineNumber());
         }
         double score = 0;
-        String tName = null;
-        int tSize = 0;
-        int tStart = 0;
-        int tEnd = 0;
-        String qName = null;
-        int qSize = 0;
-        boolean qNegativeStrand = false;
-        int qStart = 0;
-        int qEnd = 0;
+        String fromSequenceName = null;
+        int fromSequenceSize = 0;
+        int fromChainStart = 0;
+        int fromChainEnd = 0;
+        String toSequenceName = null;
+        int toSequenceSize = 0;
+        boolean toNegativeStrand = false;
+        int toChainStart = 0;
+        int toChainEnd = 0;
         int id = 0;
         try {
             score = Double.parseDouble(chainFields[1]);
-            tName = chainFields[2];
-            tSize = Integer.parseInt(chainFields[3]);
+            fromSequenceName = chainFields[2];
+            fromSequenceSize = Integer.parseInt(chainFields[3]);
             // Strand ignored because it is always +
-            tStart = Integer.parseInt(chainFields[5]);
-            tEnd = Integer.parseInt(chainFields[6]);
-            qName = chainFields[7];
-            qSize = Integer.parseInt(chainFields[8]);
-            qNegativeStrand = chainFields[9].equals("-");
-            qStart = Integer.parseInt(chainFields[10]);
-            qEnd = Integer.parseInt(chainFields[11]);
+            fromChainStart = Integer.parseInt(chainFields[5]);
+            fromChainEnd = Integer.parseInt(chainFields[6]);
+            toSequenceName = chainFields[7];
+            toSequenceSize = Integer.parseInt(chainFields[8]);
+            toNegativeStrand = chainFields[9].equals("-");
+            toChainStart = Integer.parseInt(chainFields[10]);
+            toChainEnd = Integer.parseInt(chainFields[11]);
             id = Integer.parseInt(chainFields[12]);
         } catch (NumberFormatException e) {
             throwChainFileParseException("Invalid field", chainFile, reader.getLineNumber());
         }
-        final Chain chain = new Chain(score, tName, tSize, tStart, tEnd, qName, qSize, qNegativeStrand, qStart,
-                qEnd, id);
-        int q = chain.qStart;
-        int t = chain.tStart;
+        final Chain chain = new Chain(score, fromSequenceName, fromSequenceSize, fromChainStart, fromChainEnd, toSequenceName, toSequenceSize, toNegativeStrand, toChainStart,
+                toChainEnd, id);
+        int toBlockStart = chain.toChainStart;
+        int fromBlockStart = chain.fromChainStart;
         boolean sawLastLine = false;
         while (true) {
             line = reader.readLine();
@@ -219,13 +244,10 @@ class Chain {
                 throwChainFileParseException("Block line has unexpected number of fields", chainFile, reader.getLineNumber());
             }
             int size = Integer.parseInt(blockFields[0]);
-            chain.addBlock(t, t+size, q, q+size);
-            if (sawLastLine) {
-                q = Integer.MAX_VALUE;
-                t = Integer.MAX_VALUE;
-            } else {
-                t += Integer.parseInt(blockFields[1]) + size;
-                q += Integer.parseInt(blockFields[2]) + size;
+            chain.addBlock(fromBlockStart, toBlockStart, size);
+            if (!sawLastLine) {
+                fromBlockStart += Integer.parseInt(blockFields[1]) + size;
+                toBlockStart += Integer.parseInt(blockFields[2]) + size;
             }
 
         }
