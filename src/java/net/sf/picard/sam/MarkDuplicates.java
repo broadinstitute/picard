@@ -29,6 +29,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.metrics.MetricsFile;
+import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
@@ -38,6 +39,8 @@ import net.sf.samtools.util.SortingLongCollection;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A better duplication marking algorithm that handles all cases including clipped
@@ -57,14 +60,33 @@ public class MarkDuplicates extends CommandLineProgram {
     @Usage public final String USAGE =
             "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
             "All records are then written to the output file with the duplicate records flagged.";
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to analyze.  Must be coordinate sorted.") public File INPUT;
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to right marked records to") public File OUTPUT;
-    @Option(shortName="M", doc="File to write duplication metrics to") public File METRICS_FILE;
-    @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.") public boolean REMOVE_DUPLICATES = false;
+
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to analyze.  Must be coordinate sorted.")
+    public File INPUT;
+
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to right marked records to")
+    public File OUTPUT;
+
+    @Option(shortName="M", doc="File to write duplication metrics to")
+    public File METRICS_FILE;
+
+    @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
+    public boolean REMOVE_DUPLICATES = false;
 
     @Option(doc="If true, assume that the input file is coordinate sorted, even if the header says otherwise.",
-    shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+            shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
+
+    @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
+            "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
+            "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
+            "The regular expression should contain three capture groups for the three variables, in order.")
+    public String READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*";
+
+    @Option(doc="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
+            "should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the " +
+            "Illumina pipeline that multiply pixel values by 10, in which case 50-100 is more normal.")
+    public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = 100;
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
@@ -73,6 +95,10 @@ public class MarkDuplicates extends CommandLineProgram {
 
     final private Map<String,Short> libraryIds = new HashMap<String,Short>();
     private short nextLibraryId = 1;
+
+    // Variables used for optical duplicate detection and tracking
+    private Pattern READ_NAME_PATTERN;
+    private final Histogram<Short> opticalDupesByLibraryId = new Histogram<Short>();
 
     /** Stock main method. */
     public static void main(final String[] args) {
@@ -90,6 +116,11 @@ public class MarkDuplicates extends CommandLineProgram {
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(METRICS_FILE);
 
+        // Prepare a few things that are used later
+        if (this.READ_NAME_REGEX != null) {
+            this.READ_NAME_PATTERN = Pattern.compile(READ_NAME_REGEX);
+        }
+
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists();
@@ -97,6 +128,7 @@ public class MarkDuplicates extends CommandLineProgram {
         generateDuplicateIndexes();
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
+        log.info("Found " + ((long) this.opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters.");
 
         final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SAMFileReader in  = new SAMFileReader(INPUT);
@@ -170,9 +202,20 @@ public class MarkDuplicates extends CommandLineProgram {
 
         // Write out the metrics
         final MetricsFile<DuplicationMetrics,Double> file = getMetricsFile();
-        for (final DuplicationMetrics metrics : metricsByLibrary.values()) {
+        for (final Map.Entry<String,DuplicationMetrics> entry : metricsByLibrary.entrySet()) {
+            final String libraryName = entry.getKey();
+            final DuplicationMetrics metrics = entry.getValue();
+
             metrics.READ_PAIRS_EXAMINED = metrics.READ_PAIRS_EXAMINED / 2;
             metrics.READ_PAIR_DUPLICATES = metrics.READ_PAIR_DUPLICATES / 2;
+
+            // Add the optical dupes to the metrics
+            Short libraryId = this.libraryIds.get(libraryName);
+            Histogram<Short>.Bin bin = this.opticalDupesByLibraryId.get(libraryId);
+            if (bin != null) {
+                metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
+            }
+
             metrics.calculateDerivedMetrics();
             file.addMetric(metrics);
         }
@@ -311,6 +354,28 @@ public class MarkDuplicates extends CommandLineProgram {
 
         // Fill in the library ID
         ends.libraryId = getLibraryId(header, rec);
+
+        // Fill in the location information for optical duplicates
+        if (READ_NAME_PATTERN != null) {
+            final Matcher m = READ_NAME_PATTERN.matcher(rec.getReadName());
+            if (m.matches()) {
+                ends.tile = (byte) Integer.parseInt(m.group(1));
+                ends.x    = (short) Integer.parseInt(m.group(2));
+                ends.y    = (short) Integer.parseInt(m.group(3));
+
+                // calculate the RG number (nth in list)
+                ends.readGroup = 0;
+                final String rg = (String) rec.getAttribute("RG");
+                final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
+
+                if (rg != null && readGroups != null) {
+                    for (SAMReadGroupRecord readGroup : readGroups) {
+                        if (readGroup.getReadGroupId().equals(rg)) break;
+                        else ends.readGroup++;
+                    }
+                }
+            }
+        }
 
         return ends;
     }
@@ -480,6 +545,40 @@ public class MarkDuplicates extends CommandLineProgram {
                 addIndexAsDuplicate(end.read1IndexInFile);
                 addIndexAsDuplicate(end.read2IndexInFile);
             }
+        }
+
+        trackOpticalDuplicates(list);
+    }
+
+    /**
+     * Looks through the set of reads and identifies how many of the duplicates are
+     * in fact optical duplicates, and stores the data in the instance level histogram.
+     */
+    private void trackOpticalDuplicates(final List<ReadEnds> list) {
+        final int length = list.size();
+        final boolean[] opticalDuplicateFlags = new boolean[list.size()];
+
+        for (int i=0; i<length; ++i) {
+            ReadEnds lhs = list.get(i);
+
+            for (int j=i+1; j<length; ++j) {
+                ReadEnds rhs = list.get(j);
+
+                if (lhs.readGroup == rhs.readGroup && lhs.tile >= 0 && lhs.tile == rhs.tile) {
+                    final int xDiff = Math.abs(lhs.x - rhs.x);
+                    final int yDiff = Math.abs(lhs.y - rhs.y);
+
+                    if (xDiff <= OPTICAL_DUPLICATE_PIXEL_DISTANCE && yDiff <= OPTICAL_DUPLICATE_PIXEL_DISTANCE) {
+                        opticalDuplicateFlags[j] = true;
+                    }
+                }
+            }
+        }
+
+        int opticalDuplicates = 0;
+        for (boolean b: opticalDuplicateFlags) if (b) ++opticalDuplicates;
+        if (opticalDuplicates > 0) {
+            this.opticalDupesByLibraryId.increment(list.get(0).libraryId, opticalDuplicates);
         }
     }
 

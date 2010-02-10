@@ -62,6 +62,12 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
                 this.out.writeInt(read.read2Coordinate);
                 this.out.writeLong(read.read2IndexInFile);
             }
+
+            this.out.writeShort(read.readGroup);
+            this.out.writeByte(read.tile);
+            this.out.writeShort(read.x);
+            this.out.writeShort(read.y);
+
             this.out.flush();
         }
         catch (IOException ioe) {
@@ -87,6 +93,12 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
                 read.read2Coordinate  = this.in.readInt();
                 read.read2IndexInFile = this.in.readLong();
             }
+
+            read.readGroup = this.in.readShort();
+            read.tile      = this.in.readByte();
+            read.x         = this.in.readShort();
+            read.y         = this.in.readShort();
+
             return read;
         }
         catch (IOException ioe) {

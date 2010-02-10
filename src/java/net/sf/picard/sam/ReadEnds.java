@@ -25,8 +25,10 @@ package net.sf.picard.sam;
 
 /** Little struct-like class to hold read pair (and fragment) end data for MarkDuplicates. */
 class ReadEnds {
-    public static final int SIZE_OF = (1*1) + (2*1) + (4*4) + (8*2) + 8 + // last 8 == reference overhead
-                                                                 13; // This is determined experimentally with JProfiler
+    public static final int SIZE_OF = (1*1) + (2*1) + (4*4) + (8*2) + 2 + 1 + 2 + 2 
+            + 8 + // last 8 == reference overhead
+            13; // This is determined experimentally with JProfiler
+
     public static final byte F=0, R=1, FF=2, FR=3, RR=4, RF=5;
 
     short libraryId;
@@ -38,6 +40,12 @@ class ReadEnds {
     int read2Sequence     = -1;
     int read2Coordinate   = -1;
     long read2IndexInFile = -1;
+
+    // Information used to detect optical dupes
+    short readGroup = -1;
+    byte tile = -1;
+    short x = -1, y = -1;
+
 
     boolean isPaired() { return this.read2Sequence != -1; }
 }

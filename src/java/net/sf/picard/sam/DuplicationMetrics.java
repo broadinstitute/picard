@@ -50,6 +50,12 @@ public class DuplicationMetrics extends MetricBase {
     /** The number of read pairs that were marked as duplicates. */
     public long READ_PAIR_DUPLICATES;
 
+    /**
+     * The number of read pairs duplicates that were caused by optical duplication.
+     * Value is always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.
+     */
+    public long READ_PAIR_OPTICAL_DUPLICATES;
+
     /** The percentage of mapped sequence that is marked as duplicate. */
     public Double PERCENT_DUPLICATION;
 
@@ -61,7 +67,8 @@ public class DuplicationMetrics extends MetricBase {
      * possible and the PERCENT_DUPLICATION.
      */
     public void calculateDerivedMetrics() {
-        this.ESTIMATED_LIBRARY_SIZE = estimateLibrarySize(this.READ_PAIRS_EXAMINED, this.READ_PAIRS_EXAMINED - this.READ_PAIR_DUPLICATES);
+        this.ESTIMATED_LIBRARY_SIZE = estimateLibrarySize(this.READ_PAIRS_EXAMINED - this.READ_PAIR_OPTICAL_DUPLICATES,
+                                                          this.READ_PAIRS_EXAMINED - this.READ_PAIR_DUPLICATES);
 
         PERCENT_DUPLICATION = (UNPAIRED_READ_DUPLICATES + READ_PAIR_DUPLICATES *2) /(double) (UNPAIRED_READS_EXAMINED + READ_PAIRS_EXAMINED *2);
     }
