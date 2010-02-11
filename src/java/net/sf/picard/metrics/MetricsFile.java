@@ -88,6 +88,12 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         this.histograms.add(histogram);
     }
 
+    /** Returns the number of histograms added to the metrics file. */
+    public int getNumHistograms() 
+    {
+    	return this.histograms.size();
+    }
+    
     /** Returns the list of headers with the specified type. */
     public List<Header> getHeaders(Class<? extends Header> type) {
         List<Header> tmp = new ArrayList<Header>();
