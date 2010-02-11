@@ -39,7 +39,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     private String valueLabel = "VALUE";
     private Double mean;
 
-    /** Constructs a new Histogram with default bin and value labels. */ 
+    /** Constructs a new Histogram with default bin and value labels. */
     public Histogram() { }
 
     /** Constructs a new Histogram with supplied bin and value labels. */
@@ -163,7 +163,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         if (mean == null) {
             mean = getSum() / getCount();
         }
-        
+
         return mean;
     }
 
@@ -236,7 +236,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
         return count / total;
     }
-    
+
     public double getMedian() {
         double total = 0;
         final double halfCount = getCount() / 2;
@@ -249,27 +249,34 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         return 0;
     }
 
-    /** Gets the mode of the distribution (i.e. the largest bin). */
+    /** Returns id of the Bin that's the mode of the distribution (i.e. the largest bin). */
     public double getMode() {
-        Bin mode = null;
+
+        return getModeBin().getIdValue();
+    }
+
+    /** Returns the Bin that's the mode of the distribution (i.e. the largest bin). */
+    private Bin getModeBin() {
+        Bin modeBin = null;
 
         for (final Bin bin : values()) {
-            if (mode == null || mode.value < bin.value) {
-                mode = bin;
+            if (modeBin == null || modeBin.value < bin.value) {
+                modeBin = bin;
             }
         }
 
-        return mode.getIdValue();
+        return modeBin;
     }
+
 
     public double getMin() {
         return firstEntry().getValue().getIdValue();
     }
-    
+
     public double getMax() {
         return lastEntry().getValue().getIdValue();
     }
-    
+
     public double getCount() {
         double count = 0;
         for (final Bin bin : values()) {
@@ -282,17 +289,18 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     /**
      * Trims the histogram when the bins in the tail of the distribution contain fewer than mode/tailLimit items
      */
-    public void trim(int tailLimit) {
+    public void trim(final int tailLimit) {
         if (isEmpty()) {
             return;
         }
 
-        double mode = getMode();
-        double sizeOfModeBin = get((int) mode).getValue();
-        double minimumBinSize = sizeOfModeBin/tailLimit;
+        final Bin modeBin = getModeBin();
+        final double mode = modeBin.getIdValue();
+        final double sizeOfModeBin = modeBin.getValue();
+        final double minimumBinSize = sizeOfModeBin/tailLimit;
         Histogram<K>.Bin lastBin = null;
 
-        List<K> binsToKeep = new ArrayList<K>();
+        final List<K> binsToKeep = new ArrayList<K>();
         for (Histogram<K>.Bin bin : values()) {
             double binId = ((Number)bin.getId()).doubleValue();
 
@@ -308,11 +316,13 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
             lastBin = bin;
         }
 
-       Object keys[] = keySet().toArray();
+        final Object keys[] = keySet().toArray();
         for (Object binId : keys) {
             if (!binsToKeep.contains((K)binId)) {
                 remove(binId);
             }
         }
     }
+
+
 }
