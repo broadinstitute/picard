@@ -46,8 +46,7 @@ import java.util.regex.Pattern;
  * All the continuous blocks in a chain must map from a single "from" sequence to a single "to" sequence.  All the
  * continuous blocks in a chain map from the positive strand in the "from" genome build to the same strand in the
  * "to" genome build.  The gaps in between the continuous blocks in a chain represent un-lift-overable regions.
- * A gap in a chain must not be found in another chain.  If so, the chain containing the gap should be split into
- * two chains.
+ * A gap in a chain may be found in another chain (e.g. if a portion of a sequence is reversed in the "to" genome).
  *
  * In UCSC liftOver terminology, the "target" is the "from" genome build, and the "query" is the "to" genome build.
  * E.g. when mapping from HG18 to HG19, the HG18 coordinates are "target" and HG19 is "query."  The USCS terminology
@@ -83,8 +82,8 @@ class Chain {
     final int toChainStart;
     /** End of range covered in "to" sequence. */
     final int toChainEnd;
-    /** ID of chain in file. Not used, so not stored. */
-    //final int id;
+    /** ID of chain in file.  */
+    final int id;
     private final List<ContinuousBlock> blockList = new ArrayList<ContinuousBlock>();
 
     /**
@@ -108,6 +107,7 @@ class Chain {
         this.fromSequenceName = fromSequenceName;
         this.fromSequenceSize = fromSequenceSize;
         this.fromChainStart = fromChainStart;
+        this.id = id;
     }
 
 

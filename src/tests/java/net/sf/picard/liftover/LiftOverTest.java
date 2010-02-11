@@ -30,6 +30,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author alecw@broadinstitute.org
@@ -372,6 +373,59 @@ public class LiftOverTest {
                 {new Interval("chr17", 59883988, 59884276), null},
                 {new Interval("chr17", 59887398, 59887512), null},
                 {new Interval("chrX", 48774611, 48775058), null},
+
+        };
+    }
+
+    @Test(dataProvider = "failingIntervals")
+    public void testDiagnosticLiftover(final Interval fromInterval) {
+        final List<LiftOver.PartialLiftover> partials = liftOver.diagnosticLiftover(fromInterval);
+        System.out.println("Diagnosing " + fromInterval + " (len " + fromInterval.length() + ")");
+        for (final LiftOver.PartialLiftover partial : partials) {
+            System.out.println(partial);
+        }
+    }
+
+    @DataProvider(name = "failingIntervals")
+    public Object[][] makeFailingIntervals() {
+        return new Object[][] {
+                {new Interval("chr3", 50911035, 50911051)},
+                {new Interval("chr2", 111013693, 111013832)},
+                {new Interval("chr3", 14174511, 14175398)},
+                {new Interval("chr3", 50911035, 50911051)},
+                {new Interval("chr6", 32071709, 32071869)},
+                {new Interval("chr6", 32072183, 32072358)},
+                {new Interval("chr6", 32104446, 32104606)},
+                {new Interval("chr6", 32104920, 32105095)},
+                {new Interval("chr7", 101995561, 101995739)},
+                {new Interval("chr7", 142178782, 142178825)},
+                {new Interval("chr7", 142179850, 142180013)},
+                {new Interval("chr7", 142181067, 142181324)},
+                {new Interval("chr7", 142181720, 142181860)},
+                {new Interval("chr7", 142182157, 142182313)},
+                {new Interval("chr15", 19335778, 19336302)},
+                {new Interval("chr17", 33364376, 33364428)},
+                {new Interval("chr17", 33546162, 33546214)},
+                {new Interval("chr17", 33706667, 33706736)},
+                {new Interval("chr17", 59772721, 59772781)},
+                {new Interval("chr17", 59779355, 59779421)},
+                {new Interval("chr17", 59781483, 59781540)},
+                {new Interval("chr17", 59783488, 59783565)},
+                {new Interval("chr17", 59784584, 59784615)},
+                {new Interval("chr17", 59786025, 59786136)},
+                {new Interval("chr17", 59787203, 59787494)},
+                {new Interval("chr17", 59791235, 59791514)},
+                {new Interval("chr17", 59794247, 59794502)},
+                {new Interval("chr17", 59801884, 59802193)},
+                {new Interval("chr17", 59804685, 59804982)},
+                {new Interval("chr17", 59817352, 59817382)},
+                {new Interval("chr17", 59817465, 59817532)},
+                {new Interval("chr17", 59875754, 59875812)},
+                {new Interval("chr17", 59875899, 59875944)},
+                {new Interval("chr17", 59879183, 59879456)},
+                {new Interval("chr17", 59883988, 59884276)},
+                {new Interval("chr17", 59887398, 59887512)},
+                {new Interval("chrX", 48774611, 48775058)},
 
         };
     }
