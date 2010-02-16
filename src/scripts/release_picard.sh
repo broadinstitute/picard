@@ -101,6 +101,9 @@ $EDITOR deploy/picard-tools/$RELEASE_ID/release_notes.txt
 cp dist/picard-tools-$RELEASE_ID.zip deploy/picard-tools/$RELEASE_ID/
 mkdir -p deploy/sam-jdk/$RELEASE_ID
 cp dist/sam-$RELEASE_ID.jar deploy/sam-jdk/$RELEASE_ID/
+
+scp -r javadoc alecw,picard@web.sourceforge.net:htdocs
+
 cd deploy
 scp -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
 scp -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
