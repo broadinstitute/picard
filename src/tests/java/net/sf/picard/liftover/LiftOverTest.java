@@ -24,25 +24,31 @@
 package net.sf.picard.liftover;
 
 import net.sf.picard.util.Interval;
+import net.sf.picard.util.OverlapDetector;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author alecw@broadinstitute.org
  */
 public class LiftOverTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/liftover");
+    private static final File CHAIN_FILE = new File(TEST_DATA_DIR, "hg18ToHg19.over.chain");
 
     private LiftOver liftOver;
 
     @BeforeClass
     public void initLiftOver() {
-        liftOver = new LiftOver(new File(TEST_DATA_DIR, "hg18ToHg19.over.chain"));
+        liftOver = new LiftOver(CHAIN_FILE);
     }
 
     @Test(dataProvider = "testIntervals")
@@ -428,5 +434,26 @@ public class LiftOverTest {
                 {new Interval("chrX", 48774611, 48775058)},
 
         };
+    }
+
+    @Test
+    public void testWriteChain() throws Exception {
+        final OverlapDetector<Chain> chains = Chain.loadChains(CHAIN_FILE);
+        File outFile = File.createTempFile("test.", ".chain");
+        outFile.deleteOnExit();
+        PrintWriter pw = new PrintWriter(outFile);
+        final Map<Integer, Chain> originalChainMap = new TreeMap<Integer, Chain>();
+        for (final Chain chain : chains.getAll()) {
+            chain.write(pw);
+            originalChainMap.put(chain.id, chain);
+        }
+        pw.close();
+
+        final OverlapDetector<Chain> newChains = Chain.loadChains(outFile);
+        final Map<Integer, Chain> newChainMap = new TreeMap<Integer, Chain>();
+        for (final Chain chain : newChains.getAll()) {
+            newChainMap.put(chain.id, chain);
+        }
+        Assert.assertEquals(newChainMap, originalChainMap);
     }
 }

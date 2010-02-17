@@ -30,6 +30,7 @@ import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.util.AsciiLineReader;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +62,8 @@ class Chain {
     // For parsing chain file
     private static final Pattern SPLITTER = Pattern.compile("\\s");
 
+    /** Score is not used in basic liftover implementation, but is stored so that chain can be written to disk. */
+    final double score;
     /** one-based, inclusive, so that Chain can be stored in an OverlapDetector */
     final Interval interval;
     /** Total score for chain is not used in basic liftover so not stored. */
@@ -94,8 +97,7 @@ class Chain {
           final int toChainStart, final int toChainEnd, final int id) {
         // Convert  to one-based, inclusive for Interval.
         interval = new Interval(fromSequenceName, fromChainStart + 1, fromChainEnd);
-        // Not used
-        //this.id = id;
+        this.score = score;
         this.toChainEnd = toChainEnd;
         this.toSequenceName = toSequenceName;
         this.toNegativeStrand = toNegativeStrand;
@@ -140,6 +142,28 @@ class Chain {
         int getToEnd() {
             return toStart + blockLength;
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            final ContinuousBlock that = (ContinuousBlock) o;
+
+            if (blockLength != that.blockLength) return false;
+            if (fromStart != that.fromStart) return false;
+            if (toStart != that.toStart) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = fromStart;
+            result = 31 * result + toStart;
+            result = 31 * result + blockLength;
+            return result;
+        }
     }
 
     private void addBlock(final int tStart, final int qStart, final int blockLength) {
@@ -158,6 +182,69 @@ class Chain {
      */
     List<ContinuousBlock> getBlocks() {
         return Collections.unmodifiableList(blockList);
+    }
+
+    void write(final PrintWriter writer) {
+        writer.printf("chain\t%f\t%s\t%d\t+\t%d\t%d\t%s\t%d\t%s\t%d\t%d\t%d\n",
+                score, fromSequenceName, fromSequenceSize, fromChainStart, fromChainEnd,
+                toSequenceName, toSequenceSize, (toNegativeStrand? "-": "+"), toChainStart, toChainEnd, id);
+        for (int i = 0; i < blockList.size() - 1; ++i) {
+            final ContinuousBlock thisBlock = blockList.get(i);
+            final ContinuousBlock nextBlock = blockList.get(i+1);
+
+            final int fromGap = nextBlock.fromStart - thisBlock.getFromEnd();
+            final int toGap = nextBlock.toStart - thisBlock.getToEnd();
+            writer.printf("%d\t%d\t%d\n", thisBlock.blockLength, fromGap, toGap);
+        }
+        writer.printf("%d\n", blockList.get(blockList.size() - 1).blockLength);
+        writer.println();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final Chain chain = (Chain) o;
+
+        if (fromChainEnd != chain.fromChainEnd) return false;
+        if (fromChainStart != chain.fromChainStart) return false;
+        if (fromSequenceSize != chain.fromSequenceSize) return false;
+        if (id != chain.id) return false;
+        if (Double.compare(chain.score, score) != 0) return false;
+        if (toChainEnd != chain.toChainEnd) return false;
+        if (toChainStart != chain.toChainStart) return false;
+        if (toNegativeStrand != chain.toNegativeStrand) return false;
+        if (toSequenceSize != chain.toSequenceSize) return false;
+        if (blockList != null ? !blockList.equals(chain.blockList) : chain.blockList != null) return false;
+        if (fromSequenceName != null ? !fromSequenceName.equals(chain.fromSequenceName) : chain.fromSequenceName != null)
+            return false;
+        if (interval != null ? !interval.equals(chain.interval) : chain.interval != null) return false;
+        if (toSequenceName != null ? !toSequenceName.equals(chain.toSequenceName) : chain.toSequenceName != null)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = score != +0.0d ? Double.doubleToLongBits(score) : 0L;
+        result = (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (interval != null ? interval.hashCode() : 0);
+        result = 31 * result + (fromSequenceName != null ? fromSequenceName.hashCode() : 0);
+        result = 31 * result + fromSequenceSize;
+        result = 31 * result + fromChainStart;
+        result = 31 * result + fromChainEnd;
+        result = 31 * result + (toSequenceName != null ? toSequenceName.hashCode() : 0);
+        result = 31 * result + toSequenceSize;
+        result = 31 * result + (toNegativeStrand ? 1 : 0);
+        result = 31 * result + toChainStart;
+        result = 31 * result + toChainEnd;
+        result = 31 * result + id;
+        result = 31 * result + (blockList != null ? blockList.hashCode() : 0);
+        return result;
     }
 
     /**
