@@ -808,7 +808,7 @@ public class SAMRecord implements Cloneable
      * @param tag Two-character tag name.
      * @return Appropriately typed tag value, or null if the requested tag is not present.
      */
-    public final Object getAttribute(final String tag) {
+    public Object getAttribute(final String tag) {
         return getAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag));
     }
 
@@ -818,7 +818,7 @@ public class SAMRecord implements Cloneable
      * @return The value of a tag, converted into an Integer if possible.
      * @throws RuntimeException If the value is not an integer type, or will not fit in an Integer.
      */
-    public final Integer getIntegerAttribute(final String tag) {
+    public Integer getIntegerAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof Integer) {
@@ -840,7 +840,7 @@ public class SAMRecord implements Cloneable
      * @return The value of a tag, converted into a Short if possible.
      * @throws RuntimeException If the value is not an integer type, or will not fit in a Short.
      */
-    public final Short getShortAttribute(final String tag) {
+    public Short getShortAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof Short) {
@@ -862,7 +862,7 @@ public class SAMRecord implements Cloneable
      * @return The value of a tag, converted into a Byte if possible.
      * @throws RuntimeException If the value is not an integer type, or will not fit in a Byte.
      */
-    public final Byte getByteAttribute(final String tag) {
+    public Byte getByteAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof Byte) {
@@ -878,7 +878,7 @@ public class SAMRecord implements Cloneable
         return (byte)longVal;
     }
 
-    public final String getStringAttribute(final String tag) {
+    public String getStringAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof String) {
@@ -887,7 +887,7 @@ public class SAMRecord implements Cloneable
         throw new SAMException("Value for tag " + tag + " is not a String: " + val.getClass());
     }
 
-    public final Character getCharacterAttribute(final String tag) {
+    public Character getCharacterAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof Character) {
@@ -896,7 +896,7 @@ public class SAMRecord implements Cloneable
         throw new SAMException("Value for tag " + tag + " is not a Character: " + val.getClass());
     }
 
-    public final Float getFloatAttribute(final String tag) {
+    public Float getFloatAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof Float) {
@@ -905,7 +905,7 @@ public class SAMRecord implements Cloneable
         throw new SAMException("Value for tag " + tag + " is not a Float: " + val.getClass());
     }
 
-    public final byte[] getByteArrayAttribute(final String tag) {
+    public byte[] getByteArrayAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
         if (val instanceof byte[]) {
@@ -938,7 +938,7 @@ public class SAMRecord implements Cloneable
      * Long with value between 0 and MAX_UINT is allowed for BAM but discouraged.  Attempting to write such a value
      * to SAM will cause an exception to be thrown.
      */
-    final public void setAttribute(final String tag, final Object value) {
+    public void setAttribute(final String tag, final Object value) {
         setAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag), value);
     }
 
@@ -1010,7 +1010,7 @@ public class SAMRecord implements Cloneable
     /**
      * @return list of {tag, value} tuples
      */
-    public final List<SAMTagAndValue> getAttributes() {
+    public List<SAMTagAndValue> getAttributes() {
         final List<SAMBinaryTagAndValue> binaryAttributes = getBinaryAttributes();
         final List<SAMTagAndValue> ret = new ArrayList<SAMTagAndValue>(binaryAttributes.size());
         for (final SAMBinaryTagAndValue tagAndValue : binaryAttributes) {
