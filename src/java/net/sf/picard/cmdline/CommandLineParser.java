@@ -72,6 +72,9 @@ public class CommandLineParser {
             "Usage: program [options...] [positional-arguments...]\n";
     private static final String OPTIONS_FILE = "OPTIONS_FILE";
 
+    private static final String PRECEDENCE_SYMBOL = "++";
+    private final Set<String> optionsThatCannotBeOverridden = new HashSet<String>();
+
     /**
      * A typical command line program will call this to get the beginning of the usage message,
      * and then append a description of the program, like this:
@@ -343,6 +346,14 @@ public class CommandLineParser {
 
     private boolean parseOption(String key, final String stringValue, final boolean optionsFile) {
         key = key.toUpperCase();
+
+        // Check to see if the precedence symbol was used
+        boolean precedenceSet = false;
+        if (key.startsWith(PRECEDENCE_SYMBOL)) {
+            key = key.substring(PRECEDENCE_SYMBOL.length());
+            precedenceSet = true;
+        }
+
         final OptionDefinition optionDefinition = optionMap.get(key);
         if (optionDefinition == null) {
             if (optionsFile) {
@@ -352,6 +363,15 @@ public class CommandLineParser {
             messageStream.println("ERROR: Unrecognized option: " + key);
             return false;
         }
+
+        // Check to see if the option has been "fixed" already
+        if (this.optionsThatCannotBeOverridden.contains(optionDefinition.name)) {
+            return true;
+        }
+        else if (precedenceSet) {
+            this.optionsThatCannotBeOverridden.add(optionDefinition.name);
+        }
+
         if (!optionDefinition.isCollection) {
             if (optionDefinition.hasBeenSet && !optionDefinition.hasBeenSetFromOptionsFile) {
                 messageStream.println("ERROR: Option '" + key + "' cannot be specified more than once.");
