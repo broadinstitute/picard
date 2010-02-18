@@ -28,10 +28,13 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Interval;
 import net.sf.picard.util.OverlapDetector;
 import net.sf.picard.util.Log;
+import net.sf.samtools.SAMSequenceDictionary;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Java port of UCSC liftOver.  Only the most basic liftOver functionality is implemented.
@@ -53,6 +56,18 @@ public class LiftOver {
     public LiftOver(File chainFile) {
         IoUtil.assertFileIsReadable(chainFile);
         chains = Chain.loadChains(chainFile);
+    }
+
+    /**
+     * Throw an exception if all the "to" sequence names in the chains are not found in the given sequence dictionary.
+     */
+    public void validateToSequences(final SAMSequenceDictionary sequenceDictionary) {
+        for (final Chain chain : chains.getAll()) {
+            if (sequenceDictionary.getSequence(chain.toSequenceName) == null) {
+                throw new PicardException("Sequence " + chain.toSequenceName + " from chain file is not found in sequence dictionary.");
+            }
+        }
+
     }
 
     /**

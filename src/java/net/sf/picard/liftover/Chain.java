@@ -31,9 +31,7 @@ import net.sf.samtools.util.AsciiLineReader;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -200,6 +198,65 @@ class Chain {
         writer.println();
     }
 
+    /**
+     * Throw an exception if Chain looks strange.
+     */
+    void validate() {
+        validatePositive("fromSequenceSize", fromSequenceSize);
+        validateNonNegative("fromChainStart", fromChainStart);
+        validateNonNegative("fromChainEnd", fromChainEnd);
+        validatePositive("toSequenceSize", toSequenceSize);
+        validateNonNegative("toChainStart", toChainStart);
+        validateNonNegative("toChainEnd", toChainEnd);
+        int fromLength = fromChainEnd - fromChainStart;
+        validatePositive("from length", fromLength);
+        int toLength = toChainEnd - toChainStart;
+        validatePositive("to length", toLength);
+        if (fromLength > fromSequenceSize) throw new PicardException("From chain length (" + fromLength +
+                ") < from sequence length (" + fromSequenceSize + ") for chain " + id);
+        if (toLength > toSequenceSize) throw new PicardException("To chain length (" + toLength +
+                ") < to sequence length (" + toSequenceSize + ") for chain " + id);
+        if (fromSequenceName.isEmpty()) throw new PicardException("Chain " + id + "has empty from sequence name.");
+        if (toSequenceName.isEmpty()) throw new PicardException("Chain " + id + "has empty to sequence name.");
+        if (blockList.isEmpty()) throw new PicardException("Chain " + id + " has empty block list.");
+        final ContinuousBlock firstBlock = blockList.get(0);
+        if (firstBlock.fromStart != fromChainStart) {
+            throw new PicardException("First block from start != chain from start for chain " + id);
+        }
+        if (firstBlock.toStart != toChainStart) {
+            throw new PicardException("First block to start != chain to start for chain " + id);
+        }
+        final ContinuousBlock lastBlock = blockList.get(blockList.size() - 1);
+        if (lastBlock.getFromEnd() != fromChainEnd) {
+            throw new PicardException("Last block from end != chain from end for chain " + id);
+        }
+        if (lastBlock.getToEnd() != toChainEnd) {
+            throw new PicardException("Last block to end < chain to end for chain " + id);
+        }
+        for (int i = 1; i < blockList.size(); ++i) {
+            final ContinuousBlock thisBlock = blockList.get(i);
+            final ContinuousBlock prevBlock = blockList.get(i-1);
+            if (thisBlock.fromStart < prevBlock.getFromEnd()) {
+                throw new PicardException("Continuous block " + i + " from starts before previous block ends for chain " + id);
+            }
+            if (thisBlock.toStart < prevBlock.getToEnd()) {
+                throw new PicardException("Continuous block " + i + " to starts before previous block ends for chain " + id);
+            }
+        }
+    }
+
+    private void validatePositive(final String attributeName, final int attribute) {
+        if (attribute <= 0) {
+            throw new PicardException(attributeName + " is not positive: " + attribute + " for chain " + id);
+        }
+    }
+
+    private void validateNonNegative(final String attributeName, final int attribute) {
+        if (attribute < 0) {
+            throw new PicardException(attributeName + " is negative: " + attribute + " for chain " + id);
+        }
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
@@ -253,10 +310,15 @@ class Chain {
      * @return OverlapDetector will all Chains from reader loaded into it.
      */
     static OverlapDetector<Chain> loadChains(final File chainFile) {
+        final Set<Integer> ids = new HashSet<Integer>();
         AsciiLineReader reader = new AsciiLineReader(IoUtil.openFileForReading(chainFile));
         final OverlapDetector<Chain> ret = new OverlapDetector<Chain>(0, 0);
         Chain chain;
         while ((chain = Chain.loadChain(reader, chainFile.toString())) != null) {
+            if (ids.contains(chain.id)) {
+                throw new PicardException("Chain id " + chain.id + " appears more than once in chain file.");
+            }
+            ids.add(chain.id);
             ret.addLhs(chain, chain.interval);
         }
         reader.close();
@@ -338,6 +400,7 @@ class Chain {
             }
 
         }
+        chain.validate();
         return chain;
     }
 
