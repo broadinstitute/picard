@@ -67,24 +67,13 @@ public class CleanSam extends CommandLineProgram {
         }
         SAMFileReader reader = new SAMFileReader(INPUT);
         SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-        for (final SAMRecord rec : reader) {
-            clipOverhangingAlignment(rec);
-            writer.addAlignment(rec);
+        CigarClippingIterator it = new CigarClippingIterator(reader.iterator());
+        while (it.hasNext()) {
+            writer.addAlignment(it.next());
         }
         writer.close();
-        reader.close();
+        it.close();
         return 0;
     }
 
-    private void clipOverhangingAlignment(final SAMRecord rec) {
-        if (!rec.getReadUnmappedFlag()) {
-            SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-            if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
-                // 1-based index of first base in read to clip.
-                int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-                List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
-                rec.setCigar(new Cigar(newCigarElements));
-            }
-        }
-    }
 }
