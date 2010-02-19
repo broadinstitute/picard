@@ -35,16 +35,14 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Tests for BamToFastq
  */
 public class SamToFastqTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/bam2fastq/paired");
+    private static final String CLIPPING_TEST_DATA = "ok/clipping_test.sam";
 
     @DataProvider(name = "okFiles")
     public Object[][] okFiles() {
@@ -54,6 +52,7 @@ public class SamToFastqTest {
             {"ok/first-mate-bof-last-mate-eof.sam"}, // :01 mate1, 4 pairs, :01 mate2
         };
     }
+    
 
     @DataProvider(name = "badFiles")
     public Object[][] badFiles() {
@@ -74,6 +73,51 @@ public class SamToFastqTest {
         program.SECOND_END_FASTQ = fastqFile2;
         Assert.assertEquals(program.doWork(), 0);
     }
+
+    @Test(dataProvider = "clippingTests")
+    public void testClipping(String clippingAction, String bases1_1, String quals1_1, String bases1_2, String quals1_2,
+                             String bases2_1, String quals2_1, String bases2_2, String quals2_2, String testName) throws IOException {
+        File f1 = File.createTempFile("clippingtest1", "fastq");
+        File f2 = File.createTempFile("clippingtest2", "fastq");
+        f1.deleteOnExit();
+        f2.deleteOnExit();
+        final SamToFastq program = new SamToFastq();
+        program.INPUT = new File(TEST_DATA_DIR, CLIPPING_TEST_DATA) ;
+        program.FASTQ = f1;
+        program.SECOND_END_FASTQ = f2;
+        if (clippingAction != null) {
+            program.CLIPPING_ACTION = clippingAction;
+            program.CLIPPING_ATTRIBUTE = "XT";
+        }
+        Assert.assertEquals(program.doWork(), 0);
+
+        Iterator<FastqRecord> it = new FastqReader(f1).iterator();
+        FastqRecord first = it.next();
+        Assert.assertEquals(first.getReadString(), bases1_1, testName);
+        Assert.assertEquals(first.getBaseQualityString(), quals1_1, testName);
+        FastqRecord second = it.next();
+        Assert.assertEquals(second.getReadString(), bases1_2, testName);
+        Assert.assertEquals(second.getBaseQualityString(), quals1_2, testName);
+        it = new FastqReader(f2).iterator();
+        first = it.next();
+        Assert.assertEquals(first.getReadString(), bases2_1, testName);
+        Assert.assertEquals(first.getBaseQualityString(), quals2_1, testName);
+        second = it.next();
+        Assert.assertEquals(second.getReadString(), bases2_2, testName);
+        Assert.assertEquals(second.getBaseQualityString(), quals2_2, testName);
+    }
+
+    @DataProvider(name = "clippingTests")
+    public Object[][] clippingTests() {
+        return new Object[][] {
+            {null, "AAAAAAAAAA", "1111111111", "AAAAAAAAAA", "1111111111", "CCCCCCCCCC", "2222222222", "GGGGGGGGGG", "2222222222", "No clipping test"},
+            {"X",  "AAAAAAA",    "1111111",    "AAAAAA",     "111111",     "CCCCCCCC",   "22222222",   "GGGGGG",     "222222",     "Cut clipped bases test"},
+            {"N",  "AAAAAAANNN", "1111111111", "AAAAAANNNN", "1111111111", "CCCCCCCCNN", "2222222222", "GGGGGGNNNN", "2222222222", "Mask clipped bases test"},
+            {"2",  "AAAAAAAAAA", "1111111###", "AAAAAAAAAA", "111111####", "CCCCCCCCCC", "22222222##", "GGGGGGGGGG", "222222####", "Change clipped qualities test"}
+        };
+    }
+
+
 
     @Test(dataProvider = "okFiles")
     public void testOkFile(final String samFilename) throws IOException {

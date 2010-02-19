@@ -33,6 +33,7 @@ import net.sf.picard.fastq.FastqWriter;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMUtils;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
@@ -69,6 +70,18 @@ public class SamToFastq extends CommandLineProgram {
 
     @Option(shortName="NON_PF", doc="Include non-PF reads from the SAM file into the output FASTQ files.")
     public boolean INCLUDE_NON_PF_READS = false;
+
+    @Option(shortName="CLIP_ATTR", doc="The attribute that stores the position at which " +
+            "the SAM record should be clipped", optional=true)
+    public String CLIPPING_ATTRIBUTE;
+
+    @Option(shortName="CLIP_ACT", doc="The action that should be taken with clipped reads: " +
+            "'X' means the reads and qualities should be trimmed at the clipped position; " +
+            "'N' means the bases should be changed to Ns in the clipped region; and any " +
+            "integer means that the base qualities should be set to that value in the " +
+            "clipped region.", optional=true)
+    public String CLIPPING_ACTION;
+
 
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
@@ -151,12 +164,65 @@ public class SamToFastq extends CommandLineProgram {
         final String seqHeader = mateNumber==null ? read.getReadName() : read.getReadName() + "/"+ mateNumber;
         String readString = read.getReadString();
         String baseQualities = read.getBaseQualityString();
+
+        // If we're clipping, do the right thing to the bases or qualities
+        if (CLIPPING_ATTRIBUTE != null) {
+            Integer clipPoint = (Integer)read.getAttribute(CLIPPING_ATTRIBUTE);
+            if (clipPoint != null) {
+                if (CLIPPING_ACTION.equalsIgnoreCase("X")) {
+                    readString = clip(readString, clipPoint, null,
+                            !read.getReadNegativeStrandFlag());
+                    baseQualities = clip(baseQualities, clipPoint, null,
+                            !read.getReadNegativeStrandFlag());
+
+                }
+                else if (CLIPPING_ACTION.equalsIgnoreCase("N")) {
+                    readString = clip(readString, clipPoint, 'N',
+                            !read.getReadNegativeStrandFlag());
+                }
+                else {
+                    char newQual = SAMUtils.phredToFastq(
+                            new byte[] { (byte)Integer.parseInt(CLIPPING_ACTION)}).charAt(0);
+                    baseQualities = clip(baseQualities, clipPoint, newQual,
+                            !read.getReadNegativeStrandFlag());
+                }
+            }
+        }
         if ( RE_REVERSE && read.getReadNegativeStrandFlag() ) {
-            readString = SequenceUtil.reverseComplement(read.getReadString());
-            baseQualities = StringUtil.reverseString(read.getBaseQualityString());
+            readString = SequenceUtil.reverseComplement(readString);
+            baseQualities = StringUtil.reverseString(baseQualities);
         }
         writer.write(new FastqRecord(seqHeader, readString, "", baseQualities));
 
+    }
+
+    /**
+     * Utility method to handle the changes required to the base/quality strings by the clipping
+     * parameters.
+     *
+     * @param src           The string to clip
+     * @param point         The 1-based position of the first clipped base in the read
+     * @param replacement   If non-null, the character to replace in the clipped positions
+     *                      in the string (a quality score or 'N').  If null, just trim src
+     * @param posStrand     Whether the read is on the positive strand
+     * @return String       The clipped read or qualities
+     */
+    private String clip(String src, int point, Character replacement, boolean posStrand) {
+        int len = src.length();
+        String result = posStrand ? src.substring(0, point-1) : src.substring(len-point+1);
+        if (replacement != null) {
+            if (posStrand) {
+                for (int i = point; i <= len; i++ ) {
+                    result += replacement;
+                }
+            }
+            else {
+                for (int i = 0; i <= len-point; i++) {
+                    result = replacement + result;
+                }
+            }
+        }
+        return result;
     }
 
     private void assertPairedMates(final SAMRecord record1, final SAMRecord record2) {
@@ -164,5 +230,36 @@ public class SamToFastq extends CommandLineProgram {
                record2.getFirstOfPairFlag() && record1.getSecondOfPairFlag() ) ) {
             throw new PicardException("Illegal mate state");
         }
+    }
+
+
+    /**
+    * Put any custom command-line validation in an override of this method.
+    * clp is initialized at this point and can be used to print usage and access argv.
+     * Any options set by command-line parser can be validated.
+    * @return null if command line is valid.  If command line is invalid, returns an array of error
+    * messages to be written to the appropriate place.
+    */
+    protected String[] customCommandLineValidation() {
+        if ((CLIPPING_ATTRIBUTE != null && CLIPPING_ACTION == null) ||
+            (CLIPPING_ATTRIBUTE == null && CLIPPING_ACTION != null)) {
+            return new String[] {
+                    "Both or neither of CLIPPING_ATTRIBUTE and CLIPPING_ACTION should be set." };
+        }
+        if (CLIPPING_ACTION != null) {
+            if (CLIPPING_ACTION.equals("N") || CLIPPING_ACTION.equals("X")) {
+                // Do nothing, this is fine
+            }
+            else {
+                try {
+                    Integer.parseInt(CLIPPING_ACTION);
+                }
+                catch (NumberFormatException nfe) {
+                    return new String[] {"CLIPPING ACTION must be one of: N, X, or an integer"};
+                }
+            }
+        }
+
+        return null;
     }
 }
