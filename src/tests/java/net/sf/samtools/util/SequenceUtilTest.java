@@ -23,9 +23,12 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMTag;
 import net.sf.samtools.SAMTextHeaderCodec;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -77,5 +80,30 @@ public class SequenceUtilTest {
         final String s = HEADER +
                 String.format("@SQ\tSN:phix174.seq\tLN:%d\tUR:%s\tAS:PhiX174\tM5:%s\n", length, ur, m5);
         return new SAMTextHeaderCodec().decode(new StringLineReader(s), null).getSequenceDictionary();
+    }
+
+    @Test(dataProvider = "makeReferenceFromAlignment")
+    public void testMakeReferenceFromAlignment(final String seq, final String cigar, final String md,
+                                               boolean includeReferenceBasesForDeletions,
+                                               final String expectedReference) {
+        final SAMRecord rec = new SAMRecord(null);
+        rec.setReadName("test");
+        rec.setReadString(seq);
+        rec.setCigarString(cigar);
+        rec.setAttribute(SAMTag.MD.name(), md);
+        final byte[] refBases = SequenceUtil.makeReferenceFromAlignment(rec, includeReferenceBasesForDeletions);
+        Assert.assertEquals(StringUtil.bytesToString(refBases), expectedReference);
+    }
+
+    @DataProvider(name = "makeReferenceFromAlignment")
+    public Object[][] testMakeReferenceFromAlignmentDataProvider() {
+        return new Object[][] {
+                {"ACGTACGTACGT", "12M2H", "4GAAA4", true, "ACGTGAAAACGT"},
+                {"ACGTACGTACGT", "2H12M", "12", false, "ACGTACGTACGT"},
+                {"ACGTACGTACGT", "4M4I4M2H", "8", false, "ACGT----ACGT"},
+                {"ACGTACGTACGT", "2S4M2I4M2S", "8", false, "00GTAC--ACGT00"},      
+                {"ACGTACGTACGT", "6M2D6M2H", "4GA^TT0TG4", true, "ACGTGATTTGACGT"},
+                {"ACGTACGTACGT", "6M2D6M2H", "4GA^TT0TG4", false, "ACGTGATGACGT"},
+        };
     }
 }

@@ -23,9 +23,12 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.picard.PicardException;
 import net.sf.samtools.*;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SequenceUtil {
     /** Byte typed variables for all normal bases. */
@@ -471,4 +474,166 @@ public class SequenceUtil {
         return false;
     }
 
+
+    /*
+     * Regexp for MD string.
+     *
+     * \G = end of previous match.
+     * (?:[0-9]+) non-capturing (why non-capturing?) group of digits.  For this number of bases read matches reference.
+     *  - or -
+     * Single reference base for case in which reference differs from read.
+     *  - or -
+     * ^one or more reference bases that are deleted in read.
+     *
+     */
+    static final Pattern mdPat = Pattern.compile("\\G(?:([0-9]+)|([ACTGNactgn])|(\\^[ACTGNactgn]+))");
+
+    /**
+     * Produce reference bases from an aligned SAMRecord with MD string and Cigar.
+     * @param rec Must contain non-empty CIGAR and MD attribute.
+     * @param includeReferenceBasesForDeletions If true, include reference bases that are deleted in the read.
+     * This will make the returned array not line up with the read if there are deletions.
+     * @return References bases corresponding to the read.  If there is an insertion in the read, reference contains
+     * '-'.  If the read is soft-clipped, reference contains '0'.
+     */
+    public static byte[] makeReferenceFromAlignment(final SAMRecord rec, boolean includeReferenceBasesForDeletions) {
+        final String md = rec.getStringAttribute(SAMTag.MD.name());
+        if (md == null) {
+            throw new PicardException("Cannot create reference from SAMRecord with no MD tag, read: " + rec.getReadName());
+        }
+        // Not sure how long output will be, but it will be no longer than this.
+        int maxOutputLength = 0;
+        final Cigar cigar = rec.getCigar();
+        if (cigar == null) {
+            throw new PicardException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
+        }
+        for (final CigarElement cigarElement : cigar.getCigarElements()) {
+            maxOutputLength += cigarElement.getLength();
+        }
+        final byte[] ret = new byte[maxOutputLength];
+        int outIndex = 0;
+
+        Matcher match = mdPat.matcher(md);
+        int curSeqPos = 0;
+
+        int savedBases = 0;
+        final byte[] seq = rec.getReadBases();
+        for (final CigarElement cigEl : cigar.getCigarElements())
+        {
+            int cigElLen = cigEl.getLength();
+            CigarOperator cigElOp = cigEl.getOperator();
+
+
+            // If it consumes reference bases, it's either a match or a deletion in the sequence
+            // read.  Either way, we're going to need to parse through the MD.
+            if (cigElOp.consumesReferenceBases())
+            {
+                // We have a match region, go through the MD
+                int basesMatched = 0;
+
+                // Do we have any saved matched bases?
+                while ((savedBases>0) && (basesMatched < cigElLen))
+                {
+                    ret[outIndex++] = seq[curSeqPos++];
+                    savedBases--;
+                    basesMatched++;
+                }
+
+                while (basesMatched < cigElLen)
+                {
+                    boolean matched = match.find();
+                    if (matched)
+                    {
+                        String mg;
+                        if ( ((mg = match.group(1)) !=null) && (mg.length() > 0) )
+                        {
+                            // It's a number , meaning a series of matches
+                            int num = Integer.parseInt(mg);
+                            for (int i = 0; i < num; i++)
+                            {
+                                if (basesMatched<cigElLen)
+                                {
+                                    ret[outIndex++] = seq[curSeqPos++];
+                                }
+                                else
+                                {
+                                    savedBases++;
+                                }
+                                basesMatched++;
+                            }
+                        }
+
+                        else if ( ((mg = match.group(2)) !=null) && (mg.length() > 0) )
+                        {
+                            // It's a single nucleotide, meaning a mismatch
+                            if (basesMatched<cigElLen)
+                            {
+                                ret[outIndex++] = StringUtil.charToByte(mg.charAt(0));
+                                curSeqPos++;
+                            }
+                            else
+                            {
+                                throw new IllegalStateException("Should never happen.");
+                            }
+                            basesMatched++;
+                        }
+                        else if ( ((mg = match.group(3)) !=null) && (mg.length() > 0) )
+                        {
+                            // It's a deletion, starting with a caret
+                            // don't include caret
+                            if (includeReferenceBasesForDeletions) {
+                                final byte[] deletedBases = StringUtil.stringToBytes(mg);
+                                System.arraycopy(deletedBases, 1, ret, outIndex, deletedBases.length - 1);
+                                outIndex += deletedBases.length - 1;
+                            }
+                            basesMatched += mg.length() - 1;
+
+                            // Check just to make sure.
+                            if (basesMatched != cigElLen)
+                            {
+                                throw new PicardException("Got a deletion in CIGAR (" + cigar + ", deletion " + cigElLen +
+                                        " length) with an unequal ref insertion in MD (" + md + ", md " + basesMatched + " length");
+                            }
+                            if (cigElOp != CigarOperator.DELETION)
+                            {
+                                throw new PicardException ("Got an insertion in MD ("+md+") without a corresponding deletion in cigar ("+cigar+")");
+                            }
+
+                        }
+                        else
+                        {
+                            matched = false;
+                        }
+                    }
+
+                    if (!matched)
+                    {
+                        throw new PicardException("Illegal MD pattern: " + md);
+                    }
+                }
+
+            }
+            else if (cigElOp.consumesReadBases())
+            {
+                // We have an insertion in read
+                for (int i = 0; i < cigElLen; i++)
+                {
+                    char c = (cigElOp == CigarOperator.SOFT_CLIP) ? '0' : '-';
+                    ret[outIndex++] =  StringUtil.charToByte(c);
+                    curSeqPos++;
+                }
+            }
+            else
+            {
+                // It's an op that consumes neither read nor reference bases.  Do we just ignore??
+            }
+
+        }
+        if (outIndex < ret.length) {
+            byte[] shorter = new byte[outIndex];
+            System.arraycopy(ret, 0, shorter, 0, outIndex);
+            return shorter;
+        }
+        return ret;
+    }
 }
