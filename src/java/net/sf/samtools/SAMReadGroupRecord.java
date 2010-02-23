@@ -90,6 +90,9 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
     public void setDescription(final String description) { setAttribute(DESCRIPTION_TAG, description); }
 
+    public Integer getPredictedMedianInsertSize() { return (Integer) getAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG); }
+    public void setPredictedMedianInsertSize(final Integer predictedMedianInsertSize) { setAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG, predictedMedianInsertSize); }
+
     /**
      * @return true if this == that except for the read group ID, which is arbitrary
      */
