@@ -228,7 +228,7 @@ public class SamToFastq extends CommandLineProgram {
     private void assertPairedMates(final SAMRecord record1, final SAMRecord record2) {
         if (! (record1.getFirstOfPairFlag() && record2.getSecondOfPairFlag() ||
                record2.getFirstOfPairFlag() && record1.getSecondOfPairFlag() ) ) {
-            throw new PicardException("Illegal mate state");
+            throw new PicardException("Illegal mate state: " + record1.getReadName());
         }
     }
 
