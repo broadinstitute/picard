@@ -1328,6 +1328,11 @@ public class SAMRecord implements Cloneable
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_MATE_UNMAPPED, "Mapped mate should have mate reference name", getReadName()));
             }
+            if (!getFirstOfPairFlagUnchecked() && !getSecondOfPairFlagUnchecked()) {
+                if (ret == null) ret = new ArrayList<SAMValidationError>();
+                ret.add(new SAMValidationError(SAMValidationError.Type.PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND,
+                        "Paired read should be marked as first of pair or second of pair.", getReadName()));
+            }
 /*
             TODO: PIC-97 This validation should be enabled, but probably at this point there are too many
             BAM files that have the proper pair flag set when read or mate is unmapped.

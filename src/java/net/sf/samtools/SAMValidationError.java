@@ -56,6 +56,9 @@ public class SAMValidationError {
         /** second of pair flag set for unpaired read */
         INVALID_FLAG_SECOND_OF_PAIR,
 
+        /** pair flag set but not marked as first or second of pair */
+        PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND(Severity.WARNING),
+
         /** not primary alignment flag set for unmapped read */
         INVALID_FLAG_NOT_PRIM_ALIGNMENT,
 
