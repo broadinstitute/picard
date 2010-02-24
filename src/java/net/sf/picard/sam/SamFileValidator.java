@@ -87,12 +87,15 @@ public class SamFileValidator {
      * 
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
+     * @return boolean  true if there are no validation errors, otherwise false
      */
-    public void validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
+    public boolean validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
         init(reference);
 
         validateSamFile(samReader, out);
-        
+
+        boolean result = errorsByType.isEmpty();
+
         if (errorsByType.getCount() > 0) {
             // Convert to a histogram with String IDs so that WARNING: or ERROR: can be prepended to the error type.
             final Histogram<String> errorsAndWarningsByType = new Histogram<String>("Error Type", "Count");
@@ -106,6 +109,7 @@ public class SamFileValidator {
             metricsFile.write(out);
         }
         cleanup();
+        return result;
     }
 
     /**
@@ -114,8 +118,9 @@ public class SamFileValidator {
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
      * processing will stop after this threshold has been reached
+     * @return boolean  true if there are no validation errors, otherwise false
      */
-    public void validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
+    public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
         init(reference);
 
         try {
@@ -123,8 +128,9 @@ public class SamFileValidator {
         } catch (MaxOutputExceededException e) {
             out.println("Maximum output of [" + maxVerboseOutput + "] errors reached.");
         }
-        
+        boolean result = errorsByType.isEmpty();
         cleanup();
+        return result;
     }
 
     public void validateBamFileTermination(final File inputFile) {

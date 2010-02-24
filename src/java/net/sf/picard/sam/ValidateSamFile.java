@@ -118,15 +118,17 @@ public class ValidateSamFile extends CommandLineProgram {
         }
         validator.validateBamFileTermination(INPUT);
 
+        boolean result = false;
+
         switch (MODE) {
             case SUMMARY:
-                validator.validateSamFileSummary(samReader, reference);
+                result = validator.validateSamFileSummary(samReader, reference);
                 break;
             case VERBOSE:
-                validator.validateSamFileVerbose(samReader, reference);
+                result = validator.validateSamFileVerbose(samReader, reference);
                 break;
         }
         
-        return 0;
+        return result ? 0 : 1;
     }
 }
