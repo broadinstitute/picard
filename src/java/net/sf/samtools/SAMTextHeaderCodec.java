@@ -170,8 +170,9 @@ public class SAMTextHeaderCodec {
                 samReadGroupRecord.setAttribute(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG,
                     Integer.parseInt(predictedMedianInsertSize));
             } catch (NumberFormatException e) {
-                throw new SAMFormatException(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG +
-                        " is not numeric: " + predictedMedianInsertSize, e);
+                reportErrorParsingLine(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG +
+                        " is not numeric: " + predictedMedianInsertSize, SAMValidationError.Type.INVALID_PREDICTED_MEDIAN_INSERT_SIZE,
+                        e);
             }
         }
 

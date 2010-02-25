@@ -162,7 +162,10 @@ public class SAMValidationError {
         INVALID_DATE_STRING(Severity.WARNING),
 
         /** Unsigned integer tag value is deprecated in BAM. */
-        TAG_VALUE_TOO_LARGE;
+        TAG_VALUE_TOO_LARGE,
+
+        /** PI tag value is not numeric. */
+        INVALID_PREDICTED_MEDIAN_INSERT_SIZE;
 
         public final Severity severity;
 
