@@ -163,7 +163,7 @@ public class FastqToSam extends CommandLineProgram {
         final SAMRecord srec = new SAMRecord(header);
         srec.setReadName(baseName);
         srec.setReadString(frec.getReadString());
-        srec.setReadUmappedFlag(true);
+        srec.setReadUnmappedFlag(true);
         srec.setAttribute(ReservedTagConstants.READ_GROUP_ID, READ_GROUP_NAME);
         final byte[] quals = StringUtil.stringToBytes(frec.getBaseQualityString());
         convertQuality(quals, QUALITY_FORMAT);

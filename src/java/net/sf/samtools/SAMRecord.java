@@ -716,9 +716,18 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * the query sequence itself is unmapped.
+     * the query sequence itself is unmapped.  This method name is misspelled.
+     * Use setReadUnmappedFlag instead.
+     * @deprecated
      */
     public void setReadUmappedFlag(final boolean flag) {
+        setReadUnmappedFlag(flag);
+    }
+
+    /**
+     * the query sequence itself is unmapped.
+     */
+    public void setReadUnmappedFlag(final boolean flag) {
         setFlag(flag, READ_UNMAPPED_FLAG);
         // Change to readUnmapped could change indexing bin
         setIndexingBin(null);

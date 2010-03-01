@@ -170,7 +170,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public void addUnmappedFragment(final String name) {
         final SAMRecord rec = new SAMRecord(this.header);
         rec.setReadName(name);
-        rec.setReadUmappedFlag(true);
+        rec.setReadUnmappedFlag(true);
         rec.setAttribute(SAMTag.RG.name(), READ_GROUP_ID);
         if (programRecord != null) {
             rec.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
@@ -244,7 +244,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
 
         end1.setReadName(name);
         end1.setReadPairedFlag(false);
-        end1.setReadUmappedFlag(true);
+        end1.setReadUnmappedFlag(true);
         end1.setProperPairFlag(false);
         end1.setFirstOfPairFlag(end1IsFirstOfPair);
         end1.setSecondOfPairFlag(!end1IsFirstOfPair);
@@ -256,7 +256,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
 
         end2.setReadName(name);
         end2.setReadPairedFlag(false);
-        end2.setReadUmappedFlag(true);
+        end2.setReadUnmappedFlag(true);
         end2.setProperPairFlag(false);
         end2.setFirstOfPairFlag(!end1IsFirstOfPair);
         end2.setSecondOfPairFlag(end1IsFirstOfPair);
