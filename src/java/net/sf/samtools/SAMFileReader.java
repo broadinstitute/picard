@@ -417,19 +417,24 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         try {
             final BufferedInputStream bufferedStream = new BufferedInputStream(new FileInputStream(file));
             if (isBAMFile(bufferedStream)) {
-                bufferedStream.close();
-                mIsBinary = true;
-                final BAMFileReader reader = new BAMFileReader(file, eagerDecode, validationStringency);
-                mReader = reader;
-                if (indexFile == null) {
-                    indexFile = findIndexFile(file);
-                }
-                if (indexFile != null) {
-                    mFileIndex = new BAMFileIndex(indexFile);
-                    reader.setFileIndex(mFileIndex);
-                    if (indexFile.lastModified() < file.lastModified()) {
-                        System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
-                                " is older than BAM " + file.getAbsolutePath());
+                if (!file.isFile()) {
+                    // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
+                    mReader = new BAMFileReader(bufferedStream, eagerDecode, validationStringency);
+                } else {
+                    bufferedStream.close();
+                    mIsBinary = true;
+                    final BAMFileReader reader = new BAMFileReader(file, eagerDecode, validationStringency);
+                    mReader = reader;
+                    if (indexFile == null) {
+                        indexFile = findIndexFile(file);
+                    }
+                    if (indexFile != null) {
+                        mFileIndex = new BAMFileIndex(indexFile);
+                        reader.setFileIndex(mFileIndex);
+                        if (indexFile.lastModified() < file.lastModified()) {
+                            System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
+                                    " is older than BAM " + file.getAbsolutePath());
+                        }
                     }
                 }
             } else if (isGzippedSAMFile(bufferedStream)) {
