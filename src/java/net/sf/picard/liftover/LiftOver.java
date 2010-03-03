@@ -26,15 +26,13 @@ package net.sf.picard.liftover;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Interval;
-import net.sf.picard.util.OverlapDetector;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.SAMSequenceDictionary;
 
-import java.io.*;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Java port of UCSC liftOver.  Only the most basic liftOver functionality is implemented.
