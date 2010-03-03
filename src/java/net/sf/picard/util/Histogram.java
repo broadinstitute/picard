@@ -289,7 +289,7 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     /**
      * Trims the histogram when the bins in the tail of the distribution contain fewer than mode/tailLimit items
      */
-    public void trim(final int tailLimit) {
+    public void trimByTailLimit(final int tailLimit) {
         if (isEmpty()) {
             return;
         }
@@ -314,6 +314,34 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
                 binsToKeep.add(bin.getId());
             }
             lastBin = bin;
+        }
+
+        final Object keys[] = keySet().toArray();
+        for (Object binId : keys) {
+            if (!binsToKeep.contains((K)binId)) {
+                remove(binId);
+            }
+        }
+    }
+
+    /**
+     * Trims the histogram so that only bins <= width are kept.
+     */
+    public void trimByWidth(final int width) {
+        if (isEmpty()) {
+            return;
+        }
+
+        final List<K> binsToKeep = new ArrayList<K>();
+        for (Histogram<K>.Bin bin : values()) {
+            System.err.println(bin.getIdValue() + "  < " + width);
+            double binId = ((Number)bin.getId()).doubleValue();
+            if (binId <= width) {
+                binsToKeep.add(bin.getId());
+            } else {
+                break;
+            }
+
         }
 
         final Object keys[] = keySet().toArray();
