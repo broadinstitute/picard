@@ -417,12 +417,12 @@ public class SAMFileReader implements Iterable<SAMRecord> {
         try {
             final BufferedInputStream bufferedStream = new BufferedInputStream(new FileInputStream(file));
             if (isBAMFile(bufferedStream)) {
+                mIsBinary = true;
                 if (!file.isFile()) {
                     // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
                     mReader = new BAMFileReader(bufferedStream, eagerDecode, validationStringency);
                 } else {
                     bufferedStream.close();
-                    mIsBinary = true;
                     final BAMFileReader reader = new BAMFileReader(file, eagerDecode, validationStringency);
                     mReader = reader;
                     if (indexFile == null) {
