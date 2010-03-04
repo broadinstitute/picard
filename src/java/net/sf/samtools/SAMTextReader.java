@@ -202,36 +202,29 @@ class SAMTextReader
          */
         private final String[] mFields = new String[10000];
 
-        private SAMRecord mCurrentRecord;
-
         private RecordIterator() {
-            assert(mReader != null);
-            if (mCurrentLine != null) {
-                parseLine();
+            if (mReader == null) {
+                throw new IllegalStateException("Reader is closed.");
             }
-
         }
 
         public void close() {
-            mCurrentRecord = null;
             SAMTextReader.this.close();
         }
 
         public boolean hasNext() {
-            return mCurrentRecord != null;
+            return mCurrentLine != null;
         }
 
         public SAMRecord next() {
             if (!hasNext()) {
                 throw new IllegalStateException("Cannot call next() on exhausted iterator");
             }
-            final SAMRecord ret = mCurrentRecord;
-            mCurrentRecord = null;
-            advanceLine();
-            if (mCurrentLine != null) {
-                parseLine();
+            try {
+                return parseLine();
+            } finally {
+                advanceLine();
             }
-            return ret;
         }
 
         public void remove() {
@@ -262,7 +255,7 @@ class SAMTextReader
             }
         }
 
-        private void parseLine() {
+        private SAMRecord parseLine() {
             final int numFields = StringUtil.split(mCurrentLine, mFields, '\t');
             if (numFields < NUM_REQUIRED_FIELDS) {
                 throw reportFatalErrorParsingLine("Not enough fields");
@@ -275,31 +268,31 @@ class SAMTextReader
                     reportErrorParsingLine("Empty field at position " + i + " (zero-based)");
                 }
             }
-            mCurrentRecord = new SAMRecord(mFileHeader);
-            mCurrentRecord.setValidationStringency(getValidationStringency());
-            mCurrentRecord.setHeader(mFileHeader);
-            mCurrentRecord.setReadName(mFields[QNAME_COL]);
+            final SAMRecord samRecord = new SAMRecord(mFileHeader);
+            samRecord.setValidationStringency(getValidationStringency());
+            samRecord.setHeader(mFileHeader);
+            samRecord.setReadName(mFields[QNAME_COL]);
 
             final int flags = parseInt(mFields[FLAG_COL], "FLAG");
-            mCurrentRecord.setFlags(flags);
+            samRecord.setFlags(flags);
 
             String rname = mFields[RNAME_COL];
             if (!rname.equals("*")) {
                 rname = SAMSequenceRecord.truncateSequenceName(rname);
                 validateReferenceName(rname, "RNAME");
-                mCurrentRecord.setReferenceName(rname);
-            } else if (!mCurrentRecord.getReadUnmappedFlag()) {
+                samRecord.setReferenceName(rname);
+            } else if (!samRecord.getReadUnmappedFlag()) {
                     reportErrorParsingLine("RNAME is not specified but flags indicate mapped");
                 }
 
             final int pos = parseInt(mFields[POS_COL], "POS");
             final int mapq = parseInt(mFields[MAPQ_COL], "MAPQ");
             final String cigar = mFields[CIGAR_COL];
-            if (!SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(mCurrentRecord.getReferenceName())) {
+            if (!SAMRecord.NO_ALIGNMENT_REFERENCE_NAME.equals(samRecord.getReferenceName())) {
                 if (pos == 0) {
                     reportErrorParsingLine("POS must be non-zero if RNAME is specified");
                 }
-                if (!mCurrentRecord.getReadUnmappedFlag() && cigar.equals("*")) {
+                if (!samRecord.getReadUnmappedFlag() && cigar.equals("*")) {
                     reportErrorParsingLine("CIGAR must not be '*' if RNAME is specified");
                 }
             } else {
@@ -313,18 +306,18 @@ class SAMTextReader
                     reportErrorParsingLine("CIGAR must be '*' if RNAME is not specified");
                 }
             }
-            mCurrentRecord.setAlignmentStart(pos);
-            mCurrentRecord.setMappingQuality(mapq);
-            mCurrentRecord.setCigarString(cigar);
+            samRecord.setAlignmentStart(pos);
+            samRecord.setMappingQuality(mapq);
+            samRecord.setCigarString(cigar);
 
             String mateRName = mFields[MRNM_COL];
             if (mateRName.equals("*")) {
-                if (mCurrentRecord.getReadPairedFlag() && !mCurrentRecord.getMateUnmappedFlag()) {
+                if (samRecord.getReadPairedFlag() && !samRecord.getMateUnmappedFlag()) {
                     reportErrorParsingLine("MRNM not specified but flags indicate mate mapped");
                 }
             }
             else {
-                if (!mCurrentRecord.getReadPairedFlag()) {
+                if (!samRecord.getReadPairedFlag()) {
                     reportErrorParsingLine("MRNM specified but flags indicate unpaired");
                 }
                 if (!"=".equals(mateRName)) {
@@ -332,18 +325,18 @@ class SAMTextReader
                 }
                 validateReferenceName(mateRName, "MRNM");
                 if (mateRName.equals("=")) {
-                    if (mCurrentRecord.getReferenceName() == null) {
+                    if (samRecord.getReferenceName() == null) {
                         reportErrorParsingLine("MRNM is '=', but RNAME is not set");
                     }
-                    mCurrentRecord.setMateReferenceName(mCurrentRecord.getReferenceName());
+                    samRecord.setMateReferenceName(samRecord.getReferenceName());
                 } else {
-                    mCurrentRecord.setMateReferenceName(mateRName);
+                    samRecord.setMateReferenceName(mateRName);
                 }
             }
 
             final int matePos = parseInt(mFields[MPOS_COL], "MPOS");
             final int isize = parseInt(mFields[ISIZE_COL], "ISIZE");
-            if (!mCurrentRecord.getMateReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME)) {
+            if (!samRecord.getMateReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME)) {
                 if (matePos == 0) {
                     reportErrorParsingLine("MPOS must be non-zero if MRNM is specified");
                 }
@@ -355,36 +348,37 @@ class SAMTextReader
                     reportErrorParsingLine("ISIZE must be zero if MRNM is not specified");
                 }
             }
-            mCurrentRecord.setMateAlignmentStart(matePos);
-            mCurrentRecord.setInferredInsertSize(isize);
+            samRecord.setMateAlignmentStart(matePos);
+            samRecord.setInferredInsertSize(isize);
             if (!mFields[SEQ_COL].equals("*")) {
                 validateReadBases(mFields[SEQ_COL]);
-                mCurrentRecord.setReadString(mFields[SEQ_COL]);
+                samRecord.setReadString(mFields[SEQ_COL]);
             } else {
-                mCurrentRecord.setReadBases(SAMRecord.NULL_SEQUENCE);
+                samRecord.setReadBases(SAMRecord.NULL_SEQUENCE);
             }
             if (!mFields[QUAL_COL].equals("*")) {
-                if (mCurrentRecord.getReadBases() == SAMRecord.NULL_SEQUENCE) {
+                if (samRecord.getReadBases() == SAMRecord.NULL_SEQUENCE) {
                     reportErrorParsingLine("QUAL should not be specified if SEQ is not specified");
                 }
-                if (mCurrentRecord.getReadString().length() != mFields[QUAL_COL].length()) {
+                if (samRecord.getReadString().length() != mFields[QUAL_COL].length()) {
                     reportErrorParsingLine("length(QUAL) != length(SEQ)");
                 }
-                mCurrentRecord.setBaseQualityString(mFields[QUAL_COL]);
+                samRecord.setBaseQualityString(mFields[QUAL_COL]);
             } else {
-                mCurrentRecord.setBaseQualities(SAMRecord.NULL_QUALS);
+                samRecord.setBaseQualities(SAMRecord.NULL_QUALS);
             }
 
             for (int i = NUM_REQUIRED_FIELDS; i < numFields; ++i) {
-                parseTag(mFields[i]);
+                parseTag(samRecord, mFields[i]);
             }
 
-            final List<SAMValidationError> validationErrors = mCurrentRecord.isValid();
+            final List<SAMValidationError> validationErrors = samRecord.isValid();
             if (validationErrors != null) {
                 for (final SAMValidationError errorMessage : validationErrors) {
                     reportErrorParsingLine(errorMessage.getMessage());
                 }
             }
+            return samRecord;
         }
 
         private void validateReadBases(final String bases) {
@@ -393,7 +387,7 @@ class SAMTextReader
             }
         }
 
-        private void parseTag(final String tag) {
+        private void parseTag(final SAMRecord samRecord, final String tag) {
             Map.Entry<String, Object> entry = null;
             try {
                 entry = tagCodec.decode(tag);
@@ -401,7 +395,7 @@ class SAMTextReader
                 reportErrorParsingLine(e);
             }
             if (entry != null) {
-                mCurrentRecord.setAttribute(entry.getKey(), entry.getValue());
+                samRecord.setAttribute(entry.getKey(), entry.getValue());
             }
         }
     }
