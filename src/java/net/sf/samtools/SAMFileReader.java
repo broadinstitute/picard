@@ -37,7 +37,7 @@ import java.net.URL;
 /**
  * Class for reading and querying SAM/BAM files.  Delegates to appropriate concrete implementation.
  */
-public class SAMFileReader implements Iterable<SAMRecord> {
+public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
 
     private static ValidationStringency defaultValidationStringency = ValidationStringency.DEFAULT_STRINGENCY;
 
