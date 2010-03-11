@@ -25,22 +25,34 @@
 
 package net.sf.picard.sam;
 
+import static org.testng.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileWriter;
+import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.util.SequenceUtil;
-import static org.testng.Assert.assertEquals;
-
 import net.sf.samtools.util.StringUtil;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.*;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 
 /**
@@ -138,6 +150,62 @@ public class SamFileHeaderMergerTest {
             }
         }
     }
+
+    @Test(dataProvider="data")
+    public void testProgramGroupAndReadGroupMerge(File inputFiles[], File expectedOutputFile) throws IOException {
+
+        BufferedReader reader = new BufferedReader( new FileReader(expectedOutputFile) );
+
+        String line;
+        String expected_output = "";
+        while((line = reader.readLine()) != null) {
+            expected_output += line + "\n";
+        }
+
+        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        for (final File inFile : inputFiles) {
+            IoUtil.assertFileIsReadable(inFile);
+            final SAMFileReader in = new SAMFileReader(inFile);
+            // We are now checking for zero-length reads, so suppress complaint about that.
+            in.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            readers.add(in);
+        }
+        final MergingSamRecordIterator iterator;
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.coordinate, true);
+        iterator = new MergingSamRecordIterator(headerMerger, false);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        SAMFileWriter writer = new SAMFileWriterFactory().makeSAMWriter(headerMerger.getMergedHeader(), true, baos);
+        while (iterator.hasNext()) {
+            writer.addAlignment(iterator.next());
+        }
+        writer.close();
+
+        String actual_output = StringUtil.bytesToString(baos.toByteArray());
+
+        Assert.assertEquals(actual_output, expected_output);
+    }
+
+    @DataProvider(name="data")
+    private Object[][] getProgramGroupAndReadGroupMergeData() {
+
+        return new Object[][] {
+            {
+                new File[] {
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file1.sam"),
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file2.sam") },
+                new File(TEST_DATA_DIR, "MergeSamFiles/case1/expected_output.sam")
+            }, {
+                new File[] {
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case2/chr11sub_file1.sam"),
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case2/chr11sub_file2.sam"),
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case2/chr11sub_file3.sam"),
+                        new File(TEST_DATA_DIR, "MergeSamFiles/case2/chr11sub_file4.sam") },
+                new File(TEST_DATA_DIR, "MergeSamFiles/case2/expected_output.sam")
+            }
+        };
+    }
+
 
     @Test(expectedExceptions = {PicardException.class})
     public void testUnmergeableSequenceDictionary() {

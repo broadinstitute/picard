@@ -30,11 +30,17 @@ import java.util.*;
  */
 public class SAMProgramRecord extends AbstractSAMHeaderRecord {
     public static final String PROGRAM_GROUP_ID_TAG = "ID";
-    private static final String PROGRAM_VERSION_TAG = "VN";
-    private static final String COMMAND_LINE_TAG = "CL";
-    private final String mProgramGroupId;
-    public static final Set<String> STANDARD_TAGS =
-            new HashSet<String>(Arrays.asList(PROGRAM_GROUP_ID_TAG, PROGRAM_VERSION_TAG, COMMAND_LINE_TAG));
+    public static final String PROGRAM_NAME_TAG = "PN";
+    public static final String PROGRAM_VERSION_TAG = "VN";
+    public static final String COMMAND_LINE_TAG = "CL";
+    public static final String PREVIOUS_PROGRAM_GROUP_ID_TAG = "PP";
+    private String mProgramGroupId;
+    public static final Set<String> STANDARD_TAGS = Collections.unmodifiableSet(
+            new HashSet<String>(Arrays.asList(PROGRAM_GROUP_ID_TAG,
+                    PROGRAM_NAME_TAG,
+                    PROGRAM_VERSION_TAG,
+                    COMMAND_LINE_TAG,
+                    PREVIOUS_PROGRAM_GROUP_ID_TAG)) );
 
     public SAMProgramRecord(final String programGroupId) {
         this.mProgramGroupId = programGroupId;
@@ -47,8 +53,20 @@ public class SAMProgramRecord extends AbstractSAMHeaderRecord {
         }
     }
 
+    public String getId() {
+        return getProgramGroupId();
+    }
+
     public String getProgramGroupId() {
         return mProgramGroupId;
+    }
+
+    public String getProgramName() {
+        return (String)getAttribute(PROGRAM_NAME_TAG);
+    }
+
+    public void setProgramName(final String name) {
+        setAttribute(PROGRAM_NAME_TAG, name);
     }
 
     public String getProgramVersion() {
@@ -66,6 +84,16 @@ public class SAMProgramRecord extends AbstractSAMHeaderRecord {
     public void setCommandLine(final String commandLine) {
         setAttribute(COMMAND_LINE_TAG, commandLine);
     }
+
+    public String getPreviousProgramGroupId() {
+        return (String)getAttribute(PREVIOUS_PROGRAM_GROUP_ID_TAG);
+    }
+
+    public void setPreviousProgramGroupId(final String id) {
+        setAttribute(PREVIOUS_PROGRAM_GROUP_ID_TAG, id);
+    }
+
+
 
     /**
      * @return true if this == that except for the program group ID, which is arbitrary

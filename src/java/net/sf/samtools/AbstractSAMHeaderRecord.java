@@ -23,9 +23,9 @@
  */
 package net.sf.samtools;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 
 /**
  * Base class for the various concrete records in a SAM header, providing uniform
@@ -54,8 +54,20 @@ public abstract class AbstractSAMHeaderRecord {
         }
     }
 
+    /**
+     * Returns the Set of attributes.
+     */
     public Set<Map.Entry<String,Object>> getAttributes() {
         return mAttributes.entrySet();
+    }
+
+
+    /**
+     * Returns the ID tag (or equivalent) for this header record. The
+     * default implementation throws a PicardException to indicate "not implemented".
+     */
+    public String getId() {
+        throw new UnsupportedOperationException("Method not implemented for: " + this.getClass());
     }
 
     /**

@@ -58,13 +58,14 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
         }
     }
 
+    public String getId() { return getReadGroupId();  }
     public String getReadGroupId() { return mReadGroupId; }
 
-    public String getSample() { return (String) getAttribute("SM"); }
-    public void setSample(final String value) { setAttribute("SM", value); }
+    public String getSample() { return (String) getAttribute(READ_GROUP_SAMPLE_TAG); }
+    public void setSample(final String value) { setAttribute(READ_GROUP_SAMPLE_TAG, value); }
 
-    public String getLibrary() { return (String) getAttribute("LB"); }
-    public void setLibrary(final String value) { setAttribute("LB", value); }
+    public String getLibrary() { return (String) getAttribute(LIBRARY_TAG); }
+    public void setLibrary(final String value) { setAttribute(LIBRARY_TAG, value); }
 
     public String getPlatformUnit() { return (String) getAttribute(PLATFORM_UNIT_TAG); }
     public void setPlatformUnit(final String pu) { setAttribute(PLATFORM_UNIT_TAG, pu); }
@@ -96,7 +97,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     /**
      * @return true if this == that except for the read group ID, which is arbitrary
      */
-    public boolean equivalent(final SAMReadGroupRecord that) { 
+    public boolean equivalent(final SAMReadGroupRecord that) {
         return attributesEqual(that);
     }
 
