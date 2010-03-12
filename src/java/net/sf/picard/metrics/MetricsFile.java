@@ -340,8 +340,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
                 // Now read the values
                 while ((line = in.readLine()) != null) {
-                    line = line.trim();
-                    if ("".equals(line)) {
+                    if ("".equals(line.trim())) {
                         break;
                     }
                     else {
@@ -350,7 +349,6 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
                         try { bean = (BEAN) type.newInstance(); }
                         catch (Exception e) { throw new PicardException("Error instantiating a " + type.getName(), e); }
-
 
                         for (int i=0; i<fields.length; ++i) {
                             Object value = null;
