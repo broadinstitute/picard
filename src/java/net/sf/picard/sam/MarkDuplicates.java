@@ -55,7 +55,6 @@ public class MarkDuplicates extends CommandLineProgram {
      * If more than this many sequences in SAM file, don't spill to disk because there will not
      * be enough file handles.
      */
-    private static final int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 500;
 
     @Usage public final String USAGE =
             "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
@@ -87,6 +86,10 @@ public class MarkDuplicates extends CommandLineProgram {
             "should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the " +
             "Illumina pipeline that multiply pixel values by 10, in which case 50-100 is more normal.")
     public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = 100;
+    @Option(doc="The maximum number of sequences allowed in SAM file.  If this value is exceeded, program won't " +
+            "spill to disk (used to avoid situation where there are not enough file handles.", shortName="MAX_SEQS")
+    public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
+
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
