@@ -345,7 +345,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                         break;
                     }
                     else {
-                        String[] values = line.split(SEPARATOR);
+                        String[] values = line.split(SEPARATOR, -1);
                         BEAN bean = null;
 
                         try { bean = (BEAN) type.newInstance(); }
