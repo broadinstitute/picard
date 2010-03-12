@@ -23,6 +23,11 @@
  */
 package net.sf.picard.cmdline;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Print out the usage for one or more CommandLinePrograms in a form close to what is used in the Sourceforge Picard website.
  *
@@ -32,8 +37,26 @@ public class CreateHtmlDocForProgram {
     public static void main(final String[] args) throws Exception {
         for (final String clazz : args) {
             CommandLineProgram mainClass = (CommandLineProgram)Class.forName(clazz).newInstance();
-            CommandLineParser clp = new CommandLineParser(mainClass);
+            CommandLineParserSuppressStandardOptions clp = new CommandLineParserSuppressStandardOptions(mainClass);
             clp.htmlUsage(System.out, mainClass.getClass().getSimpleName());
+        }
+    }
+
+    private static class CommandLineParserSuppressStandardOptions extends CommandLineParser {
+
+        private CommandLineParserSuppressStandardOptions(final Object callerOptions) {
+            super(callerOptions);
+        }
+
+        /**
+         * Override this method to suppress generating HTML help for "standard" options.
+         *
+         * @param optionDefinition
+         * @return true if HTML help should not be generated.
+         */
+        @Override
+        protected boolean isStandardOption(final CommandLineParser.OptionDefinition optionDefinition) {
+            return CommandLineProgram.getStandardOptions().contains(optionDefinition.name);
         }
     }
 }

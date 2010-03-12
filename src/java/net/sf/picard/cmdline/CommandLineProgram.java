@@ -24,9 +24,7 @@
 package net.sf.picard.cmdline;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import net.sf.picard.metrics.Header;
 import net.sf.picard.metrics.MetricBase;
@@ -62,6 +60,15 @@ import net.sf.samtools.util.BlockCompressedStreamConstants;
 
  */
 public abstract class CommandLineProgram {
+
+    /**
+     * List of all options in CommandLineProgram, so that these can be skipped when generating
+     * HTML help for a particular program.
+     */
+    private static final Set<String> STANDARD_OPTIONS =
+            Collections.unmodifiableSet(new HashSet<String>(
+                    Arrays.asList("TMP_DIR", "VERBOSITY", "QUIET", "VALIDATION_STRINGENCY",
+                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM")));
 
     @Option
     public File TMP_DIR = new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name"));
@@ -209,6 +216,10 @@ public abstract class CommandLineProgram {
 
     public String getCommandLine() {
         return commandLine;
+    }
+
+    public static Set<String> getStandardOptions() {
+        return STANDARD_OPTIONS;
     }
 }
 

@@ -183,10 +183,21 @@ public class CommandLineParser {
         stream.println("<table>");
         stream.println("<tr><th>Option</th><th>Description</th></tr>");
         for (final OptionDefinition optionDefinition : optionDefinitions) {
-            printHtmlOptionUsage(stream, optionDefinition);
+            if (!isStandardOption(optionDefinition)) {
+                printHtmlOptionUsage(stream, optionDefinition);
+            }
         }
         stream.println("</table>");
         stream.println("<br/>");
+    }
+
+    /**
+     * Override this method to suppress generating HTML help for "standard" options.
+     * @param optionDefinition
+     * @return true if HTML help should not be generated.
+     */
+    protected boolean isStandardOption(final OptionDefinition optionDefinition) {
+        return false;
     }
 
     /**
@@ -771,7 +782,7 @@ public class CommandLineParser {
         return argv;
     }
 
-    private static class OptionDefinition {
+    protected static class OptionDefinition {
         final Field field;
         final String name;
         final String shortName;
