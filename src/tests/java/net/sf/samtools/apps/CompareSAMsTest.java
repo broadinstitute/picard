@@ -41,7 +41,8 @@ public class CompareSAMsTest {
                 new File(TEST_FILES_DIR, f1).getAbsolutePath(),
                 new File(TEST_FILES_DIR, f2).getAbsolutePath()
         };
-        CompareSAMs compareSAMs = new CompareSAMs(samFiles);
+        CompareSAMs compareSAMs = new CompareSAMs();
+        compareSAMs.instanceMain(samFiles);
         Assert.assertEquals(areEqual, compareSAMs.areEqual());
         Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
         Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());
@@ -55,7 +56,8 @@ public class CompareSAMsTest {
                 new File(TEST_FILES_DIR, f2).getAbsolutePath(),
                 new File(TEST_FILES_DIR, f1).getAbsolutePath()
         };
-        compareSAMs = new CompareSAMs(samFilesReversed);
+        compareSAMs = new CompareSAMs();
+        compareSAMs.instanceMain(samFilesReversed);
         Assert.assertEquals(areEqual, compareSAMs.areEqual());
         Assert.assertEquals(expectedMatch, compareSAMs.getMappingsMatch());
         Assert.assertEquals(expectedDiffer, compareSAMs.getMappingsDiffer());

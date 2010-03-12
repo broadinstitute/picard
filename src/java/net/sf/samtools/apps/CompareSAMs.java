@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.picard.cmdline.CommandLineProgram;
+import net.sf.picard.cmdline.PositionalArguments;
+import net.sf.picard.cmdline.Usage;
 import net.sf.samtools.*;
 
 /**
@@ -36,28 +39,18 @@ import net.sf.samtools.*;
 
  * @author alecw@broadinstitute.org
  */
-public class CompareSAMs {
-    public static void main(final String[] argv) {
-        if (argv.length != 2) {
-            System.err.println("ERROR: Incorrect number of arguments");
-            usage();
-            System.exit(1);
-        }
-        final CompareSAMs compareSAMs = new CompareSAMs(argv);
-        if (!compareSAMs.areEqual()) {
-            System.exit(1);
-        }
-    }
+public class CompareSAMs extends CommandLineProgram {
 
-    private static void usage() {
-        System.err.println("USAGE: CompareSAMS <SAMFile1> <SAMFile2>");
-        System.err.println("Compares the headers of the two input SAM or BAM files, and, if possible, the SAMRecords.");
-        System.err.println("For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand.");
-        System.err.println("Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input,");
-        System.err.println("or are missing in one of the files");
-    }
+    @Usage
+    public final String USAGE = "USAGE: CompareSAMS <SAMFile1> <SAMFile2>\n" +
+        "Compares the headers of the two input SAM or BAM files, and, if possible, the SAMRecords. " +
+        "For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand. " +
+        "Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input, " +
+        "or are missing in one of the files";
 
-    private final String[] samFiles;
+    @PositionalArguments(minElements = 2, maxElements = 2)
+    public List<File> samFiles;
+
     private final SAMFileReader[] samReaders = new SAMFileReader[2];
     private boolean sequenceDictionariesDiffer;
     private int mappingsMatch = 0;
@@ -69,10 +62,20 @@ public class CompareSAMs {
     private int missingRight = 0;
     private boolean areEqual;
 
-    public CompareSAMs(final String[] samFiles) {
-        this.samFiles = samFiles;
-        for (int i = 0; i < samFiles.length; ++i) {
-            samReaders[i] = new SAMFileReader(new File(samFiles[i]));
+   public static void main(String[] argv) {
+        new CompareSAMs().instanceMainWithExit(argv);
+    }
+
+    /**
+     * Do the work after command line has been parsed. RuntimeException may be
+     * thrown by this method, and are reported appropriately.
+     *
+     * @return program exit status.
+     */
+    @Override
+    protected int doWork() {
+        for (int i = 0; i < samFiles.size(); ++i) {
+            samReaders[i] = new SAMFileReader(samFiles.get(i));
         }
         areEqual = compareHeaders();
         areEqual = compareAlignments() && areEqual;
@@ -82,6 +85,7 @@ public class CompareSAMs {
         } else {
             System.out.println("SAM files match.");
         }
+        return 0;
     }
 
     private void printReport() {
@@ -463,8 +467,8 @@ public class CompareSAMs {
 
     private void reportDifference(final String s1, final String s2, final String label) {
         System.out.println(label + " differs.");
-        System.out.println(samFiles[0] + ": " + s1);
-        System.out.println(samFiles[1] + ": " + s2);
+        System.out.println(samFiles.get(0) + ": " + s1);
+        System.out.println(samFiles.get(1) + ": " + s2);
     }
     private void reportDifference(Object o1, Object o2, final String label) {
         if (o1 == null) {
@@ -507,4 +511,5 @@ public class CompareSAMs {
     public boolean areEqual() {
         return areEqual;
     }
+
 }

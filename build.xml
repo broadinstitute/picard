@@ -36,6 +36,7 @@
     <property name="sam-version" value="1.16"/>
     <property name="picard-version" value="1.16"/>
     <property name="command_tmp" value=".command_tmp"/>
+    <property name="command-line-html-dir" value="${dist}/html"/>
 
 <!-- INIT -->
     <target name="init">
@@ -198,19 +199,21 @@
             <fileset dir="${classes}" includes="**/*"/>
         </copy>
 
+        <delete dir="${command-line-html-dir}"/>
 
-        <package-command main-class="net.sf.picard.sam.CleanSam" title="CleanSam"/>
-        <package-command main-class="net.sf.picard.sam.ReplaceSamHeader" title="ReplaceSamHeader"/>
+        <!-- The order of these elements determines the order they appear in the on-line help -->
+        <package-command main-class="net.sf.picard.sam.ValidateSamFile" title="ValidateSamFile"/>
         <package-command main-class="net.sf.picard.sam.SortSam" title="SortSam"/>
-        <package-command main-class="net.sf.picard.sam.SamFormatConverter" title="SamFormatConverter"/>
-        <package-command main-class="net.sf.samtools.apps.CompareSAMs" title="CompareSAMs"/>
         <package-command main-class="net.sf.picard.sam.MarkDuplicates" title="MarkDuplicates"/>
         <package-command main-class="net.sf.picard.sam.MergeSamFiles" title="MergeSamFiles"/>
         <package-command main-class="net.sf.picard.sam.ViewSam" title="ViewSam"/>
-        <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
-        <package-command main-class="net.sf.picard.sam.ValidateSamFile" title="ValidateSamFile"/>
+        <package-command main-class="net.sf.picard.sam.ReplaceSamHeader" title="ReplaceSamHeader"/>
         <package-command main-class="net.sf.picard.sam.SamToFastq" title="SamToFastq"/>
         <package-command main-class="net.sf.picard.sam.FastqToSam" title="FastqToSam"/>
+        <package-command main-class="net.sf.picard.sam.SamFormatConverter" title="SamFormatConverter"/>
+        <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
+        <package-command main-class="net.sf.picard.sam.CleanSam" title="CleanSam"/>
+        <package-command main-class="net.sf.samtools.apps.CompareSAMs" title="CompareSAMs"/>
     </target>
 
 <!-- ALL -->
@@ -241,6 +244,28 @@
                     <attribute name="Main-Class" value="@{main-class}"/>
                 </manifest>
             </jar>
+
+            <!-- For Sourceforge project website -->
+            <mkdir dir="${command-line-html-dir}/program_usage"/>
+
+            <!-- Generate HTML for each command -->
+            <java classname="net.sf.picard.cmdline.CreateHtmlDocForProgram"
+                  output="${command-line-html-dir}/program_usage/@{title}.shtml"
+                  failonerror="true">
+                <classpath>
+                    <pathelement location="${dist}/picard-${picard-version}.jar"/>
+                    <pathelement location="${dist}/sam-${sam-version}.jar"/>
+                </classpath>
+                <arg value="@{main-class}"/>
+            </java>
+
+            <!-- Generate links to each command -->
+            <echo file="${command-line-html-dir}/command-line-sidebar.shtml" append="true"
+                  message="&lt;li>&lt;a href=&quot;command-line-overview.shtml#@{title}&quot;>@{title}&lt;/a>${line.separator}"/>
+
+            <!-- include usage for each command -->
+            <echo  file="${command-line-html-dir}/command-line-usage.shtml" append="true"
+                    message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
         </sequential>
     </macrodef>
 

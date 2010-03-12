@@ -177,18 +177,35 @@ public class CommandLineParser {
     }
 
     public void htmlUsage(final PrintStream stream, final String programName) {
+        // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a name=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
-        stream.println("<p>" + usagePreamble + "</p>");
-        stream.println("<table>");
-        stream.println("<tr><th>Option</th><th>Description</th></tr>");
+        stream.println("<p>" + htmlEscape(usagePreamble) + "</p>");
+        boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!isStandardOption(optionDefinition)) {
-                printHtmlOptionUsage(stream, optionDefinition);
+                hasOptions = true;
+                break;
             }
         }
-        stream.println("</table>");
+        if (hasOptions) {
+            stream.println("<table>");
+            stream.println("<tr><th>Option</th><th>Description</th></tr>");
+            for (final OptionDefinition optionDefinition : optionDefinitions) {
+                if (!isStandardOption(optionDefinition)) {
+                    printHtmlOptionUsage(stream, optionDefinition);
+                }
+            }
+            stream.println("</table>");
+        }
         stream.println("<br/>");
+    }
+
+    private static String htmlEscape(String str) {
+        // May need more here
+        str = str.replaceAll("<", "&lt;");
+        str = str.replaceAll("\n", "\n<p>");
+        return str;
     }
 
     /**
@@ -478,7 +495,7 @@ public class CommandLineParser {
         final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
         String optionLabel = optionDefinition.name + "=" + type;
         stream.println("<tr><td>" + optionLabel + "</td><td>" +
-                makeOptionDescription(optionDefinition) + "</td></tr>");
+                htmlEscape(makeOptionDescription(optionDefinition)) + "</td></tr>");
     }
 
     private void printOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
