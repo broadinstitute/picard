@@ -66,6 +66,7 @@ public class SamFileValidator {
     private SAMSortOrderChecker orderChecker;
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
     private boolean ignoreWarnings = false;
+    private boolean bisulfiteSequenced = false;
 
     public SamFileValidator(final PrintWriter out) {
         this.out = out;
@@ -310,7 +311,8 @@ public class SamFileValidator {
                         recordNumber));
             } else if (refFileWalker != null) {
                 final ReferenceSequence refSequence = refFileWalker.get(record.getReferenceIndex());
-                final int actualNucleotideDiffs = SequenceUtil.calculateSamNmTag(record, refSequence.getBases());
+                final int actualNucleotideDiffs = SequenceUtil.calculateSamNmTag(record, refSequence.getBases(),
+                        0, isBisulfiteSequenced());
 
                 if (!tagNucleotideDiffs.equals(actualNucleotideDiffs)) {
                     addError(new SAMValidationError(
@@ -384,6 +386,9 @@ public class SamFileValidator {
         this.verbose = verbose;
         this.maxVerboseOutput = maxVerboseOutput;
     }
+
+    public boolean isBisulfiteSequenced() { return bisulfiteSequenced; }
+    public void setBisulfiteSequenced(boolean bisulfiteSequenced) { this.bisulfiteSequenced = bisulfiteSequenced; }
 
     public static class ValidationMetrics extends MetricBase {
     }

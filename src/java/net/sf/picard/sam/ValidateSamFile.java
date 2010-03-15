@@ -74,7 +74,10 @@ public class ValidateSamFile extends CommandLineProgram {
     @Option(doc="If true, only report errors, and ignore warnings.")
     public boolean IGNORE_WARNINGS = false;
 
-    
+    @Option (shortName="BISULFITE", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
+            "If so, C->T is not counted as an error in computing the value of the NM tag.")
+    public boolean IS_BISULFITE_SEQUENCED = false;
+
     
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
@@ -115,6 +118,9 @@ public class ValidateSamFile extends CommandLineProgram {
             validator.setVerbose(false, 0);
         } else {
             validator.setVerbose(true, MAX_OUTPUT);
+        }
+        if (IS_BISULFITE_SEQUENCED) {
+            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
         }
         validator.validateBamFileTermination(INPUT);
 
