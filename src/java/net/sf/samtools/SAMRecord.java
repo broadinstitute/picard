@@ -1362,7 +1362,7 @@ public class SAMRecord implements Cloneable
             }
             if (getMappingQuality() != 0) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
-                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_MAPPING_QUALITY, "MAPQ must should be 0 for unmapped read.", getReadName()));
+                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_MAPPING_QUALITY, "MAPQ should be 0 for unmapped read.", getReadName()));
             }
             if (getCigarLength() != 0) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
