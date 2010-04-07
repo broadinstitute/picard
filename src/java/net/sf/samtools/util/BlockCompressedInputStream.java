@@ -221,6 +221,11 @@ public class BlockCompressedInputStream
      * the two.
      */
     public long getFilePointer() {
+        if (mCurrentOffset == mCurrentBlock.length) {
+            // If current offset is at the end of the current block, file pointer should point
+            // to the beginning of the next block.
+            return (mBlockAddress + mLastBlockLength) << 16;
+        }
         return ((mBlockAddress << 16) | mCurrentOffset);
     }
 
@@ -257,6 +262,10 @@ public class BlockCompressedInputStream
         }
         int count = readBytes(mFileBuffer, 0, BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH);
         if (count == 0) {
+            // Handle case where there is no empty gzip block at end.
+            mCurrentOffset = 0;
+            mBlockAddress += mLastBlockLength;
+            mCurrentBlock = new byte[0];
             return;
         }
         if (count != BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH) {
