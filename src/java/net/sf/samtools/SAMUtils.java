@@ -25,6 +25,7 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -347,6 +348,40 @@ public final class SAMUtils
         }
         else if (validationStringency == SAMFileReader.ValidationStringency.LENIENT) {
             System.err.println("Ignoring SAM validation error: " + validationError);
+        }
+        
+    }
+
+
+    /**
+     * Chains <code>program</code> in front of the first "head" item in the list of
+     * SAMProgramRecords in <code>header</code>.  This method should not be used
+     * when there are multiple chains of program groups in a header, only when
+     * it can safely be assumed that there is only one chain.  It correctly handles
+     * the case where <code>program</code> has already been added to the header, so
+     * it can be used whether creating a SAMProgramRecord with a constructor or when
+     * calling SAMFileHeader.createProgramRecord().
+     */
+    public static void chainSAMProgramRecord(SAMFileHeader header, SAMProgramRecord program) {
+
+        List<SAMProgramRecord> pgs = header.getProgramRecords();
+        if (pgs.size() > 0) {
+            List<String> referencedIds = new ArrayList<String>();
+            for (SAMProgramRecord pg : pgs) {
+                if (pg.getPreviousProgramGroupId() != null) {
+                    referencedIds.add(pg.getPreviousProgramGroupId());
+                }
+            }
+            for (SAMProgramRecord pg : pgs) {
+                // if record being chained has already been added, ignore it
+                if (pg.getProgramGroupId().equals(program.getProgramGroupId())) {
+                    continue;
+                }
+                if (!referencedIds.contains(pg.getProgramGroupId())) {
+                    program.setPreviousProgramGroupId(pg.getProgramGroupId());
+                    break;
+                }
+            }
         }
     }
 }
