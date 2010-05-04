@@ -105,8 +105,13 @@ public class SAMTextHeaderCodec {
         }
         mFileHeader.setSequenceDictionary(new SAMSequenceDictionary(sequences));
         mFileHeader.setReadGroups(readGroups);
+
+        // Only store the header text if there was a parsing error or the it's less than 1MB on disk / 2MB in mem
+        if (!mFileHeader.getValidationErrors().isEmpty() || textHeader.length() < (1024 * 1024)) {
+            mFileHeader.setTextHeader(textHeader.toString());
+        }
+
         SAMUtils.processValidationErrors(mFileHeader.getValidationErrors(), -1, validationStringency);
-        mFileHeader.setTextHeader(textHeader.toString());
         return mFileHeader;
     }
 
