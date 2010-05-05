@@ -67,6 +67,7 @@ public class SamFileValidator {
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
     private boolean ignoreWarnings = false;
     private boolean bisulfiteSequenced = false;
+    private boolean sequenceDictionaryEmptyAndNoWarningEmitted = false;
 
     public SamFileValidator(final PrintWriter out) {
         this.out = out;
@@ -196,6 +197,11 @@ public class SamFileValidator {
                 }
                 validateSecondaryBaseCalls(record, recordNumber);
                 validateTags(record, recordNumber);
+                if (sequenceDictionaryEmptyAndNoWarningEmitted && !record.getReadUnmappedFlag()) {
+                    addError(new SAMValidationError(Type.MISSING_SEQUENCE_DICTIONARY, "Sequence dictionary is empty", null));
+                    sequenceDictionaryEmptyAndNoWarningEmitted = false;
+
+                }
                 recordNumber++;
             }
         } catch (SAMFormatException e) {
@@ -355,7 +361,7 @@ public class SamFileValidator {
                     null));
         }
         if (fileHeader.getSequenceDictionary().isEmpty()) {
-            addError(new SAMValidationError(Type.MISSING_SEQUENCE_DICTIONARY, "Sequence dictionary is empty", null));
+            sequenceDictionaryEmptyAndNoWarningEmitted = true;
         }
         if (fileHeader.getReadGroups().isEmpty()) {
             addError(new SAMValidationError(Type.MISSING_READ_GROUP, "Read groups is empty", null));
