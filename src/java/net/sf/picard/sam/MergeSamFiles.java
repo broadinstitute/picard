@@ -75,11 +75,26 @@ public class MergeSamFiles extends CommandLineProgram {
 
         // Open the files for reading and writing
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
-        for (final File inFile : INPUT) {
-            IoUtil.assertFileIsReadable(inFile);
-            final SAMFileReader in = new SAMFileReader(inFile);
-            readers.add(in);
-            matchedSortOrders = matchedSortOrders && in.getFileHeader().getSortOrder() == SORT_ORDER;
+        {
+            SAMSequenceDictionary dict = null; // Used to try and reduce redundant SDs in memory
+
+            for (final File inFile : INPUT) {
+                IoUtil.assertFileIsReadable(inFile);
+                final SAMFileReader in = new SAMFileReader(inFile);
+                readers.add(in);
+
+                // A slightly hackish attempt to keep memory consumption down when merging multiple files with
+                // large sequence dictionaries (10,000s of sequences). If the dictionaries are identical, then
+                // replace the duplicate copies with a single dictionary to reduce the memory footprint. 
+                if (dict == null) {
+                    dict = in.getFileHeader().getSequenceDictionary();
+                }
+                else if (dict.equals(in.getFileHeader().getSequenceDictionary())) {
+                    in.getFileHeader().setSequenceDictionary(dict);
+                }
+
+                matchedSortOrders = matchedSortOrders && in.getFileHeader().getSortOrder() == SORT_ORDER;
+            }
         }
 
         // If all the input sort orders match the output sort order then just merge them and
