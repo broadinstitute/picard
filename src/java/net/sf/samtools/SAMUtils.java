@@ -237,7 +237,7 @@ public final class SAMUtils
      * @param length How many bytes of buffer to convert.
      * @return String with ASCII representation of those quality scores.
      */
-    static String phredToFastq(final byte[] buffer, final int offset, final int length) {
+    public static String phredToFastq(final byte[] buffer, final int offset, final int length) {
         final char[] chars = new char[length];
         for (int i = 0; i < length; i++) {
             chars[i] = phredToFastq(buffer[offset+i] & 0xFF);
@@ -250,7 +250,7 @@ public final class SAMUtils
      * @param phredScore binary phred score.
      * @return Printable ASCII representation of phred score.
      */
-    static char phredToFastq(final int phredScore) {
+    public static char phredToFastq(final int phredScore) {
         if (phredScore < 0 || phredScore > MAX_PHRED_SCORE) {
             throw new IllegalArgumentException("Cannot encode phred score: " + phredScore);
         }
@@ -263,7 +263,7 @@ public final class SAMUtils
      * @param fastq Phred scores in FASTQ printable ASCII format.
      * @return byte array of binary phred scores in which each byte corresponds to a character in the input string.
      */
-    static byte[] fastqToPhred(final String fastq) {
+    public static byte[] fastqToPhred(final String fastq) {
         if (fastq == null) {
             return null;
         }
@@ -289,7 +289,7 @@ public final class SAMUtils
      * @param ch Printable ASCII FASTQ format phred score.
      * @return Binary phred score.
      */
-    static int fastqToPhred(final char ch) {
+    public static int fastqToPhred(final char ch) {
         if (ch < 33 || ch > 126) {
             throw new IllegalArgumentException("Invalid fastq character: " + ch);
         }
