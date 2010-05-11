@@ -26,6 +26,9 @@ package net.sf.picard.sam;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
@@ -33,12 +36,13 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.PicardException;
 import net.sf.samtools.*;
 
 /**
  * Reads a SAM or BAM file and combines the output to one file
  *
- * @author Dave Tefft
+ * @author Tim Fennell
  */
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
@@ -62,6 +66,14 @@ public class MergeSamFiles extends CommandLineProgram {
 
     @Option(shortName="MSD", doc="Merge the seqeunce dictionaries", optional=true)
     public boolean MERGE_SEQUENCE_DICTIONARIES = false;
+
+    @Option(doc="Option to enable a simple two-thread producer consumer version of the merge algorithm that " +
+            "uses one thread to read and merge the records from the input files and another thread to encode, " +
+            "compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases " +
+            "runtime by ~20% when writing out a compressed BAM file.")
+    public boolean USE_THREADING = false;
+
+    private static final int PROGRESS_INTERVAL = 1000000;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -121,13 +133,62 @@ public class MergeSamFiles extends CommandLineProgram {
         }
 
         // Lastly loop through and write out the records
-        for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
-            final SAMRecord record = iterator.next();
-            out.addAlignment(record);
-            if (numRecords % 10000000 == 0) {
-                log.info(numRecords + " records read.");
+        if (USE_THREADING) {
+            final BlockingQueue<SAMRecord> queue = new ArrayBlockingQueue<SAMRecord>(10000);
+            Runnable producer = new Runnable() {
+                public void run() {
+                    try {
+                        while (iterator.hasNext()) {
+                            queue.put(iterator.next());
+                        }
+                    }
+                    catch (InterruptedException ie) {
+                        throw new PicardException("Interrupted reading SAMRecord to merge.", ie);
+                    }
+                }
+            };
+
+            Runnable consumer = new Runnable() {
+                public void run() {
+                    try {
+                        long i = 0;
+                        SAMRecord rec = null;
+
+                        while ((rec = queue.poll(15, TimeUnit.SECONDS)) != null) {
+                            out.addAlignment(rec);
+                            if (++i % PROGRESS_INTERVAL == 0) log.info(i + " records processed.");
+                        }
+                    }
+                    catch (InterruptedException ie) {
+                        throw new PicardException("Interrupted writing SAMRecord to output file.", ie);
+                    }
+                }
+            };
+
+            Thread producerThread = new Thread(producer);
+            Thread consumerThread = new Thread(consumer);
+            producerThread.start();
+            consumerThread.start();
+
+            try {
+                consumerThread.join();
             }
+            catch (InterruptedException ie) {
+                throw new PicardException("Interrupted while waiting for threads to finished writing.", ie);
+            }
+
         }
+        else {
+            for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
+                final SAMRecord record = iterator.next();
+                out.addAlignment(record);
+                if (numRecords % PROGRESS_INTERVAL == 0) {
+                    log.info(numRecords + " records read.");
+                }
+            }
+
+        }
+
         log.info("Finished reading inputs.");
         out.close();
         return 0;
