@@ -28,4 +28,10 @@ public abstract class SeekableStream extends InputStream {
     public abstract void close() throws IOException;
 
     public abstract boolean eof() throws IOException;
+
+    /**
+     * @return String representation of source (e.g. URL, file path, etc.), or null if not available.
+     * Should end with .bam if not null.
+     */
+    public abstract String getSource();
 }

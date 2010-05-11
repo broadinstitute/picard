@@ -24,10 +24,7 @@
 package net.sf.samtools;
 
 
-import net.sf.samtools.util.BlockCompressedInputStream;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.IOUtil;
-import net.sf.samtools.util.RuntimeIOException;
+import net.sf.samtools.util.*;
 
 import java.io.*;
 import java.util.zip.GZIPInputStream;
@@ -160,11 +157,24 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * indexed query will be allowed.
      *
      * @param url         BAM.
-     * @param indexFile   Location of index file, or null in order to use the default index file (if present).
+     * @param indexFile   Location of index file, or null if indexed access not required.
      * @param eagerDecode eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final URL url, final File indexFile, final boolean eagerDecode) {
-        init(url, indexFile, eagerDecode, defaultValidationStringency);
+        init(new SeekableBufferedStream(new SeekableHTTPStream(url)),
+                indexFile, eagerDecode, defaultValidationStringency);
+    }
+
+    /**
+     * Read a BAM file via caller-supplied mechanism.  Indexed query will be allowed, but
+     * index file must be provided in that case.
+     * @param strm BAM -- If the stream is not buffered, caller should wrap in SeekableBufferedStream for
+     * better performance.
+     * @param indexFile Location of index file, or null indexed access not required.
+     * @param eagerDecode if true, decode SAM record entirely when reading it.
+     */
+    public SAMFileReader(final SeekableStream strm, final File indexFile, final boolean eagerDecode) {
+        init(strm, indexFile, eagerDecode, defaultValidationStringency);
     }
 
     public void close() {
@@ -381,33 +391,29 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         }
     }
 
-    /**
-     * @param url
-     * @param indexFile
-     * @param eagerDecode
-     */
-    private void init(final URL url, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
+
+    private void init(final SeekableStream strm, final File indexFile, final boolean eagerDecode,
+                      final ValidationStringency validationStringency) {
 
         try {
             // Its too expensive to examine the remote file to determine type.
             // Rely on file extension.
-            if (url.toString().toLowerCase().endsWith(".bam")) {
+            if (strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam")) {
                 mIsBinary = true;
-                final BAMFileReader reader = new BAMFileReader(url, eagerDecode, validationStringency);
+                final BAMFileReader reader = new BAMFileReader(strm, eagerDecode, validationStringency);
                 mReader = reader;
                 if (indexFile != null) {
                     mFileIndex = new BAMFileIndex(indexFile);
                     reader.setFileIndex(mFileIndex);
                 }
             } else {
-                throw new SAMFormatException("Unrecognized file format: " + url);
+                throw new SAMFormatException("Unrecognized file format: " + strm);
             }
             setValidationStringency(validationStringency);
         }
         catch (IOException e) {
             throw new RuntimeIOException(e);
         }
-
     }
 
 

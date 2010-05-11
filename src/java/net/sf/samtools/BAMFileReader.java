@@ -24,10 +24,7 @@
 package net.sf.samtools;
 
 
-import net.sf.samtools.util.BinaryCodec;
-import net.sf.samtools.util.BlockCompressedInputStream;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.StringLineReader;
+import net.sf.samtools.util.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 
 import java.io.*;
@@ -84,10 +81,9 @@ class BAMFileReader
         this(new BlockCompressedInputStream(file), eagerDecode, file.getAbsolutePath(), validationStringency);
     }
 
-
-    BAMFileReader(final URL url, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final SeekableStream strm, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        this(new BlockCompressedInputStream(url), eagerDecode, url.toString(), validationStringency);
+        this(new BlockCompressedInputStream(strm), eagerDecode, strm.getSource(), validationStringency);
     }
 
     private BAMFileReader(final BlockCompressedInputStream compressedInputStream, final boolean eagerDecode,

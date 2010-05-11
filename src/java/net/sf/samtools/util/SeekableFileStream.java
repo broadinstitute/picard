@@ -57,4 +57,9 @@ public class SeekableFileStream extends SeekableStream {
     public int read() throws IOException {
         return fis.read();  
     }
+
+    @Override
+    public String getSource() {
+        return file.getAbsolutePath();
+    }
 }

@@ -77,4 +77,8 @@ public class SeekableBufferedStream extends SeekableStream {
         return position >= wrappedStream.length();
     }
 
+    @Override
+    public String getSource() {
+        return wrappedStream.getSource();
+    }
 }

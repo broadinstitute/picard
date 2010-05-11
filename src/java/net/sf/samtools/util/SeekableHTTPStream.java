@@ -131,4 +131,9 @@ public class SeekableHTTPStream extends SeekableStream {
     public int read() throws IOException {
         throw new UnsupportedOperationException("read() not support for SeekableHTTPStreams");
     }
+
+    @Override
+    public String getSource() {
+        return url.toString();
+    }
 }

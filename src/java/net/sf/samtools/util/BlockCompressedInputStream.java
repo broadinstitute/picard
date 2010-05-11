@@ -77,7 +77,16 @@ public class BlockCompressedInputStream
 
     public BlockCompressedInputStream(final URL url) {
         mFile = new SeekableBufferedStream(new SeekableHTTPStream(url));
-        //mFile = new SeekableHTTPStream(url);
+        mStream = null;
+    }
+
+    /**
+     * For providing some arbitrary data source.  No additional buffering is
+     * provided, so if the underlying source is not buffered, wrap it in a
+     * SeekableBufferedStream before passing to this ctor.
+     */
+    public BlockCompressedInputStream(final SeekableStream strm) {
+        mFile = strm;
         mStream = null;
     }
 
