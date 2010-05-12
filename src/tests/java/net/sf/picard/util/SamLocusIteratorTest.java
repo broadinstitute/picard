@@ -47,7 +47,7 @@ public class SamLocusIteratorTest {
     @Test
     public void testBasicIterator() {
 
-        final String sqHeader = "@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
+        final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
         final String seq1  = "ACCTACGTTCAATATTACAGGCGAACATACTTACTA";
         final String qual1 = "++++++++++++++++++++++++++++++++++++"; // phred 10
         final String s1 = "3851612\t16\tchrM\t165\t255\t36M\t*\t0\t0\t" + seq1 + "\t" + qual1 + "\n";
@@ -70,7 +70,7 @@ public class SamLocusIteratorTest {
     @Test
     public void testQualityFilter() {
 
-        final String sqHeader = "@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
+        final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
         final String seq1  = "ACCTACGTTCAATATTACAGGCGAACATACTTACTA";
         final String qual1 = "++++++++++++++++++++++++++++++++++++"; // phred 10
         final String qual2 = "+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*"; // phred 10,9...
@@ -97,7 +97,7 @@ public class SamLocusIteratorTest {
      */
     @Test
     public void testSimpleGappedAlignment() {
-        final String sqHeader = "@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
+        final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
         final String seq1  = "ACCTACGTTCAATATTACAGGCGAACATACTTACTA";
         final String qual1 = "++++++++++++++++++++++++++++++++++++"; // phred 10
         final String s1 = "3851612\t16\tchrM\t165\t255\t3S3M3N3M3D3M3I18M3S\t*\t0\t0\t" + seq1 + "\t" + qual1 + "\n";
@@ -144,7 +144,7 @@ public class SamLocusIteratorTest {
      */
     @Test
     public void testOverlappingGappedAlignments() {
-        final String sqHeader = "@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
+        final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
         final String seq1  = "ACCTACGTTCAATATTACAGGCGAACATACTTACTA";
         final String qual1 = "++++++++++++++++++++++++++++++++++++"; // phred 10
         // Were it not for the gap, these two reads would not overlap

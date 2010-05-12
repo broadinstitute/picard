@@ -25,10 +25,7 @@ package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.filter.*;
-import net.sf.samtools.AlignmentBlock;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMSequenceRecord;
+import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.util.*;
@@ -43,6 +40,7 @@ import java.util.*;
  * @author alecw@broadinstitute.org
  */
 public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, CloseableIterator<SamLocusIterator.LocusInfo> {
+    private static final Log LOG = Log.getInstance(SamLocusIterator.class);
 
     /**
      * A SAMRecord plus the zero-based offset in the read corresponding to the position in LocusInfo
@@ -171,12 +169,19 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
     /**
      * Prepare to iterate through the given SAM records, skipping non-primary alignments
      *
+     * @param samReader must be coordinate sorted
      * @param intervalList Either the list of desired intervals, or null.  Note that if an intervalList is
      * passed in that is not coordinate sorted, it will eventually be coordinated sorted by this class.
      * @param useIndex If true, do indexed lookup to improve performance.  Not relevant if intervalList == null.
      * This can actually slow performance if the intervals are densely packed.
      */
     public SamLocusIterator(final SAMFileReader samReader, final IntervalList intervalList, final boolean useIndex) {
+        if (samReader.getFileHeader().getSortOrder() == null || samReader.getFileHeader().getSortOrder() == SAMFileHeader.SortOrder.unsorted) {
+            LOG.warn("SamLocusIterator constructed with samReader that has SortOrder == unsorted.  ", "" +
+                    "Assuming SAM is coordinate sorted, but exceptions may occur if it is not.");
+        } else if (samReader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException("SamLocusIterator cannot operate on a SAM file that is not coordinate sorted.");
+        }
         this.samReader = samReader;
         this.useIndex = useIndex;
         if (intervalList != null) {
