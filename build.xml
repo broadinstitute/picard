@@ -38,6 +38,21 @@
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
 
+    <property environment="env"/>
+
+    <!-- Tortuous way to set JAVA_HOME_1_5 property to JAVA_HOME_1_5 environment variable if it exists,
+     else set it to JAVA_HOME -->
+    <condition property="java_home_1.5_exists">
+        <isset property="env.JAVA_HOME_1_5"/>
+    </condition>
+    <target name="set_java_home_1.5_correctly" if="java_home_1.5_exists">
+        <property name="JAVA_HOME_1_5" value="${env.JAVA_HOME_1_5}"/>
+    </target>
+    <target  name="set_java_home_1.5_to_default_java_home" unless="java_home_1.5_exists">
+        <property name="JAVA_HOME_1_5" value="${java.home}"/>
+    </target>
+    <target  name="set_java_home_1.5" depends="set_java_home_1.5_correctly, set_java_home_1.5_to_default_java_home"/>
+
 <!-- INIT -->
     <target name="init">
         <path id="classpath">
@@ -64,16 +79,20 @@
 
     <target name="compile-src" depends="compile-sam-jdk, compile-picard" description="Compile files without cleaning"/>
 
-    <target name="compile-sam-jdk" depends="init" description="Compile sam-jdk files without cleaning">
+    <target name="compile-sam-jdk" depends="init, set_java_home_1.5" description="Compile sam-jdk files without cleaning">
         <mkdir dir="${classes}"/>
+        <!-- force SAM-JDK to be built with 1.5 -->
+        <!-- complain if net.sf.picard code is referenced -->
         <javac destdir="${classes}"
                optimize="${javac.opt}"
                debug="${javac.debug}"
+               sourcepath="" srcdir="${src}"
                includes ="net/sf/samtools/**/*.*"
-               compiler="javac1.5"> <!-- force SAM-JDK to be built with 1.5 -->
+               excludes = "net/sf/picard/**/*.*"
+               executable="${JAVA_HOME_1_5}/bin/javac"
+               compiler="javac1.5" fork="true">
             <!--<compilerarg value="-Xlint:all"/>-->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src}"/>
             <classpath refid="classpath"/>
         </javac>
     </target>
@@ -93,13 +112,14 @@
 
     <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
 
-    <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
+    <target name="compile-sam-jdk-tests" depends="init, set_java_home_1.5" description="Compile sam-jdk test files without cleaning">
         <mkdir dir="${classes.test}"/>
         <javac destdir="${classes.test}"
                optimize="${javac.opt}"
                debug="${javac.debug}"
                includes ="net/sf/samtools/**/*.*"
-                compiler="javac1.5"> <!-- Force SAM-JDK to be built with 1.5 -->
+               executable="${JAVA_HOME_1_5}/bin/javac"
+               compiler="javac1.5" fork="true"> <!-- Force SAM-JDK to be built with 1.5 -->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
             <src path="${src.test}"/>
             <classpath>
