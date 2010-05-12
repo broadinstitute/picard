@@ -24,7 +24,7 @@
 package net.sf.picard.sam;
 
 /** Little struct-like class to hold read pair (and fragment) end data for MarkDuplicates. */
-class ReadEnds {
+class ReadEnds implements MarkDuplicates.PhysicalLocation {
     public static final int SIZE_OF = (1*1) + (2*1) + (4*4) + (8*2) + 2 + 1 + 2 + 2 
             + 8 + // last 8 == reference overhead
             13; // This is determined experimentally with JProfiler
@@ -48,4 +48,16 @@ class ReadEnds {
 
 
     boolean isPaired() { return this.read2Sequence != -1; }
+
+    public short getReadGroup() { return this.readGroup; }
+    public void setReadGroup(short readGroup) { this.readGroup = readGroup; }
+
+    public byte getTile() { return this.tile; }
+    public void setTile(byte tile) { this.tile = tile; }
+
+    public short getX() { return this.x; }
+    public void setX(short x) { this.x = x; }
+
+    public short getY() { return this.y; }
+    public void setY(short y) { this.y = y; }
 }

@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  *
  * @author Tim Fennell
  */
-public class MarkDuplicates extends CommandLineProgram {
+public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     private final Log log = Log.getInstance(MarkDuplicates.class);
 
     /**
@@ -76,20 +76,9 @@ public class MarkDuplicates extends CommandLineProgram {
             shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
-            "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
-            "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
-            "The regular expression should contain three capture groups for the three variables, in order.")
-    public String READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*";
-
-    @Option(doc="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
-            "should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the " +
-            "Illumina pipeline that multiply pixel values by 10, in which case 50-100 is more normal.")
-    public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = 100;
     @Option(doc="The maximum number of sequences allowed in SAM file.  If this value is exceeded, program won't " +
             "spill to disk (used to avoid situation where there are not enough file handles.", shortName="MAX_SEQS")
     public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
-
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
@@ -100,7 +89,6 @@ public class MarkDuplicates extends CommandLineProgram {
     private short nextLibraryId = 1;
 
     // Variables used for optical duplicate detection and tracking
-    private Pattern READ_NAME_PATTERN;
     private final Histogram<Short> opticalDupesByLibraryId = new Histogram<Short>();
 
     /** Stock main method. */
@@ -118,11 +106,6 @@ public class MarkDuplicates extends CommandLineProgram {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(METRICS_FILE);
-
-        // Prepare a few things that are used later
-        if (this.READ_NAME_REGEX != null) {
-            this.READ_NAME_PATTERN = Pattern.compile(READ_NAME_REGEX);
-        }
 
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
@@ -359,23 +342,16 @@ public class MarkDuplicates extends CommandLineProgram {
         ends.libraryId = getLibraryId(header, rec);
 
         // Fill in the location information for optical duplicates
-        if (READ_NAME_PATTERN != null) {
-            final Matcher m = READ_NAME_PATTERN.matcher(rec.getReadName());
-            if (m.matches()) {
-                ends.tile = (byte) Integer.parseInt(m.group(1));
-                ends.x    = (short) Integer.parseInt(m.group(2));
-                ends.y    = (short) Integer.parseInt(m.group(3));
+        if (addLocationInformation(rec.getReadName(), ends)) {
+            // calculate the RG number (nth in list)
+            ends.readGroup = 0;
+            final String rg = (String) rec.getAttribute("RG");
+            final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
 
-                // calculate the RG number (nth in list)
-                ends.readGroup = 0;
-                final String rg = (String) rec.getAttribute("RG");
-                final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
-
-                if (rg != null && readGroups != null) {
-                    for (SAMReadGroupRecord readGroup : readGroups) {
-                        if (readGroup.getReadGroupId().equals(rg)) break;
-                        else ends.readGroup++;
-                    }
+            if (rg != null && readGroups != null) {
+                for (SAMReadGroupRecord readGroup : readGroups) {
+                    if (readGroup.getReadGroupId().equals(rg)) break;
+                    else ends.readGroup++;
                 }
             }
         }
@@ -558,25 +534,7 @@ public class MarkDuplicates extends CommandLineProgram {
      * in fact optical duplicates, and stores the data in the instance level histogram.
      */
     private void trackOpticalDuplicates(final List<ReadEnds> list) {
-        final int length = list.size();
-        final boolean[] opticalDuplicateFlags = new boolean[list.size()];
-
-        for (int i=0; i<length; ++i) {
-            ReadEnds lhs = list.get(i);
-
-            for (int j=i+1; j<length; ++j) {
-                ReadEnds rhs = list.get(j);
-
-                if (lhs.readGroup == rhs.readGroup && lhs.tile >= 0 && lhs.tile == rhs.tile) {
-                    final int xDiff = Math.abs(lhs.x - rhs.x);
-                    final int yDiff = Math.abs(lhs.y - rhs.y);
-
-                    if (xDiff <= OPTICAL_DUPLICATE_PIXEL_DISTANCE && yDiff <= OPTICAL_DUPLICATE_PIXEL_DISTANCE) {
-                        opticalDuplicateFlags[j] = true;
-                    }
-                }
-            }
-        }
+        final boolean[] opticalDuplicateFlags = findOpticalDuplicates(list, OPTICAL_DUPLICATE_PIXEL_DISTANCE);
 
         int opticalDuplicates = 0;
         for (boolean b: opticalDuplicateFlags) if (b) ++opticalDuplicates;
