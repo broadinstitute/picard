@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.samtools.apps;
+package net.sf.picard.sam;
 
 import java.io.File;
 import java.util.HashMap;

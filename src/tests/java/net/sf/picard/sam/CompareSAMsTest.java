@@ -21,17 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.samtools.apps;
+package net.sf.picard.sam;
 
+import net.sf.picard.sam.CompareSAMs;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
 
-import net.sf.samtools.apps.CompareSAMs;
-
 public class CompareSAMsTest {
-    private static final File TEST_FILES_DIR = new File("testdata/net/sf/samtools/apps/CompareSAMs");
+    private static final File TEST_FILES_DIR = new File("testdata/net/sf/picard/sam/CompareSAMs");
 
     private void testHelper(final String f1, final String f2, final int expectedMatch, final int expectedDiffer,
                             final int expectedUnmappedBoth,
