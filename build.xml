@@ -235,6 +235,7 @@
         <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
         <package-command main-class="net.sf.picard.sam.CleanSam" title="CleanSam"/>
         <package-command main-class="net.sf.picard.sam.CompareSAMs" title="CompareSAMs"/>
+        <package-command main-class="net.sf.samtools.apps.BuildBamIndex" title="BuildBamIndex"/>
     </target>
 
 <!-- ALL -->
