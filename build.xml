@@ -49,7 +49,10 @@
         <property name="JAVA_HOME_1_5" value="${env.JAVA_HOME_1_5}"/>
     </target>
     <target  name="set_java_home_1.5_to_default_java_home" unless="java_home_1.5_exists">
-        <property name="JAVA_HOME_1_5" value="${java.home}"/>
+        <!-- Note that ${java.home} doesn't work on Linux - it points to the jre
+        subdirectory, and there is no javac there -->
+        <property name="JAVA_HOME_1_5" value="${env.JAVA_HOME}"/>
+        <echo message="JAVA_HOME_1_5=${JAVA_HOME_1_5}"/>
     </target>
     <target  name="set_java_home_1.5" depends="set_java_home_1.5_correctly, set_java_home_1.5_to_default_java_home"/>
 
