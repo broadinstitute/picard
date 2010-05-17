@@ -108,3 +108,5 @@ cd deploy
 scp -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
 scp -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
 
+cd ../dist/html
+scp *.shtml program_usage/*.shtml alecw,picard@web.sourceforge.net:htdocs/inc
