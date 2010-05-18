@@ -259,10 +259,11 @@
         <attribute name="title"/>
         <element name="filesets" optional="yes"/>
         <sequential>
+            <classfileset dir="${command_tmp}" id="reqdClasses">
+                <root classname="@{main-class}"/>
+            </classfileset>
             <jar destfile="${dist}/@{title}.jar">
-                <classfileset dir="${command_tmp}">
-                    <root classname="@{main-class}"/>
-                </classfileset>
+                <fileset  refid="reqdClasses"/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
                     <attribute name="Main-Class" value="@{main-class}"/>
