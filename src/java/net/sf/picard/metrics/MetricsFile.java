@@ -222,8 +222,8 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
             return;
         }
 
-        // Build a combined key set
-        java.util.Set<HKEY> keys = new TreeSet<HKEY>();
+        // Build a combined key set.  Assume comparator is the same for all Histograms
+        java.util.Set<HKEY> keys = new TreeSet<HKEY>(histograms.get(0).comparator());
         for (Histogram<HKEY> histo : histograms) {
             if (histo != null) keys.addAll(histo.keySet());
         }
