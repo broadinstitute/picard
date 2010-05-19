@@ -58,8 +58,9 @@ public class BAMIndexWriterTest
         final BAMFileIndexWriter javaBai = new BAMFileIndexWriter(new File(javaBaiTxtFileName),
                     bam.getFileHeader().getSequenceDictionary().size());
         int n_records = javaBai.createIndex(BAM_FILE, true, true);
-        // Assert.assertEquals(, n_records);    // todo
-        // diff javaBaiTxtFileName cBaiTxtFileName
+        Assert.assertEquals(9721, n_records);
+        // diff index_test.bam.java.bai.txt index_text.bam.bai.txt
+        // diff javaBaiTxtFileName cBaiTxtFileName    //todo
         verbose ("diff " + javaBaiTxtFileName + " " + cBaiTxtFileName);
     }
 
@@ -72,17 +73,17 @@ public class BAMIndexWriterTest
         final BAMFileIndexWriter javaBai = new BAMFileIndexWriter(new File(javaBaiFileName),
                     bam.getFileHeader().getSequenceDictionary().size());
         int n_records = javaBai.createIndex(BAM_FILE, false, true);
-        // Assert.assertEquals(, n_records);    // todo
+        Assert.assertEquals(9721, n_records);
         verbose ("Wrote Binary BAM Index file " + javaBaiFileName);
 
         final String cRegeneratedBaiFileName = BAM_FILE.getPath() + ".generated.bai";  // java-generated
         final BAMIndexTextWriter bfi2 = new BAMIndexTextWriter(BAI_FILE, new File(cRegeneratedBaiFileName));
         bfi2.writeBinary(true, 0);
         verbose ("Wrote Binary BAM Index file " + javaBaiFileName);
-        // diff index_text.bai.txt index_test.java.bai.txt
-       // Binary compare of javaBaiFileName and cBaiFileName.sorted should be the same
+        // Binary compare of javaBaiFileName and cBaiFileName.sorted should be the same
+        // diff index_test.bam.java.bai index_test.bam.generated.bai
         // diff javaBaiFileName cRegeneratedBaiFileName
-        verbose ("diff " + javaBaiFileName + " " + cRegeneratedBaiFileName);
+        verbose ("diff " + javaBaiFileName + " " + cRegeneratedBaiFileName);    // todo
 
         // todo - now write both of these as text format and compare
     }
