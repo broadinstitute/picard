@@ -282,7 +282,7 @@ public class SequenceUtil {
      */
     public static int sumQualitiesOfMismatches(final SAMRecord read, final byte[] referenceBases,
                                                final int referenceOffset) {
-        return sumQualitiesOfMismatches(read, referenceBases, referenceOffset);
+        return sumQualitiesOfMismatches(read, referenceBases, referenceOffset, false);
     }
 
     /**
