@@ -23,7 +23,6 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.picard.PicardException;
 import net.sf.samtools.*;
 
 import java.util.List;
@@ -499,13 +498,13 @@ public class SequenceUtil {
     public static byte[] makeReferenceFromAlignment(final SAMRecord rec, boolean includeReferenceBasesForDeletions) {
         final String md = rec.getStringAttribute(SAMTag.MD.name());
         if (md == null) {
-            throw new PicardException("Cannot create reference from SAMRecord with no MD tag, read: " + rec.getReadName());
+            throw new SAMException("Cannot create reference from SAMRecord with no MD tag, read: " + rec.getReadName());
         }
         // Not sure how long output will be, but it will be no longer than this.
         int maxOutputLength = 0;
         final Cigar cigar = rec.getCigar();
         if (cigar == null) {
-            throw new PicardException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
+            throw new SAMException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
         }
         for (final CigarElement cigarElement : cigar.getCigarElements()) {
             maxOutputLength += cigarElement.getLength();
@@ -591,12 +590,12 @@ public class SequenceUtil {
                             // Check just to make sure.
                             if (basesMatched != cigElLen)
                             {
-                                throw new PicardException("Got a deletion in CIGAR (" + cigar + ", deletion " + cigElLen +
+                                throw new SAMException("Got a deletion in CIGAR (" + cigar + ", deletion " + cigElLen +
                                         " length) with an unequal ref insertion in MD (" + md + ", md " + basesMatched + " length");
                             }
                             if (cigElOp != CigarOperator.DELETION)
                             {
-                                throw new PicardException ("Got an insertion in MD ("+md+") without a corresponding deletion in cigar ("+cigar+")");
+                                throw new SAMException ("Got an insertion in MD ("+md+") without a corresponding deletion in cigar ("+cigar+")");
                             }
 
                         }
@@ -608,7 +607,7 @@ public class SequenceUtil {
 
                     if (!matched)
                     {
-                        throw new PicardException("Illegal MD pattern: " + md);
+                        throw new SAMException("Illegal MD pattern: " + md);
                     }
                 }
 

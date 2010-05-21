@@ -59,6 +59,7 @@ class SAMTextReader
     private static final Pattern VALID_BASES = Pattern.compile("^[acgtnACGTN.=]+$");
 
     private AsciiLineReader mReader;
+    private final SAMFileReader mParentReader;
     private SAMFileHeader mFileHeader = null;
     private String mCurrentLine = null;
     private RecordIterator mIterator = null;
@@ -67,10 +68,16 @@ class SAMTextReader
     private SAMFileReader.ValidationStringency validationStringency = SAMFileReader.ValidationStringency.DEFAULT_STRINGENCY;
 
     /**
+     * Add information about the origin (reader and position) to SAM records.
+     */
+    private boolean mEnableFileSource = false;
+
+    /**
      * Prepare to read a SAM text file.
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
-    SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
+    SAMTextReader(final SAMFileReader reader, final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
+        mParentReader = reader;
         mReader = new AsciiLineReader(stream);
         this.validationStringency = validationStringency;
         readHeader();
@@ -81,9 +88,29 @@ class SAMTextReader
      * @param stream Need not be buffered, as this class provides buffered reading.
      * @param file For error reporting only.
      */
-    SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
-        this(stream, validationStringency);
+    SAMTextReader(final SAMFileReader reader, final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
+        this(reader, stream, validationStringency);
         mFile = file;
+    }
+
+    /**
+     * If true, writes the source of every read into the source SAMRecords.
+     * @param enabled true to write source information into each SAMRecord.
+     */
+    void enableFileSource(final boolean enabled) {
+        this.mEnableFileSource = enabled;
+    }
+
+    void enableIndexCaching(final boolean enabled) {
+        throw new UnsupportedOperationException("Cannot enable index caching for a SAM text reader");
+    }
+
+    boolean hasIndex() {
+        return false;    
+    }
+
+    BAMIndex getIndex() {
+        throw new UnsupportedOperationException();
     }
 
     void close() {
@@ -124,6 +151,23 @@ class SAMTextReader
         }
         mIterator = new RecordIterator();
         return mIterator;
+    }
+
+    /**
+     * Generally loads data at a given point in the file.  Unsupported for SAMTextReaders.
+     * @param fileSpan The file span.
+     * @return An iterator over the given file span.
+     */
+    CloseableIterator<SAMRecord> getIterator(SAMFileSpan fileSpan) {
+        throw new UnsupportedOperationException("Cannot directly iterate over regions within SAM text files.");
+    }
+
+    /**
+     * Generally gets a pointer to the first read in the file.  Unsupported for SAMTextReaders.
+     * @return An pointer to the first read in the file.
+     */
+    SAMFileSpan getFilePointerSpanningReads() {
+        throw new UnsupportedOperationException("Cannot retrieve file pointers within SAM text files.");
     }
 
     /**
@@ -270,6 +314,8 @@ class SAMTextReader
             }
             final SAMRecord samRecord = new SAMRecord(mFileHeader);
             samRecord.setValidationStringency(getValidationStringency());
+            if(mEnableFileSource)
+                samRecord.setFileSource(new SAMFileSource(mParentReader,null));
             samRecord.setHeader(mFileHeader);
             samRecord.setReadName(mFields[QNAME_COL]);
 

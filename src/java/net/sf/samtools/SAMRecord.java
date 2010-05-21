@@ -28,6 +28,7 @@ import net.sf.samtools.util.StringUtil;
 
 import java.util.*;
 
+
 /**
  * Java binding for a SAM file record.  c.f. http://samtools.sourceforge.net/SAM1.pdf
  *
@@ -161,8 +162,8 @@ public class SAMRecord implements Cloneable
      */
     private SAMFileReader.ValidationStringency mValidationStringency = SAMFileReader.ValidationStringency.SILENT;
 
+    private SAMFileSource mFileSource;
     private SAMFileHeader mHeader = null;
-
 
     public SAMRecord(final SAMFileHeader header) {
         mHeader = header;
@@ -1448,6 +1449,23 @@ public class SAMRecord implements Cloneable
             return null;
         }
         return ret;
+    }
+
+    /**
+     * Gets the source of this SAM record -- both the reader that retrieved the record and the position on disk from
+     * whence it came. 
+     * @return The file source.  Note that the reader will be null if not activated using SAMFileReader.enableFileSource().
+     */
+    public SAMFileSource getFileSource() {
+        return mFileSource;
+    }
+
+    /**
+     * Sets a marker providing the source reader for this file and the position in the file from which the read originated.
+     * @param fileSource source of the given file.
+     */
+    protected void setFileSource(final SAMFileSource fileSource) {
+        mFileSource = fileSource;
     }
 
     private List<SAMValidationError> isValidReferenceIndexAndPosition(final Integer referenceIndex, final String referenceName,
