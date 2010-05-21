@@ -29,6 +29,7 @@ import java.util.Comparator;
 
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.util.CloseableIterator;
 
 /**
  * Iterator for SAM records that implements comparable to enable sorting of iterators.
@@ -37,26 +38,25 @@ import net.sf.samtools.SAMFileReader;
  */
 class ComparableSamRecordIterator extends PeekableIterator<SAMRecord> implements Comparable<ComparableSamRecordIterator> {
     private final Comparator<SAMRecord> comparator;
-    private final SAMFileReader reader;
+    private final SAMFileReader reader;    
 
     /**
-     * Constructs an iterator for iteration over the supplied SAM file that will be
-     * able to compare itself to other ComparableSAMRecordIterator instances using
-     * the supplied comparator for ordering SAMRecords.
+     * Constructs a wrapping iterator around the given iterator that will be able
+     * to compare itself to other ComparableSamRecordIterators using the given comparator.
      *
-     * @param sam the SAM file to read records from
+     * @param iterator the wrapped iterator.
      * @param comparator the Comparator to use to provide ordering fo SAMRecords
      */
-    public ComparableSamRecordIterator(final SAMFileReader sam, final Comparator<SAMRecord> comparator) {
-        super(sam.iterator());
-        this.reader = sam;
+    public ComparableSamRecordIterator(final SAMFileReader sam, final CloseableIterator<SAMRecord> iterator, final Comparator<SAMRecord> comparator) {
+        super(iterator);
+        this.reader = sam;        
         this.comparator = comparator;
     }
 
     /** Returns the reader from which this iterator was constructed. */
     public SAMFileReader getReader() {
         return reader;
-    }
+    }    
 
     /**
      * Compares this iterator to another comparable iterator based on the next record
