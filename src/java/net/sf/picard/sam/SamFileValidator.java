@@ -377,6 +377,7 @@ public class SamFileValidator {
         this.errorsByType.increment(error.getType());
         if (verbose) {
             out.println(error);
+            out.flush();
             if (this.errorsByType.getCount() >= maxVerboseOutput) {
                 throw new MaxOutputExceededException();
             }
