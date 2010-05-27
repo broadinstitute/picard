@@ -99,7 +99,7 @@ public class CigarUtil {
      * Adds a soft-clip, based on <code>clipFrom</code>, to the SAM record's existing cigar
      * and, for negative strands, also adjusts the SAM record's start position.'
      */
-    public static void clipCigar(SAMRecord rec, final int clipFrom) {
+    public static void softClipCigar(SAMRecord rec, final int clipFrom) {
 
         final Cigar cigar = rec.getCigar();
         // we don't worry about SEED_REGION_LENGTH in clipFrom
