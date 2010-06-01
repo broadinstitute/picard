@@ -27,7 +27,11 @@ import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-// replaces BAMIndexQueryResults
+/** Represents the contents of a bam index file for one reference.
+ * A BAM index (.bai) file contains information for all references in the bam file.
+ * This class describes the data present in the index file for one of these references;
+ * including the bins, chunks, and linear index.
+ */
 class BAMIndexContent {
     /**
      * The reference sequence for the data currently loaded.
@@ -174,10 +178,10 @@ class BAMIndexContent {
         }
         // System.out.println("index start is " + indexStart);
         for (int i = 0; i < indexStart; i++) {
-            bb.putLong(0); //// todo uint32_t vs int32_t in spec?
+            bb.putLong(0);          // todo uint32_t vs int32_t in spec?
         }
         for (int k = 0; k < entries.length; k++) {
-            bb.putLong(entries[k]); //// todo uint32_t vs int32_t in spec?
+            bb.putLong(entries[k]); // todo uint32_t vs int32_t in spec?
         }
     }
 }

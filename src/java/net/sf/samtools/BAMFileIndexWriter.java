@@ -56,8 +56,8 @@ public class BAMFileIndexWriter extends BAMFileIndex{
     /**
      * A mapping of reference sequence index to linear index in progress
      */
-    private final SortedMap<Integer, List<LinearIndexEntry>> referenceToIndexEntries =
-            new TreeMap<Integer, List<LinearIndexEntry>>();
+    private final SortedMap<Integer, List<LinearIndexItem>> referenceToIndexEntries =
+            new TreeMap<Integer, List<LinearIndexItem>>();
 
     //private final Log log = Log.getInstance(getClass());   // removed - so can be in samtools package
 
@@ -92,11 +92,16 @@ public class BAMFileIndexWriter extends BAMFileIndex{
 
         int count = 0;
         int localCount = 0;
+        int totalRecords = 0;
 
         int reference = 0;
         int lastReference = 0;
 
         for (Iterator<SAMRecord> iter = bam.iterator(); iter.hasNext();) {
+            totalRecords++;
+            if (totalRecords % 1000000 == 0) {
+                verbose(totalRecords + " reads processed ...");
+            }
             final SAMRecord rec = iter.next();
             if (rec.getAlignmentStart() == 0)
                 continue;  // do nothing for un-aligned records
@@ -186,14 +191,14 @@ public class BAMFileIndexWriter extends BAMFileIndex{
                     " window " + window);
             */
 
-            List<LinearIndexEntry> indexList = referenceToIndexEntries.get(reference);
+            List<LinearIndexItem> indexList = referenceToIndexEntries.get(reference);
             if (indexList == null) {
-                referenceToIndexEntries.put(reference, (List<LinearIndexEntry>) new ArrayList());
+                referenceToIndexEntries.put(reference, (List<LinearIndexItem>) new ArrayList());
                 indexList = referenceToIndexEntries.get(reference);
             }
             // Has this window already been seen? If so, might replace existing index
             boolean replaceIndex = true;
-            for (final LinearIndexEntry l : indexList) {
+            for (final LinearIndexItem l : indexList) {
                 if (l.window == window) {
                     if (l.offset < ioffset) {
                         replaceIndex = false;  // existing window value is already minimum
@@ -208,8 +213,8 @@ public class BAMFileIndexWriter extends BAMFileIndex{
                 }
             }
             if (replaceIndex)
-                //referenceToIndexEntries.get(reference).add(new LinearIndexEntry(window, ioffset));
-                indexList.add(new LinearIndexEntry(window, ioffset));
+                //referenceToIndexEntries.get(reference).add(new LinearIndexItem(window, ioffset));
+                indexList.add(new LinearIndexItem(window, ioffset));
         }
     }
 
@@ -261,14 +266,14 @@ public class BAMFileIndexWriter extends BAMFileIndex{
 
     private LinearIndex computeLinearIndex(int reference) {
         final LinearIndex linearIndex;
-        final List<LinearIndexEntry> indexList = referenceToIndexEntries.get(reference);
+        final List<LinearIndexItem> indexList = referenceToIndexEntries.get(reference);
         if (indexList == null) {
         // skip linear index for this reference
         linearIndex = null;
     } else {
         // get the max window in the list; linear index will be this long
         int maxWindow = 0;   // todo - a shorter way to do this?
-        for (final LinearIndexEntry l : indexList) {
+        for (final LinearIndexItem l : indexList) {
             if (l.window > maxWindow) {
                 maxWindow = l.window;
             }
@@ -279,7 +284,7 @@ public class BAMFileIndexWriter extends BAMFileIndex{
             newIndex[j] = 0;
         }
         // linearIndex each entry
-        for (final LinearIndexEntry l : indexList) {
+        for (final LinearIndexItem l : indexList) {
             newIndex[l.window] = l.offset;   // newIndex is one-based
         }
         linearIndex =  new LinearIndex(reference, 1, newIndex); // newIndex is one-based
@@ -335,4 +340,27 @@ public class BAMFileIndexWriter extends BAMFileIndex{
         fileChannel.close();
         stream.close();
     }
+
+    private void verbose(String message) {
+        boolean verbose = true;
+        if (verbose) {
+            //log.info (message);
+            System.out.println(message);
+        }
+    }
+
+        /**
+        * This class facilitates a sparse representation of the linear index during construction,
+        * when the size of the linear index is unknown.
+        */
+    public class LinearIndexItem {
+
+        public final int window;
+        public final long offset;
+
+        public LinearIndexItem(int window, long offset) {
+            this.window = window;
+            this.offset = offset;
+        }
+}
 }
