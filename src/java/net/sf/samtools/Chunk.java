@@ -7,8 +7,8 @@ import java.io.Serializable;
  * as a BAM file index.  A chunk is represented as a single 64-bit
  * value where the high-order 48 bits point to the location of the
  * start of a compressed BGZF block within a BGZF file and the
- * low-order 16 bits point to a position within the uncompressed
- * data within that block.
+ * low-order 16 bits point to a position within the decompressed
+ * data in the BGZF block.
  *
  * See the SAM/BAM spec for more details.
  */

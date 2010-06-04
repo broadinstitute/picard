@@ -225,8 +225,9 @@ class BAMFileReader
     }
 
     /**
-     * Gets an unbounded pointer to the first record in the BAM file.  This pointer will not necessarily
-     * point to the exact end of the file, but will point to some point past the end of the file.
+     * Gets an unbounded pointer to the first record in the BAM file.  Because the reader doesn't necessarily know
+     * when the file ends, the rightmost bound of the file pointer will not end exactly where the file ends.  However,
+     * the rightmost bound is guaranteed to be after the last read in the file.
      * @return An unbounded pointer to the first record in the BAM file.
      */
     @Override
