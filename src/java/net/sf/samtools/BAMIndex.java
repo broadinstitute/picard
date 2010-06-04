@@ -48,9 +48,9 @@ public interface BAMIndex {
      * @param referenceIndex The contig.
      * @param startPos Genomic start of query.
      * @param endPos Genomic end of query.
-     * @return A long array representation of the chunks in the BAM file.
+     * @return A file span listing the chunks in the BAM file.
      */
-    long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos);
+    BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos);
 
     /**
      * Gets the start of the last linear bin in the index.

@@ -497,7 +497,7 @@ class BAMFileReader
         int referenceIndex = fileHeader.getSequenceIndex(sequence);
         if (referenceIndex != -1) {
             final BAMIndex fileIndex = getIndex();
-            filePointers = fileIndex.getChunksOverlapping(referenceIndex, start, end);
+            filePointers = fileIndex.getSpanOverlapping(referenceIndex, start, end).toCoordinateArray();
         }
 
         // Create an iterator over the above chunk boundaries.
