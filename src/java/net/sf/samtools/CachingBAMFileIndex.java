@@ -51,12 +51,10 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
      * @param referenceIndex sequence of desired SAMRecords
      * @param startPos 1-based start of the desired interval, inclusive
      * @param endPos 1-based end of the desired interval, inclusive
-     * @return array of pairs of virtual file positions.  Each pair is the first and last
-     * virtual file position in a range that can be scanned to find SAMRecords that overlap the given
-     * positions. The last position in each pair is a virtual file pointer to the first SAMRecord beyond
-     * the range that may contain the indicated SAMRecords.
+     * @return the virtual file position.  Each pair is the first and last virtual file position
+     *         in a range that can be scanned to find SAMRecords that overlap the given positions.
      */
-    public long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos) {
+    public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         BAMIndexContent queryResults = getQueryResults(referenceIndex);
 
         if(queryResults == null)
@@ -86,7 +84,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         }
 
         chunkList = optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
-        return new BAMFileSpan(chunkList).toCoordinateArray();
+        return new BAMFileSpan(chunkList);
     }
 
     /**

@@ -47,7 +47,7 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
      * positions. The last position in each pair is a virtual file pointer to the first SAMRecord beyond
      * the range that may contain the indicated SAMRecords.
      */
-    public long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos) {
+    public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         BAMIndexContent queryResults = query(referenceIndex,startPos,endPos);
 
         if(queryResults == null)
@@ -57,6 +57,6 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
         for(Chunk chunk: queryResults.getAllChunks())
             chunkList.add(chunk.clone());
         chunkList = optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
-        return new BAMFileSpan(chunkList).toCoordinateArray();
+        return new BAMFileSpan(chunkList);
     }
 }
