@@ -68,7 +68,8 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     }
 
     /**
-     * Add a given SAM file iterator to the merging iterator.  Use this to restrict the merged iteration to a given genomic interval.
+     * Add a given SAM file iterator to the merging iterator.  Use this to restrict the merged iteration to a given genomic interval,
+     * rather than iterating over every read in the backing file or stream.
      * @param reader Reader to add to the merging iterator.
      * @param iterator Iterator traversing over reader contents.
      */
