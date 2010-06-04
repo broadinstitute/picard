@@ -56,7 +56,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
      * positions. The last position in each pair is a virtual file pointer to the first SAMRecord beyond
      * the range that may contain the indicated SAMRecords.
      */
-    public long[] getSearchBins(final int referenceIndex, final int startPos, final int endPos) {
+    public long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         BAMIndexContent queryResults = getQueryResults(referenceIndex);
 
         if(queryResults == null)

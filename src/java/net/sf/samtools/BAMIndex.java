@@ -44,14 +44,13 @@ public interface BAMIndex {
      * Gets the compressed chunks which should be searched for the contents of records contained by the span
      * referenceIndex:startPos-endPos, inclusive.  See the BAM spec for more information on how a chunk is
      * represented.
-     * TODO: This method is named getSearchBins(), but it does not currently retrieve search bins.  Please rename.
      * 
      * @param referenceIndex The contig.
      * @param startPos Genomic start of query.
      * @param endPos Genomic end of query.
      * @return A long array representation of the chunks in the BAM file.
      */
-    long[] getSearchBins(final int referenceIndex, final int startPos, final int endPos);
+    long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos);
 
     /**
      * Gets the start of the last linear bin in the index.

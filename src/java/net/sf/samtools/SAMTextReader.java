@@ -59,7 +59,6 @@ class SAMTextReader
     private static final Pattern VALID_BASES = Pattern.compile("^[acgtnACGTN.=]+$");
 
     private AsciiLineReader mReader;
-    private final SAMFileReader mParentReader;
     private SAMFileHeader mFileHeader = null;
     private String mCurrentLine = null;
     private RecordIterator mIterator = null;
@@ -70,14 +69,13 @@ class SAMTextReader
     /**
      * Add information about the origin (reader and position) to SAM records.
      */
-    private boolean mEnableFileSource = false;
+    private SAMFileReader mParentReader;
 
     /**
      * Prepare to read a SAM text file.
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
-    SAMTextReader(final SAMFileReader reader, final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
-        mParentReader = reader;
+    SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
         mReader = new AsciiLineReader(stream);
         this.validationStringency = validationStringency;
         readHeader();
@@ -88,8 +86,8 @@ class SAMTextReader
      * @param stream Need not be buffered, as this class provides buffered reading.
      * @param file For error reporting only.
      */
-    SAMTextReader(final SAMFileReader reader, final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
-        this(reader, stream, validationStringency);
+    SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
+        this(stream, validationStringency);
         mFile = file;
     }
 
@@ -97,8 +95,8 @@ class SAMTextReader
      * If true, writes the source of every read into the source SAMRecords.
      * @param enabled true to write source information into each SAMRecord.
      */
-    void enableFileSource(final boolean enabled) {
-        this.mEnableFileSource = enabled;
+    void enableFileSource(final SAMFileReader reader, final boolean enabled) {
+        this.mParentReader = enabled ? reader : null;
     }
 
     void enableIndexCaching(final boolean enabled) {
@@ -314,7 +312,7 @@ class SAMTextReader
             }
             final SAMRecord samRecord = new SAMRecord(mFileHeader);
             samRecord.setValidationStringency(getValidationStringency());
-            if(mEnableFileSource)
+            if(mParentReader != null)
                 samRecord.setFileSource(new SAMFileSource(mParentReader,null));
             samRecord.setHeader(mFileHeader);
             samRecord.setReadName(mFields[QNAME_COL]);
