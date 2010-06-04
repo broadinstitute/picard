@@ -4,15 +4,28 @@ import java.io.Serializable;
 
 /**
  * A [start,stop) file pointer pairing into the BAM file, stored
- * as a BAM file index.
+ * as a BAM file index.  A chunk is represented as a single 64-bit
+ * value where the high-order 48 bits point to the location of the
+ * start of a compressed BGZF block within a BGZF file and the
+ * low-order 16 bits point to a position within the uncompressed
+ * data within that block.
  *
- * @author mhanna
- * @version 0.1
+ * See the SAM/BAM spec for more details.
  */
 class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
     private static final long serialVersionUID = 1L;
-    
+
+    /**
+     * A pointer to the start of a region in a SAM/BAM file.  The
+     * start is inclusive: start reading from this point.
+     */
     private long mChunkStart;
+
+    /**
+     * A pointer to the end of a region in a SAM/BAM file.  The end
+     * is exclusive: this pointer points to one byte past the end
+     * of the region of interest inside the file.
+     */
     private long mChunkEnd;
 
     public Chunk(final long start, final long end) {

@@ -34,7 +34,13 @@ import java.nio.ByteOrder;
 import java.util.*;
 
 /**
- * Internal interface for reading BAM file indexes.
+ * Provides basic, generic capabilities to be used reading BAM index files.  Users can
+ * subclass this class to create new BAM index functionality for adding querying facilities,
+ * changing caching behavior, etc.
+ *
+ * Of particular note: the AbstractBAMFileIndex is, by design, the only class aware of the
+ * details of the BAM index file format.  Anyone wanting to implement a reader for a differing
+ * or extended BAM index format should implement BAMIndex directly.
  */
 abstract class AbstractBAMFileIndex implements BAMIndex {
     /**

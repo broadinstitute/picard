@@ -48,7 +48,6 @@ class BAMFileReader
     private BinaryCodec mStream = null;
     // Underlying compressed data stream.
     private final BlockCompressedInputStream mCompressedInputStream;
-    private final SAMFileReader mFileReader;
     private SAMFileHeader mFileHeader = null;
     // Populated if the file is seekable and an index exists
     private File mIndexFile;
@@ -68,7 +67,7 @@ class BAMFileReader
     /**
      * Add information about the origin (reader and position) to SAM records.
      */
-    private boolean mEnableFileSource = false;
+    private SAMFileReader mFileReader = null;
 
     /**
      * Prepare to read BAM from a stream (not seekable)
@@ -76,9 +75,8 @@ class BAMFileReader
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
      * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final SAMFileReader reader, final InputStream stream, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final InputStream stream, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        mFileReader = reader;
         mIndexFile = indexFile;
         mIsSeekable = false;
         mCompressedInputStream = new BlockCompressedInputStream(stream);
@@ -94,9 +92,9 @@ class BAMFileReader
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
      * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final SAMFileReader reader, final File file, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final File file, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        this(reader, new BlockCompressedInputStream(file), indexFile!=null ? indexFile : findIndexFile(file), eagerDecode, file.getAbsolutePath(), validationStringency);
+        this(new BlockCompressedInputStream(file), indexFile!=null ? indexFile : findIndexFile(file), eagerDecode, file.getAbsolutePath(), validationStringency);
         if (indexFile != null && indexFile.lastModified() < file.lastModified()) {
             System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
                     " is older than BAM " + file.getAbsolutePath());
@@ -104,17 +102,30 @@ class BAMFileReader
     }
 
 
-    BAMFileReader(final SAMFileReader reader, final URL url, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final URL url, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
-        this(reader, new BlockCompressedInputStream(url), indexFile, eagerDecode, url.toString(), validationStringency);
+        this(new BlockCompressedInputStream(url), indexFile, eagerDecode, url.toString(), validationStringency);
     }
+
+    private BAMFileReader(final BlockCompressedInputStream compressedInputStream, final File indexFile, final boolean eagerDecode,
+                          final String source, final ValidationStringency validationStringency)
+        throws IOException {
+        mIndexFile = indexFile;
+        mIsSeekable = true;
+        mCompressedInputStream = compressedInputStream;
+        mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
+        this.eagerDecode = eagerDecode;
+        this.mValidationStringency = validationStringency;
+        readHeader(source);
+        mFirstRecordPointer = mCompressedInputStream.getFilePointer();
+    }    
 
     /**
      * If true, writes the source of every read into the source SAMRecords.
      * @param enabled true to write source information into each SAMRecord.
      */
-    void enableFileSource(final boolean enabled) {
-        this.mEnableFileSource = enabled;
+    void enableFileSource(final SAMFileReader reader, final boolean enabled) {
+        this.mFileReader = enabled ? reader : null;
     }
 
     /**
@@ -139,25 +150,12 @@ class BAMFileReader
      * @return An index of the given type.
      */
     public BAMIndex getIndex() {
-        lazyLoadIndex();
-        if(!hasIndex())
-            throw new SAMException("Index is not available for this SAM file type.");
+        if(mIndexFile == null)
+            throw new SAMException("No index is available for this BAM file.");
+        if(mIndex == null)
+            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile) : new DiskBasedBAMFileIndex(mIndexFile);
         return mIndex;
     }    
-
-    private BAMFileReader(final SAMFileReader reader, final BlockCompressedInputStream compressedInputStream, final File indexFile, final boolean eagerDecode,
-                          final String source, final ValidationStringency validationStringency)
-        throws IOException {
-        mFileReader = reader;
-        mIndexFile = indexFile;
-        mIsSeekable = true;
-        mCompressedInputStream = compressedInputStream;
-        mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
-        this.eagerDecode = eagerDecode;
-        this.mValidationStringency = validationStringency;
-        readHeader(source);
-        mFirstRecordPointer = mCompressedInputStream.getFilePointer();
-    }
 
     void close() {
         if (mStream != null) {
@@ -166,13 +164,6 @@ class BAMFileReader
         mStream = null;
         mFileHeader = null;
         mIndex = null;
-    }
-
-    /**
-     * @return the file index, if one exists, else null.
-     */
-    BAMIndex getFileIndex() {
-        return mIndex;
     }
 
     SAMFileHeader getFileHeader() {
@@ -234,8 +225,9 @@ class BAMFileReader
     }
 
     /**
-     * Gets a pointer to the first record in the BAM file.
-     * @return A pointer to the first record in the BAM file.
+     * Gets an unbounded pointer to the first record in the BAM file.  This pointer will not necessarily
+     * point to the exact end of the file, but will point to some point past the end of the file.
+     * @return An unbounded pointer to the first record in the BAM file.
      */
     @Override
     SAMFileSpan getFilePointerSpanningReads() {
@@ -272,10 +264,6 @@ class BAMFileReader
         if (!mIsSeekable) {
             throw new UnsupportedOperationException("Cannot query stream-based BAM file");
         }
-        lazyLoadIndex();
-        if (mIndex == null) {
-            throw new IllegalStateException("No BAM file index is available");
-        }
         mCurrentIterator = createIndexIterator(sequence, start, end, contained? QueryType.CONTAINED: QueryType.OVERLAPPING);
         return mCurrentIterator;
     }
@@ -306,10 +294,6 @@ class BAMFileReader
         if (!mIsSeekable) {
             throw new UnsupportedOperationException("Cannot query stream-based BAM file");
         }
-        lazyLoadIndex();
-        if (mIndex == null) {
-            throw new IllegalStateException("No BAM file index is available");
-        }
         mCurrentIterator = createIndexIterator(sequence, start, -1, QueryType.STARTING_AT);
         return mCurrentIterator;
     }
@@ -324,12 +308,8 @@ class BAMFileReader
         if (!mIsSeekable) {
             throw new UnsupportedOperationException("Cannot query stream-based BAM file");
         }
-        lazyLoadIndex();
-        if (mIndex == null) {
-            throw new IllegalStateException("No BAM file index is available");
-        }
         try {
-            final long startOfLastLinearBin = mIndex.getStartOfLastLinearBin();
+            final long startOfLastLinearBin = getIndex().getStartOfLastLinearBin();
             if (startOfLastLinearBin != -1) {
                 mCompressedInputStream.seek(startOfLastLinearBin);
             } else {
@@ -391,15 +371,6 @@ class BAMFileReader
             }
             mFileHeader.setSequenceDictionary(new SAMSequenceDictionary(sequences));
         }
-    }
-
-    /**
-     * Lazy loads the index file of a given type.
-     */
-    private void lazyLoadIndex() {
-        if(mIndexFile == null)
-            return;
-        mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile) : new BAMFileIndex(mIndexFile);
     }
 
     /**
@@ -494,7 +465,7 @@ class BAMFileReader
             final SAMRecord next = bamRecordCodec.decode();
             final long stopCoordinate = mCompressedInputStream.getFilePointer();
 
-            if(mEnableFileSource && next != null)
+            if(mFileReader != null && next != null)
                 next.setFileSource(new SAMFileSource(mFileReader,new BAMFileSpan(new Chunk(startCoordinate,stopCoordinate))));
 
             return next;
@@ -525,8 +496,8 @@ class BAMFileReader
         final SAMFileHeader fileHeader = getFileHeader();
         int referenceIndex = fileHeader.getSequenceIndex(sequence);
         if (referenceIndex != -1) {
-            final BAMIndex fileIndex = getFileIndex();
-            filePointers = fileIndex.getSearchBins(referenceIndex, start, end);
+            final BAMIndex fileIndex = getIndex();
+            filePointers = fileIndex.getChunksOverlapping(referenceIndex, start, end);
         }
 
         // Create an iterator over the above chunk boundaries.

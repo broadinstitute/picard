@@ -82,14 +82,13 @@ public class BinList implements Iterable<Bin> {
 
     private class BinIterator implements Iterator<Bin> {
         /**
-         * Stores the bin currently in use.
+         * Stores the bin currently in use.  Will be -1 if no more bins remain in the set.
          */
         private int nextBin;
 
         public BinIterator() {
             // Initialize the bin iterator to just before the first bin.
-            nextBin = 0;
-            advance();
+            nextBin = bins.nextSetBit(0);
         }
 
         /**
@@ -97,7 +96,7 @@ public class BinList implements Iterable<Bin> {
          * @return True if more bins are remaining.
          */
         public boolean hasNext() {
-            return nextBin < bins.size();
+            return nextBin >= 0;
         }
 
         /**
@@ -108,22 +107,12 @@ public class BinList implements Iterable<Bin> {
             if(!hasNext())
                 throw new NoSuchElementException("This BinIterator is currently empty");
             int currentBin = nextBin;
-            advance();
+            nextBin = bins.nextSetBit(nextBin+1);
             return new Bin(referenceSequence,currentBin);
         }
 
         public void remove() {
             throw new UnsupportedOperationException("Unable to remove from a bin iterator");
-        }
-
-        /**
-         * Move to the next available bin.
-         */
-        private void advance() {
-            while(++nextBin < bins.size()) {
-                if(bins.get(nextBin))
-                    break;
-            }
         }
     }
 }

@@ -83,7 +83,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * Implemented as an abstract class to enforce better access control.
      */
     static abstract class ReaderImplementation {
-        abstract void enableFileSource(final boolean enabled);
+        abstract void enableFileSource(final SAMFileReader reader, final boolean enabled);
         abstract void enableIndexCaching(final boolean enabled);
         abstract boolean hasIndex();
         abstract BAMIndex getIndex();
@@ -189,7 +189,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param enabled true to write source information into each SAMRecord. 
      */
     public void enableFileSource(final boolean enabled) {
-        mReader.enableFileSource(enabled);
+        mReader.enableFileSource(this,enabled);
     }
 
     /**
@@ -436,13 +436,13 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             final BufferedInputStream bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;
-                mReader = new BAMFileReader(this, bufferedStream, null, eagerDecode, validationStringency);
+                mReader = new BAMFileReader(bufferedStream, null, eagerDecode, validationStringency);
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(this, new GZIPInputStream(bufferedStream), validationStringency);
+                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
             } else if (isSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(this, bufferedStream, validationStringency);
+                mReader = new SAMTextReader(bufferedStream, validationStringency);
             } else {
                 throw new SAMFormatException("Unrecognized file format");
             }
@@ -464,7 +464,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             // Rely on file extension.
             if (url.toString().toLowerCase().endsWith(".bam")) {
                 mIsBinary = true;
-                mReader = new BAMFileReader(this, url, indexFile, eagerDecode, validationStringency);
+                mReader = new BAMFileReader(url, indexFile, eagerDecode, validationStringency);
             } else {
                 throw new SAMFormatException("Unrecognized file format: " + url);
             }
@@ -486,22 +486,22 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
                 mIsBinary = true;
                 if (!file.isFile()) {
                     // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
-                    mReader = new BAMFileReader(this, bufferedStream, indexFile, eagerDecode, validationStringency);
+                    mReader = new BAMFileReader(bufferedStream, indexFile, eagerDecode, validationStringency);
                 } else {
                     bufferedStream.close();
-                    final BAMFileReader reader = new BAMFileReader(this, file, indexFile, eagerDecode, validationStringency);
+                    final BAMFileReader reader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency);
                     mReader = reader;
                 }
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(this, new GZIPInputStream(bufferedStream), validationStringency);
+                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
             } else if (isSAMFile(bufferedStream)) {
                 if (indexFile != null) {
                     bufferedStream.close();
                     throw new RuntimeException("Cannot use index file with textual SAM file");
                 }
                 mIsBinary = false;
-                mReader = new SAMTextReader(this, bufferedStream, file, validationStringency);
+                mReader = new SAMTextReader(bufferedStream, file, validationStringency);
             } else {
                 bufferedStream.close();
                 throw new SAMFormatException("Unrecognized file format");

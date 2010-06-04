@@ -29,11 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Internal class for reading BAM file indexes.
+ * A class for reading BAM file indices, hitting the disk once per query.
  */
-class BAMFileIndex extends AbstractBAMFileIndex
+class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
 {
-    BAMFileIndex(final File file) {
+    DiskBasedBAMFileIndex(final File file) {
         super(file);
     }
 
@@ -47,7 +47,7 @@ class BAMFileIndex extends AbstractBAMFileIndex
      * positions. The last position in each pair is a virtual file pointer to the first SAMRecord beyond
      * the range that may contain the indicated SAMRecords.
      */
-    public long[] getSearchBins(final int referenceIndex, final int startPos, final int endPos) {
+    public long[] getChunksOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         BAMIndexContent queryResults = query(referenceIndex,startPos,endPos);
 
         if(queryResults == null)

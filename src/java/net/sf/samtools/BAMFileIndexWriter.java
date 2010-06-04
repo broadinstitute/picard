@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Class for writing BAM index files
  */
-public class BAMFileIndexWriter extends BAMFileIndex{
+public class BAMFileIndexWriter extends DiskBasedBAMFileIndex {
 
     private final BAMIndexContent[] content;
 
