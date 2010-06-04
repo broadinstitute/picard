@@ -23,13 +23,11 @@
  */
 package net.sf.picard.util;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMException;
+import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,6 +35,8 @@ import java.util.List;
  * @author alecw@broadinstitute.org
  */
 public class CigarUtil {
+        private static final Log log = Log.getInstance(CigarUtil.class);
+
     /** adjust the cigar based on adapter clipping.
      * TODO: If there is hard clipping at the end of the input CIGAR, it is lost.  It should not be. 
      * *
@@ -95,4 +95,86 @@ public class CigarUtil {
         newCigar.add(new CigarElement(clipAmount, CigarOperator.S));  // S is always last element
     }
 
+    /**
+     * Adds a soft-clip, based on <code>clipFrom</code>, to the SAM record's existing cigar
+     * and, for negative strands, also adjusts the SAM record's start position.
+     * Soft clips the end of the read as the read came off the sequencer.
+     */
+    public static void softClip3PrimeEndOfRead(SAMRecord rec, final int clipFrom) {
+
+        final Cigar cigar = rec.getCigar();
+        // we don't worry about SEED_REGION_LENGTH in clipFrom
+        final boolean negativeStrand = rec.getReadNegativeStrandFlag();
+        List<CigarElement> oldCigar = cigar.getCigarElements();
+
+        if (!isValidCigar(rec, cigar, true)){
+            return; // log message already issued
+        }
+        if (negativeStrand){
+            // Can't just use Collections.reverse() here because oldCigar is unmodifiable
+            oldCigar = new ArrayList<CigarElement>(oldCigar);
+            Collections.reverse(oldCigar);
+        }
+        List<CigarElement> newCigarElems = CigarUtil.softClipEndOfRead(clipFrom, oldCigar);
+
+        if (negativeStrand) {
+            Collections.reverse(newCigarElems);
+        }
+
+        final Cigar newCigar = new Cigar(newCigarElems);
+        if (negativeStrand){
+            int oldLength = cigar.getReferenceLength();
+            int newLength = newCigar.getReferenceLength();
+            int sizeChange = oldLength - newLength;
+            if (sizeChange > 0){
+                rec.setAlignmentStart(rec.getAlignmentStart() + sizeChange);
+            } else if (sizeChange < 0){
+                throw new SAMException("The clipped length " + newLength +
+                        " is longer than the old unclipped length " + oldLength);
+            }
+        }
+        rec.setCigar(newCigar);
+
+        if (!isValidCigar(rec, newCigar, false)){
+            // log message already issued
+        }
+    }
+
+    private static boolean isValidCigar(SAMRecord rec, Cigar cigar, boolean isOldCigar) {
+        if (cigar == null || cigar.getCigarElements() == null || cigar.getCigarElements().size() == 0) {
+            if (isOldCigar) {
+                if (rec.getReadUnmappedFlag()) {
+                    // don't bother to warn since this does occur for PE reads
+                } else {
+                    log.warn("Cigar is empty for read " + rec);
+                }
+            } else {
+                log.error("Empty new cigar");
+            }
+            return false;
+        }
+
+        if (rec.getReadUnmappedFlag()){
+            log.info("Unmapped read with cigar: " + rec.getReadName() + " (" + rec.getCigarString() + "/" + cigar.toString()  + ")");
+
+        }
+        final List<SAMValidationError> validationErrors = cigar.isValid(rec.getReadName(), -1);
+        if (validationErrors != null && validationErrors.size() != 0) {
+            log.error("Invalid cigar for read " + rec +
+                (isOldCigar ? " " : " for new cigar with clipped adapter ") +
+                 " (" + rec.getCigarString() + "/" + cigar.toString()  + ") " +
+                validationErrors);
+            return false;
+        }
+    
+        if (rec.getReadLength() != cigar.getReadLength()){
+            // throw new PicardException(
+            log.error( rec.getReadLength() +
+               " read length does not = cigar length " + cigar.getReferenceLength() +
+               (isOldCigar? " oldCigar " : " ") +
+               rec + " cigar:" + cigar);
+            return false;
+        }
+        return true;
+    }
 }
