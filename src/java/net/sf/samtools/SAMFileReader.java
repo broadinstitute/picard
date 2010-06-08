@@ -30,7 +30,6 @@ import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.net.URL;
 
-
 /**
  * Class for reading and querying SAM/BAM files.  Delegates to appropriate concrete implementation.
  */
@@ -51,8 +50,9 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     }
 
     private boolean mIsBinary = false;
-    private BAMFileIndex mFileIndex = null;
+    private BAMIndex mIndex = null;
     private ReaderImplementation mReader = null;
+
     private File samFile = null;
 
     /**
@@ -80,8 +80,14 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * Implemented as an abstract class to enforce better access control.
      */
     static abstract class ReaderImplementation {
+        abstract void enableFileSource(final SAMFileReader reader, final boolean enabled);
+        abstract void enableIndexCaching(final boolean enabled);
+        abstract boolean hasIndex();
+        abstract BAMIndex getIndex();
         abstract SAMFileHeader getFileHeader();
         abstract CloseableIterator<SAMRecord> getIterator();
+        abstract CloseableIterator<SAMRecord> getIterator(SAMFileSpan fileSpan);
+        abstract SAMFileSpan getFilePointerSpanningReads();
         abstract CloseableIterator<SAMRecord> query(String sequence, int start, int end, boolean contained);
         abstract CloseableIterator<SAMRecord> queryAlignmentStart(String sequence, int start);
         abstract public CloseableIterator<SAMRecord> queryUnmapped();
@@ -181,11 +187,29 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         if (mReader != null) {
             mReader.close();
         }
-        if (mFileIndex != null) {
-            mFileIndex.close();
+        if (mIndex != null) {
+            mIndex.close();
         }
         mReader = null;
-        mFileIndex = null;
+        mIndex = null;
+    }
+
+    /**
+     * If true, writes the source of every read into the source SAMRecords.
+     * @param enabled true to write source information into each SAMRecord. 
+     */
+    public void enableFileSource(final boolean enabled) {
+        mReader.enableFileSource(this,enabled);
+    }
+
+    /**
+     * If true, uses the caching version of the index reader.
+     * @param enabled true to write source information into each SAMRecord.
+     */
+    public void enableIndexCaching(final boolean enabled) {
+        if(mIndex != null)
+            throw new SAMException("Unable to turn on index caching; index file has already been loaded.");
+        mReader.enableIndexCaching(enabled);
     }
 
     /**
@@ -199,7 +223,37 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @return true if ths is a BAM file, and has an index
      */
     public boolean hasIndex() {
-        return (mFileIndex != null);
+        return mReader.hasIndex();
+    }
+
+    /**
+     * Retrieves the index for the given file type.  Ensure that the index is of the specified type.
+     * @return An index of the given type.
+     */
+    public BAMIndex getIndex() {
+        return mReader.getIndex();
+    }
+
+    /**
+     * Returns true if the supported index is browseable, meaning the bins in it can be traversed
+     * and chunk data inspected and retrieved.
+     * @return True if the index supports the BrowseableBAMIndex interface.  False otherwise.
+     */
+    public boolean hasBrowseableIndex() {
+        return hasIndex() && getIndex() instanceof BrowseableBAMIndex;
+    }
+
+    /**
+     * Gets an index tagged with the BrowseableBAMIndex interface.  Throws an exception if no such
+     * index is available.
+     * @return An index with a browseable interface, if possible.
+     * @throws SAMException if no such index is available.
+     */
+    public BrowseableBAMIndex getBrowseableIndex() {
+        BAMIndex index = getIndex();
+        if(!(index instanceof BrowseableBAMIndex))
+            throw new SAMException("Cannot return index: index created by BAM is not browseable.");
+        return BrowseableBAMIndex.class.cast(index);
     }
 
     public SAMFileHeader getFileHeader() {
@@ -225,6 +279,23 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      */
     public CloseableIterator<SAMRecord> iterator() {
         return mReader.getIterator();
+    }
+
+    /**
+     * Iterate through the given chunks in the file.
+     * @param chunks List of chunks for which to retrieve data.
+     * @return An iterator over the given chunks.
+     */
+    public CloseableIterator<SAMRecord> iterator(final SAMFileSpan chunks) {
+        return mReader.getIterator(chunks);
+    }
+
+    /**
+     * Gets a pointer spanning all reads in the BAM file.
+     * @return Unbounded pointer to the first record, in chunk format. 
+     */
+    public SAMFileSpan getFilePointerSpanningReads() {
+        return mReader.getFilePointerSpanningReads();
     }
 
     /**
@@ -375,7 +446,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             final BufferedInputStream bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;
-                mReader = new BAMFileReader(bufferedStream, eagerDecode, validationStringency);
+                mReader = new BAMFileReader(bufferedStream, null, eagerDecode, validationStringency);
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
                 mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
@@ -400,12 +471,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             // Rely on file extension.
             if (strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam")) {
                 mIsBinary = true;
-                final BAMFileReader reader = new BAMFileReader(strm, eagerDecode, validationStringency);
-                mReader = reader;
-                if (indexFile != null) {
-                    mFileIndex = new BAMFileIndex(indexFile);
-                    reader.setFileIndex(mFileIndex);
-                }
+                mReader = new BAMFileReader(strm, indexFile, eagerDecode, validationStringency);
             } else {
                 throw new SAMFormatException("Unrecognized file format: " + strm);
             }
@@ -426,22 +492,11 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
                 mIsBinary = true;
                 if (!file.isFile()) {
                     // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
-                    mReader = new BAMFileReader(bufferedStream, eagerDecode, validationStringency);
+                    mReader = new BAMFileReader(bufferedStream, indexFile, eagerDecode, validationStringency);
                 } else {
                     bufferedStream.close();
-                    final BAMFileReader reader = new BAMFileReader(file, eagerDecode, validationStringency);
+                    final BAMFileReader reader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency);
                     mReader = reader;
-                    if (indexFile == null) {
-                        indexFile = findIndexFile(file);
-                    }
-                    if (indexFile != null) {
-                        mFileIndex = new BAMFileIndex(indexFile);
-                        reader.setFileIndex(mFileIndex);
-                        if (indexFile.lastModified() < file.lastModified()) {
-                            System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
-                                    " is older than BAM " + file.getAbsolutePath());
-                        }
-                    }
                 }
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
@@ -461,35 +516,6 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         }
         catch (IOException e) {
             throw new RuntimeIOException(e);
-        }
-    }
-
-
-    /**
-     * Look for BAM index file according to standard naming convention.
-     *
-     * @param dataFile BAM file name.
-     * @return Index file name, or null if not found.
-     */
-    private File findIndexFile(final File dataFile) {
-        // If input is foo.bam, look for foo.bai
-        final String bamExtension = ".bam";
-        File indexFile;
-        final String fileName = dataFile.getName();
-        if (fileName.endsWith(bamExtension)) {
-            final String bai = fileName.substring(0, fileName.length() - bamExtension.length()) + ".bai";
-            indexFile = new File(dataFile.getParent(), bai);
-            if (indexFile.exists()) {
-                return indexFile;
-            }
-        }
-
-        // If foo.bai doesn't exist look for foo.bam.bai
-        indexFile = new File(dataFile.getParent(), dataFile.getName() + ".bai");
-        if (indexFile.exists()) {
-            return indexFile;
-        } else {
-            return null;
         }
     }
 

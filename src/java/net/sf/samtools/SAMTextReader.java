@@ -67,6 +67,11 @@ class SAMTextReader
     private SAMFileReader.ValidationStringency validationStringency = SAMFileReader.ValidationStringency.DEFAULT_STRINGENCY;
 
     /**
+     * Add information about the origin (reader and position) to SAM records.
+     */
+    private SAMFileReader mParentReader;
+
+    /**
      * Prepare to read a SAM text file.
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
@@ -84,6 +89,26 @@ class SAMTextReader
     SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
         this(stream, validationStringency);
         mFile = file;
+    }
+
+    /**
+     * If true, writes the source of every read into the source SAMRecords.
+     * @param enabled true to write source information into each SAMRecord.
+     */
+    void enableFileSource(final SAMFileReader reader, final boolean enabled) {
+        this.mParentReader = enabled ? reader : null;
+    }
+
+    void enableIndexCaching(final boolean enabled) {
+        throw new UnsupportedOperationException("Cannot enable index caching for a SAM text reader");
+    }
+
+    boolean hasIndex() {
+        return false;    
+    }
+
+    BAMIndex getIndex() {
+        throw new UnsupportedOperationException();
     }
 
     void close() {
@@ -124,6 +149,23 @@ class SAMTextReader
         }
         mIterator = new RecordIterator();
         return mIterator;
+    }
+
+    /**
+     * Generally loads data at a given point in the file.  Unsupported for SAMTextReaders.
+     * @param fileSpan The file span.
+     * @return An iterator over the given file span.
+     */
+    CloseableIterator<SAMRecord> getIterator(SAMFileSpan fileSpan) {
+        throw new UnsupportedOperationException("Cannot directly iterate over regions within SAM text files.");
+    }
+
+    /**
+     * Generally gets a pointer to the first read in the file.  Unsupported for SAMTextReaders.
+     * @return An pointer to the first read in the file.
+     */
+    SAMFileSpan getFilePointerSpanningReads() {
+        throw new UnsupportedOperationException("Cannot retrieve file pointers within SAM text files.");
     }
 
     /**
@@ -270,6 +312,8 @@ class SAMTextReader
             }
             final SAMRecord samRecord = new SAMRecord(mFileHeader);
             samRecord.setValidationStringency(getValidationStringency());
+            if(mParentReader != null)
+                samRecord.setFileSource(new SAMFileSource(mParentReader,null));
             samRecord.setHeader(mFileHeader);
             samRecord.setReadName(mFields[QNAME_COL]);
 
