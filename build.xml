@@ -157,8 +157,8 @@
                 <pathelement path="${classes.test}"/>
             </classpath>
             <classfileset dir="${classes.test}">
-                <include name="**/Test*.class"/>
-                <include name="**/*Test.class"/>
+                 <include name="**/Test*.class"/>
+                 <include name="**/*Test.class"/>
             </classfileset>
             <jvmarg value="-Xmx1G"/>
         </testng>
@@ -238,6 +238,8 @@
         <package-command main-class="net.sf.picard.sam.CreateSequenceDictionary" title="CreateSequenceDictionary"/>
         <package-command main-class="net.sf.picard.sam.CleanSam" title="CleanSam"/>
         <package-command main-class="net.sf.picard.sam.CompareSAMs" title="CompareSAMs"/>
+        <package-command main-class="net.sf.picard.util.BuildBamIndex" title="BuildBamIndex"/>
+        <package-command main-class="net.sf.picard.util.BaiToText" title="BaiToText"/>
     </target>
 
 <!-- ALL -->

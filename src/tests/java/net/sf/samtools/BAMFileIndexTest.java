@@ -46,8 +46,8 @@ public class BAMFileIndexTest
     @Test
     public void testGetSearchBins()
         throws Exception {
-        final BAMFileIndex bfi = new BAMFileIndex(new File(BAM_FILE.getPath() + ".bai"));
-        final long[] bins = bfi.getSearchBins(1, 0, 0);
+        final DiskBasedBAMFileIndex bfi = new DiskBasedBAMFileIndex(new File(BAM_FILE.getPath() + ".bai"));
+        final long[] bins = bfi.getSpanOverlapping(1, 0, 0).toCoordinateArray();
         /***
         if (bins == null) {
             System.out.println("Search bins: " + bins);
