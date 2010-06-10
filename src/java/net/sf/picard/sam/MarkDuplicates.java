@@ -197,11 +197,12 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
 
             // Add the optical dupes to the metrics
             Short libraryId = this.libraryIds.get(libraryName);
-            Histogram<Short>.Bin bin = this.opticalDupesByLibraryId.get(libraryId);
-            if (bin != null) {
-                metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
+            if (libraryId != null) {
+                Histogram<Short>.Bin bin = this.opticalDupesByLibraryId.get(libraryId);
+                if (bin != null) {
+                    metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
+                }
             }
-
             metrics.calculateDerivedMetrics();
             file.addMetric(metrics);
         }
