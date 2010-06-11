@@ -36,14 +36,18 @@ class BAMFileWriter extends SAMFileWriterImpl {
 
     private final BinaryCodec outputBinaryCodec;
     private BAMRecordCodec bamRecordCodec = null;
+    private final BlockCompressedOutputStream blockCompressedOutputStream;
+    private BAMFileIndexWriter bamIndexWriter = null;
 
     public BAMFileWriter(final File path) {
-        outputBinaryCodec = new BinaryCodec(new DataOutputStream(new BlockCompressedOutputStream(path)));
+        blockCompressedOutputStream = new BlockCompressedOutputStream(path);
+        outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
         outputBinaryCodec.setOutputFileName(path.toString());
     }
 
     public BAMFileWriter(final File path, final int compressionLevel) {
-        outputBinaryCodec = new BinaryCodec(new DataOutputStream(new BlockCompressedOutputStream(path, compressionLevel)));
+        blockCompressedOutputStream = new BlockCompressedOutputStream(path, compressionLevel);
+        outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
         outputBinaryCodec.setOutputFileName(path.toString());
     }
 
@@ -52,11 +56,46 @@ class BAMFileWriter extends SAMFileWriterImpl {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
             bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream());
         }
+        if (bamIndexWriter == null) {
+            bamIndexWriter = createBamIndex(outputBinaryCodec.getOutputFileName());
+        }
+    }
+
+    private BAMFileIndexWriter createBamIndex(String path) {
+        // todo - how to check SAMFileReader.enableFileSource(true)
+        // todo - some way to disable in case of problems?
+        try {
+            if (!getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
+                System.err.println("Not creating BAM index since not sorted by coordinates");
+                return null;
+            }
+            String indexFileName = path + ".bai";
+            File indexFile = new File(indexFileName);
+            if (indexFile.exists()){
+                System.err.println("Overwriting existing index file " + indexFileName);
+                // return null; // todo maybe later we'll be confident enough to overwrite
+            }
+            // IoUtil.assertFileIsWritable(indexFile);   // todo IoUtil is only in net.sf.picard.io.IoUtil
+            return new BAMFileIndexWriter(indexFile, getFileHeader().getSequenceDictionary().size());
+        } catch (Exception e) {
+            System.err.println("Not creating BAM index " + e.getMessage());
+            return null;
+        }
     }
 
     protected void writeAlignment(final SAMRecord alignment) {
         prepareToWriteAlignments();
+        long startCoordinate = 0;
+        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null) {
+            startCoordinate = blockCompressedOutputStream.getFilePointer();
+        }
         bamRecordCodec.encode(alignment);
+        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null){
+            // set the alignment's SourceInfo and then prepare its index information
+            final long stopCoordinate = blockCompressedOutputStream.getFilePointer();
+            alignment.setFileSource(new SAMFileSource(null,new BAMFileSpan(new Chunk(startCoordinate,stopCoordinate))));
+            bamIndexWriter.processAlignment(alignment);
+        }
     }
 
     protected void writeHeader(final String textHeader) {
@@ -75,6 +114,15 @@ class BAMFileWriter extends SAMFileWriterImpl {
 
     protected void finish() {
         outputBinaryCodec.close();
+        if (bamIndexWriter != null){
+            try {
+                bamIndexWriter.finish();
+                bamIndexWriter.writeBinary(true, 0);
+            } catch (Exception e) {
+                System.err.println("Exception writing BAM index file " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 
     protected String getFilename() {

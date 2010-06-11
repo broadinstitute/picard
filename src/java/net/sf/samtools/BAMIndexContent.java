@@ -46,14 +46,14 @@ class BAMIndexContent {
     /**
      * A mapping from bin to the chunks contained in that bin.
      */
-    private final SortedMap<Bin, BAMFileSpan> mBinToChunks;
+    private final SortedMap<Bin, List<Chunk>> mBinToChunks;
 
     /**
      * The linear index for the reference sequence above.
      */
     private final LinearIndex mLinearIndex;
 
-    public BAMIndexContent(final int referenceSequence, final List<Bin> bins, final SortedMap<Bin,BAMFileSpan> binToChunks, final LinearIndex linearIndex) {
+    public BAMIndexContent(final int referenceSequence, final List<Bin> bins, final SortedMap<Bin,List<Chunk>> binToChunks, final LinearIndex linearIndex) {
         this.mReferenceSequence = referenceSequence;
         this.mBins = bins;
         this.mBinToChunks = binToChunks;
@@ -75,13 +75,13 @@ class BAMIndexContent {
     public List<Chunk> getChunksForBin(final Bin bin) {
         if(!mBinToChunks.containsKey(bin))
             throw new SAMException("No chunks found for the given bin.");
-        return Collections.unmodifiableList(mBinToChunks.get(bin).getChunks());
+        return Collections.unmodifiableList(mBinToChunks.get(bin));
     }
 
     public List<Chunk> getAllChunks() {
         List<Chunk> allChunks = new ArrayList<Chunk>();
-        for(BAMFileSpan span: mBinToChunks.values())
-            allChunks.addAll(span.getChunks());
+        for(List <Chunk> moreChunks: mBinToChunks.values())
+            allChunks.addAll(moreChunks);
         return Collections.unmodifiableList(allChunks);
     }
 
@@ -89,63 +89,68 @@ class BAMIndexContent {
         return mLinearIndex;
     }
 
-        /**
-     * Write the index file as human-readable text
+    /**
+     * Write this content as human-readable text
      *
      * @param pw PrintWriter for text output file
      */
-    public void writeText(final PrintWriter pw, boolean sortBins)  {
+    public void writeText(final PrintWriter pw, boolean sortBins) {
 
-            if (mBins == null || mBins.size() == 0){
-                pw.println("Reference " + mReferenceSequence + " has n_bin=0");
-                pw.println("Reference " + mReferenceSequence + " has n_intv=0");
-                return;
-            }
+        if (mBins == null || mBins.size() == 0) {
+            writeNullTextContent(pw, mReferenceSequence);
+            return;
+        }
 
-            final int size = mBins.size();
-            pw.println("Reference " + mReferenceSequence + " has n_bin= " + size);
+        final int size = mBins.size();
+        pw.println("Reference " + mReferenceSequence + " has n_bin= " + size);
 
-            // copy into an array so that it can be sorted
-            final Bin[] bins = new Bin[size];
-            if (size != 0) {
-                getBins().toArray(bins);
+        // copy into an array so that it can be sorted
+        final Bin[] bins = new Bin[size];
+        if (size != 0) {
+            getBins().toArray(bins);
+        }
+        if (sortBins) Arrays.sort(bins);  // Sort for easy text comparisons
+        for (int j = 0; j < size; j++) {
+            if (mBinToChunks.get(bins[j]) == null) {
+                pw.println("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has no mBinToChunks");
+                continue;
             }
-            if (sortBins) Arrays.sort(bins);  // Sort for easy text comparisons
-            for (int j = 0; j < size; j++) {
-                final List<Chunk> chunkList = mBinToChunks.get(bins[j]).getChunks();
-                if (chunkList == null) continue;
-                pw.print("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has n_chunk= " + chunkList.size());
-                for (final Chunk c : chunkList) {
-                    pw.println("     Chunk: " + c.toString() +
-                            " start: " + Long.toString(c.getChunkStart(), 16) +
-                            " end: " + Long.toString(c.getChunkEnd(), 16));
-                }
+            final List<Chunk> chunkList = mBinToChunks.get(bins[j]);
+            if (chunkList == null) {
+                pw.println("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has no chunkList");
+                continue;
             }
-            if ( mLinearIndex == null || mLinearIndex.getIndexEntries()== null){
-                pw.println("Reference " + mReferenceSequence + " has n_intv= 0");
-                return;
+            pw.print("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has n_chunk= " + chunkList.size());
+            for (final Chunk c : chunkList) {
+                pw.println("     Chunk: " + c.toString() +
+                        " start: " + Long.toString(c.getChunkStart(), 16) +
+                        " end: " + Long.toString(c.getChunkEnd(), 16));
             }
-            final long[] entries = mLinearIndex.getIndexEntries();
-            final int indexStart = mLinearIndex.getIndexStart();
-            // System.out.println("index start is " + indexStart);
-            final int n_intv = entries.length + indexStart;
-            pw.println("Reference " + mReferenceSequence + " has n_intv= " + n_intv);
-            for (int k = 0; k < entries.length; k++) {
-                if (entries[k] != 0){
-                    pw.println("ioffset for " + (k+indexStart) + " is " + Long.toString(entries[k]));
-                }
+        }
+        if (mLinearIndex == null || mLinearIndex.getIndexEntries() == null) {
+            pw.println("Reference " + mReferenceSequence + " has n_intv= 0");
+            return;
+        }
+        final long[] entries = mLinearIndex.getIndexEntries();
+        final int indexStart = mLinearIndex.getIndexStart();
+        // System.out.println("index start is " + indexStart);
+        final int n_intv = entries.length + indexStart;
+        pw.println("Reference " + mReferenceSequence + " has n_intv= " + n_intv);
+        for (int k = 0; k < entries.length; k++) {
+            if (entries[k] != 0) {
+                pw.println("ioffset for " + (k + indexStart) + " is " + Long.toString(entries[k]));
             }
+        }
     }
 
     /**
-     * Write the index file
+     * Write this content as binary output
      *
      * @param bb ByteBuffer for output file must exist and be writable
      */
     public void writeBinary(ByteBuffer bb, boolean sortBins) {
         if (mBins == null || mBins.size() == 0) {
-            bb.putInt(0);  // 0 bins
-            bb.putInt(0);  // 0 intv
+            writeNullBinaryContent(bb);
             return;
         }
 
@@ -161,7 +166,8 @@ class BAMIndexContent {
         for (int j = 0; j < size; j++) {
 
             bb.putInt(bins[j].getBinNumber()); // todo uint32_t vs int32_t in spec?
-            final List<Chunk> chunkList = mBinToChunks.get(bins[j]).getChunks();
+            if (mBinToChunks.get(bins[j]) == null) continue;
+            final List<Chunk> chunkList = mBinToChunks.get(bins[j]);
             final int n_chunk = chunkList.size();
             bb.putInt(n_chunk);
             for (final Chunk c : chunkList) {
@@ -183,5 +189,15 @@ class BAMIndexContent {
         for (int k = 0; k < entries.length; k++) {
             bb.putLong(entries[k]); // todo uint32_t vs int32_t in spec?
         }
+    }
+
+    static void writeNullTextContent(PrintWriter pw, int reference) {
+        pw.println("Reference " + reference + " has n_bin=0");
+        pw.println("Reference " + reference + " has n_intv=0");
+    }
+
+    static void writeNullBinaryContent(ByteBuffer bb) {
+        bb.putInt(0);  // 0 bins
+        bb.putInt(0);  // 0 intv
     }
 }

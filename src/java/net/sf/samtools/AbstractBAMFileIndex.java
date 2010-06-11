@@ -25,9 +25,8 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.RuntimeIOException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
@@ -51,12 +50,12 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     /**
      * Reports the total amount of genomic data that any bin can index.
      */
-    private static final int BIN_SPAN = 512*1024*1024;
+    protected static final int BIN_SPAN = 512*1024*1024;
 
     /**
      * What is the starting bin for each level?
      */
-    protected static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};    
+    private static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};
 
     private final File mFile;
     private MappedByteBuffer mFileBuffer;
@@ -177,6 +176,72 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     }
 
     /**
+     * Write textual bam index file
+     */
+    public void writeText(final int n_ref, final File OUTPUT, final boolean sortBins) throws Exception {
+
+        final PrintWriter pw = new PrintWriter(OUTPUT);
+        pw.println("n_ref=" + n_ref);
+        for (int i = 0; i < n_ref; i++) {
+            try {
+                if (getQueryResults(i) == null) {
+                    BAMIndexContent.writeNullTextContent(pw, i);
+                    continue;
+                }
+                getQueryResults(i).writeText(pw, sortBins);
+            } catch (Exception e) {
+                System.err.println(e.getMessage() + " Exception writing text for reference " + i);
+            }
+        }
+        pw.close();
+    }
+
+    /**
+     * Write binary bam index file
+     *
+     * @param
+     */
+    public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws Exception {
+
+        final int bufferSize; //  = 1000000; // 1M  works, but doesn't need to be this big
+        final int defaultBufferSize = 1000000;  // 1M
+        if (bamFileSize < defaultBufferSize  && bamFileSize != 0) {
+            bufferSize = (int) bamFileSize;
+        } else {
+            bufferSize = defaultBufferSize;
+        }
+        // log.info("ByteBuffer size is " + bufferSize);
+
+        final FileOutputStream stream = new FileOutputStream(OUTPUT, true);
+        final FileChannel fileChannel = stream.getChannel();
+        final ByteBuffer bb = ByteBuffer.allocateDirect(bufferSize);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+
+        // magic string
+        final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
+        bb.put(magic);
+        // n_ref
+        bb.putInt(n_ref);
+        for (int i = 0; i < n_ref; i++) {
+            if (getQueryResults(i) == null){
+                BAMIndexContent.writeNullBinaryContent(bb);
+                continue;
+            }
+            getQueryResults(i).writeBinary(bb, sortBins);
+            //  write out data and reset the buffer for each reference
+            bb.flip();
+            fileChannel.write(bb, 0);
+            // stream.flush();    // todo will flushing the stream at every reference help memory?
+            bb.position(0);
+            bb.limit(bufferSize);
+        }
+        bb.flip();
+        fileChannel.write(bb, 0);
+        fileChannel.close();
+        stream.close();
+    }
+
+    /**
      * Use to get close to the unmapped reads at the end of a BAM file.
      * @return The file offset of the first record in the last linear bin, or -1
      * if there are no elements in linear bins (i.e. no mapped reads).
@@ -219,7 +284,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         seek(4);
 
         List<Bin> bins = null;
-        SortedMap<Bin, BAMFileSpan> binToChunks = new TreeMap<Bin,BAMFileSpan>();
+        SortedMap<Bin, List<Chunk>> binToChunks = new TreeMap<Bin,List<Chunk>>();
         LinearIndex linearIndex = null;
 
         final int sequenceCount = readInteger();
@@ -253,7 +318,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             }
             Bin bin = new Bin(referenceSequence,indexBin);
             bins.add(bin);
-            binToChunks.put(bin,new BAMFileSpan(chunks));
+            binToChunks.put(bin,chunks);
         }
         // Reorder the bins in binNumber order.
         Collections.sort(bins);
@@ -273,8 +338,10 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
         linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
 
-        return new BAMIndexContent(referenceSequence,bins,binToChunks,linearIndex);
+        return new BAMIndexContent(referenceSequence, bins, binToChunks, linearIndex);
     }
+
+    abstract protected BAMIndexContent getQueryResults(int reference);
 
     /**
      * Gets the possible number of bins for a given reference sequence.
