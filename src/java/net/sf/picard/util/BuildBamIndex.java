@@ -112,13 +112,17 @@ public class BuildBamIndex extends CommandLineProgram {
         // set default output file - input-file.bai
         if (OUTPUT == null){
             String baseFileName = INPUT.getName();
-            final int lastDot = baseFileName.lastIndexOf('.');
-            final int lastSlash = baseFileName.lastIndexOf(File.separator);
-            if (lastDot != -1){
-                if (lastDot > lastSlash)
+            if (baseFileName.endsWith(".bam")){
+                final int lastDot = baseFileName.lastIndexOf('.');
+                if (lastDot != -1){
                    baseFileName = baseFileName.substring(0,lastDot);
+                }
             }
-            OUTPUT = new File (baseFileName + ".bai");
+            if (TEXTUAL){
+                OUTPUT = new File (baseFileName + ".bai.txt");
+            } else {
+                OUTPUT = new File (baseFileName + ".bai");
+            }
         }
         // check OVERWRITE
         if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){

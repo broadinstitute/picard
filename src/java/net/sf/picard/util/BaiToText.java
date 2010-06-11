@@ -24,13 +24,11 @@
 
 package net.sf.picard.util;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BAMFileIndexWriter;
 import net.sf.samtools.BAMIndexTextWriter;
 
 import java.io.File;
@@ -102,9 +100,13 @@ public class BaiToText extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        // set default output file - input-file.bai
+        // set default output file - input-file.txt
         if (OUTPUT == null){
-            OUTPUT = new File (INPUT.getName() + ".txt");
+            if (TEXTUAL){
+                OUTPUT = new File (INPUT.getName() + ".txt");
+            } else {
+                OUTPUT = new File (INPUT.getName() + ".bai");  
+            }
         }
         // check OVERWRITE
         if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){

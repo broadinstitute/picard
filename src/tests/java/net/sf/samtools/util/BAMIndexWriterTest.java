@@ -32,7 +32,6 @@ import net.sf.picard.io.IoUtil;
 
 import java.io.File;
 
-import static org.testng.Assert.*;
 
 /**
  * Test BAM file index creation
@@ -45,60 +44,56 @@ public class BAMIndexWriterTest
     private final File BAM_FILE = new File(BAM_FILE_LOCATION);
     private final File BAI_FILE = new File(BAI_FILE_LOCATION);
 
-    private final boolean mVerbose = false;
+    private final boolean mVerbose = true;
 
     @Test
     public void testWriteText() throws Exception {
         // Compare the text form of the c-generated bai file and a java-generated one
-        // final String cBaiTxtFileName = BAM_FILE_LOCATION + ".bai.txt";
         final File cBaiTxtFile = File.createTempFile("cBai.", ".bai.txt");
-        cBaiTxtFile.deleteOnExit();
         final BAMIndexTextWriter bfi = new BAMIndexTextWriter(BAI_FILE, cBaiTxtFile);
         bfi.writeText(true);
-        verbose ("Wrote Textual BAM Index file " + cBaiTxtFile);
+        verbose ("Wrote Textual version of C BAM Index file " + cBaiTxtFile);
 
         // Text compare of javaBaiTxtFileName.txt(bfi2)
         //             and cBaiTxtFileName(bfi)should be the same
-        //final String javaBaiTxtFileName = BAM_FILE_LOCATION + ".java.bai.txt";  // java-generated
         final File javaBaiTxtFile = File.createTempFile("javaBai.", "java.bai.txt");
-        javaBaiTxtFile.deleteOnExit();
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
         bam.enableFileSource(true);
         final BAMFileIndexWriter javaBai = new BAMFileIndexWriter(javaBaiTxtFile,
                     bam.getFileHeader().getSequenceDictionary().size());
         int n_records = javaBai.createIndex(BAM_FILE, true, true);
+        verbose ("Wrote Textual version of Java BAM Index file " + javaBai);
         Assert.assertEquals(9721, n_records);
         // diff index_test.bam.java.bai.txt index_text.bam.bai.txt
         verbose ("diff " + javaBaiTxtFile + " " + cBaiTxtFile);
         IoUtil.assertFilesEqual(javaBaiTxtFile, cBaiTxtFile);
+        cBaiTxtFile.deleteOnExit();
+        javaBaiTxtFile.deleteOnExit();
     }
 
     @Test
     public void testWriteBinary() throws Exception {
-        // Compare c-generated and sorted bai file with a java-generated bai file
-        // final String javaBaiFileName = BAM_FILE.getPath() + ".java.bai";  // java-generated
+        // Compare java-generated bai file with c-generated and sorted bai file
         final File javaBaiFile = File.createTempFile("javaBai.", ".bai");
-        javaBaiFile.deleteOnExit();
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
         bam.enableFileSource(true);
         final BAMFileIndexWriter javaBai = new BAMFileIndexWriter(javaBaiFile,
                     bam.getFileHeader().getSequenceDictionary().size());
         int n_records = javaBai.createIndex(BAM_FILE, false, true);
         Assert.assertEquals(9721, n_records);
-        verbose ("Wrote Binary BAM Index file " + javaBaiFile);
+        verbose ("Wrote sorted C Binary BAM Index file " + javaBaiFile);
 
-        // final String cRegeneratedBaiFileName = BAM_FILE.getPath() + ".generated.bai";  // java-generated
-        final File cRegeneratedBaiFile = File.createTempFile("cBai.", ".bai.txt");
-        cRegeneratedBaiFile.deleteOnExit();
+        final File cRegeneratedBaiFile = File.createTempFile("cBai.", ".bai");
         final BAMIndexTextWriter bfi2 = new BAMIndexTextWriter(BAI_FILE, cRegeneratedBaiFile);
         bfi2.writeBinary(true, 0);
-        verbose ("Wrote Binary BAM Index file " + javaBaiFile);
-        // Binary compare of javaBaiFileName and cBaiFileName.sorted should be the same
+        verbose ("Wrote Java-generated Binary BAM Index file " + cRegeneratedBaiFile);
+        // Binary compare of javaBaiFile and cRegeneratedBaiFile should be the same
         // diff index_test.bam.java.bai index_test.bam.generated.bai
         verbose ("diff " + javaBaiFile + " " + cRegeneratedBaiFile);
         IoUtil.assertFilesEqual(javaBaiFile, cRegeneratedBaiFile);
+        javaBaiFile.deleteOnExit();
+        cRegeneratedBaiFile.deleteOnExit();
 
-        // todo - write both of these as text format and compare
     }
 
     private void verbose(final String text) {

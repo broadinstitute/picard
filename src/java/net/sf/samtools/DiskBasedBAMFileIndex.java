@@ -59,4 +59,11 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
         chunkList = optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
         return new BAMFileSpan(chunkList);
     }
+
+     protected BAMIndexContent getQueryResults(int reference){
+         throw new UnsupportedOperationException();
+         // todo: there ought to be a way to support this using the first startPos for the reference and the last
+         // todo: return query(reference, 1, BIN_SPAN);
+         // If this were implemented, BAMIndexTextWriter could extend DiskBasedBAMFileIndex -or- CachingBAMFileIndex
+    }
 }
