@@ -81,6 +81,13 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
     }
 
     /**
+     * Must be called after calling setHeader().
+     */
+    protected SAMFileHeader.SortOrder getSortOrder() {
+        return this.sortOrder;
+    }
+
+    /**
      * When writing records that are not presorted, specify the number of records stored in RAM
      * before spilling to disk.  Must be called before setHeader().
      * @param maxRecordsInRam
