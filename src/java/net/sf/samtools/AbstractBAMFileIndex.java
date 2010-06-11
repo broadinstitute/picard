@@ -177,6 +177,9 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
     /**
      * Write textual bam index file
+     * @param  n_ref   Number of reference sequences
+     * @param OUTPUT   BAM Index output file
+     * @param sortBins Whether to sort the bins - useful for comparison to c-generated index
      */
     public void writeText(final int n_ref, final File OUTPUT, final boolean sortBins) throws Exception {
 
@@ -199,13 +202,16 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     /**
      * Write binary bam index file
      *
-     * @param
+     * @param n_ref       Number of reference sequences
+     * @param OUTPUT      BAM Index output file
+     * @param sortBins    Whether to sort the bins - useful for comparison to c-generated index
+     * @param bamFileSize Size of corresponding BAM file if known, 0 otherwise.
      */
     public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws Exception {
 
         final int bufferSize; //  = 1000000; // 1M  works, but doesn't need to be this big
         final int defaultBufferSize = 1000000;  // 1M
-        if (bamFileSize < defaultBufferSize  && bamFileSize != 0) {
+        if (bamFileSize < defaultBufferSize && bamFileSize != 0) {
             bufferSize = (int) bamFileSize;
         } else {
             bufferSize = defaultBufferSize;
@@ -223,7 +229,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         // n_ref
         bb.putInt(n_ref);
         for (int i = 0; i < n_ref; i++) {
-            if (getQueryResults(i) == null){
+            if (getQueryResults(i) == null) {
                 BAMIndexContent.writeNullBinaryContent(bb);
                 continue;
             }
