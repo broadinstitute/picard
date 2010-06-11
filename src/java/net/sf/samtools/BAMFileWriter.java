@@ -56,31 +56,6 @@ class BAMFileWriter extends SAMFileWriterImpl {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
             bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream());
         }
-        if (bamIndexWriter == null) {
-            bamIndexWriter = createBamIndex(outputBinaryCodec.getOutputFileName());
-        }
-    }
-
-    private BAMFileIndexWriter createBamIndex(String path) {
-        // todo - how to check SAMFileReader.enableFileSource(true)
-        // todo - some way to disable in case of problems?
-        try {
-            if (!getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
-                System.err.println("Not creating BAM index since not sorted by coordinates");
-                return null;
-            }
-            String indexFileName = path + ".bai";
-            File indexFile = new File(indexFileName);
-            if (indexFile.exists()){
-                System.err.println("Overwriting existing index file " + indexFileName);
-                // return null; // todo maybe later we'll be confident enough to overwrite
-            }
-            // IoUtil.assertFileIsWritable(indexFile);   // todo IoUtil is only in net.sf.picard.io.IoUtil
-            return new BAMFileIndexWriter(indexFile, getFileHeader().getSequenceDictionary().size());
-        } catch (Exception e) {
-            System.err.println("Not creating BAM index " + e.getMessage());
-            return null;
-        }
     }
 
     protected void writeAlignment(final SAMRecord alignment) {
