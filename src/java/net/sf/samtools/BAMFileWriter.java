@@ -61,16 +61,16 @@ class BAMFileWriter extends SAMFileWriterImpl {
     protected void writeAlignment(final SAMRecord alignment) {
         prepareToWriteAlignments();
         long startCoordinate = 0;
-        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null) {
-            startCoordinate = blockCompressedOutputStream.getFilePointer();
-        }
+//        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null) {
+//            startCoordinate = blockCompressedOutputStream.getFilePointer();
+//        }
         bamRecordCodec.encode(alignment);
-        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null){
-            // set the alignment's SourceInfo and then prepare its index information
-            final long stopCoordinate = blockCompressedOutputStream.getFilePointer();
-            alignment.setFileSource(new SAMFileSource(null,new BAMFileSpan(new Chunk(startCoordinate,stopCoordinate))));
-            bamIndexWriter.processAlignment(alignment);
-        }
+//        if (bamIndexWriter != null && blockCompressedOutputStream != null && alignment != null){
+//            // set the alignment's SourceInfo and then prepare its index information
+//            final long stopCoordinate = blockCompressedOutputStream.getFilePointer();
+//            alignment.setFileSource(new SAMFileSource(null,new BAMFileSpan(new Chunk(startCoordinate,stopCoordinate))));
+//            bamIndexWriter.processAlignment(alignment);
+//        }
     }
 
     protected void writeHeader(final String textHeader) {
