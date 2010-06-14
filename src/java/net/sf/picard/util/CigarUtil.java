@@ -135,10 +135,6 @@ public class CigarUtil {
         }
         rec.setCigar(newCigar);
 
-        if (!isValidCigar(rec, newCigar, false)){
-            // log message already issued
-        }
-
         // Check that the end result is not a read without any aligned bases
         boolean hasMappedBases = false;
         for (final CigarElement elem : newCigar.getCigarElements()) {
@@ -151,12 +147,18 @@ public class CigarUtil {
 
         if (!hasMappedBases) {
             rec.setReadUnmappedFlag(true);
-            rec.setCigar(null);
+            rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
             rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
             rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
             rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
             rec.setInferredInsertSize(0);
         }
+        else if (!isValidCigar(rec, newCigar, false)){
+            // log message already issued
+            throw new IllegalStateException("Invalid new Cigar: " + newCigar  + " (" + oldCigar + ") for " +
+                    rec.getReadName());
+        }
+
     }
 
     private static boolean isValidCigar(SAMRecord rec, Cigar cigar, boolean isOldCigar) {
