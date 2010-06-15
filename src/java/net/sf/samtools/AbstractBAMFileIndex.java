@@ -209,7 +209,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      */
     public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws Exception {
 
-        final int bufferSize; //  = 1000000; // 1M  works, but doesn't need to be this big
+        final int bufferSize; // = 1000000; // 1M  works, but doesn't need to be this big
         final int defaultBufferSize = 1000000;  // 1M
         if (bamFileSize < defaultBufferSize && bamFileSize != 0) {
             bufferSize = (int) bamFileSize;
@@ -234,15 +234,15 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
                 continue;
             }
             getQueryResults(i).writeBinary(bb, sortBins);
-            //  write out data and reset the buffer for each reference
+            // write out data and reset the buffer for each reference
             bb.flip();
-            fileChannel.write(bb, 0);
+            fileChannel.write(bb);
             // stream.flush();    // todo will flushing the stream at every reference help memory?
             bb.position(0);
             bb.limit(bufferSize);
         }
         bb.flip();
-        fileChannel.write(bb, 0);
+        fileChannel.write(bb);
         fileChannel.close();
         stream.close();
     }
