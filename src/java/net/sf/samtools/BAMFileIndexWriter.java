@@ -312,7 +312,7 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
     private void verbose(String message) {
         boolean verbose = true;
         if (verbose) {
-            System.err.println ("BAMFileIndexWriter: " + message);
+            System.out.println ("BAMFileIndexWriter: " + message);
         }
     }
 
