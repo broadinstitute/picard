@@ -201,6 +201,16 @@ public class ValidateSamFileTest {
             public void reset() {
                 this.index = 0;
             }
+
+            public boolean isIndexed() { return false; }
+
+            public ReferenceSequence getSequence(final String contig) {
+                throw new UnsupportedOperationException();
+            }
+
+            public ReferenceSequence getSubsequenceAt(final String contig, final long start, final long stop) {
+                throw new UnsupportedOperationException();
+            }
         });
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_TAG_NM.getHistogramString()).getValue(), 1.0);
