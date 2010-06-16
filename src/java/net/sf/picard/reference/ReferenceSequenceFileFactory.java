@@ -46,12 +46,13 @@ public class ReferenceSequenceFileFactory {
 
     /**
      * Attempts to determine the type of the reference file and return an instance
-     * of ReferenceSequenceFile that is appropriate to read it.
+     * of ReferenceSequenceFile that is appropriate to read it.  Sequence names
+     * will be truncated at first whitespace, if any.
      *
      * @param file the reference sequence file on disk
      */
     public static ReferenceSequenceFile getReferenceSequenceFile(File file) {
-        return getReferenceSequenceFile(file, false);
+        return getReferenceSequenceFile(file, true);
     }
 
     /**
@@ -65,7 +66,13 @@ public class ReferenceSequenceFileFactory {
         String name = file.getName();
         for (String ext : FASTA_EXTENSIONS) {
             if (name.endsWith(ext)) {
-                return new FastaSequenceFile(file, truncateNamesAtWhitespace);
+                // Using faidx requires truncateNamesAtWhitespace
+                if (truncateNamesAtWhitespace && IndexedFastaSequenceFile.canCreateIndexedFastaReader(file)) {
+                    return new IndexedFastaSequenceFile(file);
+                }
+                else {
+                    return new FastaSequenceFile(file, truncateNamesAtWhitespace);
+                }
             }
         }
 

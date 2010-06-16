@@ -54,6 +54,30 @@ public interface ReferenceSequenceFile {
      */
     public void reset();
 
+
+    /**
+     * @return true if getSequence and getSubsequenceAt methods are allowed.
+     */
+    public boolean isIndexed();
+
+    /**
+     * Retrieves the complete sequence described by this contig.
+     * @param contig contig whose data should be returned.
+     * @return The full sequence associated with this contig.
+     * @throws UnsupportedOperationException if !sIndexed.
+     */
+    public ReferenceSequence getSequence( String contig );
+
+    /**
+     * Gets the subsequence of the contig in the range [start,stop]
+     * @param contig Contig whose subsequence to retrieve.
+     * @param start inclusive, 1-based start of region.
+     * @param stop inclusive, 1-based stop of region.
+     * @return The partial reference sequence associated with this range.
+     * @throws UnsupportedOperationException if !sIndexed.
+     */
+    public ReferenceSequence getSubsequenceAt( String contig, long start, long stop );
+    
     /**
      * @return Reference name, file name, or something other human-readable representation.
      */

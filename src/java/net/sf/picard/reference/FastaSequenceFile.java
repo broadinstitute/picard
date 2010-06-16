@@ -27,28 +27,20 @@ package net.sf.picard.reference;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.FastLineReader;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMTextHeaderCodec;
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.util.regex.Pattern;
 
 /**
  * Implementation of ReferenceSequenceFile for reading from FASTA files.
  *
  * @author Tim Fennell
  */
-public class FastaSequenceFile implements ReferenceSequenceFile {
-    private static final Pattern WHITESPACE_SPLITTER = Pattern.compile("\\s+");
+public class FastaSequenceFile extends AbstractFastaSequenceFile {
 
-    private final File file;
     private final boolean truncateNamesAtWhitespace;
     private FastLineReader in;
-    private SAMSequenceDictionary sequenceDictionary;
     private int sequenceIndex = -1;
     private final static int BUFFER_SIZE = 5000 ;
     private final byte[] basesBuffer = new byte[BUFFER_SIZE];
@@ -56,40 +48,9 @@ public class FastaSequenceFile implements ReferenceSequenceFile {
 
     /** Constructs a FastaSequenceFile that reads from the specified file. */
     public FastaSequenceFile(final File file, final boolean truncateNamesAtWhitespace) {
-        this.file = file;
+        super(file);
         this.truncateNamesAtWhitespace = truncateNamesAtWhitespace;
         this.in = new FastLineReader(IoUtil.openFileForReading(file));
-
-        // Try and locate the dictionary
-        String dictionaryName = file.getAbsolutePath();
-        boolean fileTypeSupported = false;
-        for (final String extension : ReferenceSequenceFileFactory.FASTA_EXTENSIONS) {
-            if (dictionaryName.endsWith(extension)) {
-                  dictionaryName = dictionaryName.substring(0, dictionaryName.lastIndexOf(extension));
-                  dictionaryName += ".dict";
-                  fileTypeSupported = true;
-                  break;
-            }
-        }
-        if (!fileTypeSupported)
-            throw new IllegalArgumentException("File is not a supported reference file type: " + file.getAbsolutePath());
-
-        final File dictionary = new File(dictionaryName);
-        if (dictionary.exists()) {
-            IoUtil.assertFileIsReadable(dictionary);
-
-            try {
-                final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
-                final SAMFileHeader header = codec.decode(new AsciiLineReader(new FileInputStream(dictionary)),
-                        dictionary.toString());
-                if (header.getSequenceDictionary() != null && header.getSequenceDictionary().size() > 0) {
-                    this.sequenceDictionary = header.getSequenceDictionary();
-                }
-            }
-            catch (Exception e) {
-                throw new PicardException("Could not open sequence dictionary file: " + dictionaryName, e);
-            }
-        }
     }
 
     /**
@@ -97,14 +58,6 @@ public class FastaSequenceFile implements ReferenceSequenceFile {
      */
     public void close() {
         in.close();
-    }
-
-    /**
-     * Returns the list of sequence records associated with the reference sequence if found
-     * otherwise null.
-     */
-    public SAMSequenceDictionary getSequenceDictionary() {
-        return this.sequenceDictionary;
     }
 
     public ReferenceSequence nextSequence() {
@@ -157,7 +110,7 @@ public class FastaSequenceFile implements ReferenceSequenceFile {
         }
         String name = StringUtil.bytesToString(nameBuffer, 0, nameLength).trim();
         if (truncateNamesAtWhitespace) {
-            name = WHITESPACE_SPLITTER.split(name, 2)[0];
+            name = SAMSequenceRecord.truncateSequenceName(name);
         }
         return name;
     }
@@ -199,10 +152,5 @@ public class FastaSequenceFile implements ReferenceSequenceFile {
             bases = tmp;
         }
         return bases;
-    }
-
-    /** Returns the full path to the reference file. */
-    public String toString() {
-        return this.file.getAbsolutePath();
     }
 }
