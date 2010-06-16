@@ -212,7 +212,7 @@ public class SamFileHeaderMerger {
             for (final SAMProgramRecord programGroup : reader.getFileHeader().getProgramRecords()) {
                 //verify that there are no existing id collisions in this input file
                 if(!idsThatAreAlreadyTaken.add(programGroup.getId()))
-                    throw new PicardException("Input file: " + reader + " contains more than one RG with the same id (" + programGroup.getId() + ")");
+                    throw new PicardException("Input file: " + reader + " contains more than one PG with the same id (" + programGroup.getId() + ")");
 
                 programGroupsLeftToProcess.add(new HeaderRecordAndFileReader<SAMProgramRecord>(programGroup, reader));
             }
