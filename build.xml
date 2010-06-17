@@ -240,6 +240,17 @@
         <package-command main-class="net.sf.picard.sam.CompareSAMs" title="CompareSAMs"/>
         <package-command main-class="net.sf.picard.util.BuildBamIndex" title="BuildBamIndex"/>
         <package-command main-class="net.sf.picard.util.BaiToText" title="BaiToText"/>
+        <package-command main-class="net.sf.picard.fastq.BamToBfq" title="BamToBfq"/>
+        <package-command main-class="net.sf.picard.analysis.directed.CalculateHsMetrics" title="CalculateHsMetrics"/>
+        <package-command main-class="net.sf.picard.analysis.MeanQualityByCycle" title="MeanQualityByCycle"/>
+        <package-command main-class="net.sf.picard.analysis.QualityScoreDistribution" title="QualityScoreDistribution"/>
+        <package-command main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics" title="CollectAlignmentSummaryMetrics"/>
+        <package-command main-class="net.sf.picard.analysis.CollectGcBiasMetrics" title="CollectGcBiasMetrics"/>
+        <package-command main-class="net.sf.picard.analysis.CollectInsertSizeMetrics" title="CollectInsertSizeMetrics"/>
+        <package-command main-class="net.sf.picard.sam.FixMateInformation" title="FixMateInformation"/>
+        <package-command main-class="net.sf.picard.sam.RevertSam" title="RevertSam"/>
+        <package-command main-class="net.sf.picard.sam.MergeBamAlignment" title="MergeBamAlignment"/>
+	<package-command main-class="net.sf.picard.reference.NormalizeFasta" title="NormalizeFasta"/>
     </target>
 
 <!-- ALL -->
