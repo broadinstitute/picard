@@ -23,16 +23,19 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.CloseableIterator;
+
 import java.io.*;
 import java.util.*;
 
 /**
- * Class for writing BAM index files
+ * Class for constructing and writing BAM index files
  */
 public class BAMFileIndexWriter extends AbstractBAMFileIndex{
 // note, alternatively this could extend DiskBasedBAMFileIndex or CachingBAMFileIndex both of which extend AbstractBAMFileIndex
 // or it could just implement BAMIndex (with a few additions noted below)
 
+    // One element for each reference sequence.  Not populated until after call to finish()
     private final BAMIndexContent[] content;
 
     /**
@@ -60,6 +63,7 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
     private final File OUTPUT;
     
     /**
+     * Constructor
      * @param OUTPUT      BAM Index (.bai) file (or bai.txt file when text)
      * @param nReferences Number of references in the input BAM file
      */
@@ -72,18 +76,17 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
     }
 
     /**
-     * Generates a BAM index file, either textual or binary, sorted or not from the input BAM file
+     * Generates a BAM index file, either textual or binary, sorted or not, from an input BAM file
      *
      * @param INPUT      BAM file
      * @param createText Whether to create text output or binary
      * @param sortBins   Whether to sort the bins in the output
-     * @return count of records processed
-     * @throws Exception
+     * @return Count of aligned records processed
      */
-    public int createIndex(final File INPUT, final boolean createText, final boolean sortBins) throws Exception {
+    public int createIndex(final File INPUT, final boolean createText, final boolean sortBins) {
 
-        final SAMFileReader bam = new SAMFileReader(INPUT);
-        bam.enableFileSource(true);
+        final SAMFileReader reader = new SAMFileReader(INPUT);
+        reader.enableFileSource(true);
 
         int count = 0;
         int localCount = 0;
@@ -92,12 +95,13 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
         int reference = 0;
         int lastReference = 0;
 
-        for (Iterator<SAMRecord> i = bam.iterator(); i.hasNext();) {
+        CloseableIterator<SAMRecord> it = reader.iterator();
+        while (it.hasNext()) {
             totalRecords++;
             if (totalRecords % 1000000 == 0) {
                 verbose(totalRecords + " reads processed ...");
             }
-            final SAMRecord rec = i.next();
+            final SAMRecord rec = it.next();
             if (rec.getAlignmentStart() == 0)
                 continue;  // do nothing for un-aligned records
 
@@ -113,23 +117,32 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
             localCount++;
             processAlignment(rec);
         }
-        bam.close();
+        it.close();
         processReference(lastReference);
         // verbose("     " + localCount + " aligned records in reference " + lastReference);
         // finish();  // alternative to processReference calls above
         verbose("There are " + count + " aligned records in the input BAM file " + INPUT);
 
-        if (OUTPUT.exists()) {
-            OUTPUT.delete();
-        }
-        if (createText) {
-            writeText(sortBins);
-        } else {
-            long size = INPUT.length();
-            //log.info("The input file size is " + size);
-            writeBinary(sortBins, size);
+        deleteIndex(); // delete old index if present. Caller has checked that this is ok and expected
+        try {
+            if (createText) {
+                writeText(sortBins);
+            } else {
+                writeBinary(sortBins, INPUT.length());
+            }
+        } catch (Exception e) {
+            deleteIndex();
+            throw new SAMException("Exception creating index " + e.getMessage());
         }
         return count;
+    }
+
+    /**
+     * Deletes old or partial index file
+     * Called whenever exceptions occur.
+     */
+    public void deleteIndex(){
+            OUTPUT.delete();
     }
 
     public void writeText(boolean sortBins) throws Exception {
@@ -148,29 +161,29 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
      */
     public void processAlignment(final SAMRecord rec) {
 
-        final int bin;
+        final int binNumber;
         if (rec.getIndexingBin() == null) {
-            bin = rec.computeIndexingBin();
+            binNumber = rec.computeIndexingBin();
         } else {
-            bin = rec.getIndexingBin();
+            binNumber = rec.getIndexingBin();
         }
 
         // is there a bin already represented for this index?  if not, add it
         final int reference = rec.getReferenceIndex();
-        final Bin b = new Bin(reference, bin);
+        final Bin bin = new Bin(reference, binNumber);
         List<Bin> binList = referenceToBins.get(reference);
         if (binList == null) {
             binList = new ArrayList<Bin>();
             referenceToBins.put(reference, binList);
         }
-        if (!binList.contains(b)) {
-            binList.add(b);
+        if (!binList.contains(bin)) {
+            binList.add(bin);
         }
 
         // add chunk information from this record to the bin
         final BAMFileSpan newSpan;
         if (rec.getFileSource() == null) {
-            // todo throw new SAMException?
+            // todo throw new SAMException? deleteIndex()?
             System.err.println("No source for BAM Record " + rec);
             return;
         } else {
@@ -178,31 +191,31 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
         }
 
         if (newSpan != null) {
-            List<Chunk> chunks = binToChunks.get(b);
+            List<Chunk> chunks = binToChunks.get(bin);
             if (chunks == null) {
                 chunks = new ArrayList<Chunk>();
-                binToChunks.put(b, chunks);
+                binToChunks.put(bin, chunks);
             }
             for (Chunk c : newSpan.getChunks()) {
                 chunks.add(c);
             }
         } else {
+            deleteIndex();
             throw new SAMException("Null coordinates on record " + rec +
                     " in reference " + reference);
         }
 
         // add linear index information
         // the smallest file offset that starts in the 16k window for this bin
-        // if (bin < LEVEL_STARTS[LEVEL_STARTS.length - 1]) {  // don't index the top level 6 16k bins with bin# >=4681
-        if (bin < getFirstBinInLevel(getNumIndexLevels()-1)) {  // don't index the top level 6 16k bins with bin# >=4681
+        // if (binNumber < LEVEL_STARTS[LEVEL_STARTS.length - 1]) {  // don't index the top level 6 16k bins with bin# >= 4681
+        if (binNumber < getFirstBinInLevel(getNumIndexLevels()-1)) {  // don't index the top level 6 16k bins with bin# >= 4681
             final long iOffset = ((BAMFileSpan) rec.getFileSource().getFilePointer()).toCoordinateArray()[0];
             final int alignmentStart = rec.getAlignmentStart() - 1;
             final int window = LinearIndex.convertToLinearIndexOffset(alignmentStart); // the 16k window
 
-            /* log.debug("Reference " + reference + " count " + localCount + " bin=" + bin + " startPosition=" +
-                    iOffset + "(" + Long.toString(iOffset, 16) + "x)" + // " startAlignment=" +
-                    // alignmentStart + "(" + Long.toString(alignmentStart,16) + "x)" + " endAlignment=" +
-                    // alignmentEnd + "(" + Long.toString(alignmentEnd,16) + "x)" +
+            /* log.debug("Reference " + reference + " bin=" + binNumber + " startPosition=" +
+                    iOffset + "(" + Long.toString(iOffset, 16) + "x)" + " startAlignment=" +
+                    alignmentStart + "(" + Long.toString(alignmentStart,16) + "x)" +
                     " window " + window);
             */
 
@@ -213,15 +226,13 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
             }
             // Has this window already been seen? If so, might replace existing index
             boolean replaceIndex = true;
-            for (final LinearIndexItem l : indexList) {
-                if (l.window == window) {
-                    if (l.offset < iOffset) {
+            for (final LinearIndexItem li : indexList) {
+                if (li.window == window) {
+                    if (li.offset < iOffset) {
                         replaceIndex = false;  // existing window value is already minimum
-                        // log.debug("## Reference " + reference + " not adding new iOffset " + iOffset + " to window " + l.window);
                     } else {
                         // remove existingIndex in place of this one
-                        indexList.remove(l);
-                        // log.debug("## Reference " + reference + " replacing old iOffset " + l.offset + " with new offset " + iOffset + " in window " + l.window);
+                        indexList.remove(li);
                     }
                     break;
                 }
@@ -231,9 +242,10 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
         }
     }
 
-    // When all the records have been processed, finish is called
-    // note we can do this processing per-reference instead of per-file if desired
-
+    /**
+     * After all the alignment records have been processed, finish is called.
+     * Note, we can do this processing per-reference instead of per-file if desired
+     */
     public void finish() {
         // constructs a BAMIndexContent from bins, chunks, and linear index
         for (int i = 0; i < n_ref; i++) {
@@ -241,12 +253,13 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
         }
     }
 
+    /**  Processing after all alignments of a reference have already been processed */
     private void processReference(int reference) {
 
-        // bins
+        // process bins
         final List<Bin> binList = referenceToBins.get(reference);
 
-        if (binList == null) return;
+        if (binList == null) return;  // no bins for this reference
 
         // process chunks
         for (Bin bin : binList) {
@@ -263,6 +276,7 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
         content[reference] = new BAMIndexContent(reference, binList, binToChunks, linearIndex);
     }
 
+    /** transform the sparse representation of linear index to an array representation  */
     private LinearIndex computeLinearIndex(int reference) {
         final LinearIndex linearIndex;
         final List<LinearIndexItem> indexList = referenceToIndexEntries.get(reference);
@@ -271,44 +285,44 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
             linearIndex = null;
         } else {
             // get the max window in the list; linear index will be this long
-            int maxWindow = 0;   // todo - a shorter way to do this?
+            int maxWindow = 0;
             for (final LinearIndexItem l : indexList) {
-                if (l.window > maxWindow) {
-                    maxWindow = l.window;
-                }
+                maxWindow = Math.max(maxWindow, l.window);
             }
             // log.debug("** n_intv (maxWindow) for reference " + reference + " is " + (maxWindow + 1));
-            long[] newIndex = new long[maxWindow + 1];   // newIndex is one-based
-            for (int j = 0; j <= maxWindow; j++) {
-                newIndex[j] = 0;
-            }
-            // linearIndex each entry
+            long[] newIndex = new long[maxWindow + 1]; // newIndex is one-based
+            Arrays.fill(newIndex, 0);
+
+            // non-0 linearIndex for each entry
             for (final LinearIndexItem l : indexList) {
-                newIndex[l.window] = l.offset;   // newIndex is one-based
+                newIndex[l.window] = l.offset;
             }
             linearIndex = new LinearIndex(reference, 1, newIndex); // newIndex is one-based
         }
         return linearIndex;
     }
 
-    // return the content of this Index
+    /** Return the content of this index for a given reference sequence */
     protected BAMIndexContent getQueryResults(int reference){
         return content[reference];
     }
 
-    // This method is needed if this class extends AbstractBAMFileIndex;
-    // not needed if it extends DiskBasedBAMFileIndex or CachingBAMFileIndex
+    /**
+     * This method is needed if this class extends AbstractBAMFileIndex;
+     * not needed if it extends DiskBasedBAMFileIndex or CachingBAMFileIndex
+     */
     public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         throw new UnsupportedOperationException();
     }
 
     /*  These needed if this class just implements BAMIndex
     public void open() {}
-    public void close() {} // todo call finish() here?
+    public void close() {} // call finish() here?
     public long getStartOfLastLinearBin() {throw new UnsupportedOperationException();};
     private static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};
     */
 
+    // net.sf.samtools logging is primitive ...
     private void verbose(String message) {
         boolean verbose = true;
         if (verbose) {
@@ -322,8 +336,8 @@ public class BAMFileIndexWriter extends AbstractBAMFileIndex{
      */
     private class LinearIndexItem {
 
-        public final int window;
-        public final long offset;
+        public final int window;   // index position in the array
+        public final long offset;  // value of the linear index at that position
 
         public LinearIndexItem(int window, long offset) {
             this.window = window;

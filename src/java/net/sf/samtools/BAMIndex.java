@@ -30,6 +30,9 @@ package net.sf.samtools;
  * @version 0.1
  */
 public interface BAMIndex {
+
+    public static final String BAMIndexSuffix = ".bai";
+
     /**
      * Open the BAM file index.
      */

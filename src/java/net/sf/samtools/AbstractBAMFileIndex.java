@@ -181,7 +181,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * @param OUTPUT   BAM Index output file
      * @param sortBins Whether to sort the bins - useful for comparison to c-generated index
      */
-    public void writeText(final int n_ref, final File OUTPUT, final boolean sortBins) throws Exception {
+    public void writeText(final int n_ref, final File OUTPUT, final boolean sortBins) throws FileNotFoundException {
 
         final PrintWriter pw = new PrintWriter(OUTPUT);
         pw.println("n_ref=" + n_ref);
@@ -207,7 +207,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * @param sortBins    Whether to sort the bins - useful for comparison to c-generated index
      * @param bamFileSize Size of corresponding BAM file if known, 0 otherwise.
      */
-    public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws Exception {
+    public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws IOException {
 
         final int bufferSize; // = 1000000; // 1M  works, but doesn't need to be this big
         final int defaultBufferSize = 1000000;  // 1M

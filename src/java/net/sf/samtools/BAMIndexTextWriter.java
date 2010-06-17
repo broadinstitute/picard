@@ -26,7 +26,8 @@ package net.sf.samtools;
 import java.io.File;
 
 /**
- * Class for writing BAI (BAM file indexes) as text or binary
+ * Class for writing BAI (BAM index files) as text or binary.
+ * Requires an existing index file. Used for testing only.
  */
 public class BAMIndexTextWriter extends CachingBAMFileIndex { // *not* DiskBasedBAMFileIndex 
 
@@ -41,7 +42,7 @@ public class BAMIndexTextWriter extends CachingBAMFileIndex { // *not* DiskBased
     /**
      * Constructor
      * @param INPUT     A BAM Index File, .bai
-     * @param OUTPUT    A Textual BAM Index File, .bai.txt, or a binary bai file .generated.bai
+     * @param OUTPUT    Reformatted BAM Index File, .bai.txt, or (sorted) binary .bai file
      */
     public BAMIndexTextWriter(final File INPUT, final File OUTPUT) {
         super(INPUT);

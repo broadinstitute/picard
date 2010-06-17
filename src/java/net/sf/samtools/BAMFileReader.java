@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.net.URL;
 
 /**
  * Internal class for reading and querying BAM files.
@@ -520,7 +519,7 @@ class BAMFileReader
         File indexFile;
         final String fileName = dataFile.getName();
         if (fileName.endsWith(bamExtension)) {
-            final String bai = fileName.substring(0, fileName.length() - bamExtension.length()) + ".bai";
+            final String bai = fileName.substring(0, fileName.length() - bamExtension.length()) + BAMIndex.BAMIndexSuffix;
             indexFile = new File(dataFile.getParent(), bai);
             if (indexFile.exists()) {
                 return indexFile;
