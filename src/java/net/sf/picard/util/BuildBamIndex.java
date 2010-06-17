@@ -31,13 +31,14 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.BAMFileIndexWriter;
+import net.sf.samtools.BAMIndex;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 
 import java.io.File;
 
 /**
- * Command line program to generate a BAM index (.bai) file
+ * Command line program to generate a BAM index (.bai) file from an existing BAM (.bam) file
  *
  * @author Martha Borkan
  */
@@ -119,9 +120,9 @@ public class BuildBamIndex extends CommandLineProgram {
                 }
             }
             if (TEXTUAL){
-                OUTPUT = new File (baseFileName + ".bai.txt");
+                OUTPUT = new File (baseFileName + BAMIndex.BAMIndexSuffix + ".txt");
             } else {
-                OUTPUT = new File (baseFileName + ".bai");
+                OUTPUT = new File (baseFileName + BAMIndex.BAMIndexSuffix);
             }
         }
         // check OVERWRITE

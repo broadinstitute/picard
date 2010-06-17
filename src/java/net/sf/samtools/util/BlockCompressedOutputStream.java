@@ -195,9 +195,10 @@ public class BlockCompressedOutputStream
         write(singleByteArray);
     }
 
-    // Encode virtual file pointer
-    // Upper 48 bits is the byte offset into the compressed stream of a block.
-    // Lower 16 bits is the byte offset into the uncompressed stream inside the block.
+    /** Encode virtual file pointer
+     * Upper 48 bits is the byte offset into the compressed stream of a block.
+     * Lower 16 bits is the byte offset into the uncompressed stream inside the block.
+     */
     public long getFilePointer(){
         return mBlockAddress << 16 | numUncompressedBytes;
     }
