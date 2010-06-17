@@ -51,11 +51,6 @@ public class ExampleSamUsage {
         final SAMFileWriter outputSam = new SAMFileWriterFactory().makeSAMOrBAMWriter(inputSam.getFileHeader(),
                 true, outputSamOrBamFile);
 
-        if (outputSam instanceof BAMFileWriter) {
-            // don't create a new bam index for this
-            ((BAMFileWriter) outputSam).enableBamIndexConstruction(false);
-        }
-
         for (final SAMRecord samRecord : inputSam) {
             // Convert read name to upper case.
             samRecord.setReadName(samRecord.getReadName().toUpperCase());
