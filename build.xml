@@ -225,32 +225,33 @@
         <delete dir="${command-line-html-dir}"/>
 
         <!-- The order of these elements determines the order they appear in the on-line help -->
+        <!-- If you don't want to generate on-line doc for a command, use package-command instead of package-and-document-command -->
         <package-command title="BaiToText"                      main-class="net.sf.picard.util.BaiToText"/>
-        <package-command title="BamToBfq"                       main-class="net.sf.picard.fastq.BamToBfq"/>
-        <package-command title="BuildBamIndex"                  main-class="net.sf.picard.util.BuildBamIndex"/>
-        <package-command title="CalculateHsMetrics"             main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
-        <package-command title="CleanSam"                       main-class="net.sf.picard.sam.CleanSam"/>
-        <package-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
-        <package-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
-        <package-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
-        <package-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
-        <package-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
-        <package-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
-        <package-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
-        <package-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
-        <package-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
-        <package-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
-        <package-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
-        <package-command title="MergeSamFiles"                  main-class="net.sf.picard.sam.MergeSamFiles"/>
-        <package-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
-        <package-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
-        <package-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
-        <package-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
-        <package-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
-        <package-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
-        <package-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
-        <package-command title="ValidateSamFile"                main-class="net.sf.picard.sam.ValidateSamFile"/>
-        <package-command title="ViewSam"                        main-class="net.sf.picard.sam.ViewSam"/>
+        <package-and-document-command title="BamToBfq"                       main-class="net.sf.picard.fastq.BamToBfq"/>
+        <package-and-document-command title="BuildBamIndex"                  main-class="net.sf.picard.util.BuildBamIndex"/>
+        <package-and-document-command title="CalculateHsMetrics"             main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
+        <package-and-document-command title="CleanSam"                       main-class="net.sf.picard.sam.CleanSam"/>
+        <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
+        <package-and-document-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
+        <package-and-document-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
+        <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
+        <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
+        <package-and-document-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
+        <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
+        <package-and-document-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
+        <package-and-document-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
+        <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
+        <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
+        <package-and-document-command title="MergeSamFiles"                  main-class="net.sf.picard.sam.MergeSamFiles"/>
+        <package-and-document-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
+        <package-and-document-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
+        <package-and-document-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
+        <package-and-document-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
+        <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
+        <package-and-document-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
+        <package-and-document-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
+        <package-and-document-command title="ValidateSamFile"                main-class="net.sf.picard.sam.ValidateSamFile"/>
+        <package-and-document-command title="ViewSam"                        main-class="net.sf.picard.sam.ViewSam"/>
     </target>
 
 <!-- ALL -->
@@ -282,7 +283,15 @@
                     <attribute name="Main-Class" value="@{main-class}"/>
                 </manifest>
             </jar>
+        </sequential>
+    </macrodef>
 
+    <!-- generate HTML documentation for command-line program -->
+    <macrodef name="document-command">
+        <attribute name="main-class"/>
+        <attribute name="title"/>
+        <element name="filesets" optional="yes"/>
+        <sequential>
             <!-- For Sourceforge project website -->
             <mkdir dir="${command-line-html-dir}/program_usage"/>
 
@@ -304,6 +313,17 @@
             <!-- include usage for each command -->
             <echo  file="${command-line-html-dir}/command-line-usage.shtml" append="true"
                     message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
+        </sequential>
+    </macrodef>
+
+    <!-- Create a jar for a command-line class so it can be run java -jar jarfile, and generate on-line doc for it. -->
+    <macrodef name="package-and-document-command">
+        <attribute name="main-class"/>
+        <attribute name="title"/>
+        <element name="filesets" optional="yes"/>
+        <sequential>
+            <package-command title="@{title}" main-class="@{main-class}"/>
+            <document-command title="@{title}" main-class="@{main-class}"/>
         </sequential>
     </macrodef>
 
