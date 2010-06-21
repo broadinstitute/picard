@@ -301,7 +301,11 @@ public class BlockCompressedInputStream
         byte[] buffer = mCurrentBlock;
         mCurrentBlock = null;
         if (buffer == null || buffer.length != uncompressedLength) {
-            buffer = new byte[uncompressedLength];
+            try {
+                buffer = new byte[uncompressedLength];
+            } catch (NegativeArraySizeException e) {
+                throw new RuntimeException("BGZF file has invalid uncompressedLength: " + uncompressedLength, e);
+            }
         }
         blockGunzipper.unzipBlock(buffer, compressedBlock, compressedLength);
         mCurrentBlock = buffer;
