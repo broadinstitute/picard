@@ -607,7 +607,8 @@ public class SequenceUtil {
 
                     if (!matched)
                     {
-                        throw new SAMException("Illegal MD pattern: " + md);
+                        throw new SAMException("Illegal MD pattern: " + md + " for read " + rec.getReadName() +
+                                " with CIGAR " + rec.getCigarString());
                     }
                 }
 
