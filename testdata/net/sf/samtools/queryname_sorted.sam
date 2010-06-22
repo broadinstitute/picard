@@ -1,0 +1,15 @@
+@HD	VN:1.0	SO:queryname
+@SQ	SN:chr1	LN:101
+@SQ	SN:chr2	LN:101
+@SQ	SN:chr3	LN:101
+@RG	ID:0	SM:Hi,Mom!
+A	73	chr2	1	255	10M	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+A	133	*	0	0	*	chr2	1	0	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+B	99	chr1	1	255	10M	=	26	35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+B	147	chr1	26	255	10M	=	1	-35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+C	99	chr2	1	255	10M	=	26	35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+C	147	chr2	26	255	10M	=	1	-35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+D	99	chr3	1	255	10M	=	25	35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+D	147	chr3	26	255	10M	=	1	-35	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+E	99	chr1	2	255	10M	=	15	30	CAACAGAAGC	)'.*.+2,))	RG:Z:0
+E	147	chr1	15	255	10M	=	2	-30	CAACAGAAGC	)'.*.+2,))	RG:Z:0

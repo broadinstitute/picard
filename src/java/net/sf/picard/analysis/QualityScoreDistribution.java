@@ -113,7 +113,7 @@ public class QualityScoreDistribution extends CommandLineProgram {
 
         // Now run R to generate a chart
         final int rResult = RExecutor.executeFromClasspath(
-                "edu/mit/broad/picard/quality/qualityScoreDistribution.R",
+                "net/sf/picard/analysis/qualityScoreDistribution.R",
                 OUTPUT.getAbsolutePath(),
                 CHART_OUTPUT.getAbsolutePath(),
                 INPUT.getName());

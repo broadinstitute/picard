@@ -26,6 +26,7 @@
 <project name="picard-public" basedir="." default="all">
 
     <property name="src" value="src/java"/>
+    <property name="src.scripts" value="src/scripts"/>
     <property name="src.test" value="src/tests"/>
     <property name="lib" value="lib"/>
     <property name="dist" value="dist"/>
@@ -145,6 +146,9 @@
                 <pathelement location="${classes}"/>
             </classpath>
         </javac>
+        <copy todir="${classes.test}/">
+            <fileset dir="${src.test}/scripts" includes="**/*"/>
+        </copy>
     </target>
 
 <!-- TEST -->
@@ -278,6 +282,7 @@
             </classfileset>
             <jar destfile="${dist}/@{title}.jar">
                 <fileset  refid="reqdClasses"/>
+                <fileset dir="${src.scripts}" includes="**/*.R"/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
                     <attribute name="Main-Class" value="@{main-class}"/>

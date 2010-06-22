@@ -145,7 +145,7 @@ public class MeanQualityByCycle extends CommandLineProgram {
 
         // Now run R to generate a chart
         final int rResult = RExecutor.executeFromClasspath(
-                "edu/mit/broad/picard/quality/meanQualityByCycle.R",
+                "net/sf/picard/analysis/meanQualityByCycle.R",
                 OUTPUT.getAbsolutePath(),
                 CHART_OUTPUT.getAbsolutePath(),
                 INPUT.getName());
