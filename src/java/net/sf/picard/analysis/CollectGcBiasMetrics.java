@@ -59,7 +59,7 @@ import net.sf.picard.util.QualityUtil;
  */
 public class CollectGcBiasMetrics extends CommandLineProgram {
     /** The location of the R script to do the plotting. */
-    private static final String R_SCRIPT = "edu/mit/broad/picard/sam/gcBias.R";
+    private static final String R_SCRIPT = "net/sf/picard/analysis/gcBias.R";
 
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="The reference sequence fasta file.")
     public File REFERENCE_SEQUENCE;

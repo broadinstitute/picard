@@ -27,6 +27,8 @@ package net.sf.samtools;
 import net.sf.samtools.util.*;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 import java.net.URL;
 
@@ -85,8 +87,8 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         abstract boolean hasIndex();
         abstract BAMIndex getIndex();
         abstract SAMFileHeader getFileHeader();
-        abstract CloseableIterator<SAMRecord> getIterator();
-        abstract CloseableIterator<SAMRecord> getIterator(SAMFileSpan fileSpan);
+        abstract CloseableIterator<SAMRecord>  getIterator();
+        abstract CloseableIterator<SAMRecord>  getIterator(SAMFileSpan fileSpan);
         abstract SAMFileSpan getFilePointerSpanningReads();
         abstract CloseableIterator<SAMRecord> query(String sequence, int start, int end, boolean contained);
         abstract CloseableIterator<SAMRecord> queryAlignmentStart(String sequence, int start);
@@ -277,8 +279,8 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * Only a single open iterator on a SAM or BAM file may be extant at any one time.  If you want to start
      * a second iteration, the first one must be closed first.
      */
-    public CloseableIterator<SAMRecord> iterator() {
-        return mReader.getIterator();
+    public SAMRecordIterator iterator() {
+        return new AssertableIterator(mReader.getIterator(), mReader.getFileHeader().getSortOrder());
     }
 
     /**
@@ -286,8 +288,8 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param chunks List of chunks for which to retrieve data.
      * @return An iterator over the given chunks.
      */
-    public CloseableIterator<SAMRecord> iterator(final SAMFileSpan chunks) {
-        return mReader.getIterator(chunks);
+    public SAMRecordIterator iterator(final SAMFileSpan chunks) {
+        return new AssertableIterator(mReader.getIterator(chunks), mReader.getFileHeader().getSortOrder());
     }
 
     /**
@@ -318,8 +320,9 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      *                  interval of interest.  If false, the alignment of the returned SAMRecords need only overlap the interval of interest.
      * @return Iterator over the SAMRecords matching the interval.
      */
-    public CloseableIterator<SAMRecord> query(final String sequence, final int start, final int end, final boolean contained) {
-        return mReader.query(sequence, start, end, contained);
+    public SAMRecordIterator query(final String sequence, final int start, final int end, final boolean contained) {
+        return new AssertableIterator(mReader.query(sequence, start, end, contained),
+                mReader.getFileHeader().getSortOrder());
     }
 
     /**
@@ -339,7 +342,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param end      1-based, inclusive end of interval of interest. Zero implies end of the reference sequence.
      * @return Iterator over the SAMRecords overlapping the interval.
      */
-    public CloseableIterator<SAMRecord> queryOverlapping(final String sequence, final int start, final int end) {
+    public SAMRecordIterator queryOverlapping(final String sequence, final int start, final int end) {
         return query(sequence, start, end, false);
     }
 
@@ -360,12 +363,12 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param end      1-based, inclusive end of interval of interest. Zero implies end of the reference sequence.
      * @return Iterator over the SAMRecords contained in the interval.
      */
-    public CloseableIterator<SAMRecord> queryContained(final String sequence, final int start, final int end) {
+    public SAMRecordIterator queryContained(final String sequence, final int start, final int end) {
         return query(sequence, start, end, true);
     }
 
-    public CloseableIterator<SAMRecord> queryUnmapped() {
-        return mReader.queryUnmapped();
+    public SAMRecordIterator queryUnmapped() {
+        return new AssertableIterator(mReader.queryUnmapped(), mReader.getFileHeader().getSortOrder());
     }
 
     /**
@@ -384,8 +387,9 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param start    Alignment start of interest.
      * @return Iterator over the SAMRecords with the given alignment start.
      */
-    public CloseableIterator<SAMRecord> queryAlignmentStart(final String sequence, final int start) {
-        return mReader.queryAlignmentStart(sequence, start);
+    public SAMRecordIterator queryAlignmentStart(final String sequence, final int start) {
+        return new AssertableIterator(mReader.queryAlignmentStart(sequence, start),
+                mReader.getFileHeader().getSortOrder());
     }
 
     /**
@@ -569,4 +573,74 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             return getClass().getSimpleName() + "{" + this.samFile.getAbsolutePath() + "}";
         }
     }
+
+    /**
+     * Wrapper class to let calls to Iterator return a SAMRecordIterator
+     */
+    static class AssertableIterator implements SAMRecordIterator {
+
+        private final CloseableIterator<SAMRecord> wrappedIterator;
+        private final SAMFileHeader.SortOrder headerSortOrder;
+        private SAMRecord previous = null;
+        private Comparator comparator = null;
+
+        public AssertableIterator(CloseableIterator<SAMRecord> iterator, SAMFileHeader.SortOrder sortOrder) {
+            wrappedIterator = iterator;
+            headerSortOrder = sortOrder;
+        }
+
+        @Override
+        public SAMRecordIterator assertSorted(SAMFileHeader.SortOrder sortOrder) {
+
+            if (sortOrder == null || sortOrder == SAMFileHeader.SortOrder.unsorted) {
+                return this;
+            }
+
+            if (headerSortOrder != null &&
+                headerSortOrder != SAMFileHeader.SortOrder.unsorted &&
+                headerSortOrder != sortOrder) {
+
+                 throw new IllegalArgumentException("SAM file header sort order (" + headerSortOrder.name() +
+                     ") is in conflict with asserted sort order " + sortOrder.name());
+             }
+
+            final Class<? extends SAMRecordComparator> type = sortOrder.getComparator();
+
+            if (type != null) {
+                try {
+                    final Constructor<? extends SAMRecordComparator> ctor = type.getConstructor();
+                    comparator = ctor.newInstance();
+                }
+                catch (Exception e) {
+                    throw new IllegalArgumentException("Could not instantiate a comparator for sort order: " +
+                            sortOrder, e);
+                }
+            }
+            return this;
+        }
+
+        @Override
+        public SAMRecord next() {
+            SAMRecord result = wrappedIterator.next();
+            if (comparator != null) {
+                if (previous != null) {
+                    if (comparator.compare(previous, result) > 0) {
+                         throw new IllegalStateException("Records " + previous.getReadName() + " (" +
+                             previous.getReferenceName() + ":" + previous.getAlignmentStart() + ") " +
+                             "should come after " + result.getReadName() + " (" +
+                             result.getReferenceName() + ":" + result.getAlignmentStart() +
+                             ") when sorting with " + comparator.getClass().getName());
+                     }
+                }
+                previous = result;
+            }
+            return result;
+        }
+
+        public void close() { wrappedIterator.close(); }
+        public boolean hasNext() { return wrappedIterator.hasNext(); }
+        public void remove() { wrappedIterator.remove(); }
+    }
+
+
 }
