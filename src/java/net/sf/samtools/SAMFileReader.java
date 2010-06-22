@@ -589,7 +589,6 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             headerSortOrder = sortOrder;
         }
 
-        @Override
         public SAMRecordIterator assertSorted(SAMFileHeader.SortOrder sortOrder) {
 
             if (sortOrder == null || sortOrder == SAMFileHeader.SortOrder.unsorted) {
@@ -619,7 +618,6 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             return this;
         }
 
-        @Override
         public SAMRecord next() {
             SAMRecord result = wrappedIterator.next();
             if (comparator != null) {
