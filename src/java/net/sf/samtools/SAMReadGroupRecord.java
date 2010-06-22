@@ -116,9 +116,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
 
     @Override
     public int hashCode() {
-        int result = mReadGroupId != null ? mReadGroupId.hashCode() : 0;
-        result = 31 * result + attributesHashCode();
-        return result;
+        return mReadGroupId.hashCode();
     }
 
     Set<String> getStandardTags() {

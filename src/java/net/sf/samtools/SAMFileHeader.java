@@ -305,7 +305,6 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
         int result = attributesHashCode();
         result = 31 * result + (mSequenceDictionary != null ? mSequenceDictionary.hashCode() : 0);
         result = 31 * result + (mReadGroups != null ? mReadGroups.hashCode() : 0);
-        result = 31 * result + (mReadGroupMap != null ? mReadGroupMap.hashCode() : 0);
         result = 31 * result + (mProgramRecords != null ? mProgramRecords.hashCode() : 0);
         return result;
     }
