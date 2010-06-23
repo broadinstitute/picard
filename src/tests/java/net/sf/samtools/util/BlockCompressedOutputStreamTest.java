@@ -90,4 +90,13 @@ public class BlockCompressedOutputStreamTest {
         }
         Assert.assertEquals(i, INPUT_SIZE);
     }
+
+    // PIC-393 exception closing BGZF stream opened to /dev/null
+    // I don't think this will work on Windows, because /dev/null doesn't work
+    @Test(groups = "unix")
+    public void testDevNull() throws Exception {
+        final BlockCompressedOutputStream bcos = new BlockCompressedOutputStream("/dev/null");
+        bcos.write("Hi, Mom!".getBytes());
+        bcos.close();
+    }
 }
