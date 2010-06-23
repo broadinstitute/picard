@@ -23,16 +23,7 @@
  */
 package net.sf.picard.sam;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.AbstractSAMHeaderRecord;
@@ -75,21 +66,25 @@ public class SamFileHeaderMerger {
             new HashMap<SAMFileReader, Map<Integer, Integer>>();
 
     // We don't always have access to the SAMFileReader in order to find the right mapping,
-    // so also store the mapping using theSAMFileHeader
+    // so also store the mapping using theSAMFileHeader.
+    // This is an IdentityHashMap because it can be quite expensive to compute the hashCode for
+    // large SAMFileHeaders.  It is possible that two input files will have identical headers so that
+    // the regular HashMap would fold them together, but the value stored in each of the two
+    // Map entries will be the same, so it should not hurt anything.
     private final Map<SAMFileHeader,  Map<Integer, Integer>> samSeqDictionaryIdTranslationViaHeader =
-            new HashMap<SAMFileHeader, Map<Integer, Integer>>();
+            new IdentityHashMap<SAMFileHeader, Map<Integer, Integer>>();
 
     //HeaderRecordFactory that creates SAMReadGroupRecord instances.
     private static final HeaderRecordFactory<SAMReadGroupRecord> READ_GROUP_RECORD_FACTORY = new HeaderRecordFactory<SAMReadGroupRecord>() {
         public SAMReadGroupRecord createRecord(String id, SAMReadGroupRecord srcReadGroupRecord) {
-            return new SAMReadGroupRecord(id, (SAMReadGroupRecord) srcReadGroupRecord);
+            return new SAMReadGroupRecord(id, srcReadGroupRecord);
         }
     };
 
     //HeaderRecordFactory that creates SAMProgramRecord instances.
     private static final HeaderRecordFactory<SAMProgramRecord> PROGRAM_RECORD_FACTORY = new HeaderRecordFactory<SAMProgramRecord>() {
         public SAMProgramRecord createRecord(String id, SAMProgramRecord srcProgramRecord) {
-            return new SAMProgramRecord(id, (SAMProgramRecord) srcProgramRecord);
+            return new SAMProgramRecord(id, srcProgramRecord);
         }
     };
 
