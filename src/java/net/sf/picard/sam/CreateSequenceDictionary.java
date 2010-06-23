@@ -50,7 +50,7 @@ import java.util.Set;
 public class CreateSequenceDictionary extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-    @Usage(programVersion="1.0")
+    @Usage
     public String USAGE =
             "Usage: " + getClass().getName() + " [options]\n\n" +
                     "Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.\n";

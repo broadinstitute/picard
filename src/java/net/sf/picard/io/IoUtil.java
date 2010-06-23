@@ -358,4 +358,9 @@ public class IoUtil {
         return new BufferedReader(new InputStreamReader(openFileForReading(file)));
 	}
 
+    /** Takes a string and replaces any characters that are not safe for filenames with an underscore */
+    public static String makeFileNameSafe(String str) {
+        return str.trim().replaceAll("[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]", "_");
+    }
+
 }

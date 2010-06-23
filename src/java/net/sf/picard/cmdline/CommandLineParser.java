@@ -79,7 +79,7 @@ public class CommandLineParser {
      * A typical command line program will call this to get the beginning of the usage message,
      * and then append a description of the program, like this:
      *
-     * \@Usage(programVersion=PROGRAM_VERSION)
+     * \@Usage
      * public String USAGE = CommandLineParser.getStandardUsagePreamble(getClass()) + "Frobnicates the freebozzle."
      */
     public static String getStandardUsagePreamble(final Class mainClass) {
