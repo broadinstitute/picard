@@ -24,10 +24,14 @@
 
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.Usage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
@@ -52,7 +56,7 @@ public class FixMateInformation extends CommandLineProgram {
             " and then copied over the INPUT file.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input file to fix.")
-    public File INPUT;
+    public List<File> INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
             doc="The output file to write to. If no output file is supplied, the input file is overwritten.")
@@ -70,64 +74,89 @@ public class FixMateInformation extends CommandLineProgram {
 
     protected int doWork() {
         // Open up the input
-        INPUT = INPUT.getAbsoluteFile();
-        if (OUTPUT != null) OUTPUT = OUTPUT.getAbsoluteFile();        
-        IoUtil.assertFileIsReadable(INPUT);
-        final SAMFileReader in = new SAMFileReader(INPUT);
-        final SAMFileHeader header = in.getFileHeader();
-
-        // Deal with the various sorting complications
-        final boolean inputIsQueryNameSorted = in.getFileHeader().getSortOrder() == SortOrder.queryname;
-        final SortOrder outputSortOrder = SORT_ORDER == null ? in.getFileHeader().getSortOrder() : SORT_ORDER;
-        final boolean outputIsQueryNameSorted = outputSortOrder == SortOrder.queryname;
-        header.setSortOrder(outputSortOrder);
+        boolean allQueryNameSorted = true;
+        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        for (final File f : INPUT) {
+            IoUtil.assertFileIsReadable(f);
+            SAMFileReader reader = new SAMFileReader(f);
+            readers.add(new SAMFileReader(f));
+            if (reader.getFileHeader().getSortOrder() != SortOrder.queryname) allQueryNameSorted = false;
+        }
 
         // Decide where to write the fixed file - into the specified output file
         // or into a temporary file that will overwrite the INPUT file eventually
+        if (OUTPUT != null) OUTPUT = OUTPUT.getAbsoluteFile();
         final boolean differentOutputSpecified = OUTPUT != null;
 
         if (differentOutputSpecified) {
             IoUtil.assertFileIsWritable(OUTPUT);
         }
+        else if (INPUT.size() != 1) {
+            throw new PicardException("Must specify either an explicit OUTPUT file or a single INPUT file to be overridden.");
+        }
         else {
-            final File dir = INPUT.getParentFile();
+            final File soleInput = INPUT.get(0).getAbsoluteFile();
+            final File dir       = soleInput.getParentFile().getAbsoluteFile();
             try {
+                IoUtil.assertFileIsWritable(soleInput);
                 IoUtil.assertDirectoryIsWritable(dir);
-                IoUtil.assertFileIsWritable(INPUT);
-                OUTPUT = File.createTempFile(INPUT.getName() + ".being_fixed.", ".bam", dir);
+                OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", ".bam", dir);
             }
             catch (IOException ioe) {
                 throw new RuntimeIOException("Could not create tmp file in " + dir.getAbsolutePath());
             }
         }
 
+        // Get the input records merged and sorted by query name as needed
+        final PeekableIterator<SAMRecord> iterator;
+        final SAMFileHeader header;
+
+        {
+            // Deal with merging if necessary
+            Iterator<SAMRecord> tmp;
+            if (INPUT.size() > 1) {
+                final SamFileHeaderMerger merger = new SamFileHeaderMerger(readers, SortOrder.unsorted, false);
+                tmp = new MergingSamRecordIterator(merger, false);
+                header = merger.getMergedHeader();
+            }
+            else {
+                tmp = readers.get(0).iterator();
+                header = readers.get(0).getFileHeader();
+            }
+
+            // And now deal with re-sorting if necessary
+            if (allQueryNameSorted) {
+                iterator = new PeekableIterator<SAMRecord>(tmp);
+            }
+            else {
+                log.info("Sorting input into queryname order.");
+                final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class,
+                                                                                          new BAMRecordCodec(header),
+                                                                                          new SAMRecordQueryNameComparator(),
+                                                                                          MAX_RECORDS_IN_RAM,
+                                                                                          TMP_DIR);
+                while (tmp.hasNext()) {
+                    sorter.add(tmp.next());
+
+                }
+
+                iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+                log.info("Sorting by queryname complete.");
+            }
+
+            // Deal with the various sorting complications
+            final SortOrder outputSortOrder = SORT_ORDER == null ? readers.get(0).getFileHeader().getSortOrder() : SORT_ORDER;
+            log.info("Output will be sorted by " + outputSortOrder);
+            header.setSortOrder(outputSortOrder);
+        }
+
+
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
                                                                                 header.getSortOrder() == SortOrder.queryname,
                                                                                 OUTPUT);
 
-        // Get the input records sorted by query name
-        final PeekableIterator<SAMRecord> iterator;
-        if (inputIsQueryNameSorted) {
-            iterator = new PeekableIterator<SAMRecord>(in.iterator());
-        }
-        else {
-            log.info("Sorting input into queryname order.");
-            final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class,
-                                                                                      new BAMRecordCodec(in.getFileHeader()),
-                                                                                      new SAMRecordQueryNameComparator(),
-                                                                                      MAX_RECORDS_IN_RAM,
-                                                                                      TMP_DIR);
-
-            for (final SAMRecord rec : in) {
-                sorter.add(rec);
-            }
-
-            iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
-            in.close();
-
-        }
-
         // Now go through the input file and fix up the records
+        log.info("Traversing query name sorted records and fixing up mate pair information.");
         int count = 0;
         while (iterator.hasNext()) {
             final SAMRecord rec1 = iterator.next();
@@ -163,9 +192,10 @@ public class FixMateInformation extends CommandLineProgram {
         if (!differentOutputSpecified) {
             log.info("Replacing input file with fixed file.");
 
-            final File old = new File(INPUT.getParentFile(), INPUT.getName() + ".old");
-            if (!old.exists() && INPUT.renameTo(old)) {
-                if (OUTPUT.renameTo(INPUT)) {
+            final File soleInput = INPUT.get(0).getAbsoluteFile();
+            final File old = new File(soleInput.getParentFile(), soleInput.getName() + ".old");
+            if (!old.exists() && soleInput.renameTo(old)) {
+                if (OUTPUT.renameTo(soleInput)) {
 
                     if (!old.delete()) {
                         log.warn("Could not delete old file: " + old.getAbsolutePath());
@@ -173,14 +203,14 @@ public class FixMateInformation extends CommandLineProgram {
                     }
                 }
                 else {
-                    log.error("Could not move new file to " + INPUT.getAbsolutePath());
+                    log.error("Could not move new file to " + soleInput.getAbsolutePath());
                     log.error("Input file preserved as: " + old.getAbsolutePath());
                     log.error("New file preserved as: " + OUTPUT.getAbsolutePath());
                     return 1;
                 }
             }
             else {
-                log.error("Could not move input file out of the way: " + INPUT.getAbsolutePath());
+                log.error("Could not move input file out of the way: " + soleInput.getAbsolutePath());
 
                 if (!OUTPUT.delete()) {
                     log.error("Could not delete temporary file: " + OUTPUT.getAbsolutePath());
