@@ -80,7 +80,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
 
 
     // Usage and parameters
-    @Usage(programVersion="1.1")
+    @Usage
     public String USAGE = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
     @Option(shortName="I", doc="SAM or BAM file") public File INPUT;
     @Option(shortName="O", doc="File to write insert size metrics to") public File OUTPUT;

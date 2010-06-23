@@ -38,7 +38,7 @@ import java.util.*;
  * @author Tim Fennell
  */
 public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm {
-    @Usage(programVersion="1.0") public final String USAGE =
+    @Usage public final String USAGE =
             "Attempts to estimate library complexity from sequence alone. Does so by sorting all reads " +
             "by the first N bases (5 by default) of each read and then comparing reads with the first " +
             "N bases identical to each other for duplicates.  Reads are considered to be duplicates if " +

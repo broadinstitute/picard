@@ -43,7 +43,7 @@ import java.io.File;
  * @author Martha Borkan
  */
 public class BuildBamIndex extends CommandLineProgram {
-    @Usage(programVersion="1.1")
+    @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file." +
             "Input BAM file must be sorted in coordinate order.";
 

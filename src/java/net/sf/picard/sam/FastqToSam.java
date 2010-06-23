@@ -47,7 +47,7 @@ import java.io.File;
  */
 public class FastqToSam extends CommandLineProgram {
 
-    @Usage(programVersion="1.0") 
+    @Usage 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
         + " Input files can be in GZip format (end in .gz).\n" 
         ;

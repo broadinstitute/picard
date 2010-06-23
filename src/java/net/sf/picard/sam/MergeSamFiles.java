@@ -48,7 +48,7 @@ public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
 
     // Usage and parameters
-    @Usage(programVersion="1.0")
+    @Usage
     public String USAGE = "Merges multiple SAM/BAM files into one file.\n";
 
     @Option(shortName="I", doc="SAM or BAM input file", minElements=1)

@@ -37,7 +37,7 @@ public class CommandLineParserTest {
     }
 
     class FrobnicateOptions {
-        @Usage(programVersion="1.0")
+        @Usage
         public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
         @PositionalArguments(minElements=2, maxElements=2)
@@ -57,7 +57,7 @@ public class CommandLineParserTest {
     }
 
     class FrobnicateOptionsWithNullList {
-        @Usage(programVersion="1.0")
+        @Usage
         public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
         @PositionalArguments(minElements=2, maxElements=2)

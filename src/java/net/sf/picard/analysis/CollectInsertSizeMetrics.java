@@ -56,7 +56,7 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     private static final String HISTOGRAM_R_SCRIPT = "net/sf/picard/analysis/insertSizeHistogram.R";
     // Usage and parameters
-    @Usage(programVersion="1.0")
+    @Usage
     public String USAGE = "Reads a SAM or BAM file and writes a file containing metrics about " +
             "the statistical distribution of insert size (excluding duplicates) " +
             "and generates a histogram plot.\n";

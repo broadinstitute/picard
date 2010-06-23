@@ -39,7 +39,7 @@ import java.io.File;
  * @author Martha Borkan
  */
 public class BaiToText extends CommandLineProgram {
-    @Usage(programVersion="1.1")
+    @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a textual form of a BAM index (.bai) file.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,

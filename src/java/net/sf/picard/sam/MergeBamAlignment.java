@@ -45,7 +45,7 @@ import java.util.*;
 public class MergeBamAlignment extends CommandLineProgram {
     // Usage and parameters
 
-    @Usage(programVersion="1.1")
+    @Usage
     public String USAGE = getStandardUsagePreamble() +  "Merges alignment data from a SAM or BAM " +
             "file with additional data stored in an unmapped BAM file and produces a third SAM " +
             "or BAM file of aligned and unaligned reads.  \n";
