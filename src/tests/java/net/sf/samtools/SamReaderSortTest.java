@@ -40,11 +40,14 @@ public class SamReaderSortTest {
     public static final String QUERYNAME_SORTED_FILE = "testdata/net/sf/samtools/queryname_sorted.sam";
     public static final String QUERYNAME_SORTED_NO_HEADER_SORT = "testdata/net/sf/samtools/unsorted.sam";
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void testSortsDisagree() throws Exception {
         SAMRecordIterator it = new SAMFileReader(new File(COORDINATE_SORTED_FILE)).iterator();
         try {
             it.assertSorted(SAMFileHeader.SortOrder.queryname);
+            while(it.hasNext()) {
+                it.next();
+            }
             Assert.fail("Queryname assertion should have failed on coordinate sorted file but didn't");
         }
         finally {
