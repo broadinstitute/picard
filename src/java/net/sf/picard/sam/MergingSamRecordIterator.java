@@ -188,15 +188,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         }
 
         // Otherwise try and figure out what kind of comparator to return and build it
-        final Class<? extends SAMRecordComparator> type = this.sortOrder.getComparator();
-
-        try {
-            final Constructor<? extends SAMRecordComparator> ctor = type.getConstructor();
-            return ctor.newInstance();
-        }
-        catch (Exception e) {
-            throw new PicardException("Could not instantiate a comparator for sort order: " + this.sortOrder, e);
-        }
+        return this.sortOrder.getComparatorInstance();
     }
 
     /** Returns the merged header that the merging iterator is working from. */

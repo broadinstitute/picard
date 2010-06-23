@@ -26,6 +26,7 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.StringLineReader;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.io.StringWriter;
 
@@ -65,10 +66,27 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
         }
 
         /**
-         * @return Comparator to sort in the specified order, or null if unsorted.
+         * @return Comparator class to sort in the specified order, or null if unsorted.
          */
         public Class<? extends SAMRecordComparator> getComparator() {
             return comparator;
+        }
+
+        /**
+         * @return Comparator to sort in the specified order, or null if unsorted.
+         */
+        public SAMRecordComparator getComparatorInstance() {
+            if (comparator != null) {
+                try {
+                    final Constructor<? extends SAMRecordComparator> ctor = comparator.getConstructor();
+                    return ctor.newInstance();
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Could not instantiate a comparator for sort order: " +
+                            this.name(), e);
+                }
+            }
+            return null;
         }
     }
 
