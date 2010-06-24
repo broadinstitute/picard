@@ -585,7 +585,13 @@ public class BinaryCodec {
                 if (this.outputStream instanceof FileOutputStream) {
                     this.outputStream.flush();
                     FileOutputStream fos = (FileOutputStream)this.outputStream;
-                    fos.getFD().sync();
+                    try {
+                        fos.getFD().sync();
+                    } catch (SyncFailedException e) {
+                        // Since the sync is belt-and-suspenders anyway, don't throw an exception if it fails,
+                        // because on some OSs it will fail for some types of output.  E.g. writing to /dev/null
+                        // on some Unixes.
+                    }
                 }
                 this.outputStream.close();
             }

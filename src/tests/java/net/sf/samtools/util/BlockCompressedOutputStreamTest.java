@@ -65,8 +65,7 @@ public class BlockCompressedOutputStreamTest {
         }
     }
 
-    // Writing to /dev/null doesn't work properly on some systems, because FileDescriptor.sync() fails.
-    @Test(groups = "broken")
+    @Test
     public void testOverflow() throws Exception {
         final File f = File.createTempFile("BCOST.", ".gz");
         f.deleteOnExit();
