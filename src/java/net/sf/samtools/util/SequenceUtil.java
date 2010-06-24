@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 public class SequenceUtil {
     /** Byte typed variables for all normal bases. */
-    public static final byte a='a', c='c', g='g', t='t', A='A', C='C', G='G', T='T';
+    public static final byte a='a', c='c', g='g', t='t', n='n', A='A', C='C', G='G', T='T', N='N';
 
     /**
      * Calculate the reverse complement of the specified sequence
@@ -493,7 +493,8 @@ public class SequenceUtil {
      * @param includeReferenceBasesForDeletions If true, include reference bases that are deleted in the read.
      * This will make the returned array not line up with the read if there are deletions.
      * @return References bases corresponding to the read.  If there is an insertion in the read, reference contains
-     * '-'.  If the read is soft-clipped, reference contains '0'.
+     * '-'.  If the read is soft-clipped, reference contains '0'.  If there is a skipped region and
+     * includeReferenceBasesForDeletions==true, reference will have Ns for the skipped region.
      */
     public static byte[] makeReferenceFromAlignment(final SAMRecord rec, boolean includeReferenceBasesForDeletions) {
         final String md = rec.getStringAttribute(SAMTag.MD.name());
@@ -523,10 +524,19 @@ public class SequenceUtil {
             CigarOperator cigElOp = cigEl.getOperator();
 
 
+            if (cigElOp == CigarOperator.SKIPPED_REGION) {
+                // We've decided that MD tag will not contain bases for skipped regions, as they
+                // could be megabases long, so just put N in there if caller wants reference bases,
+                // otherwise ignore skipped regions.
+                if (includeReferenceBasesForDeletions) {
+                    for (int i = 0; i < cigElLen; ++i) {
+                    ret[outIndex++] = N;
+                    }
+                }
+            }
             // If it consumes reference bases, it's either a match or a deletion in the sequence
             // read.  Either way, we're going to need to parse through the MD.
-            if (cigElOp.consumesReferenceBases())
-            {
+            else if (cigElOp.consumesReferenceBases()) {
                 // We have a match region, go through the MD
                 int basesMatched = 0;
 
