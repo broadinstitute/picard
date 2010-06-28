@@ -64,6 +64,10 @@
                 <include name="**/*.jar"/>
             </fileset>
         </path>
+        <path  id="metrics.classpath">
+            <pathelement path="${classpath}"/>
+            <pathelement location="${classes}"/>
+        </path>
     </target>
 
 <!-- CLEAN -->
@@ -204,19 +208,29 @@
 
     <target name="javadoc" depends="init" description="Generates the project javadoc.">
         <javadoc
-           sourcepath="${src}"
-           destdir="javadoc"
-           packagenames="net.sf.samtools.*, net.sf.picard.*"
-           windowtitle="SAM JDK API Documentation"
-           doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
-           author="true"
-           protected="true"
-           use="true"
-           version="true">
-          <classpath location="${java.home}/../lib/tools.jar"/>
-          <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
-          </javadoc>
-        </target>
+                sourcepath="${src}"
+                destdir="javadoc"
+                packagenames="net.sf.samtools.*, net.sf.picard.*"
+                windowtitle="SAM JDK API Documentation"
+                doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
+                author="true"
+                protected="true"
+                use="true"
+                version="true"
+                failonerror="true">
+            <classpath location="${java.home}/../lib/tools.jar"/>
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+        </javadoc>
+        <mkdir dir="${command-line-html-dir}"/>
+        <javadoc sourcepath="${src}/java"
+                 doclet="net.sf.picard.util.MetricsDoclet"
+                 docletpathref="metrics.classpath"
+                 classpathref="metrics.classpath"
+                 failonerror="true">
+            <sourcepath path="${src}"/>
+            <arg line="-f ${command-line-html-dir}/picard-metric-definitions.shtml"/>
+        </javadoc>
+    </target>
 
     <target name="package-commands" depends="compile">
         <delete dir="${command_tmp}"/>

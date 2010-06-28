@@ -121,4 +121,5 @@ scp -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/p
 scp -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
 
 cd ../dist/html
-scp *.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
+scp *.shtml *.html program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
+
