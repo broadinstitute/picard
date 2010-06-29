@@ -76,12 +76,10 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
         }
         channel = in.getChannel();
 
-        if (getSequenceDictionary() == null)
-            throw new IllegalArgumentException("No sequence dictionary exists for fasta " + file +
-                    ".  Cannot create indexed reader");
-
         reset();
-        sanityCheckDictionaryAgainstIndex(file.getAbsolutePath(), sequenceDictionary,index);
+        if (getSequenceDictionary() != null) {
+            sanityCheckDictionaryAgainstIndex(file.getAbsolutePath(), sequenceDictionary,index);
+        }
     }
 
     /**
@@ -104,7 +102,6 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
 
     public static boolean canCreateIndexedFastaReader(final File fastaFile) {
         return (fastaFile.exists() &&
-                findSequenceDictionary(fastaFile) != null &&
                 findFastaIndex(fastaFile) != null);
     }
 
@@ -172,37 +169,41 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
         if(stop > indexEntry.getSize())
             throw new PicardException("Query asks for data past end of contig");
 
-        int length = (int)(stop - start + 1);
+        final int length = (int)(stop - start + 1);
 
-        byte[] target = new byte[length];
-        ByteBuffer targetBuffer = ByteBuffer.wrap(target);
+        final byte[] target = new byte[length];
+        final ByteBuffer targetBuffer = ByteBuffer.wrap(target);
 
         final int basesPerLine = indexEntry.getBasesPerLine();
         final int bytesPerLine = indexEntry.getBytesPerLine();
+        final int separatorLength = bytesPerLine - basesPerLine;
 
         final long startOffset = ((start-1)/basesPerLine)*bytesPerLine + (start-1)%basesPerLine;
         final long stopOffset = ((stop-1)/basesPerLine)*bytesPerLine + (stop-1)%basesPerLine;
         final int size = (int)(stopOffset-startOffset)+1;
-
-        ByteBuffer channelBuffer = ByteBuffer.allocate(size);
+        int amountToRead = Math.min(basesPerLine-(int)startOffset%bytesPerLine,size);
+        int amountRead = 0;
         try {
-            channel.read(channelBuffer,indexEntry.getLocation()+startOffset);
+            channel.position(indexEntry.getLocation()+startOffset);
+            while (amountRead < length) {
+                targetBuffer.limit(amountRead + amountToRead);
+                int actuallyRead = channel.read(targetBuffer);
+                if (actuallyRead != amountToRead) {
+                    throw new PicardException(file + " ended before reading sequence " + contig +
+                            " up to " + stop);
+                }
+                amountRead += amountToRead;
+                if (amountRead < length) {
+                    channel.position(channel.position() + separatorLength);
+                    amountToRead = Math.min(length - amountRead, basesPerLine);
+                }
+            }
         }
         catch(IOException ex) {
-            throw new PicardException("Unable to load specified portion of FASTA into memory.");
+            throw new PicardException("Unable to load " + contig + "(" + start + ", " + stop + ") from " + file);
         }
 
-        channelBuffer.position(0);
-        channelBuffer.limit(Math.min(basesPerLine-(int)startOffset%bytesPerLine,size));
-
-        while( channelBuffer.hasRemaining() ) {
-            targetBuffer.put(channelBuffer);
-
-            channelBuffer.limit(Math.min(channelBuffer.limit()+bytesPerLine,size));
-            channelBuffer.position(Math.min(channelBuffer.position()+bytesPerLine-basesPerLine,size));
-        }
-
-        return new ReferenceSequence( contig, sequenceDictionary.getSequenceIndex(contig), target );
+        return new ReferenceSequence( contig, indexEntry.getSequenceIndex(), target );
     }
 
     /**
