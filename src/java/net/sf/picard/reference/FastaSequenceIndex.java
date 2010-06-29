@@ -83,6 +83,32 @@ public class FastaSequenceIndex implements Iterable<FastaSequenceIndexEntry> {
     }
 
     /**
+     * Compare two FastaSequenceIndex objects for equality.
+     * @param other Another FastaSequenceIndex to compare
+     * @return True if index has the same entries as other instance, in the same order
+     */
+    public boolean equals(Object other) {
+        if(!(other instanceof FastaSequenceIndex))
+            return false;
+
+        if (this == other) return true;
+
+        FastaSequenceIndex otherIndex = (FastaSequenceIndex)other;
+        if(this.size() != otherIndex.size())
+            return false;
+
+        Iterator<FastaSequenceIndexEntry> iter = this.iterator();
+        Iterator<FastaSequenceIndexEntry> otherIter = otherIndex.iterator();
+        while (iter.hasNext()) {
+            if (!otherIter.hasNext())
+                return false;
+            if (!iter.next().equals(otherIter.next()))
+                return false;
+        }
+        return true;
+    }
+
+    /**
      * Parse the contents of an index file, caching the results internally.
      * @param indexFile File to parse.
      * @throws FileNotFoundException Thrown if file could not be opened.
@@ -91,6 +117,7 @@ public class FastaSequenceIndex implements Iterable<FastaSequenceIndexEntry> {
         try {
             Scanner scanner = new Scanner(indexFile);
 
+            int sequenceIndex = 0;
             while( scanner.hasNext() ) {
                 // Tokenize and validate the index line.
                 String result = scanner.findInLine("(.+)\\t+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
@@ -112,7 +139,7 @@ public class FastaSequenceIndex implements Iterable<FastaSequenceIndexEntry> {
 
                 contig = SAMSequenceRecord.truncateSequenceName(contig);
                 // Build sequence structure
-                add(new FastaSequenceIndexEntry(contig,location,size,basesPerLine,bytesPerLine) );
+                add(new FastaSequenceIndexEntry(contig,location,size,basesPerLine,bytesPerLine, sequenceIndex++) );
             }
         } catch (FileNotFoundException e) {
             throw new PicardException("Fasta index file should be found but is not: " + indexFile, e);
@@ -167,6 +194,7 @@ class FastaSequenceIndexEntry {
     private long size;
     private int basesPerLine;
     private int bytesPerLine;
+    private final int sequenceIndex;
 
     /**
      * Create a new entry with the given parameters.
@@ -180,12 +208,14 @@ class FastaSequenceIndexEntry {
                                     long location,
                                     long size,
                                     int basesPerLine,
-                                    int bytesPerLine ) {
+                                    int bytesPerLine,
+                                    int sequenceIndex) {
         this.contig = contig;
         this.location = location;
         this.size = size;
         this.basesPerLine = basesPerLine;
         this.bytesPerLine = bytesPerLine;
+        this.sequenceIndex = sequenceIndex;
     }
 
     /**
@@ -239,6 +269,10 @@ class FastaSequenceIndexEntry {
         return bytesPerLine;
     }
 
+    public int getSequenceIndex() {
+        return sequenceIndex;
+    }
+
     /**
      * For debugging.  Emit the contents of each contig line.
      * @return A string representation of the contig line.
@@ -249,5 +283,29 @@ class FastaSequenceIndexEntry {
                                                                                                   size,
                                                                                                   basesPerLine,
                                                                                                   bytesPerLine );
+    }
+
+    /**
+     * Compare this index entry to another index entry.
+     * @param other another FastaSequenceIndexEntry
+     * @return True if each has the same name, location, size, basesPerLine and bytesPerLine
+     */
+    public boolean equals(Object other) {
+        if(!(other instanceof FastaSequenceIndexEntry))
+            return false;
+
+        if (this == other) return true;
+
+        FastaSequenceIndexEntry otherEntry = (FastaSequenceIndexEntry)other;
+        return (contig.equals(otherEntry.contig) && size == otherEntry.size && location == otherEntry.location
+        && basesPerLine == otherEntry.basesPerLine && bytesPerLine == otherEntry.bytesPerLine);
+    }
+
+    /**
+     * In general, we expect one entry per contig, so compute the hash based only on the contig.
+     * @return A unique hash code representing this object.
+     */
+    public int hashCode() {
+        return contig.hashCode();
     }
 }

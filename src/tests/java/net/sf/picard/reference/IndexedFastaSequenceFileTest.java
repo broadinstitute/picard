@@ -40,16 +40,20 @@ import java.io.FileNotFoundException;
 public class IndexedFastaSequenceFileTest{
     private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/reference");
     private static File SEQUENCE_FILE = new File(TEST_DATA_DIR,"Homo_sapiens_assembly18.trimmed.fasta");
+    private static File SEQUENCE_FILE_NODICT = new File(TEST_DATA_DIR,"Homo_sapiens_assembly18.trimmed.nodict.fasta");
 
     private final String firstBasesOfChrM = "GATCACAGGTCTATCACCCT";
     private final String extendedBasesOfChrM = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCAT" +
                                                "TTGGTATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTG" +
                                                "GAGCCGGAGCACCCTATGTCGCAGTATCTGTCTTTGATTCCTGCCTCATT";
     private final String lastBasesOfChr20 = "ttgtctgatgctcatattgt";
+    private final int CHR20_LENGTH = 1000000;
 
     @DataProvider(name="homosapiens")
     public Object[][] provideSequenceFile() throws FileNotFoundException {
-        return new Object[][] { new Object[] { new IndexedFastaSequenceFile(SEQUENCE_FILE) } };
+        return new Object[][] { new Object[]
+                { new IndexedFastaSequenceFile(SEQUENCE_FILE) },
+                { new IndexedFastaSequenceFile(SEQUENCE_FILE_NODICT) }};
     }
 
     @DataProvider(name="comparative")
@@ -192,10 +196,9 @@ public class IndexedFastaSequenceFileTest{
     @Test(dataProvider="homosapiens")
     public void testLastOfChr20(IndexedFastaSequenceFile sequenceFile) {
         long startTime = System.currentTimeMillis();
-        SAMSequenceRecord sequenceEntry = sequenceFile.getSequenceDictionary().getSequence("chr20");
         ReferenceSequence sequence = sequenceFile.getSubsequenceAt("chr20",
-                                                                   sequenceEntry.getSequenceLength()-lastBasesOfChr20.length()+1,
-                                                                   sequenceEntry.getSequenceLength());
+                                                                   CHR20_LENGTH - lastBasesOfChr20.length()+1,
+                                                                   CHR20_LENGTH);
         long endTime = System.currentTimeMillis();
 
         Assert.assertEquals(sequence.getName(),"chr20","Sequence contig is not correct");
