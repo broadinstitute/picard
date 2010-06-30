@@ -43,6 +43,11 @@ import java.util.Iterator;
  */
 public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
     /**
+     * Size of the read buffer.
+     */
+    private static final int BUFFER_SIZE = 128 * 1024;
+    
+    /**
      * The interface facilitating direct access to the fasta.
      */
     private final FileChannel channel;
@@ -75,11 +80,10 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
             throw new PicardException("Fasta file should be readable but is not: " + file, e);
         }
         channel = in.getChannel();
-
         reset();
-        if (getSequenceDictionary() != null) {
-            sanityCheckDictionaryAgainstIndex(file.getAbsolutePath(), sequenceDictionary,index);
-        }
+
+        if(getSequenceDictionary() != null)
+            sanityCheckDictionaryAgainstIndex(file.getAbsolutePath(),sequenceDictionary,index);
     }
 
     /**
@@ -169,38 +173,52 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
         if(stop > indexEntry.getSize())
             throw new PicardException("Query asks for data past end of contig");
 
-        final int length = (int)(stop - start + 1);
+        int length = (int)(stop - start + 1);
 
-        final byte[] target = new byte[length];
-        final ByteBuffer targetBuffer = ByteBuffer.wrap(target);
+        byte[] target = new byte[length];
+        ByteBuffer targetBuffer = ByteBuffer.wrap(target);
 
         final int basesPerLine = indexEntry.getBasesPerLine();
         final int bytesPerLine = indexEntry.getBytesPerLine();
-        final int separatorLength = bytesPerLine - basesPerLine;
+        final int terminatorLength = bytesPerLine - basesPerLine;
 
-        final long startOffset = ((start-1)/basesPerLine)*bytesPerLine + (start-1)%basesPerLine;
-        final long stopOffset = ((stop-1)/basesPerLine)*bytesPerLine + (stop-1)%basesPerLine;
-        final int size = (int)(stopOffset-startOffset)+1;
-        int amountToRead = Math.min(basesPerLine-(int)startOffset%bytesPerLine,size);
-        int amountRead = 0;
-        try {
-            channel.position(indexEntry.getLocation()+startOffset);
-            while (amountRead < length) {
-                targetBuffer.limit(amountRead + amountToRead);
-                int actuallyRead = channel.read(targetBuffer);
-                if (actuallyRead != amountToRead) {
-                    throw new PicardException(file + " ended before reading sequence " + contig +
-                            " up to " + stop);
-                }
-                amountRead += amountToRead;
-                if (amountRead < length) {
-                    channel.position(channel.position() + separatorLength);
-                    amountToRead = Math.min(length - amountRead, basesPerLine);
-                }
+        long startOffset = ((start-1)/basesPerLine)*bytesPerLine + (start-1)%basesPerLine;
+
+        // Allocate a 128K buffer for reading in sequence data.
+        ByteBuffer channelBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+
+        while(targetBuffer.position() < length) {
+            // If the bufferOffset is currently within the eol characters in the string, push the bufferOffset forward to the next printable character.
+            startOffset += Math.max((int)(startOffset%bytesPerLine - basesPerLine + 1),0);
+
+            try {
+                 startOffset += channel.read(channelBuffer,indexEntry.getLocation()+startOffset);
             }
-        }
-        catch(IOException ex) {
-            throw new PicardException("Unable to load " + contig + "(" + start + ", " + stop + ") from " + file);
+            catch(IOException ex) {
+                throw new PicardException("Unable to load " + contig + "(" + start + ", " + stop + ") from " + file);
+            }
+
+            // Reset the buffer for outbound transfers.
+            channelBuffer.flip();
+
+            // Calculate the size of the next run of bases based on the contents we've already retrieved.
+            final int positionInContig = (int)start-1+targetBuffer.position();
+            final int nextBaseSpan = Math.min(basesPerLine-positionInContig%basesPerLine,length-targetBuffer.position());
+            // Cap the bytes to transfer by limiting the nextBaseSpan to the size of the channel buffer.
+            int bytesToTransfer = Math.min(nextBaseSpan,channelBuffer.capacity());
+
+            channelBuffer.limit(channelBuffer.position()+bytesToTransfer);
+
+            while(channelBuffer.hasRemaining()) {
+                targetBuffer.put(channelBuffer);
+
+                bytesToTransfer = Math.min(basesPerLine,length-targetBuffer.position());
+                channelBuffer.limit(Math.min(channelBuffer.position()+bytesToTransfer+terminatorLength,channelBuffer.capacity()));
+                channelBuffer.position(Math.min(channelBuffer.position()+terminatorLength,channelBuffer.capacity()));
+            }
+
+            // Reset the buffer for inbound transfers.
+            channelBuffer.flip();
         }
 
         return new ReferenceSequence( contig, indexEntry.getSequenceIndex(), target );
