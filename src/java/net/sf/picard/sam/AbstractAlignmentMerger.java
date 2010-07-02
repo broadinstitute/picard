@@ -134,7 +134,7 @@ public abstract class AbstractAlignmentMerger {
         final SortingCollection<SAMRecord> alignmentSorted = SortingCollection.newInstance(
             SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
             MAX_RECORDS_IN_RAM);
-        final ClippedPairFixer pairFixer = new ClippedPairFixer(alignmentSorted, header);
+        final ClippedPairFixer pairFixer = new ClippedPairFixer(alignmentSorted, header, alignedReadsOnly);
 
         final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
         SAMRecord nextAligned = alignedIterator.hasNext() ? alignedIterator.next() : null;
@@ -198,7 +198,7 @@ public abstract class AbstractAlignmentMerger {
         writer.close();
 
 
-        log.info("Wrote " + aligned + " alignment records and " + unmapped + " unmapped reads.");
+        log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
 
@@ -303,11 +303,14 @@ public abstract class AbstractAlignmentMerger {
 
         private final SortingCollection<SAMRecord> collection;
         private final SAMFileHeader header;
+        private final boolean alignedOnly;
         private SAMRecord pending = null;
 
-        public ClippedPairFixer(final SortingCollection<SAMRecord> collection, final SAMFileHeader header) {
+        public ClippedPairFixer(final SortingCollection<SAMRecord> collection, final SAMFileHeader header,
+                                boolean alignedReadsOnly) {
             this.collection = collection;
             this.header = header;
+            this.alignedOnly = alignedReadsOnly;
         }
 
         public void add(final SAMRecord record) {
@@ -315,6 +318,10 @@ public abstract class AbstractAlignmentMerger {
                 collection.add(record);
             }
             else if (pending == null) {
+                pending = record;
+            }
+            else if (alignedOnly && !pending.getReadName().equals(record.getReadName())) {
+                collection.add(pending);
                 pending = record;
             }
             else {
