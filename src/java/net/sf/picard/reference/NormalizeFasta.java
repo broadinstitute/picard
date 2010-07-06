@@ -10,6 +10,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -74,8 +75,11 @@ public class NormalizeFasta extends CommandLineProgram {
 
             }
         }
-
-        CloserUtil.close(out);
+        try {
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
         return 0;
     }
 }
