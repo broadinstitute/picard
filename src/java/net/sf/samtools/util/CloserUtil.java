@@ -32,6 +32,9 @@ import java.io.IOException;
 
 /**
  * Utility to close things that implement Closeable
+ * WARNING: This should only be used for Closeable things open for read, because it ignores exceptions, and
+ * the caller will probably want to know about exceptions when closing a file being written to, because
+ * this may indicate a failure to flush.
  *
  * @author Kathleen Tibbetts
  */
