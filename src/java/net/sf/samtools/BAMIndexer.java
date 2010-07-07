@@ -113,7 +113,7 @@ public class BAMIndexer {
             }
             alignmentIterator.close();
             finish();
-            verbose("Records without coordinates = " + noCoordinateRecords);
+            // verbose("Records without coordinates = " + noCoordinateRecords);
 
         } catch (Exception e) {
             outputWriter.deleteIndexFile();
