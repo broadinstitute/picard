@@ -23,46 +23,41 @@
  */
 package net.sf.samtools;
 
+import java.io.File;
+
 /**
- * A basic interface for querying BAM indices.
+ * A basic interface for writing BAM index files
  *
- * @author mhanna
- * @version 0.1
+ * @author mborkan
  */
-public interface BAMIndex {
+public abstract class AbstractBAMIndexWriter implements BAMIndexWriter {
 
-    public static final String BAMIndexSuffix = ".bai";
-
-    /**
-     * Reports the maximum number of bins that can appear in a BAM file.
-     */
-    public static final int MAX_BINS = 37450;   // =(8^6-1)/7+1
+    protected final int n_ref;
+    protected final File output;
 
     /**
-     * Open the BAM file index.
+     * Constructor
+     *
+     * @param output      BAM Index (.bai) file (or bai.txt file when text)
+     * @param nReferences Number of references in the input BAM file
      */
-    public void open();
+    public AbstractBAMIndexWriter(final File output, final int nReferences) {
+        this.output = output;
+        this.n_ref = nReferences;
+    }
+
+
+    abstract public void writeHeader();
+
+    abstract public void writeReference(final BAMIndexContent content, int reference);
+
+    abstract public void close();
 
     /**
-     * Close the BAM file index.
+     * Deletes old or partial index file
+     * Called whenever exceptions occur.
      */
-    public void close();
-
-    /**
-     * Gets the compressed chunks which should be searched for the contents of records contained by the span
-     * referenceIndex:startPos-endPos, inclusive.  See the BAM spec for more information on how a chunk is
-     * represented.
-     * 
-     * @param referenceIndex The contig.
-     * @param startPos Genomic start of query.
-     * @param endPos Genomic end of query.
-     * @return A file span listing the chunks in the BAM file.
-     */
-    BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos);
-
-    /**
-     * Gets the start of the last linear bin in the index.
-     * @return The chunk indicating the start of the last bin in the linear index.
-     */
-    long getStartOfLastLinearBin();    
+    public void deleteIndexFile() {
+        output.delete();
+    }
 }

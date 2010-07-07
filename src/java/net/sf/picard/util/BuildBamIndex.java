@@ -30,10 +30,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BAMFileIndexWriter;
-import net.sf.samtools.BAMIndex;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.*;
 
 import java.io.File;
 
@@ -44,8 +41,9 @@ import java.io.File;
  */
 public class BuildBamIndex extends CommandLineProgram {
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file." +
-            "Input BAM file must be sorted in coordinate order.";
+    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file. " +
+            "Input BAM file must be sorted in coordinate order. " +
+            "Output file defaults to INPUT.bai (or if TEXTUAL, INPUT.bai.txt";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
@@ -62,7 +60,7 @@ public class BuildBamIndex extends CommandLineProgram {
     public Boolean SORT = true;
 
     @Option(doc = "Whether to write textual or binary representation", shortName = "TEXT")
-    public Boolean TEXTUAL = false;
+    public Boolean TEXTUAL = false;       // todo is there a way to hide this option
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {
@@ -76,7 +74,6 @@ public class BuildBamIndex extends CommandLineProgram {
      */
     protected int doWork() {
         final Log log = Log.getInstance(getClass());
-        int count = 0;
 
         // Some quick parameter checking
         IoUtil.assertFileIsReadable(INPUT);
@@ -93,17 +90,17 @@ public class BuildBamIndex extends CommandLineProgram {
                 throw new PicardException("Input BAM file must be sorted by coordinates");
             }
 
-            final BAMFileIndexWriter instance = new BAMFileIndexWriter(OUTPUT,
-                    bam.getFileHeader().getSequenceDictionary().size());
+            final BAMIndexer instance = new BAMIndexer(INPUT, OUTPUT,
+                    bam.getFileHeader().getSequenceDictionary().size(), SORT, TEXTUAL);
 
-            count = instance.createIndex(INPUT, TEXTUAL, SORT);
+            instance.createIndex();
 
         } catch (Exception e) {
             log.error(e.getMessage() + " exception when writing output file " + OUTPUT + e);
             e.printStackTrace();
             return 1;
         }
-        log.info("Successfully wrote bam index file " + OUTPUT + " from " + count + " records");
+        log.info("Successfully wrote bam index file " + OUTPUT);
 
         return 0;
     }
@@ -112,7 +109,7 @@ public class BuildBamIndex extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         // set default output file - input-file.bai
         if (OUTPUT == null){
-            String baseFileName = INPUT.getName();
+            String baseFileName = INPUT.getAbsolutePath();
             if (baseFileName.endsWith(".bam")){
                 final int lastDot = baseFileName.lastIndexOf('.');
                 if (lastDot != -1){
@@ -125,15 +122,18 @@ public class BuildBamIndex extends CommandLineProgram {
                 OUTPUT = new File (baseFileName + BAMIndex.BAMIndexSuffix);
             }
         }
-        // check OVERWRITE
-        if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
-            return new String[] {"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
-        }
 
         // make sure input is BAM file not SAM
         final SAMFileReader bam = new SAMFileReader(INPUT);
         if (!bam.isBinary()){
             return new String[] {"Input file must be bam file, not sam file"};
+        }
+
+        // check OVERWRITE
+        if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
+            return new String[] {"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
+        } else if (OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
+            OUTPUT.delete();
         }
         return null;
     }

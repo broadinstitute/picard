@@ -23,6 +23,8 @@
  */
 package net.sf.samtools;
 
+import java.util.List;
+
 /**
  * An individual bin in a BAM file.
  *
@@ -39,6 +41,8 @@ public class Bin implements Comparable<Bin> {
      * The number of this bin within the BAM file.
      */
     private final int binNumber;
+
+    private List<Chunk> chunkList;
 
     public Bin(final int referenceSequence, final int binNumber) {
         this.referenceSequence = referenceSequence;
@@ -88,9 +92,19 @@ public class Bin implements Comparable<Bin> {
 
         // Check the reference sequences first.
         if(this.referenceSequence != other.referenceSequence)
-            return ((Integer)referenceSequence).compareTo(other.referenceSequence);
+            // return ((Integer)referenceSequence).compareTo(other.referenceSequence);
+            return referenceSequence - other.referenceSequence;
 
         // Then check the bin ordering.
-        return ((Integer)binNumber).compareTo(other.binNumber);
+        // return ((Integer)binNumber).compareTo(other.binNumber);
+        return binNumber - other.binNumber;
+    }
+
+    void setChunkList(List<Chunk> list){
+        chunkList = list;
+    }
+
+    List<Chunk> getChunkList(){
+        return chunkList;
     }
 }
