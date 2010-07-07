@@ -238,6 +238,10 @@ public class BlockCompressedInputStream
         return ((mBlockAddress << 16) | mCurrentOffset);
     }
 
+    public static long getFileBlock(final long bgzfOffset) {
+        return ((bgzfOffset >> 16L) & 0xFFFFFFFFFFFFL);
+    }
+    
     /**
      * @param stream Must be at start of file.  Throws RuntimeException if !stream.markSupported().
      * @return true if the given file looks like a valid BGZF file.

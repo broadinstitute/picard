@@ -29,7 +29,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BAMIndexTextWriter;
+import net.sf.samtools.BamIndexerForExistingBai;
 
 import java.io.File;
 
@@ -78,23 +78,10 @@ public class BaiToText extends CommandLineProgram {
 
         log.info("Reading input file and building index.");
 
-        try {
+        final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT, SORT);
+        instance.createIndex(OUTPUT, TEXTUAL);
 
-            final BAMIndexTextWriter instance = new BAMIndexTextWriter(INPUT, OUTPUT);
-
-            if (TEXTUAL){
-                instance.writeText(SORT);
-            } else {
-                instance.writeBinary(SORT, 0);
-            }
-
-        } catch (Exception e) {
-            log.error(e.getMessage() + " exception when writing output file " + OUTPUT + e);
-            e.printStackTrace();
-            return 1;
-        }
         log.info("Successfully wrote bam index file " + OUTPUT);
-
         return 0;
     }
 
@@ -103,14 +90,16 @@ public class BaiToText extends CommandLineProgram {
         // set default output file - input-file.txt
         if (OUTPUT == null){
             if (TEXTUAL){
-                OUTPUT = new File (INPUT.getName() + ".txt");
+                OUTPUT = new File (INPUT.getAbsolutePath() + ".txt");
             } else {
-                OUTPUT = new File (INPUT.getName() + ".bai");  
+                OUTPUT = new File (INPUT.getAbsolutePath() + ".bai");  
             }
         }
         // check OVERWRITE
         if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
             return new String[] {"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
+        } else if (OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
+            OUTPUT.delete();
         }
         return null;
     }

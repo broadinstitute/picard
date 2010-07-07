@@ -89,7 +89,8 @@ class BAMIndexContent {
         return mLinearIndex;
     }
 
-    /**
+    // todo - remove - only used by Old BuildBamIndex
+      /**
      * Write this content as human-readable text
      *
      * @param pw PrintWriter for text output file
@@ -112,13 +113,17 @@ class BAMIndexContent {
         if (sortBins) Arrays.sort(bins);  // Sort for easy text comparisons
         for (int j = 0; j < size; j++) {
             if (mBinToChunks.get(bins[j]) == null) {
-                pw.println("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has no mBinToChunks");
+                pw.println("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has no mBinToChunks"); // remove?
                 continue;
             }
             final List<Chunk> chunkList = mBinToChunks.get(bins[j]);
             if (chunkList == null) {
                 pw.println("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has no chunkList");
                 continue;
+            }
+            if (chunkList.size() == 0){
+                // continue; // todo
+                pw.println();
             }
             pw.print("  Ref " + mReferenceSequence + " bin " + bins[j].getBinNumber() + " has n_chunk= " + chunkList.size());
             for (final Chunk c : chunkList) {
@@ -138,7 +143,7 @@ class BAMIndexContent {
         pw.println("Reference " + mReferenceSequence + " has n_intv= " + n_intv);
         for (int k = 0; k < entries.length; k++) {
             if (entries[k] != 0) {
-                pw.println("ioffset for " + (k + indexStart) + " is " + Long.toString(entries[k]));
+                pw.println("  Ref " + mReferenceSequence + " ioffset for " + (k + indexStart) + " is " + Long.toString(entries[k]));
             }
         }
     }
@@ -166,7 +171,10 @@ class BAMIndexContent {
         for (int j = 0; j < size; j++) {
 
             bb.putInt(bins[j].getBinNumber()); // todo uint32_t vs int32_t in spec?
-            if (mBinToChunks.get(bins[j]) == null) continue;
+            if (mBinToChunks.get(bins[j]) == null) {
+                bb.putInt(0);
+                continue;
+            }
             final List<Chunk> chunkList = mBinToChunks.get(bins[j]);
             final int n_chunk = chunkList.size();
             bb.putInt(n_chunk);

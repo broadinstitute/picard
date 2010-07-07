@@ -24,6 +24,7 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.RuntimeIOException;
+import static net.sf.samtools.util.BlockCompressedInputStream.getFileBlock;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -42,10 +43,6 @@ import java.util.*;
  * or extended BAM index format should implement BAMIndex directly.
  */
 abstract class AbstractBAMFileIndex implements BAMIndex {
-    /**
-     * Reports the maximum number of bins that can appear in a BAM file.
-     */
-    private static final int MAX_BINS = 37450; // =(8^6-1)/7+1
 
     /**
      * Reports the total amount of genomic data that any bin can index.
@@ -176,78 +173,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     }
 
     /**
-     * Write textual bam index file
-     * @param  n_ref   Number of reference sequences
-     * @param OUTPUT   BAM Index output file
-     * @param sortBins Whether to sort the bins - useful for comparison to c-generated index
-     */
-    public void writeText(final int n_ref, final File OUTPUT, final boolean sortBins) throws FileNotFoundException {
-
-        final PrintWriter pw = new PrintWriter(OUTPUT);
-        pw.println("n_ref=" + n_ref);
-        for (int i = 0; i < n_ref; i++) {
-            try {
-                if (getQueryResults(i) == null) {
-                    BAMIndexContent.writeNullTextContent(pw, i);
-                    continue;
-                }
-                getQueryResults(i).writeText(pw, sortBins);
-            } catch (Exception e) {
-                System.err.println(e.getMessage() + " Exception writing text for reference " + i);
-            }
-        }
-        pw.close();
-    }
-
-    /**
-     * Write binary bam index file
-     *
-     * @param n_ref       Number of reference sequences
-     * @param OUTPUT      BAM Index output file
-     * @param sortBins    Whether to sort the bins - useful for comparison to c-generated index
-     * @param bamFileSize Size of corresponding BAM file if known, 0 otherwise.
-     */
-    public void writeBinary(final int n_ref, final File OUTPUT, final boolean sortBins, final long bamFileSize) throws IOException {
-
-        final int bufferSize; // = 1000000; // 1M  works, but doesn't need to be this big
-        final int defaultBufferSize = 1000000;  // 1M
-        if (bamFileSize < defaultBufferSize && bamFileSize != 0) {
-            bufferSize = (int) bamFileSize;
-        } else {
-            bufferSize = defaultBufferSize;
-        }
-        // log.info("ByteBuffer size is " + bufferSize);
-
-        final FileOutputStream stream = new FileOutputStream(OUTPUT, true);
-        final FileChannel fileChannel = stream.getChannel();
-        final ByteBuffer bb = ByteBuffer.allocateDirect(bufferSize);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-
-        // magic string
-        final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
-        bb.put(magic);
-        // n_ref
-        bb.putInt(n_ref);
-        for (int i = 0; i < n_ref; i++) {
-            if (getQueryResults(i) == null) {
-                BAMIndexContent.writeNullBinaryContent(bb);
-                continue;
-            }
-            getQueryResults(i).writeBinary(bb, sortBins);
-            // write out data and reset the buffer for each reference
-            bb.flip();
-            fileChannel.write(bb);
-            // stream.flush();    // todo will flushing the stream at every reference help memory?
-            bb.position(0);
-            bb.limit(bufferSize);
-        }
-        bb.flip();
-        fileChannel.write(bb);
-        fileChannel.close();
-        stream.close();
-    }
-
-    /**
      * Use to get close to the unmapped reads at the end of a BAM file.
      * @return The file offset of the first record in the last linear bin, or -1
      * if there are no elements in linear bins (i.e. no mapped reads).
@@ -313,7 +238,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
-            if (regionBins.get(indexBin)) {
+            if (regionBins.get(indexBin) || indexBin == MAX_BINS) {
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
@@ -323,6 +248,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
                 skipBytes(16 * nChunks);
             }
             Bin bin = new Bin(referenceSequence,indexBin);
+            bin.setChunkList(chunks);
             bins.add(bin);
             binToChunks.put(bin,chunks);
         }
@@ -425,10 +351,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             // System.out.println("# nLinearBins: " + nLinearBins);
             skipBytes(8 * nLinearBins);
         }
-    }
-
-    private long getFileBlock(final long bgzfOffset) {
-        return ((bgzfOffset >> 16L) & 0xFFFFFFFFFFFFL);
     }
 
     private void readBytes(final byte[] bytes) {
