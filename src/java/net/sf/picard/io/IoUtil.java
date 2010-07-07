@@ -363,4 +363,15 @@ public class IoUtil {
         return str.trim().replaceAll("[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]", "_");
     }
 
+    /** Returns the name of the file minus the extension (i.e. text after the last "." in the filename). */
+    public static String basename(final File f) {
+        final String full = f.getName();
+        final int index = full.lastIndexOf(".");
+        if (index > 0) {
+            return full.substring(0, index);
+        }
+        else {
+            return full;
+        }
+    }    
 }
