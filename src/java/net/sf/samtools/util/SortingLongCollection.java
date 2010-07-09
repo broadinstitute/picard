@@ -54,6 +54,7 @@ import java.util.*;
  */
 public class SortingLongCollection {
     public static final int SIZEOF = 8;
+    public static final int MAX_ITEMS_IN_RAM = (int)Math.floor((Integer.MAX_VALUE/8)*.999);
 
     /**
      * Where files of sorted values go.
@@ -96,7 +97,7 @@ public class SortingLongCollection {
             throw new IllegalArgumentException("maxValuesInRam must be > 0");
         }
         this.tmpDir = tmpDir;
-        this.maxValuesInRam = maxValuesInRam;
+        this.maxValuesInRam = Math.min(maxValuesInRam, MAX_ITEMS_IN_RAM);
         this.ramValues = new long[maxValuesInRam];
     }
 
