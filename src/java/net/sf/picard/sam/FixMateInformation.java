@@ -157,7 +157,7 @@ public class FixMateInformation extends CommandLineProgram {
 
         // Now go through the input file and fix up the records
         log.info("Traversing query name sorted records and fixing up mate pair information.");
-        int count = 0;
+        long count = 0;
         while (iterator.hasNext()) {
             final SAMRecord rec1 = iterator.next();
             final SAMRecord rec2 = iterator.hasNext() ? iterator.peek() : null;
