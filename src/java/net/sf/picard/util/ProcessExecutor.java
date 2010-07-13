@@ -25,6 +25,7 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.Log;
 
 import java.io.*;
 import java.util.concurrent.*;

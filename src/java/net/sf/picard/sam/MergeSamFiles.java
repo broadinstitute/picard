@@ -35,7 +35,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.samtools.*;
 

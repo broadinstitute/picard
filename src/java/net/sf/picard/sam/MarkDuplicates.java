@@ -24,13 +24,12 @@
 
 package net.sf.picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.*;
@@ -39,8 +38,6 @@ import net.sf.samtools.util.SortingLongCollection;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A better duplication marking algorithm that handles all cases including clipped

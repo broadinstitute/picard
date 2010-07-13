@@ -26,7 +26,7 @@ package net.sf.picard.liftover;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Interval;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.SAMSequenceDictionary;
 
