@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2010 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.sf.samtools;
 
 import java.io.File;
@@ -30,10 +31,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A basic interface for writing BAM index files as human-readable text.
+ * Class for writing binary BAM index files as human-readable text.
  * Used for testing only.
- *
- * @author mborkan
+
  */
 class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
 
@@ -57,6 +57,9 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         }
     }
 
+    /**
+     * Write header information at the beginning of the file
+     */
     public void writeHeader() {
         pw.println("n_ref=" + n_ref);
     }
@@ -71,6 +74,16 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
             return;
         }
         final int ref = content.getReferenceSequence();
+        if (ref != reference){
+            // something is wrong. either ignore it, or add nulls till we catch up
+            System.err.println("Reference on content is " + ref + " but expecting reference " + reference);
+            if (ref > reference){
+                for (int i = reference; i< ref; i++){
+                     writeNullContent(pw, i);
+                }
+            }
+            // if (ref < reference) // just ignore it?? todo
+        }
         final List<Bin> bins = content.getBins();
         final LinearIndex linearIndex = content.getLinearIndex();
 
@@ -139,7 +152,13 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         pw.println("Reference " + reference + " has n_intv=0");
     }
 
-    public void close() {
+    /**
+     * Any necessary processing at the end of the file
+     *
+     * @param noCoordinateCount the count of records seen with no coordinate positions in the start coordinate
+     */
+    public void close(final Long noCoordinateCount) {
+        pw.println("No Coordinate Count=" + noCoordinateCount);
         pw.close();
     }
 }

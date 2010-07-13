@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2010 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.sf.samtools;
 
 import java.io.File;
@@ -34,14 +35,12 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A basic interface for writing BAM index files
- *
- * @author mborkan
+ * Class for writing binary BAM index files
  */
 public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
 
     private final ByteBuffer bb;
-    private final int bufferSize; // = 1000000; // 1M  works, but doesn't need to be this big
+    private final int bufferSize;
     private final FileChannel fileChannel;
     private final FileOutputStream stream;
     private final boolean sortBins;
@@ -59,10 +58,11 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
 
         this.sortBins = sortBins;
 
-        final int defaultBufferSize = 1000000;  // 1M
+        final int defaultBufferSize = 1000000;  // 1M works, but doesn't need to be this big
+        final int minBufferSize = 100000;
         if (bamFileSize < defaultBufferSize && bamFileSize != 0) {
-            if (bamFileSize < 100000) {
-                bufferSize = 100000;  // make it at least this big
+            if (bamFileSize < minBufferSize) {
+                bufferSize = minBufferSize;
             } else {
                 bufferSize = (int) bamFileSize;
             }
@@ -70,7 +70,6 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
             bufferSize = defaultBufferSize;
         }
 
-        // log.info("ByteBuffer size is " + bufferSize);
         try {
             stream = new FileOutputStream(output, true);
             fileChannel = stream.getChannel();
@@ -110,20 +109,25 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         final int size = bins.size();
         bb.putInt(size);
 
-        // copy into an array so that it can be sorted
+        // copy bins into an array so that it can be sorted
         final Bin[] binArray = new Bin[size];
         if (size != 0) {
             bins.toArray(binArray);
         }
         if (sortBins) Arrays.sort(binArray);  // Sort for easy text comparisons
-        for (int j = 0; j < size; j++) {
 
-            bb.putInt(binArray[j].getBinNumber()); // todo uint32_t vs int32_t in spec?
-            if (binArray[j].getChunkList() == null){
+        // todo - don't copy the array when no sorting
+        // and instead loop using
+        // for (Bin bin: bins) {
+
+        for (int j = 0; j < size; j++) {
+            Bin bin = binArray[j];
+            bb.putInt(bin.getBinNumber()); // todo uint32_t vs int32_t in spec?
+            if (bin.getChunkList() == null){
                 bb.putInt(0);
                 continue;
             }
-            final List<Chunk> chunkList = binArray[j].getChunkList();
+            final List<Chunk> chunkList = bin.getChunkList();
             final int n_chunk = chunkList.size();
             bb.putInt(n_chunk);
             for (final Chunk c : chunkList) {
@@ -133,12 +137,12 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         }
         final long[] entries = linearIndex == null ? null : linearIndex.getIndexEntries();
         final int indexStart = linearIndex == null ? 0 : linearIndex.getIndexStart();
-        final int n_intv = entries == null ? indexStart : entries.length + indexStart; // +1;
+        final int n_intv = entries == null ? indexStart : entries.length + indexStart;
         bb.putInt(n_intv);
         if (entries == null) {
             return;
         }
-        // System.out.println("index start is " + indexStart);
+
         for (int i = 0; i < indexStart; i++) {
             bb.putLong(0);          // todo uint32_t vs int32_t in spec?
         }
@@ -163,7 +167,8 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         bb.putInt(0);  // 0 intv
     }
 
-    public void close() {
+    public void close(Long noCoordinateCount) {
+        bb.putLong(noCoordinateCount == null ? 0 : noCoordinateCount);
         bb.flip();
         try {
             fileChannel.write(bb);

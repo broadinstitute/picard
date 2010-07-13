@@ -27,7 +27,6 @@ import net.sf.samtools.util.RuntimeIOException;
 import static net.sf.samtools.util.BlockCompressedInputStream.getFileBlock;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
@@ -141,6 +140,8 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             FileInputStream fileStream = new FileInputStream(mFile);
             FileChannel fileChannel = fileStream.getChannel();
             mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
+            //         fileChannel.size() > Integer.MAX_VALUE ? Integer.MAX_VALUE : fileChannel.size());
+            // todo if (fileChannel.size() > Integer.MAX_VALUE) use Integer.MAX_VALUE
             mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
             fileChannel.close();
@@ -209,13 +210,27 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         return lastLinearIndexPointer;
     }
 
+    /**
+     * Can only be called once all other references have been read, before the file is closed
+     * @return meta data at the end of the bam index that indicates count of records holding no coordinates
+     */
+    Long getNoCoordinateCount(){
+       if(mFileBuffer == null)
+            throw new SAMException("Cannot query a closed index file");
+        try { // in case of old index file without meta data
+           return readLong();
+        } catch (Exception e){
+            return null;
+        }
+    }
+
+
     protected BAMIndexContent query(final int referenceSequence, final int startPos, final int endPos) {
         if(mFileBuffer == null)
             throw new SAMException("Cannot query a closed index file");
         seek(4);
 
         List<Bin> bins = null;
-        SortedMap<Bin, List<Chunk>> binToChunks = new TreeMap<Bin,List<Chunk>>();
         LinearIndex linearIndex = null;
 
         final int sequenceCount = readInteger();
@@ -238,7 +253,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
-            if (regionBins.get(indexBin) || indexBin == MAX_BINS) {
+            if (regionBins.get(indexBin) || indexBin == MAX_BINS) { 
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
@@ -250,7 +265,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             Bin bin = new Bin(referenceSequence,indexBin);
             bin.setChunkList(chunks);
             bins.add(bin);
-            binToChunks.put(bin,chunks);
         }
         // Reorder the bins in binNumber order.
         Collections.sort(bins);
@@ -270,7 +284,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
         linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
 
-        return new BAMIndexContent(referenceSequence, bins, binToChunks, linearIndex);
+        return new BAMIndexContent(referenceSequence, bins, linearIndex);
     }
 
     abstract protected BAMIndexContent getQueryResults(int reference);

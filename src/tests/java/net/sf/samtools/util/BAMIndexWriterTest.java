@@ -49,23 +49,27 @@ public class BAMIndexWriterTest
     public void testWriteText() throws Exception {
         // Compare the text form of the c-generated bai file and a java-generated one
         final File cBaiTxtFile = File.createTempFile("cBai.", ".bai.txt");
-        final BamIndexerForExistingBai bfi = new BamIndexerForExistingBai(BAI_FILE, true);
-        bfi.createIndex(cBaiTxtFile, true);
+        final BamIndexerForExistingBai bfi = new BamIndexerForExistingBai(BAI_FILE);
+        bfi.createIndex(cBaiTxtFile, true, true);
         verbose ("Wrote Textual version of C BAM Index file " + cBaiTxtFile);
 
-        // Text compare of javaBaiTxtFileName.txt(bfi2)
-        //             and cBaiTxtFileName(bfi)should be the same
+        // Text compare of javaBaiTxtFile
+        //             and cBaiTxtFile   should be the same
+        final File javaBaiFile = File.createTempFile("javaBai.", "java.bai");
         final File javaBaiTxtFile = File.createTempFile("javaBai.", "java.bai.txt");
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
         bam.enableFileSource(true);
-        final BAMIndexer javaBai = new BAMIndexer(BAM_FILE, javaBaiTxtFile,
-                    bam.getFileHeader().getSequenceDictionary().size(), true, true);
+        final BAMIndexer javaBai = new BAMIndexer(BAM_FILE, javaBaiFile,
+                    bam.getFileHeader().getSequenceDictionary().size(), true);
         javaBai.createIndex();
-        verbose ("Wrote Textual version of Java BAM Index file " + javaBai);
+        verbose ("Wrote binary version of Java BAM Index file " + javaBai);
+        // now, turn the bai file into text
+        new BamIndexerForExistingBai(javaBaiFile).createIndex(javaBaiTxtFile, true, true);
         // diff index_test.bam.java.bai.txt index_text.bam.bai.txt
         verbose ("diff " + javaBaiTxtFile + " " + cBaiTxtFile);
         IoUtil.assertFilesEqual(javaBaiTxtFile, cBaiTxtFile);
         cBaiTxtFile.deleteOnExit();
+        javaBaiFile.deleteOnExit();
         javaBaiTxtFile.deleteOnExit();
     }
 
@@ -76,13 +80,13 @@ public class BAMIndexWriterTest
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
         bam.enableFileSource(true);
         final BAMIndexer javaBai = new BAMIndexer(BAM_FILE, javaBaiFile,
-                    bam.getFileHeader().getSequenceDictionary().size(), true, false);
+                    bam.getFileHeader().getSequenceDictionary().size(), true);
         javaBai.createIndex();
         verbose ("Wrote sorted C Binary BAM Index file " + javaBaiFile);
 
         final File cRegeneratedBaiFile = File.createTempFile("cBai.", ".bai");
-        final BamIndexerForExistingBai bfi2 = new BamIndexerForExistingBai(BAI_FILE, true);
-        bfi2.createIndex(cRegeneratedBaiFile, false);
+        final BamIndexerForExistingBai bfi2 = new BamIndexerForExistingBai(BAI_FILE);
+        bfi2.createIndex(cRegeneratedBaiFile, false, true);
         verbose ("Wrote Java-generated Binary BAM Index file " + cRegeneratedBaiFile);
         // Binary compare of javaBaiFile and cRegeneratedBaiFile should be the same
         // diff index_test.bam.java.bai index_test.bam.generated.bai

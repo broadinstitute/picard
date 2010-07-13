@@ -202,6 +202,21 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
     }
 
     /**
+     * Find the first offset in the chunk list
+     * @return The first offset in the span
+     */
+    protected long getFirstOffset() {
+        long result = 0;
+        if (chunks == null){
+            return result;
+        }
+        for (final Chunk chunk : chunks) {
+            return chunk.getChunkStart();
+        }
+        return result;
+    }
+
+    /**
      * Gets the constituent chunks stored in this span.
      * @return An unmodifiable list of chunks.
      */

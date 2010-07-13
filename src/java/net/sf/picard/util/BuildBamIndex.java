@@ -24,7 +24,6 @@
 
 package net.sf.picard.util;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -44,7 +43,7 @@ public class BuildBamIndex extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file. " +
             "Input BAM file must be sorted in coordinate order. " +
-            "Output file defaults to INPUT.bai (or if TEXTUAL, INPUT.bai.txt";
+            "Output file defaults to INPUT.bai (or x.bai if INPUT is x.bam)";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
@@ -57,11 +56,8 @@ public class BuildBamIndex extends CommandLineProgram {
     @Option(doc = "Whether to overwrite an existing bai file", shortName = "OVERWRITE")
     public Boolean OVERWRITE_EXISTING_BAI_FILE = false;
 
-    @Option(doc = "Whether to sort the bins in sequence order")
-    public Boolean SORT = true;
-
-    @Option(doc = "Whether to write textual or binary representation", shortName = "TEXT")
-    public Boolean TEXTUAL = false;       // todo is there a way to hide this option
+    @Option(doc = "Whether to sort the bins in bin number order")
+    public Boolean SORT = false;
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {
@@ -82,27 +78,23 @@ public class BuildBamIndex extends CommandLineProgram {
 
         log.info("Reading input file and building index.");
 
-        try {
-            final SAMFileReader bam = new SAMFileReader(INPUT);
-            bam.enableFileSource(true);
+        final SAMFileReader bam = new SAMFileReader(INPUT);
 
-            // check sort order in the header - must be coordinate
-            if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-                throw new PicardException("Input BAM file must be sorted by coordinates");
-            }
-
-            final BAMIndexer instance = new BAMIndexer(INPUT, OUTPUT,
-                    bam.getFileHeader().getSequenceDictionary().size(), SORT, TEXTUAL);
-
-            instance.createIndex();
-
-        } catch (Exception e) {
-            log.error(e.getMessage() + " exception when writing output file " + OUTPUT + e);
-            e.printStackTrace();
-            return 1;
+        if (!bam.isBinary()){
+            throw new SAMException ("Input file must be bam file, not sam file.");
         }
-        log.info("Successfully wrote bam index file " + OUTPUT);
+        // check sort order in the header - must be coordinate
+        if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
+            throw new SAMException ("Input bam file must be sorted by coordinates");
+        }
 
+        bam.enableFileSource(true);
+
+        final BAMIndexer instance = new BAMIndexer(INPUT, OUTPUT,
+                bam.getFileHeader().getSequenceDictionary().size(), SORT);
+        instance.createIndex();
+
+        log.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
     }
 
@@ -110,24 +102,7 @@ public class BuildBamIndex extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         // set default output file - input-file.bai
         if (OUTPUT == null){
-            String baseFileName = INPUT.getAbsolutePath();
-            if (baseFileName.endsWith(".bam")){
-                final int lastDot = baseFileName.lastIndexOf('.');
-                if (lastDot != -1){
-                   baseFileName = baseFileName.substring(0,lastDot);
-                }
-            }
-            if (TEXTUAL){
-                OUTPUT = new File (baseFileName + BAMIndex.BAMIndexSuffix + ".txt");
-            } else {
-                OUTPUT = new File (baseFileName + BAMIndex.BAMIndexSuffix);
-            }
-        }
-
-        // make sure input is BAM file not SAM
-        final SAMFileReader bam = new SAMFileReader(INPUT);
-        if (!bam.isBinary()){
-            return new String[] {"Input file must be bam file, not sam file"};
+            OUTPUT = new File(IoUtil.basename(INPUT) + BAMIndex.BAMIndexSuffix);
         }
 
         // check OVERWRITE
