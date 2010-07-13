@@ -272,7 +272,7 @@ public class BAMIndexBuilder {
              // get the max window in the list; linear index will be this long
 
             int maxWindow = indexSeen.length();
-            long[] newIndex = Arrays.copyOf(index, maxWindow);
+            long[] newIndex = null; //Arrays.copyOf(index, maxWindow);
 
             // c index also fills in intermediate 0's with values.  This seems incorrect todo
             long lastOffset = 0;
