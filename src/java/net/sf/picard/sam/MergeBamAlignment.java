@@ -27,13 +27,10 @@ import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.samtools.*;
-import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
-import java.util.*;
 
 /**
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an

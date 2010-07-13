@@ -28,7 +28,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import net.sf.picard.analysis.InsertSizeMetrics;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
@@ -38,7 +37,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.sam.SamPairUtil;
 import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.picard.util.RExecutor;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;

@@ -30,7 +30,7 @@ import net.sf.picard.metrics.Header;
 import net.sf.picard.metrics.MetricBase;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.metrics.StringHeader;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;

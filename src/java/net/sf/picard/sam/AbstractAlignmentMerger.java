@@ -27,7 +27,7 @@ import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.CigarUtil;
-import net.sf.picard.util.Log;
+import net.sf.samtools.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;

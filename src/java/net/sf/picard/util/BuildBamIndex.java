@@ -31,6 +31,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.*;
+import net.sf.samtools.util.Log;
 
 import java.io.File;
 
