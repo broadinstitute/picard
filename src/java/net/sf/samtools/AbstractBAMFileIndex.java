@@ -278,7 +278,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         if (regionLinearBinStart < nLinearBins) {
             linearIndexEntries = new long[regionLinearBinStop-regionLinearBinStart+1];
             skipBytes(8 * regionLinearBinStart);
-            for(int linearBin = regionLinearBinStart; linearBin <= regionLinearBinStop; linearBin++)
+            for(int linearBin = regionLinearBinStart; linearBin <= regionLinearBinStop && linearBin <= nLinearBins-1; linearBin++)
                 linearIndexEntries[linearBin-regionLinearBinStart] = readLong();
         }
 
