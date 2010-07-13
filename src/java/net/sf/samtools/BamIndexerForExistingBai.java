@@ -24,6 +24,9 @@
 package net.sf.samtools;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Class used only for testing. Constructs BAM index content from an existing bai file
@@ -34,31 +37,29 @@ public class BamIndexerForExistingBai {
     // input either built from bam file, or (for debugging) from existing bai file
     private final File inputFile;
 
-    // whether to sort the bins in the index.
-    private final boolean sortBins;
-
     /**
      * Constructor
      *
      * @param input       BAM Index (.bai) file
-     * @param sortBins    Whether to sort the bins in the output
      */
-    public BamIndexerForExistingBai(final File input, final boolean sortBins) {
+    public BamIndexerForExistingBai(final File input) {
 
         this.inputFile = input;
-        this.sortBins= sortBins;
     }
 
     /**
      * Generates a BAM index file, either textual or binary, sorted or not, from an input BAI file
      *
-     *  @param output      BAM Index (.bai) file (or bai.txt file when text)
-     *  @param textOutput  Whether to create text output or binary
+     * @param output      BAM Index (.bai) file (or bai.txt file when text)
+     * @param textOutput  Whether to create text output or binary
+     * @param sortBins     Whether to sort the bins in the output
      */
-    public void createIndex(final File output, final boolean textOutput) {
+    public void createIndex(final File output, final boolean textOutput, final boolean sortBins) {
 
-        // content is (for debugging) from an existing bai file.
-        final CachingBAMFileIndex existingIndex = new CachingBAMFileIndex(inputFile);
+        // content is from an existing bai file.
+
+        // final DiskBasedBAMFileIndex existingIndex = new DiskBasedBAMFileIndex(inputFile); // doesn't work todo
+        final CachingBAMFileIndex existingIndex = new CachingBAMFileIndex(inputFile); // also works
         final int n_ref = existingIndex.getNumberOfReferences();
         final BAMIndexWriter outputWriter;
         if (textOutput){
@@ -73,11 +74,74 @@ public class BamIndexerForExistingBai {
             for (int i = 0; i < n_ref; i++) {
                 outputWriter.writeReference(existingIndex.getQueryResults(i), i);
             }
-            outputWriter.close();
+            outputWriter.close(existingIndex.getNoCoordinateCount());
+            existingIndex.close();
 
         } catch (Exception e) {
-            outputWriter.deleteIndexFile();
+            outputWriter.close(null); // let's keep the partial file for now  todo
+ //            outputWriter.deleteIndexFile();
             throw new SAMException("Exception creating BAM index", e);
         }
+    }
+
+    /**
+     * Prints meta-data statistics from BAM index (.bai) file
+     * Statistics include count of aligned and unaligned reads for each reference sequence
+     * and a count of all records with no start coordinate
+     */
+    public void indexStats() {
+        try {
+            final BAMFileReader bam = new BAMFileReader(inputFile, null, false, SAMFileReader.ValidationStringency.SILENT);
+            // bam.enableIndexCaching(true);  // to test CachingBAMFileIndex
+
+            if (!bam.hasIndex()) {
+                throw new SAMException("No index for bam file " + inputFile);
+            }
+
+            AbstractBAMFileIndex index = (AbstractBAMFileIndex) bam.getIndex();
+            index.open();
+            // read through all the bins of every reference.
+            int nRefs = index.getNumberOfReferences();
+            for (int i = 0; i < nRefs; i++) {
+                BAMIndexContent content = index.query(i, 0, -1); // todo: it would be faster just to skip to the last bin
+
+                final SAMSequenceRecord seq = bam.getFileHeader().getSequence(i);
+                if (seq == null) continue;
+                final String sequenceName = seq.getSequenceName();
+                final int sequenceLength = seq.getSequenceLength();
+                System.out.print(sequenceName + ' ' + "length =" + sequenceLength);
+
+                if (content == null || content.getBins() == null || content.getBins().isEmpty()) {
+                    System.out.println();
+                    continue;
+                }
+                Bin bin = Collections.max(content.getBins()); // might be expensive?
+
+                boolean firstChunk = true;
+                if (bin.equals(new Bin(i, BAMIndex.MAX_BINS))) {
+                    List<Chunk> chunkList = bin.getChunkList();
+                    for (Chunk c : chunkList) {
+                        long start = c.getChunkStart();
+                        long end = c.getChunkEnd();
+                        if (firstChunk){
+                            // samtools idxstats doesn't print this, so we won't either
+                            // System.out.print(sequenceName + ' ' + "Start=" + start + "    End=" + end);
+                            firstChunk = false;
+                        } else {
+                            firstChunk = true;
+                            System.out.println("    Aligned= " + start + "   Unaligned= " + end);
+                        }
+                    }
+                } else {
+                    // no meta data for this index
+                }
+            }
+
+            System.out.println("NoCoordinateCount= " + index.getNoCoordinateCount());
+
+        } catch (IOException e) {
+            throw new SAMException("Exception in getting index statistics", e);
+        }
+
     }
 }

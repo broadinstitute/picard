@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2010 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,11 @@ import net.sf.samtools.util.CloseableIterator;
 import java.io.*;
 
 /**
- * Class for constructing BAM index content from a BAM file
- * and writing it out (as binary bai file or textual bai.txt file for debugging)
+ * Class for both constructing BAM index content and writing it out.
  */
 public class BAMIndexer {
 
-    /**
-     * The number of references (chromosomes) in the BAM file
-     */
+    // The number of references (chromosomes) in the BAM file
     private final int numReferences;
 
     // input bam file
@@ -47,14 +44,12 @@ public class BAMIndexer {
     // output written as binary, or (for debugging) as text
     private final BAMIndexWriter outputWriter;
 
-    private int currentReference = -1;
+    private int currentReference = 0;
 
     /**
-     * Constructor
-     *
      * @param input       BAM (.bam) file
      * @param output      binary BAM Index (.bai) file
-     * @param nReferences Number of references in the input BAM file, or -1 if unknown
+     * @param nReferences Number of references in the input BAM file
      */
     public BAMIndexer(final File input, final File output, final int nReferences, final boolean sortBins) {
 
@@ -66,35 +61,15 @@ public class BAMIndexer {
     }
 
     /**
-     * Constructor that allows specifying sorted text output
-     * * Todo - hide this.  Only called by BAMIndexWriterText and BuildBamIndex(for shorthand to get text output)
-     *
-     * @param input       BAM (.bam) file
-     * @param output      BAM Index (.bai) file (or bai.txt file when text)
-     * @param nReferences Number of references in the input BAM file, or -1 if unknown
-     * @param sortBins    Whether to sort the bins in the output
-     * @param textOutput  Whether to create text output or binary
-     */
-    public BAMIndexer(final File input, final File output, final int nReferences, final boolean sortBins, final boolean textOutput) {
-
-        numReferences = nReferences;
-        inputFile = input;
-        indexBuilder = new BAMIndexBuilder();
-        outputWriter = textOutput ? new TextualBAMIndexWriter(nReferences, output, sortBins)
-                : BAMIndexWriterFactory.makeBAMIndexWriter(nReferences, output, sortBins, input.length());
-        outputWriter.writeHeader();
-    }
-
-    /**
      * Generates a BAM index file from an input BAM file
      */
     public void createIndex() {
 
-        int noCoordinateRecords = 0;
         SAMFileReader reader = new SAMFileReader(inputFile);
         reader.enableFileSource(true);
         CloseableIterator<SAMRecord> alignmentIterator = reader.iterator();
         int totalRecords = 0;
+        SAMRecord rec = null;
 
         // create and write the content
         try {
@@ -102,22 +77,15 @@ public class BAMIndexer {
                 if (++totalRecords % 1000000 == 0) {
                     verbose(totalRecords + " reads processed ...");
                 }
-                final SAMRecord rec = alignmentIterator.next();
-                if (rec.getAlignmentStart() == SAMRecord.NO_ALIGNMENT_START) {
-                    noCoordinateRecords++;
-                    continue;  // do nothing for un-aligned records, except count
-                    // this count should match           noCoordinateRecord in BAMIndexBuilder
-                }
-
+                rec = alignmentIterator.next();
                 processAlignment(rec);
             }
             alignmentIterator.close();
             finish();
-            // verbose("Records without coordinates = " + noCoordinateRecords);
 
         } catch (Exception e) {
             outputWriter.deleteIndexFile();
-            throw new SAMException("Exception creating BAM index", e);
+            throw new SAMException("Exception creating BAM index on record " + rec, e);
         }
     }
 
@@ -130,19 +98,16 @@ public class BAMIndexer {
     public void processAlignment(final SAMRecord rec) {
         final int reference = rec.getReferenceIndex();
         if (reference != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX && reference != currentReference){
-            // process any skipped references
-            for (int i = currentReference + 1; i < reference; i++) {
-                // System.err.println("### skipping reference " + i);
-                BAMIndexContent skippedContent = indexBuilder.processReference(i);
-                outputWriter.writeReference(skippedContent, i);
+            // process any completed references
+            while (currentReference < reference) {
+                BAMIndexContent content = indexBuilder.processReference(currentReference);
+                outputWriter.writeReference(content, currentReference);
                 indexBuilder.startNewReference();
+                currentReference++;
             }
             currentReference = reference;
         }
-        final BAMIndexContent finishedContent = indexBuilder.processAlignment(rec);
-        if (finishedContent != null) {
-            outputWriter.writeReference(finishedContent, finishedContent.getReferenceSequence());
-        }
+        indexBuilder.processAlignment(rec);
     }
 
     /**
@@ -150,15 +115,15 @@ public class BAMIndexer {
      * Note, we can do this processing per-reference instead of per-file if desired
      */
     public void finish() {
-        // process any skipped references
-        for (int i = currentReference; i < numReferences; i++) {
-            // System.err.println("### ending reference " + i);
-            BAMIndexContent skippedContent = indexBuilder.processReference(i);
-            outputWriter.writeReference(skippedContent, i);
+        // process any remaining references
+        while (currentReference < numReferences) {
+            BAMIndexContent content = indexBuilder.processReference(currentReference);
+            outputWriter.writeReference(content, currentReference);
             indexBuilder.startNewReference();
+            currentReference++;
         }
-        // todo add meta information of noCoordinateRecordCount
-        outputWriter.close();
+        long noCoordinateRecords = indexBuilder.finish();
+        outputWriter.close(noCoordinateRecords); // writes count of noCoordinateRecords
     }
 
     /**

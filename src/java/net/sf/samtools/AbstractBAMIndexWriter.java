@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2010 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,12 +46,25 @@ public abstract class AbstractBAMIndexWriter implements BAMIndexWriter {
         this.n_ref = nReferences;
     }
 
-
+    /**
+     * Write header information at the beginning of the file
+     */
     abstract public void writeHeader();
 
+    /**
+     * Write the data for one alignments to one reference sequence
+     *
+     * @param content   BAMIndexContent containing the information for one reference
+     * @param reference reference sequence number
+     */
     abstract public void writeReference(final BAMIndexContent content, int reference);
 
-    abstract public void close();
+    /**
+     * Any necessary processing at the end of the file
+     *
+     * @param noCoordinateCount the count of records seen with no coordinate positions in the start coordinate
+     */
+    abstract public void close(final Long noCoordinateCount);
 
     /**
      * Deletes old or partial index file

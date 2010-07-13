@@ -43,12 +43,12 @@ public class BaiToText extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a textual form of a BAM index (.bai) file.";
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="A BAM Index file to process.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "A BAM Index file to process.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The textual BAM index file output", optional=true)
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The textual BAM index file output", optional = true)
     public File OUTPUT;
 
     @Option(doc = "Whether to overwrite an existing bai.txt file", shortName = "OVERWRITE")
@@ -60,7 +60,9 @@ public class BaiToText extends CommandLineProgram {
     @Option(doc = "Whether to write textual or binary representation", shortName = "TEXT")
     public Boolean TEXTUAL = true;  // binary output is used to test. Should generate the same file as input
 
-    /** Stock main method for a command line program. */
+    /**
+     * Stock main method for a command line program.
+     */
     public static void main(final String[] argv) {
         System.exit(new BaiToText().instanceMain(argv));
     }
@@ -79,8 +81,8 @@ public class BaiToText extends CommandLineProgram {
 
         log.info("Reading input file and building index.");
 
-        final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT, SORT);
-        instance.createIndex(OUTPUT, TEXTUAL);
+        final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT);
+        instance.createIndex(OUTPUT, TEXTUAL, SORT);   // todo note - sorting will always be done (by CachingBamIndex implementation)
 
         log.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
@@ -89,17 +91,17 @@ public class BaiToText extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         // set default output file - input-file.txt
-        if (OUTPUT == null){
-            if (TEXTUAL){
-                OUTPUT = new File (INPUT.getAbsolutePath() + ".txt");
+        if (OUTPUT == null) {
+            if (TEXTUAL) {
+                OUTPUT = new File(INPUT.getAbsolutePath() + ".txt");
             } else {
-                OUTPUT = new File (INPUT.getAbsolutePath() + ".bai");  
+                OUTPUT = new File(INPUT.getAbsolutePath() + ".bai");
             }
         }
         // check OVERWRITE
-        if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
-            return new String[] {"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
-        } else if (OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()){
+        if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()) {
+            return new String[]{"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
+        } else if (OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()) {
             OUTPUT.delete();
         }
         return null;

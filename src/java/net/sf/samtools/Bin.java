@@ -42,6 +42,9 @@ public class Bin implements Comparable<Bin> {
      */
     private final int binNumber;
 
+    /**
+     * The chunks associated with this bin.
+     */
     private List<Chunk> chunkList;
 
     public Bin(final int referenceSequence, final int binNumber) {
@@ -92,19 +95,23 @@ public class Bin implements Comparable<Bin> {
 
         // Check the reference sequences first.
         if(this.referenceSequence != other.referenceSequence)
-            // return ((Integer)referenceSequence).compareTo(other.referenceSequence);
             return referenceSequence - other.referenceSequence;
 
         // Then check the bin ordering.
-        // return ((Integer)binNumber).compareTo(other.binNumber);
         return binNumber - other.binNumber;
     }
 
-    void setChunkList(List<Chunk> list){
+    /**
+     * Sets the chunks associated with this bin
+     */
+    public void setChunkList(List<Chunk> list){
         chunkList = list;
     }
 
-    List<Chunk> getChunkList(){
+    /**
+     * @return  the chunks associated with this bin
+     */
+    public List<Chunk> getChunkList(){
         return chunkList;
     }
 }
