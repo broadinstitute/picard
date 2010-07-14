@@ -23,6 +23,7 @@
  */
 package net.sf.picard.io;
 
+import net.sf.picard.util.ProcessExecutor;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 
@@ -51,6 +52,31 @@ public class IoUtilTest {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line = reader.readLine();
             Assert.assertEquals(randomizedTestString, line);
+        }    }
+
+    @Test(groups={"unix"})
+    public void testGetCanonicalPath() throws IOException {
+
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name"));
+        File actual = new File(tmpDir, "actual.txt");
+        ProcessExecutor.execute(new String[]{"touch", actual.getAbsolutePath()});
+        File symlink = new File(tmpDir, "symlink.txt");
+        ProcessExecutor.execute(new String[]{"ln", "-s", actual.getAbsolutePath(), symlink.getAbsolutePath()});
+        File lnDir = new File(tmpDir, "symLinkDir");
+        ProcessExecutor.execute(new String[]{"ln", "-s", tmpDir.getAbsolutePath(), lnDir.getAbsolutePath()});
+        File lnToActual = new File(lnDir, "actual.txt");
+        File lnToSymlink = new File(lnDir, "symlink.txt");
+
+
+        File files [] = { actual, symlink, lnToActual, lnToSymlink };
+        for (File f : files) {
+            Assert.assertEquals(IoUtil.getFullCanonicalPath(f), actual.getCanonicalPath());
         }
+
+        actual.delete();
+        symlink.delete();
+        lnToActual.delete();
+        lnToSymlink.delete();
+        lnDir.delete();
     }
 }
