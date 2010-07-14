@@ -27,7 +27,6 @@ import net.sf.picard.PicardException;
 import net.sf.picard.filter.*;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.Log;
 
 import java.util.*;
 

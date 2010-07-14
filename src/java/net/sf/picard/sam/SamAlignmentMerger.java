@@ -2,7 +2,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.Log;
+import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SortingCollection;

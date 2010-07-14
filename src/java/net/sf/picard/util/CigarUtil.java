@@ -25,7 +25,6 @@ package net.sf.picard.util;
 
 import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
-import net.sf.samtools.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
