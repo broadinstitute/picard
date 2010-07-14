@@ -272,13 +272,14 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         final int nLinearBins = readInteger();
 
         final int regionLinearBinStart = LinearIndex.convertToLinearIndexOffset(startPos);
-        final int regionLinearBinStop = LinearIndex.convertToLinearIndexOffset(endPos)>0 ? LinearIndex.convertToLinearIndexOffset(endPos) : nLinearBins-1; 
+        final int regionLinearBinStop = LinearIndex.convertToLinearIndexOffset(endPos)>0 ? LinearIndex.convertToLinearIndexOffset(endPos) : nLinearBins-1;
+        final int actualStop = Math.min(regionLinearBinStop, nLinearBins -1);
 
         long[] linearIndexEntries = new long[0];
         if (regionLinearBinStart < nLinearBins) {
-            linearIndexEntries = new long[regionLinearBinStop-regionLinearBinStart+1];
+            linearIndexEntries = new long[actualStop-regionLinearBinStart+1];
             skipBytes(8 * regionLinearBinStart);
-            for(int linearBin = regionLinearBinStart; linearBin <= regionLinearBinStop && linearBin <= nLinearBins-1; linearBin++)
+            for(int linearBin = regionLinearBinStart; linearBin <= actualStop; linearBin++)
                 linearIndexEntries[linearBin-regionLinearBinStart] = readLong();
         }
 
