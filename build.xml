@@ -57,6 +57,17 @@
     </target>
     <target  name="set_java_home_1.5" depends="set_java_home_1.5_correctly, set_java_home_1.5_to_default_java_home"/>
 
+    <condition  property="isUnix">
+        <os family="unix"/>
+    </condition>
+    <target name="set_excluded_test_groups_unix" if="isUnix">
+        <property name="excludedTestGroups" value="slow, broken, unix"/>
+    </target>
+    <target name="set_excluded_test_groups_non_unix" unless="isUnix">
+        <property name="excludedTestGroups" value="slow, broken"/>
+    </target>
+    <target name="set_excluded_test_groups" depends="set_excluded_test_groups_unix,set_excluded_test_groups_non_unix"/>
+
 <!-- INIT -->
     <target name="init">
         <path id="classpath">
@@ -156,10 +167,10 @@
     </target>
 
 <!-- TEST -->
-    <target name="test" depends="compile" description="Run unit tests">
+    <target name="test" depends="compile, set_excluded_test_groups" description="Run unit tests">
         <taskdef resource="testngtasks" classpathref="classpath"/>
         <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
-                failureproperty="tests.failed" excludedgroups="slow, broken" workingDir="${basedir}">
+                failureproperty="tests.failed" excludedgroups="${excludedTestGroups}" workingDir="${basedir}">
             <classpath>
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>

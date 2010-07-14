@@ -374,4 +374,24 @@ public class IoUtil {
             return full;
         }
     }    
+
+    /** Returns the full path to the file with all symbolic links resolved **/
+    public static String getFullCanonicalPath(File file) {
+        try {
+            File f = file.getCanonicalFile();
+            String canonicalPath = "";
+            while (f != null  && !f.getName().equals("")) {
+                canonicalPath = "/" + f.getName() + canonicalPath;
+                f = f.getParentFile();
+                if (f != null) f = f.getCanonicalFile();
+            }
+            return canonicalPath;
+        } catch (IOException ioe) {
+            throw new RuntimeException("Error getting full canonical path for " +
+                    file + ": " + ioe.getMessage(), ioe);
+        }
+   }
+
 }
+
+
