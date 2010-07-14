@@ -36,7 +36,7 @@ import java.util.List;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.util.Log;
+import net.sf.picard.util.Log;
 import net.sf.samtools.util.RuntimeIOException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;

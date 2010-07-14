@@ -27,7 +27,7 @@ package net.sf.picard.analysis.directed;
 import net.sf.picard.sam.DuplicationMetrics;
 import net.sf.picard.util.Interval;
 import net.sf.picard.util.IntervalList;
-import net.sf.samtools.util.Log;
+import net.sf.picard.util.Log;
 
 import java.util.*;
 import java.io.*;

@@ -35,7 +35,7 @@ import net.sf.picard.metrics.*;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.analysis.AlignmentSummaryMetrics.Category;
 import net.sf.picard.util.IlluminaUtil;
-import net.sf.samtools.util.Log;
+import net.sf.picard.util.Log;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.AlignmentBlock;

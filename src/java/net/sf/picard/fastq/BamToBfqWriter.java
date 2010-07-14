@@ -37,7 +37,7 @@ import net.sf.picard.filter.TagFilter;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.sam.ReservedTagConstants;
 import net.sf.picard.filter.WholeReadClippedFilter;
-import net.sf.samtools.util.Log;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;

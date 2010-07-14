@@ -23,8 +23,6 @@
  */
 package net.sf.samtools;
 
-import net.sf.samtools.util.Log;
-
 import java.io.File;
 import java.io.OutputStream;
 
@@ -32,8 +30,6 @@ import java.io.OutputStream;
  * Create a SAMFileWriter for writing SAM or BAM.
  */
 public class SAMFileWriterFactory {
-
-    private static final Log log = Log.getInstance(SAMFileWriterFactory.class);
 
     private Integer maxRecordsInRam;
 
@@ -120,7 +116,6 @@ public class SAMFileWriterFactory {
         if (filename.endsWith(".sam")) {
             return makeSAMWriter(header, presorted, outputFile);
         }
-        log.info(outputFile + " does not have .sam or .bam extension.  It will be written in BAM format.");
         return makeBAMWriter(header, presorted, outputFile);
     }
 
