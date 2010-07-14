@@ -239,13 +239,11 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
      */
     private boolean skipRecord(final SAMRecord record) {
         return !record.getReadPairedFlag() ||
+                record.getReadUnmappedFlag() ||
                 record.getMateUnmappedFlag() ||
                 record.getFirstOfPairFlag() ||
                 record.getNotPrimaryAlignmentFlag() ||
                 record.getDuplicateReadFlag() ||
                 record.getInferredInsertSize() == 0;
     }
-
-
-
 }
