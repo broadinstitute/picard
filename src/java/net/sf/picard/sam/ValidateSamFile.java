@@ -109,8 +109,11 @@ public class ValidateSamFile extends CommandLineProgram {
 
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
         final SAMFileReader samReader = new SAMFileReader(INPUT);
+        samReader.enableCrcChecking(true);
+
         final SamFileValidator validator = new SamFileValidator(out);
         validator.setErrorsToIgnore(IGNORE);
+        
         if (IGNORE_WARNINGS) {
             validator.setIgnoreWarnings(IGNORE_WARNINGS);
         }
