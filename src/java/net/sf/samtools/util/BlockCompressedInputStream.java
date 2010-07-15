@@ -43,10 +43,7 @@ import java.net.URL;
  *
  * c.f. http://samtools.sourceforge.net/SAM1.pdf for details of BGZF format
  */
-public class BlockCompressedInputStream
-        extends InputStream
-{
-
+public class BlockCompressedInputStream extends InputStream {
     private InputStream mStream = null;
     private SeekableStream mFile = null;
     private byte[] mFileBuffer = null;
@@ -88,6 +85,15 @@ public class BlockCompressedInputStream
     public BlockCompressedInputStream(final SeekableStream strm) {
         mFile = strm;
         mStream = null;
+    }
+
+    /**
+     * Determines whether or not the inflater will re-calculated the CRC on the decompressed data
+     * and check it against the value stored in the GZIP header.  CRC checking is an expensive
+     * operation and should be used accordingly.
+     */
+    public void setCheckCrcs(final boolean check) {
+        this.blockGunzipper.setCheckCrcs(check);
     }
 
     /**
