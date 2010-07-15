@@ -84,6 +84,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     static abstract class ReaderImplementation {
         abstract void enableFileSource(final SAMFileReader reader, final boolean enabled);
         abstract void enableIndexCaching(final boolean enabled);
+        abstract void enableCrcChecking(final boolean enabled);
         abstract boolean hasIndex();
         abstract BAMIndex getIndex();
         abstract SAMFileHeader getFileHeader();
@@ -212,6 +213,14 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         if(mIndex != null)
             throw new SAMException("Unable to turn on index caching; index file has already been loaded.");
         mReader.enableIndexCaching(enabled);
+    }
+
+    /**
+     * Only meaningful for BAM file readers - enables or disables checking of checksums on uncompressed
+     * data during decompression. Enabling this will increase decompression time by 15-30%.
+     */
+    public void enableCrcChecking(final boolean enabled) {
+        this.mReader.enableCrcChecking(enabled);
     }
 
     /**

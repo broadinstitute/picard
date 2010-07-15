@@ -37,9 +37,7 @@ import java.util.regex.Pattern;
 /**
  * Internal class for reading SAM text files.
  */
-class SAMTextReader
-    extends SAMFileReader.ReaderImplementation
-{
+class SAMTextReader extends SAMFileReader.ReaderImplementation {
     // From SAM specification
     private static final int QNAME_COL = 0;
     private static final int FLAG_COL = 1;
@@ -101,6 +99,10 @@ class SAMTextReader
 
     void enableIndexCaching(final boolean enabled) {
         throw new UnsupportedOperationException("Cannot enable index caching for a SAM text reader");
+    }
+
+    void enableCrcChecking(boolean enabled) {
+        // Do nothing - this has no meaning for SAM reading
     }
 
     boolean hasIndex() {

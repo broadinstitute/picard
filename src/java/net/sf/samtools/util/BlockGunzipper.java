@@ -45,6 +45,12 @@ import java.nio.ByteOrder;
 public class BlockGunzipper {
     private final Inflater inflater = new Inflater(true); // GZIP mode
     private final CRC32 crc32 = new CRC32();
+    private boolean checkCrcs = false;
+
+    /** Allows the caller to decide whether or not to check CRCs on when uncompressing blocks. */
+    public void setCheckCrcs(final boolean check) {
+        this.checkCrcs = check;
+    }
 
     /**
      * Decompress GZIP-compressed data
@@ -92,14 +98,17 @@ public class BlockGunzipper {
                 throw new SAMFormatException("Did not inflate expected amount");
             }
 
-            // Validate CRC
-            crc32.reset();
-            crc32.update(uncompressedBlock, 0, uncompressedSize);
-            final long crc = crc32.getValue();
-            if ((int)crc != expectedCrc) {
-                throw new SAMFormatException("CRC mismatch");
+            // Validate CRC if so desired
+            if (this.checkCrcs) {
+                crc32.reset();
+                crc32.update(uncompressedBlock, 0, uncompressedSize);
+                final long crc = crc32.getValue();
+                if ((int)crc != expectedCrc) {
+                    throw new SAMFormatException("CRC mismatch");
+                }
             }
-        } catch (DataFormatException e) {
+        } catch (DataFormatException e)
+        {
             throw new RuntimeException(e);
         }
     }
