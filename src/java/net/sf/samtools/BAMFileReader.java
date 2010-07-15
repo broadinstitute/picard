@@ -36,8 +36,7 @@ import java.util.NoSuchElementException;
 /**
  * Internal class for reading and querying BAM files.
  */
-class BAMFileReader
-    extends SAMFileReader.ReaderImplementation {
+class BAMFileReader extends SAMFileReader.ReaderImplementation {
     // True if reading from a File rather than an InputStream
     private boolean mIsSeekable = false;
     // For converting bytes into other primitive types
@@ -131,6 +130,11 @@ class BAMFileReader
         if(mIndex != null)
             throw new SAMException("Unable to turn on index caching; index file has already been loaded.");
         this.mEnableIndexCaching = enabled;
+    }
+
+    @Override
+    void enableCrcChecking(boolean enabled) {
+        this.mCompressedInputStream.setCheckCrcs(enabled);
     }
 
     /**
