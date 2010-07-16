@@ -76,10 +76,10 @@ public class BAMIndexBuilder {
 
         // is there a bin already represented for this index?  if not, add it
         final Bin bin;
+        final int reference = rec.getReferenceIndex();
         if (bins[binNumber] != null) {
             bin = bins[binNumber];
         } else {
-            final int reference = rec.getReferenceIndex();
             bin = new Bin(reference, binNumber);
             bins[binNumber] = bin;
             binsSeen = true;
@@ -120,6 +120,7 @@ public class BAMIndexBuilder {
         final long iOffset = newSpan.getFirstOffset();
         final int alignmentStart = rec.getAlignmentStart();
         int alignmentEnd = rec.getAlignmentEnd();
+        // int alignmentEnd = rec.getFakeAlignmentEnd();  // todo do not commit - just for performance testing
         int startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart); // the 16k window
         int endWindow = LinearIndex.convertToLinearIndexOffset(alignmentEnd);
 
@@ -138,7 +139,7 @@ public class BAMIndexBuilder {
         */
 
         /* diagnostic
-        if (reference == 1){
+        if (reference == 1916 || reference == 5528){
             final long endPos = newSpan.toCoordinateArray()[1];
             verbose("Ref " + reference + " " + rec.getReadName() + " bin=" + binNumber + " startPos=" +
               iOffset + "(" + Long.toString(iOffset, 16) + "x)" +
@@ -175,8 +176,23 @@ public class BAMIndexBuilder {
         List<Bin> binList = new ArrayList <Bin> ();
 
         // process chunks
+        final SortedMap<Bin, List<Chunk>> binToChunks = new TreeMap<Bin, List<Chunk>>();
+        //long firstOffset = -1;
+        //long lastOffset = 0;
         for (Bin bin : bins) {
             if (bin == null) continue;
+            List<Chunk> chunkList = bin.getChunkList();
+            if (chunkList != null){
+                // calculate first and last offset
+                long newFirstOffset = chunkList.get(0).getChunkStart();
+                if (firstOffset == -1  || newFirstOffset < firstOffset){
+                    firstOffset = newFirstOffset;
+                }
+                lastOffset = chunkList.get(chunkList.size()-1).getChunkEnd();
+
+                bin.setChunkList(chunkList);
+                binToChunks.put(bin, chunkList);
+            }
             binList.add(bin);
         }
 
@@ -186,14 +202,15 @@ public class BAMIndexBuilder {
         final Bin metaBin = new Bin(reference, MAX_BINS);
         List<Chunk> metaChunkList = new ArrayList<Chunk>(1);
         metaBin.setChunkList(metaChunkList);
-        metaChunkList.add(new Chunk(firstOffset, lastOffset));
+        binToChunks.put(metaBin, metaChunkList);
+        metaChunkList.add(new Chunk(firstOffset == -1 ? 0 : firstOffset, lastOffset)) ;
         metaChunkList.add(new Chunk(alignedRecords, unalignedRecords));
         binList.add(metaBin);
 
         // process linear index
         final LinearIndex linearIndex = computeLinearIndex(reference);
 
-        return new BAMIndexContent(reference, binList, linearIndex);
+        return new BAMIndexContent(reference, binList, binToChunks, linearIndex);
     }
 
     /**  reinitialize all data structures when the reference changes */
@@ -248,19 +265,18 @@ public class BAMIndexBuilder {
         } else {
             // linear index will be as long as the largest index seen
             long[] newIndex = new long[largestIndexSeen + 1]; // in java1.6 Arrays.copyOf(index, largestIndexSeen + 1);
+
+            // c samtools index also fills in intermediate 0's with values.  This seems unnecessary, but safe
+            long lastNonZeroOffset = 0;
             for (int i = 0; i <= largestIndexSeen; i++) {
+                if (index[i] == 0){
+                    index[i] = lastNonZeroOffset;
+                } else {
+                    lastNonZeroOffset = index[i];
+                }
                 newIndex[i] = index[i];
             }
 
-            // c samtools index also fills in intermediate 0's with values.  This seems unnecessary, but safe
-            long lastOffset = 0;
-            for (int i=0; i <= largestIndexSeen; i++){
-                if (newIndex[i] == 0){
-                    newIndex[i] = lastOffset;
-                } else {
-                    lastOffset = newIndex[i];
-                }
-            }
             linearIndex = new LinearIndex(reference, 0, newIndex);
         }
         return linearIndex;

@@ -42,13 +42,19 @@ class BAMIndexContent {
     private final List<Bin> mBins;
 
     /**
+     * A mapping from bin to the chunks contained in that bin.
+     */
+    private final SortedMap<Bin, List<Chunk>> mBinToChunks;
+
+    /**
      * The linear index for the reference sequence above.
      */
     private final LinearIndex mLinearIndex;
 
-    public BAMIndexContent(final int referenceSequence, final List<Bin> bins, final LinearIndex linearIndex) {
+    public BAMIndexContent(final int referenceSequence, final List<Bin> bins, final SortedMap<Bin,List<Chunk>> binToChunks, final LinearIndex linearIndex) {
         this.mReferenceSequence = referenceSequence;
         this.mBins = bins;
+        this.mBinToChunks = binToChunks;
         this.mLinearIndex = linearIndex;
     }
 
@@ -65,16 +71,15 @@ class BAMIndexContent {
     }
 
     public List<Chunk> getChunksForBin(final Bin bin) {
-        return Collections.unmodifiableList(bin.getChunkList());
+        if(!mBinToChunks.containsKey(bin))
+            throw new SAMException("No chunks found for the given bin.");
+        return Collections.unmodifiableList(mBinToChunks.get(bin));
     }
 
     public List<Chunk> getAllChunks() {
         List<Chunk> allChunks = new ArrayList<Chunk>();
-        for(Bin bin: getBins()){
-            if (getChunksForBin(bin) != null){
-                allChunks.addAll(getChunksForBin(bin));
-            }
-        }
+        for(List <Chunk> moreChunks: mBinToChunks.values())
+            allChunks.addAll(moreChunks);
         return Collections.unmodifiableList(allChunks);
     }
 
