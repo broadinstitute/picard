@@ -29,35 +29,33 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.*;
+import net.sf.samtools.BamIndexerForExistingBai;
+import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMFileReader;
 
 import java.io.File;
 
 /**
- * Command line program to generate a BAM index (.bai) file from an existing BAM (.bam) file
+ * Command line program to print statistics from BAM index (.bai) file
+ * Statistics include count of aligned and unaligned reads for each reference sequence
+ * and a count of all records with no start coordinate.
+ * Similar to the 'samtools idxstats' command.
  *
  * @author Martha Borkan
  */
-public class BuildBamIndex extends CommandLineProgram {
+public class BamIndexStats extends CommandLineProgram {
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file. " +
-            "Input BAM file must be sorted in coordinate order. " +
-            "Output file defaults to INPUT.bai (or x.bai if INPUT is x.bam)";
+    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index statistics" +
+            "Input BAM file must be sorted in coordinate order, and have a corresponding index file ";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The BAM index file", optional=true)
-    public File OUTPUT;
-
-    @Option(doc = "Whether to sort the bins in bin number order")
-    public Boolean SORT = false;
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {
-        System.exit(new BuildBamIndex().instanceMain(argv));
+        System.exit(new BamIndexStats().instanceMain(argv));
     }
 
     /**
@@ -66,40 +64,29 @@ public class BuildBamIndex extends CommandLineProgram {
      * all the records generating a BAM Index, then writes the bai file.
      */
     protected int doWork() {
-        final Log log = Log.getInstance(getClass());
 
         // Some quick parameter checking
         IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
 
-        final SAMFileReader bam = new SAMFileReader(INPUT);
+        final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT);
+        instance.indexStats();
 
-        if (!bam.isBinary()){
-            throw new SAMException ("Input file must be bam file, not sam file.");
-        }
-
-        if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-            throw new SAMException ("Input bam file must be sorted by coordinates");
-        }
-
-        bam.enableFileSource(true);
-
-        BAMIndexer instance = new BAMIndexer(INPUT, OUTPUT,
-                    bam.getFileHeader().getSequenceDictionary().size(), SORT);
-        instance.createIndex();
-
-        log.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
     }
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (OUTPUT == null){
-            OUTPUT = new File(IoUtil.basename(INPUT) + BAMIndex.BAMIndexSuffix);
+
+        // make sure input is BAM file not SAM
+        final SAMFileReader bam = new SAMFileReader(INPUT);
+        if (!bam.isBinary()){
+            return new String[] {"Input file must be bam file, not sam file"};
         }
-        if (OUTPUT.exists()){
-           OUTPUT.delete();
+        // check sort order in the header - must be coordinate
+        if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
+            return new String[] {"Input BAM file must be sorted by coordinates"};
         }
+        // Check that bai file exists is in instance.indexStats() call above
         return null;
     }
 }

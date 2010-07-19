@@ -25,7 +25,6 @@ package net.sf.samtools;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -58,14 +57,14 @@ public class BamIndexerForExistingBai {
 
         // content is from an existing bai file.
 
-        // final DiskBasedBAMFileIndex existingIndex = new DiskBasedBAMFileIndex(inputFile); // doesn't work todo
-        final CachingBAMFileIndex existingIndex = new CachingBAMFileIndex(inputFile); // also works
+        // final DiskBasedBAMFileIndex existingIndex = new DiskBasedBAMFileIndex(inputFile); // todo doesn't work
+        final CachingBAMFileIndex existingIndex = new CachingBAMFileIndex(inputFile);
         final int n_ref = existingIndex.getNumberOfReferences();
         final BAMIndexWriter outputWriter;
         if (textOutput){
             outputWriter = new TextualBAMIndexWriter(n_ref, output, sortBins);
         } else {
-            outputWriter = BAMIndexWriterFactory.makeBAMIndexWriter(n_ref, output, sortBins, inputFile.length());
+            outputWriter = new BinaryBAMIndexWriter(n_ref, output, sortBins);
         }
         outputWriter.writeHeader();
 
@@ -78,8 +77,7 @@ public class BamIndexerForExistingBai {
             existingIndex.close();
 
         } catch (Exception e) {
-            outputWriter.close(null); // let's keep the partial file for now  todo
- //            outputWriter.deleteIndexFile();
+            outputWriter.deleteIndexFile();
             throw new SAMException("Exception creating BAM index", e);
         }
     }
@@ -105,6 +103,13 @@ public class BamIndexerForExistingBai {
             for (int i = 0; i < nRefs; i++) {
                 BAMIndexContent content = index.query(i, 0, -1); // todo: it would be faster just to skip to the last bin
 
+                List<Chunk> chunkList = content.getMetaDataChunks();
+                if (chunkList == null || chunkList.size() == 0) {
+                    System.out.println("No metadata chunks");
+                } else if (chunkList != null && chunkList.size() != 2) {
+                    System.out.println(chunkList.size() + " metadata chunks");
+                }
+
                 final SAMSequenceRecord seq = bam.getFileHeader().getSequence(i);
                 if (seq == null) continue;
                 final String sequenceName = seq.getSequenceName();
@@ -115,15 +120,13 @@ public class BamIndexerForExistingBai {
                     System.out.println();
                     continue;
                 }
-                Bin bin = Collections.max(content.getBins()); // might be expensive?
 
                 boolean firstChunk = true;
-                if (bin.equals(new Bin(i, BAMIndex.MAX_BINS))) {
-                    List<Chunk> chunkList = bin.getChunkList();
+                if (chunkList != null) {
                     for (Chunk c : chunkList) {
                         long start = c.getChunkStart();
                         long end = c.getChunkEnd();
-                        if (firstChunk){
+                        if (firstChunk) {
                             // samtools idxstats doesn't print this, so we won't either
                             // System.out.print(sequenceName + ' ' + "Start=" + start + "    End=" + end);
                             firstChunk = false;
@@ -132,8 +135,6 @@ public class BamIndexerForExistingBai {
                             System.out.println("    Aligned= " + start + "   Unaligned= " + end);
                         }
                     }
-                } else {
-                    // no meta data for this index
                 }
             }
 
@@ -142,6 +143,5 @@ public class BamIndexerForExistingBai {
         } catch (IOException e) {
             throw new SAMException("Exception in getting index statistics", e);
         }
-
     }
 }
