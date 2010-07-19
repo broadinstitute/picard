@@ -75,14 +75,7 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         }
         final int ref = content.getReferenceSequence();
         if (ref != reference){
-            // something is wrong. either ignore it, or add nulls till we catch up
-            System.err.println("Reference on content is " + ref + " but expecting reference " + reference);
-            if (ref > reference){
-                for (int i = reference; i< ref; i++){
-                     writeNullContent(pw, i);
-                }
-            }
-            // if (ref < reference) // just ignore it?? todo
+            throw new SAMException("Reference on content is " + ref + " but expecting reference " + reference);
         }
         final List<Bin> bins = content.getBins();
         final LinearIndex linearIndex = content.getLinearIndex();
@@ -94,7 +87,7 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         }
 
         final int size = bins.size();
-        pw.println("Reference " + ref + " has n_bin= " + size);
+        pw.println("Reference " + ref + " has n_bin= " +  size);
 
         // copy into an array so that it can be sorted
         final Bin[] binArray = new Bin[size];
@@ -105,6 +98,7 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
 
         // chunks
         for (int j = 0; j < size; j++) {
+            if (binArray[j].getBinNumber() == BAMIndex.MAX_BINS)  break;
             if (binArray[j].getChunkList() == null) {
                  pw.println("  Ref " + reference + " bin " + binArray[j].getBinNumber() + " has no binArray");  // remove?
                 continue;
@@ -114,13 +108,8 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
                 pw.println("  Ref " + ref + " bin " + binArray[j].getBinNumber() + " has no chunkList");
                 continue;
             }
-            if (chunkList.size() == 0) {
-                // continue;         // todo?
-                // pw.println();
-            }
             pw.print("  Ref " + ref + " bin " + binArray[j].getBinNumber() + " has n_chunk= " + chunkList.size());
             if (chunkList.size() == 0) {
-                // continue;         // todo?
                  pw.println();
             }
             for (final Chunk c : chunkList) {
@@ -129,6 +118,8 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
                         " end: " + Long.toString(c.getChunkEnd(), 16));
             }
         }
+        writeChunkMetaData(ref, content.getMetaDataChunks());
+        
         // linear index
         if (linearIndex == null || linearIndex.getIndexEntries() == null) {
             pw.println("Reference " + ref + " has n_intv= 0");
@@ -147,6 +138,24 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         pw.flush ();  // write each reference to disk as it's being created
     }
 
+    /**
+     * Write the meta data represented by the chunkLists associated with bin MAX_BINS 37450
+     *
+     * @param chunkList contains metadata describing numAligned records, numUnAligned, etc
+     */
+    private void writeChunkMetaData(int reference, List<Chunk> chunkList) {
+        pw.print("  Ref " + reference + "bin 37450 has n_chunk= " + chunkList.size());
+        if (chunkList.size() == 0) {
+            pw.println();
+        }
+        for (final Chunk c : chunkList) {
+            pw.println("     Chunk: " + c.toString() +
+                    " start: " + Long.toString(c.getChunkStart(), 16) +
+                    " end: " + Long.toString(c.getChunkEnd(), 16));
+        }
+
+    }
+       
     private void writeNullContent(PrintWriter pw, int reference) {
         pw.println("Reference " + reference + " has n_bin=0");
         pw.println("Reference " + reference + " has n_intv=0");

@@ -43,7 +43,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
     public void close() {
         super.close();
         mLastReferenceRetrieved = null;
-        mQueriesByReference.clear();
+        if (mQueriesByReference != null) mQueriesByReference.clear();  // can be null if exception thrown
     }
 
     /**

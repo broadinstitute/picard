@@ -56,7 +56,7 @@ public class BAMIndexer {
         numReferences = nReferences;
         inputFile = input;
         indexBuilder = new BAMIndexBuilder();
-        outputWriter = BAMIndexWriterFactory.makeBAMIndexWriter(nReferences, output, sortBins, input.length());
+        outputWriter = new BinaryBAMIndexWriter(nReferences, output, sortBins);
         outputWriter.writeHeader();
     }
 
