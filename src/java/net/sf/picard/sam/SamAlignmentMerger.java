@@ -23,7 +23,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final File alignedSamFile;
     private final boolean pairedRun;
     private final int maxGaps;
-    private final SAMFileReader reader;
+    private SAMFileReader reader;
+    private boolean forceSort = false;
 
     /**
      * Constructor
@@ -66,6 +67,19 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
 
     /**
+     * Merges the alignment from the map file with the non-aligned records from the source BAM file.
+     */
+    public void mergeAlignment() {
+        try {
+            super.mergeAlignment();
+        }
+        catch(Exception e) {
+            forceSort = true;
+            super.mergeAlignment();
+        }
+    }
+
+    /**
      * Reads the aligned SAM records into a SortingCollection and returns an iterator over that collection
      */
     protected CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords() {
@@ -75,6 +89,11 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         if (getProgramRecord() != null) {
             header.addProgramRecord(getProgramRecord());
         }
+
+        if (!forceSort) {
+            return new SortedAlignmentIterator(reader.iterator());
+        }
+        this.reader = new SAMFileReader(this.alignedSamFile);
 
         SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                     new BAMRecordCodec(header), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
@@ -88,11 +107,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 SAMRecord mate = readNameToReadPending.remove(sam.getReadName());
                 if (mate != null) {
                     if ((!sam.getReadUnmappedFlag()) || (!mate.getReadUnmappedFlag())) {
-                        final boolean proper = SamPairUtil.isProperPair(sam, mate, isJumpingLibrary());
-                        sam.setProperPairFlag(proper);
-                        mate.setProperPairFlag(proper);
-                        SamPairUtil.setMateInfo(sam, mate, getHeader());
-
+                        fixMates(sam, mate);
                         alignmentSorter.add(sam);
                         alignmentSorter.add(mate);
                         count += 2;
@@ -122,6 +137,60 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         return alignmentSorter.iterator();
     }
 
+
+    private class SortedAlignmentIterator implements CloseableIterator<SAMRecord> {
+
+        CloseableIterator<SAMRecord> wrappedIterator;
+        private SAMRecord next = null;
+
+        public SortedAlignmentIterator(SAMRecordIterator it) {
+            wrappedIterator = new CigarClippingIterator(it);
+            it.assertSorted(SAMFileHeader.SortOrder.queryname);
+        }
+
+        public void close() {
+            wrappedIterator.close();
+        }
+
+        public boolean hasNext() {
+            return wrappedIterator.hasNext() || next != null;
+        }
+
+        public SAMRecord next() {
+
+            if (!pairedRun) {
+                return wrappedIterator.next();
+            }
+
+            if (next == null) {
+                SAMRecord firstOfPair = wrappedIterator.next();
+                next = wrappedIterator.next();
+                fixMates(firstOfPair, next);
+                firstOfPair.setReadName(cleanReadName(firstOfPair.getReadName()));
+                return firstOfPair;
+            }
+            else {
+                SAMRecord secondOfPair = next;
+                secondOfPair.setReadName(cleanReadName(secondOfPair.getReadName()));
+                next = null;
+                return secondOfPair;
+            }
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException("remove() not supported");
+        }
+    }
+
+    private void fixMates(SAMRecord first, SAMRecord second) {
+        if ((!first.getReadUnmappedFlag()) || (!second.getReadUnmappedFlag())) {
+            final boolean proper = SamPairUtil.isProperPair(first, second, isJumpingLibrary());
+            first.setProperPairFlag(proper);
+            second.setProperPairFlag(proper);
+            SamPairUtil.setMateInfo(first, second, getHeader());
+        }
+    }
+
     /**
      * For now, we only ignore those alignments that have more than <code>maxGaps</code> insertions
      * or deletions.
@@ -137,4 +206,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         return gaps > maxGaps;
     }
 
+    // Accessor for testing
+    public boolean getForceSort() {return this.forceSort; }
 }

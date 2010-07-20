@@ -173,6 +173,9 @@ public abstract class AbstractAlignmentMerger {
             }
         }
         unmappedIterator.close();
+        if (alignedIterator.hasNext()) {
+            throw new PicardException("Reads remaining on alignment iterator!");
+        }
         alignedIterator.close();
 
         final SAMFileWriter writer =
