@@ -26,9 +26,11 @@ package net.sf.picard.sam;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  *  Test for the MergeBamAlignment class
@@ -39,6 +41,8 @@ public class MergeBamAlignmentTest {
 
     private static final File unmappedBam = new File("testdata/net/sf/picard/sam/unmapped.sam");
     private static final File alignedBam = new File("testdata/net/sf/picard/sam/aligned.sam");
+    private static final File alignedQuerynameSortedBam =
+            new File("testdata/net/sf/picard/sam/aligned_queryname_sorted.sam");
     private static final File fasta = new File("testdata/net/sf/picard/sam/merger.fasta");
 
     @Test
@@ -145,6 +149,36 @@ public class MergeBamAlignmentTest {
         Assert.assertEquals(pg.getProgramName(), "Hey!",
                 "Program name not picked up correctly from aligned BAM");
 
+    }
+
+
+    @Test(dataProvider="data")
+    public void testSortingOnSamAlignmentMerger(File unmapped, File aligned, boolean sorted, String testName)
+        throws IOException {
+
+        File target = File.createTempFile("target", "bam");
+        SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
+                 true, false, false, aligned, 1);
+        merger.mergeAlignment();
+        Assert.assertEquals(sorted, !merger.getForceSort());
+        SAMRecordIterator it = new SAMFileReader(target).iterator();
+        int aln = 0;
+        while (it.hasNext()) {
+            if (!it.next().getReadUnmappedFlag()) {
+                aln++;
+            }
+        }
+        Assert.assertEquals(aln, 6, "Incorrect number of aligned reads in merged BAM file");
+        target.delete();
+    }
+
+    @DataProvider(name="data")
+    public Object[][] getDataForSortingTest() {
+        return new Object[][] {
+                {unmappedBam, alignedQuerynameSortedBam, true, "Basic test with pre-sorted alignment"},
+                {unmappedBam, alignedBam, false, "Basic test with unsorted alignment"}
+
+        };
     }
 
 
