@@ -159,6 +159,9 @@ public abstract class AbstractAlignmentMerger {
                     }
                     aligned++;
                 }
+                else {
+                    unmapped++;
+                }
                 nextAligned = alignedIterator.hasNext() ? alignedIterator.next() : null;
             }
             else {

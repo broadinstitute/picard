@@ -163,8 +163,10 @@ public class MergeBamAlignmentTest {
         Assert.assertEquals(sorted, !merger.getForceSort());
         SAMRecordIterator it = new SAMFileReader(target).iterator();
         int aln = 0;
+        int ct = 0;
         while (it.hasNext()) {
-            if (!it.next().getReadUnmappedFlag()) {
+            SAMRecord rec = it.next();
+            if (!rec.getReadUnmappedFlag()) {
                 aln++;
             }
         }
