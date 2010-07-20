@@ -24,13 +24,16 @@
 
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.*;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,6 +76,16 @@ public class RevertSam extends CommandLineProgram {
         add("MQ");
     }};
 
+    @Option(doc="The sample alias to use in the reverted output file.  This will override the existing " +
+            "sample alias in the file and is used only if all the read groups in the input file have the " +
+            "same sample alias ", shortName=StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional=true)
+    public String SAMPLE_ALIAS;
+
+    @Option(doc="The library name to use in the reverted output file.  This will override the existing " +
+            "sample alias in the file and is used only if all the read groups in the input file have the " +
+            "same sample alias ", shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional=true)
+    public String LIBRARY_NAME;
+
 
     /** Default main method impl. */
     public static void main(final String[] args) {
@@ -86,10 +99,43 @@ public class RevertSam extends CommandLineProgram {
         final SAMFileReader in = new SAMFileReader(INPUT, true);
         final SAMFileHeader inHeader = in.getFileHeader();
 
+        // If we are going to override SAMPLE_ALIAS or LIBRARY_NAME, make sure all the read
+        // groups have the same values.
+        List<SAMReadGroupRecord> rgs = inHeader.getReadGroups();
+        if (SAMPLE_ALIAS != null || LIBRARY_NAME != null) {
+            boolean allSampleAliasesIdentical = true;
+            boolean allLibraryNamesIdentical = true;
+            for (int i = 1; i < rgs.size(); i++) {
+                if (!rgs.get(0).getSample().equals(rgs.get(i).getSample())) {
+                    allSampleAliasesIdentical = false;
+                }
+                if (!rgs.get(0).getLibrary().equals(rgs.get(i).getLibrary())) {
+                    allLibraryNamesIdentical = false;
+                }
+            }
+            if (SAMPLE_ALIAS != null && !allSampleAliasesIdentical) {
+                throw new PicardException("Read groups have multiple values for sample.  " +
+                        "A value for SAMPLE_ALIAS cannot be supplied." );
+            }
+            if (LIBRARY_NAME != null && !allLibraryNamesIdentical) {
+                throw new PicardException("Read groups have multiple values for library name.  " +
+                        "A value for library name cannot be supplied." );
+            }
+        }
+
+
         // Build the output writer with an appropriate header based on the options
         final boolean presorted = inHeader.getSortOrder() == SORT_ORDER;
         final SAMFileHeader outHeader = new SAMFileHeader();
-        outHeader.setReadGroups(inHeader.getReadGroups());
+        for (SAMReadGroupRecord rg : inHeader.getReadGroups()) {
+            if (SAMPLE_ALIAS != null) {
+                rg.setSample(SAMPLE_ALIAS);
+            }
+            if (LIBRARY_NAME != null) {
+                rg.setLibrary(LIBRARY_NAME);
+            }
+            outHeader.addReadGroup(rg);
+        }
         outHeader.setSortOrder(SORT_ORDER);
         if (!REMOVE_ALIGNMENT_INFORMATION) {
             outHeader.setSequenceDictionary(inHeader.getSequenceDictionary());
