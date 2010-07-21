@@ -339,7 +339,11 @@ public class SAMRecord implements Cloneable
         if (mReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            try {
+                mReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            } catch (NullPointerException e) {
+                throw new IllegalArgumentException("Reference index " + referenceIndex + " not found in sequence dictionary.", e);
+            }
         }
     }
 
@@ -381,7 +385,11 @@ public class SAMRecord implements Cloneable
         if (mMateReferenceIndex == NO_ALIGNMENT_REFERENCE_INDEX) {
             mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
         } else {
-            mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            try {
+                mMateReferenceName = mHeader.getSequence(referenceIndex).getSequenceName();
+            } catch (NullPointerException e) {
+                throw new IllegalArgumentException("Reference index " + referenceIndex + " not found in sequence dictionary.", e);
+            }
         }
     }
 
