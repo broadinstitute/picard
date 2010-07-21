@@ -67,7 +67,6 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         }
     }
 
-
     public void writeHeader() {
         // magic string
         final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
@@ -96,33 +95,20 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         final int size = bins.size();
         bb.putInt(size);
 
-        // copy bins into an array so that it can be sorted
-        final Bin[] binArray = new Bin[size];
-        if (size != 0) {
-            bins.toArray(binArray);
-        }
-        if (sortBins) Arrays.sort(binArray);  // Sort for easy text comparisons
-
-        // todo - don't copy the array when no sorting
-        // and instead loop using
-        // for (Bin bin: bins) {
-
-        for (int j = 0; j < size; j++) {
-            Bin bin = binArray[j];
-
-            if (bin.getBinNumber() == BAMIndex.MAX_BINS)  break;
-            
-            bb.putInt(bin.getBinNumber()); // todo uint32_t vs int32_t in spec?
-            if (bin.getChunkList() == null){
-                bb.putInt(0);
-                continue;
+        if (sortBins) {
+            // copy bins into an array so that it can be sorted for text comparisons
+            final Bin[] binArray = new Bin[size];
+            if (size != 0) {
+                bins.toArray(binArray);
             }
-            final List<Chunk> chunkList = bin.getChunkList();
-            final int n_chunk = chunkList.size();
-            bb.putInt(n_chunk);
-            for (final Chunk c : chunkList) {
-                bb.putLong(c.getChunkStart());   // todo uint32_t vs int32_t in spec?
-                bb.putLong(c.getChunkEnd());     // todo uint32_t vs int32_t in spec?
+            Arrays.sort(binArray);
+
+            for (Bin bin : binArray) {
+                writeBin(bin);
+            }
+        } else {
+            for (Bin bin : bins) {
+                writeBin(bin);
             }
         }
         writeChunkMetaData(content.getMetaDataChunks());
@@ -153,6 +139,23 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         bb.limit(bufferSize);
     }
 
+    private void writeBin(Bin bin) {
+        if (bin.getBinNumber() == BAMIndex.MAX_BINS)  return; // meta data
+        
+        bb.putInt(bin.getBinNumber()); // todo uint32_t vs int32_t in spec?
+        if (bin.getChunkList() == null){
+            bb.putInt(0);
+            return;
+        }
+        final List<Chunk> chunkList = bin.getChunkList();
+        final int n_chunk = chunkList.size();
+        bb.putInt(n_chunk);
+        for (final Chunk c : chunkList) {
+            bb.putLong(c.getChunkStart());   // todo uint32_t vs int32_t in spec?
+            bb.putLong(c.getChunkEnd());     // todo uint32_t vs int32_t in spec?
+        }
+    }
+
     /**
      * Write the meta data represented by the chunkLists associated with bin MAX_BINS 37450
      *
@@ -162,7 +165,7 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         bb.putInt(BAMIndex.MAX_BINS);
         final int n_chunk = chunkList.size();   // should be 2
         if (n_chunk != 2){
-            System.err.println("Undexpect # chunks of meta data= " + n_chunk); // throw new SAMException
+            System.err.println("Unexpected # chunks of meta data= " + n_chunk); // throw new SAMException
         }
         bb.putInt(n_chunk);
         for (final Chunk c : chunkList) {

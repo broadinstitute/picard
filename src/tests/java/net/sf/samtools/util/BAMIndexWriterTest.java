@@ -24,21 +24,14 @@
 package net.sf.samtools.util;
 
 import net.sf.samtools.*;
-import org.testng.annotations.Test;
 import net.sf.picard.io.IoUtil;
+import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 
 /**
  * Test BAM file index creation
