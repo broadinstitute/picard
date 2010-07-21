@@ -23,13 +23,21 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.samtools.BAMIndexer;
-import net.sf.samtools.BamIndexerForExistingBai;
-import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.*;
 import org.testng.annotations.Test;
 import net.sf.picard.io.IoUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 
 /**
@@ -37,12 +45,14 @@ import java.io.File;
  */
 public class BAMIndexWriterTest
 {
-    // Two input files
+    // Two input files for basic test
     private final String BAM_FILE_LOCATION = "testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam";
     private final String BAI_FILE_LOCATION = "testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam.bai";
     private final File BAM_FILE = new File(BAM_FILE_LOCATION);
     private final File BAI_FILE = new File(BAI_FILE_LOCATION);
 
+    private final String LARGE_BAM_URL_STRING = "http://picard.sourceforge.net/testdata/test_human.bam";
+    private final File BAM_Index_File = new File("testdata/net/sf/samtools/BAMFileIndexTest/test_human.bai");
     private final boolean mVerbose = true;
 
     @Test
@@ -51,21 +61,20 @@ public class BAMIndexWriterTest
         final File cBaiTxtFile = File.createTempFile("cBai.", ".bai.txt");
         final BamIndexerForExistingBai bfi = new BamIndexerForExistingBai(BAI_FILE);
         bfi.createIndex(cBaiTxtFile, true, true);
-        verbose ("Wrote Textual version of C BAM Index file " + cBaiTxtFile);
+        verbose ("Wrote textual C BAM Index file " + cBaiTxtFile);
 
-        // Text compare of javaBaiTxtFile
-        //             and cBaiTxtFile   should be the same
         final File javaBaiFile = File.createTempFile("javaBai.", "java.bai");
-        final File javaBaiTxtFile = File.createTempFile("javaBai.", "java.bai.txt");
+        final File javaBaiTxtFile = new File(javaBaiFile.getAbsolutePath() + ".txt");
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
         bam.enableFileSource(true);
         final BAMIndexer javaBai = new BAMIndexer(BAM_FILE, javaBaiFile,
                     bam.getFileHeader().getSequenceDictionary().size(), true);
         javaBai.createIndex();
-        verbose ("Wrote binary version of Java BAM Index file " + javaBai);
+        verbose ("Wrote binary Java BAM Index file " + javaBaiFile);
+        
         // now, turn the bai file into text
         new BamIndexerForExistingBai(javaBaiFile).createIndex(javaBaiTxtFile, true, true);
-        // diff index_test.bam.java.bai.txt index_text.bam.bai.txt
+        // and compare them
         verbose ("diff " + javaBaiTxtFile + " " + cBaiTxtFile);
         IoUtil.assertFilesEqual(javaBaiTxtFile, cBaiTxtFile);
         cBaiTxtFile.deleteOnExit();
@@ -82,14 +91,14 @@ public class BAMIndexWriterTest
         final BAMIndexer javaBai = new BAMIndexer(BAM_FILE, javaBaiFile,
                     bam.getFileHeader().getSequenceDictionary().size(), true);
         javaBai.createIndex();
-        verbose ("Wrote sorted C Binary BAM Index file " + javaBaiFile);
+        verbose ("Wrote binary java BAM Index file " + javaBaiFile);
 
         final File cRegeneratedBaiFile = File.createTempFile("cBai.", ".bai");
         final BamIndexerForExistingBai bfi2 = new BamIndexerForExistingBai(BAI_FILE);
         bfi2.createIndex(cRegeneratedBaiFile, false, true);
-        verbose ("Wrote Java-generated Binary BAM Index file " + cRegeneratedBaiFile);
+        verbose ("Wrote sorted C binary BAM Index file " + cRegeneratedBaiFile);
+
         // Binary compare of javaBaiFile and cRegeneratedBaiFile should be the same
-        // diff index_test.bam.java.bai index_test.bam.generated.bai
         verbose ("diff " + javaBaiFile + " " + cRegeneratedBaiFile);
         IoUtil.assertFilesEqual(javaBaiFile, cRegeneratedBaiFile);
         javaBaiFile.deleteOnExit();
@@ -97,9 +106,30 @@ public class BAMIndexWriterTest
 
     }
 
+    @Test
+    public void testBadIndex() throws Exception {
+        
+        final URL bamURL = new URL(LARGE_BAM_URL_STRING);
+        final String sequence = "chr22";
+        final int startPos = 624553;
+        final int endPos = 5892114;
+        int startWindow = LinearIndex.convertToLinearIndexOffset(startPos);
+
+        verbose("Testing query " + sequence + ":" + startPos + "-" + endPos + " in window " + startWindow + " ...");
+
+        final SAMFileReader reader1 = new SAMFileReader(bamURL, BAM_Index_File, false);
+        final Iterator<SAMRecord> iter = reader1.queryOverlapping(sequence, startPos, endPos);
+        int count = 0;
+        while (iter.hasNext()){
+            count ++;
+        }
+        verbose("Found " + count + " records in " + sequence + " at position " + startPos + " in window " + startWindow);
+        assertEquals(count, 0);
+    }
+
     private void verbose(final String text) {
         if (mVerbose) {
-            System.out.println("# " + text);
+            System.out.println("#BAMIndexWriterTest " + text);
         }
     }
 }
