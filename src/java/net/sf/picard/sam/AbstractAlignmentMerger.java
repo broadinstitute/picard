@@ -94,9 +94,12 @@ public abstract class AbstractAlignmentMerger {
             }
             String fastaPath = referenceFasta.getAbsolutePath();
             File sd = new File(fastaPath.substring(0, fastaPath.lastIndexOf(".")) + ".dict");
-            sequenceDictionary = sd.exists()
-                ? new SAMFileReader(IoUtil.openFileForReading(sd)).getFileHeader().getSequenceDictionary()
-                : null;
+            if (!sd.exists()) {
+                throw new PicardException("No sequence dictionary was found for the reference " +
+                    fastaPath + ".  A sequence dictionary is required for alignment merging.");
+            }
+            sequenceDictionary =
+                    new SAMFileReader(IoUtil.openFileForReading(sd)).getFileHeader().getSequenceDictionary();
         }
         this.clipAdapters = clipAdapters;
         this.bisulfiteSequence = bisulfiteSequence;
