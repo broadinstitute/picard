@@ -114,12 +114,16 @@ cp dist/picard-tools-$RELEASE_ID.zip deploy/picard-tools/$RELEASE_ID/
 mkdir -p deploy/sam-jdk/$RELEASE_ID
 cp dist/sam-$RELEASE_ID.jar deploy/sam-jdk/$RELEASE_ID/
 
-scp -r javadoc $USERNAME,picard@web.sourceforge.net:htdocs
+# Make all files to be pushed to Sourceforge writable by group so that another Picard admin can overwrite them.
+
+chmod -R gu+rw javadoc deploy dist
+
+scp -p -r javadoc $USERNAME,picard@web.sourceforge.net:htdocs
 
 cd deploy
-scp -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
-scp -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
+scp -p -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
+scp -p -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
 
 cd ../dist/html
-scp *.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
+scp -p *.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
 
