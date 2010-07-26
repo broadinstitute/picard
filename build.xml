@@ -181,6 +181,13 @@
             </classfileset>
             <jvmarg value="-Xmx1G"/>
         </testng>
+        <junitreport todir="${dist}/test" >
+            <fileset dir="${test.output}">
+                <include name="*.xml"/>
+            </fileset>
+            <report format="noframes" todir="${dist}/test" styledir="etc/test"/>
+        </junitreport>
+        <copy file="etc/test/testng.css" todir="${dist}/test" overwrite="true"/>
         <fail if="tests.failed" message="There were failed unit tests"/>
     </target>
 

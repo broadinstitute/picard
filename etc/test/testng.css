@@ -1,0 +1,26 @@
+nvocation-failed,  .test-failed  { background-color: #ffc0cb; }
+.invocation-percent, .test-percent { background-color: #66cdaa; }
+.invocation-passed,  .test-passed  { background-color: #98fb98; }
+.invocation-skipped, .test-skipped { background-color: #f0e68c; }
+
+.main-page {
+  font-size: small;
+  font-family: verdana, 'trebuchet ms', sans-serif;
+}
+
+
+table {
+  font-size: small;
+  font-family: verdana, 'trebuchet ms', sans-serif;
+}
+
+h1 , h2 , h3 , h4 , h5 , h6  {
+	color: #999;
+	font-family : Georgia, "Times New Roman", Times, serif;
+	font-weight : normal;
+	font-variant : small-caps;
+	padding: 0px;
+	margin-bottom:0.2px;
+	margin-top:1px;
+}
+
