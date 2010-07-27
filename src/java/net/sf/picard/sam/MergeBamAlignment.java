@@ -45,29 +45,30 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() +  "Merges alignment data from a SAM or BAM " +
             "file with additional data stored in an unmapped BAM file and produces a third SAM " +
-            "or BAM file of aligned and unaligned reads.  \n";
-    @Option(shortName="UNMAPPED", doc="Original SAM or BAM file of unmapped reads  ")
+            "or BAM file of aligned and unaligned reads.";
+    @Option(shortName="UNMAPPED", doc="Original SAM or BAM file of unmapped reads, which must " +
+            "be in queryname order.")
         public File UNMAPPED_BAM;
-    @Option(shortName="ALIGNED", doc="SAM or BAM file with alignment data.  ")
+    @Option(shortName="ALIGNED", doc="SAM or BAM file with alignment data.")
         public File ALIGNED_BAM;
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Merged SAM or BAM file " +
-        "to write to") public File OUTPUT;
+        "to write to.") public File OUTPUT;
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Path to the fasta " +
-        "file for the reference sequence") public File REFERENCE_SEQUENCE;
+        "file for the reference sequence.") public File REFERENCE_SEQUENCE;
     @Option(shortName=StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
-            doc="The program group ID of the aligner (if not supplied by the aligned file).  ",
+            doc="The program group ID of the aligner (if not supplied by the aligned file).",
             optional=true) public String PROGRAM_RECORD_ID;
     @Option(shortName="PG_VERSION", doc="The version of the program group (if not supplied by " +
-            "the aligned file).  ", optional=true) public String PROGRAM_GROUP_VERSION;
+            "the aligned file).", optional=true) public String PROGRAM_GROUP_VERSION;
     @Option(shortName="PG_COMMAND", doc="The command line of the program group (if not supplied " +
-            "by the aligned file).  ", optional=true) public String PROGRAM_GROUP_COMMAND_LINE;
+            "by the aligned file).", optional=true) public String PROGRAM_GROUP_COMMAND_LINE;
     @Option(shortName="PG_NAME", doc="The name of the program group (if not supplied by " +
-            "the aligned file).  ", optional=true)public String PROGRAM_GROUP_NAME;
+            "the aligned file).", optional=true)public String PROGRAM_GROUP_NAME;
     @Option(doc="Whether this is a paired-end run. ", shortName="PE") public Boolean PAIRED_RUN;
-    @Option(doc="The expected jump size (required if this is a jumping library). ", shortName="JUMP",
+    @Option(doc="The expected jump size (required if this is a jumping library).", shortName="JUMP",
             optional=true) public Integer JUMP_SIZE;
-    @Option(doc="Whether to clip adapters where identified") public boolean CLIP_ADAPTERS = true;
-    @Option(doc="Whether the lane is bisulfite sequence (used when caculating the NM tag)")
+    @Option(doc="Whether to clip adapters where identified.") public boolean CLIP_ADAPTERS = true;
+    @Option(doc="Whether the lane is bisulfite sequence (used when caculating the NM tag).")
         public boolean IS_BISULFITE_SEQUENCE = false;
     @Option(doc="Whether to output only aligned reads.  ") public boolean ALIGNED_READS_ONLY = false;
     @Option(doc="The maximum number of insertions or deletions permitted for an alignment to be " +
