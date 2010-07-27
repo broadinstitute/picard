@@ -156,7 +156,7 @@ public class CommandLineParser {
     public void usage(final PrintStream stream) {
         stream.print(usagePreamble);
         if (!optionDefinitions.isEmpty()) {
-            stream.println("\nOptions:\n");
+            stream.println("\n\nOptions:\n");
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 printOptionUsage(stream, optionDefinition);
             }
@@ -531,7 +531,7 @@ public class CommandLineParser {
         final StringBuilder sb = new StringBuilder();
         if (optionDefinition.doc.length() > 0) {
             sb.append(optionDefinition.doc);
-            sb.append(" ");
+            sb.append("  ");
         }
         if (optionDefinition.optional && !optionDefinition.isCollection) {
             sb.append("Default value: ");
