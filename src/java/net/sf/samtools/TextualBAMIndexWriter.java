@@ -144,7 +144,7 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
      * @param chunkList contains metadata describing numAligned records, numUnAligned, etc
      */
     private void writeChunkMetaData(int reference, List<Chunk> chunkList) {
-        pw.print("  Ref " + reference + "bin 37450 has n_chunk= " + chunkList.size());
+        pw.print("  Ref " + reference + " bin 37450 has n_chunk= " + chunkList.size());
         if (chunkList.size() == 0) {
             pw.println();
         }

@@ -28,8 +28,9 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Class used only for testing. Constructs BAM index content from an existing bai file
- * and writes it out (as binary bai file or textual bai.txt file)
+ * Constructs BAM index content from an existing bai file
+ * and writes it out (as binary bai file or textual bai.txt file) for testing,
+ * or prints index statistics
  */
 public class BamIndexerForExistingBai {
 
@@ -57,7 +58,6 @@ public class BamIndexerForExistingBai {
 
         // content is from an existing bai file.
 
-        // final DiskBasedBAMFileIndex existingIndex = new DiskBasedBAMFileIndex(inputFile); // todo doesn't work
         final CachingBAMFileIndex existingIndex = new CachingBAMFileIndex(inputFile);
         final int n_ref = existingIndex.getNumberOfReferences();
         final BAMIndexWriter outputWriter;
@@ -90,7 +90,6 @@ public class BamIndexerForExistingBai {
     public void indexStats() {
         try {
             final BAMFileReader bam = new BAMFileReader(inputFile, null, false, SAMFileReader.ValidationStringency.SILENT);
-            // bam.enableIndexCaching(true);  // to test CachingBAMFileIndex
 
             if (!bam.hasIndex()) {
                 throw new SAMException("No index for bam file " + inputFile);
@@ -105,7 +104,7 @@ public class BamIndexerForExistingBai {
 
                 List<Chunk> chunkList = content.getMetaDataChunks();
                 if (chunkList == null || chunkList.size() == 0) {
-                    System.out.println("No metadata chunks");
+                    // System.out.println("No metadata chunks");
                 } else if (chunkList != null && chunkList.size() != 2) {
                     System.out.println(chunkList.size() + " metadata chunks");
                 }
@@ -114,7 +113,7 @@ public class BamIndexerForExistingBai {
                 if (seq == null) continue;
                 final String sequenceName = seq.getSequenceName();
                 final int sequenceLength = seq.getSequenceLength();
-                System.out.print(sequenceName + ' ' + "length =" + sequenceLength);
+                System.out.print(sequenceName + ' ' + "length=\t" + sequenceLength);
 
                 if (content == null || content.getBins() == null || content.getBins().isEmpty()) {
                     System.out.println();
@@ -132,7 +131,7 @@ public class BamIndexerForExistingBai {
                             firstChunk = false;
                         } else {
                             firstChunk = true;
-                            System.out.println("    Aligned= " + start + "   Unaligned= " + end);
+                            System.out.println("\tAligned= " + start + "\tUnaligned= " + end);
                         }
                     }
                 }

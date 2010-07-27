@@ -30,7 +30,7 @@ import java.io.File;
  *
  * @author mborkan
  */
-public abstract class AbstractBAMIndexWriter implements BAMIndexWriter {
+abstract class AbstractBAMIndexWriter implements BAMIndexWriter { // note - only package visibility
 
     protected final int n_ref;
     protected final File output;

@@ -38,7 +38,9 @@ import java.util.*;
  * changing caching behavior, etc.
  *
  * Of particular note: the AbstractBAMFileIndex is, by design, the only class aware of the
- * details of the BAM index file format.  Anyone wanting to implement a reader for a differing
+ * details of the BAM index file format (other than the four classes representing the data,
+ * BAMIndexContent, Bin, Chunk, LinearIndex, and the classes for building the BAM index).
+ * Anyone wanting to implement a reader for a differing
  * or extended BAM index format should implement BAMIndex directly.
  */
 abstract class AbstractBAMFileIndex implements BAMIndex {
@@ -52,6 +54,8 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * What is the starting bin for each level?
      */
     private static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};
+
+    public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
 
     private final File mFile;
     private MappedByteBuffer mFileBuffer;
@@ -251,11 +255,13 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
+            Chunk lastChunk = null;
             if (regionBins.get(indexBin)) {
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
-                    chunks.add(new Chunk(chunkBegin, chunkEnd));
+                    lastChunk = new Chunk(chunkBegin, chunkEnd);
+                    chunks.add(lastChunk);
                 }
             } else if (indexBin == MAX_BINS) {
                 // meta data - build the bin so that the count of bins is correct;
@@ -263,13 +269,15 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
-                    metaDataChunks.add(new Chunk(chunkBegin, chunkEnd));
+                    lastChunk = new Chunk(chunkBegin, chunkEnd);
+                    metaDataChunks.add(lastChunk);
                 }
             } else {
                 skipBytes(16 * nChunks);
             }
             Bin bin = new Bin(referenceSequence, indexBin);
             bin.setChunkList(chunks);
+            bin.setLastChunk(lastChunk);
             bins.add(bin);
         }
         // Reorder the bins in binNumber order.

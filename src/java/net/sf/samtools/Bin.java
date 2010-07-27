@@ -47,6 +47,9 @@ public class Bin implements Comparable<Bin> {
      */
     private List<Chunk> chunkList;
 
+    /** The last chunk in the chunkList */
+    private Chunk lastChunk;
+
     public Bin(final int referenceSequence, final int binNumber) {
         this.referenceSequence = referenceSequence;
         this.binNumber = binNumber;
@@ -113,5 +116,19 @@ public class Bin implements Comparable<Bin> {
      */
     public List<Chunk> getChunkList(){
         return chunkList;
+    }
+
+    /**
+     * Optimization to keep lastChunk instead of iterating over all chunks repeatedly
+     */
+    public void setLastChunk(Chunk c){
+        lastChunk = c;
+    }
+
+    /**
+     * @return  the last Chunk of the chunkList
+     */
+    public Chunk getLastChunk(){
+        return lastChunk;
     }
 }

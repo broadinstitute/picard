@@ -45,8 +45,8 @@ import java.io.File;
  */
 public class BamIndexStats extends CommandLineProgram {
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index statistics" +
-            "Input BAM file must be sorted in coordinate order, and have a corresponding index file ";
+    public String USAGE = getStandardUsagePreamble() + "Generates BAM index statistics. " +
+            "Input BAM file must have a corresponding index file.\n";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
@@ -59,9 +59,8 @@ public class BamIndexStats extends CommandLineProgram {
     }
 
     /**
-     * Main method for the program.  Checks that all input files are present and
-     * readable and that the output file can be written to.  Then iterates through
-     * all the records generating a BAM Index, then writes the bai file.
+     * Main method for the program.  Checks that input file is present and
+     * readable, then iterates through the index printing meta data to stdout.
      */
     protected int doWork() {
 
@@ -81,10 +80,6 @@ public class BamIndexStats extends CommandLineProgram {
         final SAMFileReader bam = new SAMFileReader(INPUT);
         if (!bam.isBinary()){
             return new String[] {"Input file must be bam file, not sam file"};
-        }
-        // check sort order in the header - must be coordinate
-        if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-            return new String[] {"Input BAM file must be sorted by coordinates"};
         }
         // Check that bai file exists is in instance.indexStats() call above
         return null;

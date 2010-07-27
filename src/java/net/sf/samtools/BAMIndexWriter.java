@@ -28,7 +28,7 @@ package net.sf.samtools;
  *
  * @author mborkan
  */
-public interface BAMIndexWriter {
+interface BAMIndexWriter {  // note - only package visibility
 
     /**
      * Write header information at the beginning of the file
