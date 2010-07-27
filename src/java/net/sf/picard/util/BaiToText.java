@@ -29,6 +29,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.samtools.BAMIndex;
 import net.sf.samtools.BamIndexerForExistingBai;
 
 import java.io.File;
@@ -40,23 +41,20 @@ import java.io.File;
  */
 public class BaiToText extends CommandLineProgram {
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a textual form of a BAM index (.bai) file.";
+    public String USAGE = getStandardUsagePreamble() + "Generates a textual form of a BAM index (.bai) file.\n";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "A BAM Index file to process.")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "The textual BAM index file output", optional = true)
+            doc = "The textual BAM index file output.", optional = true)
     public File OUTPUT;
 
-    @Option(doc = "Whether to overwrite an existing bai.txt file", shortName = "OVERWRITE")
-    public Boolean OVERWRITE_EXISTING_BAI_FILE = false;
-
-    @Option(doc = "Whether to sort the bins in sequence order")
+    @Option(doc = "Whether to sort the bins in sequence order.")
     public Boolean SORT = true;
 
-    @Option(doc = "Whether to write textual or binary representation", shortName = "TEXT")
+    @Option(doc = "Whether to write textual or binary representation.", shortName = "TEXT")
     public Boolean TEXTUAL = true;  // binary output is used to test. Should generate the same file as input
 
     /**
@@ -68,8 +66,8 @@ public class BaiToText extends CommandLineProgram {
 
     /**
      * Main method for the program.  Checks that all input files are present and
-     * readable and that the output file can be written to.  Then iterates through
-     * all the records generating a BAM Index, then writes the bai file.
+     * readable and that the output file can be written to.
+     * Write a textual version of an existing bam index file.
      */
     protected int doWork() {
         final Log log = Log.getInstance(getClass());
@@ -81,7 +79,7 @@ public class BaiToText extends CommandLineProgram {
         log.info("Reading input file and building index.");
 
         final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT);
-        instance.createIndex(OUTPUT, TEXTUAL, SORT);   // todo note - sorting will always be done (by CachingBamIndex implementation)
+        instance.createIndex(OUTPUT, TEXTUAL, SORT);
 
         log.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
@@ -89,6 +87,10 @@ public class BaiToText extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (INPUT.getName().endsWith(".bam")){
+            INPUT = new File (IoUtil.basename(INPUT) + BAMIndex.BAMIndexSuffix);
+            System.out.println("Input must be index file, not bam file; Assuming input " + INPUT.getName());             
+        }
         // set default output file - input-file.txt
         if (OUTPUT == null) {
             if (TEXTUAL) {
@@ -97,10 +99,7 @@ public class BaiToText extends CommandLineProgram {
                 OUTPUT = new File(INPUT.getAbsolutePath() + ".bai");
             }
         }
-        // check OVERWRITE
-        if (!OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()) {
-            return new String[]{"Output file already exists.  Use option OVERWRITE=true to replace " + OUTPUT.toString()};
-        } else if (OVERWRITE_EXISTING_BAI_FILE && OUTPUT.exists()) {
+        if (OUTPUT.exists()) {
             OUTPUT.delete();
         }
         return null;

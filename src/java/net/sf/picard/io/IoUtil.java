@@ -367,7 +367,7 @@ public class IoUtil {
     public static String basename(final File f) {
         final String full = f.getName();
         final int index = full.lastIndexOf(".");
-        if (index > 0) {
+        if (index > 0  && index > full.lastIndexOf(File.separator)) {
             return full.substring(0, index);
         }
         else {

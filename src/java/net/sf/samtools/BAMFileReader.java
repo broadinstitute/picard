@@ -414,7 +414,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         }
 
         public void close() {
-            if (this != mCurrentIterator) {
+            if (mCurrentIterator != null && this != mCurrentIterator) {
                 throw new IllegalStateException("Attempt to close non-current iterator");
             }
             mCurrentIterator = null;

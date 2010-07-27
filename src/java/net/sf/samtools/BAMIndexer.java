@@ -35,9 +35,6 @@ public class BAMIndexer {
     // The number of references (chromosomes) in the BAM file
     private final int numReferences;
 
-    // input bam file
-    private final File inputFile;
-
     // content is built up from the input bam file using this
     private final BAMIndexBuilder indexBuilder;
 
@@ -47,14 +44,12 @@ public class BAMIndexer {
     private int currentReference = 0;
 
     /**
-     * @param input       BAM (.bam) file
      * @param output      binary BAM Index (.bai) file
      * @param nReferences Number of references in the input BAM file
      */
-    public BAMIndexer(final File input, final File output, final int nReferences, final boolean sortBins) {
+    public BAMIndexer(final File output, final int nReferences, final boolean sortBins) {
 
         numReferences = nReferences;
-        inputFile = input;
         indexBuilder = new BAMIndexBuilder();
         outputWriter = new BinaryBAMIndexWriter(nReferences, output, sortBins);
         outputWriter.writeHeader();
@@ -63,9 +58,8 @@ public class BAMIndexer {
     /**
      * Generates a BAM index file from an input BAM file
      */
-    public void createIndex() {
+    public void createIndex(SAMFileReader reader) {
 
-        SAMFileReader reader = new SAMFileReader(inputFile);
         reader.enableFileSource(true);
         CloseableIterator<SAMRecord> alignmentIterator = reader.iterator();
         int totalRecords = 0;
@@ -107,7 +101,7 @@ public class BAMIndexer {
             }
             currentReference = reference;
         }
-        indexBuilder.processAlignment(rec);
+        indexBuilder.processAlignment(reference, rec);
     }
 
     /**

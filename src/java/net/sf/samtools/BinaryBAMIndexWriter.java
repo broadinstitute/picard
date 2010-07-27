@@ -24,25 +24,20 @@
 
 package net.sf.samtools;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * Class for writing binary BAM index files
  */
-public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
+class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {  // note - only package visibility
 
-    private final int bufferSize = 1000000;
+    private final int bufferSize = 1048576; // faster if power of 2
     private final ByteBuffer bb;
-    private final FileChannel fileChannel;
-    private final FileOutputStream stream;
+    private final BufferedOutputStream boStream;
     private final boolean sortBins;
 
     /**
@@ -58,9 +53,8 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         this.sortBins = sortBins;
 
         try {
-            stream = new FileOutputStream(output, true);
-            fileChannel = stream.getChannel();
-            bb = ByteBuffer.allocateDirect(bufferSize);
+            boStream = new BufferedOutputStream(new FileOutputStream(output));
+            bb = ByteBuffer.allocate(bufferSize);
             bb.order(ByteOrder.LITTLE_ENDIAN);
         } catch (FileNotFoundException e) {
             throw new SAMException("Can't find output file " + output, e);
@@ -71,7 +65,6 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
         // magic string
         final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
         bb.put(magic);
-        // n_ref
         bb.putInt(n_ref);
     }
 
@@ -84,35 +77,55 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
             writeNullContent(bb);
             return;
         }
-        final List<Bin> bins = content.getBins();
-        final LinearIndex linearIndex = content.getLinearIndex();
 
-        if (bins == null || bins.size() == 0) {
-            writeNullContent(bb);
-            return;
-        }
+        final Bin[] originalBins = content.getOriginalBins();
+        if (originalBins != null){
+             // good, we avoided copying the original array to a list
 
-        final int size = bins.size();
-        bb.putInt(size);
+            final int size = content.getNumberOfBins();
+            bb.putInt(size);
 
-        if (sortBins) {
-            // copy bins into an array so that it can be sorted for text comparisons
-            final Bin[] binArray = new Bin[size];
-            if (size != 0) {
-                bins.toArray(binArray);
-            }
-            Arrays.sort(binArray);
-
-            for (Bin bin : binArray) {
+            // Note, originalBins is naturally sorted, so no sort is needed
+            int count = 0;
+            for (Bin bin : originalBins) {
+                if (bin == null) continue;
+                count++;
                 writeBin(bin);
             }
+
         } else {
-            for (Bin bin : bins) {
-                writeBin(bin);
+            // bins are only available as a list
+
+            final List<Bin> bins = content.getBins();
+            final int size = bins.size();
+
+            if (bins == null || size == 0) {
+                writeNullContent(bb);
+                return;
+            }
+
+            bb.putInt(size);
+
+            if (sortBins) {
+                // copy bins into an array so that it can be sorted for text comparisons
+                final Bin[] binArray = new Bin[size];
+                if (size != 0) {
+                    bins.toArray(binArray);
+                }
+                Arrays.sort(binArray);
+
+                for (Bin bin : binArray) {
+                    writeBin(bin);
+                }
+            } else {
+                for (Bin bin : bins) {
+                    writeBin(bin);
+                }
             }
         }
         writeChunkMetaData(content.getMetaDataChunks());
 
+        final LinearIndex linearIndex = content.getLinearIndex();
         final long[] entries = linearIndex == null ? null : linearIndex.getIndexEntries();
         final int indexStart = linearIndex == null ? 0 : linearIndex.getIndexStart();
         final int n_intv = entries == null ? indexStart : entries.length + indexStart;
@@ -128,13 +141,16 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
             bb.putLong(entries[k]); // todo uint32_t vs int32_t in spec?
         }
         // write out data and reset the buffer for each reference
-        bb.flip();
+        bb.flip();       // sets position to 0
+
         try {
-            fileChannel.write(bb);
-            stream.flush();
+            byte[] bytesToWrite = bb.array();
+            boStream.write(bytesToWrite, bb.arrayOffset(), bb.limit());
+            boStream.flush();
         } catch (IOException e) {
             throw new SAMException("IOException in BinaryBAMIndexWriter reference " + reference, e);
         }
+
         bb.position(0);
         bb.limit(bufferSize);
     }
@@ -176,18 +192,16 @@ public class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {
 
 
     private static void writeNullContent(ByteBuffer bb) {
-        bb.putInt(0);  // 0 bins
-        bb.putInt(0);  // 0 intv
+        bb.putLong(0);  // 0 bins , 0 intv
     }
 
     public void close(Long noCoordinateCount) {
         bb.putLong(noCoordinateCount == null ? 0 : noCoordinateCount);
         bb.flip();
         try {
-            fileChannel.write(bb);
-            fileChannel.close();
-            stream.flush();
-            stream.close();
+            boStream.write(bb.array(),bb.arrayOffset(), bb.limit());
+            boStream.flush();
+            boStream.close();
         } catch (IOException e) {
             throw new SAMException("IOException in BinaryBAMIndexWriter ", e);
         }

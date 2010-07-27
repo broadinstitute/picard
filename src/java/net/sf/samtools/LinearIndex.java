@@ -30,6 +30,9 @@ package net.sf.samtools;
  * @version 0.1
  */
 public class LinearIndex {
+
+    public static final int MAX_LINEAR_INDEX_SIZE = AbstractBAMFileIndex.MAX_LINEAR_INDEX_SIZE;
+
     private static final int BAM_LIDX_SHIFT = 14;
 
     /**

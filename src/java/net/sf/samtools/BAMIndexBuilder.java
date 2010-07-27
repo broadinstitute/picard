@@ -35,11 +35,11 @@ import java.util.*;
 class BAMIndexBuilder {
 
     // the bins for the current reference
-    private Bin[] bins = new Bin[MAX_BINS];
-    private boolean binsSeen = false;
+    private Bin[] bins = new Bin[MAX_BINS +1]; // one extra for metaData
+    private int binsSeen = 0;
 
-    // linear index for the current bin
-    private long[] index = new long[MAX_BINS];
+    // linear index for the current reference
+    private long[] index = new long[LinearIndex.MAX_LINEAR_INDEX_SIZE];
     private int largestIndexSeen = -1;
 
     // information in meta data
@@ -54,11 +54,13 @@ class BAMIndexBuilder {
      *
      * @param rec The BAM record
      */
-    public void processAlignment(final SAMRecord rec) {
+    public void processAlignment(final int reference, final SAMRecord rec) {
 
-        if (rec.getAlignmentStart() == SAMRecord.NO_ALIGNMENT_START) {
+        final int alignmentStart = rec.getAlignmentStart();
+
+        if (alignmentStart == SAMRecord.NO_ALIGNMENT_START) {
             noCoordinateRecords++;
-            return; //  null;  // do nothing for records without coordinates, but count them
+            return; // do nothing for records without coordinates, but count them
         }
 
         if (rec.getReadUnmappedFlag()) {
@@ -68,99 +70,82 @@ class BAMIndexBuilder {
         }
 
         // process bins
-        final int binNumber;
-        if (rec.getIndexingBin() == null) {
-            binNumber = rec.computeIndexingBin();
-        } else {
-            binNumber = rec.getIndexingBin();
-        }
 
-        // is there a bin already represented for this index?  if not, add it
+        final Integer binNumber = rec.getIndexingBin();
+        final int binNum = binNumber == null ? rec.computeIndexingBin(): binNumber;
+
+        // is there a bin already represented for this index?  if not, add one
         final Bin bin;
-        final int reference = rec.getReferenceIndex();
-        if (bins[binNumber] != null) {
-            bin = bins[binNumber];
+        if (bins[binNum] != null) {
+            bin = bins[binNum];
         } else {
-            bin = new Bin(reference, binNumber);
-            bins[binNumber] = bin;
-            binsSeen = true;
+            bin = new Bin(reference, binNum);
+            bins[binNum] = bin;
+            binsSeen++;
         }
 
-        // add chunk information from this record to the bin
+        // process chunks
 
-        final BAMFileSpan newSpan;
-        if (rec.getFileSource() == null) {
+        final SAMFileSource source = rec.getFileSource();
+        if (source == null) {
             throw new SAMException("No source for BAM Record " + rec);
-        } else {
-            newSpan = (BAMFileSpan) rec.getFileSource().getFilePointer();
+        }
+        final BAMFileSpan newSpan = (BAMFileSpan) source.getFilePointer();
+        Chunk newChunk = newSpan.getChunks().get(0); // only 1 chunk in a single source span
+
+        final long chunkStart = newChunk.getChunkStart();
+        if (chunkStart < firstOffset || firstOffset == -1) {
+            firstOffset = chunkStart;
+        }
+        final long chunkEnd = newChunk.getChunkEnd();
+        if (chunkEnd > lastOffset) {
+            lastOffset = chunkEnd;
         }
 
         List<Chunk> oldChunks = bin.getChunkList();
-        boolean firstChunkList = false;
         if (oldChunks == null) {
             oldChunks = new ArrayList<Chunk>();
             bin.setChunkList(oldChunks);
-            firstChunkList = true;
-        }
-        for (Chunk newChunk : newSpan.getChunks()) {
-            // note, there should only be one newChunk
-            // optimize chunkList as we go
-            final long newFirstOffset = newChunk.getChunkStart();
-            if (newFirstOffset < firstOffset || firstOffset == -1){
-                firstOffset = newFirstOffset;
+            bin.setLastChunk(newChunk);
+            oldChunks.add(newChunk);
+
+        } else {
+            final Chunk lastChunk = bin.getLastChunk();
+
+            // Coalesce chunks that are in adjacent file blocks.
+            final long lastFileBlock = getFileBlock(lastChunk.getChunkEnd());
+            final long chunkFileBlock = getFileBlock(chunkStart);
+            if (chunkFileBlock - lastFileBlock <= 1) {
+                lastChunk.setChunkEnd(chunkEnd);  // coalesced
+            } else {
+                oldChunks.add(newChunk);
+                bin.setLastChunk(newChunk);
             }
-            final long newLastOffset = newChunk.getChunkEnd();
-            if (newLastOffset > lastOffset){
-                lastOffset = newLastOffset;
-            }
-            simpleOptimizeChunkList(firstChunkList, oldChunks, newChunk);
         }
 
-        // add linear index information
+        // process linear index
+
         // the smallest file offset that appears in the 16k window for this bin
-        final long iOffset = newSpan.getFirstOffset();
-        final int alignmentStart = rec.getAlignmentStart();
-        int alignmentEnd = rec.getAlignmentEnd();
+        final int alignmentEnd = rec.getAlignmentEnd();
         int startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart); // the 16k window
-        int endWindow = LinearIndex.convertToLinearIndexOffset(alignmentEnd);
+        final int endWindow;
 
-        if (alignmentEnd == 0) {
-            if (alignmentStart != 0){
-                startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart - 1);
-            }
-            endWindow = startWindow;  // assume alignment uses one position
+        if (alignmentEnd == SAMRecord.NO_ALIGNMENT_START) {   // assume alignment uses one position
+            // Next line for C (samtools index) compatibility. Differs only when on a window boundary
+            startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart - 1);
+            endWindow = startWindow;
+        } else {
+            endWindow = LinearIndex.convertToLinearIndexOffset(alignmentEnd);
         }
 
-        /* almost, but not quite right
-          if (alignmentEnd == 0) {
-              alignmentEnd = alignmentStart + 1;
-              endWindow = LinearIndex.convertToLinearIndexOffset(alignmentEnd);
-          }
-        */
-
-        /* diagnostic
-        if (reference == 1){
-            final long endPos = newSpan.toCoordinateArray()[1];
-            verbose("Ref " + reference + " " + rec.getReadName() + " bin=" + binNumber + " startPos=" +
-              iOffset + "(" + Long.toString(iOffset, 16) + "x)" +
-              "endPos=" + endPos + "(" + Long.toString(endPos, 16) + "x)" +
-              " sA=" + alignmentStart + "(" + Long.toString(alignmentStart,16) + "x)" +
-              " eA=" + alignmentEnd + "(" + Long.toString(alignmentEnd,16) + "x)" +
-              "     sWin " + startWindow + " eWin " + endWindow );
+        if (endWindow > largestIndexSeen) {
+            largestIndexSeen = endWindow;
         }
-        */
 
         // set linear index at every 16K window that this alignment overlaps
         for (int win = startWindow; win <= endWindow; win++) {
-            if (index[win] != 0) {
-                if (iOffset < index[win]) {
-                    index[win] = iOffset;
-                }
-            } else {
-                if (win > largestIndexSeen){
-                    largestIndexSeen = win;
-                }
-                index[win] = iOffset;
+            if (index[win] == 0 || chunkStart < index[win]) {
+                index[win] = chunkStart;
             }
         }
     }
@@ -171,63 +156,32 @@ class BAMIndexBuilder {
     public BAMIndexContent processReference(int reference) {
 
         // process bins
-        if (!binsSeen) return null;  // no bins for this reference
-
-        List<Bin> binList = new ArrayList <Bin> ();
-
-        // process chunks
-        for (Bin bin : bins) {
-            if (bin == null) continue;
-            List<Chunk> chunkList = bin.getChunkList();
-            if (chunkList != null){
-                // calculate first and last offset
-                long newFirstOffset = chunkList.get(0).getChunkStart();
-                long newLastOffset = chunkList.get(chunkList.size()-1).getChunkEnd();
-                if (firstOffset == -1 || newFirstOffset < firstOffset) {
-                    firstOffset = newFirstOffset;
-                }
-                if (newLastOffset > lastOffset) {
-                    lastOffset = newLastOffset;
-                }
-
-                bin.setChunkList(chunkList);
-            }
-            binList.add(bin);
-        }
-        final List<Chunk> metaData = getMetaDataChunks();
-        // add an extra bin for the meta data so that the count of n_bins comes out right
+        if (binsSeen == 0) return null;  // no bins for this reference
+        
+        // process chunks, adding an extra bin for the meta data so that the count of n_bins comes out right
         final Bin metaBin = new Bin(reference, MAX_BINS);
+        final List<Chunk> metaData = getMetaDataChunks();
         metaBin.setChunkList(metaData);
-        binList.add(metaBin);
+        bins[MAX_BINS]= metaBin;
 
         // process linear index
-        final LinearIndex linearIndex = computeLinearIndex(reference);
+        // linear index will only be as long as the largest index seen
+        final long[] newIndex = new long[largestIndexSeen + 1]; // in java1.6 Arrays.copyOf(index, largestIndexSeen + 1);
 
-        return new BAMIndexContent(reference, binList, metaData, linearIndex);
-    }
-
-    private List<Chunk> getMetaDataChunks() {
-        // for c compatibility, add an extra bin 37450 with 2 chunks of extra meta information
-        //       offset_begin: offset_end
-        //       n_mapped: n_unmapped
-        List<Chunk> metaChunkList = new ArrayList<Chunk>(1);
-        metaChunkList.add(new Chunk(firstOffset == -1 ? 0 : firstOffset, lastOffset));
-        metaChunkList.add(new Chunk(alignedRecords, unalignedRecords));
-        return metaChunkList;
-    }
-
-    /**  reinitialize all data structures when the reference changes */
-    void startNewReference() {
-        if (binsSeen){
-            Arrays.fill(bins, null);
-            Arrays.fill (index, 0);
+        // C (samtools index) also fills in intermediate 0's with values.  This seems unnecessary, but safe
+        long lastNonZeroOffset = 0;
+        for (int i = 0; i <= largestIndexSeen; i++) {
+            if (index[i] == 0) {
+                index[i] = lastNonZeroOffset; // not necessary, but C (samtools index) does this
+            } else {
+                lastNonZeroOffset = index[i];
+            }
+            newIndex[i] = index[i];
         }
-        binsSeen = false;
-        largestIndexSeen = -1;
-        firstOffset = -1;
-        lastOffset = 0;
-        alignedRecords = 0;
-        unalignedRecords = 0;
+
+        final LinearIndex linearIndex = new LinearIndex(reference, 0, newIndex);
+
+        return new BAMIndexContent(reference, bins, binsSeen + 1, metaData, linearIndex);
     }
 
     /** @return the count of records with no coordinate positions */
@@ -235,54 +189,29 @@ class BAMIndexBuilder {
         return noCoordinateRecords;
     }
 
-    /**
-     * This is a simpler version of optimizeChunkList found in AbstractBamFileIndex.
-     */
-    private void simpleOptimizeChunkList(final boolean firstChunkList, final List<Chunk> chunks, final Chunk newChunk) {
-        if (firstChunkList) {
-            chunks.add(newChunk);
-            return;
+    /**  reinitialize all data structures when the reference changes */
+    void startNewReference() {
+        if (binsSeen > 0){
+            Arrays.fill(bins, null);
+            Arrays.fill (index, 0);
         }
-        Chunk lastChunk = null;
-        for (final Chunk chunk : chunks) {
-            lastChunk = chunk;
-        }
-        // Coalesce chunks that are in adjacent file blocks.
-        final long lastFileBlock = getFileBlock(lastChunk.getChunkEnd());
-        final long chunkFileBlock = getFileBlock(newChunk.getChunkStart());
-        if (chunkFileBlock - lastFileBlock <= 1) {     // probably always true
-            lastChunk.setChunkEnd(newChunk.getChunkEnd());
-        } else {
-            chunks.add(newChunk);
-        }
+        binsSeen = 0;
+        largestIndexSeen = -1;
+        firstOffset = -1;
+        lastOffset = 0;
+        alignedRecords = 0;
+        unalignedRecords = 0;
     }
 
-    /**
-     * The linear index stored can be smaller than full array of all possible windows
-     */
-    private LinearIndex computeLinearIndex(int reference) {
-        final LinearIndex linearIndex;
-        if (largestIndexSeen == -1) {
-            // skip linear index for this reference
-            linearIndex = null;
-        } else {
-            // linear index will be as long as the largest index seen
-            long[] newIndex = new long[largestIndexSeen + 1]; // in java1.6 Arrays.copyOf(index, largestIndexSeen + 1);
 
-            // c samtools index also fills in intermediate 0's with values.  This seems unnecessary, but safe
-            long lastNonZeroOffset = 0;
-            for (int i = 0; i <= largestIndexSeen; i++) {
-                if (index[i] == 0){
-                    index[i] = lastNonZeroOffset;
-                } else {
-                    lastNonZeroOffset = index[i];
-                }
-                newIndex[i] = index[i];
-            }
-
-            linearIndex = new LinearIndex(reference, 0, newIndex);
-        }
-        return linearIndex;
+    private List<Chunk> getMetaDataChunks() {
+        // An extra bin #37450  (MAX_BINS) with 2 chunks of extra meta information
+        //       offset_begin: offset_end
+        //       n_mapped: n_unmapped
+        final List<Chunk> metaChunkList = new ArrayList<Chunk>(1);
+        metaChunkList.add(new Chunk(firstOffset == -1 ? 0 : firstOffset, lastOffset));
+        metaChunkList.add(new Chunk(alignedRecords, unalignedRecords));
+        return metaChunkList;
     }
 
     private void verbose(String message) {
