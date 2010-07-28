@@ -41,13 +41,16 @@ public class BlockCompressedStreamConstants {
     // We require that a compressed block (including header and footer, be <= this)
     public static final int MAX_COMPRESSED_BLOCK_SIZE = 64 * 1024;
 
-    // Push out a gzip block when this many uncompressed bytes have been accumulated.
-    public static final int DEFAULT_UNCOMPRESSED_BLOCK_SIZE = 64 * 1024;
+    // Gzip overhead is the header, the footer, and the block size (encoded as a short).
+    public static final int GZIP_OVERHEAD = BLOCK_HEADER_LENGTH + BLOCK_FOOTER_LENGTH + 2;
 
-    // If after compressing a block, the compressed block is found to be >
-    // MAX_COMPRESSED_BLOCK_SIZE, including overhead, then throttle back bytes to
-    // be compressed by this amount and try again.
-    public static final int UNCOMPRESSED_THROTTLE_AMOUNT = 1024;
+    // If Deflater has compression level == NO_COMPRESSION, 10 bytes of overhead (determined experimentally).
+    public static final int NO_COMPRESSION_OVERHEAD = 10;
+
+    // Push out a gzip block when this many uncompressed bytes have been accumulated.
+    // This size is selected so that if data is not compressible,  if Deflater is given
+    // compression level == NO_COMPRESSION, compressed size is guaranteed to be <= MAX_COMPRESSED_BLOCK_SIZE.
+    public static final int DEFAULT_UNCOMPRESSED_BLOCK_SIZE = 64 * 1024 - (GZIP_OVERHEAD + NO_COMPRESSION_OVERHEAD);
 
     // Magic numbers
     public static final byte GZIP_ID1 = 31;

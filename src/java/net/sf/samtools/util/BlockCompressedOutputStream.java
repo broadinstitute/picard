@@ -55,7 +55,7 @@ public class BlockCompressedOutputStream
      * @param compressionLevel 1 <= compressionLevel <= 9
      */
     public static void setDefaultCompressionLevel(final int compressionLevel) {
-        if (compressionLevel < Deflater.BEST_SPEED || compressionLevel > Deflater.BEST_COMPRESSION) {
+        if (compressionLevel < Deflater.NO_COMPRESSION || compressionLevel > Deflater.BEST_COMPRESSION) {
             throw new IllegalArgumentException("Invalid compression level: " + compressionLevel);
         }
         defaultCompressionLevel = compressionLevel;
@@ -68,6 +68,18 @@ public class BlockCompressedOutputStream
             new byte[BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE -
                     BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH];
     private final Deflater deflater;
+
+    // A second deflater is created for the very unlikely case where the regular deflation actually makes
+    // things bigger, and the compressed block is too big.  It should be possible to downshift the
+    // primary deflater to NO_COMPRESSION level, recompress, and then restore it to its original setting,
+    // but in practice that doesn't work.
+    // The motivation for deflating at NO_COMPRESSION level is that it will predictably produce compressed
+    // output that is 10 bytes larger than the input, and the threshold at which a block is generated is such that
+    // the size of tbe final gzip block will always be <= 64K.  This is preferred over the previous method,
+    // which would attempt to compress up to 64K bytes, and if the resulting compressed block was too large,
+    // try compressing fewer input bytes (aka "downshifting').  The problem with downshifting is that
+    // getFilePointer might return an inaccurate value.
+    private final Deflater noCompressionDeflater = new Deflater(Deflater.NO_COMPRESSION, true);
     private final CRC32 crc32 = new CRC32();
     private final File file;
     private long mBlockAddress = 0;
@@ -75,11 +87,6 @@ public class BlockCompressedOutputStream
 
     // Really a local variable, but allocate once to reduce GC burden.
     private final byte[] singleByteArray = new byte[1];
-
-    /**
-     * Number of times amount being compressed had to be reduced to compress into MAX_COMPRESSED_BLOCK_SIZE
-     */
-    private int numberOfThrottleBacks = 0;
 
     /**
      * Uses default compression level, which is 5 unless changed by setDefaultCompressionLevel
@@ -217,40 +224,40 @@ public class BlockCompressedOutputStream
             return 0;
         }
         int bytesToCompress = numUncompressedBytes;
-        while (true) {
-            // Compress the input
-            deflater.reset();
-            deflater.setInput(uncompressedBuffer, 0, bytesToCompress);
-            deflater.finish();
-            final int compressedSize = deflater.deflate(compressedBuffer, 0, compressedBuffer.length);
+        // Compress the input
+        deflater.reset();
+        deflater.setInput(uncompressedBuffer, 0, bytesToCompress);
+        deflater.finish();
+        int compressedSize = deflater.deflate(compressedBuffer, 0, compressedBuffer.length);
 
-            // If it didn't all fit in compressedBuffer.length, reduce the amount to
-            // be compressed and try again.
-            if (!deflater.finished()) {
-                bytesToCompress -= BlockCompressedStreamConstants.UNCOMPRESSED_THROTTLE_AMOUNT;
-                ++numberOfThrottleBacks;
-                assert(bytesToCompress > 0);
-                continue;
+        // If it didn't all fit in compressedBuffer.length, set compression level to NO_COMPRESSION
+        // and try again.  This should always fit.
+        if (!deflater.finished()) {
+            noCompressionDeflater.reset();
+            noCompressionDeflater.setInput(uncompressedBuffer, 0, bytesToCompress);
+            noCompressionDeflater.finish();
+            compressedSize = noCompressionDeflater.deflate(compressedBuffer, 0, compressedBuffer.length);
+            if (!noCompressionDeflater.finished()) {
+                throw new IllegalStateException("unpossible");
             }
-            // Data compressed small enough, so write it out.
-            crc32.reset();
-            crc32.update(uncompressedBuffer, 0, bytesToCompress);
-            
-            final int totalBlockSize = writeGzipBlock(compressedSize, bytesToCompress, crc32.getValue());
-            assert(bytesToCompress <= numUncompressedBytes);
-
-            // Clear out from uncompressedBuffer the data that was written 
-            if (bytesToCompress == numUncompressedBytes) {
-                numUncompressedBytes = 0;
-            } else {
-                System.arraycopy(uncompressedBuffer, bytesToCompress, uncompressedBuffer, 0,
-                        numUncompressedBytes - bytesToCompress);
-                numUncompressedBytes -= bytesToCompress;
-            }
-            mBlockAddress += totalBlockSize;
-            return totalBlockSize;
         }
-        // unreachable
+        // Data compressed small enough, so write it out.
+        crc32.reset();
+        crc32.update(uncompressedBuffer, 0, bytesToCompress);
+
+        final int totalBlockSize = writeGzipBlock(compressedSize, bytesToCompress, crc32.getValue());
+        assert(bytesToCompress <= numUncompressedBytes);
+
+        // Clear out from uncompressedBuffer the data that was written
+        if (bytesToCompress == numUncompressedBytes) {
+            numUncompressedBytes = 0;
+        } else {
+            System.arraycopy(uncompressedBuffer, bytesToCompress, uncompressedBuffer, 0,
+                    numUncompressedBytes - bytesToCompress);
+            numUncompressedBytes -= bytesToCompress;
+        }
+        mBlockAddress += totalBlockSize;
+        return totalBlockSize;
     }
 
     /**
