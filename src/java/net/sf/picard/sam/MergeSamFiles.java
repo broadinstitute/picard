@@ -87,6 +87,7 @@ public class MergeSamFiles extends CommandLineProgram {
 
         // Open the files for reading and writing
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
         {
             SAMSequenceDictionary dict = null; // Used to try and reduce redundant SDs in memory
 
@@ -94,6 +95,7 @@ public class MergeSamFiles extends CommandLineProgram {
                 IoUtil.assertFileIsReadable(inFile);
                 final SAMFileReader in = new SAMFileReader(inFile);
                 readers.add(in);
+                headers.add(in.getFileHeader());
 
                 // A slightly hackish attempt to keep memory consumption down when merging multiple files with
                 // large sequence dictionaries (10,000s of sequences). If the dictionaries are identical, then
@@ -117,16 +119,16 @@ public class MergeSamFiles extends CommandLineProgram {
 
         if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED) {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SORT_ORDER, MERGE_SEQUENCE_DICTIONARIES);
-            iterator = new MergingSamRecordIterator(headerMerger, ASSUME_SORTED);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SORT_ORDER, headers, MERGE_SEQUENCE_DICTIONARIES);
+            iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORTED);
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerMerger.getMergedHeader(), true, OUTPUT);
         }
         else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers,
-                                                                             SAMFileHeader.SortOrder.unsorted,
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.unsorted,
+                                                                             headers,
                                                                              MERGE_SEQUENCE_DICTIONARIES);
-            iterator = new MergingSamRecordIterator(headerMerger, false);
+            iterator = new MergingSamRecordIterator(headerMerger, readers, false);
             final SAMFileHeader header = headerMerger.getMergedHeader();
             header.setSortOrder(SORT_ORDER);
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);

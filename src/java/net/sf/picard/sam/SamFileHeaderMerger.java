@@ -43,11 +43,12 @@ import net.sf.samtools.util.SequenceUtil;
 public class SamFileHeaderMerger {
     //Super Header to construct
     private final SAMFileHeader mergedHeader;
-    private final Collection<SAMFileReader> readers;
+    private Collection<SAMFileReader> readers;
+    private final Collection<SAMFileHeader> headers;
 
     //Translation of old group ids to new group ids
-    private final Map<SAMFileReader, Map<String, String>> samReadGroupIdTranslation =
-            new HashMap<SAMFileReader, Map<String, String>>();
+    private final Map<SAMFileHeader, Map<String, String>> samReadGroupIdTranslation =
+            new IdentityHashMap<SAMFileHeader, Map<String, String>>();
 
     //the read groups from different files use the same group ids
     private boolean hasReadGroupCollisions = false;
@@ -56,17 +57,12 @@ public class SamFileHeaderMerger {
     private boolean hasProgramGroupCollisions = false;
 
     //Translation of old program group ids to new program group ids
-    private Map<SAMFileReader, Map<String, String>> samProgramGroupIdTranslation =
-            new HashMap<SAMFileReader, Map<String, String>>();
+    private Map<SAMFileHeader, Map<String, String>> samProgramGroupIdTranslation =
+            new IdentityHashMap<SAMFileHeader, Map<String, String>>();
 
     private boolean hasMergedSequenceDictionary = false;
 
-    //Translation of old sequence dictionary ids to new dictionary ids
-    private final Map<SAMFileReader, Map<Integer, Integer>> samSeqDictionaryIdTranslation =
-            new HashMap<SAMFileReader, Map<Integer, Integer>>();
-
-    // We don't always have access to the SAMFileReader in order to find the right mapping,
-    // so also store the mapping using theSAMFileHeader.
+    // Translation of old sequence dictionary ids to new dictionary ids
     // This is an IdentityHashMap because it can be quite expensive to compute the hashCode for
     // large SAMFileHeaders.  It is possible that two input files will have identical headers so that
     // the regular HashMap would fold them together, but the value stored in each of the two
@@ -100,6 +96,7 @@ public class SamFileHeaderMerger {
      *
      * @param readers sam file readers to combine
      * @param sortOrder sort order new header should have
+     * @deprecated replaced by SamFileHeaderMerger(Collection<SAMFileHeader>, SAMFileHeader.SortOrder, boolean)
      */
     public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder) {
         this(readers, sortOrder, false);
@@ -112,19 +109,33 @@ public class SamFileHeaderMerger {
      * @param sortOrder sort order new header should have
      * @param mergeDictionaries If true, merge sequence dictionaries in new header.  If false, require that
      * all input sequence dictionaries be identical.
+     * @deprecated replaced by SamFileHeaderMerger(Collection<SAMFileHeader>, SAMFileHeader.SortOrder, boolean)
      */
     public SamFileHeaderMerger(final Collection<SAMFileReader> readers, final SAMFileHeader.SortOrder sortOrder, final boolean mergeDictionaries) {
+        this(sortOrder, getHeadersFromReaders(readers), mergeDictionaries);
         this.readers = readers;
+    }
+
+    /**
+     * Create SAMFileHeader with additional information..  This is the preferred constructor.
+     *
+     * @param sortOrder sort order new header should have
+     * @param headers sam file headers to combine
+     * @param mergeDictionaries If true, merge sequence dictionaries in new header.  If false, require that
+     * all input sequence dictionaries be identical.
+     */
+    public SamFileHeaderMerger(final SAMFileHeader.SortOrder sortOrder, final Collection<SAMFileHeader> headers, final boolean mergeDictionaries) {
+        this.headers = headers;
         this.mergedHeader = new SAMFileHeader();
 
         SAMSequenceDictionary sequenceDictionary;
         try {
-            sequenceDictionary = getSequenceDictionary(readers);
+            sequenceDictionary = getSequenceDictionary(headers);
             this.hasMergedSequenceDictionary = false;
         }
         catch (SequenceUtil.SequenceListsDifferException pe) {
             if (mergeDictionaries) {
-                sequenceDictionary = mergeSequenceDictionaries(readers);
+                sequenceDictionary = mergeSequenceDictionaries(headers);
                 this.hasMergedSequenceDictionary = true;
             }
             else {
@@ -135,43 +146,53 @@ public class SamFileHeaderMerger {
         this.mergedHeader.setSequenceDictionary(sequenceDictionary);
 
         // Set program that creates input alignments
-        for (final SAMProgramRecord program : mergeProgramGroups(readers)) {
+        for (final SAMProgramRecord program : mergeProgramGroups(headers)) {
             this.mergedHeader.addProgramRecord(program);
         }
 
         // Set read groups for merged header
-        final List<SAMReadGroupRecord> readGroups = mergeReadGroups(readers);
+        final List<SAMReadGroupRecord> readGroups = mergeReadGroups(headers);
         this.mergedHeader.setReadGroups(readGroups);
         this.mergedHeader.setGroupOrder(SAMFileHeader.GroupOrder.none);
 
         this.mergedHeader.setSortOrder(sortOrder);
 
-        for (final SAMFileReader reader : readers) {
-            for (final String comment : reader.getFileHeader().getComments()) {
+        for (final SAMFileHeader header : headers) {
+            for (final String comment : header.getComments()) {
                 this.mergedHeader.addComment(comment);
             }
         }
     }
 
+    // Utilility method to make use with old constructor
+    private static List<SAMFileHeader> getHeadersFromReaders(Collection<SAMFileReader> readers) {
+        List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
+        for (SAMFileReader reader : readers) {
+            headers.add(reader.getFileHeader());
+        }
+        return headers;
+    }
+
+
     /**
      * Checks to see if there are clashes where different readers are using the same read
      * group IDs. If yes, then those IDs that collided are remapped.
      *
-     * @param readers readers to combine
+     * @param headers headers to combine
      * @return new list of read groups constructed from all the readers
      */
-    private List<SAMReadGroupRecord> mergeReadGroups(final Collection<SAMFileReader> readers) {
+    private List<SAMReadGroupRecord> mergeReadGroups(final Collection<SAMFileHeader> headers) {
         //prepare args for mergeHeaderRecords(..) call
         final HashSet<String> idsThatAreAlreadyTaken = new HashSet<String>();
 
-        final List<HeaderRecordAndFileReader<SAMReadGroupRecord>> readGroupsToProcess = new LinkedList<HeaderRecordAndFileReader<SAMReadGroupRecord>>();
-        for (final SAMFileReader reader : readers) {
-            for (final SAMReadGroupRecord readGroup : reader.getFileHeader().getReadGroups()) {
+        final List<HeaderRecordAndFileHeader<SAMReadGroupRecord>> readGroupsToProcess = new LinkedList<HeaderRecordAndFileHeader<SAMReadGroupRecord>>();
+        for (final SAMFileHeader header : headers) {
+            for (final SAMReadGroupRecord readGroup : header.getReadGroups()) {
                 //verify that there are no existing id collisions in this input file
                 if(!idsThatAreAlreadyTaken.add(readGroup.getId()))
-                    throw new PicardException("Input file: " + reader + " contains more than one RG with the same id (" + readGroup.getId() + ")");
+                    throw new PicardException("Input file: " + header + " contains more than one RG with the same id (" + readGroup.getId() + ")");
 
-                readGroupsToProcess.add(new HeaderRecordAndFileReader<SAMReadGroupRecord>(readGroup, reader));
+                readGroupsToProcess.add(new HeaderRecordAndFileHeader<SAMReadGroupRecord>(readGroup, header));
             }
             idsThatAreAlreadyTaken.clear();
         }
@@ -191,10 +212,10 @@ public class SamFileHeaderMerger {
      * Checks to see if there are clashes where different readers are using the same program
      * group IDs. If yes, then those IDs that collided are remapped.
      *
-     * @param readers readers to combine
+     * @param headers headers to combine
      * @return new list of program groups constructed from all the readers
      */
-    private List<SAMProgramRecord> mergeProgramGroups(final Collection<SAMFileReader> readers) {
+    private List<SAMProgramRecord> mergeProgramGroups(final Collection<SAMFileHeader> headers) {
 
         final List<SAMProgramRecord> overallResult = new LinkedList<SAMProgramRecord>();
 
@@ -202,14 +223,14 @@ public class SamFileHeaderMerger {
         final HashSet<String> idsThatAreAlreadyTaken = new HashSet<String>();
 
         //need to process all program groups
-        List<HeaderRecordAndFileReader<SAMProgramRecord>> programGroupsLeftToProcess = new LinkedList<HeaderRecordAndFileReader<SAMProgramRecord>>();
-        for (final SAMFileReader reader : readers) {
-            for (final SAMProgramRecord programGroup : reader.getFileHeader().getProgramRecords()) {
+        List<HeaderRecordAndFileHeader<SAMProgramRecord>> programGroupsLeftToProcess = new LinkedList<HeaderRecordAndFileHeader<SAMProgramRecord>>();
+        for (final SAMFileHeader header : headers) {
+            for (final SAMProgramRecord programGroup : header.getProgramRecords()) {
                 //verify that there are no existing id collisions in this input file
                 if(!idsThatAreAlreadyTaken.add(programGroup.getId()))
-                    throw new PicardException("Input file: " + reader + " contains more than one PG with the same id (" + programGroup.getId() + ")");
+                    throw new PicardException("Input file: " + header + " contains more than one PG with the same id (" + programGroup.getId() + ")");
 
-                programGroupsLeftToProcess.add(new HeaderRecordAndFileReader<SAMProgramRecord>(programGroup, reader));
+                programGroupsLeftToProcess.add(new HeaderRecordAndFileHeader<SAMProgramRecord>(programGroup, header));
             }
             idsThatAreAlreadyTaken.clear();
         }
@@ -223,9 +244,9 @@ public class SamFileHeaderMerger {
         //and so on until all program group headers are processed.
 
         //currentProgramGroups is the list of records to merge next. Start by merging the programGroups that don't have a PP attribute (eg. the tree roots).
-        List< HeaderRecordAndFileReader<SAMProgramRecord> > currentProgramGroups = new LinkedList<HeaderRecordAndFileReader<SAMProgramRecord>>();
-        for(final Iterator<HeaderRecordAndFileReader<SAMProgramRecord>> programGroupsLeftToProcessIterator = programGroupsLeftToProcess.iterator(); programGroupsLeftToProcessIterator.hasNext(); ) {
-            final HeaderRecordAndFileReader<SAMProgramRecord> pair = programGroupsLeftToProcessIterator.next();
+        List< HeaderRecordAndFileHeader<SAMProgramRecord> > currentProgramGroups = new LinkedList<HeaderRecordAndFileHeader<SAMProgramRecord>>();
+        for(final Iterator<HeaderRecordAndFileHeader<SAMProgramRecord>> programGroupsLeftToProcessIterator = programGroupsLeftToProcess.iterator(); programGroupsLeftToProcessIterator.hasNext(); ) {
+            final HeaderRecordAndFileHeader<SAMProgramRecord> pair = programGroupsLeftToProcessIterator.next();
             if(pair.getHeaderRecord().getAttribute(SAMProgramRecord.PREVIOUS_PROGRAM_GROUP_ID_TAG) == null) {
                 programGroupsLeftToProcessIterator.remove();
                 currentProgramGroups.add(pair);
@@ -248,14 +269,14 @@ public class SamFileHeaderMerger {
 
             //find all records in programGroupsLeftToProcess whose ppId points to a record that was just processed (eg. a record that's in currentProgramGroups),
             //and move them to the list of programGroupsToProcessNext.
-            LinkedList<HeaderRecordAndFileReader<SAMProgramRecord>> programGroupsToProcessNext = new LinkedList<HeaderRecordAndFileReader<SAMProgramRecord>>();
-            for(final Iterator<HeaderRecordAndFileReader<SAMProgramRecord>> programGroupsLeftToProcessIterator = programGroupsLeftToProcess.iterator(); programGroupsLeftToProcessIterator.hasNext(); ) {
-                final HeaderRecordAndFileReader<SAMProgramRecord> pairLeftToProcess = programGroupsLeftToProcessIterator.next();
+            LinkedList<HeaderRecordAndFileHeader<SAMProgramRecord>> programGroupsToProcessNext = new LinkedList<HeaderRecordAndFileHeader<SAMProgramRecord>>();
+            for(final Iterator<HeaderRecordAndFileHeader<SAMProgramRecord>> programGroupsLeftToProcessIterator = programGroupsLeftToProcess.iterator(); programGroupsLeftToProcessIterator.hasNext(); ) {
+                final HeaderRecordAndFileHeader<SAMProgramRecord> pairLeftToProcess = programGroupsLeftToProcessIterator.next();
                 final Object ppIdOfRecordLeftToProcess = pairLeftToProcess.getHeaderRecord().getAttribute(SAMProgramRecord.PREVIOUS_PROGRAM_GROUP_ID_TAG);
                 //find what currentProgramGroups this ppId points to (NOTE: they have to come from the same file)
-                for(final HeaderRecordAndFileReader<SAMProgramRecord> justProcessedPair : currentProgramGroups) {
+                for(final HeaderRecordAndFileHeader<SAMProgramRecord> justProcessedPair : currentProgramGroups) {
                     String idJustProcessed = justProcessedPair.getHeaderRecord().getId();
-                    if(pairLeftToProcess.getFileReader() == justProcessedPair.getFileReader() && ppIdOfRecordLeftToProcess.equals(idJustProcessed)) {
+                    if(pairLeftToProcess.getFileHeader() == justProcessedPair.getFileHeader() && ppIdOfRecordLeftToProcess.equals(idJustProcessed)) {
                         programGroupsLeftToProcessIterator.remove();
                         programGroupsToProcessNext.add(pairLeftToProcess);
                         break;
@@ -269,7 +290,7 @@ public class SamFileHeaderMerger {
         //verify that all records were processed
         if(!programGroupsLeftToProcess.isEmpty()) {
             StringBuffer errorMsg = new StringBuffer(programGroupsLeftToProcess.size() + " program groups weren't processed. Do their PP ids point to existing PGs? \n");
-            for( final HeaderRecordAndFileReader<SAMProgramRecord> pair : programGroupsLeftToProcess ) {
+            for( final HeaderRecordAndFileHeader<SAMProgramRecord> pair : programGroupsLeftToProcess ) {
                 SAMProgramRecord record = pair.getHeaderRecord();
                 errorMsg.append("@PG ID:"+record.getProgramGroupId()+" PN:"+record.getProgramName()+" PP:"+record.getPreviousProgramGroupId() +"\n");
             }
@@ -296,20 +317,20 @@ public class SamFileHeaderMerger {
      *
      * @return The list of translated records.
      */
-    private List<HeaderRecordAndFileReader<SAMProgramRecord>> translateIds(
-            List<HeaderRecordAndFileReader<SAMProgramRecord>> programGroups,
-            Map<SAMFileReader, Map<String, String>> idTranslationTable,
+    private List<HeaderRecordAndFileHeader<SAMProgramRecord>> translateIds(
+            List<HeaderRecordAndFileHeader<SAMProgramRecord>> programGroups,
+            Map<SAMFileHeader, Map<String, String>> idTranslationTable,
             boolean translatePpIds) {
 
         //go through programGroups and translate any IDs and PPs based on the idTranslationTable.
-        List<HeaderRecordAndFileReader<SAMProgramRecord>> result = new LinkedList<HeaderRecordAndFileReader<SAMProgramRecord>>();
-        for(final HeaderRecordAndFileReader<SAMProgramRecord> pair : programGroups ) {
+        List<HeaderRecordAndFileHeader<SAMProgramRecord>> result = new LinkedList<HeaderRecordAndFileHeader<SAMProgramRecord>>();
+        for(final HeaderRecordAndFileHeader<SAMProgramRecord> pair : programGroups ) {
             final SAMProgramRecord record = pair.getHeaderRecord();
             final String id = record.getProgramGroupId();
             final String ppId = (String) record.getAttribute(SAMProgramRecord.PREVIOUS_PROGRAM_GROUP_ID_TAG);
 
-            final SAMFileReader reader = pair.getFileReader();
-            final Map<String, String> translations = idTranslationTable.get(reader);
+            final SAMFileHeader header = pair.getFileHeader();
+            final Map<String, String> translations = idTranslationTable.get(header);
 
             //see if one or both ids need to be translated
             SAMProgramRecord translatedRecord = null;
@@ -333,7 +354,7 @@ public class SamFileHeaderMerger {
             }
 
             if(translatedRecord != null) {
-                result.add(new HeaderRecordAndFileReader<SAMProgramRecord>(translatedRecord, reader));
+                result.add(new HeaderRecordAndFileHeader<SAMProgramRecord>(translatedRecord, header));
             } else {
                 result.add(pair); //keep the original record
             }
@@ -364,48 +385,48 @@ public class SamFileHeaderMerger {
      *
      * @return True if there were collisions.
      */
-    private <RecordType extends AbstractSAMHeaderRecord> boolean mergeHeaderRecords(final List<HeaderRecordAndFileReader<RecordType>> headerRecords, HeaderRecordFactory<RecordType> headerRecordFactory,
-            final HashSet<String> idsThatAreAlreadyTaken, Map<SAMFileReader, Map<String, String>> idTranslationTable, List<RecordType> result) {
+    private <RecordType extends AbstractSAMHeaderRecord> boolean mergeHeaderRecords(final List<HeaderRecordAndFileHeader<RecordType>> headerRecords, HeaderRecordFactory<RecordType> headerRecordFactory,
+            final HashSet<String> idsThatAreAlreadyTaken, Map<SAMFileHeader, Map<String, String>> idTranslationTable, List<RecordType> result) {
 
         //The outer Map bins the header records by their ids. The nested Map further collapses
         //header records which, in addition to having the same id, also have identical attributes.
         //In other words, each key in the nested map represents one or more
         //header records which have both identical ids and identical attributes. The List of
-        //SAMFileReaders keeps track of which readers these header record(s) came from.
-        final Map<String, Map<RecordType, List<SAMFileReader>>> idToRecord =
-            new HashMap<String, Map<RecordType, List<SAMFileReader>>>();
+        //SAMFileHeaders keeps track of which readers these header record(s) came from.
+        final Map<String, Map<RecordType, List<SAMFileHeader>>> idToRecord =
+            new HashMap<String, Map<RecordType, List<SAMFileHeader>>>();
 
         //Populate the idToRecord and seenIds data structures
-        for (final HeaderRecordAndFileReader<RecordType> pair : headerRecords) {
+        for (final HeaderRecordAndFileHeader<RecordType> pair : headerRecords) {
             final RecordType record = pair.getHeaderRecord();
-            final SAMFileReader reader = pair.getFileReader();
+            final SAMFileHeader header = pair.getFileHeader();
             final String recordId = record.getId();
-            Map<RecordType, List<SAMFileReader>> recordsWithSameId = idToRecord.get(recordId);
+            Map<RecordType, List<SAMFileHeader>> recordsWithSameId = idToRecord.get(recordId);
             if(recordsWithSameId == null) {
-                recordsWithSameId = new LinkedHashMap<RecordType, List<SAMFileReader>>();
+                recordsWithSameId = new LinkedHashMap<RecordType, List<SAMFileHeader>>();
                 idToRecord.put(recordId, recordsWithSameId);
             }
 
-            List<SAMFileReader> fileReaders = recordsWithSameId.get(record);
-            if(fileReaders == null) {
-                fileReaders = new LinkedList<SAMFileReader>();
-                recordsWithSameId.put(record, fileReaders);
+            List<SAMFileHeader> fileHeaders = recordsWithSameId.get(record);
+            if(fileHeaders == null) {
+                fileHeaders = new LinkedList<SAMFileHeader>();
+                recordsWithSameId.put(record, fileHeaders);
             }
 
-            fileReaders.add(reader);
+            fileHeaders.add(header);
         }
 
         //Resolve any collisions between header records by remapping their ids.
         boolean hasCollisions = false;
-        for (final Map.Entry<String, Map<RecordType, List<SAMFileReader>>> entry : idToRecord.entrySet() )
+        for (final Map.Entry<String, Map<RecordType, List<SAMFileHeader>>> entry : idToRecord.entrySet() )
         {
             final String recordId = entry.getKey();
-            final Map<RecordType, List<SAMFileReader>> recordsWithSameId = entry.getValue();
+            final Map<RecordType, List<SAMFileHeader>> recordsWithSameId = entry.getValue();
 
 
-            for( Map.Entry<RecordType, List<SAMFileReader>> recordWithUniqueAttr : recordsWithSameId.entrySet()) {
+            for( Map.Entry<RecordType, List<SAMFileHeader>> recordWithUniqueAttr : recordsWithSameId.entrySet()) {
                 final RecordType record = recordWithUniqueAttr.getKey();
-                final List<SAMFileReader> fileReaders = recordWithUniqueAttr.getValue();
+                final List<SAMFileHeader> fileHeaders = recordWithUniqueAttr.getValue();
 
                 String newId;
                 if(!idsThatAreAlreadyTaken.contains(recordId)) {
@@ -425,11 +446,11 @@ public class SamFileHeaderMerger {
                     idsThatAreAlreadyTaken.add( newId );
                 }
 
-                for(SAMFileReader fileReader : fileReaders) {
-                    Map<String, String> readerTranslationTable = idTranslationTable.get(fileReader);
+                for(SAMFileHeader fileHeader : fileHeaders) {
+                    Map<String, String> readerTranslationTable = idTranslationTable.get(fileHeader);
                     if(readerTranslationTable == null) {
                         readerTranslationTable = new HashMap<String, String>();
-                        idTranslationTable.put(fileReader, readerTranslationTable);
+                        idTranslationTable.put(fileHeader, readerTranslationTable);
                     }
                     readerTranslationTable.put(recordId, newId);
                 }
@@ -443,16 +464,15 @@ public class SamFileHeaderMerger {
 
 
     /**
-     * Get the sequences off the SAMFileReader header.  Throws runtime exception if the sequence
+     * Get the sequences off the SAMFileHeader.  Throws runtime exception if the sequence
      * are different from one another.
      *
-     * @param readers readers to pull sequences from
+     * @param headers headers to pull sequences from
      * @return sequences from files.  Each file should have the same sequence
      */
-    private SAMSequenceDictionary getSequenceDictionary(final Collection<SAMFileReader> readers) {
+    private SAMSequenceDictionary getSequenceDictionary(final Collection<SAMFileHeader> headers) {
         SAMSequenceDictionary sequences = null;
-        for (final SAMFileReader reader : readers) {
-            final SAMFileHeader header = reader.getFileHeader();
+        for (final SAMFileHeader header : headers) {
 
             if (sequences == null) {
                 sequences = header.getSequenceDictionary();
@@ -467,19 +487,19 @@ public class SamFileHeaderMerger {
     }
 
     /**
-     * Get the sequences from the SAMFileReader header, and merge the resulting sequence dictionaries.
+     * Get the sequences from the SAMFileHeader, and merge the resulting sequence dictionaries.
      *
-     * @param readers readers to pull sequences from
+     * @param headers headers to pull sequences from
      * @return sequences from files.  Each file should have the same sequence
      */
-    private SAMSequenceDictionary mergeSequenceDictionaries(final Collection<SAMFileReader> readers) {
+    private SAMSequenceDictionary mergeSequenceDictionaries(final Collection<SAMFileHeader> headers) {
         SAMSequenceDictionary sequences = new SAMSequenceDictionary();
-        for (final SAMFileReader reader : readers) {
-            final SAMSequenceDictionary currentSequences = reader.getFileHeader().getSequenceDictionary();
+        for (final SAMFileHeader header : headers) {
+            final SAMSequenceDictionary currentSequences = header.getSequenceDictionary();
             sequences = mergeSequences(sequences, currentSequences);
         }
         // second pass, make a map of the original seqeunce id -> new sequence id
-        createSequenceMapping(readers, sequences);
+        createSequenceMapping(headers, sequences);
         return sequences;
     }
 
@@ -553,40 +573,58 @@ public class SamFileHeaderMerger {
     /**
      * create the sequence mapping.  This map is used to convert the unmerged header sequence ID's to the merged
      * list of sequence id's.
-     * @param readers the collections of readers.
+     * @param headers the collections of headers.
      * @param masterDictionary the superset dictionary we've created.
      */
-    private void createSequenceMapping(final Collection<SAMFileReader> readers, SAMSequenceDictionary masterDictionary) {
+    private void createSequenceMapping(final Collection<SAMFileHeader> headers, SAMSequenceDictionary masterDictionary) {
         LinkedList<String> resultingDictStr = new LinkedList<String>();
         for (SAMSequenceRecord r : masterDictionary.getSequences()) {
             resultingDictStr.add(r.getSequenceName());
         }
-        for (final SAMFileReader reader : readers) {
+        for (final SAMFileHeader header : headers) {
             Map<Integer, Integer> seqMap = new HashMap<Integer, Integer>();
-            SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
+            SAMSequenceDictionary dict = header.getSequenceDictionary();
             for (SAMSequenceRecord rec : dict.getSequences()) {
                 seqMap.put(rec.getSequenceIndex(), resultingDictStr.indexOf(rec.getSequenceName()));
             }
-            this.samSeqDictionaryIdTranslation.put(reader, seqMap);
-            this.samSeqDictionaryIdTranslationViaHeader.put(reader.getFileHeader(), seqMap);
+            this.samSeqDictionaryIdTranslationViaHeader.put(header, seqMap);
         }
     }
 
 
 
-    /** Returns the read group id that should be used for the input read and RG id. */
+    /**
+     * Returns the read group id that should be used for the input read and RG id.
+     *
+     * @deprecated replaced by getReadGroupId(SAMFileHeader, String)
+     * */
     public String getReadGroupId(final SAMFileReader reader, final String originalReadGroupId) {
-        return this.samReadGroupIdTranslation.get(reader).get(originalReadGroupId);
+        return getReadGroupId(reader.getFileHeader(), originalReadGroupId);
+    }
+
+    /** Returns the read group id that should be used for the input read and RG id. */
+    public String getReadGroupId(final SAMFileHeader header, final String originalReadGroupId) {
+        return this.samReadGroupIdTranslation.get(header).get(originalReadGroupId);
     }
 
     /**
      * @param reader one of the input files
      * @param originalProgramGroupId a program group ID from the above input file
      * @return new ID from the merged list of program groups in the output file
+     * @deprecated replaced by getProgramGroupId(SAMFileHeader, String)
      */
     public String getProgramGroupId(final SAMFileReader reader, final String originalProgramGroupId) {
-        return this.samProgramGroupIdTranslation.get(reader).get(originalProgramGroupId);
-        }
+        return getProgramGroupId(reader.getFileHeader(), originalProgramGroupId);
+    }
+
+    /**
+     * @param header one of the input headers
+     * @param originalProgramGroupId a program group ID from the above input file
+     * @return new ID from the merged list of program groups in the output file
+     */
+    public String getProgramGroupId(final SAMFileHeader header, final String originalProgramGroupId) {
+        return this.samProgramGroupIdTranslation.get(header).get(originalProgramGroupId);
+    }
 
     /** Returns true if there are read group duplicates within the merged headers. */
     public boolean hasReadGroupCollisions() {
@@ -608,9 +646,17 @@ public class SamFileHeaderMerger {
         return this.mergedHeader;
     }
 
-    /** Returns the collection of readers that this header merger is working with. */
+    /** Returns the collection of readers that this header merger is working with. May return null.
+     * @deprecated replaced by getHeaders()
+     */
     public Collection<SAMFileReader> getReaders() {
         return this.readers;
+    }
+
+    /** Returns the collection of readers that this header merger is working with.
+     */
+    public Collection<SAMFileHeader> getHeaders() {
+        return this.headers;
     }
 
     /**
@@ -618,19 +664,10 @@ public class SamFileHeaderMerger {
      * @param reader the reader
      * @param oldReferenceSequenceIndex the old sequence (also called reference) index
      * @return the new index value
+     * @deprecated replaced by getMergedSequenceIndex(SAMFileHeader, Integer)
      */
     public Integer getMergedSequenceIndex(SAMFileReader reader, Integer oldReferenceSequenceIndex) {
-        final Map<Integer, Integer> mapping = this.samSeqDictionaryIdTranslation.get(reader);
-        if (mapping == null) {
-            throw new PicardException("No sequence dictionary mapping available for reader: " + reader);
-        }
-
-        final Integer newIndex = mapping.get(oldReferenceSequenceIndex);
-        if (newIndex == null) {
-            throw new PicardException("No mapping for reference index " + oldReferenceSequenceIndex + " from reader: " + reader);
-        }
-
-        return newIndex;
+        return this.getMergedSequenceIndex(reader.getFileHeader(), oldReferenceSequenceIndex);
     }
 
     /**
@@ -671,22 +708,22 @@ public class SamFileHeaderMerger {
 
     /**
      * Struct that groups together a subclass of AbstractSAMHeaderRecord with the
-     * SAMFileReader that it came from.
+     * SAMFileHeader that it came from.
      */
-    private static class HeaderRecordAndFileReader<RecordType extends AbstractSAMHeaderRecord> {
+    private static class HeaderRecordAndFileHeader<RecordType extends AbstractSAMHeaderRecord> {
         private RecordType headerRecord;
-        private SAMFileReader samFileReader;
+        private SAMFileHeader samFileHeader;
 
-        public HeaderRecordAndFileReader(RecordType headerRecord, SAMFileReader samFileReader) {
+        public HeaderRecordAndFileHeader(RecordType headerRecord, SAMFileHeader samFileHeader) {
             this.headerRecord = headerRecord;
-            this.samFileReader = samFileReader;
+            this.samFileHeader = samFileHeader;
         }
 
         public RecordType getHeaderRecord() {
             return headerRecord;
         }
-        public SAMFileReader getFileReader() {
-            return samFileReader;
+        public SAMFileHeader getFileHeader() {
+            return samFileHeader;
         }
     }
 }

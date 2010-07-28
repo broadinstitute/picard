@@ -60,9 +60,13 @@ public class MergingSamRecordIteratorTest {
         readerList.add(samReader);
         readerList.add(samReader2);
 
-        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readerList, SAMFileHeader.SortOrder.coordinate);
+        final List<SAMFileHeader> headerList = new ArrayList<SAMFileHeader>();
+        headerList.add(samReader.getFileHeader());
+        headerList.add(samReader2.getFileHeader());
 
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, false);
+        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headerList, false);
+
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, readerList, false);
 
 
         int i = 0;
@@ -99,9 +103,13 @@ public class MergingSamRecordIteratorTest {
         readerList.add(samReader);
         readerList.add(samReader2);
 
-        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readerList, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headerList = new ArrayList<SAMFileHeader>();
+        headerList.add(samReader.getFileHeader());
+        headerList.add(samReader2.getFileHeader());
 
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, false);
+        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headerList, false);
+
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, readerList, false);
 
 
         int i = 0;
@@ -138,9 +146,13 @@ public class MergingSamRecordIteratorTest {
         readerList.add(samReader);
         readerList.add(samReader2);
 
-        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readerList, SAMFileHeader.SortOrder.unsorted);
+        final List<SAMFileHeader> headerList = new ArrayList<SAMFileHeader>();
+        headerList.add(samReader.getFileHeader());
+        headerList.add(samReader2.getFileHeader());
 
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, false);
+        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.unsorted, headerList, false);
+
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(fileHeaderMerger, readerList, false);
 
 
         int i = 0;
@@ -183,9 +195,13 @@ public class MergingSamRecordIteratorTest {
         readerList.add(samReader);
         readerList.add(samReader2);
 
-        final SamFileHeaderMerger samFileHeaderMerger = new SamFileHeaderMerger(readerList, SAMFileHeader.SortOrder.coordinate);
+        final List<SAMFileHeader> headerList = new ArrayList<SAMFileHeader>();
+        headerList.add(samReader.getFileHeader());
+        headerList.add(samReader2.getFileHeader());
 
-        new MergingSamRecordIterator(samFileHeaderMerger, false);
+        final SamFileHeaderMerger samFileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headerList, false);
+
+        new MergingSamRecordIterator(samFileHeaderMerger, readerList, false);
         Assert.fail("This method should throw exception before getting to this point");
     }
 
@@ -210,9 +226,13 @@ public class MergingSamRecordIteratorTest {
         readerList.add(samReader);
         readerList.add(samReader2);
 
-        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readerList, SAMFileHeader.SortOrder.coordinate);
+        final List<SAMFileHeader> headerList = new ArrayList<SAMFileHeader>();
+        headerList.add(samReader.getFileHeader());
+        headerList.add(samReader2.getFileHeader());
 
-        new MergingSamRecordIterator(fileHeaderMerger, false);
+        final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headerList, false);
+
+        new MergingSamRecordIterator(fileHeaderMerger, readerList, false);
         Assert.fail("This method should throw exception before getting to this point");
     }
 
@@ -233,8 +253,8 @@ public class MergingSamRecordIteratorTest {
         for (final String comment : comments2) {
             header.addComment(comment);
         }
-        final SamFileHeaderMerger merger = new SamFileHeaderMerger(Arrays.asList(builder1.getSamReader(), builder2.getSamReader()),
-                SAMFileHeader.SortOrder.coordinate);
+        final SamFileHeaderMerger merger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate,
+                Arrays.asList(builder1.getSamReader().getFileHeader(), builder2.getSamReader().getFileHeader()), false);
         final List<String> mergedComments = merger.getMergedHeader().getComments();
         Assert.assertEquals(mergedComments.size(), bothComments.size());
         for (final String comment : mergedComments) {

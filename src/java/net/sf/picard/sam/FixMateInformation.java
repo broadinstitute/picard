@@ -115,8 +115,12 @@ public class FixMateInformation extends CommandLineProgram {
             // Deal with merging if necessary
             Iterator<SAMRecord> tmp;
             if (INPUT.size() > 1) {
-                final SamFileHeaderMerger merger = new SamFileHeaderMerger(readers, SortOrder.unsorted, false);
-                tmp = new MergingSamRecordIterator(merger, false);
+                List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
+                for (SAMFileReader reader : readers) {
+                    headers.add(reader.getFileHeader());
+                }
+                final SamFileHeaderMerger merger = new SamFileHeaderMerger(SortOrder.unsorted, headers, false);
+                tmp = new MergingSamRecordIterator(merger, readers, false);
                 header = merger.getMergedHeader();
             }
             else {
