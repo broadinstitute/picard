@@ -39,6 +39,7 @@ import net.sf.samtools.util.CloseableIterator;
 public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     private final PriorityQueue<ComparableSamRecordIterator> pq;
     private final SamFileHeaderMerger samHeaderMerger;
+    private final Collection<SAMFileReader> readers;
     private final SAMFileHeader.SortOrder sortOrder;
     private final SAMRecordComparator comparator;
 
@@ -50,13 +51,24 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
      * provided by the header merger parameter.
      * @param headerMerger The merged header and contents of readers.
      * @param forcePresorted True to ensure that the iterator checks the headers of the readers for appropriate sort order.
+     * @deprecated replaced by (SamFileHeaderMerger, Collection<SAMFileReader>, boolean)
      */
     public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, final boolean forcePresorted) {
+        this(headerMerger, headerMerger.getReaders(), forcePresorted);
+    }
+
+    /**
+     * Constructs a new merging iterator with the same set of readers and sort order as
+     * provided by the header merger parameter.
+     * @param headerMerger The merged header and contents of readers.
+     * @param forcePresorted True to ensure that the iterator checks the headers of the readers for appropriate sort order.
+     */
+    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, Collection<SAMFileReader> readers, final boolean forcePresorted) {
         this.samHeaderMerger = headerMerger;
         this.sortOrder = headerMerger.getMergedHeader().getSortOrder();
         this.comparator = getComparator();
+        this.readers = readers;
 
-        final Collection<SAMFileReader> readers = headerMerger.getReaders();
         this.pq = new PriorityQueue<ComparableSamRecordIterator>(readers.size());
 
         for (final SAMFileReader reader : readers) {
@@ -64,7 +76,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
                     reader.getFileHeader().getSortOrder() != this.sortOrder){
                 throw new PicardException("Files are not compatible with sort order");
             }
-        }        
+        }
     }
 
     /**
@@ -76,7 +88,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     public void addIterator(final SAMFileReader reader, final CloseableIterator<SAMRecord> iterator) {
         if(iterationStarted)
             throw new PicardException("Cannot add another iterator; iteration has already begun");
-        if(!samHeaderMerger.getReaders().contains(reader))
+        if(!samHeaderMerger.getHeaders().contains(reader.getFileHeader()))
             throw new PicardException("All iterators to be merged must be accounted for in the SAM header merger");
         final ComparableSamRecordIterator comparableIterator = new ComparableSamRecordIterator(reader,iterator,comparator);
         addIfNotEmpty(comparableIterator);
@@ -86,7 +98,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     private void startIterationIfRequired() {
         if(initialized)
             return;
-        for(SAMFileReader reader: samHeaderMerger.getReaders())
+        for(SAMFileReader reader: readers)
             addIterator(reader,reader.iterator());
         iterationStarted = true;
     }
@@ -119,7 +131,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         if (this.samHeaderMerger.hasReadGroupCollisions()) {
             final String oldGroupId = (String) record.getAttribute(ReservedTagConstants.READ_GROUP_ID);
             if (oldGroupId != null ) {
-                final String newGroupId = this.samHeaderMerger.getReadGroupId(iterator.getReader(),oldGroupId);
+                final String newGroupId = this.samHeaderMerger.getReadGroupId(iterator.getReader().getFileHeader(),oldGroupId);
                 record.setAttribute(ReservedTagConstants.READ_GROUP_ID, newGroupId); 
                 }
         }
@@ -128,7 +140,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         if (this.samHeaderMerger.hasProgramGroupCollisions()) { 
             final String oldGroupId = (String) record.getAttribute(ReservedTagConstants.PROGRAM_GROUP_ID);
             if (oldGroupId != null ) {
-                final String newGroupId = this.samHeaderMerger.getProgramGroupId(iterator.getReader(),oldGroupId);
+                final String newGroupId = this.samHeaderMerger.getProgramGroupId(iterator.getReader().getFileHeader(),oldGroupId);
                 record.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, newGroupId); 
                 }
         }
@@ -136,11 +148,11 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         // Fix up the sequence indexes if needs be
         if (this.samHeaderMerger.hasMergedSequenceDictionary()) {
             if (record.getReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
-                record.setReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(),record.getReferenceIndex()));
+                record.setReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader().getFileHeader(),record.getReferenceIndex()));
             }
 
             if (record.getReadPairedFlag() && record.getMateReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
-                record.setMateReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader(),record.getMateReferenceIndex()));
+                record.setMateReferenceIndex(this.samHeaderMerger.getMergedSequenceIndex(iterator.getReader().getFileHeader(),record.getMateReferenceIndex()));
             }
         }
 

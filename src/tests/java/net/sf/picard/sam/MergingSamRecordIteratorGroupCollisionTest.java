@@ -24,6 +24,7 @@
 package net.sf.picard.sam;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import net.sf.samtools.AbstractSAMHeaderRecord;
@@ -79,13 +80,17 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<? extends AbstractSAMHeaderRecord> outputGroups = adapter.getGroups(headerMerger.getMergedHeader());
         Assert.assertEquals(outputGroups.size(), 1);
 
         Assert.assertTrue(adapter.equivalent(outputGroups.get(0),group0));
 
-        assertRecords(headerMerger, adapter, addReadGroup, "0", "0") ;
+        assertRecords(headerMerger, readers, adapter, addReadGroup, "0", "0") ;
     }
 
     /** Test for groups with same ID but different attributes */
@@ -109,13 +114,17 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<? extends AbstractSAMHeaderRecord> outputGroups = adapter.getGroups(headerMerger.getMergedHeader());
         Assert.assertEquals(outputGroups.size(), 2);
         Assert.assertTrue(adapter.equivalent(outputGroups.get(0),group0));
         Assert.assertTrue(adapter.equivalent(outputGroups.get(1),group1));
 
-        assertRecords(headerMerger, adapter, addReadGroup, "0", "0.1") ;
+        assertRecords(headerMerger, readers, adapter, addReadGroup, "0", "0.1") ;
     }
 
 
@@ -139,13 +148,17 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<? extends AbstractSAMHeaderRecord> outputGroups = adapter.getGroups(headerMerger.getMergedHeader());
         Assert.assertEquals(outputGroups.size(), 2);
         Assert.assertTrue(adapter.equivalent(outputGroups.get(0),group0));
         Assert.assertTrue(adapter.equivalent(outputGroups.get(1),group1));
 
-        assertRecords(headerMerger, adapter, addReadGroup, "0", "55") ;
+        assertRecords(headerMerger, readers, adapter, addReadGroup, "0", "55") ;
     }
 
 
@@ -170,13 +183,17 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<? extends AbstractSAMHeaderRecord> outputGroups = adapter.getGroups(headerMerger.getMergedHeader());
         Assert.assertEquals(outputGroups.size(), 2);
         Assert.assertTrue(adapter.equivalent(outputGroups.get(0),group0));
         Assert.assertTrue(adapter.equivalent(outputGroups.get(1),group1));
 
-        assertRecords(headerMerger, adapter, addReadGroup, "0", "55") ;
+        assertRecords(headerMerger, readers, adapter, addReadGroup, "0", "55") ;
     }
 
     @Test(dataProvider = "adapters")
@@ -228,13 +245,17 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<SAMProgramRecord> outputProgramGroups = headerMerger.getMergedHeader().getProgramRecords();
         Assert.assertEquals(outputProgramGroups.size(), 2);
         Assert.assertTrue(outputProgramGroups.get(0).equivalent(program1));
         Assert.assertTrue(outputProgramGroups.get(1).equivalent(program2));
 
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, false);
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, false);
         SAMRecord samRecord = iterator.next();
         Assert.assertEquals(samRecord.getAttribute(SAMTag.PG.name()), "0");
         samRecord = iterator.next();
@@ -244,8 +265,9 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         Assert.assertFalse(iterator.hasNext());
     }
 
-    private void assertRecords(SamFileHeaderMerger headerMerger, GroupAdapter adapter, boolean addReadGroup, String... attrs) {
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, addReadGroup);
+    private void assertRecords(SamFileHeaderMerger headerMerger, Collection<SAMFileReader> readers,
+                               GroupAdapter adapter, boolean addReadGroup, String... attrs) {
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, addReadGroup);
         for (int j=0 ; j < attrs.length ; j++) {
             SAMRecord samRecord = iterator.next();
             Assert.assertEquals(samRecord.getAttribute(adapter.getTagName()), attrs[j]);
@@ -291,14 +313,19 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder2.getSamReader());
         readers.add(builder3.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+        headers.add(readers.get(2).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<SAMProgramRecord> outputProgramGroups = headerMerger.getMergedHeader().getProgramRecords();
         Assert.assertEquals(outputProgramGroups.size(), 2);
         Assert.assertTrue(outputProgramGroups.get(0).equivalent(program1));
         Assert.assertTrue(outputProgramGroups.get(1).equivalent(program3));
 
 
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, false);
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, false);
         SAMRecord samRecord = iterator.next();
         Assert.assertEquals(samRecord.getAttribute(SAMTag.PG.name()), "0");
         samRecord = iterator.next();
@@ -334,7 +361,11 @@ public class MergingSamRecordIteratorGroupCollisionTest {
         readers.add(builder1.getSamReader());
         readers.add(builder2.getSamReader());
 
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.queryname);
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+        headers.add(readers.get(0).getFileHeader());
+        headers.add(readers.get(1).getFileHeader());
+
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.queryname, headers, false);
         final List<? extends AbstractSAMHeaderRecord> outputGroups = headerMerger.getMergedHeader().getReadGroups();
 
         //the merged read groups are sorted in order
@@ -414,7 +445,11 @@ public class MergingSamRecordIteratorGroupCollisionTest {
                 readers.add(samReader);
             }
 
-            final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.coordinate);
+            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+            for (SAMFileReader reader : readers) {
+                headers.add(reader.getFileHeader());
+            }
+            final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
             return fileHeaderMerger.getMergedHeader().getProgramRecords();
             }
 
@@ -460,8 +495,12 @@ public class MergingSamRecordIteratorGroupCollisionTest {
                 samReader.getFileHeader().setReadGroups(records);
                 readers.add(samReader);
             }
+            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
+            for (SAMFileReader reader : readers) {
+                headers.add(reader.getFileHeader());
+            }
 
-            final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.coordinate);
+            final SamFileHeaderMerger fileHeaderMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
             return fileHeaderMerger.getMergedHeader().getReadGroups();
         }
 

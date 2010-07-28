@@ -72,13 +72,13 @@ public class SamFileHeaderMergerTest {
     public void testMergedException() {
         File INPUT[] = {new File(TEST_DATA_DIR, "Chromosome1to10.bam"),
                         new File(TEST_DATA_DIR, "Chromosome5to9.bam")};
-        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
         for (final File inFile : INPUT) {
             IoUtil.assertFileIsReadable(inFile);
             final SAMFileReader in = new SAMFileReader(inFile);
-            readers.add(in);
+            headers.add(in.getFileHeader());
         }
-        new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted, false);
+        new SamFileHeaderMerger(SAMFileHeader.SortOrder.unsorted, headers, false);
     }
 
     /** Tests that we can successfully merge two files with */
@@ -87,16 +87,18 @@ public class SamFileHeaderMergerTest {
         File INPUT[] = {new File(TEST_DATA_DIR, "Chromosome1to10.bam"),
                         new File(TEST_DATA_DIR, "Chromosome5to9.bam")};
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
         for (final File inFile : INPUT) {
             IoUtil.assertFileIsReadable(inFile);
             final SAMFileReader in = new SAMFileReader(inFile);
             // We are now checking for zero-length reads, so suppress complaint about that.
             in.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
             readers.add(in);
+            headers.add(in.getFileHeader());
         }
         final MergingSamRecordIterator iterator;
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.unsorted, true);
-        iterator = new MergingSamRecordIterator(headerMerger, false);
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.unsorted, headers, true);
+        iterator = new MergingSamRecordIterator(headerMerger, readers, false);
         headerMerger.getMergedHeader();
 
         // count the total reads, and record read counts for each sequence
@@ -136,13 +138,12 @@ public class SamFileHeaderMergerTest {
         final String sd2 = sq2 + sq3 + sq4;
         SAMFileReader reader1 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd1)));
         SAMFileReader reader2 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd2)));
-        final List<SAMFileReader> inputReaders = Arrays.asList(reader1, reader2);
-        SamFileHeaderMerger merger = new SamFileHeaderMerger(inputReaders,
-                SAMFileHeader.SortOrder.coordinate, true);
+        final List<SAMFileHeader> inputHeaders = Arrays.asList(reader1.getFileHeader(), reader2.getFileHeader());
+        SamFileHeaderMerger merger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, inputHeaders, true);
         final SAMFileHeader mergedHeader = merger.getMergedHeader();
-        for (final SAMFileReader inputReader : inputReaders) {
+        for (final SAMFileHeader inputHeader : inputHeaders) {
             int prevTargetIndex = -1;
-            for (final SAMSequenceRecord sequenceRecord : inputReader.getFileHeader().getSequenceDictionary().getSequences()) {
+            for (final SAMSequenceRecord sequenceRecord : inputHeader.getSequenceDictionary().getSequences()) {
                 final int targetIndex = mergedHeader.getSequenceIndex(sequenceRecord.getSequenceName());
                 Assert.assertNotSame(targetIndex, -1);
                 Assert.assertTrue(prevTargetIndex < targetIndex);
@@ -163,16 +164,18 @@ public class SamFileHeaderMergerTest {
         }
 
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
         for (final File inFile : inputFiles) {
             IoUtil.assertFileIsReadable(inFile);
             final SAMFileReader in = new SAMFileReader(inFile);
             // We are now checking for zero-length reads, so suppress complaint about that.
             in.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
             readers.add(in);
+            headers.add(in.getFileHeader());
         }
         final MergingSamRecordIterator iterator;
-        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(readers, SAMFileHeader.SortOrder.coordinate, true);
-        iterator = new MergingSamRecordIterator(headerMerger, false);
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers,true);
+        iterator = new MergingSamRecordIterator(headerMerger, readers, false);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         SAMFileWriter writer = new SAMFileWriterFactory().makeSAMWriter(headerMerger.getMergedHeader(), true, baos);
@@ -213,7 +216,7 @@ public class SamFileHeaderMergerTest {
         final String sd2 = sq2 + sq3 + sq4 + sq1;
         SAMFileReader reader1 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd1)));
         SAMFileReader reader2 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd2)));
-        final List<SAMFileReader> inputReaders = Arrays.asList(reader1, reader2);
-        new SamFileHeaderMerger(inputReaders, SAMFileHeader.SortOrder.coordinate, true);
+        final List<SAMFileHeader> inputHeaders = Arrays.asList(reader1.getFileHeader(), reader2.getFileHeader());
+        new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, inputHeaders, true);
     }
 }
