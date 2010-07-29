@@ -73,6 +73,9 @@ public class MergeSamFiles extends CommandLineProgram {
             "runtime by ~20% when writing out a compressed BAM file.")
     public boolean USE_THREADING = false;
 
+    @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
+    public List<String> COMMENT = new ArrayList<String>();
+
     private static final int PROGRESS_INTERVAL = 1000000;
 
     /** Required main method implementation. */
@@ -131,6 +134,9 @@ public class MergeSamFiles extends CommandLineProgram {
             iterator = new MergingSamRecordIterator(headerMerger, readers, false);
             final SAMFileHeader header = headerMerger.getMergedHeader();
             header.setSortOrder(SORT_ORDER);
+            for (String comment : COMMENT) {
+                header.addComment(comment);
+            }
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
         }
 
