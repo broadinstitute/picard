@@ -76,7 +76,7 @@ public abstract class CommandLineProgram {
     @Option(doc = "Control verbosity of logging.")
     public Log.LogLevel VERBOSITY = Log.LogLevel.INFO;
 
-    @Option(doc = "Whether to suppress job-summary info on System.out.")
+    @Option(doc = "Whether to suppress job-summary info on System.err.")
     public Boolean QUIET = false;
 
     @Option(doc = "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT " +
@@ -142,7 +142,7 @@ public abstract class CommandLineProgram {
         }
         System.setProperty("java.io.tmpdir", TMP_DIR.getAbsolutePath());
         if (!QUIET) {
-            System.out.println("[" + new Date() + "] " + commandLine);
+            System.err.println("[" + new Date() + "] " + commandLine);
         }
         final int ret;
 
@@ -151,8 +151,8 @@ public abstract class CommandLineProgram {
         } finally {
             // Emit the time even if program throws
             if (!QUIET) {
-                System.out.println("[" + new Date() + "] " + getClass().getName() + " done.");
-                System.out.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+                System.err.println("[" + new Date() + "] " + getClass().getName() + " done.");
+                System.err.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
             }
         }
         return ret;

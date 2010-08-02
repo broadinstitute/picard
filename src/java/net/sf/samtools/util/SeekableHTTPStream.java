@@ -29,7 +29,7 @@ public class SeekableHTTPStream extends SeekableStream {
                 contentLength = Long.parseLong(contentLengthString);
             }
             catch (NumberFormatException ignored) {
-                System.out.println("WARNING: Invalid content length (" + contentLengthString + "  for: " + url);
+                System.err.println("WARNING: Invalid content length (" + contentLengthString + "  for: " + url);
                 contentLength = -1;
             }
         }

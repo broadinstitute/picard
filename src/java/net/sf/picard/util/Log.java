@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 /**
- * <p>A <em>wafer thin</em> wrapper around System.out that uses var-args to make it
+ * <p>A <em>wafer thin</em> wrapper around System.err that uses var-args to make it
  * much more efficient to call the logging methods in without having to
  * surround every call site with calls to Log.isXXXEnabled().  All the methods on this
  * class take a variable length list of arguments and, only if logging is enabled for
@@ -47,7 +47,7 @@ public final class Log {
 
     private final Class<?> clazz;
     private final String className;
-    private final PrintStream out = System.out;
+    private final PrintStream out = System.err;
 
     /**
      * Private constructor

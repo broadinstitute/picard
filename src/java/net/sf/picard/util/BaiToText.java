@@ -40,6 +40,9 @@ import java.io.File;
  * @author Martha Borkan
  */
 public class BaiToText extends CommandLineProgram {
+    private static final Log LOG = Log.getInstance(BaiToText.class);
+
+
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a textual form of a BAM index (.bai) file.\n";
 
@@ -70,18 +73,17 @@ public class BaiToText extends CommandLineProgram {
      * Write a textual version of an existing bam index file.
      */
     protected int doWork() {
-        final Log log = Log.getInstance(getClass());
 
         // Some quick parameter checking
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-        log.info("Reading input file and building index.");
+        LOG.info("Reading input file and building index.");
 
         final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT);
         instance.createIndex(OUTPUT, TEXTUAL, SORT);
 
-        log.info("Successfully wrote bam index file " + OUTPUT);
+        LOG.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
     }
 
@@ -89,7 +91,7 @@ public class BaiToText extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         if (INPUT.getName().endsWith(".bam")){
             INPUT = new File (IoUtil.basename(INPUT) + BAMIndex.BAMIndexSuffix);
-            System.out.println("Input must be index file, not bam file; Assuming input " + INPUT.getName());             
+            LOG.warn("Input must be index file, not bam file; Assuming input " + INPUT.getName());             
         }
         // set default output file - input-file.txt
         if (OUTPUT == null) {

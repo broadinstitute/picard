@@ -32,6 +32,7 @@ import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.FastqQualityFormat;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.SolexaQualityConverter;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
@@ -46,6 +47,7 @@ import java.io.File;
  * Input files can be in GZip format (end in .gz).
  */
 public class FastqToSam extends CommandLineProgram {
+    private static Log LOG = Log.getInstance(FastqToSam.class);
 
     @Usage 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
@@ -94,7 +96,7 @@ public class FastqToSam extends CommandLineProgram {
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
         final int readCount = (FASTQ2 == null) ?  doUnpaired() : doPaired();
-        System.out.println("Processed " + readCount + " fastq reads");
+        LOG.info("Processed " + readCount + " fastq reads");
         return 0;
     }
 

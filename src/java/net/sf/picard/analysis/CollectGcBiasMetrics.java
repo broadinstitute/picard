@@ -33,6 +33,7 @@ import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.metrics.MetricsFile;
@@ -58,6 +59,8 @@ import net.sf.picard.util.QualityUtil;
  * @author Tim Fennell
  */
 public class CollectGcBiasMetrics extends CommandLineProgram {
+    private static final Log LOG = Log.getInstance(CollectGcBiasMetrics.class);
+
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "net/sf/picard/analysis/gcBias.R";
 
@@ -152,7 +155,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                 }
             }
 
-            System.out.println("Processed: " + ref.getName());
+            LOG.info("Processed: " + ref.getName());
         }
 
         // Finish up the reads, presumably all unaligned
