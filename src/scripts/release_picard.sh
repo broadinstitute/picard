@@ -118,6 +118,8 @@ cp dist/sam-$RELEASE_ID.jar deploy/sam-jdk/$RELEASE_ID/
 
 chmod -R gu+rw javadoc deploy dist
 
+find javadoc deploy dist -type d -exec chmod g+s '{}' ';' 
+
 scp -p -r javadoc $USERNAME,picard@web.sourceforge.net:htdocs
 
 cd deploy
