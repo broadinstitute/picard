@@ -209,7 +209,7 @@ public class BlockCompressedOutputStream
      * Lower 16 bits is the byte offset into the uncompressed stream inside the block.
      */
     public long getFilePointer(){
-        return mBlockAddress << 16 | numUncompressedBytes;
+        return BlockCompressedFilePointerUtil.makeFilePointer(mBlockAddress, numUncompressedBytes);
     }
 
     /**

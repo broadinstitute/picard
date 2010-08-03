@@ -203,8 +203,8 @@ public class BlockCompressedInputStream extends InputStream {
         // Decode virtual file pointer
         // Upper 48 bits is the byte offset into the compressed stream of a block.
         // Lower 16 bits is the byte offset into the uncompressed stream inside the block.
-        final long compressedOffset = pos >> 16;
-        final int uncompressedOffset = (int) (pos & 0xFFFF);
+        final long compressedOffset = BlockCompressedFilePointerUtil.getBlockAddress(pos);
+        final int uncompressedOffset = BlockCompressedFilePointerUtil.getBlockOffset(pos);
         final int available;
         if (mBlockAddress == compressedOffset && mCurrentBlock != null) {
             available = mCurrentBlock.length;
@@ -239,13 +239,13 @@ public class BlockCompressedInputStream extends InputStream {
         if (mCurrentOffset == mCurrentBlock.length) {
             // If current offset is at the end of the current block, file pointer should point
             // to the beginning of the next block.
-            return (mBlockAddress + mLastBlockLength) << 16;
+            return BlockCompressedFilePointerUtil.makeFilePointer(mBlockAddress + mLastBlockLength, 0);
         }
-        return ((mBlockAddress << 16) | mCurrentOffset);
+        return BlockCompressedFilePointerUtil.makeFilePointer(mBlockAddress, mCurrentOffset);
     }
 
     public static long getFileBlock(final long bgzfOffset) {
-        return ((bgzfOffset >> 16L) & 0xFFFFFFFFFFFFL);
+        return BlockCompressedFilePointerUtil.getBlockAddress(bgzfOffset);
     }
     
     /**
