@@ -32,15 +32,22 @@ public class BlockCompressedFilePointerUtil {
     private static final int OFFSET_MASK = 0xffff;
     private static final long ADDRESS_MASK = 0xFFFFFFFFFFFFL;
 
+    public static final long MAX_BLOCK_ADDRESS = ADDRESS_MASK;
+    public static final int MAX_OFFSET = OFFSET_MASK;
+    
     /**
      * @param vfp1
      * @param vfp2
      * @return negative if vfp1 is earlier in file than vfp2, positive if it is later, 0 if equal.
      */
     public static int compare(final long vfp1, final long vfp2) {
+        if (vfp1 == vfp2) return 0;
+        // When treating as unsigned, negative number is > positive.
+        if (vfp1 < 0 && vfp2 >= 0) return 1;
+        if (vfp1 >= 0 && vfp2 < 0) return -1;
+        // Either both negative or both non-negative, so regular comparison works.
         if (vfp1 < vfp2) return -1;
-        if (vfp1 > vfp2) return 1;
-        return 0;
+        return 1; // vfp1 > vfp2
     }
 
     /**
@@ -49,6 +56,18 @@ public class BlockCompressedFilePointerUtil {
      * @return Virtual file pointer that embodies the input parameters.
      */
     static long makeFilePointer(final long blockAddress, final int blockOffset) {
+        if (blockOffset < 0) {
+            throw new IllegalArgumentException("Negative blockOffset " + blockOffset + " not allowed.");
+        }
+        if (blockAddress < 0) {
+            throw new IllegalArgumentException("Negative blockAddress " + blockAddress + " not allowed.");
+        }
+        if (blockOffset > MAX_OFFSET) {
+            throw new IllegalArgumentException("blockOffset " + blockOffset + " too large.");
+        }
+        if (blockAddress > MAX_BLOCK_ADDRESS) {
+            throw new IllegalArgumentException("blockAddress " + blockAddress + " too large.");
+        }
         return blockAddress << SHIFT_AMOUNT | blockOffset;
     }
 
@@ -66,5 +85,9 @@ public class BlockCompressedFilePointerUtil {
      */
     static int getBlockOffset(final long virtualFilePointer) {
         return (int) (virtualFilePointer & 0xFFFF);
+    }
+
+    public static String asString(final long vfp) {
+        return String.format("%d(0x%x): (block address: %d, offset: %d)", vfp, vfp, getBlockAddress(vfp), getBlockOffset(vfp));
     }
 }
