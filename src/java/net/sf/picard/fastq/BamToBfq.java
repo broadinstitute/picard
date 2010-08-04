@@ -56,6 +56,8 @@ public class BamToBfq extends CommandLineProgram {
     @Option(doc="Prefix to be stripped off the beginning of all read names  (to make them short enough to run in Maq)", optional=true) public String READ_NAME_PREFIX;
     @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true) public Boolean INCLUDE_NON_PF_READS = false;
     @Option(doc="Whether to clip adapters from the reads") public boolean CLIP_ADAPTERS = true;
+    @Option(doc="The number of bases from each read to write to the bfq file.  If this is non-null, then " +
+            "only the first BASES_TO_WRITE bases from each read will be written.", optional=true) public Integer BASES_TO_WRITE = null;
 
     protected int doWork() {
 
@@ -67,7 +69,7 @@ public class BamToBfq extends CommandLineProgram {
 
         BamToBfqWriter writer = new BamToBfqWriter(INPUT, outputPrefix, READS_TO_ALIGN,
                 READ_CHUNK_SIZE, PAIRED_RUN, RUN_BARCODE != null ? RUN_BARCODE + ":" : READ_NAME_PREFIX,
-                INCLUDE_NON_PF_READS, CLIP_ADAPTERS);
+                INCLUDE_NON_PF_READS, CLIP_ADAPTERS, BASES_TO_WRITE);
         writer.writeBfqFiles();
         return 0;
     }
