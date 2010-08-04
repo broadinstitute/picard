@@ -25,6 +25,7 @@ package net.sf.picard.fastq;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class BamToBfqWriter {
     private final Log log = Log.getInstance(BamToBfqWriter.class);
     private final boolean includeNonPfReads;
     private final boolean clipAdapters;
+    private final Integer basesToWrite;
 
     /**
      * Constructor
@@ -85,7 +87,7 @@ public class BamToBfqWriter {
      */
     public BamToBfqWriter(final File bamFile, final String outputPrefix, final Integer total,
                           final Integer chunk, final boolean pairedReads, String namePrefix,
-                          boolean includeNonPfReads, boolean clipAdapters) {
+                          boolean includeNonPfReads, boolean clipAdapters, Integer basesToWrite) {
 
         IoUtil.assertFileIsReadable(bamFile);
         this.bamFile = bamFile;
@@ -105,6 +107,7 @@ public class BamToBfqWriter {
         this.nameTrim = namePrefix != null ? namePrefix.length() : 0;
         this.includeNonPfReads = includeNonPfReads;
         this.clipAdapters = clipAdapters;
+        this.basesToWrite = basesToWrite;
     }
 
     /**
@@ -119,7 +122,7 @@ public class BamToBfqWriter {
      */
     public BamToBfqWriter(final File bamFile, final String outputPrefix, final boolean pairedReads,
                           String namePrefix, boolean includeNonPfReads) {
-        this(bamFile, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true);
+        this(bamFile, outputPrefix, null, null, pairedReads, namePrefix, includeNonPfReads, true, null);
     }
  
     /**
@@ -303,9 +306,9 @@ public class BamToBfqWriter {
                 retainedLength = Math.min(seqs.length, Math.max(SEED_REGION_LENGTH, trimPoint -1));
             }
         }
-        
+
         // Write the length of the sequence
-        codec.writeInt(seqs.length);
+        codec.writeInt(basesToWrite != null ? basesToWrite : seqs.length);
 
         // Calculate and write the sequence and qualities
         final byte[] seqsAndQuals = encodeSeqsAndQuals(seqs, quals, retainedLength);
@@ -313,10 +316,10 @@ public class BamToBfqWriter {
     }
 
     private byte[] encodeSeqsAndQuals(char[] seqs, char[] quals, int retainedLength) {
-        final byte[] seqsAndQuals = new byte[seqs.length];
+        final byte[] seqsAndQuals = new byte[basesToWrite == null ? seqs.length : basesToWrite];
 
         int seedRegionNoCallFixes = 0;
-        for (int i = 0; i < retainedLength; i++) {
+        for (int i = 0; i < retainedLength && i < seqsAndQuals.length; i++) {
             int quality = Math.min(quals[i]-33, 63);
             final int base;
             switch(seqs[i]) {
@@ -359,9 +362,10 @@ public class BamToBfqWriter {
             seqsAndQuals[i] = encodeBaseAndQuality(base, quality);
         }
         // rewrite clipped adapter with all A's of quality 1
-        for (int i = retainedLength; i < seqs.length; i++) {
+        for (int i = retainedLength; i < seqsAndQuals.length; i++) {
             seqsAndQuals[i] = encodeBaseAndQuality(0, 1);
         }
+
         return seqsAndQuals;
     }
 
