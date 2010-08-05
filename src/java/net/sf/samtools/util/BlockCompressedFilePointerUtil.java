@@ -25,7 +25,6 @@ package net.sf.samtools.util;
 
 /**
  * Static for manipulating virtual file pointers in BGZF files.
- * TODO: Make these work properly for very big files, where longs become negative. 
  */
 public class BlockCompressedFilePointerUtil {
     private static final int SHIFT_AMOUNT = 16;
@@ -84,7 +83,7 @@ public class BlockCompressedFilePointerUtil {
      * @return Offset into uncompressed block for this virtual file pointer.
      */
     static int getBlockOffset(final long virtualFilePointer) {
-        return (int) (virtualFilePointer & 0xFFFF);
+        return (int) (virtualFilePointer & OFFSET_MASK);
     }
 
     public static String asString(final long vfp) {
