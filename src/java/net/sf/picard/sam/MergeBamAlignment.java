@@ -31,6 +31,8 @@ import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A command-line tool to merge BAM/SAM alignment info from a third-party aligner with the data in an
@@ -74,6 +76,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc="The maximum number of insertions or deletions permitted for an alignment to be " +
             "included.  Alignments with more than this many insertions or deletions will be ignored.",
             shortName="MAX_GAPS") public int MAX_INSERTIONS_OR_DELETIONS = 1;
+    @Option(doc="Reserved alignment attributes (tags starting with X, Y, or Z) that should be " +
+            "brought over from the alignment data when merging.")
+    public List<String> ATTRIBUTES_TO_RETAIN = new ArrayList<String>();
 
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
@@ -97,7 +102,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
             JUMP_SIZE != null, ALIGNED_READS_ONLY, ALIGNED_BAM,
-            MAX_INSERTIONS_OR_DELETIONS);
+            MAX_INSERTIONS_OR_DELETIONS, ATTRIBUTES_TO_RETAIN);
         merger.mergeAlignment();
         return 0;
     }

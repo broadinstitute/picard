@@ -35,6 +35,8 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeSet;
 
 /**
@@ -61,6 +63,7 @@ public abstract class AbstractAlignmentMerger {
     private final boolean jumpingLibrary;
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
+    private final List<String> attributesToRetain = new ArrayList<String>();
 
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
@@ -78,11 +81,16 @@ public abstract class AbstractAlignmentMerger {
      * @param jumpingLibrary    Whether this is a jumping library
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
      * @param programRecord     Program record for taget file SAMRecords created.
+     * @param attributesToRetain  private attributes from the alignment record that should be
+     *                          included when merging.  This overrides the exclusion of
+     *                          attributes whose tags start with the reserved characters
+     *                          of X, Y, and Z
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean jumpingLibrary,
-                                   final boolean alignedReadsOnly, final SAMProgramRecord programRecord) {
+                                   final boolean alignedReadsOnly, final SAMProgramRecord programRecord,
+                                   final List<String> attributesToRetain) {
         this.unmappedBamFile = unmappedBamFile;
         this.targetBamFile = targetBamFile;
 
@@ -113,8 +121,32 @@ public abstract class AbstractAlignmentMerger {
             header.addProgramRecord(programRecord);
         }
         header.setSequenceDictionary(this.sequenceDictionary);
+        if (attributesToRetain != null) {
+            this.attributesToRetain.addAll(attributesToRetain);
+        }
 
     }
+
+    /**
+     * Constructor
+     *
+     * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
+     *                          include info on all the reads that did not map
+     * @param targetBamFile     The file to which to write the merged SAM records
+     * @param referenceFasta    The reference sequence for the map files
+     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence
+     * @param jumpingLibrary    Whether this is a jumping library
+     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
+     * @param programRecord     Program record for taget file SAMRecords created.
+     *
+    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
+                                   final File referenceFasta, final boolean clipAdapters,
+                                   final boolean bisulfiteSequence, final boolean jumpingLibrary,
+                                   final boolean alignedReadsOnly, final SAMProgramRecord programRecord) {
+        this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
+             jumpingLibrary, alignedReadsOnly, programRecord, null);
+    }*/
 
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
@@ -232,7 +264,8 @@ public abstract class AbstractAlignmentMerger {
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment) {
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
             // Copy over any non-reserved attributes.
-            if (RESERVED_ATTRIBUTE_STARTS.indexOf(attr.tag.charAt(0)) == -1) {
+            if (RESERVED_ATTRIBUTE_STARTS.indexOf(attr.tag.charAt(0)) == -1
+                    || attributesToRetain.contains(attr.tag)) {
                 rec.setAttribute(attr.tag, attr.value);
             }
         }
