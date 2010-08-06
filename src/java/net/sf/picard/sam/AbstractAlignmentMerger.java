@@ -139,14 +139,14 @@ public abstract class AbstractAlignmentMerger {
      * @param jumpingLibrary    Whether this is a jumping library
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
      * @param programRecord     Program record for taget file SAMRecords created.
-     *
+     */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean jumpingLibrary,
                                    final boolean alignedReadsOnly, final SAMProgramRecord programRecord) {
         this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
              jumpingLibrary, alignedReadsOnly, programRecord, null);
-    }*/
+    }
 
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
