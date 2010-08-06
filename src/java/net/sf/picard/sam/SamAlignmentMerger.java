@@ -9,6 +9,7 @@ import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,14 +43,19 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * @param alignedSamFile    The SAM file with alignment information
      * @param maxGaps           The maximum number of insertions or deletions permitted in an
      *                          alignment.  Alignments with more than this many gaps will be ignored.
+     * @param attributesToRetain  private attributes from the alignment record that should be
+     *                          included when merging.  This overrides the exclusion of
+     *                          attributes whose tags start with the reserved characters
+     *                          of X, Y, and Z
+     *
      */
     public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                  final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
                  final boolean pairedRun, final boolean jumpingLibrary, final boolean alignedReadsOnly,
-                 final File alignedSamFile, final int maxGaps) {
+                 final File alignedSamFile, final int maxGaps, final List<String> attributesToRetain) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-              jumpingLibrary, alignedReadsOnly, programRecord);
+              jumpingLibrary, alignedReadsOnly, programRecord, attributesToRetain);
 
         IoUtil.assertFileIsReadable(alignedSamFile);
         this.alignedSamFile = alignedSamFile;
@@ -63,6 +69,32 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
         }
         log.info("Processing SAM file: " + alignedSamFile.getAbsolutePath());
+    }
+
+    /**
+     * Constructor
+     *
+     * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
+     *                          include info on all the reads that did not map
+     * @param targetBamFile     The file to which to write the merged SAM records
+     * @param referenceFasta    The reference sequence for the map files
+     * @param programRecord     Program record for taget file SAMRecords created.
+     * @param clipAdapters      Whether adapters marked in BAM file are clipped from the read
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence
+     * @param pairedRun         Whether the run is a paired-end run
+     * @param jumpingLibrary    Whether this is a jumping library
+     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
+     * @param alignedSamFile    The SAM file with alignment information
+     * @param maxGaps           The maximum number of insertions or deletions permitted in an
+     *                          alignment.  Alignments with more than this many gaps will be ignored.
+     */
+    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
+                 final boolean pairedRun, final boolean jumpingLibrary, final boolean alignedReadsOnly,
+                 final File alignedSamFile, final int maxGaps) {
+
+        this(unmappedBamFile, targetBamFile, referenceFasta, programRecord, clipAdapters, bisulfiteSequence,
+              pairedRun, jumpingLibrary, alignedReadsOnly, alignedSamFile, maxGaps, null);
     }
 
 
