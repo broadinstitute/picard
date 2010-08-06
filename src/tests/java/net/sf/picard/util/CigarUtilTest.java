@@ -106,4 +106,36 @@ public class CigarUtilTest {
             {"Test 18s:second, later clip", 100, "8S42M", true, 48, "8S42M", 100},
         };
     }
+
+    @Test(dataProvider="addData")
+     public void addingSoftClippedBasesTest(final String testName, final String cigar, final boolean negativeStrand,
+                           final int threePrimeEnd, final int fivePrimeEnd, final String expectedCigar) throws IOException {
+
+        Assert.assertEquals(CigarUtil.addSoftClippedBasesToEndsOfCigar(codec.decode(cigar), negativeStrand,
+                threePrimeEnd, fivePrimeEnd).toString(), expectedCigar, testName);
+     }
+
+     @DataProvider(name = "addData")
+     private Object[][] getCigarAddingTestData() {
+         // numClippedBases = (readLength - clipPosition) +1
+         return new Object[][]{
+                 {"Add to 5' end only, +", "36M", false, 0, 5, "5S36M"},
+                 {"Add to 5' end only, -", "30M1I5M", true, 0, 5, "30M1I5M5S"},
+                 {"Add to 3' end only, +", "26M", false, 3, 0, "26M3S"},
+                 {"Add to 3' end only, -", "19M3D7M", true, 3, 0, "3S19M3D7M"},
+                 {"Add to 5' end already soft-clipped, +", "6S20M", false, 0, 5, "11S20M"},
+                 {"Add to 5' end already soft-clipped, -", "28M4S", true, 0, 5, "28M9S"},
+                 {"Add to 3' end already soft-clipped, +", "15M5I10M2S", false, 7, 0, "15M5I10M9S"},
+                 {"Add to 3' end already soft-clipped, -", "2S34M", true, 6, 0, "8S34M"},
+                 {"Add to 5' and 3' ends, no merging, +", "36M", false, 15, 30, "30S36M15S"},
+                 {"Add to 5' and 3' ends, no merging, -", "36M", true, 15, 30, "15S36M30S"},
+                 {"Add to 5' and 3' ends, merging 5' end, +", "5S31M", false, 15, 30, "35S31M15S"},
+                 {"Add to 5' and 3' ends, merging 5' end, -", "31M5S", true, 15, 30, "15S31M35S"},
+                 {"Add to 5' and 3' ends, merging 3' end, +", "20M6S", false, 10, 12, "12S20M16S"},
+                 {"Add to 5' and 3' ends, merging 3' end, -", "6S25M", true, 10, 12, "16S25M12S"},
+                 {"Add to 5' and 3' ends, merging both ends, +", "3S31M2S", false, 10, 15, "18S31M12S"},
+                 {"Add to 5' and 3' ends, merging both ends, -", "2S26M8S", true, 10, 12, "12S26M20S"}
+         };
+     }
+
 }
