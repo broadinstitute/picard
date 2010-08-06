@@ -198,4 +198,47 @@ public class CigarUtil {
         }
         return true;
     }
+
+    /**
+     * Adds additional soft-clipped bases at the 3' and/or 5' end of the cigar.  Does not
+     * change the existing cigar except to merge the newly added soft-clipped bases if the
+     * element at the end of the cigar being modified is also a soft-clip.
+     *
+     * @param cigar             The cigar on which to base the new cigar
+     * @param negativeStrand    Whether the read is on the negative strand
+     * @param threePrimeEnd     number of soft-clipped bases to add to the 3' end of the read
+     * @param fivePrimeEnd      number of soft-clipped bases to add to the 5' end of the read
+     */
+    public static Cigar addSoftClippedBasesToEndsOfCigar(Cigar cigar, boolean negativeStrand,
+                                                         final int threePrimeEnd, final int fivePrimeEnd) {
+
+        List<CigarElement> newCigar = new ArrayList<CigarElement>(cigar.getCigarElements());
+        if (negativeStrand) {
+            Collections.reverse(newCigar);
+        }
+
+        if (threePrimeEnd > 0) {
+            int last = newCigar.size()-1;
+            int bases = threePrimeEnd;
+            if (newCigar.get(last).getOperator() == CigarOperator.SOFT_CLIP) {
+                CigarElement oldSoftClip = newCigar.remove(last);
+                bases += oldSoftClip.getLength();
+            }
+            newCigar.add(new CigarElement(bases, CigarOperator.SOFT_CLIP));
+        }
+
+        if (fivePrimeEnd > 0) {
+            int bases = fivePrimeEnd;
+            if (newCigar.get(0).getOperator() == CigarOperator.SOFT_CLIP) {
+                CigarElement oldSoftClip = newCigar.remove(0);
+                bases += oldSoftClip.getLength();
+            }
+            newCigar.add(0, new CigarElement(bases, CigarOperator.SOFT_CLIP));
+        }
+
+        if (negativeStrand) {
+            Collections.reverse(newCigar);
+        }
+        return new Cigar(newCigar);
+    }
 }
