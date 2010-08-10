@@ -186,7 +186,24 @@ public class SamFileHeaderMergerTest {
 
         String actual_output = StringUtil.bytesToString(baos.toByteArray());
 
-        Assert.assertEquals(actual_output, expected_output);
+        List<String> actual = Arrays.asList(actual_output.split("\\n"));
+        List<String> expected = Arrays.asList(expected_output.split("\\n"));
+        for (int i = 0; i < expected.size(); i++) {
+            if (expected.get(i).startsWith("@")) {
+                Assert.assertEquals(actual.get(i), expected.get(i));
+            }
+            else
+            {
+                List<String> expectedSamParts = Arrays.asList(expected.get(i).split("\\s*"));
+                List<String> actualSamParts = Arrays.asList(actual.get(i).split("\\s*"));
+                for (String exp : expectedSamParts) {
+                    Assert.assertTrue(actualSamParts.contains(exp));
+                }
+                for (String act : actualSamParts) {
+                    Assert.assertTrue(expectedSamParts.contains(act));
+                }
+            }
+        }
     }
 
     @DataProvider(name="data")
