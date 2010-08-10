@@ -969,23 +969,20 @@ public class SAMRecord implements Cloneable
                     SAMTagUtil.getSingleton().makeStringTag(tag));
         }
         if (mAttributes == null) {
-            mAttributes = new ArrayList<SAMBinaryTagAndValue>();
+            mAttributes = new LinkedList<SAMBinaryTagAndValue>();
         }
-        int i;
-        for (i = 0; i < mAttributes.size(); ++i) {
-            if (mAttributes.get(i).tag == tag) {
+
+        for (Iterator<SAMBinaryTagAndValue> it = mAttributes.iterator(); it.hasNext();) {
+            SAMBinaryTagAndValue tv = it.next();
+            if (tv.tag == tag) {
+                it.remove();
                 break;
             }
         }
-        if (i < mAttributes.size()) {
-            if (value != null) {
-                mAttributes.set(i, new SAMBinaryTagAndValue(tag, value));
-            } else {
-                mAttributes.remove(i);
-            }
-        } else if (value != null) {
+        if (value != null) {
             mAttributes.add(new SAMBinaryTagAndValue(tag, value));
         }
+
     }
 
     /**
@@ -1525,7 +1522,7 @@ public class SAMRecord implements Cloneable
     public Object clone() throws CloneNotSupportedException {
         final SAMRecord newRecord = (SAMRecord)super.clone();
         if (mAttributes != null) {
-            newRecord.mAttributes = (ArrayList)((ArrayList)mAttributes).clone();
+            newRecord.mAttributes = (LinkedList)((LinkedList)mAttributes).clone();
         }
         return newRecord;
     }
