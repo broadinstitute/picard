@@ -31,6 +31,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.Histogram;
+import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMValidationError.Type;
@@ -68,6 +69,8 @@ public class SamFileValidator {
     private boolean ignoreWarnings = false;
     private boolean bisulfiteSequenced = false;
     private boolean sequenceDictionaryEmptyAndNoWarningEmitted = false;
+
+    private final static Log log = Log.getInstance(SamFileValidator.class);
 
     public SamFileValidator(final PrintWriter out) {
         this.out = out;
@@ -203,6 +206,9 @@ public class SamFileValidator {
 
                 }
                 recordNumber++;
+                if (recordNumber % 10000000 == 0) {
+                    log.info(recordNumber + " reads validated.");
+                }
             }
         } catch (SAMFormatException e) {
             // increment record number because the iterator behind the SAMFileReader
