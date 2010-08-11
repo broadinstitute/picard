@@ -41,8 +41,8 @@ import java.util.Random;
 
 public class SortingCollectionTest {
     // Create a separate directory for files so it is possible to confirm that the directory is emptied
-    private final File tmpDir = new File(System.getProperty("java.io.tmpdir"), "SortingCollectionTest");
-
+    private final File tmpDir = new File(System.getProperty("java.io.tmpdir") + "/" + System.getProperty("user.name"), 
+            "SortingCollectionTest");
     @BeforeTest void setup() {
         // Clear out any existing files if the directory exists
         if (tmpDir.exists()) {
