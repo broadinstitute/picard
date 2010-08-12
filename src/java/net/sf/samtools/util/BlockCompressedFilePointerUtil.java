@@ -50,6 +50,15 @@ public class BlockCompressedFilePointerUtil {
     }
 
     /**
+     * @return true if vfp2 points to somewhere in the BGZF block immediately following vfp1's BGZF block.
+     */
+    public static boolean areInAdjacentBlocks(final long vfp1, final long vfp2) {
+        final long block1 = getBlockAddress(vfp1);
+        final long block2 = getBlockAddress(vfp2);
+        return (block1 + 1 == block2);        
+    }
+
+    /**
      * @param blockAddress File offset of start of BGZF block.
      * @param blockOffset Offset into uncompressed block.
      * @return Virtual file pointer that embodies the input parameters.
@@ -74,7 +83,7 @@ public class BlockCompressedFilePointerUtil {
      * @param virtualFilePointer
      * @return File offset of start of BGZF block for this virtual file pointer.
      */
-    static long getBlockAddress(final long virtualFilePointer) {
+    public static long getBlockAddress(final long virtualFilePointer) {
         return (virtualFilePointer >> SHIFT_AMOUNT) & ADDRESS_MASK;
     }
 
@@ -82,7 +91,7 @@ public class BlockCompressedFilePointerUtil {
      * @param virtualFilePointer
      * @return Offset into uncompressed block for this virtual file pointer.
      */
-    static int getBlockOffset(final long virtualFilePointer) {
+    public static int getBlockOffset(final long virtualFilePointer) {
         return (int) (virtualFilePointer & OFFSET_MASK);
     }
 
