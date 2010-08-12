@@ -27,8 +27,6 @@ import net.sf.samtools.util.StringUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 
@@ -287,7 +285,7 @@ class BAMRecord
     }
 
     @Override
-    protected List<SAMBinaryTagAndValue> getBinaryAttributes() {
+    protected SAMBinaryTagAndValue getBinaryAttributes() {
         if (!mAttributesDecoded) {
             decodeAttributes();
         }
@@ -299,10 +297,10 @@ class BAMRecord
             return;
         }
         mAttributesDecoded = true;
-        final List<SAMBinaryTagAndValue> attributes = new LinkedList<SAMBinaryTagAndValue>();
+        SAMBinaryTagAndValue attributes = null;
         final int tagsOffset = readNameSize() + cigarSize() + basesSize() + qualsSize();
         final int tagsSize = mRestOfBinaryData.length - tagsOffset;
-        BinaryTagCodec.readTags(attributes, mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
+        attributes = BinaryTagCodec.readTags(attributes, mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
         setAttributes(attributes);
     }
 

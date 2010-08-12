@@ -98,11 +98,11 @@ class SAMTextWriter extends SAMFileWriterImpl {
             out.write(alignment.getReadString());
             out.write(FIELD_SEPARATOR);
             out.write(alignment.getBaseQualityString());
-            if (alignment.getBinaryAttributes() != null) {
-                for (final SAMBinaryTagAndValue attribute : alignment.getBinaryAttributes()) {
-                    out.write(FIELD_SEPARATOR);
-                    out.write(tagCodec.encode(tagUtil.makeStringTag(attribute.tag), attribute.value));
-                }
+            SAMBinaryTagAndValue attribute = alignment.getBinaryAttributes();
+            while (attribute != null) {
+                out.write(FIELD_SEPARATOR);
+                out.write(tagCodec.encode(tagUtil.makeStringTag(attribute.tag), attribute.value));
+                attribute = attribute.getNext();
             }
             out.write("\n");
 

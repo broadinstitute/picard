@@ -83,10 +83,10 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
             // binary attribute size already known, don't need to compute.
             blockSize += attributesSize;
         } else {
-            if (alignment.getBinaryAttributes() != null) {
-                for (final SAMBinaryTagAndValue attribute : alignment.getBinaryAttributes()) {
-                    blockSize += (BinaryTagCodec.getTagSize(attribute.value));
-                }
+            SAMBinaryTagAndValue attribute = alignment.getBinaryAttributes();
+            while (attribute != null) {
+                blockSize += (BinaryTagCodec.getTagSize(attribute.value));
+                attribute = attribute.getNext();
             }
         }
 
@@ -139,10 +139,10 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
                 Arrays.fill(qualities, (byte) 0xFF);
             }
             this.binaryCodec.writeBytes(qualities);
-            if (alignment.getBinaryAttributes() != null) {
-                for (final SAMBinaryTagAndValue attribute : alignment.getBinaryAttributes()) {
-                    this.binaryTagCodec.writeTag(attribute.tag, attribute.value);
-                }
+            SAMBinaryTagAndValue attribute = alignment.getBinaryAttributes();
+            while (attribute != null) {
+                this.binaryTagCodec.writeTag(attribute.tag, attribute.value);
+                attribute = attribute.getNext();
             }
         }
     }

@@ -152,7 +152,7 @@ public class SAMRecord implements Cloneable
     private String mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
     private int mMateAlignmentStart = 0;
     private int mInferredInsertSize = 0;
-    private List<SAMBinaryTagAndValue> mAttributes = null;
+    private SAMBinaryTagAndValue mAttributes = null;
     private Integer mReferenceIndex = null;
     private Integer mMateReferenceIndex = null;
     private Integer mIndexingBin = null;
@@ -933,13 +933,12 @@ public class SAMRecord implements Cloneable
     }
 
     protected Object getAttribute(final short tag) {
-        if (mAttributes == null) {
-            return null;
-        }
-        for (final SAMBinaryTagAndValue tagAndValue : mAttributes) {
-            if (tagAndValue.tag == tag) {
-                return tagAndValue.value;
+        SAMBinaryTagAndValue next = mAttributes;
+        while (next != null) {
+            if (next.tag == tag) {
+                return next.value;
             }
+            next = next.getNext();
         }
         return null;
     }
@@ -968,45 +967,56 @@ public class SAMRecord implements Cloneable
             throw new SAMException("Attribute type " + value.getClass() + " not supported. Tag: " +
                     SAMTagUtil.getSingleton().makeStringTag(tag));
         }
+        // It's a new tag
         if (mAttributes == null) {
-            mAttributes = new LinkedList<SAMBinaryTagAndValue>();
+            mAttributes = new SAMBinaryTagAndValue(tag, value);
         }
+        else {
+            SAMBinaryTagAndValue previous = null;
+            SAMBinaryTagAndValue current = mAttributes;
 
-        for (Iterator<SAMBinaryTagAndValue> it = mAttributes.iterator(); it.hasNext();) {
-            SAMBinaryTagAndValue tv = it.next();
-            if (tv.tag == tag) {
-                it.remove();
-                break;
+            while (current != null) {
+                if (current.tag == tag) {
+                    if (previous != null) {
+                        previous.replaceNext(current.getNext());
+                    }
+                    else {
+                        mAttributes = current.getNext();
+                    }
+                    break;
+                }
+                else {
+                    previous = current;
+                }
+                current = current.getNext();
+            }
+            if (value != null) {
+                final SAMBinaryTagAndValue newHead = new SAMBinaryTagAndValue(tag, value);
+                newHead.setNext(mAttributes);
+                mAttributes = newHead;
             }
         }
-        if (value != null) {
-            mAttributes.add(new SAMBinaryTagAndValue(tag, value));
-        }
-
     }
 
     /**
      * Removes all attributes.
      */
     public void clearAttributes() {
-        mAttributes.clear();
+        mAttributes = null;
     }
 
     /**
-     * Replace any existing attributes with the given list.  Does not copy the list
-     * but installs it directly.
+     * Replace any existing attributes with the given linked item.
      */
-    protected void setAttributes(final List<SAMBinaryTagAndValue> attributes) {
+    protected void setAttributes(final SAMBinaryTagAndValue attributes) {
         mAttributes = attributes;
     }
+
     /**
-     * @return List of all tags on this record.  Returns null if there are no tags.
+     * @return Pointer to the first of the tags.  Returns null if there are no tags.
      */
-    protected List<SAMBinaryTagAndValue> getBinaryAttributes() {
-        if (mAttributes == null || mAttributes.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(mAttributes);
+    protected SAMBinaryTagAndValue getBinaryAttributes() {
+        return mAttributes;
     }
 
     /**
@@ -1026,11 +1036,12 @@ public class SAMRecord implements Cloneable
      * @return list of {tag, value} tuples
      */
     public List<SAMTagAndValue> getAttributes() {
-        final List<SAMBinaryTagAndValue> binaryAttributes = getBinaryAttributes();
-        final List<SAMTagAndValue> ret = new ArrayList<SAMTagAndValue>(binaryAttributes.size());
-        for (final SAMBinaryTagAndValue tagAndValue : binaryAttributes) {
-            ret.add(new SAMTagAndValue(SAMTagUtil.getSingleton().makeStringTag(tagAndValue.tag),
-                    tagAndValue.value));
+        SAMBinaryTagAndValue binaryAttributes = getBinaryAttributes();
+        final List<SAMTagAndValue> ret = new ArrayList<SAMTagAndValue>();
+        while (binaryAttributes != null) {
+            ret.add(new SAMTagAndValue(SAMTagUtil.getSingleton().makeStringTag(binaryAttributes.tag),
+                    binaryAttributes.value));
+            binaryAttributes = binaryAttributes.getNext();
         }
         return ret;
     }
@@ -1108,8 +1119,10 @@ public class SAMRecord implements Cloneable
         addField(buffer, getReadString(), null, "*");
         addField(buffer, getBaseQualityString(), null, "*");
         if (mAttributes != null) {
-            for (final SAMBinaryTagAndValue entry : getBinaryAttributes()) {
+            SAMBinaryTagAndValue entry = getBinaryAttributes();
+            while (entry != null) {
                 addField(buffer, formatTagValue(entry.tag, entry.value));
+                entry = entry.getNext();
             }
         }
         return buffer.toString();
@@ -1522,7 +1535,15 @@ public class SAMRecord implements Cloneable
     public Object clone() throws CloneNotSupportedException {
         final SAMRecord newRecord = (SAMRecord)super.clone();
         if (mAttributes != null) {
-            newRecord.mAttributes = (LinkedList)((LinkedList)mAttributes).clone();
+            SAMBinaryTagAndValue newHead = mAttributes.clone();
+            SAMBinaryTagAndValue next = mAttributes.getNext();
+            while (next != null) {
+                SAMBinaryTagAndValue nextClone = next.clone();
+                nextClone.setNext(newHead);
+                newHead = nextClone;
+            }
+
+            newRecord.mAttributes = newHead;
         }
         return newRecord;
     }
