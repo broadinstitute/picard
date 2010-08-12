@@ -969,7 +969,9 @@ public class SAMRecord implements Cloneable
         }
         // It's a new tag
         if (mAttributes == null) {
-            mAttributes = new SAMBinaryTagAndValue(tag, value);
+            if (value != null) {
+                mAttributes = new SAMBinaryTagAndValue(tag, value);
+            }
         }
         else {
             SAMBinaryTagAndValue previous = null;
