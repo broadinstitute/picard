@@ -71,7 +71,9 @@ public abstract class CommandLineProgram {
                     "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM")));
 
     @Option
-    public File TMP_DIR = new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name"));
+    public File TMP_DIR = (System.getProperty("java.io.tmpdir").endsWith("/" + System.getProperty("user.name"))?
+            new File(System.getProperty("java.io.tmpdir")):
+            new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name")));
 
     @Option(doc = "Control verbosity of logging.")
     public Log.LogLevel VERBOSITY = Log.LogLevel.INFO;
