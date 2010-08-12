@@ -22,16 +22,14 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package net.sf.picard.sam;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BamIndexerForExistingBai;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.BAMIndexer;
 
 import java.io.File;
 
@@ -64,24 +62,9 @@ public class BamIndexStats extends CommandLineProgram {
      */
     protected int doWork() {
 
-        // Some quick parameter checking
         IoUtil.assertFileIsReadable(INPUT);
-
-        final BamIndexerForExistingBai instance = new BamIndexerForExistingBai(INPUT);
-        instance.indexStats();
+        BAMIndexer.printIndexStats(INPUT);
 
         return 0;
-    }
-
-    @Override
-    protected String[] customCommandLineValidation() {
-
-        // make sure input is BAM file not SAM
-        final SAMFileReader bam = new SAMFileReader(INPUT);
-        if (!bam.isBinary()){
-            return new String[] {"Input file must be bam file, not sam file"};
-        }
-        // Check that bai file exists is in instance.indexStats() call above
-        return null;
     }
 }

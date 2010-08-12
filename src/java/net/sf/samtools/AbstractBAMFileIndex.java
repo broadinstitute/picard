@@ -55,13 +55,21 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      */
     private static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};
 
+    /**
+     * Reports the maximum number of bins that can appear in a BAM file.
+     */
+    public static final int MAX_BINS = 37450;   // =(8^6-1)/7+1
+    
     public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
 
     private final File mFile;
     private MappedByteBuffer mFileBuffer;
 
-    protected AbstractBAMFileIndex(final File file) {
+    private SAMSequenceDictionary mBamDictionary = null;
+
+    protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
         mFile = file;
+        mBamDictionary = dictionary;
         if (file != null){
             open();
         }
@@ -71,7 +79,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * Get the number of levels employed by this index.
      * @return Number of levels in this index.
      */
-    public int getNumIndexLevels() {
+    public static int getNumIndexLevels() {
         return LEVEL_STARTS.length;
     }
 
@@ -80,7 +88,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * @param levelNumber Level number.  0-based.
      * @return The first bin in this level.
      */
-    public int getFirstBinInLevel(final int levelNumber) {
+    public static int getFirstBinInLevel(final int levelNumber) {
         return LEVEL_STARTS[levelNumber];
     }
 
@@ -231,7 +239,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             throw new SAMException("Cannot query a closed index file");
         seek(4);
 
-        List<Bin> bins = null;
+        Bin[] bins = null;
         LinearIndex linearIndex = null;
         List<Chunk> metaDataChunks = new ArrayList<Chunk>();
 
@@ -249,9 +257,9 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         skipToSequence(referenceSequence);
 
         final int binCount = readInteger();
-        bins = new ArrayList<Bin>(binCount);
+        bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
-            List<Chunk> chunks = new ArrayList<Chunk>();
+            List<Chunk> chunks = new ArrayList<Chunk>();  // todo LinkedList ?
             final int indexBin = readInteger();
             final int nChunks = readInteger();
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
@@ -272,16 +280,15 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
                     lastChunk = new Chunk(chunkBegin, chunkEnd);
                     metaDataChunks.add(lastChunk);
                 }
+                continue; // don't create a Bin
             } else {
                 skipBytes(16 * nChunks);
             }
             Bin bin = new Bin(referenceSequence, indexBin);
             bin.setChunkList(chunks);
             bin.setLastChunk(lastChunk);
-            bins.add(bin);
+            bins[bin.getBinNumber()] = bin;
         }
-        // Reorder the bins in binNumber order.
-        Collections.sort(bins);
 
         final int nLinearBins = readInteger();
 
@@ -299,7 +306,29 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
         linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
 
-        return new BAMIndexContent(referenceSequence, bins, metaDataChunks, linearIndex);
+        return new BAMIndexContent(referenceSequence, bins, binCount, metaDataChunks, linearIndex);
+    }
+
+    /**
+     * The maximum possible bin number for this reference sequence.
+     * This is based on the maximum coordinate position of the reference
+     * which is based on the size of the reference
+     */
+    private int getMaxBinNumberForReference(final int reference) {
+        try {
+            final int sequenceLength = mBamDictionary.getSequence(reference).getSequenceLength();
+            return getMaxBinNumberForSequenceLength(sequenceLength);
+        } catch (Exception e) {
+            return MAX_BINS;
+        }
+    }
+
+    /**
+     * The maxiumum bin number for a reference sequence of a given length
+     */
+    static int getMaxBinNumberForSequenceLength(int sequenceLength) {
+        return getFirstBinInLevel(getNumIndexLevels() - 1) + (sequenceLength >> 14);
+        // return 4680 + (sequenceLength >> 14); // note 4680 = getFirstBinInLevel(getNumIndexLevels() - 1)
     }
 
     abstract protected BAMIndexContent getQueryResults(int reference);

@@ -31,29 +31,22 @@ package net.sf.samtools;
 interface BAMIndexWriter {  // note - only package visibility
 
     /**
-     * Write header information at the beginning of the file
-     */
-    public void writeHeader();
-
-    /**
      * Write the data for one alignments to one reference sequence
      *
      * @param content    BAMIndexContent containing the information for one reference
-     * @param reference  reference sequence number
      */
-    public void writeReference(final BAMIndexContent content, int reference);
+    public void writeReference(final BAMIndexContent content);
+
+    /**
+     * Writes out the count of records without coordinates
+     *
+     * @param count
+     */
+    public void writeNoCoordinateRecordCount(final Long count);
 
     /**
      * Any necessary processing at the end of the file
-     *
-     * @param noCoordinateCount the count of records seen with no coordinate positions in the start coordinate
      */
-    public void close(final Long noCoordinateCount);
-
-    /**
-     * Deletes old or partial index file
-     * Called whenever exceptions occur.
-     */
-    public void deleteIndexFile();
+    public void close();
 
 }

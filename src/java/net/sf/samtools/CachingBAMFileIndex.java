@@ -35,8 +35,8 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
     private Integer mLastReferenceRetrieved = null;
     private WeakHashMap<Integer,BAMIndexContent> mQueriesByReference = new WeakHashMap<Integer,BAMIndexContent>();
 
-    public CachingBAMFileIndex(final File file) {
-        super(file);
+    public CachingBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
+        super(file, dictionary);
     }
 
     @Override

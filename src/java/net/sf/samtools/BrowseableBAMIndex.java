@@ -7,18 +7,6 @@ package net.sf.samtools;
  * @version 0.1
  */
 public interface BrowseableBAMIndex extends BAMIndex {
-    /**
-     * Get the number of levels employed by this index.
-     * @return Number of levels in this index.
-     */
-    public int getNumIndexLevels();
-
-    /**
-     * Gets the first bin in the given level.
-     * @param levelNumber Level number.
-     * @return First bin in levelNumber.
-     */
-    public int getFirstBinInLevel(final int levelNumber);
 
     /**
      * Gets the size (number of bins in) a given level of a BAM index.

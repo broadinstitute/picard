@@ -33,7 +33,7 @@ public class LinearIndex {
 
     public static final int MAX_LINEAR_INDEX_SIZE = AbstractBAMFileIndex.MAX_LINEAR_INDEX_SIZE;
 
-    private static final int BAM_LIDX_SHIFT = 14;
+    public static final int BAM_LIDX_SHIFT = 14;
 
     /**
      * The reference sequence number for this linear index.

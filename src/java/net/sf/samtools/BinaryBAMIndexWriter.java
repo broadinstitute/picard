@@ -24,186 +24,159 @@
 
 package net.sf.samtools;
 
+import net.sf.samtools.util.BinaryCodec;
+
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Class for writing binary BAM index files
  */
-class BinaryBAMIndexWriter extends AbstractBAMIndexWriter {  // note - only package visibility
+class BinaryBAMIndexWriter implements BAMIndexWriter {
 
-    private final int bufferSize = 1048576; // faster if power of 2
-    private final ByteBuffer bb;
-    private final BufferedOutputStream boStream;
-    private final boolean sortBins;
+    protected final int nRef;
+    protected final File output;
+    private final BinaryCodec codec;
 
     /**
      * constructor
      *
-     * @param n_ref    Number of reference sequences
-     * @param output   BAM Index output file
-     * @param sortBins Whether to sort the bins - useful for comparison to c-generated index
+     * @param nRef    Number of reference sequences
+     * @param output  BAM Index output file
      */
-    public BinaryBAMIndexWriter(final int n_ref, final File output, boolean sortBins) {
-        super(output, n_ref);
+    public BinaryBAMIndexWriter(final int nRef, final File output) {
 
-        this.sortBins = sortBins;
+        this.output = output;
+        this.nRef = nRef;
 
         try {
-            boStream = new BufferedOutputStream(new FileOutputStream(output));
-            bb = ByteBuffer.allocate(bufferSize);
-            bb.order(ByteOrder.LITTLE_ENDIAN);
-        } catch (FileNotFoundException e) {
-            throw new SAMException("Can't find output file " + output, e);
+            codec = new BinaryCodec(output, true);
+            writeHeader();
+        } catch (Exception e) {
+            throw new SAMException("Exception opening output file " + output, e);
         }
-    }
-
-    public void writeHeader() {
-        // magic string
-        final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
-        bb.put(magic);
-        bb.putInt(n_ref);
     }
 
     /**
      * Write this content as binary output
      */
-    public void writeReference(final BAMIndexContent content, int reference) {
+    public void writeReference(final BAMIndexContent content) {
 
         if (content == null) {
-            writeNullContent(bb);
+            writeNullContent();
             return;
         }
 
-        final Bin[] originalBins = content.getOriginalBins();
-        if (originalBins != null){
-             // good, we avoided copying the original array to a list
+        // write bins
 
-            final int size = content.getNumberOfBins();
-            bb.putInt(size);
+        final BAMIndexContent.BinList bins = content.getBins();
+        final int size = bins == null ? 0 : content.getNumberOfNonNullBins();
 
-            // Note, originalBins is naturally sorted, so no sort is needed
-            int count = 0;
-            for (Bin bin : originalBins) {
-                if (bin == null) continue;
-                count++;
-                writeBin(bin);
-            }
-
-        } else {
-            // bins are only available as a list
-
-            final List<Bin> bins = content.getBins();
-            final int size = bins.size();
-
-            if (bins == null || size == 0) {
-                writeNullContent(bb);
-                return;
-            }
-
-            bb.putInt(size);
-
-            if (sortBins) {
-                // copy bins into an array so that it can be sorted for text comparisons
-                final Bin[] binArray = new Bin[size];
-                if (size != 0) {
-                    bins.toArray(binArray);
-                }
-                Arrays.sort(binArray);
-
-                for (Bin bin : binArray) {
-                    writeBin(bin);
-                }
-            } else {
-                for (Bin bin : bins) {
-                    writeBin(bin);
-                }
-            }
+        if (size == 0) {
+            writeNullContent();
+            return;
         }
-        writeChunkMetaData(content.getMetaDataChunks());
+
+        codec.writeInt(size);
+        for (Bin bin : bins) {   // note, bins will always be sorted
+            if (bin.getBinNumber() == AbstractBAMFileIndex.MAX_BINS)
+                continue;
+            writeBin(bin);
+        }
+
+        // write chunks
+        
+        final List<Chunk> chunks = content.getMetaDataChunks();
+        if (chunks != null)
+            writeChunkMetaData(content.getReferenceSequence(), chunks);
+
+        // write linear index
 
         final LinearIndex linearIndex = content.getLinearIndex();
         final long[] entries = linearIndex == null ? null : linearIndex.getIndexEntries();
         final int indexStart = linearIndex == null ? 0 : linearIndex.getIndexStart();
         final int n_intv = entries == null ? indexStart : entries.length + indexStart;
-        bb.putInt(n_intv);
+        codec.writeInt(n_intv);
         if (entries == null) {
             return;
         }
-
+        // since indexStart is usually 0, this is usually a no-op
         for (int i = 0; i < indexStart; i++) {
-            bb.putLong(0);          // todo uint32_t vs int32_t in spec?
+            codec.writeLong(0);
         }
         for (int k = 0; k < entries.length; k++) {
-            bb.putLong(entries[k]); // todo uint32_t vs int32_t in spec?
+            codec.writeLong(entries[k]);
         }
-        // write out data and reset the buffer for each reference
-        bb.flip();       // sets position to 0
-
         try {
-            byte[] bytesToWrite = bb.array();
-            boStream.write(bytesToWrite, bb.arrayOffset(), bb.limit());
-            boStream.flush();
+            codec.getOutputStream().flush();
         } catch (IOException e) {
-            throw new SAMException("IOException in BinaryBAMIndexWriter reference " + reference, e);
+            throw new SAMException("IOException in BinaryBAMIndexWriter reference " + content.getReferenceSequence(), e);
         }
+    }
 
-        bb.position(0);
-        bb.limit(bufferSize);
+    /**
+     * Writes out the count of records without coordinates
+     *
+     * @param count
+     */
+    public void writeNoCoordinateRecordCount(final Long count) {
+        codec.writeLong(count == null ? 0 : count);
+    }
+
+    /**
+     * Any necessary processing at the end of the file
+     */
+    public void close() {
+        codec.close();
     }
 
     private void writeBin(Bin bin) {
-        if (bin.getBinNumber() == BAMIndex.MAX_BINS)  return; // meta data
+        final int binNumber = bin.getBinNumber();
+        if (binNumber >= AbstractBAMFileIndex.MAX_BINS){
+            throw new SAMException("Unexpected bin number when writing bam index " + binNumber);
+        }
         
-        bb.putInt(bin.getBinNumber()); // todo uint32_t vs int32_t in spec?
+        codec.writeInt(binNumber);
         if (bin.getChunkList() == null){
-            bb.putInt(0);
+            codec.writeInt(0);
             return;
         }
         final List<Chunk> chunkList = bin.getChunkList();
         final int n_chunk = chunkList.size();
-        bb.putInt(n_chunk);
+        codec.writeInt(n_chunk);
         for (final Chunk c : chunkList) {
-            bb.putLong(c.getChunkStart());   // todo uint32_t vs int32_t in spec?
-            bb.putLong(c.getChunkEnd());     // todo uint32_t vs int32_t in spec?
+            codec.writeLong(c.getChunkStart());
+            codec.writeLong(c.getChunkEnd());
         }
     }
 
     /**
      * Write the meta data represented by the chunkLists associated with bin MAX_BINS 37450
      *
+     * @param ref reference sequence for this metadata
      * @param chunkList contains metadata describing numAligned records, numUnAligned, etc
      */
-    private void writeChunkMetaData(List<Chunk> chunkList) {
-        bb.putInt(BAMIndex.MAX_BINS);
-        final int n_chunk = chunkList.size();   // should be 2
+    private void writeChunkMetaData(int ref, List<Chunk> chunkList) {
+        codec.writeInt(AbstractBAMFileIndex.MAX_BINS);
+        final int n_chunk = chunkList.size();
         if (n_chunk != 2){
-            System.err.println("Unexpected # chunks of meta data= " + n_chunk); // throw new SAMException
+            throw new SAMException("Unexpected # chunks of index meta data= " + n_chunk + " for reference " + ref);
         }
-        bb.putInt(n_chunk);
+        codec.writeInt(n_chunk);
         for (final Chunk c : chunkList) {
-            bb.putLong(c.getChunkStart());   // todo uint32_t vs int32_t in spec?
-            bb.putLong(c.getChunkEnd());     // todo uint32_t vs int32_t in spec?
+            codec.writeLong(c.getChunkStart());
+            codec.writeLong(c.getChunkEnd());
         }
    }
 
-
-    private static void writeNullContent(ByteBuffer bb) {
-        bb.putLong(0);  // 0 bins , 0 intv
+    private void writeHeader() {
+        // magic string
+        final byte[] magic = BAMFileConstants.BAM_INDEX_MAGIC;
+        codec.writeBytes(magic);
+        codec.writeInt(nRef);
     }
 
-    public void close(Long noCoordinateCount) {
-        bb.putLong(noCoordinateCount == null ? 0 : noCoordinateCount);
-        bb.flip();
-        try {
-            boStream.write(bb.array(),bb.arrayOffset(), bb.limit());
-            boStream.flush();
-            boStream.close();
-        } catch (IOException e) {
-            throw new SAMException("IOException in BinaryBAMIndexWriter ", e);
-        }
+    private void writeNullContent() {
+        codec.writeLong(0);  // 0 bins , 0 intv
     }
 }

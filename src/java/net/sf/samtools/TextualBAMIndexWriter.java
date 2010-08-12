@@ -27,7 +27,6 @@ package net.sf.samtools;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -35,80 +34,75 @@ import java.util.List;
  * Used for testing only.
 
  */
-class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
+class TextualBAMIndexWriter implements BAMIndexWriter {
 
+    protected final int nRef;
+    protected final File output;
     private final PrintWriter pw;
-    private final boolean sortBins;
 
     /**
      * constructor
      *
-     * @param n_ref    Number of reference sequences
+     * @param nRef    Number of reference sequences
      * @param output   BAM Index output file
-     * @param sortBins Whether to sort the bins - useful for comparison to c-generated index
      */
-    public TextualBAMIndexWriter(final int n_ref, final File output, final boolean sortBins) {
-        super(output, n_ref);
-        this.sortBins = sortBins;
+    public TextualBAMIndexWriter(final int nRef, final File output) {
+        this.output = output;
+        this.nRef = nRef;
         try {
             pw = new PrintWriter(output);
         } catch (FileNotFoundException e) {
             throw new SAMException("Can't find output file " + output, e);
         }
+        writeHeader();
     }
 
     /**
      * Write header information at the beginning of the file
      */
-    public void writeHeader() {
-        pw.println("n_ref=" + n_ref);
+    private void writeHeader() {
+        pw.println("n_ref=" + nRef);
     }
 
     /**
      * Write this content as human-readable text
      */
-    public void writeReference(final BAMIndexContent content, int reference) {
+    public void writeReference(final BAMIndexContent content) {
+
+        final int reference = content.getReferenceSequence();
 
         if (content == null) {
-            writeNullContent(pw, reference);
+            writeNullContent(reference);
             return;
         }
         final int ref = content.getReferenceSequence();
         if (ref != reference){
             throw new SAMException("Reference on content is " + ref + " but expecting reference " + reference);
         }
-        final List<Bin> bins = content.getBins();
-        final LinearIndex linearIndex = content.getLinearIndex();
 
-       // bins
-        if (bins == null || bins.size() == 0) {
-            writeNullContent(pw, ref);
+        final BAMIndexContent.BinList bins = content.getBins();
+        final int size = bins == null ? 0 : content.getNumberOfNonNullBins();
+
+        if (size == 0) {
+            writeNullContent(reference);
             return;
         }
 
-        final int size = bins.size();
-        pw.println("Reference " + ref + " has n_bin= " +  size);
-
-        // copy into an array so that it can be sorted
-        final Bin[] binArray = new Bin[size];
-        if (size != 0) {
-            bins.toArray(binArray);
-        }
-        if (sortBins) Arrays.sort(binArray);  // Sort for easy text comparisons
+        pw.println("Reference " + ref + " has n_bin= " + size);
 
         // chunks
-        for (int j = 0; j < size; j++) {
-            if (binArray[j].getBinNumber() == BAMIndex.MAX_BINS)  break;
-            if (binArray[j].getChunkList() == null) {
-                 pw.println("  Ref " + reference + " bin " + binArray[j].getBinNumber() + " has no binArray");  // remove?
+        for (Bin bin : bins) {   // note, bins will always be sorted
+            if (bin.getBinNumber() == AbstractBAMFileIndex.MAX_BINS)  break;
+            if (bin.getChunkList() == null) {
+                pw.println("  Ref " + reference + " bin " + bin.getBinNumber() + " has no binArray");  // remove?
                 continue;
             }
-            final List<Chunk> chunkList = binArray[j].getChunkList();
+            final List<Chunk> chunkList = bin.getChunkList();
             if (chunkList == null) {
-                pw.println("  Ref " + ref + " bin " + binArray[j].getBinNumber() + " has no chunkList");
+                pw.println("  Ref " + ref + " bin " + bin.getBinNumber() + " has no chunkList");
                 continue;
             }
-            pw.print("  Ref " + ref + " bin " + binArray[j].getBinNumber() + " has n_chunk= " + chunkList.size());
+            pw.print("  Ref " + ref + " bin " + bin.getBinNumber() + " has n_chunk= " + chunkList.size());
             if (chunkList.size() == 0) {
                  pw.println();
             }
@@ -121,6 +115,7 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
         writeChunkMetaData(ref, content.getMetaDataChunks());
         
         // linear index
+        final LinearIndex linearIndex = content.getLinearIndex();
         if (linearIndex == null || linearIndex.getIndexEntries() == null) {
             pw.println("Reference " + ref + " has n_intv= 0");
             return;
@@ -156,18 +151,24 @@ class TextualBAMIndexWriter extends AbstractBAMIndexWriter {
 
     }
        
-    private void writeNullContent(PrintWriter pw, int reference) {
+    private void writeNullContent(int reference) {
         pw.println("Reference " + reference + " has n_bin=0");
         pw.println("Reference " + reference + " has n_intv=0");
     }
 
     /**
-     * Any necessary processing at the end of the file
+     * Write count of records without coordinates
      *
      * @param noCoordinateCount the count of records seen with no coordinate positions in the start coordinate
      */
-    public void close(final Long noCoordinateCount) {
+    public void writeNoCoordinateRecordCount(final Long noCoordinateCount) {
         pw.println("No Coordinate Count=" + noCoordinateCount);
+    }
+
+    /**
+     * Any necessary processing at the end of the file
+     */
+    public void close() {
         pw.close();
     }
 }

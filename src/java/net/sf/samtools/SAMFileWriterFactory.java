@@ -31,7 +31,38 @@ import java.io.OutputStream;
  */
 public class SAMFileWriterFactory {
 
+    private static boolean DefaultCreateIndexWhileWriting = false;
+    private boolean createIndex = false;
+
     private Integer maxRecordsInRam;
+
+    /**
+     * Construct a factory that uses the default to decide whether or not to create bam index files while creating the bam file.
+     */
+    public SAMFileWriterFactory() {
+        this.createIndex = DefaultCreateIndexWhileWriting;
+    }
+
+    /**
+     * Sets the default for subsequent SAMFileWriterFactories
+     * that do not specify whether to create an index
+     *
+     * @param setting whether to create the bam index on the fly while creating the bam file
+     */
+    public static void setDefaultCreateIndexWhileWriting(final boolean setting) {
+        DefaultCreateIndexWhileWriting = setting;
+    }
+
+    /**
+     * Convenience method allowing newSAMFileWriterFactory().setCreateIndex(true);
+     * Equivalent to SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true); newSAMFileWriterFactory();
+     * @param setting whether to attempt to create a BAM index while creating the BAM file
+     * @return this factory object
+     */
+    public SAMFileWriterFactory setCreateIndex(final boolean setting){
+        this.createIndex = setting;
+        return this;
+    }
 
     /**
      * Create a BAMFileWriter that is ready to receive SAMRecords.  Uses default compression level.
@@ -41,11 +72,7 @@ public class SAMFileWriterFactory {
      */
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
         final BAMFileWriter ret = new BAMFileWriter(outputFile);
-        ret.setSortOrder(header.getSortOrder(), presorted);
-        if (maxRecordsInRam != null) {
-            ret.setMaxRecordsInRam(maxRecordsInRam);
-        }
-        ret.setHeader(header);
+        initializeBAMWriter(ret, header, presorted);
         return ret;
     }
 
@@ -60,12 +87,19 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile,
                                        final int compressionLevel) {
         final BAMFileWriter ret = new BAMFileWriter(outputFile, compressionLevel);
-        ret.setSortOrder(header.getSortOrder(), presorted);
-        if (maxRecordsInRam != null) {
-            ret.setMaxRecordsInRam(maxRecordsInRam);
-        }
-        ret.setHeader(header);
+        initializeBAMWriter(ret, header, presorted);
         return ret;
+    }
+
+    private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted) {
+        writer.setSortOrder(header.getSortOrder(), presorted);
+        if (createIndex && writer.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
+            writer.enableBamIndexConstruction();
+        }
+        if (maxRecordsInRam != null) {
+            writer.setMaxRecordsInRam(maxRecordsInRam);
+        }
+        writer.setHeader(header);
     }
 
     /**
