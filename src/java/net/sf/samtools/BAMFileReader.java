@@ -152,7 +152,8 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if(mIndexFile == null)
             throw new SAMException("No index is available for this BAM file.");
         if(mIndex == null)
-            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile) : new DiskBasedBAMFileIndex(mIndexFile);
+            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary())
+                                         : new DiskBasedBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary() );
         return mIndex;
     }    
 

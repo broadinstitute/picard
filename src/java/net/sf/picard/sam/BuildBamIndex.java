@@ -22,45 +22,40 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package net.sf.picard.sam;
 
 import net.sf.picard.cmdline.*;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 /**
- * Command line program to generate a BAM index (.bai) file from an existing BAM (.bam) file
+ * Command line program to generate a BAM index (.bai) file from a BAM (.bam) file
  *
  * @author Martha Borkan
  */
 public class BuildBamIndex extends CommandLineProgram {
+
+    private static final Log log = Log.getInstance(BAMIndexer.class);
+
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file. " +
             "Input BAM file must be sorted in coordinate order. " +
-            "Output file defaults to INPUT.bai (or x.bai if INPUT is x.bam)\n";
+            "Output file defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai)";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="A BAM file to process.", optional=true, mutex="INPUT_URL")
-    public File INPUT;
+            doc="A BAM file or URL to process.")
+    public String INPUT;
 
-    @Option(shortName= "URL",
-            doc="A BAM file to process.", optional=true, mutex="INPUT")
-    public String INPUT_URL;
+    URL inputUrl = null;   // INPUT as URL
+    File inputFile = null; // INPUT as File, if it can't be interpreted as a valid URL
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc="The BAM index file.", optional=true)
     public File OUTPUT;
-
-    @Option(doc = "Whether to sort the bins in bin number order.")
-    public Boolean SORT = false;
-
-    @PositionalArguments(minElements = 0, maxElements = 2)
-    public List<File> IN_OUT;
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {
@@ -75,68 +70,82 @@ public class BuildBamIndex extends CommandLineProgram {
     protected int doWork() {
         final Log log = Log.getInstance(getClass());
 
+        try {
+            inputUrl = new URL(INPUT);
+        } catch (java.net.MalformedURLException e) {
+            inputFile = new File(INPUT);
+        }
+
+        // set default output file - input-file.bai
+        if (OUTPUT == null) {
+
+            final String baseFileName;
+            if (inputUrl != null) {
+                String path = inputUrl.getPath();
+                int lastSlash = path.lastIndexOf("/");
+                baseFileName = path.substring(lastSlash + 1, path.length());
+            } else {
+                baseFileName = inputFile.getAbsolutePath();
+            }
+
+            if (baseFileName.endsWith(".bam")) {
+
+                final int index = baseFileName.lastIndexOf(".");
+                OUTPUT = new File(baseFileName.substring(0, index) + BAMIndex.BAMIndexSuffix);
+
+            } else {
+                OUTPUT = new File(baseFileName + BAMIndex.BAMIndexSuffix);
+            }
+        }
+
         IoUtil.assertFileIsWritable(OUTPUT);
         final SAMFileReader bam;
 
-        if (INPUT_URL != null) {
+        if (inputUrl != null) {
             // remote input
-            final URL bamURL;
-            try {
-                bamURL = new URL(INPUT_URL);
-            } catch (MalformedURLException e) {
-                throw new SAMException(e);
-            }
-            bam = new SAMFileReader(bamURL, null, false);
-
+            bam = new SAMFileReader(inputUrl, null, false);
         } else {
             // input from a normal file
-            IoUtil.assertFileIsReadable(INPUT);
-            bam = new SAMFileReader(INPUT);
+            IoUtil.assertFileIsReadable(inputFile);
+            bam = new SAMFileReader(inputFile);
         }
 
-        if (!bam.isBinary()){
-            throw new SAMException ("Input file must be bam file, not sam file.");
+        if (!bam.isBinary()) {
+            throw new SAMException("Input file must be bam file, not sam file.");
         }
 
         if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-            throw new SAMException ("Input bam file must be sorted by coordinates");
+            throw new SAMException("Input bam file must be sorted by coordinates");
         }
 
         bam.enableFileSource(true);
 
-        BAMIndexer instance = new BAMIndexer(OUTPUT,
-                    bam.getFileHeader().getSequenceDictionary().size(), SORT);
-        instance.createIndex(bam);
+        createIndex(bam, OUTPUT);
 
         log.info("Successfully wrote bam index file " + OUTPUT);
         return 0;
     }
 
-    @Override
-    protected String[] customCommandLineValidation() {
-        // allow positional as alternative to i=input o=output
-        if (IN_OUT.size() > 0) {
-            if (INPUT != null) {
-                return new String[]{"Can't specify both named and positional INPUT parameter"};
-            }
-            INPUT = IN_OUT.get(0);
-            if (IN_OUT.size() > 1) {
-                if (OUTPUT != null) {
-                    return new String[]{"Can't specify both named and positional OUTPUT parameter"};
-                }
-                OUTPUT = IN_OUT.get(1);
-            }
-        }
-        if (INPUT == null && INPUT_URL == null)
-            return new String[]{"INPUT BAM file unspecified"};
+    /**
+     * Generates a BAM index file from an input BAM file
+     *
+     * @param reader SAMFileReader for input BAM file
+     * @para output  File for output index file
+     */
+    public static void createIndex(SAMFileReader reader, File output) {
 
-        // Todo allow output to a stream, e.g. BuildBamIndex > BaiToText
-        if (OUTPUT == null) {
-            OUTPUT = new File(IoUtil.basename(INPUT) + BAMIndex.BAMIndexSuffix);
+        BAMIndexer indexer = new BAMIndexer(output, reader.getFileHeader());
+
+        reader.enableFileSource(true);
+        int totalRecords = 0;
+
+        // create and write the content
+        for (SAMRecord rec : reader) {
+            if (++totalRecords % 1000000 == 0) {
+                log.info(totalRecords + " reads processed ...");
+            }
+            indexer.processAlignment(rec);
         }
-        if (OUTPUT.exists()) {
-            OUTPUT.delete();
-        }
-        return null;
+        indexer.finish();
     }
 }

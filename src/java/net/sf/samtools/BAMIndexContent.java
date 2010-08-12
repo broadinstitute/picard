@@ -25,7 +25,8 @@ package net.sf.samtools;
 
 import java.util.*;
 
-/** Represents the contents of a bam index file for one reference.
+/**
+ * Represents the contents of a bam index file for one reference.
  * A BAM index (.bai) file contains information for all references in the bam file.
  * This class describes the data present in the index file for one of these references;
  * including the bins, chunks, and linear index.
@@ -39,14 +40,7 @@ class BAMIndexContent {
     /**
      * A list of all bins in the above reference sequence.
      */
-    private List<Bin> mBins;
-
-    /**
-     * Alternative representation of the bins;
-     * Avoids having to copy the array to the mBins list when constructing bam index
-     */
-    private final Bin[] mBinArray;
-    private final int mNumberOfBins;
+    private BinList mBinList;
 
     /**
      * Chunks containing metaData for the reference, e.g. number of aligned and unaligned records
@@ -58,111 +52,174 @@ class BAMIndexContent {
      */
     private final LinearIndex mLinearIndex;
 
-    /**
-     * @param referenceSequence   Content corresponds to this reference.
-     * @param bins                List of bins represented by this content
-     * @param metaDataChunks      Chunks representing metaData
-     * @param linearIndex         Additional index used to optimize queries
-     */
-    public BAMIndexContent(final int referenceSequence, final List<Bin> bins, final List<Chunk> metaDataChunks, final LinearIndex linearIndex) {
-        this.mReferenceSequence = referenceSequence;
-        this.mBins = bins;
-        this.mBinArray = null;
-        this.mNumberOfBins = 0;
-        this.metaDataChunks = metaDataChunks;
-        this.mLinearIndex = linearIndex;
-    }
 
-    /** Alternate constructor used when building an index.
-     * Avoids copying bin array to bin list.
-     * @param referenceSequence   Content corresponds to this reference.
-     * @param bins                Array of bins represented by this content
-     * @param numberOfBins        Maximum index in the bins array that has data
-     * @param metaDataChunks      Chunks representing metaData
-     * @param linearIndex         Additional index used to optimize queries
+    /**
+     * @param referenceSequence Content corresponds to this reference.
+     * @param bins              Array of bins represented by this content, possibly sparse
+     * @param numberOfBins      Number of non-null bins
+     * @param metaDataChunks    Chunks representing metaData
+     * @param linearIndex       Additional index used to optimize queries
      */
     BAMIndexContent(final int referenceSequence, final Bin[] bins, final int numberOfBins, final List<Chunk> metaDataChunks, final LinearIndex linearIndex) {
         this.mReferenceSequence = referenceSequence;
-        this.mBins = null;
-        this.mBinArray = bins;
-        this.mNumberOfBins = numberOfBins;
+        this.mBinList = new BinList(bins, numberOfBins);
         this.metaDataChunks = metaDataChunks;
         this.mLinearIndex = linearIndex;
     }
 
-    /** Reference for this Content */
+    /**
+     * Reference for this Content
+     */
     public int getReferenceSequence() {
         return mReferenceSequence;
     }
 
     /**
      * Does this content have anything in this bin?
-    */
+     */
     public boolean containsBin(final Bin bin) {
-        return Collections.binarySearch(mBins,bin) >= 0;
+        return mBinList.getBin(bin.getBinNumber()) != null;
     }
 
     /**
-    * @return list of bins represented by this content
-    */
-    public List<Bin> getBins() {
-        if (mBins == null && mBinArray != null && mNumberOfBins > 0) {
-            // copy the mBinArray to an unmodifiable list
-            mBins = new ArrayList<Bin>();
-            for (Bin bin : mBinArray) {
-                if (bin != null) mBins.add(bin);
-            }
-        }
-        return Collections.unmodifiableList(mBins);
-    }
-
-    /**
-     * @return array of bins specified in the alternate constructor, if any; otherwise null
+     * @return iterable list of bins represented by this content
      */
-    Bin[] getOriginalBins(){
-        return mBinArray;
+    public BinList getBins() {
+        return mBinList;
     }
 
     /**
-     * @return  the number of bins represented by this content
+     * @return the number of non-null bins represented by this content
      */
-    int getNumberOfBins(){
-        if (mBinArray != null)
-            return mNumberOfBins;
-        else
-            return mBins.size();
+    int getNumberOfNonNullBins() {
+        return mBinList.getNumberOfNonNullBins();
     }
 
     /**
-     * @return  the chunks associated with the specified bin
+     * @return the chunks associated with the specified bin
      */
     public List<Chunk> getChunksForBin(final Bin bin) {
         return Collections.unmodifiableList(bin.getChunkList());
     }
 
     /**
-     * @return  the meta data chunks for this content
+     * @return the meta data chunks for this content
      */
     public List<Chunk> getMetaDataChunks() {
         return Collections.unmodifiableList(metaDataChunks);
     }
 
     /**
-     * @return  all chunks associated with all bins in this content
+     * @return all chunks associated with all bins in this content
      */
     public List<Chunk> getAllChunks() {
         List<Chunk> allChunks = new ArrayList<Chunk>();
-        for(Bin b: mBins)
-        if (b.getChunkList() != null){
-            allChunks.addAll(b.getChunkList());
-        }
+        for (Bin b : mBinList)
+            if (b.getChunkList() != null) {
+                allChunks.addAll(b.getChunkList());
+            }
         return Collections.unmodifiableList(allChunks);
     }
 
     /**
-     * @return  the linear index represented by this content
+     * @return the linear index represented by this content
      */
     public LinearIndex getLinearIndex() {
         return mLinearIndex;
+    }
+
+    /**
+     * This class is used to encapsulate the list of Bins store in the BAMIndexContent
+     * While it is currently represented as an array, we may decide to change it to an ArrayList or other structure
+     */
+    class BinList implements Iterable<Bin> {
+
+        private final Bin[] mBinArray;
+        public final int numberOfNonNullBins;
+        public final int maxBinNumber;  // invariant: maxBinNumber = mBinArray.length -1 since array is 0 based
+
+        /**
+         * @param binList      an ArrayList representation of the bins
+         * @param maxBinNumber maximum bin number in the bin being read. <= MAX_BINS
+         */
+        BinList(List<Bin> binList, int maxBinNumber) {
+            this.maxBinNumber = maxBinNumber;
+            mBinArray = new Bin[maxBinNumber + 1];
+            int count = 0;
+            for (Bin b : binList) {
+                mBinArray[b.getBinNumber()] = b;
+                count++;
+            }
+            numberOfNonNullBins = count; // note this is the same as binList.size(), but avoids traversing the list again.
+        }
+
+        /**
+         * @param binArray            a sparse array representation of the bins. The index into the array is the bin number.
+         * @param numberOfNonNullBins
+         */
+        BinList(Bin[] binArray, int numberOfNonNullBins) {
+            this.mBinArray = binArray;
+            this.numberOfNonNullBins = numberOfNonNullBins;
+            this.maxBinNumber = mBinArray.length - 1;
+        }
+
+        Bin getBin(int binNumber) {
+            if (binNumber > maxBinNumber) return null;
+            return mBinArray[binNumber];
+        }
+
+        int getNumberOfNonNullBins() {
+            return numberOfNonNullBins;
+        }
+
+        /**
+         * Gets an iterator over all non-null bins.
+         *
+         * @return An iterator over all bins.
+         */
+        public Iterator<Bin> iterator() {
+            return new BinIterator();
+        }
+
+        private class BinIterator implements Iterator<Bin> {
+            /**
+             * Stores the bin currently in use.
+             */
+            private int nextBin;
+
+            public BinIterator() {
+                nextBin = 0;
+            }
+
+            /**
+             * Are there more bins in this set, waiting to be returned?
+             *
+             * @return True if more bins are remaining.
+             */
+            public boolean hasNext() {
+                while (nextBin <= maxBinNumber) {
+                    if (getBin(nextBin) != null) return true;
+                    nextBin++;
+                }
+                return false;
+            }
+
+            /**
+             * Gets the next bin in the provided BinList.
+             *
+             * @return the next available bin in the BinList.
+             */
+            public Bin next() {
+                if (!hasNext())
+                    throw new NoSuchElementException("This BinIterator is currently empty");
+                Bin result = getBin(nextBin);
+                nextBin++;
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("Unable to remove from a bin iterator");
+            }
+        }
     }
 }

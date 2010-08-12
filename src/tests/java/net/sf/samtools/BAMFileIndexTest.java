@@ -46,7 +46,8 @@ public class BAMFileIndexTest
     @Test
     public void testGetSearchBins()
         throws Exception {
-        final DiskBasedBAMFileIndex bfi = new DiskBasedBAMFileIndex(new File(BAM_FILE.getPath() + ".bai"));
+        final DiskBasedBAMFileIndex bfi = new DiskBasedBAMFileIndex(new File(BAM_FILE.getPath() + ".bai"),
+                null);    // todo can null be replaced with a Sequence dictionary for the BAM_FILE?
         final long[] bins = bfi.getSpanOverlapping(1, 0, 0).toCoordinateArray();
         /***
         if (bins == null) {

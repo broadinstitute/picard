@@ -225,6 +225,17 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
     }
 
     /**
+     * Checks that there is only a single chunk for this span and returns it.
+     * @return The single chunk stored in this span
+     */
+    protected Chunk getSingleChunk() {
+        if (chunks.size() != 1){
+            throw new SAMException("Expecting a single chunk for span. Found " + chunks.size());
+        }
+        return chunks.get(0);
+    }
+
+    /**
      * The list of chunks is often represented as an array of
      * longs where every even-numbered index is a start coordinate
      * and every odd-numbered index is a stop coordinate.  Convert

@@ -33,8 +33,8 @@ import java.util.List;
  */
 class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
 {
-    DiskBasedBAMFileIndex(final File file) {
-        super(file);
+    DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
+        super(file, dictionary);
     }
 
     /**
@@ -63,7 +63,7 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
      protected BAMIndexContent getQueryResults(int reference){
          throw new UnsupportedOperationException();
          // todo: there ought to be a way to support this using the first startPos for the reference and the last
-         // todo: return query(reference, 1, BIN_SPAN);
-         // If this were implemented, BAMIndexTextWriter could extend DiskBasedBAMFileIndex -or- CachingBAMFileIndex
+         // return query(reference, 1, -1);
+         // If this were implemented, BAMIndexer.createAndWriteIndex could extend DiskBasedBAMFileIndex -or- CachingBAMFileIndex
     }
 }

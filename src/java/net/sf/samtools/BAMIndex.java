@@ -34,11 +34,6 @@ public interface BAMIndex {
     public static final String BAMIndexSuffix = ".bai";
 
     /**
-     * Reports the maximum number of bins that can appear in a BAM file.
-     */
-    public static final int MAX_BINS = 37450;   // =(8^6-1)/7+1
-
-    /**
      * Open the BAM file index.
      */
     public void open();

@@ -53,14 +53,6 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         outputBinaryCodec.setOutputFileName(path.toString());
     }
 
-    // Allow enabling or disabling the bam index construction
-    public void enableBamIndexConstruction (boolean setting) {
-        if (setting && !getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
-           throw new SAMException("Not creating BAM index since not sorted by coordinates: " + getSortOrder());
-        }
-        makeBamIndex = setting;
-    }
-
     private void prepareToWriteAlignments() {
         if (bamRecordCodec == null) {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
@@ -71,6 +63,15 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         }
     }
 
+   // Allow enabling the bam index construction
+   // only enabled by factory method before anything is written
+   void enableBamIndexConstruction () {
+        if (!getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
+           throw new SAMException("Not creating BAM index since not sorted by coordinates: " + getSortOrder());
+        }
+        makeBamIndex = true;
+    }
+
     private BAMIndexer createBamIndex(String path) {
         try {
             String indexFileName = path + BAMIndex.BAMIndexSuffix;
@@ -79,9 +80,8 @@ public class BAMFileWriter extends SAMFileWriterImpl {
                 if (!indexFile.canWrite()) {
                     throw new SAMException("Not creating BAM index since unable to write index file " + indexFileName);
                 }
-                indexFile.delete();
             }
-            return new BAMIndexer(indexFile, getFileHeader().getSequenceDictionary().size(), false);
+            return new BAMIndexer(indexFile, getFileHeader());
         } catch (Exception e) {
             throw new SAMException("Not creating BAM index", e);
         }
@@ -90,16 +90,15 @@ public class BAMFileWriter extends SAMFileWriterImpl {
     protected void writeAlignment(final SAMRecord alignment) {
         prepareToWriteAlignments();
 
-        if (bamIndexer != null && blockCompressedOutputStream != null) {
+        if (bamIndexer != null) {
             try {
-                final long startCoordinate = blockCompressedOutputStream.getFilePointer();
+                final long startOffset = blockCompressedOutputStream.getFilePointer();
                 bamRecordCodec.encode(alignment);
-                final long stopCoordinate = blockCompressedOutputStream.getFilePointer();
+                final long stopOffset = blockCompressedOutputStream.getFilePointer();
                 // set the alignment's SourceInfo and then prepare its index information
-                alignment.setFileSource(new SAMFileSource(null, new BAMFileSpan(new Chunk(startCoordinate, stopCoordinate))));
+                alignment.setFileSource(new SAMFileSource(null, new BAMFileSpan(new Chunk(startOffset, stopOffset))));
                 bamIndexer.processAlignment(alignment);
             } catch (Exception e) {
-                bamIndexer.deleteIndex();
                 bamIndexer = null;
                 throw new SAMException("Exception when processing alignment for BAM index " + alignment, e);
             }
@@ -128,7 +127,6 @@ public class BAMFileWriter extends SAMFileWriterImpl {
             try {
                 bamIndexer.finish();
             } catch (Exception e) {
-                bamIndexer.deleteIndex(); // don't want a partial bai file around
                 throw new SAMException("Exception writing BAM index file", e);
             }
         }
