@@ -208,17 +208,20 @@ class BinaryTagCodec {
      * @param offset Where in binaryRep tags start.
      * @param length How many bytes in binaryRep are tag storage.
      */
-    static void readTags(final List<SAMBinaryTagAndValue> tagCollection, final byte[] binaryRep, final int offset,
+    static SAMBinaryTagAndValue readTags(SAMBinaryTagAndValue tagCollection, final byte[] binaryRep, final int offset,
                          final int length, final SAMFileReader.ValidationStringency validationStringency) {
         final ByteBuffer byteBuffer = ByteBuffer.wrap(binaryRep, offset, length);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        
+
         while (byteBuffer.hasRemaining()) {
             final short tag = byteBuffer.getShort();
             final byte tagType = byteBuffer.get();
             final Object value = readValue(tagType, byteBuffer, validationStringency);
-            tagCollection.add(new SAMBinaryTagAndValue(tag, value));
+            final SAMBinaryTagAndValue newHead = new SAMBinaryTagAndValue(tag, value);
+            newHead.setNext(tagCollection);
+            tagCollection = newHead;
         }
+        return tagCollection;
     }
 
     /**

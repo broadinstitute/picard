@@ -33,6 +33,7 @@ package net.sf.samtools;
 public class SAMBinaryTagAndValue {
     public final short tag;
     public final Object value;
+    private SAMBinaryTagAndValue next = null;
 
     public SAMBinaryTagAndValue(final short tag, final Object value) {
         this.tag = tag;
@@ -57,5 +58,26 @@ public class SAMBinaryTagAndValue {
         int result = (int) tag;
         result = 31 * result + value.hashCode();
         return result;
+    }
+
+    // Clone method does NOT copy pointer to the next record
+    public SAMBinaryTagAndValue clone() {
+        return new SAMBinaryTagAndValue(this.tag, this.value);
+    }
+
+    // The methods below are for implementing a light-weight, single-direction linked list
+
+    public SAMBinaryTagAndValue getNext() { return this.next; }
+
+    public void setNext(SAMBinaryTagAndValue next) {
+        if (this.next != null) {
+            throw new IllegalStateException("Cannot set next on SAMBinaryTagAndValue when it already exists!  " +
+                    "Use insert() instead.");
+        }
+        this.next = next;
+    }
+
+    public void replaceNext(SAMBinaryTagAndValue next) {
+        this.next = next;
     }
 }
