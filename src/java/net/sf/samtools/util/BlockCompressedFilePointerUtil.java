@@ -50,12 +50,12 @@ public class BlockCompressedFilePointerUtil {
     }
 
     /**
-     * @return true if vfp2 points to somewhere in the BGZF block immediately following vfp1's BGZF block.
+     * @return true if vfp2 points to somewhere in the same BGZF block, or the one immediately following vfp1's BGZF block.
      */
-    public static boolean areInAdjacentBlocks(final long vfp1, final long vfp2) {
+    public static boolean areInSameOrAdjacentBlocks(final long vfp1, final long vfp2) {
         final long block1 = getBlockAddress(vfp1);
         final long block2 = getBlockAddress(vfp2);
-        return (block1 + 1 == block2);        
+        return (block1 == block2 || block1 + 1 == block2);        
     }
 
     /**
