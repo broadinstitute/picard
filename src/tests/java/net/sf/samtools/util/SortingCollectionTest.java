@@ -50,10 +50,11 @@ public class SortingCollectionTest {
                 f.delete();
             }
         }
-        tmpDir.mkdir();
+        tmpDir.mkdirs();
     }
 
     @AfterTest void tearDown() {
+        System.err.println("In SortingCollectionTest.tearDown.  tmpDir: " + tmpDir);
         for (final File f : tmpDir.listFiles()) {
             f.delete();
         }
@@ -61,6 +62,7 @@ public class SortingCollectionTest {
     }
 
     private boolean tmpDirIsEmpty() {
+        System.err.println("In SortingCollectionTest.tmpDirIsEmpty.  tmpDir: " + tmpDir);
         return tmpDir.listFiles().length == 0;
     }
 
