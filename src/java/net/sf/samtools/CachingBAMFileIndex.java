@@ -39,13 +39,6 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         super(file, dictionary);
     }
 
-    @Override
-    public void close() {
-        super.close();
-        mLastReferenceRetrieved = null;
-        if (mQueriesByReference != null) mQueriesByReference.clear();  // can be null if exception thrown
-    }
-
     /**
      * Get list of regions of BAM file that may contain SAMRecords for the given range
      * @param referenceIndex sequence of desired SAMRecords
@@ -75,7 +68,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
 
         List<Chunk> chunkList = new ArrayList<Chunk>();
         for(Bin bin: bins) {
-            for(Chunk chunk: queryResults.getChunksForBin(bin))
+            for(Chunk chunk: bin.getChunkList())
                 chunkList.add(chunk.clone());
         }
 
@@ -137,7 +130,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
 
         List<Chunk> chunkList = new ArrayList<Chunk>();
         for(Bin coveringBin: binTree) {
-            for(Chunk chunk: indexQuery.getChunksForBin(coveringBin))
+            for(Chunk chunk: coveringBin.getChunkList())
                 chunkList.add(chunk.clone());
         }
 

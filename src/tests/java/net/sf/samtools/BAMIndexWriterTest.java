@@ -67,7 +67,6 @@ public class BAMIndexWriterTest {
         final File javaBaiFile = File.createTempFile("javaBai.", "java.bai");
         final File javaBaiTxtFile = new File(javaBaiFile.getAbsolutePath() + ".txt");
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
-        bam.enableFileSource(true);
         BuildBamIndex.createIndex(bam, javaBaiFile);
         verbose ("Wrote binary Java BAM Index file " + javaBaiFile);
         
@@ -86,7 +85,6 @@ public class BAMIndexWriterTest {
         // Compare java-generated bai file with c-generated and sorted bai file
         final File javaBaiFile = File.createTempFile("javaBai.", ".bai");
         final SAMFileReader bam = new SAMFileReader(BAM_FILE);
-        bam.enableFileSource(true);
         BuildBamIndex.createIndex(bam, javaBaiFile);
         verbose ("Wrote binary java BAM Index file " + javaBaiFile);
                                                     
@@ -219,7 +217,6 @@ public class BAMIndexWriterTest {
             }
         }
 
-        existingIndex1.close();
         indexFile1.deleteOnExit();
 
     }
@@ -236,7 +233,6 @@ public class BAMIndexWriterTest {
     private File createIndexFile(File bamFile) throws IOException {
         final File bamIndexFile = File.createTempFile("Bai.", ".bai");
         final SAMFileReader bam = new SAMFileReader(bamFile);
-        bam.enableFileSource(true);
         BuildBamIndex.createIndex(bam, bamIndexFile);
         verbose ("Wrote BAM Index file " + bamIndexFile);
         return bamIndexFile;

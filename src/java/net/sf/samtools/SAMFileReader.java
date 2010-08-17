@@ -27,8 +27,6 @@ package net.sf.samtools;
 import net.sf.samtools.util.*;
 
 import java.io.*;
-import java.lang.reflect.Constructor;
-import java.util.Comparator;
 import java.util.zip.GZIPInputStream;
 import java.net.URL;
 
@@ -189,9 +187,6 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     public void close() {
         if (mReader != null) {
             mReader.close();
-        }
-        if (mIndex != null) {
-            mIndex.close();
         }
         mReader = null;
         mIndex = null;

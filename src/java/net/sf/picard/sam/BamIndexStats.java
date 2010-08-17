@@ -29,7 +29,9 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BAMIndexer;
+import net.sf.picard.util.Log;
+import net.sf.samtools.BAMIndex;
+import net.sf.samtools.BAMIndexMetaData;
 
 import java.io.File;
 
@@ -42,6 +44,9 @@ import java.io.File;
  * @author Martha Borkan
  */
 public class BamIndexStats extends CommandLineProgram {
+
+    private static final Log log = Log.getInstance(BuildBamIndex.class);
+
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates BAM index statistics. " +
             "Input BAM file must have a corresponding index file.\n";
@@ -62,8 +67,10 @@ public class BamIndexStats extends CommandLineProgram {
      */
     protected int doWork() {
 
+        if (INPUT.getName().endsWith(BAMIndex.BAMIndexSuffix))
+               log.warn("INPUT should be BAM file not index file");
         IoUtil.assertFileIsReadable(INPUT);
-        BAMIndexer.printIndexStats(INPUT);
+        BAMIndexMetaData.printIndexStats(INPUT);
 
         return 0;
     }

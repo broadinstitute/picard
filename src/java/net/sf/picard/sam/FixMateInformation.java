@@ -154,6 +154,9 @@ public class FixMateInformation extends CommandLineProgram {
             header.setSortOrder(outputSortOrder);
         }
 
+        if (CREATE_INDEX && header.getSortOrder() != SortOrder.coordinate){
+            throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
+        }
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
                                                                                 header.getSortOrder() == SortOrder.queryname,

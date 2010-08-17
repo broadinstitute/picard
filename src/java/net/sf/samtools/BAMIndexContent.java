@@ -40,12 +40,12 @@ class BAMIndexContent {
     /**
      * A list of all bins in the above reference sequence.
      */
-    private BinList mBinList;
+    private final BinList mBinList;
 
     /**
      * Chunks containing metaData for the reference, e.g. number of aligned and unaligned records
      */
-    private final List<Chunk> metaDataChunks;
+    private final BAMIndexMetaData mMetaData;
 
     /**
      * The linear index for the reference sequence above.
@@ -57,13 +57,13 @@ class BAMIndexContent {
      * @param referenceSequence Content corresponds to this reference.
      * @param bins              Array of bins represented by this content, possibly sparse
      * @param numberOfBins      Number of non-null bins
-     * @param metaDataChunks    Chunks representing metaData
+     * @param metaData          Extra information about the reference in this index
      * @param linearIndex       Additional index used to optimize queries
      */
-    BAMIndexContent(final int referenceSequence, final Bin[] bins, final int numberOfBins, final List<Chunk> metaDataChunks, final LinearIndex linearIndex) {
+    BAMIndexContent(final int referenceSequence, final Bin[] bins, final int numberOfBins, final BAMIndexMetaData metaData, final LinearIndex linearIndex) {
         this.mReferenceSequence = referenceSequence;
         this.mBinList = new BinList(bins, numberOfBins);
-        this.metaDataChunks = metaDataChunks;
+        this.mMetaData = metaData;
         this.mLinearIndex = linearIndex;
     }
 
@@ -96,17 +96,10 @@ class BAMIndexContent {
     }
 
     /**
-     * @return the chunks associated with the specified bin
-     */
-    public List<Chunk> getChunksForBin(final Bin bin) {
-        return Collections.unmodifiableList(bin.getChunkList());
-    }
-
-    /**
      * @return the meta data chunks for this content
      */
-    public List<Chunk> getMetaDataChunks() {
-        return Collections.unmodifiableList(metaDataChunks);
+    public BAMIndexMetaData getMetaData() {
+        return mMetaData;
     }
 
     /**
@@ -139,21 +132,6 @@ class BAMIndexContent {
         public final int maxBinNumber;  // invariant: maxBinNumber = mBinArray.length -1 since array is 0 based
 
         /**
-         * @param binList      an ArrayList representation of the bins
-         * @param maxBinNumber maximum bin number in the bin being read. <= MAX_BINS
-         */
-        BinList(List<Bin> binList, int maxBinNumber) {
-            this.maxBinNumber = maxBinNumber;
-            mBinArray = new Bin[maxBinNumber + 1];
-            int count = 0;
-            for (Bin b : binList) {
-                mBinArray[b.getBinNumber()] = b;
-                count++;
-            }
-            numberOfNonNullBins = count; // note this is the same as binList.size(), but avoids traversing the list again.
-        }
-
-        /**
          * @param binArray            a sparse array representation of the bins. The index into the array is the bin number.
          * @param numberOfNonNullBins
          */
@@ -183,7 +161,7 @@ class BAMIndexContent {
 
         private class BinIterator implements Iterator<Bin> {
             /**
-             * Stores the bin currently in use.
+             * Stores the bin # of the Bin currently in use.
              */
             private int nextBin;
 

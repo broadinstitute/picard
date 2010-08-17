@@ -23,15 +23,13 @@
  */
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMRecord;
+import net.sf.samtools.*;
 
 import java.io.File;
 import java.util.Iterator;
@@ -59,6 +57,9 @@ public class SamFormatConverter extends CommandLineProgram {
         SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
 
+        if  (CREATE_INDEX && writer.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate){
+            throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
+        }
         final Iterator<SAMRecord> iterator = reader.iterator();
         while (iterator.hasNext()) {
             writer.addAlignment(iterator.next());

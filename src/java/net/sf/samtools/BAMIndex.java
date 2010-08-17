@@ -34,16 +34,6 @@ public interface BAMIndex {
     public static final String BAMIndexSuffix = ".bai";
 
     /**
-     * Open the BAM file index.
-     */
-    public void open();
-
-    /**
-     * Close the BAM file index.
-     */
-    public void close();
-
-    /**
      * Gets the compressed chunks which should be searched for the contents of records contained by the span
      * referenceIndex:startPos-endPos, inclusive.  See the BAM spec for more information on how a chunk is
      * represented.
