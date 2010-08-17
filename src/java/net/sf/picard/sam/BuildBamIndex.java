@@ -39,22 +39,21 @@ import java.net.URL;
  */
 public class BuildBamIndex extends CommandLineProgram {
 
-    private static final Log log = Log.getInstance(BAMIndexer.class);
+    private static final Log log = Log.getInstance(BuildBamIndex.class);
 
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file. " +
-            "Input BAM file must be sorted in coordinate order. " +
-            "Output file defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai)";
+    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="A BAM file or URL to process.")
+            doc="A BAM file or URL to process. Must be sorted in coordinate order.")
     public String INPUT;
 
     URL inputUrl = null;   // INPUT as URL
     File inputFile = null; // INPUT as File, if it can't be interpreted as a valid URL
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The BAM index file.", optional=true)
+            doc="The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
+                "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional=true)
     public File OUTPUT;
 
     /** Stock main method for a command line program. */
@@ -68,7 +67,6 @@ public class BuildBamIndex extends CommandLineProgram {
      * all the records generating a BAM Index, then writes the bai file.
      */
     protected int doWork() {
-        final Log log = Log.getInstance(getClass());
 
         try {
             inputUrl = new URL(INPUT);
@@ -117,8 +115,6 @@ public class BuildBamIndex extends CommandLineProgram {
         if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
             throw new SAMException("Input bam file must be sorted by coordinates");
         }
-
-        bam.enableFileSource(true);
 
         createIndex(bam, OUTPUT);
 

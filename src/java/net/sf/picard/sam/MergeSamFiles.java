@@ -202,4 +202,12 @@ public class MergeSamFiles extends CommandLineProgram {
         return 0;
     }
 
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (CREATE_INDEX && SORT_ORDER != SAMFileHeader.SortOrder.coordinate) {
+            return new String[]{"Can't CREATE_INDEX unless SORT_ORDER is coordinate"};
+        }
+        return null;
+    }
+
 }

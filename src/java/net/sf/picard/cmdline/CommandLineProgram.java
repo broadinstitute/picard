@@ -32,6 +32,7 @@ import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.metrics.StringHeader;
 import net.sf.picard.util.Log;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.BlockCompressedStreamConstants;
@@ -68,7 +69,7 @@ public abstract class CommandLineProgram {
     private static final Set<String> STANDARD_OPTIONS =
             Collections.unmodifiableSet(new HashSet<String>(
                     Arrays.asList("TMP_DIR", "VERBOSITY", "QUIET", "VALIDATION_STRINGENCY",
-                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM")));
+                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM", "CREATE_INDEX")));
 
     @Option
     public File TMP_DIR = (System.getProperty("java.io.tmpdir").endsWith("/" + System.getProperty("user.name"))?
@@ -91,6 +92,9 @@ public abstract class CommandLineProgram {
 
     @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
+
+    @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.")
+    public Boolean CREATE_INDEX = false;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
@@ -135,6 +139,10 @@ public abstract class CommandLineProgram {
 
         if (MAX_RECORDS_IN_RAM != null) {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
+        }
+
+        if (CREATE_INDEX){
+            SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
 
         if (!TMP_DIR.exists()) {

@@ -37,6 +37,7 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
     protected final int nRef;
     protected final File output;
     private final BinaryCodec codec;
+    private int count = 0;
 
     /**
      * constructor
@@ -64,8 +65,15 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
 
         if (content == null) {
             writeNullContent();
+            count++;
             return;
         }
+
+        if (content.getReferenceSequence() != count){
+            throw new SAMException("Unexpectedly writing reference " + content.getReferenceSequence() +
+                ", expecting reference " + count);
+        }
+        count ++;
 
         // write bins
 
@@ -77,18 +85,21 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
             return;
         }
 
-        codec.writeInt(size);
+        //final List<Chunk> chunks = content.getMetaData() == null ? null
+        //        : content.getMetaData().getMetaDataChunks();
+        BAMIndexMetaData metaData = content.getMetaData();
+
+        codec.writeInt(size + ((metaData != null)? 1 : 0 ));
+        // codec.writeInt(size);
         for (Bin bin : bins) {   // note, bins will always be sorted
             if (bin.getBinNumber() == AbstractBAMFileIndex.MAX_BINS)
                 continue;
             writeBin(bin);
         }
 
-        // write chunks
-        
-        final List<Chunk> chunks = content.getMetaDataChunks();
-        if (chunks != null)
-            writeChunkMetaData(content.getReferenceSequence(), chunks);
+        // write metadata "bin" and chunks        
+        if (metaData != null)
+            writeChunkMetaData(metaData);
 
         // write linear index
 
@@ -153,21 +164,18 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
     /**
      * Write the meta data represented by the chunkLists associated with bin MAX_BINS 37450
      *
-     * @param ref reference sequence for this metadata
-     * @param chunkList contains metadata describing numAligned records, numUnAligned, etc
+     * @param metaData information describing numAligned records, numUnAligned, etc
      */
-    private void writeChunkMetaData(int ref, List<Chunk> chunkList) {
+    private void writeChunkMetaData(BAMIndexMetaData metaData) {
         codec.writeInt(AbstractBAMFileIndex.MAX_BINS);
-        final int n_chunk = chunkList.size();
-        if (n_chunk != 2){
-            throw new SAMException("Unexpected # chunks of index meta data= " + n_chunk + " for reference " + ref);
-        }
-        codec.writeInt(n_chunk);
-        for (final Chunk c : chunkList) {
-            codec.writeLong(c.getChunkStart());
-            codec.writeLong(c.getChunkEnd());
-        }
-   }
+        final int nChunk = 2;
+        codec.writeInt(nChunk);
+        codec.writeLong(metaData.getFirstOffset());
+        codec.writeLong(metaData.getLastOffset());
+        codec.writeLong(metaData.getAlignedRecordCount());
+        codec.writeLong(metaData.getUnalignedRecordCount());
+
+    }
 
     private void writeHeader() {
         // magic string

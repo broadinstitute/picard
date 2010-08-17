@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.BlockCompressedFilePointerUtil;
 import net.sf.samtools.util.BlockCompressedInputStream;
 
 import java.io.*;
@@ -104,67 +105,6 @@ public class BAMIndexer {
     }
 
     /**
-     * Prints meta-data statistics from BAM index (.bai) file
-     * Statistics include count of aligned and unaligned reads for each reference sequence
-     * and a count of all records with no start coordinate
-     */
-    static public void printIndexStats(final File inputBamFile) {
-        try {
-            final BAMFileReader bam = new BAMFileReader(inputBamFile, null, false, SAMFileReader.ValidationStringency.SILENT);
-
-            if (!bam.hasIndex()) {
-                throw new SAMException("No index for bam file " + inputBamFile);
-            }
-
-            AbstractBAMFileIndex index = (AbstractBAMFileIndex) bam.getIndex();
-            index.open();
-            // read through all the bins of every reference.
-            int nRefs = index.getNumberOfReferences();
-            for (int i = 0; i < nRefs; i++) {
-
-                final SAMSequenceRecord seq = bam.getFileHeader().getSequence(i);
-                if (seq == null) continue;
-                final String sequenceName = seq.getSequenceName();
-                final int sequenceLength = seq.getSequenceLength();
-                System.out.print(sequenceName + ' ' + "length=\t" + sequenceLength);
-
-                BAMIndexContent content = index.query(i, 0, -1); // todo: it would be faster just to skip to the last bin
-
-                if (content == null || content.getBins() == null) {
-                    System.out.println();
-                    continue;
-                }
-                List<Chunk> chunkList = content.getMetaDataChunks();
-                if (chunkList == null || chunkList.size() == 0) {
-                    // System.out.println("No metadata chunks");
-                } else if (chunkList.size() != 2) {
-                    throw new SAMException("Unexpected number of metadata chunks " + (chunkList.size()));
-                }
-                boolean firstChunk = true;
-                if (chunkList != null) {
-                    for (Chunk c : chunkList) {
-                        long start = c.getChunkStart();
-                        long end = c.getChunkEnd();
-                        if (firstChunk) {
-                            // samtools idxstats doesn't print this, so we won't either
-                            // System.out.print(sequenceName + ' ' + "Start=" + start + "    End=" + end);
-                            firstChunk = false;
-                        } else {
-                            firstChunk = true;
-                            System.out.println("\tAligned= " + start + "\tUnaligned= " + end);
-                        }
-                    }
-                }
-            }
-
-            System.out.println("NoCoordinateCount= " + index.getNoCoordinateCount());
-
-        } catch (IOException e) {
-            throw new SAMException("Exception in getting index statistics", e);
-        }
-    }
-
-    /**
      * Generates a BAM index file, either textual or binary, from an input BAI file.
      * Only used for testing, but located here for visibility into CachingBAMFileIndex.
      *
@@ -191,7 +131,6 @@ public class BAMIndexer {
             }
             outputWriter.writeNoCoordinateRecordCount(existingIndex.getNoCoordinateCount());
             outputWriter.close();
-            existingIndex.close();
 
         } catch (Exception e) {
             throw new SAMException("Exception creating BAM index", e);
@@ -217,7 +156,7 @@ public class BAMIndexer {
         private int largestIndexSeen = -1;
 
         // information in meta data
-        private BAMIndexStats indexStats = new BAMIndexStats();
+        private BAMIndexMetaData indexStats = new BAMIndexMetaData();
 
         /**
          * @param header SAMFileheader used for reference name (in index stats) and for max bin number
@@ -233,25 +172,19 @@ public class BAMIndexer {
          */
         public void processAlignment(final SAMRecord rec) {
 
-            // various checks
-            final int reference = rec.getReferenceIndex() == -1 ? currentReference : rec.getReferenceIndex();
+            // metadata
+            indexStats.recordMetaData(rec);
 
-            if (reference != currentReference) {
-                throw new SAMException("Unexpected reference " + reference +
-                        " when constructing index for " + currentReference + " for record " + rec);
-            }
-
-            // meta data processing
             final int alignmentStart = rec.getAlignmentStart();
             if (alignmentStart == SAMRecord.NO_ALIGNMENT_START) {
-                indexStats.incrementNoCoordinateRecordCount();
                 return; // do nothing for records without coordinates, but count them
             }
 
-            if (rec.getReadUnmappedFlag()) {
-                indexStats.incrementUnAlignedRecordCount();
-            } else {
-                indexStats.incrementAlignedRecordCount();
+            // various checks
+            final int reference = rec.getReferenceIndex();
+            if (reference != currentReference) {
+                throw new SAMException("Unexpected reference " + reference +
+                        " when constructing index for " + currentReference + " for record " + rec);
             }
 
             // process bins
@@ -261,7 +194,7 @@ public class BAMIndexer {
 
             // has the bins array been allocated? If not, do so
             if (bins == null) {
-                final SAMSequenceRecord seq = bamHeader == null ? null : bamHeader.getSequence(reference);
+                final SAMSequenceRecord seq = bamHeader.getSequence(reference);
                 if (seq == null) {
                     bins = new Bin[MAX_BINS + 1];
                 } else {
@@ -285,28 +218,23 @@ public class BAMIndexer {
             if (source == null) {
                 throw new SAMException("No source (virtual file offsets); needed for indexing on BAM Record " + rec);
             }
-            final BAMFileSpan newSpan = (BAMFileSpan) source.getFilePointer();
-            Chunk newChunk = newSpan.getSingleChunk();
-
+            final Chunk newChunk = ((BAMFileSpan) source.getFilePointer()).getSingleChunk();
             final long chunkStart = newChunk.getChunkStart();
-            indexStats.setFirstOffsetIfSmaller(chunkStart);
-
             final long chunkEnd = newChunk.getChunkEnd();
-            indexStats.setLastOffsetIfLarger(chunkEnd);
 
-            List<Chunk> oldChunks = bin.getChunkList();
+            final List<Chunk> oldChunks = bin.getChunkList();
             if (oldChunks == null) {
                 bin.addInitialChunk(newChunk);
 
             } else {
                 final Chunk lastChunk = bin.getLastChunk();
 
-                // Coalesce chunks that are in adjacent file blocks.
+                // Coalesce chunks that are in the same or adjacent file blocks.
                 // Similar to AbstractBAMFileIndex.optimizeChunkList,
                 // but no need to copy the list, no minimumOffset, and maintain bin.lastChunk
                 final long lastFileBlock = BlockCompressedInputStream.getFileBlock(lastChunk.getChunkEnd());
                 final long chunkFileBlock = BlockCompressedInputStream.getFileBlock(chunkStart);
-                if (chunkFileBlock - lastFileBlock <= 1) { // todo - possibility of overflow?
+                if (BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastFileBlock, chunkFileBlock)) {
                     lastChunk.setChunkEnd(chunkEnd);  // coalesced
                 } else {
                     oldChunks.add(newChunk);
@@ -355,9 +283,7 @@ public class BAMIndexer {
             if (binsSeen == 0) return null;  // no bins for this reference
 
             // process chunks
-            final Bin metaBin = new Bin(reference, MAX_BINS);
-            final List<Chunk> metaData = getMetaDataChunks();
-            metaBin.setChunkList(metaData);
+            // nothing needed
 
             // process linear index
             // linear index will only be as long as the largest index seen
@@ -368,6 +294,7 @@ public class BAMIndexer {
             for (int i = 0; i <= largestIndexSeen; i++) {
                 if (index[i] == 0) {
                     index[i] = lastNonZeroOffset; // not necessary, but C (samtools index) does this
+                    // note, if you remove the above line BAMIndexWriterTest.compareTextual and compareBinary will have to change
                 } else {
                     lastNonZeroOffset = index[i];
                 }
@@ -376,7 +303,7 @@ public class BAMIndexer {
 
             final LinearIndex linearIndex = new LinearIndex(reference, 0, newIndex);
 
-            return new BAMIndexContent(reference, bins, binsSeen + 1, metaData, linearIndex);
+            return new BAMIndexContent(reference, bins, binsSeen, indexStats, linearIndex);
         }
 
         /**
@@ -396,17 +323,7 @@ public class BAMIndexer {
             }
             binsSeen = 0;
             largestIndexSeen = -1;
-
             indexStats.newReference();
         }
-
-        /**
-         * @return the per-reference list of meta data in the form of Chunks
-         */
-        private List<Chunk> getMetaDataChunks() {
-
-            return indexStats.getMetaDataChunks();
-        }
-
     }
 }

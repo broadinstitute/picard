@@ -32,22 +32,17 @@ import java.io.OutputStream;
 public class SAMFileWriterFactory {
 
     private static boolean DefaultCreateIndexWhileWriting = false;
-    private boolean createIndex = false;
+    private boolean createIndex = DefaultCreateIndexWhileWriting ;
 
     private Integer maxRecordsInRam;
 
     /**
-     * Construct a factory that uses the default to decide whether or not to create bam index files while creating the bam file.
-     */
-    public SAMFileWriterFactory() {
-        this.createIndex = DefaultCreateIndexWhileWriting;
-    }
-
-    /**
      * Sets the default for subsequent SAMFileWriterFactories
-     * that do not specify whether to create an index
+     * that do not specify whether to create an index.
+     * If a BAM (not SAM) file is created, the setting is true, and the file header specifies coordinate order,
+     * then a BAM index file will be written along with the BAM file.
      *
-     * @param setting whether to create the bam index on the fly while creating the bam file
+     * @param setting whether to attempt to create a BAM index while creating the BAM file
      */
     public static void setDefaultCreateIndexWhileWriting(final boolean setting) {
         DefaultCreateIndexWhileWriting = setting;
@@ -56,11 +51,30 @@ public class SAMFileWriterFactory {
     /**
      * Convenience method allowing newSAMFileWriterFactory().setCreateIndex(true);
      * Equivalent to SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true); newSAMFileWriterFactory();
-     * @param setting whether to attempt to create a BAM index while creating the BAM file
+     * If a BAM (not SAM) file is created, the setting is true, and the file header specifies coordinate order,
+     * then a BAM index file will be written along with the BAM file.
+     *
+     * @param setting whether to attempt to create a BAM index while creating the BAM file.
      * @return this factory object
      */
     public SAMFileWriterFactory setCreateIndex(final boolean setting){
         this.createIndex = setting;
+        return this;
+    }
+
+    /**
+     * Before creating a writer that is not presorted, this method may be called in order to override
+     * the default number of SAMRecords stored in RAM before spilling to disk
+     * (c.f. SAMFileWriterImpl.MAX_RECORDS_IN_RAM).  When writing very large sorted SAM files, you may need
+     * call this method in order to avoid running out of file handles.  The RAM available to the JVM may need
+     * to be increased in order to hold the specified number of records in RAM.  This value affects the number
+     * of records stored in subsequent calls to one of the make...() methods.
+     *
+     * @param maxRecordsInRam Number of records to store in RAM before spilling to temporary file when
+     * creating a sorted SAM or BAM file.
+     */
+    public SAMFileWriterFactory setMaxRecordsInRam(int maxRecordsInRam) {
+        this.maxRecordsInRam = maxRecordsInRam;
         return this;
     }
 
@@ -153,18 +167,4 @@ public class SAMFileWriterFactory {
         return makeBAMWriter(header, presorted, outputFile);
     }
 
-    /**
-     * Before creating a writer that is not presorted, this method may be called in order to override
-     * the default number of SAMRecords stored in RAM before spilling to disk
-     * (c.f. SAMFileWriterImpl.MAX_RECORDS_IN_RAM).  When writing very large sorted SAM files, you may need
-     * call this method in order to avoid running out of file handles.  The RAM available to the JVM may need
-     * to be increased in order to hold the specified number of records in RAM.  This value affects the number
-     * of records stored in subsequent calls to one of the make...() methods.
-     *
-     * @param maxRecordsInRam Number of records to store in RAM before spilling to temporary file when
-     * creating a sorted SAM or BAM file.
-     */
-    public void setMaxRecordsInRam(int maxRecordsInRam) {
-        this.maxRecordsInRam = maxRecordsInRam;
-    }
 }

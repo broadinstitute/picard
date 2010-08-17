@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.BlockCompressedFilePointerUtil;
 import net.sf.samtools.util.RuntimeIOException;
 import static net.sf.samtools.util.BlockCompressedInputStream.getFileBlock;
 
@@ -48,7 +49,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     /**
      * Reports the total amount of genomic data that any bin can index.
      */
-    protected static final int BIN_SPAN = 512*1024*1024;
+    protected static final int BIN_GENOMIC_SPAN = 512*1024*1024;
 
     /**
      * What is the starting bin for each level?
@@ -63,15 +64,34 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
 
     private final File mFile;
-    private MappedByteBuffer mFileBuffer;
+    private final MappedByteBuffer mFileBuffer;
 
     private SAMSequenceDictionary mBamDictionary = null;
 
     protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
         mFile = file;
         mBamDictionary = dictionary;
-        if (file != null){
-            open();
+        // Open the file stream.
+        try {
+            FileInputStream fileStream = new FileInputStream(mFile);
+            FileChannel fileChannel = fileStream.getChannel();
+            mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
+            mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            fileChannel.close();
+            fileStream.close();
+        }
+        catch (IOException exc) {
+            throw new RuntimeIOException(exc.getMessage(), exc);
+        }
+
+        // Verify the magic number.
+        seek(0);
+        final byte[] buffer = new byte[4];
+        readBytes(buffer);
+        if (!Arrays.equals(buffer, BAMFileConstants.BAM_INDEX_MAGIC)) {
+            throw new RuntimeException("Invalid file header in BAM index " + mFile +
+                                       ": " + new String(buffer));
         }
     }
 
@@ -128,7 +148,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         final int level = getLevelForBin(bin);
         final int levelStart = LEVEL_STARTS[level];
         final int levelSize = ((level==getNumIndexLevels()-1) ? MAX_BINS-1 : LEVEL_STARTS[level+1]) - levelStart;
-        return (bin.getBinNumber() - levelStart)*(BIN_SPAN/levelSize)+1;
+        return (bin.getBinNumber() - levelStart)*(BIN_GENOMIC_SPAN /levelSize)+1;
     }
 
     /**
@@ -140,47 +160,12 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
         final int level = getLevelForBin(bin);
         final int levelStart = LEVEL_STARTS[level];
         final int levelSize = ((level==getNumIndexLevels()-1) ? MAX_BINS-1 : LEVEL_STARTS[level+1]) - levelStart;
-        return (bin.getBinNumber()-levelStart+1)*(BIN_SPAN/levelSize);
-    }
-
-    public void open() {
-        // Open the file stream.
-        if (mFileBuffer != null) {
-            return;
-        }
-        try {
-            FileInputStream fileStream = new FileInputStream(mFile);
-            FileChannel fileChannel = fileStream.getChannel();
-            mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
-            mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            fileChannel.close();
-            fileStream.close();
-        }
-        catch (IOException exc) {
-            throw new RuntimeIOException(exc.getMessage(), exc);
-        }
-
-        // Verify the magic number.
-        seek(0);
-        final byte[] buffer = new byte[4];
-        readBytes(buffer);
-        if (!Arrays.equals(buffer, BAMFileConstants.BAM_INDEX_MAGIC)) {
-            close();
-            throw new RuntimeException("Invalid file header in BAM index " + mFile +
-                                       ": " + new String(buffer));
-        }
+        return (bin.getBinNumber()-levelStart+1)*(BIN_GENOMIC_SPAN /levelSize);
     }
 
     public int getNumberOfReferences() {
-        if(mFileBuffer == null)
-            throw new SAMException("Cannot query a closed index file");
         seek(4);
         return readInteger();
-    }
-
-    public void close() {
-        mFileBuffer = null;
     }
 
     /**
@@ -189,8 +174,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * if there are no elements in linear bins (i.e. no mapped reads).
      */
     public long getStartOfLastLinearBin() {
-        if(mFileBuffer == null)
-            throw new SAMException("Cannot query a closed index file");
         seek(4);
 
         final int sequenceCount = readInteger();
@@ -225,8 +208,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return meta data at the end of the bam index that indicates count of records holding no coordinates
      */
     Long getNoCoordinateCount(){
-       if(mFileBuffer == null)
-            throw new SAMException("Cannot query a closed index file");
         try { // in case of old index file without meta data
            return readLong();
         } catch (Exception e){
@@ -235,8 +216,6 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
     }
 
     protected BAMIndexContent query(final int referenceSequence, final int startPos, final int endPos) {
-        if(mFileBuffer == null)
-            throw new SAMException("Cannot query a closed index file");
         seek(4);
 
         Bin[] bins = null;
@@ -256,12 +235,13 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
         skipToSequence(referenceSequence);
 
-        final int binCount = readInteger();
+        int binCount = readInteger();
+        boolean metaDataSeen = false;
         bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
-            List<Chunk> chunks = new ArrayList<Chunk>();  // todo LinkedList ?
             final int indexBin = readInteger();
             final int nChunks = readInteger();
+            List<Chunk> chunks = new ArrayList<Chunk>(nChunks);
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
             Chunk lastChunk = null;
             if (regionBins.get(indexBin)) {
@@ -280,6 +260,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
                     lastChunk = new Chunk(chunkBegin, chunkEnd);
                     metaDataChunks.add(lastChunk);
                 }
+                metaDataSeen = true;
                 continue; // don't create a Bin
             } else {
                 skipBytes(16 * nChunks);
@@ -306,7 +287,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
 
         linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
 
-        return new BAMIndexContent(referenceSequence, bins, binCount, metaDataChunks, linearIndex);
+        return new BAMIndexContent(referenceSequence, bins, binCount - (metaDataSeen? 1 : 0), new BAMIndexMetaData(metaDataChunks), linearIndex);
     }
 
     /**
@@ -338,7 +319,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return How many bins could possibly be used according to this indexing scheme to index a single contig.
      */
     protected int getMaxAddressibleGenomicLocation() {
-        return BIN_SPAN;
+        return BIN_GENOMIC_SPAN;
     }
 
     /**
@@ -382,7 +363,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             // This is a performance optimization.
             final long lastFileBlock = getFileBlock(lastChunk.getChunkEnd());
             final long chunkFileBlock = getFileBlock(chunk.getChunkStart());
-            if (chunkFileBlock - lastFileBlock > 1) {
+            if (! BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastFileBlock, chunkFileBlock)) {
                 result.add(chunk);
                 lastChunk = chunk;
             } else {

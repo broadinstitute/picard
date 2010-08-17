@@ -39,6 +39,7 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
     protected final int nRef;
     protected final File output;
     private final PrintWriter pw;
+    private int count = 0;
 
     /**
      * constructor
@@ -73,12 +74,14 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
 
         if (content == null) {
             writeNullContent(reference);
+            count++;
             return;
         }
-        final int ref = content.getReferenceSequence();
-        if (ref != reference){
-            throw new SAMException("Reference on content is " + ref + " but expecting reference " + reference);
+
+        if (reference != count){
+            throw new SAMException("Reference on content is " + reference + " but expecting reference " + count);
         }
+        count++;
 
         final BAMIndexContent.BinList bins = content.getBins();
         final int size = bins == null ? 0 : content.getNumberOfNonNullBins();
@@ -88,7 +91,11 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
             return;
         }
 
-        pw.println("Reference " + ref + " has n_bin= " + size);
+        //final List<Chunk> chunks = content.getMetaData() == null ? null
+        //        : content.getMetaData().getMetaDataChunks();
+        BAMIndexMetaData metaData = content.getMetaData();
+
+        pw.println("Reference " + reference + " has n_bin= " + Integer.toString(size + (metaData != null? 1 : 0)));
 
         // chunks
         for (Bin bin : bins) {   // note, bins will always be sorted
@@ -99,10 +106,10 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
             }
             final List<Chunk> chunkList = bin.getChunkList();
             if (chunkList == null) {
-                pw.println("  Ref " + ref + " bin " + bin.getBinNumber() + " has no chunkList");
+                pw.println("  Ref " + reference + " bin " + bin.getBinNumber() + " has no chunkList");
                 continue;
             }
-            pw.print("  Ref " + ref + " bin " + bin.getBinNumber() + " has n_chunk= " + chunkList.size());
+            pw.print("  Ref " + reference + " bin " + bin.getBinNumber() + " has n_chunk= " + chunkList.size());
             if (chunkList.size() == 0) {
                  pw.println();
             }
@@ -112,22 +119,23 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
                         " end: " + Long.toString(c.getChunkEnd(), 16));
             }
         }
-        writeChunkMetaData(ref, content.getMetaDataChunks());
+
+        writeChunkMetaData(reference, metaData);
         
         // linear index
         final LinearIndex linearIndex = content.getLinearIndex();
         if (linearIndex == null || linearIndex.getIndexEntries() == null) {
-            pw.println("Reference " + ref + " has n_intv= 0");
+            pw.println("Reference " + reference + " has n_intv= 0");
             return;
         }
         final long[] entries = linearIndex.getIndexEntries();
         final int indexStart = linearIndex.getIndexStart();
         // System.out.println("index start is " + indexStart);
         final int n_intv = entries.length + indexStart;
-        pw.println("Reference " + ref + " has n_intv= " + n_intv);
+        pw.println("Reference " + reference + " has n_intv= " + n_intv);
         for (int k = 0; k < entries.length; k++) {
             if (entries[k] != 0) {
-                pw.println("  Ref " + ref + " ioffset for " + (k + indexStart) + " is " + Long.toString(entries[k]));
+                pw.println("  Ref " + reference + " ioffset for " + (k + indexStart) + " is " + Long.toString(entries[k]));
             }
         }
         pw.flush ();  // write each reference to disk as it's being created
@@ -136,17 +144,20 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
     /**
      * Write the meta data represented by the chunkLists associated with bin MAX_BINS 37450
      *
-     * @param chunkList contains metadata describing numAligned records, numUnAligned, etc
+     * @param metaData information describing numAligned records, numUnAligned, etc
      */
-    private void writeChunkMetaData(int reference, List<Chunk> chunkList) {
-        pw.print("  Ref " + reference + " bin 37450 has n_chunk= " + chunkList.size());
-        if (chunkList.size() == 0) {
+    private void writeChunkMetaData(int reference, BAMIndexMetaData metaData) {
+        final int nChunks = metaData == null ? 0 : 2;
+        pw.print("  Ref " + reference + " bin 37450 has n_chunk= " + nChunks);
+        if (nChunks == 0) {
             pw.println();
-        }
-        for (final Chunk c : chunkList) {
-            pw.println("     Chunk: " + c.toString() +
-                    " start: " + Long.toString(c.getChunkStart(), 16) +
-                    " end: " + Long.toString(c.getChunkEnd(), 16));
+        } else {
+            pw.println("     Chunk: " + //  c.toString() +
+                    " start: " + Long.toString(metaData.getFirstOffset(), 16) +
+                    " end: " + Long.toString(metaData.getLastOffset(), 16));
+            pw.println("     Chunk: " + //  c.toString() +
+                    " start: " + Long.toString(metaData.getAlignedRecordCount(), 16) +
+                    " end: " + Long.toString(metaData.getUnalignedRecordCount(), 16));
         }
 
     }
