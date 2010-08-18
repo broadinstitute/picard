@@ -25,7 +25,6 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.BlockCompressedFilePointerUtil;
 import net.sf.samtools.util.RuntimeIOException;
-import static net.sf.samtools.util.BlockCompressedInputStream.getFileBlock;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -361,9 +360,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             }
             // Coalesce chunks that are in adjacent file blocks.
             // This is a performance optimization.
-            final long lastFileBlock = getFileBlock(lastChunk.getChunkEnd());
-            final long chunkFileBlock = getFileBlock(chunk.getChunkStart());
-            if (! BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastFileBlock, chunkFileBlock)) {
+            if (! BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastChunk.getChunkEnd(), chunk.getChunkStart())) {
                 result.add(chunk);
                 lastChunk = chunk;
             } else {
