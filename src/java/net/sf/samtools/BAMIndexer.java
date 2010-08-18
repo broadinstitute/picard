@@ -24,7 +24,6 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.BlockCompressedFilePointerUtil;
-import net.sf.samtools.util.BlockCompressedInputStream;
 
 import java.io.*;
 import java.util.Arrays;
@@ -232,9 +231,7 @@ public class BAMIndexer {
                 // Coalesce chunks that are in the same or adjacent file blocks.
                 // Similar to AbstractBAMFileIndex.optimizeChunkList,
                 // but no need to copy the list, no minimumOffset, and maintain bin.lastChunk
-                final long lastFileBlock = BlockCompressedInputStream.getFileBlock(lastChunk.getChunkEnd());
-                final long chunkFileBlock = BlockCompressedInputStream.getFileBlock(chunkStart);
-                if (BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastFileBlock, chunkFileBlock)) {
+                if (BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastChunk.getChunkEnd(),chunkStart)) {
                     lastChunk.setChunkEnd(chunkEnd);  // coalesced
                 } else {
                     oldChunks.add(newChunk);
