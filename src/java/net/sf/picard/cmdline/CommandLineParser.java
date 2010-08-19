@@ -465,7 +465,7 @@ public class CommandLineParser {
             reader = new BufferedReader(new FileReader(optionsFile));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("#")) {
+                if (line.startsWith("#") || line.trim().length() == 0) {
                     continue;
                 }
                 final String[] pair = line.split("=", 2);
