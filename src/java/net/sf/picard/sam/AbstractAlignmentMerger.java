@@ -64,6 +64,7 @@ public abstract class AbstractAlignmentMerger {
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<String>();
+    private final File referenceFasta;
 
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
@@ -93,13 +94,12 @@ public abstract class AbstractAlignmentMerger {
                                    final List<String> attributesToRetain) {
         this.unmappedBamFile = unmappedBamFile;
         this.targetBamFile = targetBamFile;
+        this.referenceFasta = referenceFasta;
 
         IoUtil.assertFileIsReadable(unmappedBamFile);
         IoUtil.assertFileIsWritable(targetBamFile);
         if (referenceFasta != null) {
-            if (referenceFasta.exists()) {
-                refSeq = new ReferenceSequenceFileWalker(referenceFasta);
-            }
+            setRefSeqFileWalker();
             String fastaPath = referenceFasta.getAbsolutePath();
             File sd = new File(fastaPath.substring(0, fastaPath.lastIndexOf(".")) + ".dict");
             if (!sd.exists()) {
@@ -434,4 +434,9 @@ public abstract class AbstractAlignmentMerger {
     protected SAMFileHeader getHeader() { return this.header; }
     protected boolean ignoreAlignment(SAMRecord sam) { return false; } // default implementation
 
+    protected void setRefSeqFileWalker() {
+        if (this.referenceFasta != null && this.referenceFasta.exists()) {
+            refSeq = new ReferenceSequenceFileWalker(referenceFasta);
+        }
+    }
 }
