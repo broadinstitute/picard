@@ -107,6 +107,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
         catch(Exception e) {
             forceSort = true;
+            setRefSeqFileWalker();
             super.mergeAlignment();
         }
     }
