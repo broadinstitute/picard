@@ -74,11 +74,12 @@ public class BAMFileWriter extends SAMFileWriterImpl {
 
     private BAMIndexer createBamIndex(String path) {
         try {
-            String indexFileName = path + BAMIndex.BAMIndexSuffix;
-            File indexFile = new File(indexFileName);
+            final String indexFileBase = path.endsWith(".bam") ?
+                    path.substring(0, path.lastIndexOf(".")) : path;
+            final File indexFile = new File(indexFileBase + BAMIndex.BAMIndexSuffix);
             if (indexFile.exists()) {
                 if (!indexFile.canWrite()) {
-                    throw new SAMException("Not creating BAM index since unable to write index file " + indexFileName);
+                    throw new SAMException("Not creating BAM index since unable to write index file " + indexFile);
                 }
             }
             return new BAMIndexer(indexFile, getFileHeader());
