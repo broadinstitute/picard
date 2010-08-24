@@ -23,7 +23,12 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.Md5CalculatingOutputStream;
+import net.sf.samtools.util.RuntimeIOException;
+
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -33,8 +38,26 @@ public class SAMFileWriterFactory {
 
     private static boolean DefaultCreateIndexWhileWriting = false;
     private boolean createIndex = DefaultCreateIndexWhileWriting ;
+    private static boolean defaultCreateMd5File = false;
+    private boolean createMd5File = defaultCreateMd5File;
+
 
     private Integer maxRecordsInRam;
+
+    /**
+     * Sets the default for whether to create md5Files for BAM files this factory.
+     */
+    public static void setDefaultCreateMd5File(final boolean createMd5File) {
+        defaultCreateMd5File = createMd5File;
+    }
+
+    /**
+     * Sets whether to create md5Files for BAMs from this factory.
+     */
+    public SAMFileWriterFactory setCreateMd5File(final boolean createMd5File) {
+        this.createMd5File = createMd5File;
+        return this;
+    }
 
     /**
      * Sets the default for subsequent SAMFileWriterFactories
@@ -85,9 +108,17 @@ public class SAMFileWriterFactory {
      * @param outputFile where to write the output.
      */
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
-        final BAMFileWriter ret = new BAMFileWriter(outputFile);
-        initializeBAMWriter(ret, header, presorted);
-        return ret;
+        try {
+            final BAMFileWriter ret = this.createMd5File
+                    ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
+                        new File(outputFile.getAbsolutePath() + ".md5")), outputFile)
+                    : new BAMFileWriter(outputFile);
+            initializeBAMWriter(ret, header, presorted);
+            return ret;
+        }
+        catch (IOException ioe) {
+            throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
+        }
     }
 
     /**
@@ -100,9 +131,17 @@ public class SAMFileWriterFactory {
      */
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile,
                                        final int compressionLevel) {
-        final BAMFileWriter ret = new BAMFileWriter(outputFile, compressionLevel);
-        initializeBAMWriter(ret, header, presorted);
-        return ret;
+        try {
+            final BAMFileWriter ret = this.createMd5File
+                    ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
+                        new File(outputFile.getAbsolutePath() + ".md5")), outputFile, compressionLevel)
+                    : new BAMFileWriter(outputFile, compressionLevel);
+            initializeBAMWriter(ret, header, presorted);
+            return ret;
+        }
+        catch (IOException ioe) {
+            throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
+        }
     }
 
     private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted) {
@@ -123,17 +162,27 @@ public class SAMFileWriterFactory {
      * @param outputFile where to write the output.
      */
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
-        final SAMTextWriter ret = new SAMTextWriter(outputFile);
-        ret.setSortOrder(header.getSortOrder(), presorted);
-        if (maxRecordsInRam != null) {
-            ret.setMaxRecordsInRam(maxRecordsInRam);
+        try {
+            final SAMTextWriter ret = this.createMd5File
+                ? new SAMTextWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
+                    new File(outputFile.getAbsolutePath() + ".md5")))
+                : new SAMTextWriter(outputFile);
+            ret.setSortOrder(header.getSortOrder(), presorted);
+            if (maxRecordsInRam != null) {
+                ret.setMaxRecordsInRam(maxRecordsInRam);
+            }
+            ret.setHeader(header);
+            return ret;
         }
-        ret.setHeader(header);
-        return ret;
+        catch (IOException ioe) {
+            throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
+        }
     }
 
     /**
      * Create a SAMTextWriter for writing to a stream that is ready to receive SAMRecords.
+     * This method does not support the creation of an MD5 file
+     * 
      * @param header entire header. Sort order is determined by the sortOrder property of this arg.
      * @param presorted if true, SAMRecords must be added to the SAMFileWriter in order that agrees with header.sortOrder.
      * @param stream the stream to write records to.

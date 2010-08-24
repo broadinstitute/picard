@@ -81,7 +81,7 @@ public class BlockCompressedOutputStream
     // getFilePointer might return an inaccurate value.
     private final Deflater noCompressionDeflater = new Deflater(Deflater.NO_COMPRESSION, true);
     private final CRC32 crc32 = new CRC32();
-    private final File file;
+    private File file = null;
     private long mBlockAddress = 0;
 
 
@@ -117,6 +117,23 @@ public class BlockCompressedOutputStream
     public BlockCompressedOutputStream(final File file, final int compressionLevel) {
         this.file = file;
         codec = new BinaryCodec(file, true);
+        deflater = new Deflater(compressionLevel, true);
+    }
+
+    /**
+     * Constructors that take output streams
+     * file may be null
+     */
+    public BlockCompressedOutputStream(final OutputStream os, File file) {
+        this(os, file, defaultCompressionLevel);
+    }
+
+    public BlockCompressedOutputStream(final OutputStream os, final File file, final int compressionLevel) {
+        this.file = file;
+        codec = new BinaryCodec(os);
+        if (file != null) {
+            codec.setOutputFileName(file.getAbsolutePath());
+        }
         deflater = new Deflater(compressionLevel, true);
     }
 
@@ -184,8 +201,8 @@ public class BlockCompressedOutputStream
         // }
         codec.writeBytes(BlockCompressedStreamConstants.EMPTY_GZIP_BLOCK);
         codec.close();
-        // Can't re-open something that is not a regular file, e.g. a named pipe.
-        if (!this.file.isFile()) return;
+        // Can't re-open something that is not a regular file, e.g. a named pipe or an output stream
+        if (this.file == null || !this.file.isFile()) return;
         if (BlockCompressedInputStream.checkTermination(this.file) !=
                 BlockCompressedInputStream.FileTermination.HAS_TERMINATOR_BLOCK) {
             throw new IOException("Terminator block not found after closing BGZF file " + this.file);
