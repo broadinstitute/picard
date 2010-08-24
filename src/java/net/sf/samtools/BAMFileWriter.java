@@ -28,6 +28,7 @@ import net.sf.samtools.util.BlockCompressedOutputStream;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 
 /**
  * Concrete implementation of SAMFileWriter for writing gzipped BAM files.
@@ -51,6 +52,18 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         blockCompressedOutputStream = new BlockCompressedOutputStream(path, compressionLevel);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
         outputBinaryCodec.setOutputFileName(path.toString());
+    }
+
+    public BAMFileWriter(final OutputStream os, final File file) {
+        blockCompressedOutputStream = new BlockCompressedOutputStream(os, file);
+        outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
+        outputBinaryCodec.setOutputFileName(file.getAbsolutePath());
+    }
+
+    public BAMFileWriter(final OutputStream os, final File file, int compressionLevel) {
+        blockCompressedOutputStream = new BlockCompressedOutputStream(os, file, compressionLevel);
+        outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
+        outputBinaryCodec.setOutputFileName(file.getAbsolutePath());
     }
 
     private void prepareToWriteAlignments() {

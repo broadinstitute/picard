@@ -69,7 +69,7 @@ public abstract class CommandLineProgram {
     private static final Set<String> STANDARD_OPTIONS =
             Collections.unmodifiableSet(new HashSet<String>(
                     Arrays.asList("TMP_DIR", "VERBOSITY", "QUIET", "VALIDATION_STRINGENCY",
-                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM", "CREATE_INDEX")));
+                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM", "CREATE_INDEX", "MD5_FILE")));
 
     @Option
     public File TMP_DIR = (System.getProperty("java.io.tmpdir").endsWith("/" + System.getProperty("user.name"))?
@@ -95,6 +95,9 @@ public abstract class CommandLineProgram {
 
     @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.")
     public Boolean CREATE_INDEX = false;
+
+    @Option(shortName="MD5", doc="Whether to create an MD5 digest for any BAM files created.  ")
+    public boolean CREATE_MD5_FILE = false;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
@@ -144,6 +147,8 @@ public abstract class CommandLineProgram {
         if (CREATE_INDEX){
             SAMFileWriterFactory.setDefaultCreateIndexWhileWriting(true);
         }
+
+        SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
 
         if (!TMP_DIR.exists()) {
             // Intentially not checking the return value, because it may be that the program does not
