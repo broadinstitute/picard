@@ -96,7 +96,7 @@ public abstract class CommandLineProgram {
     @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.")
     public Boolean CREATE_INDEX = false;
 
-    @Option(shortName="MD5", doc="Whether to create an MD5 digest for any BAM files created.  ")
+    @Option(doc="Whether to create an MD5 digest for any BAM files created.  ")
     public boolean CREATE_MD5_FILE = false;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
