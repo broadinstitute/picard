@@ -26,19 +26,49 @@ package net.sf.samtools;
 /**
  * Comparator for sorting SAMRecords by coordinate.  Note that the header is required because
  * the order of sequences in the header defines the major sort order.
+ *
+ * Ideally this method would only return 0 for completely equal SAMRecords, so that sort is
+ * completely deterministic.  This implementation does not achieve this completely, but it
+ * comes pretty close, while avoiding decoding the variable length fields, except for read name,
+ * which is decoded if coordinate and strand are equal.
+ *
+ * Extreme care must be taken to ensure the following:
+ * if A == B, then B == A
+ * if A < B, then B > A
+ * if A < B && B < C, then A < C
+ *
  */
 public class SAMRecordCoordinateComparator implements SAMRecordComparator {
     public int compare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
-        final int cmp = fileOrderCompare(samRecord1, samRecord2);
+        int cmp = fileOrderCompare(samRecord1, samRecord2);
         if (cmp != 0) {
             return cmp;
         }
+        // Test of negative strand flag is not really necessary, because it is tested
+        // with cmp if getFlags, but it is left here because that is the way it was done
+        // in the past.
         if (samRecord1.getReadNegativeStrandFlag() == samRecord2.getReadNegativeStrandFlag()) {
-            return samRecord1.getReadName().compareTo(samRecord2.getReadName());
+            cmp = samRecord1.getReadName().compareTo(samRecord2.getReadName());
+            if (cmp != 0) return cmp;
+            cmp = compareInts(samRecord1.getFlags(), samRecord2.getFlags());
+            if (cmp != 0) return cmp;
+            cmp = compareInts(samRecord1.getMappingQuality(), samRecord2.getMappingQuality());
+            if (cmp != 0) return cmp;
+            cmp = compareInts(samRecord1.getMateReferenceIndex(), samRecord2.getMateReferenceIndex());
+            if (cmp != 0) return cmp;
+            cmp = compareInts(samRecord1.getMateAlignmentStart(), samRecord2.getMateAlignmentStart());
+            if (cmp != 0) return cmp;
+            cmp = compareInts(samRecord1.getInferredInsertSize(), samRecord2.getInferredInsertSize());
+            return cmp;
+
         }
-        else {
-            return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
-        }
+        else return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
+    }
+
+    private int compareInts(int i1, int i2) {
+        if (i1 < i2) return -1;
+        else if (i1 > i2) return 1;
+        else return 0;
     }
 
     /**
