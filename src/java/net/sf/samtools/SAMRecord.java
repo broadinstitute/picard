@@ -1537,16 +1537,9 @@ public class SAMRecord implements Cloneable
     public Object clone() throws CloneNotSupportedException {
         final SAMRecord newRecord = (SAMRecord)super.clone();
         if (mAttributes != null) {
-            SAMBinaryTagAndValue newHead = mAttributes.clone();
-            SAMBinaryTagAndValue next = mAttributes.getNext();
-            while (next != null) {
-                SAMBinaryTagAndValue nextClone = next.clone();
-                nextClone.setNext(newHead);
-                newHead = nextClone;
-            }
-
-            newRecord.mAttributes = newHead;
+            newRecord.mAttributes = this.mAttributes.copy();
         }
+
         return newRecord;
     }
 

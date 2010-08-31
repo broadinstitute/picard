@@ -60,9 +60,11 @@ public class SAMBinaryTagAndValue {
         return result;
     }
 
-    // Clone method does NOT copy pointer to the next record
-    public SAMBinaryTagAndValue clone() {
-        return new SAMBinaryTagAndValue(this.tag, this.value);
+    /** Creates and returns a deep copy of the list of tag/values. */
+    public SAMBinaryTagAndValue copy() {
+        final SAMBinaryTagAndValue retval = new SAMBinaryTagAndValue(this.tag, this.value);
+        if (next != null) retval.next = next.copy();
+        return retval;
     }
 
     // The methods below are for implementing a light-weight, single-direction linked list
