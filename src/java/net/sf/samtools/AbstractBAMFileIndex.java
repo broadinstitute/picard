@@ -43,7 +43,7 @@ import java.util.*;
  * Anyone wanting to implement a reader for a differing
  * or extended BAM index format should implement BAMIndex directly.
  */
-abstract class AbstractBAMFileIndex implements BAMIndex {
+public abstract class AbstractBAMFileIndex implements BAMIndex {
 
     /**
      * Reports the total amount of genomic data that any bin can index.
@@ -360,7 +360,7 @@ abstract class AbstractBAMFileIndex implements BAMIndex {
             }
             // Coalesce chunks that are in adjacent file blocks.
             // This is a performance optimization.
-            if (! BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastChunk.getChunkEnd(), chunk.getChunkStart())) {
+            if (!lastChunk.overlaps(chunk) && !lastChunk.isAdjacentTo(chunk)) {
                 result.add(chunk);
                 lastChunk = chunk;
             } else {

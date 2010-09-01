@@ -1,6 +1,12 @@
 package net.sf.samtools;
 
+import net.sf.samtools.util.BlockCompressedFilePointerUtil;
+
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A [start,stop) file pointer pairing into the BAM file, stored
@@ -72,6 +78,51 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
         if (mChunkStart != chunk.mChunkStart) return false;
 
         return true;
+    }
+
+    /**
+     * Returns whether two chunks overlap.
+     * @param other Chunk to which this should be compared.
+     * @return True if the chunks overlap.  Returns false if the two chunks abut or are disjoint.
+     */
+    public boolean overlaps(final Chunk other) {
+        int comparison = this.compareTo(other);
+        if(comparison == 0)
+            return true;
+
+        // "sort" the two chunks using the comparator.
+        Chunk leftMost = comparison==-1 ? this : other;
+        Chunk rightMost = comparison==1 ? this : other;
+
+        long leftMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(leftMost.getChunkEnd());
+        long rightMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(rightMost.getChunkStart());
+
+        // If the left block's address is after the right block's address, compare the two blocks.
+        // If the two blocks are identical, compare the block offsets.
+        // If the right block is after the left block, no overlap is possible.
+        if(leftMostBlockAddress > rightMostBlockAddress)
+            return true;
+        else if(leftMostBlockAddress == rightMostBlockAddress) {
+            int leftMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(leftMost.getChunkEnd());
+            int rightMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(rightMost.getChunkStart());
+            return leftMostOffset > rightMostOffset;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Returns whether two chunks overlap.
+     * @param other Chunk to which this should be compared.
+     * @return True if the two chunks are adjacent.  Returns false if the chunks overlap or are discontinuous.
+     */
+    public boolean isAdjacentTo(final Chunk other) {
+        // Simpler implementation would be to == the chunk end of one to the chunk start of the other.  Chose this implementation to ensure that all chunk
+        // comparisons point directly to the 
+        return (BlockCompressedFilePointerUtil.getBlockAddress(this.getChunkEnd()) == BlockCompressedFilePointerUtil.getBlockAddress(other.getChunkStart()) &&
+                BlockCompressedFilePointerUtil.getBlockOffset(this.getChunkEnd()) == BlockCompressedFilePointerUtil.getBlockOffset(other.getChunkStart())) ||
+               (BlockCompressedFilePointerUtil.getBlockAddress(this.getChunkStart()) == BlockCompressedFilePointerUtil.getBlockAddress(other.getChunkEnd()) &&
+                BlockCompressedFilePointerUtil.getBlockOffset(this.getChunkStart()) == BlockCompressedFilePointerUtil.getBlockOffset(other.getChunkEnd()));
     }
 
     @Override

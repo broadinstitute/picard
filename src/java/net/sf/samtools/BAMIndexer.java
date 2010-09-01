@@ -222,7 +222,7 @@ public class BAMIndexer {
             final long chunkEnd = newChunk.getChunkEnd();
 
             final List<Chunk> oldChunks = bin.getChunkList();
-            if (oldChunks == null) {
+            if (!bin.containsChunks()) {
                 bin.addInitialChunk(newChunk);
 
             } else {
