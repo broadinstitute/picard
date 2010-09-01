@@ -24,6 +24,7 @@
 package net.sf.samtools;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -92,6 +93,14 @@ public class Bin implements Comparable<Bin> {
     }
 
     /**
+     * Returns whether the bin currently contains chunks.
+     * @return True if the bin has chunks, false otherwise.
+     */
+    public boolean containsChunks() {
+        return chunkList != null;
+    }
+
+    /**
      * Compare two bins to see what ordering they should appear in.
      * @param other Other bin to which this bin should be compared.
      * @return -1 if this < other, 0 if this == other, 1 if this > other.
@@ -126,9 +135,12 @@ public class Bin implements Comparable<Bin> {
     }
 
     /**
-     * @return  the chunks associated with this bin
+     * Gets the list of chunks associated with this bin.
+     * @return the chunks in this bin.  If no chunks are associated, an empty list will be returned.
      */
     public List<Chunk> getChunkList(){
+        if(chunkList == null)
+            return Collections.<Chunk>emptyList();
         return chunkList;
     }
 

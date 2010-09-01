@@ -116,15 +116,15 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         // Add the specified bin to the tree if it exists.
         List<Bin> binTree = new ArrayList<Bin>();
         if(indexQuery.containsBin(bin))
-            binTree.add(bin);
+            binTree.add(indexQuery.getBins().getBin(bin.getBinNumber()));
 
         int currentBinLevel = binLevel;
         while(--currentBinLevel >= 0) {
             final int binStart = getFirstBinInLevel(currentBinLevel);
             final int binWidth = getMaxAddressibleGenomicLocation()/getLevelSize(currentBinLevel);
             final int binNumber = firstLocusInBin/binWidth + binStart;
-            Bin parentBin = new Bin(bin.getReferenceSequence(),binNumber);
-            if(indexQuery.containsBin(parentBin))
+            Bin parentBin = indexQuery.getBins().getBin(binNumber);
+            if(parentBin != null && indexQuery.containsBin(parentBin))
                 binTree.add(parentBin);
         }
 
