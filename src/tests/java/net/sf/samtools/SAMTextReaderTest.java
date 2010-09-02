@@ -64,9 +64,9 @@ public class SAMTextReaderTest {
 
         final String[] samResults =
                 {"read_28833_29006_6945\t99\tchr20\t28833\t20\t10M1D25M\tchr20\t28993\t195\t" + seq1 + "\t" + qual1 +
-                        "\tRG:Z:L1\tH1:i:0\tH0:i:0\tNm:i:1\tMF:i:130",
+                        "\tH0:i:0\tH1:i:0\tMF:i:130\tRG:Z:L1\tNm:i:1",
                 "read_28701_28881_323b\t147\tchr20\t28834\t30\t35M\tchr20\t28701\t-168\t" + seq2 + "\t" + qual2 +
-                        "\tRG:Z:L2\tH1:i:0\tH0:i:1\tNm:i:0\tMF:i:18"
+                        "\tH0:i:1\tH1:i:0\tMF:i:18\tRG:Z:L2\tNm:i:0"
         };
 
         final SAMFileReader samReader = createSamFileReader(samExample);

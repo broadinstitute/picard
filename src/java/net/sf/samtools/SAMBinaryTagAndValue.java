@@ -40,17 +40,22 @@ public class SAMBinaryTagAndValue {
         this.value = value;
     }
 
-    @Override
-    public boolean equals(final Object o) {
+    @Override public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        return typeSafeEquals((SAMBinaryTagAndValue) o);
+    }
 
-        final SAMBinaryTagAndValue that = (SAMBinaryTagAndValue) o;
-
-        if (tag != that.tag) return false;
-        if (!value.equals(that.value)) return false;
-
-        return true;
+    /** Type safe equals method that recurses down the list looking for equality. */
+    private boolean typeSafeEquals(final SAMBinaryTagAndValue that) {
+        if (this.tag != that.tag) return false;
+        if ((this.value == null) ? that.value == null : this.value.equals(that.value)) {
+            if (this.next == null) return that.next == null;
+            else return this.next.typeSafeEquals(that.next);
+        }
+        else {
+            return false;
+        }
     }
 
     @Override
@@ -71,15 +76,46 @@ public class SAMBinaryTagAndValue {
 
     public SAMBinaryTagAndValue getNext() { return this.next; }
 
-    public void setNext(SAMBinaryTagAndValue next) {
-        if (this.next != null) {
-            throw new IllegalStateException("Cannot set next on SAMBinaryTagAndValue when it already exists!  " +
-                    "Use insert() instead.");
+    /** Inserts at item into the ordered list of attributes and returns the head of the list/sub-list */
+    public SAMBinaryTagAndValue insert(final SAMBinaryTagAndValue attr) {
+        if (attr == null) return this;
+        if (attr.next != null) throw new IllegalStateException("Can only insert single tag/value combinations.");
+
+        if (attr.tag < this.tag) {
+            // attr joins the list ahead of this element
+            attr.next = this;
+            return attr;
         }
-        this.next = next;
+        else if (this.tag == attr.tag) {
+            // attr replaces this in the list
+            attr.next = this.next;
+            return attr;
+        }
+        else if (this.next == null) {
+            // attr gets stuck on the end
+            this.next = attr;
+            return this;
+        }
+        else {
+            // attr gets inserted somewhere in the tail
+            this.next = this.next.insert(attr);
+            return this;
+        }
     }
 
-    public void replaceNext(SAMBinaryTagAndValue next) {
-        this.next = next;
+    /** Removes a tag from the list and returns the new head of the list/sub-list. */
+    public SAMBinaryTagAndValue remove(final short tag) {
+        if (this.tag == tag) return this.next;
+        else {
+            if (this.next != null) this.next = this.next.remove(tag);
+            return this;
+        }
+    }
+
+    /** Returns the SAMBinaryTagAndValue that contains the required tag, or null if not contained. */
+    public SAMBinaryTagAndValue find(final short tag) {
+        if (this.tag == tag) return this;
+        else if (this.tag > tag || this.next == null) return null;
+        else return this.next.find(tag); 
     }
 }

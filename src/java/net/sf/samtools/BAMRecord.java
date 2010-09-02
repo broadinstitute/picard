@@ -297,10 +297,9 @@ class BAMRecord
             return;
         }
         mAttributesDecoded = true;
-        SAMBinaryTagAndValue attributes = null;
         final int tagsOffset = readNameSize() + cigarSize() + basesSize() + qualsSize();
         final int tagsSize = mRestOfBinaryData.length - tagsOffset;
-        attributes = BinaryTagCodec.readTags(attributes, mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
+        SAMBinaryTagAndValue attributes = BinaryTagCodec.readTags(mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
         setAttributes(attributes);
     }
 
