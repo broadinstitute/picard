@@ -933,14 +933,12 @@ public class SAMRecord implements Cloneable
     }
 
     protected Object getAttribute(final short tag) {
-        SAMBinaryTagAndValue next = mAttributes;
-        while (next != null) {
-            if (next.tag == tag) {
-                return next.value;
-            }
-            next = next.getNext();
+        if (this.mAttributes == null) return null;
+        else {
+            final SAMBinaryTagAndValue tmp = this.mAttributes.find(tag);
+            if (tmp != null) return tmp.value;
+            else return null;
         }
-        return null;
     }
 
     /**
@@ -968,35 +966,13 @@ public class SAMRecord implements Cloneable
                     SAMTagUtil.getSingleton().makeStringTag(tag));
         }
         // It's a new tag
-        if (mAttributes == null) {
-            if (value != null) {
-                mAttributes = new SAMBinaryTagAndValue(tag, value);
-            }
+        if (value == null) {
+            if (this.mAttributes != null) this.mAttributes = this.mAttributes.remove(tag);
         }
         else {
-            SAMBinaryTagAndValue previous = null;
-            SAMBinaryTagAndValue current = mAttributes;
-
-            while (current != null) {
-                if (current.tag == tag) {
-                    if (previous != null) {
-                        previous.replaceNext(current.getNext());
-                    }
-                    else {
-                        mAttributes = current.getNext();
-                    }
-                    break;
-                }
-                else {
-                    previous = current;
-                }
-                current = current.getNext();
-            }
-            if (value != null) {
-                final SAMBinaryTagAndValue newHead = new SAMBinaryTagAndValue(tag, value);
-                newHead.setNext(mAttributes);
-                mAttributes = newHead;
-            }
+            final SAMBinaryTagAndValue tmp = new SAMBinaryTagAndValue(tag, value);
+            if (this.mAttributes == null) this.mAttributes = tmp;
+            else this.mAttributes = this.mAttributes.insert(tmp);
         }
     }
 
