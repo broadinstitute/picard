@@ -33,19 +33,19 @@ public class SAMRecordQueryNameComparator implements SAMRecordComparator {
         if (cmp != 0) {
             return cmp;
         }
-        if (samRecord1.getReadPairedFlag()) {
-            if (samRecord1.getFirstOfPairFlag() && samRecord2.getSecondOfPairFlag()) {
-                return -1;
-            }
-            else if (samRecord2.getFirstOfPairFlag() && samRecord1.getSecondOfPairFlag()) {
-                return 1;
-            }
+
+        final boolean r1Paired = samRecord1.getReadPairedFlag();
+        final boolean r2Paired = samRecord2.getReadPairedFlag();
+
+        if (r1Paired || r2Paired) {
+            if (!r1Paired) return 1;
+            else if (!r2Paired) return -1;
+            else if (samRecord1.getFirstOfPairFlag()  && samRecord2.getSecondOfPairFlag()) return -1;
+            else if (samRecord1.getSecondOfPairFlag() && samRecord2.getFirstOfPairFlag()) return 1;
         }
 
-        if (samRecord1.getReadNegativeStrandFlag() == samRecord2.getReadNegativeStrandFlag()) {
-            return 0;
-        }
-        return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
+        if (samRecord1.getReadNegativeStrandFlag() == samRecord2.getReadNegativeStrandFlag()) return 0;
+        else return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
     }
 
     /**
