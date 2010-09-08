@@ -68,6 +68,8 @@ public class FixMateInformation extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(FixMateInformation.class);
 
+    protected SAMFileWriter out;
+
     public static void main(final String[] args) {
         new FixMateInformation().instanceMainWithExit(args);
     }
@@ -158,11 +160,8 @@ public class FixMateInformation extends CommandLineProgram {
             throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
         }
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
-                                                                                header.getSortOrder() == SortOrder.queryname,
-                                                                                OUTPUT);
+        createSamFileWriter(header);
 
-        // Now go through the input file and fix up the records
         log.info("Traversing query name sorted records and fixing up mate pair information.");
         long count = 0;
         while (iterator.hasNext()) {
@@ -172,12 +171,12 @@ public class FixMateInformation extends CommandLineProgram {
             if (rec2 != null && rec1.getReadName().equals(rec2.getReadName())) {
                 iterator.next(); // consume the peeked record
                 SamPairUtil.setMateInfo(rec1, rec2, header);
-                out.addAlignment(rec1);
-                out.addAlignment(rec2);
+                writeAlignment(rec1);
+                writeAlignment(rec2);
                 count += 2;
             }
             else {
-                out.addAlignment(rec1);
+                writeAlignment(rec1);
                 ++count;
             }
 
@@ -192,8 +191,7 @@ public class FixMateInformation extends CommandLineProgram {
         else {
             log.info("Finished processing reads; re-sorting output file.");
         }
-
-        out.close();
+        closeWriter();
 
         // Lastly if we're fixing in place, swap the files
         if (!differentOutputSpecified) {
@@ -230,4 +228,19 @@ public class FixMateInformation extends CommandLineProgram {
 
         return 0;
     }
+
+    protected void createSamFileWriter(SAMFileHeader header) {
+        out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
+                  header.getSortOrder() == SortOrder.queryname, OUTPUT);
+
+    }
+
+    protected void writeAlignment(SAMRecord sam) {
+        out.addAlignment(sam);
+    }
+
+    protected void closeWriter() {
+        out.close();
+    }
+
 }
