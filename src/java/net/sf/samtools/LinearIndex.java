@@ -83,7 +83,7 @@ public class LinearIndex {
         final int regionLinearBin = start >> BAM_LIDX_SHIFT;
         // System.out.println("# regionLinearBin: " + regionLinearBin);
         long minimumOffset = 0;
-        if (regionLinearBin < mIndexEntries.length-mIndexStart)
+        if (regionLinearBin-mIndexStart < mIndexEntries.length)
             minimumOffset = mIndexEntries[regionLinearBin-mIndexStart];
         return minimumOffset;
     }
