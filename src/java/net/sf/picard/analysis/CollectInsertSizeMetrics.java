@@ -108,11 +108,12 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
         final MetricsFile<InsertSizeMetrics, Integer> file = collectMetrics(in.iterator());
         in.close();
 
-        file.write(OUTPUT);
-
-        if (file.getMetrics().get(0).READ_PAIRS == 0) {
+        if (file == null || file.getMetrics().get(0).READ_PAIRS == 0) {
             log.warn("Input file did not contain any records with insert size information.");
-        } else  {
+        }
+        else  {
+            file.write(OUTPUT);
+
             final int rResult;
             if(HISTOGRAM_WIDTH == null) {
                 rResult = RExecutor.executeFromClasspath(
@@ -151,7 +152,17 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
         int validRecordCounter = 0;
         while (samIterator.hasNext()) {
             final SAMRecord record = samIterator.next();
-            if (skipRecord(record)) {
+
+            // Cut out if we're into the unaligned reads at the end of the file
+            if (record.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) break;
+
+            if (!record.getReadPairedFlag() ||
+                    record.getReadUnmappedFlag() ||
+                    record.getMateUnmappedFlag() ||
+                    record.getFirstOfPairFlag() ||
+                    record.getNotPrimaryAlignmentFlag() ||
+                    record.getDuplicateReadFlag() ||
+                    record.getInferredInsertSize() == 0) {
                 continue;
             }
 
@@ -227,23 +238,13 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
 
         if(file.getNumHistograms() == 0) {
             //can happen if user sets MINIMUM_PCT = 0.95, etc.
-            throw new PicardException("All data categories were discarded becaused they had an insufficient"+
-                    " percentage of the data. Try lowering MINIMUM_PCT (currently set to: " + MINIMUM_PCT + ").");
+            log.warn("All data categories were discarded because they contained < " + MINIMUM_PCT +
+                     " of the total aligned paired data.");
+            log.warn("Total mapped pairs in all categories: " + validRecordCounter);
+            return null;
         }
 
         return file;
     }
 
-    /**
-     * Figures out whether or not the record should be included in the counting of insert sizes
-     */
-    private boolean skipRecord(final SAMRecord record) {
-        return !record.getReadPairedFlag() ||
-                record.getReadUnmappedFlag() ||
-                record.getMateUnmappedFlag() ||
-                record.getFirstOfPairFlag() ||
-                record.getNotPrimaryAlignmentFlag() ||
-                record.getDuplicateReadFlag() ||
-                record.getInferredInsertSize() == 0;
-    }
 }
