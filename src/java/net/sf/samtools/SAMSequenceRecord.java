@@ -45,6 +45,10 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     public static final String URI_TAG = "UR";
     public static final String SPECIES_TAG = "SP";
 
+    /** If one sequence has this length, and another sequence had a different length, isSameSequence will
+     * not complain that they are different sequences. */
+    public static final int UNKNOWN_SEQUENCE_LENGTH = 0;
+
 
     /**
      * This is not a valid sequence name, because it is reserved in the MRNM field of SAM text format
@@ -67,7 +71,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
      * sequenceLength is required for the object to be considered valid.
      */
     public SAMSequenceRecord(final String name) {
-        this(name, 0);
+        this(name, UNKNOWN_SEQUENCE_LENGTH);
     }
 
     public SAMSequenceRecord(final String name, final int sequenceLength) {
@@ -120,7 +124,9 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         if (that == null) return false;
 
         if (mSequenceIndex != that.mSequenceIndex) return false;
-        if (mSequenceLength != that.mSequenceLength) return false;
+        // PIC-439.  Allow undefined length.
+        if (mSequenceLength != UNKNOWN_SEQUENCE_LENGTH && that.mSequenceLength != UNKNOWN_SEQUENCE_LENGTH && mSequenceLength != that.mSequenceLength)
+            return false;
         if (this.getAttribute(SAMSequenceRecord.MD5_TAG) != null && that.getAttribute(SAMSequenceRecord.MD5_TAG) != null) {
             final BigInteger thisMd5 = new BigInteger((String)this.getAttribute(SAMSequenceRecord.MD5_TAG), 16);
             final BigInteger thatMd5 = new BigInteger((String)that.getAttribute(SAMSequenceRecord.MD5_TAG), 16);
