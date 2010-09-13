@@ -61,6 +61,10 @@ public class BlockCompressedOutputStream
         defaultCompressionLevel = compressionLevel;
     }
 
+    public static int getDefaultCompressionLevel() {
+        return defaultCompressionLevel;
+    }
+
     private final BinaryCodec codec;
     private final byte[] uncompressedBuffer = new byte[BlockCompressedStreamConstants.DEFAULT_UNCOMPRESSED_BLOCK_SIZE];
     private int numUncompressedBytes = 0;
