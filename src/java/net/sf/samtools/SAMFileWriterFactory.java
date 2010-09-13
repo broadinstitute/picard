@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.Md5CalculatingOutputStream;
 import net.sf.samtools.util.RuntimeIOException;
 
@@ -108,17 +109,7 @@ public class SAMFileWriterFactory {
      * @param outputFile where to write the output.
      */
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
-        try {
-            final BAMFileWriter ret = this.createMd5File
-                    ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
-                        new File(outputFile.getAbsolutePath() + ".md5")), outputFile)
-                    : new BAMFileWriter(outputFile);
-            initializeBAMWriter(ret, header, presorted);
-            return ret;
-        }
-        catch (IOException ioe) {
-            throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
-        }
+        return makeBAMWriter(header, presorted, outputFile, BlockCompressedOutputStream.getDefaultCompressionLevel());
     }
 
     /**
@@ -132,11 +123,12 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile,
                                        final int compressionLevel) {
         try {
-            final BAMFileWriter ret = this.createMd5File
+            boolean createMd5File = this.createMd5File && outputFile.isFile();
+            final BAMFileWriter ret = createMd5File
                     ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
                         new File(outputFile.getAbsolutePath() + ".md5")), outputFile, compressionLevel)
                     : new BAMFileWriter(outputFile, compressionLevel);
-            initializeBAMWriter(ret, header, presorted);
+            initializeBAMWriter(ret, header, presorted, this.createIndex && outputFile.isFile());
             return ret;
         }
         catch (IOException ioe) {
@@ -144,7 +136,7 @@ public class SAMFileWriterFactory {
         }
     }
 
-    private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted) {
+    private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted, boolean createIndex) {
         writer.setSortOrder(header.getSortOrder(), presorted);
         if (createIndex && writer.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
             writer.enableBamIndexConstruction();
