@@ -31,10 +31,7 @@ import net.sf.samtools.util.StringUtil;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Contains a set of metrics that can be written to a file and parsed back
@@ -288,7 +285,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                     
                     String className = line.substring(MAJOR_HEADER_PREFIX.length()).trim();
                     try {
-                        header = (Header) loadClass(className).newInstance();
+                        header = (Header) loadClass(className, true).newInstance();
                     }
                     catch (Exception e) {
                         throw new PicardException("Error load and/or instantiating an instance of " + className, e);
@@ -319,7 +316,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 String className = line.split(SEPARATOR)[1];
                 Class<?> type = null;
                 try {
-                    type = loadClass(className);
+                    type = loadClass(className, true);
                 }
                 catch (ClassNotFoundException cnfe) {
                     throw new PicardException("Could not locate class with name " + className, cnfe);
@@ -377,7 +374,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 String keyClassName = line.split(SEPARATOR)[1].trim();
                 Class<?> keyClass = null;
 
-                try { keyClass = loadClass(keyClassName); }
+                try { keyClass = loadClass(keyClassName, true); }
                 catch (ClassNotFoundException cnfe) { throw new PicardException("Could not load class with name " + keyClassName); }
 
                 // Read the next line with the bin and value labels
@@ -404,17 +401,34 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Attempts to load a class, taking into account that some classes have "migrated" from the broad to sf. */
-    private Class<?> loadClass(String className) throws ClassNotFoundException {
-        try {
-            return Class.forName(className);
-        }
+    private Class<?> loadClass(String className, boolean tryOtherPackages) throws ClassNotFoundException {
+        // List of alternative packages to check in case classes moved around
+        String[] packages = new String[] {
+                "edu.mit.broad.picard.genotype.concordance",
+                "edu.mit.broad.picard.genotype.fingerprint",
+                "edu.mit.broad.picard.ic",
+                "edu.mit.broad.picard.illumina",
+                "edu.mit.broad.picard.jumping",
+                "edu.mit.broad.picard.quality",
+                "edu.mit.broad.picard.samplevalidation",
+                "net.sf.picard.analysis",
+                "net.sf.picard.analysis.directed",
+                "net.sf.picard.sam",
+                "net.sf.picard.metrics"
+        };
+
+        try { return Class.forName(className); }
         catch (ClassNotFoundException cnfe) {
-            if (className.startsWith("edu.mit.broad.picard")) {
-                return loadClass(className.replace("edu.mit.broad.picard", "net.sf.picard"));
+            if (tryOtherPackages) {
+                for (final String p : packages) {
+                    try {
+                        return loadClass(p + className.substring(className.lastIndexOf(".")), false);
+                    }
+                    catch (ClassNotFoundException cnf2) {/* do nothing */}
+                }
             }
-            else {
-                throw cnfe;
-            }
+
+            throw cnfe;
         }
     }
 
