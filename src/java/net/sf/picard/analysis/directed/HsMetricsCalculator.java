@@ -84,9 +84,11 @@ public class HsMetricsCalculator {
         this.targets      = IntervalList.fromFile(targets);
 
         this.metrics.BAIT_SET = baits.getName();
-        final int tmp = this.metrics.BAIT_SET.lastIndexOf(".");
-        if (tmp > 0) {
-            this.metrics.BAIT_SET = this.metrics.BAIT_SET.substring(0, tmp);
+        {
+            final int tmp = this.metrics.BAIT_SET.indexOf(".");
+            if (tmp > 0) {
+                this.metrics.BAIT_SET = this.metrics.BAIT_SET.substring(0, tmp);
+            }
         }
 
         final List<Interval> uniqueBaits = this.baits.getUniqueIntervals();
