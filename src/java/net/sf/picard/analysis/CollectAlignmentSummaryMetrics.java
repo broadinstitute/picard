@@ -24,6 +24,7 @@
 
 package net.sf.picard.analysis;
 
+import net.sf.picard.util.CollectionUtil;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.sam.ReservedTagConstants;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -90,7 +91,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     public Boolean ASSUME_SORTED = Boolean.TRUE;
     @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;
-    @Option() public List<String> ADAPTER_SEQUENCE = Arrays.asList(
+    @Option() public List<String> ADAPTER_SEQUENCE = CollectionUtil.makeList(
         IlluminaUtil.AdapterPair.SINGLE_END.get5PrimeAdapter(),
         IlluminaUtil.AdapterPair.SINGLE_END.get3PrimeAdapter(),
         IlluminaUtil.AdapterPair.PAIRED_END.get5PrimeAdapter(),
