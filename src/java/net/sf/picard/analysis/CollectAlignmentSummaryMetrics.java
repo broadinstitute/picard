@@ -98,7 +98,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         IlluminaUtil.AdapterPair.PAIRED_END.get3PrimeAdapter(),
         IlluminaUtil.AdapterPair.INDEXED.get5PrimeAdapter(),
         IlluminaUtil.AdapterPair.INDEXED.get3PrimeAdapter()
-    );  // todo - this list is immutable, so this option doesn't really work
+    );
     // also List options are only appended to, not replaced
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
