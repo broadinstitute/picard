@@ -65,7 +65,8 @@ public class BAMIndexer {
 
     /**
      * Record any index information for a given BAM record.
-     * If this alignment starts a new reference, write out the old reference
+     * If this alignment starts a new reference, write out the old reference.
+     * Requires a non-null value for rec.getFileSource().
      *
      * @param rec The BAM record
      */
@@ -167,7 +168,7 @@ public class BAMIndexer {
         /**
          * Record any index information for a given BAM record
          *
-         * @param rec The BAM record
+         * @param rec The BAM record. Requires rec.getFileSource() is non-null.
          */
         public void processAlignment(final SAMRecord rec) {
 

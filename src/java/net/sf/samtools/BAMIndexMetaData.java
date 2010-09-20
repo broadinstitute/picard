@@ -111,6 +111,9 @@ public class BAMIndexMetaData {
             return;
         }
 
+        if (rec.getFileSource() == null){
+            throw new SAMException("BAM cannot be indexed without setting a fileSource for record " + rec);
+        }
         final Chunk newChunk = ((BAMFileSpan) rec.getFileSource().getFilePointer()).getSingleChunk();
         final long start = newChunk.getChunkStart();
         final long end = newChunk.getChunkEnd();
