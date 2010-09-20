@@ -23,6 +23,7 @@
  */
 package net.sf.picard.cmdline;
 
+import net.sf.picard.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -525,5 +526,37 @@ public class CommandLineParserTest {
         final UninitializedCollectionThatCannotBeAutoInitializedOptions o = new UninitializedCollectionThatCannotBeAutoInitializedOptions();
         new CommandLineParser(o);
         Assert.fail("Exception should have been thrown");
+    }
+
+    class CollectionWithDefaultValuesOptions {
+        @Option
+        public List<String> LIST = CollectionUtil.makeList("foo", "bar");
+    }
+
+    @Test
+    public void testClearDefaultValuesFromListOption() {
+        final CollectionWithDefaultValuesOptions o = new CollectionWithDefaultValuesOptions();
+        final CommandLineParser clp = new CommandLineParser(o);
+        final String[] args = {"LIST=null"};
+        Assert.assertTrue(clp.parseOptions(System.err, args));
+        Assert.assertEquals(o.LIST.size(), 0);
+    }
+
+    @Test
+    public void testClearDefaultValuesFromListOptionAndAddNew() {
+        final CollectionWithDefaultValuesOptions o = new CollectionWithDefaultValuesOptions();
+        final CommandLineParser clp = new CommandLineParser(o);
+        final String[] args = {"LIST=null", "LIST=baz", "LIST=frob"};
+        Assert.assertTrue(clp.parseOptions(System.err, args));
+        Assert.assertEquals(o.LIST, CollectionUtil.makeList("baz", "frob"));
+    }
+
+    @Test
+    public void testAddToDefaultValuesListOption() {
+        final CollectionWithDefaultValuesOptions o = new CollectionWithDefaultValuesOptions();
+        final CommandLineParser clp = new CommandLineParser(o);
+        final String[] args = {"LIST=baz", "LIST=frob"};
+        Assert.assertTrue(clp.parseOptions(System.err, args));
+        Assert.assertEquals(o.LIST, CollectionUtil.makeList("foo", "bar", "baz", "frob"));
     }
 }
