@@ -439,6 +439,8 @@ public class CommandLineParser {
                 } else {
                     c.add(value);
                 }
+                optionDefinition.hasBeenSet = true;
+                optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
             } else {
                 optionDefinition.field.set(callerOptions, value);
                 optionDefinition.hasBeenSet = true;
