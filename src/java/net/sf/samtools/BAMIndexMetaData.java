@@ -224,13 +224,17 @@ public class BAMIndexMetaData {
         AbstractBAMFileIndex index = (AbstractBAMFileIndex) bam.getIndex();
         // read through all the bins of every reference.
         int nRefs = index.getNumberOfReferences();
-        BAMIndexMetaData[] result = new BAMIndexMetaData[nRefs];
+        BAMIndexMetaData[] result = new BAMIndexMetaData[nRefs == 0 ? 1 : nRefs];
         for (int i = 0; i < nRefs; i++) {
             BAMIndexContent content = index.query(i, 0, -1); // todo: it would be faster just to skip to the last bin
             result[i] = content.getMetaData();
         }
-        if (result[0] != null)
-            result[0].setNoCoordinateRecordCount(index.getNoCoordinateCount());
+
+        if (result[0] == null){
+           result[0] = new BAMIndexMetaData();
+        }
+        result[0].setNoCoordinateRecordCount(index.getNoCoordinateCount());
+
         return result;
     }
 }
