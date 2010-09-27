@@ -150,11 +150,12 @@ public class Cigar {
             } else if (isRealOperator(op)) {
                 // Must be at least one real operator (MIDN)
                 seenRealOperator = true;
-                // There should be an M operator between any pair of IDN operators
+                // There should be an M or P operator between any pair of IDN operators
                 if (isInDelOperator(op)) {
                     for (int j = i+1; j < cigarElements.size(); ++j) {
                         final CigarOperator nextOperator = cigarElements.get(j).getOperator();
-                        if (isRealOperator(nextOperator) && !isInDelOperator(nextOperator)) {
+                        // Allow
+                        if ((isRealOperator(nextOperator) && !isInDelOperator(nextOperator)) || isPaddingOperator(nextOperator)) {
                             break;
                         }
                         if (isInDelOperator(nextOperator) && op == nextOperator) {
