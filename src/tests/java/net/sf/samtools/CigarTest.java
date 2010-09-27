@@ -38,6 +38,7 @@ public class CigarTest {
     public void testPositive() {
         Assert.assertNotNull(codec);
         Assert.assertNull(codec.decode("").isValid(null, -1));
+        Assert.assertNull(codec.decode("2M1P4M1P2D1P6D").isValid(null, -1));
         Assert.assertNull(codec.decode("10M5N1I12M").isValid(null, -1));
         Assert.assertNull(codec.decode("10M1I5N1I12M").isValid(null, -1));
         Assert.assertNull(codec.decode("9M1D5N1I12M").isValid(null, -1));
