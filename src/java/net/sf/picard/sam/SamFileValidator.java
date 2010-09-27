@@ -361,9 +361,10 @@ public class SamFileValidator {
         }
         if (fileHeader.getVersion() == null) {
             addError(new SAMValidationError(Type.MISSING_VERSION_NUMBER, "Header has no version number", null));
-        } else if (!fileHeader.getVersion().equals(SAMFileHeader.CURRENT_VERSION)) {
+        } else if (!SAMFileHeader.ACCEPTABLE_VERSIONS.contains(fileHeader.getVersion())) {
             addError(new SAMValidationError(Type.INVALID_VERSION_NUMBER, "Header version: " +
-                    fileHeader.getVersion() + " does not match expected version: " + SAMFileHeader.CURRENT_VERSION,
+                    fileHeader.getVersion() + " does not match any of the acceptable versions: " +
+                    StringUtil.join(", ", SAMFileHeader.ACCEPTABLE_VERSIONS.toArray(new String[0])),
                     null));
         }
         if (fileHeader.getSequenceDictionary().isEmpty()) {

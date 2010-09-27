@@ -308,9 +308,39 @@ public class ValidateSamFileTest {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
         new SamFileValidator(out).validateSamFileSummary(samReader, reference);
+        LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
+        if (reader.readLine().equals("No errors found")) {
+            return new Histogram<String>();
+        }
         final MetricsFile<MetricBase, String> outputFile = new MetricsFile<MetricBase, String>();
         outputFile.read(new FileReader(outFile));
         Assert.assertNotNull(outputFile.getHistogram());
         return outputFile.getHistogram();
     }
+
+    @Test(dataProvider = "headerVersions")
+    public void testHeaderVersion(final String version, boolean expectValid) throws Exception {
+        final File samFile = File.createTempFile("validateHeader.", ".sam");
+        samFile.deleteOnExit();
+        final PrintWriter pw = new PrintWriter(samFile);
+        pw.println("@HD\tVN:" + version);
+        pw.close();
+        final SAMFileReader reader = new SAMFileReader(samFile);
+        final Histogram<String> results = executeValidation(reader, null);
+        if (expectValid) Assert.assertNull(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()));
+        else {
+            Assert.assertNotNull(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()));
+            Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()).getValue(), 1.0);
+        }
+    }
+
+    @DataProvider(name = "headerVersions")
+    public Object[][] testHeaderVersionScenarios() {
+        return new Object[][] {
+                {"1.0", true},
+                {"1.3", true},
+                {"1.4", false},
+        };
+    }
+
 }
