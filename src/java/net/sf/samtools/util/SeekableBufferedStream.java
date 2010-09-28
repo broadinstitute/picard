@@ -34,15 +34,21 @@ import java.io.IOException;
  */
 public class SeekableBufferedStream extends SeekableStream {
 
-    private int bufferSize = 512000;
+    public static final int DEFAULT_BUFFER_SIZE = 512000;
+
+    final private int bufferSize;
+    final SeekableStream wrappedStream;
     BufferedInputStream bufferedStream;
-    SeekableStream wrappedStream;
     long position;
 
-    public SeekableBufferedStream(SeekableStream httpStream) {
+    public SeekableBufferedStream(SeekableStream httpStream, int bufferSize) {
+        this.bufferSize = bufferSize;
         this.wrappedStream = httpStream;
         this.position = 0;
         bufferedStream = new BufferedInputStream(wrappedStream, bufferSize);
+    }
+    public SeekableBufferedStream(SeekableStream httpStream) {
+        this(httpStream, DEFAULT_BUFFER_SIZE);
     }
 
     public long length() {
