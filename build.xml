@@ -291,7 +291,7 @@
     </target>
 
 <!-- ALL -->
-    <target name="all" depends="compile, sam-jar, picard-jar, package-commands" description="Default build target">
+    <target name="all" depends="compile, sam-jar, picard-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
         </zip>
@@ -322,6 +322,23 @@
             </jar>
         </sequential>
     </macrodef>
+
+    <target name="document-standard-options" depends="picard-jar, sam-jar">
+        <sequential>
+            <!-- For Sourceforge project website -->
+            <mkdir dir="${command-line-html-dir}/program_usage"/>
+
+            <!-- Generate HTML for each command -->
+            <java classname="net.sf.picard.cmdline.CreateHtmlDocForStandardOptions"
+                  output="${command-line-html-dir}/program_usage/standard-options.shtml"
+                  failonerror="true">
+                <classpath>
+                    <pathelement location="${dist}/picard-${picard-version}.jar"/>
+                    <pathelement location="${dist}/sam-${sam-version}.jar"/>
+                </classpath>
+            </java>
+        </sequential>
+    </target>
 
     <!-- generate HTML documentation for command-line program -->
     <macrodef name="document-command">

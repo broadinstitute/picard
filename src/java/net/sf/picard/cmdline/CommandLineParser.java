@@ -189,16 +189,20 @@ public class CommandLineParser {
             }
         }
         if (hasOptions) {
-            stream.println("<table>");
-            stream.println("<tr><th>Option</th><th>Description</th></tr>");
-            for (final OptionDefinition optionDefinition : optionDefinitions) {
-                if (!isStandardOption(optionDefinition)) {
-                    printHtmlOptionUsage(stream, optionDefinition);
-                }
-            }
-            stream.println("</table>");
+            htmlPrintOptions(stream);
         }
         stream.println("<br/>");
+    }
+
+    public void htmlPrintOptions(PrintStream stream) {
+        stream.println("<table>");
+        stream.println("<tr><th>Option</th><th>Description</th></tr>");
+        for (final OptionDefinition optionDefinition : optionDefinitions) {
+            if (!isStandardOption(optionDefinition)) {
+                printHtmlOptionUsage(stream, optionDefinition);
+            }
+        }
+        stream.println("</table>");
     }
 
     private static String htmlEscape(String str) {
