@@ -303,11 +303,25 @@ public class ValidateSamFileTest {
             SAMFileReader.setDefaultValidationStringency(saveStringency);
         }
     }
+
+    @Test
+    public void testIndexFileValidation() throws Exception {
+        SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "bad_index.bam"));
+            samReader.enableIndexCaching(true);
+            Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_INDEX_FILE_POINTER.getHistogramString()).getValue(), 1.0);
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
  
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
-        new SamFileValidator(out).validateSamFileSummary(samReader, reference);
+        new SamFileValidator(out).setValidateIndex(true).validateSamFileSummary(samReader, reference);
         LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
         if (reader.readLine().equals("No errors found")) {
             return new Histogram<String>();

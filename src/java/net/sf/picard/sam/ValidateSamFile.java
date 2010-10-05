@@ -74,6 +74,9 @@ public class ValidateSamFile extends CommandLineProgram {
     @Option(doc="If true, only report errors, and ignore warnings.")
     public boolean IGNORE_WARNINGS = false;
 
+    @Option(doc="If true and input is a BAM file with an index file, also validates the index.")
+    public boolean VALIDATE_INDEX = true;
+
     @Option (shortName="BISULFITE", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
             "If so, C->T is not counted as an error in computing the value of the NM tag.")
     public boolean IS_BISULFITE_SEQUENCED = false;
@@ -108,7 +111,10 @@ public class ValidateSamFile extends CommandLineProgram {
         }
 
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-        final SAMFileReader samReader = new SAMFileReader(INPUT);
+        final SAMFileReader samReader = new SAMFileReader(INPUT); 
+        if (VALIDATE_INDEX){
+            samReader.enableIndexCaching(true);
+        }
         samReader.enableCrcChecking(true);
 
         final SamFileValidator validator = new SamFileValidator(out);
@@ -124,6 +130,9 @@ public class ValidateSamFile extends CommandLineProgram {
         }
         if (IS_BISULFITE_SEQUENCED) {
             validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
+        }
+        if (VALIDATE_INDEX){
+            validator.setValidateIndex(VALIDATE_INDEX);
         }
         validator.validateBamFileTermination(INPUT);
 
