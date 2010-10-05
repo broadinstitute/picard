@@ -95,7 +95,7 @@ public class SAMValidationError {
         /** mate alignment does not match alignment start of mate */
         MISMATCH_MATE_ALIGNMENT_START,
         
-        /** the record's mate fields do not match the coresponding fields of the mate */
+        /** the record's mate fields do not match the corresponding fields of the mate */
         MATE_FIELD_MISMATCH,
         
         /** the NM tag (nucleotide differences) is incorrect */
@@ -163,6 +163,9 @@ public class SAMValidationError {
 
         /** Unsigned integer tag value is deprecated in BAM. */
         TAG_VALUE_TOO_LARGE,
+
+        /** Invalide virtualFilePointer in index */
+        INVALID_INDEX_FILE_POINTER,
 
         /** PI tag value is not numeric. */
         INVALID_PREDICTED_MEDIAN_INSERT_SIZE;

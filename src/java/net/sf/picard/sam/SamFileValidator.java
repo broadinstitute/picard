@@ -68,6 +68,7 @@ public class SamFileValidator {
     private Set<Type> errorsToIgnore = EnumSet.noneOf(Type.class);
     private boolean ignoreWarnings = false;
     private boolean bisulfiteSequenced = false;
+    private boolean validateIndex = false;
     private boolean sequenceDictionaryEmptyAndNoWarningEmitted = false;
 
     private final static Log log = Log.getInstance(SamFileValidator.class);
@@ -171,6 +172,13 @@ public class SamFileValidator {
             validateHeader(samReader.getFileHeader());
             orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
             validateSamRecords(samReader);
+            if (validateIndex){
+                try {
+                   BamIndexValidator.exhaustivelyTestIndex(samReader);
+                } catch (Exception e){
+                    addError(new SAMValidationError(Type.INVALID_INDEX_FILE_POINTER, e.getMessage(), null));
+                }
+            }
             
             if (errorsByType.isEmpty()) {
                 out.println("No errors found");
@@ -182,8 +190,10 @@ public class SamFileValidator {
 
     private void validateSamRecords(final Iterable<SAMRecord> samRecords) {
         long recordNumber = 1;
+        SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
         try {
-            for (final SAMRecord record : samRecords) {
+            while(iter.hasNext()){
+                SAMRecord record = iter.next();
                 final Collection<SAMValidationError> errors = record.isValid();
                 if (errors != null) {
                     for (final SAMValidationError error : errors) {
@@ -217,6 +227,8 @@ public class SamFileValidator {
             throw new PicardException("SAMFormatException on record " + recordNumber, e);
         } catch (FileTruncatedException e) {
             addError(new SAMValidationError(Type.TRUNCATED_FILE, "File is truncated", null));
+        } finally {
+            iter.close();
         }
     }
 
@@ -403,6 +415,13 @@ public class SamFileValidator {
 
     public boolean isBisulfiteSequenced() { return bisulfiteSequenced; }
     public void setBisulfiteSequenced(boolean bisulfiteSequenced) { this.bisulfiteSequenced = bisulfiteSequenced; }
+
+    public SamFileValidator setValidateIndex(boolean validateIndex) {
+        // The SAMFileReader must also have IndexCaching enabled to have the index validated,
+        // samReader.enableIndexCaching(true);
+        this.validateIndex = validateIndex;
+        return this;
+    }
 
     public static class ValidationMetrics extends MetricBase {
     }
