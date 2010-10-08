@@ -68,6 +68,23 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 setProgramRecord(reader.getFileHeader().getProgramRecords().get(0));
             }
         }
+        else {
+            setProgramRecord(programRecord);
+        }
+
+        if (getProgramRecord() != null) {
+            SAMFileReader tmp = new SAMFileReader(unmappedBamFile);
+            try {
+                for (SAMProgramRecord pg : tmp.getFileHeader().getProgramRecords()) {
+                    if (pg.getId().equals(getProgramRecord().getId())) {
+                        throw new PicardException("Program Record ID already in use in unmapped BAM file.");
+                    }
+                }
+            }
+            finally {
+                tmp.close();
+            }
+        }
         log.info("Processing SAM file: " + alignedSamFile.getAbsolutePath());
     }
 
