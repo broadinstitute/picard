@@ -68,9 +68,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 setProgramRecord(reader.getFileHeader().getProgramRecords().get(0));
             }
         }
-        else {
-            setProgramRecord(programRecord);
-        }
 
         if (getProgramRecord() != null) {
             SAMFileReader tmp = new SAMFileReader(unmappedBamFile);
