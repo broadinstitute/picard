@@ -180,6 +180,10 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
     }
 
     public void addReadGroup(final SAMReadGroupRecord readGroup) {
+        if (mReadGroupMap.containsKey(readGroup.getReadGroupId())) {
+            throw new IllegalArgumentException("Read group with group id " +
+                readGroup.getReadGroupId() + " already exists in SAMFileHeader!");
+        }
         mReadGroups.add(readGroup);
         mReadGroupMap.put(readGroup.getReadGroupId(), readGroup);
     }
@@ -189,6 +193,10 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
     }
 
     public void addProgramRecord(final SAMProgramRecord programRecord) {
+        if (mProgramRecordMap.containsKey(programRecord.getProgramGroupId())) {
+            throw new IllegalArgumentException("Program record with group id " +
+                programRecord.getProgramGroupId() + " already exists in SAMFileHeader!");
+        }
         this.mProgramRecords.add(programRecord);
         this.mProgramRecordMap.put(programRecord.getProgramGroupId(), programRecord);
     }

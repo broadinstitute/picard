@@ -168,7 +168,13 @@ public class SAMValidationError {
         INVALID_INDEX_FILE_POINTER,
 
         /** PI tag value is not numeric. */
-        INVALID_PREDICTED_MEDIAN_INSERT_SIZE;
+        INVALID_PREDICTED_MEDIAN_INSERT_SIZE,
+
+        /** Same read group id appears more than once */
+        DUPLICATE_READ_GROUP_ID,
+
+        /** Same program group id appears more than once */
+        DUPLICATE_PROGRAM_GROUP_ID;
 
         public final Severity severity;
 
