@@ -385,6 +385,26 @@ public class SamFileValidator {
         if (fileHeader.getReadGroups().isEmpty()) {
             addError(new SAMValidationError(Type.MISSING_READ_GROUP, "Read groups is empty", null));
         }
+        List<SAMProgramRecord> pgs = fileHeader.getProgramRecords();
+        for (int i = 0; i < pgs.size()-1; i++) {
+            for (int j=i+1; j < pgs.size(); j++) {
+                if (pgs.get(i).getProgramGroupId().equals(pgs.get(j).getProgramGroupId())) {
+                    addError(new SAMValidationError(Type.DUPLICATE_PROGRAM_GROUP_ID, "Duplicate " +
+                            "program group id: " + pgs.get(i).getProgramGroupId(), null));
+                }
+            }
+        }
+
+        List<SAMReadGroupRecord> rgs = fileHeader.getReadGroups();
+        for (int i = 0; i < rgs.size()-1; i++) {
+            for (int j=i+1; j < rgs.size(); j++) {
+                if (rgs.get(i).getReadGroupId().equals(rgs.get(j).getReadGroupId())) {
+                    addError(new SAMValidationError(Type.DUPLICATE_READ_GROUP_ID, "Duplicate " +
+                            "read group id: " + rgs.get(i).getReadGroupId(), null));
+                }
+            }
+        }
+
     }
 
     private void addError(final SAMValidationError error) {
