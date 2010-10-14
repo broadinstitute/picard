@@ -111,7 +111,8 @@ public class ValidateSamFile extends CommandLineProgram {
         }
 
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-        final SAMFileReader samReader = new SAMFileReader(INPUT); 
+        final SAMFileReader samReader = new SAMFileReader(INPUT);
+        if (!samReader.isBinary()) VALIDATE_INDEX=false;
         if (VALIDATE_INDEX){
             samReader.enableIndexCaching(true);
         }
