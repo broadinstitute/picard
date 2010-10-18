@@ -91,17 +91,27 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
      * @param file The file to open.
      * @throws FileNotFoundException If the fasta or any of its supporting files cannot be found.
      */
-    public IndexedFastaSequenceFile(final File file) {
-        this(file, new FastaSequenceIndex((findFastaIndex(file))));
+    public IndexedFastaSequenceFile(final File file) throws FileNotFoundException {
+        this(file, new FastaSequenceIndex((findRequiredFastaIndexFile(file))));
     }
 
 
     public boolean isIndexed() {return true;}
 
     private static File findFastaIndex(File fastaFile) {
-        File indexFile = new File(fastaFile.getAbsolutePath() + ".fai");
+        File indexFile = getFastaIndexFileName(fastaFile);
         if (!indexFile.exists()) return null;
         return indexFile;
+    }
+
+    private static File getFastaIndexFileName(File fastaFile) {
+        return new File(fastaFile.getAbsolutePath() + ".fai");
+    }
+
+    private static File findRequiredFastaIndexFile(File fastaFile) throws FileNotFoundException {
+        File ret = findFastaIndex(fastaFile);
+        if (ret == null) throw new FileNotFoundException(getFastaIndexFileName(fastaFile) + " not found.");
+        return ret;
     }
 
     public static boolean canCreateIndexedFastaReader(final File fastaFile) {

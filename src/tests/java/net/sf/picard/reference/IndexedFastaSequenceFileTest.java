@@ -261,4 +261,10 @@ public class IndexedFastaSequenceFileTest{
 
         System.err.printf("testReset runtime: %dms%n", (endTime - startTime)) ;
     }
+
+    @Test(expectedExceptions = FileNotFoundException.class)
+    public void testMissingFile() throws Exception {
+        new IndexedFastaSequenceFile(new File(TEST_DATA_DIR, "non-existent.fasta"));
+        Assert.fail("FileNotFoundException should have been thrown");
+    }
 }
