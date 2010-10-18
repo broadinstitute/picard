@@ -24,7 +24,10 @@
 
 package net.sf.picard.reference;
 
+import net.sf.picard.PicardException;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -68,7 +71,11 @@ public class ReferenceSequenceFileFactory {
             if (name.endsWith(ext)) {
                 // Using faidx requires truncateNamesAtWhitespace
                 if (truncateNamesAtWhitespace && IndexedFastaSequenceFile.canCreateIndexedFastaReader(file)) {
-                    return new IndexedFastaSequenceFile(file);
+                    try {
+                        return new IndexedFastaSequenceFile(file);
+                    } catch (FileNotFoundException e) {
+                        throw new IllegalStateException("Should never happen, because existence of files has been checked.", e);
+                    }
                 }
                 else {
                     return new FastaSequenceFile(file, truncateNamesAtWhitespace);
