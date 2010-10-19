@@ -73,9 +73,13 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(doc="The maximum number of sequences allowed in SAM file.  If this value is exceeded, program won't " +
-            "spill to disk (used to avoid situation where there are not enough file handles.", shortName="MAX_SEQS")
+    @Option(doc="This option is obsolete.  ReadEnds will always be spilled to disk.", shortName="MAX_SEQS")
     public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
+
+    @Option(doc="Maximum number of file handles to keep open when spilling read ends to disk.  " + "" +
+            "Set this number a little lower than the per-process maximum number of file that may be open.  " +
+            "This number can be found by executing the 'ulimit -n' command on a Unix system.", shortName = "MAX_FILE_HANDLES")
+    public int MAX_FILE_HANDLES_FOR_READ_ENDS_MAP = 8000;
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
@@ -248,12 +252,8 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
                 throw new PicardException(INPUT + " is not coordinate sorted.");
             }
         }
-        final ReadEndsMap tmp;
-        if (header.getSequenceDictionary().getSequences().size() > MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP) {
-            tmp = new RAMReadEndsMap();
-        } else {
-            tmp = new DiskReadEndsMap();
-        }
+        final ReadEndsMap tmp = new DiskReadEndsMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP);
+
         long index = 0;
 
         for (final SAMRecord rec : sam) {
