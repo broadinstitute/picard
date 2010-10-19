@@ -53,21 +53,21 @@ public class FileAppendStreamLRUCache extends ResourceLimitedMap<File, FileOutpu
             try {
                 return new FileOutputStream(file, true);
             } catch (FileNotFoundException e) {
-                throw new PicardException(file + "not found", e);
+                // In case the file could not be opened because of too many file handles, try to force
+                // file handles to be closed.
+                System.gc();
+                System.runFinalization();
+                try {
+                    return new FileOutputStream(file, true);
+                } catch (FileNotFoundException e2) {
+                    throw new PicardException(file + "not found", e2);
+                }
             }
         }
 
         public void finalizeValue(final File file, final FileOutputStream fileOutputStream) {
             try {
                 fileOutputStream.close();
-
-                // Sadly, close() doesn't reliably release the file handle.  Forcing GC and finalization
-                // seems to do the trick, so GC periodically to avoid running out of file handles.
-                if (++numCloses % GC_FREQUENCY == 0) {
-                    System.gc();
-                    System.runFinalization();
-                    numCloses = 0;
-                }
             } catch (IOException e) {
                 throw new PicardException("Exception closing FileOutputStream for " + file, e);
             }
