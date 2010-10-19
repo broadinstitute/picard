@@ -70,7 +70,7 @@ public class Interval implements Comparable<Interval>, Cloneable {
         this.end = end;
         this.negativeStrand = negative;
         this.name = name;
-        if (this.end < this.start) {
+        if (this.end < this.start-1) {
             throw new IllegalArgumentException("start must be less than or equal to end!");
         }
     }
