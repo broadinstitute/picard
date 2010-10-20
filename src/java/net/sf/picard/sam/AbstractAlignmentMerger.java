@@ -227,8 +227,10 @@ public abstract class AbstractAlignmentMerger {
                     byte referenceBases[] = refSeq.get(rec.getReferenceIndex()).getBases();
                     rec.setAttribute(SAMTag.NM.name(),
                         SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
-                    rec.setAttribute(SAMTag.UQ.name(),
-                        SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
+                    if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
+                        rec.setAttribute(SAMTag.UQ.name(),
+                            SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
+                    }
                 }
             }
             writer.addAlignment(rec);
