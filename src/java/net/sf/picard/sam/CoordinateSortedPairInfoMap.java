@@ -49,12 +49,13 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
      * directory where files will go
      */
     private final File workDir = IoUtil.createTempDir("CSPI.", null);
-    private int sequenceIndexOfMapInRam = -1;
+    private int sequenceIndexOfMapInRam = -2; // -1 is a valid sequence index in this case
     private Map<KEY, REC> mapInRam = null;
     private final FileAppendStreamLRUCache outputStreams;
-    private final List<Integer> sizeOfMapOnDisk = new ArrayList<Integer>();
     private final Codec<KEY, REC> elementCodec;
-    private final List<File> mapsOnDisk = new ArrayList<File>();
+    // Key is reference index (which is in the range [-1 .. max sequence index].
+    // Value is the number of records on disk for this index.
+    private final Map<Integer, Integer> sizeOfMapOnDisk = new HashMap<Integer, Integer>();
 
     CoordinateSortedPairInfoMap(int maxOpenFiles, Codec<KEY, REC> elementCodec) {
         this.elementCodec = elementCodec;
@@ -81,13 +82,14 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
 
             // Spill map in RAM to disk
             if (mapInRam != null) {
+                File spillFile = makeFileForSequence(sequenceIndexOfMapInRam);
+                if (spillFile.exists()) throw new IllegalStateException(spillFile + " should not exist.");
                 final OutputStream os = getOutputStreamForSequence(sequenceIndexOfMapInRam);
                 elementCodec.setOutputStream(os);
                 for (final Map.Entry<KEY, REC> entry : mapInRam.entrySet()) {
                     elementCodec.encode(entry.getKey(), entry.getValue());
                 }
-                sizeOfMapOnDisk.set(sequenceIndexOfMapInRam, mapInRam.size());
-                mapsOnDisk.set(sequenceIndexOfMapInRam, null);
+                sizeOfMapOnDisk.put(sequenceIndexOfMapInRam, mapInRam.size());
                 mapInRam.clear();
             } else {
                 mapInRam = new HashMap<KEY, REC>();
@@ -96,32 +98,31 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
             sequenceIndexOfMapInRam = sequenceIndex;
 
             // Load map from disk if it existed
-            if (mapsOnDisk.size() > sequenceIndex) {
-                File mapOnDisk = mapsOnDisk.get(sequenceIndex);
-                if (outputStreams.containsKey(mapOnDisk)) {
-                    outputStreams.remove(mapOnDisk).close();
-                }
-                final int numRecords = sizeOfMapOnDisk.get(sequenceIndex);
-                sizeOfMapOnDisk.set(sequenceIndex, 0);
-                final File file = makeFileForSequence(sequenceIndex);
-                if (file.exists()) {
-                    FileInputStream is = null;
-                    try {
-                        is = new FileInputStream(file);
-                        elementCodec.setInputStream(is);
-                        for (int i = 0; i < numRecords; ++i) {
-                            final KeyAndRecord<KEY, REC> keyAndRecord = elementCodec.decode();
-                            if (mapInRam.containsKey(keyAndRecord.getKey()))
-                                throw new PicardException("Value was put into PairInfoMap more than once.  " +
-                                        sequenceIndex + ": " + keyAndRecord.getKey());
-                            mapInRam.put(keyAndRecord.getKey(), keyAndRecord.getRecord());
-                        }
-                    } finally {
-                        CloserUtil.close(is);
-                    }
-                    net.sf.samtools.util.IOUtil.deleteFiles(file);
-                }
+            File mapOnDisk = makeFileForSequence(sequenceIndex);
+            if (outputStreams.containsKey(mapOnDisk)) {
+                outputStreams.remove(mapOnDisk).close();
             }
+            final Integer numRecords = sizeOfMapOnDisk.remove(sequenceIndex);
+            if (mapOnDisk.exists()) {
+                if (numRecords == null)
+                    throw new IllegalStateException("null numRecords for " + mapOnDisk);
+                FileInputStream is = null;
+                try {
+                    is = new FileInputStream(mapOnDisk);
+                    elementCodec.setInputStream(is);
+                    for (int i = 0; i < numRecords; ++i) {
+                        final KeyAndRecord<KEY, REC> keyAndRecord = elementCodec.decode();
+                        if (mapInRam.containsKey(keyAndRecord.getKey()))
+                            throw new PicardException("Value was put into PairInfoMap more than once.  " +
+                                    sequenceIndex + ": " + keyAndRecord.getKey());
+                        mapInRam.put(keyAndRecord.getKey(), keyAndRecord.getRecord());
+                    }
+                } finally {
+                    CloserUtil.close(is);
+                }
+                net.sf.samtools.util.IOUtil.deleteFiles(mapOnDisk);
+            } else if (numRecords != null && numRecords > 0)
+                throw new IllegalStateException("Non-zero numRecords but " + mapOnDisk + " does not exist");
         } catch (IOException e) {
             throw new PicardException("Error loading new map from disk.", e);
         }
@@ -146,7 +147,9 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
             final OutputStream os = getOutputStreamForSequence(sequenceIndex);
             elementCodec.setOutputStream(os);
             elementCodec.encode(key, record);
-            sizeOfMapOnDisk.set(sequenceIndex, sizeOfMapOnDisk.get(sequenceIndex) + 1);
+            Integer prevCount = sizeOfMapOnDisk.get(sequenceIndex);
+            if (prevCount == null) prevCount = 0;
+            sizeOfMapOnDisk.put(sequenceIndex,  prevCount + 1);
         }
     }
 
@@ -157,16 +160,12 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
     }
 
     private OutputStream getOutputStreamForSequence(final int mateSequenceIndex) {
-        while (mateSequenceIndex >= mapsOnDisk.size()) {
-            mapsOnDisk.add(makeFileForSequence(mapsOnDisk.size()));
-            sizeOfMapOnDisk.add(0);
-        }
-        return outputStreams.get(mapsOnDisk.get(mateSequenceIndex));
+        return outputStreams.get(makeFileForSequence(mateSequenceIndex));
     }
 
     public int size() {
         int total = sizeInRam();
-        for (final Integer mapSize : sizeOfMapOnDisk) {
+        for (final Integer mapSize : sizeOfMapOnDisk.values()) {
             if (mapSize != null) {
                 total += mapSize;
             }
