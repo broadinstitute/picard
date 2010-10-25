@@ -82,6 +82,12 @@ public class ValidateSamFile extends CommandLineProgram {
     public boolean IS_BISULFITE_SEQUENCED = false;
 
     
+    @Option(doc="Relevant for a coordinate-sorted file containing read pairs only.  " +
+            "Maximum number of file handles to keep open when spilling mate info to disk.  " + "" +
+            "Set this number a little lower than the per-process maximum number of file that may be open.  " +
+            "This number can be found by executing the 'ulimit -n' command on a Unix system.")
+    public int MAX_OPEN_TEMP_FILES = 8000;
+
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
@@ -118,7 +124,7 @@ public class ValidateSamFile extends CommandLineProgram {
         }
         samReader.enableCrcChecking(true);
 
-        final SamFileValidator validator = new SamFileValidator(out);
+        final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
         validator.setErrorsToIgnore(IGNORE);
         
         if (IGNORE_WARNINGS) {

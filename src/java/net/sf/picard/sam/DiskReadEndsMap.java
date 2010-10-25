@@ -28,10 +28,7 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Disk-based implementation of ReadEndsMap.  A subdirectory of the system tmpdir is created to store
@@ -76,24 +73,6 @@ class DiskReadEndsMap implements ReadEndsMap {
         return pairInfoMap.sizeInRam();
     }
 
-    private static class KeyAndRecord implements CoordinateSortedPairInfoMap.KeyAndRecord<String, ReadEnds> {
-        private final String key;
-        private final ReadEnds record;
-
-        private KeyAndRecord(String key, ReadEnds record) {
-            this.key = key;
-            this.record = record;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public ReadEnds getRecord() {
-            return record;
-        }
-    }
-
     private static class Codec implements CoordinateSortedPairInfoMap.Codec<String, ReadEnds> {
         private final ReadEndsCodec readEndsCodec = new ReadEndsCodec();
 
@@ -105,11 +84,11 @@ class DiskReadEndsMap implements ReadEndsMap {
             readEndsCodec.setOutputStream(os);
         }
 
-        public CoordinateSortedPairInfoMap.KeyAndRecord<String, ReadEnds> decode() {
+        public Map.Entry<String, ReadEnds> decode() {
             try {
                 final String key = readEndsCodec.getInputStream().readUTF();
                 final ReadEnds record = readEndsCodec.decode();
-                return new KeyAndRecord(key, record);
+                return new AbstractMap.SimpleEntry<java.lang.String,net.sf.picard.sam.ReadEnds>(key, record);
             } catch (IOException e) {
                 throw new PicardException("Error loading ReadEndsMap from disk", e);
             }

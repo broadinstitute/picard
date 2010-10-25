@@ -69,7 +69,7 @@ public class ValidateSamFileTest {
         }
         
         final StringWriter results = new StringWriter();
-        final SamFileValidator validator = new SamFileValidator(new PrintWriter(results));
+        final SamFileValidator validator = new SamFileValidator(new PrintWriter(results), 8000);
         validator.setVerbose(true, 10);
         validator.validateSamFileVerbose(
                 samBuilder.getSamReader(), 
@@ -128,6 +128,28 @@ public class ValidateSamFileTest {
         Assert.assertEquals(results.get(SAMValidationError.Type.MISMATCH_FLAG_MATE_UNMAPPED.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.MISMATCH_MATE_ALIGNMENT_START.getHistogramString()).getValue(), 2.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.MISMATCH_MATE_REF_INDEX.getHistogramString()).getValue(), 2.0);
+    }
+
+    @Test(dataProvider = "missingMateTestCases")
+    public void testMissingMate(SAMFileHeader.SortOrder sortOrder) throws IOException {
+        final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder(true, sortOrder);
+
+        samBuilder.addPair(String.valueOf(1), 1, 1, 101);
+        final Iterator<SAMRecord> records = samBuilder.iterator();
+        records.next();
+        records.remove();
+        final Histogram<String> results = executeValidation(samBuilder.getSamReader(), null);
+
+        Assert.assertEquals(results.get(SAMValidationError.Type.MATE_NOT_FOUND.getHistogramString()).getValue(), 1.0);
+    }
+
+    @DataProvider(name = "missingMateTestCases")
+    public Object[][] missingMateTestCases() {
+        return new Object[][] {
+                {SAMFileHeader.SortOrder.coordinate},
+                {SAMFileHeader.SortOrder.queryname},
+                {SAMFileHeader.SortOrder.unsorted},
+        };
     }
 
     @Test
@@ -321,7 +343,7 @@ public class ValidateSamFileTest {
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
-        new SamFileValidator(out).setValidateIndex(true).validateSamFileSummary(samReader, reference);
+        new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference);
         LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
         if (reader.readLine().equals("No errors found")) {
             return new Histogram<String>();

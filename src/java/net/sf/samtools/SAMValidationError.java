@@ -174,7 +174,10 @@ public class SAMValidationError {
         DUPLICATE_READ_GROUP_ID,
 
         /** Same program group id appears more than once */
-        DUPLICATE_PROGRAM_GROUP_ID;
+        DUPLICATE_PROGRAM_GROUP_ID,
+
+        /** Read is marked as paired, but its pair was not found.  */
+        MATE_NOT_FOUND;
 
         public final Severity severity;
 

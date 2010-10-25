@@ -26,13 +26,11 @@ package net.sf.picard.sam;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.FileAppendStreamLRUCache;
+import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Holds info about a mate pair for use when processing a coordinate sorted file.  When one read of a pair is encountered,
@@ -44,18 +42,24 @@ import java.util.Map;
  * @param <KEY> KEY + reference sequence index are used to identify the record being stored or retrieved.
  * @param <REC> The type of record being retrieved.
  */
-public class CoordinateSortedPairInfoMap<KEY, REC> {
+public class CoordinateSortedPairInfoMap<KEY, REC> implements Iterable<Map.Entry<KEY, REC>> {
+    // -1 is a valid sequence index in this case
+    private final int INVALID_SEQUENCE_INDEX = -2;
     /**
      * directory where files will go
      */
     private final File workDir = IoUtil.createTempDir("CSPI.", null);
-    private int sequenceIndexOfMapInRam = -2; // -1 is a valid sequence index in this case
+    private int sequenceIndexOfMapInRam = INVALID_SEQUENCE_INDEX;
     private Map<KEY, REC> mapInRam = null;
     private final FileAppendStreamLRUCache outputStreams;
     private final Codec<KEY, REC> elementCodec;
     // Key is reference index (which is in the range [-1 .. max sequence index].
     // Value is the number of records on disk for this index.
     private final Map<Integer, Integer> sizeOfMapOnDisk = new HashMap<Integer, Integer>();
+
+    // No other methods may be called when iteration is in progress, because iteration depends on and changes
+    // internal state.
+    private boolean iterationInProgress = false;
 
     CoordinateSortedPairInfoMap(int maxOpenFiles, Codec<KEY, REC> elementCodec) {
         this.elementCodec = elementCodec;
@@ -69,7 +73,8 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
      * @param key
      * @return The record corresponding to the given sequenceIndex and key, or null if it is not present.
      */
-    public REC remove(final int sequenceIndex, final String key) {
+    public REC remove(final int sequenceIndex, final KEY key) {
+        if (iterationInProgress) throw new IllegalStateException("Cannot be called when iteration is in progress");
         ensureSequenceLoaded(sequenceIndex);
         return mapInRam.remove(key);
     }
@@ -84,13 +89,16 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
             if (mapInRam != null) {
                 File spillFile = makeFileForSequence(sequenceIndexOfMapInRam);
                 if (spillFile.exists()) throw new IllegalStateException(spillFile + " should not exist.");
-                final OutputStream os = getOutputStreamForSequence(sequenceIndexOfMapInRam);
-                elementCodec.setOutputStream(os);
-                for (final Map.Entry<KEY, REC> entry : mapInRam.entrySet()) {
-                    elementCodec.encode(entry.getKey(), entry.getValue());
+                if (!mapInRam.isEmpty()) {
+                    // Do not create file or entry in sizeOfMapOnDisk if there is nothing to write.
+                    final OutputStream os = getOutputStreamForSequence(sequenceIndexOfMapInRam);
+                    elementCodec.setOutputStream(os);
+                    for (final Map.Entry<KEY, REC> entry : mapInRam.entrySet()) {
+                        elementCodec.encode(entry.getKey(), entry.getValue());
+                    }
+                    sizeOfMapOnDisk.put(sequenceIndexOfMapInRam, mapInRam.size());
+                    mapInRam.clear();
                 }
-                sizeOfMapOnDisk.put(sequenceIndexOfMapInRam, mapInRam.size());
-                mapInRam.clear();
             } else {
                 mapInRam = new HashMap<KEY, REC>();
             }
@@ -111,11 +119,11 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
                     is = new FileInputStream(mapOnDisk);
                     elementCodec.setInputStream(is);
                     for (int i = 0; i < numRecords; ++i) {
-                        final KeyAndRecord<KEY, REC> keyAndRecord = elementCodec.decode();
+                        final Map.Entry<KEY, REC> keyAndRecord = elementCodec.decode();
                         if (mapInRam.containsKey(keyAndRecord.getKey()))
                             throw new PicardException("Value was put into PairInfoMap more than once.  " +
                                     sequenceIndex + ": " + keyAndRecord.getKey());
-                        mapInRam.put(keyAndRecord.getKey(), keyAndRecord.getRecord());
+                        mapInRam.put(keyAndRecord.getKey(), keyAndRecord.getValue());
                     }
                 } finally {
                     CloserUtil.close(is);
@@ -136,6 +144,7 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
      * @param record
      */
     public void put(final int sequenceIndex, final KEY key, final REC record) {
+        if (iterationInProgress) throw new IllegalStateException("Cannot be called when iteration is in progress");
         if (sequenceIndex == sequenceIndexOfMapInRam) {
             // Store in RAM map
             if (mapInRam.containsKey(key))
@@ -180,32 +189,72 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
         return mapInRam != null? mapInRam.size(): 0;
     }
 
-    private static class MapEntry {
-        private String key;
-        private ReadEnds readEnds;
+    /**
+     * Creates an iterator over all elements in map, in arbitrary order.  Elements may not be added
+     * or removed from map when iteration is in progress, nor may a second iteration be started.
+     * Iterator must be closed in order to allow normal access to the map.
+     */
+    public CloseableIterator<Map.Entry<KEY, REC>> iterator() {
+        if (iterationInProgress) throw new IllegalStateException("Cannot be called when iteration is in progress");
+        iterationInProgress = true;
+        return new MapIterator();
+    }
 
-        public String getKey() {
-            return key;
+    private class MapIterator implements CloseableIterator<Map.Entry<KEY, REC>> {
+        private boolean closed = false;
+        private Set<Integer> referenceIndices = new HashSet<Integer>(sizeOfMapOnDisk.keySet());
+        private final Iterator<Integer> referenceIndexIterator;
+        private Iterator<Map.Entry<KEY, REC>> currentReferenceIterator = null;
+
+        private MapIterator() {
+            if (sequenceIndexOfMapInRam != INVALID_SEQUENCE_INDEX)
+                referenceIndices.add(sequenceIndexOfMapInRam);
+            referenceIndexIterator = referenceIndices.iterator();
+            advanceToNextNonEmptyReferenceIndex();
         }
 
-        public void setKey(final String key) {
-            this.key = key;
+        private void advanceToNextNonEmptyReferenceIndex() {
+            while (referenceIndexIterator.hasNext()) {
+                int nextReferenceIndex = referenceIndexIterator.next();
+                ensureSequenceLoaded(nextReferenceIndex);
+                if (!mapInRam.isEmpty()) {
+                    createIteratorForMapInRam();
+                    return;
+                }
+            }
+            // no more.
+            currentReferenceIterator = null;
         }
 
-        public ReadEnds getReadEnds() {
-            return readEnds;
+        private void createIteratorForMapInRam() {
+            currentReferenceIterator = mapInRam.entrySet().iterator();
         }
 
-        public void setReadEnds(final ReadEnds readEnds) {
-            this.readEnds = readEnds;
+        public void close() {
+            closed = true;
+            iterationInProgress = false;
+        }
+
+        public boolean hasNext() {
+            if (closed) throw new IllegalStateException("Iterator has been closed");
+            if (currentReferenceIterator != null && !currentReferenceIterator.hasNext())
+                throw new IllegalStateException("Should not happen");
+            return currentReferenceIterator != null;
+        }
+
+        public Map.Entry<KEY, REC> next() {
+            if (closed) throw new IllegalStateException("Iterator has been closed");
+            if (!hasNext()) throw new NoSuchElementException();
+            final Map.Entry<KEY, REC> ret = currentReferenceIterator.next();
+            if (!currentReferenceIterator.hasNext()) advanceToNextNonEmptyReferenceIndex();
+            return ret;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 
-    public interface KeyAndRecord<KEY, REC> {
-        KEY getKey();
-        REC getRecord();
-        
-    }
     /**
      * Client must implement this class, which defines the way in which records are written to and
      * read from file.
@@ -234,7 +283,7 @@ public class CoordinateSortedPairInfoMap<KEY, REC> {
          * @return null if no more records.  Should throw exception if EOF is encountered in the middle of
          * a record.
          */
-        KeyAndRecord<KEY, REC> decode();
+        Map.Entry<KEY, REC> decode();
 
     }
 }
