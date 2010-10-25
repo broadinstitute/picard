@@ -60,7 +60,7 @@ import java.util.*;
 public class SamFileValidator {
     private Histogram<Type> errorsByType = new Histogram<Type>();
     private final PrintWriter out;
-    private Map<String, PairEndInfo> pairEndInfoByName;
+    private PairEndInfoMap pairEndInfoByName;
     private ReferenceSequenceFileWalker refFileWalker = null;
     private boolean verbose = false;
     private int maxVerboseOutput = 100;
@@ -70,11 +70,13 @@ public class SamFileValidator {
     private boolean bisulfiteSequenced = false;
     private boolean validateIndex = false;
     private boolean sequenceDictionaryEmptyAndNoWarningEmitted = false;
+    private final int maxTempFiles;
 
     private final static Log log = Log.getInstance(SamFileValidator.class);
 
-    public SamFileValidator(final PrintWriter out) {
+    public SamFileValidator(final PrintWriter out, final int maxTempFiles) {
         this.out = out;
+        this.maxTempFiles = maxTempFiles;
     }
 
     /** Sets one or more error types that should not be reported on. */
@@ -96,7 +98,7 @@ public class SamFileValidator {
      * @return boolean  true if there are no validation errors, otherwise false
      */
     public boolean validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
-        init(reference);
+        init(reference, samReader.getFileHeader());
 
         validateSamFile(samReader, out);
 
@@ -127,7 +129,7 @@ public class SamFileValidator {
      * @return boolean  true if there are no validation errors, otherwise false
      */
     public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
-        init(reference);
+        init(reference, samReader.getFileHeader());
 
         try {
             validateSamFile(samReader, out);
@@ -172,6 +174,7 @@ public class SamFileValidator {
             validateHeader(samReader.getFileHeader());
             orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
             validateSamRecords(samReader);
+            validateUnmatchedPairs();
             if (validateIndex){
                 try {
                    BamIndexValidator.exhaustivelyTestIndex(samReader);
@@ -185,6 +188,41 @@ public class SamFileValidator {
             }
         } finally {
             out.flush();
+        }
+    }
+
+
+    /**
+     * Report on reads marked as paired, for which the mate was not found.
+     */
+    private void validateUnmatchedPairs() {
+        final InMemoryPairEndInfoMap inMemoryPairMap;
+        if (pairEndInfoByName instanceof CoordinateSortedPairEndInfoMap) {
+            // For the coordinate-sorted map, need to detect mate pairs in which the mateReferenceIndex on one end
+            // does not match the readReference index on the other end, so the pairs weren't united and validated.
+            inMemoryPairMap = new InMemoryPairEndInfoMap();
+            CloseableIterator<Map.Entry<String, PairEndInfo>> it = ((CoordinateSortedPairEndInfoMap)pairEndInfoByName).iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, PairEndInfo> entry = it.next();
+                PairEndInfo pei = inMemoryPairMap.remove(entry.getValue().readReferenceIndex, entry.getKey());
+                if (pei != null) {
+                    // Found a mismatch btw read.mateReferenceIndex and mate.readReferenceIndex
+                    List<SAMValidationError> errors = pei.validateMates(entry.getValue(), entry.getKey());
+                    for (final SAMValidationError error : errors) {
+                        addError(error);
+                    }
+                } else {
+                    // Mate not found.
+                    inMemoryPairMap.put(entry.getValue().mateReferenceIndex, entry.getKey(), entry.getValue());
+                }
+            }
+            it.close();
+        } else {
+            inMemoryPairMap = (InMemoryPairEndInfoMap)pairEndInfoByName;
+        }
+        // At this point, everything in InMemoryMap is a read marked as a pair, for which a mate was not found.
+        for (final Map.Entry<String, PairEndInfo> entry: inMemoryPairMap) {
+            addError(new SAMValidationError(Type.MATE_NOT_FOUND, "Mate not found for paired read", entry.getKey()));
         }
     }
 
@@ -311,8 +349,12 @@ public class SamFileValidator {
         }
     }
     
-    private void init(final ReferenceSequenceFile reference) {
-        this.pairEndInfoByName = new HashMap<String, PairEndInfo>();
+    private void init(final ReferenceSequenceFile reference, final SAMFileHeader header) {
+        if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
+            this.pairEndInfoByName = new CoordinateSortedPairEndInfoMap();
+        } else {
+            this.pairEndInfoByName = new InMemoryPairEndInfoMap();
+        }
         if (reference != null) {
             this.refFileWalker = new ReferenceSequenceFileWalker(reference);
         }
@@ -355,9 +397,9 @@ public class SamFileValidator {
             return;
         }
         
-        final PairEndInfo pairEndInfo = pairEndInfoByName.remove(record.getReadName());
+        final PairEndInfo pairEndInfo = pairEndInfoByName.remove(record.getReferenceIndex(), record.getReadName());
         if (pairEndInfo == null) {
-            pairEndInfoByName.put(record.getReadName(), new PairEndInfo(record, recordNumber));
+            pairEndInfoByName.put(record.getMateReferenceIndex(), record.getReadName(), new PairEndInfo(record, recordNumber));
         } else {
             final List<SAMValidationError> errors =
                 pairEndInfo.validateMates(new PairEndInfo(record, recordNumber), record.getReadName());
@@ -476,7 +518,19 @@ public class SamFileValidator {
             this.mateReferenceIndex = record.getMateReferenceIndex();
             this.mateUnmappedFlag = record.getMateUnmappedFlag();
         }
-        
+
+        private PairEndInfo(int readAlignmentStart, int readReferenceIndex, boolean readNegStrandFlag, boolean readUnmappedFlag, int mateAlignmentStart, int mateReferenceIndex, boolean mateNegStrandFlag, boolean mateUnmappedFlag, long recordNumber) {
+            this.readAlignmentStart = readAlignmentStart;
+            this.readReferenceIndex = readReferenceIndex;
+            this.readNegStrandFlag = readNegStrandFlag;
+            this.readUnmappedFlag = readUnmappedFlag;
+            this.mateAlignmentStart = mateAlignmentStart;
+            this.mateReferenceIndex = mateReferenceIndex;
+            this.mateNegStrandFlag = mateNegStrandFlag;
+            this.mateUnmappedFlag = mateUnmappedFlag;
+            this.recordNumber = recordNumber;
+        }
+
         public List<SAMValidationError> validateMates(final PairEndInfo mate, final String readName) {
             final List<SAMValidationError> errors = new ArrayList<SAMValidationError>();
             validateMateFields(this, mate, readName, errors);
@@ -520,6 +574,110 @@ public class SamFileValidator {
     private static class MaxOutputExceededException extends PicardException {
         MaxOutputExceededException() {
             super("maxVerboseOutput exceeded.");
+        }
+    }
+
+    interface PairEndInfoMap extends Iterable<Map.Entry<String, PairEndInfo>> {
+        void put(int mateReferenceIndex, String key, PairEndInfo value);
+        PairEndInfo remove(int mateReferenceIndex, String key);
+        CloseableIterator<Map.Entry<String, PairEndInfo>> iterator();
+    }
+
+    private class CoordinateSortedPairEndInfoMap implements PairEndInfoMap {
+        private final CoordinateSortedPairInfoMap<String, PairEndInfo> onDiskMap =
+                new CoordinateSortedPairInfoMap<String, PairEndInfo>(maxTempFiles, new Codec());
+
+        public void put(int mateReferenceIndex, String key, PairEndInfo value) {
+            onDiskMap.put(mateReferenceIndex, key, value);
+        }
+
+        public PairEndInfo remove(int mateReferenceIndex, String key) {
+            return onDiskMap.remove(mateReferenceIndex, key); 
+        }
+
+        public CloseableIterator<Map.Entry<String, PairEndInfo>> iterator() {
+            return onDiskMap.iterator();
+        }
+
+        private class Codec implements CoordinateSortedPairInfoMap.Codec<String, PairEndInfo> {
+            private DataInputStream in;
+            private DataOutputStream out;
+
+            public void setOutputStream(final OutputStream os) { this.out = new DataOutputStream(os); }
+            public void setInputStream(final InputStream is) { this.in = new DataInputStream(is); }
+
+            public void encode(String key, PairEndInfo record) {
+                try {
+                    out.writeUTF(key);
+                    out.writeInt(record.readAlignmentStart);
+                    out.writeInt(record.readReferenceIndex);
+                    out.writeBoolean(record.readNegStrandFlag);
+                    out.writeBoolean(record.readUnmappedFlag);
+                    out.writeInt(record.mateAlignmentStart);
+                    out.writeInt(record.mateReferenceIndex);
+                    out.writeBoolean(record.mateNegStrandFlag);
+                    out.writeBoolean(record.mateUnmappedFlag);
+                    out.writeLong(record.recordNumber);
+                } catch (IOException e) {
+                    throw new PicardException("Error spilling PairInfo to disk", e);
+                }
+            }
+
+            public Map.Entry<String, PairEndInfo> decode() {
+                try {
+                    final String key = in.readUTF();
+                    final int readAlignmentStart = in.readInt();
+                    final int readReferenceIndex = in.readInt();
+                    final boolean readNegStrandFlag = in.readBoolean();
+                    final boolean readUnmappedFlag = in.readBoolean();
+
+                    final int mateAlignmentStart = in.readInt();
+                    final int mateReferenceIndex = in.readInt();
+                    final boolean mateNegStrandFlag = in.readBoolean();
+                    final boolean mateUnmappedFlag = in.readBoolean();
+
+                    final long recordNumber = in.readLong();
+                    final PairEndInfo rec = new PairEndInfo(readAlignmentStart, readReferenceIndex, readNegStrandFlag, readUnmappedFlag, mateAlignmentStart, mateReferenceIndex, mateNegStrandFlag, mateUnmappedFlag, recordNumber);
+                    return new AbstractMap.SimpleEntry(key, rec);
+                } catch (IOException e) {
+                    throw new PicardException("Error reading PairInfo from disk", e);
+                }
+            }
+        }
+    }
+
+    private static class InMemoryPairEndInfoMap implements PairEndInfoMap {
+        private final Map<String, PairEndInfo> map = new HashMap<String, PairEndInfo>();
+
+        public void put(int mateReferenceIndex, String key, PairEndInfo value) {
+            if (mateReferenceIndex != value.mateReferenceIndex)
+                throw new IllegalArgumentException("mateReferenceIndex does not agree with PairEndInfo");
+            map.put(key, value);
+        }
+
+        public PairEndInfo remove(int mateReferenceIndex, String key) {
+            return map.remove(key);
+        }
+
+        public CloseableIterator<Map.Entry<String, PairEndInfo>> iterator() {
+            final Iterator<Map.Entry<String, PairEndInfo>> it = map.entrySet().iterator();
+            return new CloseableIterator<Map.Entry<String, PairEndInfo>>() {
+                public void close() {
+                    // do nothing
+                }
+
+                public boolean hasNext() {
+                    return it.hasNext();
+                }
+
+                public Map.Entry<String, PairEndInfo> next() {
+                    return it.next();
+                }
+
+                public void remove() {
+                    it.remove();
+                }
+            };
         }
     }
 }
