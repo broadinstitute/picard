@@ -24,6 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
 import java.util.Arrays;
@@ -392,6 +393,26 @@ public class IoUtil {
         }
    }
 
+    /**
+     * Reads everything from an input stream as characters and returns a single String.
+     */
+    public static String readFully(final InputStream in) {
+        try {
+            BufferedReader r = new BufferedReader(new InputStreamReader(in));
+            StringBuilder builder = new StringBuilder(512);
+            String line = null;
+
+            while ((line = r.readLine()) != null) {
+                if (builder.length() > 0) builder.append('\n');
+                builder.append(line);
+            }
+
+            return builder.toString();
+        }
+        catch (IOException ioe) {
+            throw new RuntimeIOException("Error reading stream", ioe);
+        }
+    }
 }
 
 
