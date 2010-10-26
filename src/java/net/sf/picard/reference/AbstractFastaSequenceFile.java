@@ -50,7 +50,6 @@ abstract class AbstractFastaSequenceFile implements ReferenceSequenceFile {
         this.file = file;
         final File dictionary = findSequenceDictionary(file);
 
-
         if (dictionary != null) {
             IoUtil.assertFileIsReadable(dictionary);
 
@@ -71,9 +70,12 @@ abstract class AbstractFastaSequenceFile implements ReferenceSequenceFile {
     protected static File findSequenceDictionary(final File file) {
         // Try and locate the dictionary
         String dictionaryName = file.getAbsolutePath();
+        String dictionaryNameExt = file.getAbsolutePath();
         boolean fileTypeSupported = false;
         for (final String extension : ReferenceSequenceFileFactory.FASTA_EXTENSIONS) {
             if (dictionaryName.endsWith(extension)) {
+                  dictionaryNameExt = new String(dictionaryName);
+                  dictionaryNameExt += ".dict";
                   dictionaryName = dictionaryName.substring(0, dictionaryName.lastIndexOf(extension));
                   dictionaryName += ".dict";
                   fileTypeSupported = true;
@@ -86,6 +88,10 @@ abstract class AbstractFastaSequenceFile implements ReferenceSequenceFile {
         final File dictionary = new File(dictionaryName);
         if (dictionary.exists())
             return dictionary;
+        // try without removing the file extension
+        final File dictionaryExt = new File(dictionaryNameExt);
+        if (dictionaryExt.exists())
+            return dictionaryExt;
         else return null;
     }
 
