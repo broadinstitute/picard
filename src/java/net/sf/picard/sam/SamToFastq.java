@@ -152,9 +152,6 @@ public class SamToFastq extends CommandLineProgram {
                 }
             }
 
-            if (firstSeenMates.size() > 0) {
-                throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
-            }
         } finally {
             // Flush as much as possible.
             writer1.close();
@@ -162,6 +159,9 @@ public class SamToFastq extends CommandLineProgram {
             reader.close();
         }
 
+        if (firstSeenMates.size() > 0) {
+            throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
+        }
     }
 
     void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer) {
