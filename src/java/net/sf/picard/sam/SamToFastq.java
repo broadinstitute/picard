@@ -127,37 +127,41 @@ public class SamToFastq extends CommandLineProgram {
 
         final Map<String,SAMRecord> firstSeenMates = new HashMap<String,SAMRecord>();
 
-        for (final SAMRecord currentRecord : reader ) {
-            // Skip non-PF reads as necessary
-            if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) continue;
+        try {
+            for (final SAMRecord currentRecord : reader ) {
+                // Skip non-PF reads as necessary
+                if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) continue;
 
-            final String currentReadName = currentRecord.getReadName() ;
-            final SAMRecord firstRecord = firstSeenMates.get(currentReadName);
-            if (firstRecord == null) {
-                firstSeenMates.put(currentReadName, currentRecord) ;
-            }
-            else {
-                assertPairedMates(firstRecord, currentRecord);
-
-                if (currentRecord.getFirstOfPairFlag()) {
-                     writeRecord(currentRecord, 1, writer1);
-                     writeRecord(firstRecord, 2, writer2);
+                final String currentReadName = currentRecord.getReadName() ;
+                final SAMRecord firstRecord = firstSeenMates.get(currentReadName);
+                if (firstRecord == null) {
+                    firstSeenMates.put(currentReadName, currentRecord) ;
                 }
                 else {
-                     writeRecord(firstRecord, 1, writer1);
-                     writeRecord(currentRecord, 2, writer2);
+                    assertPairedMates(firstRecord, currentRecord);
+
+                    if (currentRecord.getFirstOfPairFlag()) {
+                         writeRecord(currentRecord, 1, writer1);
+                         writeRecord(firstRecord, 2, writer2);
+                    }
+                    else {
+                         writeRecord(firstRecord, 1, writer1);
+                         writeRecord(currentRecord, 2, writer2);
+                    }
+                    firstSeenMates.remove(currentReadName);
                 }
-                firstSeenMates.remove(currentReadName);
             }
+
+            if (firstSeenMates.size() > 0) {
+                throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
+            }
+        } finally {
+            // Flush as much as possible.
+            writer1.close();
+            writer2.close();
+            reader.close();
         }
 
-        if (firstSeenMates.size() > 0) {
-            throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
-        }
-  
-        reader.close();
-        writer1.close();
-        writer2.close();
     }
 
     void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer) {
