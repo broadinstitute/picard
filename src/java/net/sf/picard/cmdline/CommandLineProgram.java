@@ -62,41 +62,32 @@ import net.sf.samtools.util.BlockCompressedStreamConstants;
  */
 public abstract class CommandLineProgram {
 
-    /**
-     * List of all options in CommandLineProgram, so that these can be skipped when generating
-     * HTML help for a particular program.
-     */
-    private static final Set<String> STANDARD_OPTIONS =
-            Collections.unmodifiableSet(new HashSet<String>(
-                    Arrays.asList("TMP_DIR", "VERBOSITY", "QUIET", "VALIDATION_STRINGENCY",
-                    "COMPRESSION_LEVEL", "MAX_RECORDS_IN_RAM", "CREATE_INDEX", "MD5_FILE")));
-
-    @Option
+    @Option(common=true)
     public File TMP_DIR = (System.getProperty("java.io.tmpdir").endsWith("/" + System.getProperty("user.name"))?
             new File(System.getProperty("java.io.tmpdir")):
             new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name")));
 
-    @Option(doc = "Control verbosity of logging.")
+    @Option(doc = "Control verbosity of logging.", common=true)
     public Log.LogLevel VERBOSITY = Log.LogLevel.INFO;
 
-    @Option(doc = "Whether to suppress job-summary info on System.err.")
+    @Option(doc = "Whether to suppress job-summary info on System.err.", common=true)
     public Boolean QUIET = false;
 
     @Option(doc = "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT " +
             "can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) " +
-            "do not otherwise need to be decoded.")
+            "do not otherwise need to be decoded.", common=true)
     public SAMFileReader.ValidationStringency VALIDATION_STRINGENCY = SAMFileReader.ValidationStringency.DEFAULT_STRINGENCY;
 
-    @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).")
+    @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
     public int COMPRESSION_LEVEL = BlockCompressedStreamConstants.DEFAULT_COMPRESSION_LEVEL;
 
-    @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true)
+    @Option(doc = "When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.", optional=true, common=true)
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
-    @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.")
+    @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)
     public Boolean CREATE_INDEX = false;
 
-    @Option(doc="Whether to create an MD5 digest for any BAM files created.  ")
+    @Option(doc="Whether to create an MD5 digest for any BAM files created.  ", common=true)
     public boolean CREATE_MD5_FILE = false;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
@@ -201,7 +192,7 @@ public abstract class CommandLineProgram {
             for (final String msg : customErrorMessages) {
                 System.err.println(msg);
             }
-            commandLineParser.usage(System.err);
+            commandLineParser.usage(System.err, false);
             return false;
         }
         return true;
@@ -231,10 +222,6 @@ public abstract class CommandLineProgram {
 
     public String getCommandLine() {
         return commandLine;
-    }
-
-    public static Set<String> getStandardOptions() {
-        return STANDARD_OPTIONS;
     }
 }
 

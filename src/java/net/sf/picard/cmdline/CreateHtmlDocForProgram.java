@@ -37,26 +37,8 @@ public class CreateHtmlDocForProgram {
     public static void main(final String[] args) throws Exception {
         for (final String clazz : args) {
             CommandLineProgram mainClass = (CommandLineProgram)Class.forName(clazz).newInstance();
-            CommandLineParserSuppressStandardOptions clp = new CommandLineParserSuppressStandardOptions(mainClass);
-            clp.htmlUsage(System.out, mainClass.getClass().getSimpleName());
-        }
-    }
-
-    private static class CommandLineParserSuppressStandardOptions extends CommandLineParser {
-
-        private CommandLineParserSuppressStandardOptions(final Object callerOptions) {
-            super(callerOptions);
-        }
-
-        /**
-         * Override this method to suppress generating HTML help for "standard" options.
-         *
-         * @param optionDefinition
-         * @return true if HTML help should not be generated.
-         */
-        @Override
-        protected boolean isStandardOption(final CommandLineParser.OptionDefinition optionDefinition) {
-            return CommandLineProgram.getStandardOptions().contains(optionDefinition.name);
+            CommandLineParser clp = new CommandLineParser(mainClass);
+            clp.htmlUsage(System.out, mainClass.getClass().getSimpleName(), false);
         }
     }
 }

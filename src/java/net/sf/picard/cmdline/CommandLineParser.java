@@ -83,7 +83,7 @@ public class CommandLineParser {
      * public String USAGE = CommandLineParser.getStandardUsagePreamble(getClass()) + "Frobnicates the freebozzle."
      */
     public static String getStandardUsagePreamble(final Class mainClass) {
-        return "USAGE: " + mainClass.getName() + " [options]\n\n";
+        return "USAGE: " + mainClass.getSimpleName() + " [options]\n\n";
     }
 
     // This is the object that the caller has provided that contains annotations,
@@ -153,52 +153,60 @@ public class CommandLineParser {
      * Print a usage message based on the options object passed to the ctor.
      * @param stream Where to write the usage message.
      */
-    public void usage(final PrintStream stream) {
+    public void usage(final PrintStream stream, final boolean printCommon) {
         stream.print(usagePreamble);
+        stream.println("\n\nOptions:\n");
+
+        printOptionParamUsage(stream, "--help", "-h", null, "Displays options specific to this tool.");
+        printOptionParamUsage(stream, "--stdhelp", "-H", null, "Displays options specific to this tool AND " +
+                "options common to all Picard command line tools.");
+
         if (!optionDefinitions.isEmpty()) {
-            stream.println("\n\nOptions:\n");
             for (final OptionDefinition optionDefinition : optionDefinitions) {
-                printOptionUsage(stream, optionDefinition);
+                if(printCommon || !optionDefinition.isCommon) printOptionUsage(stream, optionDefinition);
             }
         }
-        final Field fileField;
-        try {
-            fileField = getClass().getField("IGNORE_THIS_PROPERTY");
-        } catch (NoSuchFieldException e) {
-            throw new PicardException("Should never happen", e);
+
+        if(printCommon) {
+            final Field fileField;
+            try {
+                fileField = getClass().getField("IGNORE_THIS_PROPERTY");
+            } catch (NoSuchFieldException e) {
+                throw new PicardException("Should never happen", e);
+            }
+            final OptionDefinition optionsFileOptionDefinition =
+                    new OptionDefinition(fileField, OPTIONS_FILE, "",
+                            "File of OPTION_NAME=value pairs.  No positional parameters allowed.  Unlike command-line options, " +
+                    "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
+                    "by a subsequent command-line option.  " +
+                    "A line starting with '#' is considered a comment.", false, true, 0, Integer.MAX_VALUE, null, true, new String[0]);
+            printOptionUsage(stream, optionsFileOptionDefinition);
         }
-        final OptionDefinition optionsFileOptionDefinition =
-                new OptionDefinition(fileField, OPTIONS_FILE, "",
-                        "File of OPTION_NAME=value pairs.  No positional parameters allowed.  Unlike command-line options, " +
-                "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
-                "by a subsequent command-line option.  " +
-                "A line starting with '#' is considered a comment.", false, true, 0, Integer.MAX_VALUE, null, new String[0]);
-        printOptionUsage(stream, optionsFileOptionDefinition);
     }
 
-    public void htmlUsage(final PrintStream stream, final String programName) {
+    public void htmlUsage(final PrintStream stream, final String programName, boolean printCommon) {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a name=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
         stream.println("<p>" + htmlEscape(usagePreamble) + "</p>");
         boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
-            if (!isStandardOption(optionDefinition)) {
+            if (!optionDefinition.isCommon || printCommon) {
                 hasOptions = true;
                 break;
             }
         }
         if (hasOptions) {
-            htmlPrintOptions(stream);
+            htmlPrintOptions(stream, printCommon);
         }
         stream.println("<br/>");
     }
 
-    public void htmlPrintOptions(PrintStream stream) {
+    public void htmlPrintOptions(PrintStream stream, boolean printCommon) {
         stream.println("<table>");
         stream.println("<tr><th>Option</th><th>Description</th></tr>");
         for (final OptionDefinition optionDefinition : optionDefinitions) {
-            if (!isStandardOption(optionDefinition)) {
+            if (!optionDefinition.isCommon || printCommon) {
                 printHtmlOptionUsage(stream, optionDefinition);
             }
         }
@@ -210,15 +218,6 @@ public class CommandLineParser {
         str = str.replaceAll("<", "&lt;");
         str = str.replaceAll("\n", "\n<p>");
         return str;
-    }
-
-    /**
-     * Override this method to suppress generating HTML help for "standard" options.
-     * @param optionDefinition
-     * @return true if HTML help should not be generated.
-     */
-    protected boolean isStandardOption(final OptionDefinition optionDefinition) {
-        return false;
     }
 
     /**
@@ -234,9 +233,14 @@ public class CommandLineParser {
         for (int i = 0; i < args.length; ++i) {
             final String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
-                usage(messageStream);
+                usage(messageStream, false);
                 return false;
             }
+            if (arg.equals("-H") || arg.equals("--stdhelp")) {
+                usage(messageStream, true);
+                return false;
+            }
+
             final String[] pair = arg.split("=", 2);
             if (pair.length == 2 && pair[1].length() == 0) {
 
@@ -248,26 +252,26 @@ public class CommandLineParser {
                 if (pair[0].equals(OPTIONS_FILE)) {
                     if (!parseOptionsFile(pair[1])) {
                         messageStream.println();
-                        usage(messageStream);
+                        usage(messageStream, true);
                         return false;
                     }
                     commandLine += " " + OPTIONS_FILE + "=" + pair[1];
                 } else {
                     if (!parseOption(pair[0], pair[1], false)) {
                         messageStream.println();
-                        usage(messageStream);
+                        usage(messageStream, true);
                         return false;
                     }
                 }
             } else if (!parsePositionalArgument(arg)) {
                 messageStream.println();
-                usage(messageStream);
+                usage(messageStream, false);
                 return false;
             }
         }
         if (!checkNumArguments()) {
             messageStream.println();
-            usage(messageStream);
+            usage(messageStream, false);
             return false;
         }
 
@@ -409,7 +413,7 @@ public class CommandLineParser {
                 messageStream.println("ERROR: Option '" + key + "' cannot be specified more than once.");
                 return false;
             }
-        }
+        }                                      
         final Object value;
         try {
             if(stringValue.equals("null")) {
@@ -478,12 +482,12 @@ public class CommandLineParser {
                 if (pair.length == 2) {
                     if (!parseOption(pair[0], pair[1], true)) {
                         messageStream.println();
-                        usage(messageStream);
+                        usage(messageStream, true);
                         return false;
                     }
                 } else {
                     messageStream.println("Strange line in OPTIONS_FILE " + optionsFile + ": " + line);
-                    usage(messageStream);
+                    usage(messageStream, true);
                     return false;
                 }
             }
@@ -505,23 +509,31 @@ public class CommandLineParser {
     }
 
     private void printOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
-        final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
-        String optionLabel = optionDefinition.name + "=" + type;
+        printOptionParamUsage(stream, optionDefinition.name, optionDefinition.shortName,
+                              getUnderlyingType(optionDefinition.field).getSimpleName(),
+                              makeOptionDescription(optionDefinition));
+    }
+
+
+    private void printOptionParamUsage(final PrintStream stream, final String name, final String shortName,
+                                       final String type, final String optionDescription) {
+        String optionLabel = name;
+        if(type != null) optionLabel += "=" + type;
+
         stream.print(optionLabel);
-        if (optionDefinition.shortName.length() > 0) {
+        if (shortName != null && shortName.length() > 0) {
             stream.println();
-        }
-        if (optionDefinition.shortName.length() > 0) {
-            optionLabel = optionDefinition.shortName + "=" + type;
+            optionLabel = shortName;
+            if(type != null) optionLabel += "=" + type;
             stream.print(optionLabel);
         }
+
         int numSpaces = OPTION_COLUMN_WIDTH - optionLabel.length();
         if (optionLabel.length() > OPTION_COLUMN_WIDTH) {
             stream.println();
             numSpaces = OPTION_COLUMN_WIDTH;
         }
         printSpaces(stream, numSpaces);
-        final String optionDescription = makeOptionDescription(optionDefinition);
         final String wrappedDescription = StringUtil.wordWrap(optionDescription, DESCRIPTION_COLUMN_WIDTH);
         final String[] descriptionLines = wrappedDescription.split("\n");
         for (int i = 0; i < descriptionLines.length; ++i) {
@@ -630,7 +642,7 @@ public class CommandLineParser {
                     optionAnnotation.shortName(),
                     optionAnnotation.doc(), optionAnnotation.optional() || (field.get(callerOptions) != null),
                     isCollection, optionAnnotation.minElements(),
-                    optionAnnotation.maxElements(), field.get(callerOptions),
+                    optionAnnotation.maxElements(), field.get(callerOptions),  optionAnnotation.common(),
                     optionAnnotation.mutex());
 
             for (final String option : optionAnnotation.mutex()) {
@@ -815,12 +827,13 @@ public class CommandLineParser {
         final int minElements;
         final int maxElements;
         final String defaultValue;
+        final boolean isCommon;
         boolean hasBeenSet = false;
         boolean hasBeenSetFromOptionsFile = false;
         Set<String> mutuallyExclusive;
 
         private OptionDefinition(final Field field, final String name, final String shortName, final String doc, final boolean optional, final boolean collection,
-                                 final int minElements, final int maxElements, final Object defaultValue, final String[] mutuallyExclusive) {
+                                 final int minElements, final int maxElements, final Object defaultValue, final boolean isCommon, final String[] mutuallyExclusive) {
             this.field = field;
             this.name = name.toUpperCase();
             this.shortName = shortName.toUpperCase();
@@ -840,6 +853,7 @@ public class CommandLineParser {
             } else {
                 this.defaultValue = "null";
             }
+            this.isCommon = isCommon;
             this.mutuallyExclusive = new HashSet<String>(Arrays.asList(mutuallyExclusive));
         }
     }
