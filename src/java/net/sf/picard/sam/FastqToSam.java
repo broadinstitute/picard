@@ -47,7 +47,7 @@ import java.io.File;
  * Input files can be in GZip format (end in .gz).
  */
 public class FastqToSam extends CommandLineProgram {
-    private static Log LOG = Log.getInstance(FastqToSam.class);
+    private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Usage 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
@@ -209,9 +209,10 @@ public class FastqToSam extends CommandLineProgram {
 
     /** Returns read baseName and asserts correct pair read name format:
      * <ul>
-     * <li> A pair read name must contain at least one /
-     * <li> First pair read name must end with "/1 and second pair read name ends with "/2" 
+     * <li> Paired reads must either have the exact same read names or they must contain at least one "/"
+     * <li> and the First pair read name must end with "/1" and second pair read name ends with "/2"
      * <li> The baseName (read name part before the /) must be the same for both read names
+     * <li> If the read names are exactly the same but end in "/2" or "/1" then an exception will be thrown 
      * </ul>
      */
     String getBaseName(final String readName1, final String readName2, final FastqReader freader1, final FastqReader freader2) {
@@ -227,21 +228,41 @@ public class FastqToSam extends CommandLineProgram {
             throw new PicardException(String.format("In paired mode, read name 1 (%s) does not match read name 2 (%s)", baseName1,baseName2));
         }
 
-        if (StringUtil.isBlank(num1)) throw new PicardException(error(freader1,"Pair 1 number is required ("+readName1+")"));
-        if (StringUtil.isBlank(num2)) throw new PicardException(error(freader2,"Pair 2 number is required ("+readName2+")"));
-        if (!num1.equals("1")) throw new PicardException(error(freader1,"Pair 1 number must be 1 ("+readName1+")"));
-        if (!num2.equals("2")) throw new PicardException(error(freader2,"Pair 2 number must be 2 ("+readName2+")"));
+        final boolean num1Blank = StringUtil.isBlank(num1);
+        final boolean num2Blank = StringUtil.isBlank(num2);
+        if (num1Blank || num2Blank) {
+            if(!num1Blank) throw new PicardException(error(freader1,"Pair 1 number is missing (" +readName1+ "). Both pair numbers must be present or neither."));       //num1 != blank and num2   == blank
+            else if(!num2Blank) throw new PicardException(error(freader2, "Pair 2 number is missing (" +readName2+ "). Both pair numbers must be present or neither.")); //num1 == blank and num =2 != blank 
+        } else {
+            if (!num1.equals("1")) throw new PicardException(error(freader1,"Pair 1 number must be 1 ("+readName1+")"));
+            if (!num2.equals("2")) throw new PicardException(error(freader2,"Pair 2 number must be 2 ("+readName2+")"));
+        }
 
         return baseName1 ;
     }
 
     /** Breaks up read name into baseName and number separated by the last / */
     private String [] getReadNameTokens(final String readName, final int pairNum, final FastqReader freader) {
+        if(readName.equals("")) throw new PicardException(error(freader,"Pair read name "+pairNum+" cannot be empty: "+readName));
+
         final int idx = readName.lastIndexOf("/");
-        if (idx == -1) throw new PicardException(error(freader,"Pair read name "+pairNum+" must have a slash: "+readName));
         final String result[] = new String[2];
-        result[0] = readName.substring(0,idx); // baseName
-        result[1] = readName.substring(idx+1, readName.length()); // number
+
+        if (idx == -1) {
+            result[0] = readName;
+            result[1] = null;
+        } else {
+            result[1] = readName.substring(idx+1, readName.length()); // should be a 1 or 2
+            
+            if(!result[1].equals("1") && !result[1].equals("2")) {    //if not a 1 or 2 then names must be identical
+                result[0] = readName;
+                result[1] = null;
+            }
+            else {
+                result[0] = readName.substring(0,idx); // baseName
+            }
+        }
+
         return result ;
     }
 
