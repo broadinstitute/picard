@@ -133,17 +133,34 @@ public class FastqToSamTest {
     }
 
     private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version) throws IOException {
-        final File fastqFile1 = new File(TEST_DATA_DIR, fastqFilename1);
-        final File samFile = newTempSamFile(fastqFile1.getName());
+        final File fastq1 = new File(TEST_DATA_DIR, fastqFilename1);
+        final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
+        final File samFile = newTempSamFile(fastq1.getName());
 
-        final FastqToSam program = new FastqToSam();
-        program.FASTQ = fastqFile1;
-        if (fastqFilename2 != null) program.FASTQ2 = new File(TEST_DATA_DIR, fastqFilename2);
-        program.OUTPUT = samFile;
-        program.QUALITY_FORMAT = version;
-        program.READ_GROUP_NAME = "rg" ;
-        program.SAMPLE_NAME = "s1" ;
-        Assert.assertEquals(program.doWork(), 0);
+        String [] args;
+
+        if(fastqFilename2 != null) {
+            args = new String[] {
+                "FASTQ=" + fastq1.getAbsolutePath(),
+                "FASTQ2=" + fastq2.getAbsolutePath(),
+                "OUTPUT=" + samFile.getAbsolutePath(),
+                "QUALITY_FORMAT=" + version,
+                "READ_GROUP_NAME=rg",
+                "SAMPLE_NAME=s1"
+            };
+        } else {
+            args = new String[] {
+                "FASTQ=" + fastq1.getAbsolutePath(),
+                "OUTPUT=" + samFile.getAbsolutePath(),
+                "QUALITY_FORMAT=" + version,
+                "READ_GROUP_NAME=rg",
+                "SAMPLE_NAME=s1"
+            };
+
+        }
+
+        FastqToSam fqToSam = new FastqToSam();
+        Assert.assertEquals(fqToSam.instanceMain(args), 0);
         return samFile ;
     }
 
@@ -179,9 +196,17 @@ public class FastqToSamTest {
     public Object[][] okPairNames() {
         return new Object[][] {
             {"aa/1", "aa/2" },
+            {"aa", "aa" },
+            {"aa/bb", "aa/bb" },
+            {"aa/bb/", "aa/bb/" },
             {"aa/bb/1", "aa/bb/2" },
             {"aa/bb/cc/dd/ee/ff/1", "aa/bb/cc/dd/ee/ff/2" },
             {"////1", "////2" },
+            {"/", "/" },
+            {"////", "////" },
+            {"/aa", "/aa" },
+            {"aa/", "aa/" },
+            {"ab/c", "ab/c"}
         };
     }
 
@@ -189,14 +214,12 @@ public class FastqToSamTest {
     public Object[][] badPairNames() {
         return new Object[][] {
             {"", "" },
-            {"/", "/" },
-            {"////", "////" },
-            {"aa", "aa" },
-            {"/aa", "/aa" },
-            {"aa/", "aa/" },
+            {"aa/1", "bb/2" },
+            {"aa"  , "bb" },
+            {"aa/1", "aa" },
+            {"aa",   "aa/2" },
             {"aa/1", "aa/1" },
             {"aa/2", "aa/2" },
-            {"aa/1", "bb/2" },
         };
     }
 
