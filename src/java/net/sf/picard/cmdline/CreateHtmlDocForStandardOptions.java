@@ -26,7 +26,7 @@ package net.sf.picard.cmdline;
 public class CreateHtmlDocForStandardOptions {
     public static void main(final String[] args) throws Exception {
         CommandLineParser clp = new CommandLineParser(new DummyProgram());
-        clp.htmlPrintOptions(System.out);
+        clp.htmlPrintOptions(System.out, true);
     }
 
     static class DummyProgram extends CommandLineProgram {
