@@ -64,4 +64,15 @@ public class IOUtil {
             }
         }
     }
+
+
+    /**
+     * @return true if the path is not a device (e.g. /dev/null or /dev/stdin), and is not
+     * an existing directory.  I.e. is is a regular path that may correspond to an existing
+     * file, or a path that could be a regular output file.
+     */
+    public static boolean isRegularPath(final File file) {
+        return !file.exists() || file.isFile();
+    }
+
 }

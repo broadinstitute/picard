@@ -39,6 +39,7 @@ public class SAMFileWriterFactoryTest {
     @Test
     public void ordinaryFileWriterTest() throws Exception {
         final File outputFile = File.createTempFile("tmp.", ".bam");
+        outputFile.delete();
         outputFile.deleteOnExit();
         String basename = outputFile.getName();
         basename = basename.substring(0, basename.lastIndexOf("."));

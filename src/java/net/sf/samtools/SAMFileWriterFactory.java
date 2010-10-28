@@ -24,6 +24,7 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.BlockCompressedOutputStream;
+import net.sf.samtools.util.IOUtil;
 import net.sf.samtools.util.Md5CalculatingOutputStream;
 import net.sf.samtools.util.RuntimeIOException;
 
@@ -123,12 +124,12 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile,
                                        final int compressionLevel) {
         try {
-            boolean createMd5File = this.createMd5File && outputFile.isFile();
+            boolean createMd5File = this.createMd5File && IOUtil.isRegularPath(outputFile);
             final BAMFileWriter ret = createMd5File
                     ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
                         new File(outputFile.getAbsolutePath() + ".md5")), outputFile, compressionLevel)
                     : new BAMFileWriter(outputFile, compressionLevel);
-            initializeBAMWriter(ret, header, presorted, this.createIndex && outputFile.isFile());
+            initializeBAMWriter(ret, header, presorted, this.createIndex && IOUtil.isRegularPath(outputFile));
             return ret;
         }
         catch (IOException ioe) {
