@@ -24,6 +24,7 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
+
 import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
@@ -52,7 +53,7 @@ public class SamToFastqTest {
             {"ok/first-mate-bof-last-mate-eof.sam"}, // :01 mate1, 4 pairs, :01 mate2
         };
     }
-    
+
 
     @DataProvider(name = "badFiles")
     public Object[][] badFiles() {
@@ -61,35 +62,35 @@ public class SamToFastqTest {
         };
     }
 
-    private void convertFile(final String samFilename, final String fastqFilename1, final String fastqFilename2) throws IOException {
-        convertFile(new File(TEST_DATA_DIR, samFilename), 
-            newTempFastqFile(fastqFilename1), newTempFastqFile(fastqFilename2));
-    }
-
-    private void convertFile(final File samFile, final File fastqFile1, final File fastqFile2) throws IOException {
-        final SamToFastq program = new SamToFastq();
-        program.INPUT = samFile ;
-        program.FASTQ = fastqFile1;
-        program.SECOND_END_FASTQ = fastqFile2;
-        Assert.assertEquals(program.doWork(), 0);
+    private void convertFile(String [] args) {
+        SamToFastq samToFq = new SamToFastq();
+        Assert.assertEquals(samToFq.instanceMain(args),0);
     }
 
     @Test(dataProvider = "clippingTests")
     public void testClipping(String clippingAction, String bases1_1, String quals1_1, String bases1_2, String quals1_2,
                              String bases2_1, String quals2_1, String bases2_2, String quals2_2, String testName) throws IOException {
-        File f1 = File.createTempFile("clippingtest1", "fastq");
-        File f2 = File.createTempFile("clippingtest2", "fastq");
+        final File samFile = new File(TEST_DATA_DIR, CLIPPING_TEST_DATA) ;
+        final File f1 = File.createTempFile("clippingtest1", "fastq");
+        final File f2 = File.createTempFile("clippingtest2", "fastq");
         f1.deleteOnExit();
         f2.deleteOnExit();
-        final SamToFastq program = new SamToFastq();
-        program.INPUT = new File(TEST_DATA_DIR, CLIPPING_TEST_DATA) ;
-        program.FASTQ = f1;
-        program.SECOND_END_FASTQ = f2;
+
         if (clippingAction != null) {
-            program.CLIPPING_ACTION = clippingAction;
-            program.CLIPPING_ATTRIBUTE = "XT";
+            convertFile(new String[]{
+                "INPUT="            + samFile.getAbsolutePath(),
+                "FASTQ="            + f1.getAbsolutePath(),
+                "SECOND_END_FASTQ=" + f2.getAbsolutePath(),
+                "CLIPPING_ACTION="  + clippingAction,
+                "CLIPPING_ATTRIBUTE=" + "XT"
+            });
+        } else {
+            convertFile(new String[]{
+                "INPUT="            + samFile.getAbsolutePath(),
+                "FASTQ="            + f1.getAbsolutePath(),
+                "SECOND_END_FASTQ=" + f2.getAbsolutePath(),
+            });
         }
-        Assert.assertEquals(program.doWork(), 0);
 
         Iterator<FastqRecord> it = new FastqReader(f1).iterator();
         FastqRecord first = it.next();
@@ -117,24 +118,26 @@ public class SamToFastqTest {
         };
     }
 
-
-
     @Test(dataProvider = "okFiles")
     public void testOkFile(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pair1File = newTempFastqFile("pair1");
         final File pair2File = newTempFastqFile("pair2");
 
-        convertFile(samFile, pair1File, pair2File);
+        convertFile(new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "FASTQ=" + pair1File.getAbsolutePath(),
+              "SECOND_END_FASTQ=" + pair2File.getAbsolutePath()
+        });
 
         // Check that paired fastq files are same size
-        final Set<String> set1 = createFastqReadHeaderSet(pair1File);
-        final Set<String> set2 = createFastqReadHeaderSet(pair2File);
-        Assert.assertEquals(set1.size(), set2.size());
+        final Set<String> outputHeaderSet1 = createFastqReadHeaderSet(pair1File);
+        final Set<String> outputHeaderSet2 = createFastqReadHeaderSet(pair2File);
+        Assert.assertEquals(outputHeaderSet1.size(), outputHeaderSet2.size());
 
         // Create map of mate pairs from SAM records
         final Map<String,MatePair> map = createSamMatePairsMap(samFile) ;
-        Assert.assertEquals(map.size(), set2.size());
+        Assert.assertEquals(map.size(), outputHeaderSet2.size());
 
         // Ensure that each mate of each pair in SAM file is in the correct fastq pair file
         for (final Map.Entry<String,MatePair> entry : map.entrySet() ) {
@@ -143,15 +146,129 @@ public class SamToFastqTest {
             Assert.assertNotNull(mpair.mate2);
             Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
             final String readName = mpair.mate1.getReadName() ;
-            Assert.assertTrue(set1.contains(readName+"/1")); // ensure mate is in correct file
-            Assert.assertTrue(set2.contains(readName+"/2"));
+            Assert.assertTrue(outputHeaderSet1.contains(readName+"/1")); // ensure mate is in correct file
+            Assert.assertTrue(outputHeaderSet2.contains(readName+"/2"));
         }
     }
 
+
     @Test (dataProvider = "badFiles", expectedExceptions= PicardException.class)
     public void testBadFile(final String samFilename) throws IOException {
-        convertFile(samFilename, "tt-pair1.fastq", "tt-pair2.fastq");
+        final File samFile = new File(TEST_DATA_DIR,samFilename);
+        convertFile(new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "FASTQ=tt-pair1.fastq",
+              "SECOND_END_FASTQ=tt-pair2.fastq"
+        });
     }
+
+    @DataProvider(name = "okGroupedFiles")
+    public Object[][] okGroupedFiles() {
+        return new Object[][] {
+            {"ok/grouped-last-pair-mates-flipped.sam", null,  null,  new String[]{"rg1","rg2"}},
+        };
+    }
+
+
+    @DataProvider(name = "badGroupedFiles")
+    public Object[][] badGroupedFiles() {
+        return new Object[][] {
+            {"bad/grouped-unpaired-mate.sam", null,  null,  new String[]{"rg1.fastq","rg2.fastq"}}
+        };
+    }
+
+    @Test(dataProvider = "okGroupedFiles")
+    public void testOkGroupedFiles(final String samFilename, final String fastq, final String secondEndFastq,
+                                   final String [] groupFiles) throws IOException {
+        final File samFile = new File(TEST_DATA_DIR,samFilename);
+        final Map<String, Set<String>> outputSets = new HashMap<String, Set<String>>(groupFiles.length);
+
+        SamToFastq samToFq = new SamToFastq();
+        String tmpDir = samToFq.TMP_DIR + "/";
+        String [] args = new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "OUTPUT_PER_RG=true",
+              "OUTPUT_DIR=" + tmpDir,
+        };
+        samToFq.instanceMain(args);
+
+        File f1;
+        File f2;
+        String fname1;
+        String fname2;
+        String keyName1;
+        String keyName2;
+        Set<String> outputHeaderSet1;
+        Set<String> outputHeaderSet2;
+        for(final String groupPUName : groupFiles)
+        {
+            keyName1 = groupPUName + "_1";
+            keyName2 = groupPUName + "_2";
+            fname1 = tmpDir + "/" + keyName1 + ".fastq";
+            fname2 = tmpDir + "/" + keyName2 + ".fastq";
+            f1 = new File(fname1);
+            f2 = new File(fname2);
+            f1.deleteOnExit();
+            f2.deleteOnExit();
+            IoUtil.assertFileIsReadable(f1);
+            IoUtil.assertFileIsReadable(f2);
+
+            // Check that paired fastq files are same size and store them for later comparison
+            outputHeaderSet1 = createFastqReadHeaderSet(f1);
+            outputHeaderSet2 = createFastqReadHeaderSet(f2);
+            outputSets.put(keyName1 , outputHeaderSet1);
+            outputSets.put(keyName2, outputHeaderSet2);
+            Assert.assertEquals(outputHeaderSet1.size(), outputHeaderSet2.size());
+        }
+
+        // Create map of read groups and mate pairs from SAM records
+        final Map<String, Map<String,MatePair>> map = createPUPairsMap(samFile);
+
+        for(final Map.Entry<String, Map<String, MatePair>> groupEntry : map.entrySet()) {
+            // Ensure that fore each group, each mate of each pair in the SAM file is in the correct fastq pair file
+            for (final Map.Entry<String,MatePair> entry : groupEntry.getValue().entrySet() ) {
+                final MatePair mpair = entry.getValue();
+                outputHeaderSet1 = outputSets.get(groupEntry.getKey() + "_1");
+                outputHeaderSet2 = outputSets.get(groupEntry.getKey() + "_2");
+
+                Assert.assertNotNull(mpair.mate1); // ensure we have two mates
+                Assert.assertNotNull(mpair.mate2);
+                Assert.assertEquals(mpair.mate1.getReadName(),mpair.mate2.getReadName());
+                final String readName = mpair.mate1.getReadName() ;
+                Assert.assertTrue(outputHeaderSet1.contains(readName+"/1")); // ensure mate is in correct file
+                Assert.assertTrue(outputHeaderSet2.contains(readName+"/2"));
+            }
+        }
+    }
+
+
+    @Test (dataProvider = "badGroupedFiles", expectedExceptions= PicardException.class)
+    public void testBadGroupedFile(final String samFilename, final String fastq, final String secondEndFastq,
+                                   final String [] groupFiles) throws IOException {
+        final File samFile = new File(TEST_DATA_DIR,samFilename);
+        SamToFastq samToFq = new SamToFastq();
+        final String tmpDir = samToFq.TMP_DIR + "/";
+        final String [] args = new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "OUTPUT_PER_RG=true",
+              "OUTPUT_DIR=" + tmpDir,
+        };
+        samToFq.instanceMain(args);
+
+        File f1;
+        File f2;
+        String fname1;
+        String fname2;
+        for(final String groupPUName : groupFiles)
+        {
+            fname1 = tmpDir + groupPUName + "_1.fastq";
+            fname2 = tmpDir + groupPUName + "_2.fastq";
+            f1 = new File(fname1);
+            f2 = new File(fname2);
+            f1.deleteOnExit();
+            f1.deleteOnExit();
+        }
+    }                                         
 
     private Set<String> createFastqReadHeaderSet(final File file) {
         final Set<String> set = new HashSet<String>();
@@ -180,6 +297,33 @@ public class SamToFastqTest {
         return map;
     }
 
+
+    private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
+        IoUtil.assertFileIsReadable(samFile);
+        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(samFile));
+        final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
+
+        Map<String,MatePair> curFileMap;
+        for (final SAMRecord record : reader ) {
+            String platformUnit = record.getReadGroup().getPlatformUnit();
+            curFileMap = map.get(platformUnit);
+            if(curFileMap == null)
+            {
+                curFileMap = new LinkedHashMap<String, MatePair>();
+                map.put(platformUnit, curFileMap);
+            }
+
+            MatePair mpair = curFileMap.get(record.getReadName());
+            if (mpair == null) {
+                 mpair = new MatePair();
+                 curFileMap.put(record.getReadName(), mpair);
+            }
+            mpair.add(record);
+        }
+        reader.close();
+        return map;
+    }
+
     class MatePair {
         SAMRecord mate1 ;
         SAMRecord mate2 ;
@@ -198,6 +342,7 @@ public class SamToFastqTest {
     }
 
     private File newTempFastqFile(final String filename) throws IOException {
+        if(filename == null) return null;
         final File file = File.createTempFile(filename,".fastq");
         file.deleteOnExit();
         return file; 
