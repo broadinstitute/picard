@@ -145,4 +145,55 @@ public class CollectAlignmentSummaryMetricsTest {
             }
         }
     }
+
+
+    @Test
+    public void testNoReference() throws IOException {
+        CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
+        program.INPUT = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+        program.OUTPUT = File.createTempFile("alignmentMetrics", ".txt");
+        program.OUTPUT.deleteOnExit();
+        program.REFERENCE_SEQUENCE = null;
+        Assert.assertEquals(program.doWork(), 0);
+
+        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        output.read(new FileReader(program.OUTPUT));
+
+        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
+            switch (metrics.CATEGORY) {
+            case FIRST_OF_PAIR:
+                Assert.assertEquals(metrics.TOTAL_READS, 9);
+                Assert.assertEquals(metrics.PF_READS, 7);
+                Assert.assertEquals(metrics.PF_NOISE_READS, 1);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 0);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
+                Assert.assertEquals(metrics.BAD_CYCLES, 19);
+                break;
+            case SECOND_OF_PAIR:
+                Assert.assertEquals(metrics.TOTAL_READS, 9);
+                Assert.assertEquals(metrics.PF_READS, 9);
+                Assert.assertEquals(metrics.PF_NOISE_READS, 1);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 0);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
+                Assert.assertEquals(metrics.BAD_CYCLES, 3);
+                break;
+            case PAIR:
+                Assert.assertEquals(metrics.TOTAL_READS, 18);
+                Assert.assertEquals(metrics.PF_READS, 16);
+                Assert.assertEquals(metrics.PF_NOISE_READS, 2);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 0);
+                Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
+                Assert.assertEquals(metrics.BAD_CYCLES, 22);
+                break;
+            case UNPAIRED:
+            default:
+                Assert.fail("Data does not contain this category: " + metrics.CATEGORY);
+            }
+        }
+    }
+
 }
