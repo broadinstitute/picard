@@ -120,14 +120,28 @@ public class CommandLineParserTest {
     public void testUsage() {
         final FrobnicateOptions fo = new FrobnicateOptions();
         final CommandLineParser clp = new CommandLineParser(fo);
-        clp.usage(System.out);
+        clp.usage(System.out, false);
+    }
+
+    @Test
+    public void testUsageWithDefault() {
+        final FrobnicateOptions fo = new FrobnicateOptions();
+        final CommandLineParser clp = new CommandLineParser(fo);
+        clp.usage(System.out, true);
     }
 
     @Test
     public void testUsageWithoutPositional() {
         final OptionsWithoutPositional fo = new OptionsWithoutPositional();
         final CommandLineParser clp = new CommandLineParser(fo);
-        clp.usage(System.out);
+        clp.usage(System.out, false);
+    }
+
+    @Test
+    public void testUsageWithoutPositionalWithDefault() {
+        final OptionsWithoutPositional fo = new OptionsWithoutPositional();
+        final CommandLineParser clp = new CommandLineParser(fo);
+        clp.usage(System.out, true);
     }
 
     @Test
