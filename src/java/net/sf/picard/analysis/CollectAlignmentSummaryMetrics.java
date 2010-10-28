@@ -85,7 +85,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     public String USAGE = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
     @Option(shortName="I", doc="SAM or BAM file") public File INPUT;
     @Option(shortName="O", doc="File to write insert size metrics to") public File OUTPUT;
-    @Option(shortName="R", doc="Reference sequence file") public File REFERENCE_SEQUENCE;
+    @Option(shortName="R", doc="Reference sequence file", optional=true) public File REFERENCE_SEQUENCE;
     @Option(doc="If true (default), \"unsorted\" SAM/BAM files will be considerd coordinate sorted",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public Boolean ASSUME_SORTED = Boolean.TRUE;
@@ -105,6 +105,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
 
     private ReferenceSequenceFileWalker referenceSequenceWalker;
     private SAMFileHeader samFileHeader;
+    private boolean doRefMetrics;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -115,20 +116,25 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     protected int doWork() {
         prepareAdapterSequences();
 
+        doRefMetrics = REFERENCE_SEQUENCE != null;
+
         // Check the files are readable/writable
         IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        if(doRefMetrics) IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IoUtil.assertFileIsWritable(OUTPUT);
         final SAMFileReader in = new SAMFileReader(INPUT);
         assertCoordinateSortOrder(in);
 
-        this.referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
+        if(doRefMetrics) {this.referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);}
         this.samFileHeader = in.getFileHeader();
 
         if (!samFileHeader.getSequenceDictionary().isEmpty()) {
-            SequenceUtil.assertSequenceDictionariesEqual(
+            if(doRefMetrics){
+                SequenceUtil.assertSequenceDictionariesEqual(
+
                     samFileHeader.getSequenceDictionary(),
                     this.referenceSequenceWalker.getSequenceDictionary());
+            }
         } else {
             log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
                     "in the file are aligned then alignment summary metrics collection will fail.");
@@ -140,7 +146,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         final MetricCollector<AlignmentSummaryMetrics, SAMRecord> pairCollector =  constructCollector(Category.PAIR);
 
         // Loop over the reads applying them to the correct collectors
-        for (SAMRecord record : in) {
+        for (final SAMRecord record : in) {
             if (record.getReadPairedFlag()) {
                 if (record.getFirstOfPairFlag()) firstOfPairCollector.addRecord(record);
                 else secondOfPairCollector.addRecord(record);
@@ -208,7 +214,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         ADAPTER_SEQUENCES = new byte[count * 2][];
 
         for (int i=0; i<count; ++i) {
-            String adapter = ADAPTER_SEQUENCE.get(i).toUpperCase();
+            final String adapter = ADAPTER_SEQUENCE.get(i).toUpperCase();
             ADAPTER_SEQUENCES[i] = StringUtil.stringToBytes(adapter);
             ADAPTER_SEQUENCES[i + count] = StringUtil.stringToBytes(SequenceUtil.reverseComplement(adapter));
 
@@ -283,24 +289,26 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
                     }
                 }
                 else {
-                    metrics.PF_READS_ALIGNED++;
+                    if(doRefMetrics) {
+                        metrics.PF_READS_ALIGNED++;
 
-                    if (!record.getReadNegativeStrandFlag()) {
-                        numPositiveStrand++;
-                    }
+                        if (!record.getReadNegativeStrandFlag()) {
+                            numPositiveStrand++;
+                        }
 
-                    if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
-                        metrics.READS_ALIGNED_IN_PAIRS++;
+                        if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
+                            metrics.READS_ALIGNED_IN_PAIRS++;
 
-                        // With both reads mapped we can see if this pair is chimeric
-                        if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
-                             !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
+                            // With both reads mapped we can see if this pair is chimeric
+                            if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
+                                 !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
 
-                            // Check that both ends have mapq > minimum
-                            final Integer mateMq = record.getIntegerAttribute("MQ");
-                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD &&
-                                    record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                                ++this.chimeras;
+                                // Check that both ends have mapq > minimum
+                                final Integer mateMq = record.getIntegerAttribute("MQ");
+                                if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD &&
+                                        record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                                    ++this.chimeras;
+                                }
                             }
                         }
                     }
@@ -310,12 +318,15 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
 
         public void onComplete() {
             metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
-            metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-            metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
-            metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
-            metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
             metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
-            metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+            metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
+            
+            if(doRefMetrics) {
+                metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
+                metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
+                metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
+                metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+            }
         }
 
         private boolean isNoiseRead(final SAMRecord record) {
@@ -344,7 +355,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
             if (record.getNotPrimaryAlignmentFlag()) {
                 return;
             }
-            if (record.getReadUnmappedFlag()) {
+            if (record.getReadUnmappedFlag() || !doRefMetrics) {
                 final byte[] readBases = record.getReadBases();
                 for (int i = 0; i < readBases.length; i++) {
                     if (SequenceUtil.isNoCall(readBases[i])) {
@@ -354,13 +365,13 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
             } else {
                 final boolean highQualityMapping = isHighQualityMapping(record);
                 if (highQualityMapping) metrics.PF_HQ_ALIGNED_READS++;
-                
+
                 final byte[] readBases = record.getReadBases();
                 final byte[] refBases = referenceSequenceWalker.get(record.getReferenceIndex()).getBases();
                 final byte[] qualities  = record.getBaseQualities();
                 final int refLength = refBases.length;
                 long mismatchCount = 0;
-                
+
                 for (final AlignmentBlock alignmentBlock : record.getAlignmentBlocks()) {
                     final int readIndex = alignmentBlock.getReadStart() - 1;
                     final int refIndex  = alignmentBlock.getReferenceStart() - 1;
@@ -385,7 +396,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
                         if (highQualityMapping) {
                             metrics.PF_HQ_ALIGNED_BASES++;
                             if (!bisulfiteBase) {
-                                metrics.incrementErrorRateDenominator();                                
+                                metrics.incrementErrorRateDenominator();
                             }
                             if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) {
                                 metrics.PF_HQ_ALIGNED_Q20_BASES++;
@@ -399,7 +410,6 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
                         }
                     }
                 }
-
                 mismatchHistogram.increment(mismatchCount);
             }
         }
@@ -410,8 +420,11 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         }
 
         public void onComplete() {
+            if(doRefMetrics) {
             metrics.PF_HQ_MEDIAN_MISMATCHES = mismatchHistogram.getMedian();
             metrics.PF_HQ_ERROR_RATE = mismatchHistogram.getSum() / (double)metrics.getErrorRateDenominator();
+            }
+
             metrics.BAD_CYCLES = 0;
 
             for (final Histogram<Integer>.Bin cycleBin : badCycleHistogram.values()) {
