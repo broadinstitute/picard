@@ -32,13 +32,16 @@ import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.fastq.FastqWriter;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMUtils;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,14 +62,20 @@ public class SamToFastq extends CommandLineProgram {
     @Option(doc="Input SAM/BAM file to extract reads from", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT ;
 
-    @Option(shortName="F", doc="Output fastq file (single-end fastq or, if paired, first end of the pair fastq).")
+    @Option(shortName="F", doc="Output fastq file (single-end fastq or, if paired, first end of the pair fastq).", mutex={"OUTPUT_PER_RG"})
     public File FASTQ ;
 
-    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true)
+    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true, mutex={"OUTPUT_PER_RG"})
     public File SECOND_END_FASTQ ;
 
+    @Option(shortName="OPRG", doc="Output a fastq file per read group (two fastq files per read group if the group is paired).", optional=true, mutex={"FASTQ", "SECOND_END_FASTQ"})
+    public boolean OUTPUT_PER_RG ;
+
+    @Option(shortName="ODIR", doc="Directory in which to output the fastq file(s).  Used only when OUTPUT_PER_RG is true.", optional=true)
+    public File OUTPUT_DIR;
+
     @Option(shortName="RC", doc="Re-reverse bases and qualities of reads with negative strand flag set before writing them to fastq", optional=true)
-    public Boolean RE_REVERSE = true;
+    public boolean RE_REVERSE = true;
 
     @Option(shortName="NON_PF", doc="Include non-PF reads from the SAM file into the output FASTQ files.")
     public boolean INCLUDE_NON_PF_READS = false;
@@ -88,18 +97,24 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     protected int doWork() {
-        if (SECOND_END_FASTQ == null) {
-            doUnpaired();
-        }
-        else {
-            doPaired();
+        IoUtil.assertFileIsReadable(INPUT);
+        
+        if (OUTPUT_PER_RG) {
+            doGrouped();
+        } else {
+            IoUtil.assertFileIsWritable(FASTQ);
+
+            if (SECOND_END_FASTQ == null) {
+                doUnpaired();
+            }
+            else {
+                doPaired();
+            }
         }
         return 0;
     }
 
     protected void doUnpaired() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(FASTQ);
 
         final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         final FastqWriter writer = new FastqWriter(FASTQ);
@@ -117,8 +132,6 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     protected void doPaired() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(FASTQ);
         IoUtil.assertFileIsWritable(SECOND_END_FASTQ);
 
         final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
@@ -164,6 +177,102 @@ public class SamToFastq extends CommandLineProgram {
         }
     }
 
+    protected void doGrouped()
+    {
+        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+        final Map<String,SAMRecord> firstSeenMates = new HashMap<String,SAMRecord>();
+        final Map<SAMReadGroupRecord, List<FastqWriter>> writers = new HashMap<SAMReadGroupRecord, List<FastqWriter>>();
+
+        for (final SAMRecord currentRecord : reader ) {
+            // Skip non-PF reads as necessary
+            if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) continue;
+
+            if(currentRecord.getReadPairedFlag())
+            {
+                doGroupedPaired(firstSeenMates, writers, currentRecord);
+            }
+            else
+            {
+                doGroupedUnpaired(writers, currentRecord);
+            }
+        }
+
+        if (firstSeenMates.size() > 0) {
+            throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
+        }
+
+        reader.close();
+        for(final List<FastqWriter> writerPair : writers.values()){
+            for(final FastqWriter fq : writerPair){
+                fq.close();
+            }
+        }
+    }
+
+    protected void doGroupedPaired(final Map<String,SAMRecord> firstSeenMates,
+                                final Map<SAMReadGroupRecord, List<FastqWriter>> writers, final SAMRecord currentRecord) {
+        final String currentReadName = currentRecord.getReadName() ;
+        final SAMRecord firstRecord = firstSeenMates.remove(currentReadName);
+
+        if (firstRecord == null) {
+            firstSeenMates.put(currentReadName, currentRecord) ;
+        }
+        else {
+            assertPairedMates(firstRecord, currentRecord);
+
+            final SAMReadGroupRecord readGroup = currentRecord.getReadGroup();
+            List<FastqWriter> writerPair;
+            writerPair = writers.get(readGroup);
+            if(writerPair == null)
+            {
+                final File fq1 = makeReadGroupFile(readGroup, "_1");
+                IoUtil.assertFileIsWritable(fq1);
+                final File fq2 = makeReadGroupFile(readGroup, "_2");
+                IoUtil.assertFileIsWritable(fq2);
+
+                writerPair = new ArrayList<FastqWriter>();
+                writerPair.add(new FastqWriter(fq1));
+                writerPair.add(new FastqWriter(fq2));
+                writers.put(readGroup, writerPair);
+            }
+
+            if (currentRecord.getFirstOfPairFlag()) {
+                 writeRecord(currentRecord, 1, writerPair.get(0));
+                 writeRecord(firstRecord, 2, writerPair.get(1));
+            }
+            else {
+                 writeRecord(firstRecord, 1, writerPair.get(0));
+                 writeRecord(currentRecord, 2, writerPair.get(1));
+            }
+        }
+    }
+
+    protected void doGroupedUnpaired(final Map<SAMReadGroupRecord, List<FastqWriter>> writers, final SAMRecord currentRecord) {
+        final SAMReadGroupRecord readGroup = currentRecord.getReadGroup();
+        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+
+        List<FastqWriter> writerList = writers.get(readGroup);
+        if(writerList == null){
+            final File fq1 = makeReadGroupFile(readGroup, null);
+            IoUtil.assertFileIsWritable(fq1);
+
+            writerList = new ArrayList<FastqWriter>();
+            writerList.add(new FastqWriter(fq1));
+        }
+
+        writeRecord(currentRecord, null, writerList.get(0));
+        reader.close();
+    }
+
+    private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
+        String fileName = IoUtil.makeFileNameSafe(readGroup.getPlatformUnit());
+        if(preExtSuffix != null) fileName += preExtSuffix;
+        fileName += ".fastq";
+
+        if(OUTPUT_DIR != null) return new File(OUTPUT_DIR, fileName);
+        return new File(fileName);
+    }
+
     void writeRecord(final SAMRecord read, final Integer mateNumber, final FastqWriter writer) {
         final String seqHeader = mateNumber==null ? read.getReadName() : read.getReadName() + "/"+ mateNumber;
         String readString = read.getReadString();
@@ -171,7 +280,7 @@ public class SamToFastq extends CommandLineProgram {
 
         // If we're clipping, do the right thing to the bases or qualities
         if (CLIPPING_ATTRIBUTE != null) {
-            Integer clipPoint = (Integer)read.getAttribute(CLIPPING_ATTRIBUTE);
+            final Integer clipPoint = (Integer)read.getAttribute(CLIPPING_ATTRIBUTE);
             if (clipPoint != null) {
                 if (CLIPPING_ACTION.equalsIgnoreCase("X")) {
                     readString = clip(readString, clipPoint, null,
@@ -185,7 +294,7 @@ public class SamToFastq extends CommandLineProgram {
                             !read.getReadNegativeStrandFlag());
                 }
                 else {
-                    char newQual = SAMUtils.phredToFastq(
+                    final char newQual = SAMUtils.phredToFastq(
                             new byte[] { (byte)Integer.parseInt(CLIPPING_ACTION)}).charAt(0);
                     baseQualities = clip(baseQualities, clipPoint, newQual,
                             !read.getReadNegativeStrandFlag());
@@ -211,8 +320,8 @@ public class SamToFastq extends CommandLineProgram {
      * @param posStrand     Whether the read is on the positive strand
      * @return String       The clipped read or qualities
      */
-    private String clip(String src, int point, Character replacement, boolean posStrand) {
-        int len = src.length();
+    private String clip(final String src, final int point, final Character replacement, final boolean posStrand) {
+        final int len = src.length();
         String result = posStrand ? src.substring(0, point-1) : src.substring(len-point+1);
         if (replacement != null) {
             if (posStrand) {
