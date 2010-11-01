@@ -35,7 +35,9 @@ import net.sf.picard.metrics.MetricsFile;
 
 import java.io.File;
 
+import net.sf.picard.util.IntervalList;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.util.SequenceUtil;
 
 /**
  * Calculates a set of HS metrics from a sam or bam file.
@@ -80,6 +82,13 @@ public class CalculateHsMetrics extends CommandLineProgram {
 
         HsMetricsCalculator calculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS);
         SAMFileReader sam = new SAMFileReader(INPUT);
+
+        // Validate that the targets and baits fore for the same references as the reads files
+        SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
+                IntervalList.fromFile(TARGET_INTERVALS).getHeader().getSequenceDictionary());
+        SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
+                IntervalList.fromFile(BAIT_INTERVALS).getHeader().getSequenceDictionary());
+        
         calculator.analyze(sam.iterator());
 
         MetricsFile<HsMetrics, Integer> metrics = getMetricsFile();
