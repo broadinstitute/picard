@@ -125,11 +125,18 @@ public class SAMFileWriterFactory {
                                        final int compressionLevel) {
         try {
             boolean createMd5File = this.createMd5File && IOUtil.isRegularPath(outputFile);
+            if (this.createMd5File && !createMd5File) {
+                System.err.println("Cannot create MD5 file for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
+            }
             final BAMFileWriter ret = createMd5File
                     ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
                         new File(outputFile.getAbsolutePath() + ".md5")), outputFile, compressionLevel)
                     : new BAMFileWriter(outputFile, compressionLevel);
-            initializeBAMWriter(ret, header, presorted, this.createIndex && IOUtil.isRegularPath(outputFile));
+            boolean createIndex = this.createIndex && IOUtil.isRegularPath(outputFile);
+            if (this.createIndex && !createIndex) {
+                System.err.println("Cannot create index for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
+            }
+            initializeBAMWriter(ret, header, presorted, createIndex);
             return ret;
         }
         catch (IOException ioe) {
