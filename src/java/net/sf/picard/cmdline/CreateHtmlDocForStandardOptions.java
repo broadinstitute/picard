@@ -25,6 +25,8 @@ package net.sf.picard.cmdline;
 
 public class CreateHtmlDocForStandardOptions {
     public static void main(final String[] args) throws Exception {
+        System.setProperty("java.io.tmpdir", "<System temp directory>");
+        System.setProperty("user.name", "<current user name>");
         CommandLineParser clp = new CommandLineParser(new DummyProgram());
         clp.htmlPrintOptions(System.out, true);
     }
