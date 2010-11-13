@@ -213,30 +213,34 @@ public class SequenceUtil {
      */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset,
                                       final boolean bisulfiteSequence) {
-        int mismatches = 0;
+        try {
+            int mismatches = 0;
 
-        final byte[] readBases = read.getReadBases();
+            final byte[] readBases = read.getReadBases();
 
-        for (final AlignmentBlock block : read.getAlignmentBlocks()) {
-            final int readBlockStart = block.getReadStart() - 1;
-            final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
-            final int length = block.getLength();
+            for (final AlignmentBlock block : read.getAlignmentBlocks()) {
+                final int readBlockStart = block.getReadStart() - 1;
+                final int referenceBlockStart = block.getReferenceStart() - 1 - referenceOffset;
+                final int length = block.getLength();
 
-            for (int i=0; i<length; ++i) {
-                if (!bisulfiteSequence) {
-                    if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
-                        ++mismatches;
+                for (int i=0; i<length; ++i) {
+                    if (!bisulfiteSequence) {
+                        if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                            ++mismatches;
+                        }
                     }
-                }
-                else {
-                    if (!bisulfiteBasesEqual(read.getReadNegativeStrandFlag(), readBases[readBlockStart+i],
-                            referenceBases[referenceBlockStart+i])) {
-                        ++mismatches;
+                    else {
+                        if (!bisulfiteBasesEqual(read.getReadNegativeStrandFlag(), readBases[readBlockStart+i],
+                                referenceBases[referenceBlockStart+i])) {
+                            ++mismatches;
+                        }
                     }
                 }
             }
+            return mismatches;
+        } catch (Exception e) {
+            throw new SAMException("Exception counting mismatches for read " + read, e);
         }
-        return mismatches;
     }
 
     /**
