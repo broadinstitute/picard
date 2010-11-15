@@ -25,6 +25,7 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -455,6 +456,19 @@ public class SequenceUtil {
         }
     }
 
+    
+    /** Reverses the quals in place. */
+    public static void reverse(final byte[] quals) {
+        final int lastIndex = quals.length - 1;
+
+        int i, j;
+        for (i=0, j=lastIndex; i<j; ++i, --j) {
+            final byte tmp = quals[i];
+            quals[i] = quals[j];
+            quals[j] = tmp;
+        }
+    }
+    
     /** Returns true if the bases are equal OR if the mismatch cannot be accounted for by
      * bisfulite treatment.  C->T on the positive strand and G->A on the negative strand
      * do not count as mismatches */
@@ -649,5 +663,66 @@ public class SequenceUtil {
             return shorter;
         }
         return ret;
+    }
+    
+    /**
+     * Produce reference bases from an aligned SAMRecord with a Cigar but without an MD string
+     * @param rec Must contain non-empty CIGAR attribute.
+     * @param includeReferenceBasesForDeletions If true, include reference bases that are deleted in the read.
+     * This will make the returned array not line up with the read if there are deletions.
+     * @param refSeqBases The reference bases
+     * @return References bases corresponding to the read.
+     *  If there is an insertion in the read, reference contains '-'.
+     *  Soft and hard clipping are ignored.
+     *  If there is a skipped region (Cigar 'N') reference will have Ns for the skipped region.
+     *  If there is a deletion or N, and includeReferenceBasesForDeletions is set, the reference base is included.
+     */
+    public static byte[] makeReferenceFromAlignment(final SAMRecord rec, final boolean includeReferenceBasesForDeletions, final byte[] refSeqBases) {
+        // Not sure how long output will be, but it will be no longer than this.
+        int maxOutputLength = 0;
+        final Cigar cigar = rec.getCigar();
+        if (cigar == null) {
+            throw new SAMException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
+        }
+        for (final CigarElement cigarElement : cigar.getCigarElements()) {
+            final CigarOperator operator = cigarElement.getOperator();
+            if (operator != CigarOperator.SOFT_CLIP && operator != CigarOperator.HARD_CLIP)
+                maxOutputLength += cigarElement.getLength();
+        }
+        final byte[] result = new byte[maxOutputLength];
+        try {
+
+            int refPos = rec.getAlignmentStart();
+            int refLength = refSeqBases.length;
+            if (refPos != 0) refPos--;
+            int resultPos = 0;
+            for (final CigarElement c: rec.getCigar().getCigarElements()){
+                final CigarOperator op = c.getOperator();
+                final int length = c.getLength();
+
+                if ((op.equals(CigarOperator.D) || op.equals(CigarOperator.N) ) && !includeReferenceBasesForDeletions){
+                     continue; // do nothing. will change the readbases for this
+                } else if (op.consumesReferenceBases()){
+                     final int lengthToCopy = (refPos + length >= refLength)? refLength - refPos : length;
+                     System.arraycopy(refSeqBases, refPos, result, resultPos, lengthToCopy);
+                     refPos += lengthToCopy;
+                } else if (op.equals(CigarOperator.H) || op.equals(CigarOperator.S)){
+                    continue; // do nothing
+                } else {   // I or P
+                     //  insert opCount '-' into the result
+                     final byte DASH = 45;
+                     Arrays.fill(result, resultPos , resultPos + length, DASH);
+                 }
+                 resultPos += length;
+            }
+            if (resultPos < result.length){
+                byte[] shorter = new byte[resultPos];
+                System.arraycopy(result, 0, shorter, 0, resultPos);
+                return shorter;
+            }
+        } catch (Exception e) {
+            throw new SAMException("Exception making reference from alignment "+ rec, e);
+        }
+        return result;
     }
 }
