@@ -93,15 +93,17 @@ public class SequenceUtilTest {
         rec.setAttribute(SAMTag.MD.name(), md);
         final byte[] refBases = SequenceUtil.makeReferenceFromAlignment(rec, includeReferenceBasesForDeletions);
         Assert.assertEquals(StringUtil.bytesToString(refBases), expectedReference);
+        final byte[] refBases2 = SequenceUtil.makeReferenceFromAlignment(rec, includeReferenceBasesForDeletions, StringUtil.stringToBytes(expectedReference));
+        Assert.assertEquals(StringUtil.bytesToString(refBases), expectedReference);
     }
 
     @DataProvider(name = "makeReferenceFromAlignment")
     public Object[][] testMakeReferenceFromAlignmentDataProvider() {
         return new Object[][] {
-                {"ACGTACGTACGT", "12M2H", "4GAAA4", true, "ACGTGAAAACGT"},
+               {"ACGTACGTACGT", "12M2H", "4GAAA4", true, "ACGTGAAAACGT"},
                 {"ACGTACGTACGT", "2H12M", "12", false, "ACGTACGTACGT"},
                 {"ACGTACGTACGT", "4M4I4M2H", "8", false, "ACGT----ACGT"},
-                {"ACGTACGTACGT", "2S4M2I4M2S", "8", false, "00GTAC--ACGT00"},      
+                {"ACGTACGTACGT", "2S4M2I4M2S", "8", false, "00GTAC--ACGT00"},
                 {"ACGTACGTACGT", "6M2D6M2H", "4GA^TT0TG4", true, "ACGTGATTTGACGT"},
                 {"ACGTACGTACGT", "6M2D6M2H", "4GA^TT0TG4", false, "ACGTGATGACGT"},
                 // When CIGAR has N, MD will not have skipped bases.
