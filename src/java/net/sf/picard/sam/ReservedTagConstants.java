@@ -46,5 +46,15 @@ public class ReservedTagConstants {
      * sequence within a read (in original orientation) that should be clipped
      * or trimmed before alignment and downstream use.
      */
-    public static final String XT = "XT";
+     public static final String XT = "XT";
+
+    /** The original sequence before 454 cafie and homopolymer correction */
+    public static final String XS = "XS";
+
+    /** The original pred quals before 454 cafie and homopolymer correction */
+    public static final String XP = "XP";   // todo consider whether OQ would suffice
+
+    /** The original cigar before 454 cafie and homopolymer correction */
+    public static final String XC = "XC";
+
 }
