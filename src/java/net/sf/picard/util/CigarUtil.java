@@ -241,4 +241,49 @@ public class CigarUtil {
         }
         return new Cigar(newCigar);
     }
+
+    // unpack a cigar string into an array of cigarOperators
+    // to facilitate sequence manipulation
+    public static char[] cigarArrayFromElements(List<CigarElement> cigar){
+        int pos = 0;
+        int length = 0;
+        for (CigarElement e : cigar){
+            length += e.getLength();
+        }
+        char[] result = new char[length];
+        for (CigarElement e : cigar){
+            for (int i = 0; i < e.getLength(); i++){
+                CigarOperator o = e.getOperator();
+                result[i+pos] = (char) CigarOperator.enumToCharacter(o);
+            }
+            pos += e.getLength();
+        }
+        return result;
+    }
+
+    // unpack a cigar string into an array of cigarOperators
+    // to facilitate sequence manipulation
+    public static char[] cigarArrayFromString(String cigar){
+          return cigarArrayFromElements(TextCigarCodec.getSingleton().decode(cigar).getCigarElements());
+    }
+
+    // construct a cigar string from an array of cigarOperators.
+    public static String cigarStringFromArray(final char[] cigar){
+        String result = "";
+        int length = cigar.length;
+        char lastOp = 0;  int lastLen = 0;
+        for (int i=0; i < length; i++){
+             if (cigar[i] == lastOp){
+                 lastLen++;
+             } else if (cigar[i] == '-'){
+                 ; // nothing - just ignore '-'
+             } else {
+                 if (lastOp != 0)
+                     result = result + Integer.toString(lastLen) + Character.toString(lastOp);
+                 lastLen = 1;
+                 lastOp = cigar[i];
+             }
+        }
+        return result + Integer.toString(lastLen) + Character.toString(lastOp);
+    }
 }
