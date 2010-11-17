@@ -49,5 +49,12 @@ public interface BAMIndex {
      * Gets the start of the last linear bin in the index.
      * @return The chunk indicating the start of the last bin in the linear index.
      */
-    long getStartOfLastLinearBin();    
+    long getStartOfLastLinearBin();
+
+    /**
+     * Gets meta data for the given reference including information about number of aligned, unaligned, and noCoordinate records
+     * @param reference the reference of interest
+     * @return meta data for the reference
+     */
+    public BAMIndexMetaData getMetaData(int reference);
 }
