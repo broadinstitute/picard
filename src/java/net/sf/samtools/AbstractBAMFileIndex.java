@@ -23,7 +23,6 @@
  */
 package net.sf.samtools;
 
-import net.sf.samtools.util.BlockCompressedFilePointerUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
@@ -202,14 +201,31 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         return lastLinearIndexPointer;
     }
 
-     /**
-     * Can only be called once all other references have been read, before the file is closed
-     * @return meta data at the end of the bam index that indicates count of records holding no coordinates
+    /**
+     * Return meta data for the given reference including information about number of aligned, unaligned, and noCoordinate records
+     * @param reference the reference of interest
+     * @return meta data for the reference
      */
-    Long getNoCoordinateCount(){
+    public BAMIndexMetaData getMetaData(int reference) {
+        BAMIndexContent content = query(reference, 0, -1); // todo: it would be faster just to skip to the last bin
+        return content.getMetaData();
+    }
+
+    /**
+     * Returns count of records unassociated with any reference. Call before the index file is closed
+     *
+     * @return meta data at the end of the bam index that indicates count of records holding no coordinates
+     * or null if no meta data (old index format)
+     */
+    public Long getNoCoordinateCount() {
+
+        seek(4);
+        final int sequenceCount = readInteger();
+
+        skipToSequence(sequenceCount);
         try { // in case of old index file without meta data
-           return readLong();
-        } catch (Exception e){
+            return readLong();
+        } catch (Exception e) {
             return null;
         }
     }
@@ -217,8 +233,6 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     protected BAMIndexContent query(final int referenceSequence, final int startPos, final int endPos) {
         seek(4);
 
-        Bin[] bins = null;
-        LinearIndex linearIndex = null;
         List<Chunk> metaDataChunks = new ArrayList<Chunk>();
 
         final int sequenceCount = readInteger();
@@ -236,7 +250,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
 
         int binCount = readInteger();
         boolean metaDataSeen = false;
-        bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
+        Bin[] bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
@@ -267,13 +281,13 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             Bin bin = new Bin(referenceSequence, indexBin);
             bin.setChunkList(chunks);
             bin.setLastChunk(lastChunk);
-            bins[bin.getBinNumber()] = bin;
+            bins[indexBin] = bin;
         }
 
         final int nLinearBins = readInteger();
 
         final int regionLinearBinStart = LinearIndex.convertToLinearIndexOffset(startPos);
-        final int regionLinearBinStop = LinearIndex.convertToLinearIndexOffset(endPos)>0 ? LinearIndex.convertToLinearIndexOffset(endPos) : nLinearBins-1;
+        final int regionLinearBinStop = endPos > 0 ? LinearIndex.convertToLinearIndexOffset(endPos) : nLinearBins-1;
         final int actualStop = Math.min(regionLinearBinStop, nLinearBins -1);
 
         long[] linearIndexEntries = new long[0];
@@ -284,7 +298,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
                 linearIndexEntries[linearBin-regionLinearBinStart] = readLong();
         }
 
-        linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
+        final LinearIndex linearIndex = new LinearIndex(referenceSequence,regionLinearBinStart,linearIndexEntries);
 
         return new BAMIndexContent(referenceSequence, bins, binCount - (metaDataSeen? 1 : 0), new BAMIndexMetaData(metaDataChunks), linearIndex);
     }
@@ -351,7 +365,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         final List<Chunk> result = new ArrayList<Chunk>();
         for (final Chunk chunk : chunks) {
             if (chunk.getChunkEnd() <= minimumOffset) {
-                continue;
+                continue;               // linear index optimization
             }
             if (result.isEmpty()) {
                 result.add(chunk);

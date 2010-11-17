@@ -102,13 +102,6 @@ public class BAMIndexMetaData {
     }
 
     /**
-     * @return the count of records with no coordinate information in the bam file
-     */
-    public long getNoCoordinateRecordCount() {
-        return noCoordinateRecords;
-    }
-
-    /**
      * Call for each new reference sequence encountered
      */
     void newReference() {
@@ -160,10 +153,20 @@ public class BAMIndexMetaData {
     }
 
     /**
-     * Call whenever a reference with no coordinate information is encountered in the bam file
+     * Set local variable. Normally noCoordinateRecord count accessed from AbstractBAMFileIndex when reading
      */
-    void setNoCoordinateRecordCount(long count) {
+    private void setNoCoordinateRecordCount(long count) {
         noCoordinateRecords = count;
+    }
+
+
+    /**
+     * @return the count of records with no coordinate information in the bam file.
+     * Not public, since only used by BAMIndexer when writing bam index.
+     * Readers of bam index should use AbstractBAMFileIndex.getNoCoordinateRecordCount.
+     */
+    long getNoCoordinateRecordCount() {
+        return noCoordinateRecords;
     }
 
     /**
@@ -218,21 +221,22 @@ public class BAMIndexMetaData {
      * Statistics include count of aligned and unaligned reads for each reference sequence
      * and a count of all records with no start coordinate
      */
-    static public BAMIndexMetaData[] getIndexStats(final BAMFileReader bam) {
+    static public BAMIndexMetaData[] getIndexStats(final BAMFileReader bam){
 
         AbstractBAMFileIndex index = (AbstractBAMFileIndex) bam.getIndex();
         // read through all the bins of every reference.
         int nRefs = index.getNumberOfReferences();
         BAMIndexMetaData[] result = new BAMIndexMetaData[nRefs == 0 ? 1 : nRefs];
         for (int i = 0; i < nRefs; i++) {
-            BAMIndexContent content = index.query(i, 0, -1); // todo: it would be faster just to skip to the last bin
-            result[i] = content.getMetaData();
+            result[i] = index.getMetaData(i);
         }
 
         if (result[0] == null){
            result[0] = new BAMIndexMetaData();
         }
-        result[0].setNoCoordinateRecordCount(index.getNoCoordinateCount());
+        final Long noCoordCount = index.getNoCoordinateCount();
+        if (noCoordCount != null)  // null in old index files without metadata
+           result[0].setNoCoordinateRecordCount(noCoordCount);
 
         return result;
     }
