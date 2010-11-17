@@ -27,6 +27,7 @@ package net.sf.samtools;
 import net.sf.samtools.util.*;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 import java.net.URL;
 
@@ -133,7 +134,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final InputStream stream, final boolean eagerDecode) {
-        init(stream, eagerDecode, defaultValidationStringency);
+        init(stream, null, null, eagerDecode, defaultValidationStringency);
     }
 
     /**
@@ -144,7 +145,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final File file, final boolean eagerDecode) {
-        init(file, null, eagerDecode, defaultValidationStringency);
+        this(file, null, eagerDecode);
     }
 
     /**
@@ -156,7 +157,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @param eagerDecode eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final File file, final File indexFile, final boolean eagerDecode){
-        init(file, indexFile, eagerDecode, defaultValidationStringency);
+        init(null, file, indexFile, eagerDecode, defaultValidationStringency);
     }
 
     /**
@@ -446,27 +447,6 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         }
     }
 
-    private void init(final InputStream stream, final boolean eagerDecode, final ValidationStringency validationStringency) {
-
-        try {
-            final BufferedInputStream bufferedStream = IOUtil.toBufferedStream(stream);
-            if (isBAMFile(bufferedStream)) {
-                mIsBinary = true;
-                mReader = new BAMFileReader(bufferedStream, null, eagerDecode, validationStringency);
-            } else if (isGzippedSAMFile(bufferedStream)) {
-                mIsBinary = false;
-                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
-            } else if (isSAMFile(bufferedStream)) {
-                mIsBinary = false;
-                mReader = new SAMTextReader(bufferedStream, validationStringency);
-            } else {
-                throw new SAMFormatException("Unrecognized file format");
-            }
-            setValidationStringency(validationStringency);
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
-        }
-    }
 
 
     private void init(final SeekableStream strm, final File indexFile, final boolean eagerDecode,
@@ -489,21 +469,26 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     }
 
 
-    private void init(final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
+    private void init(final InputStream stream, final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
+        if (stream != null && file != null) throw new IllegalArgumentException("stream and file are mutually exclusive");
         this.samFile = file;
 
         try {
-            final BufferedInputStream bufferedStream = new BufferedInputStream(new FileInputStream(file));
+            final BufferedInputStream bufferedStream;
+            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file));
+            else bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;
-                if (!file.isFile()) {
+                if (file == null || !file.isFile()) {
                     // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
                     mReader = new BAMFileReader(bufferedStream, indexFile, eagerDecode, validationStringency);
                 } else {
                     bufferedStream.close();
-                    final BAMFileReader reader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency);
-                    mReader = reader;
+                    mReader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency);
                 }
+            } else if (BlockCompressedInputStream.isValidFile(bufferedStream)) {
+                mIsBinary = false;
+                mReader = new SAMTextReader(new BlockCompressedInputStream(bufferedStream), validationStringency);
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
                 mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
@@ -531,7 +516,30 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      */
     private boolean isBAMFile(final InputStream stream)
             throws IOException {
-        return BlockCompressedInputStream.isValidFile(stream);
+        if (!BlockCompressedInputStream.isValidFile(stream)) {
+          return false;
+        }
+        final int buffSize = BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
+        stream.mark(buffSize);
+        final byte[] buffer = new byte[buffSize];
+        readBytes(stream, buffer, 0, buffSize);
+        stream.reset();
+        final byte[] magicBuf = new byte[4];
+        final int magicLength = readBytes(new BlockCompressedInputStream(new ByteArrayInputStream(buffer)), magicBuf, 0, 4);
+        return magicLength == BAMFileConstants.BAM_MAGIC.length && Arrays.equals(BAMFileConstants.BAM_MAGIC, magicBuf);
+    }
+
+    private static int readBytes(final InputStream stream, final byte[] buffer, final int offset, final int length)
+        throws IOException {
+        int bytesRead = 0;
+        while (bytesRead < length) {
+            final int count = stream.read(buffer, offset + bytesRead, length - bytesRead);
+            if (count <= 0) {
+                break;
+            }
+            bytesRead += count;
+        }
+        return bytesRead;
     }
 
     /**
