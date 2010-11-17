@@ -55,17 +55,21 @@ public class CigarUtilTest {
           cigar = copiedList;
       }
       List<CigarElement> result = CigarUtil.softClipEndOfRead( clipPosition, cigar);
-      if (negativeStrand){
-          Collections.reverse(result);
-
-          int oldLength = (new Cigar(cigar)).getReferenceLength();
-          int newLength = (new Cigar(result)).getReferenceLength();
-          int sizeChange = oldLength - newLength;
-          //Assert.assertEquals(sizeChange, numClippedBases + adjustment, testName + " sizeChange == numClippedBases");
-          Assert.assertEquals(start + sizeChange, expectedAdjustedStart, sizeChange + " " +  testName);
-          Assert.assertTrue(sizeChange >= 0, "sizeChange >= 0. " + sizeChange);
+       Cigar newCigar = new Cigar(result);
+       Cigar oldCigar = new Cigar(cigar);
+       if (negativeStrand){
+           Collections.reverse(result);
+           newCigar = new Cigar(result);
+           int oldLength = oldCigar.getReferenceLength();
+           int newLength = newCigar.getReferenceLength();
+           int sizeChange = oldLength - newLength;
+           //Assert.assertEquals(sizeChange, numClippedBases + adjustment, testName + " sizeChange == numClippedBases");
+           Assert.assertEquals(start + sizeChange, expectedAdjustedStart, sizeChange + " " +  testName);
+           Assert.assertTrue(sizeChange >= 0, "sizeChange >= 0. " + sizeChange);
       }
-       Assert.assertEquals (codec.encode(new Cigar(result)), expectedCigar, testName);
+       Assert.assertEquals (codec.encode(newCigar), expectedCigar, testName);
+       Assert.assertEquals(newCigar.getReadLength(), oldCigar.getReadLength());
+       Assert.assertNull(newCigar.isValid(testName, -1));
     }
 
     @DataProvider(name = "clipData")
