@@ -88,6 +88,27 @@ public class BAMIndexMetaData {
     }
 
     /**
+     * @return the count of aligned records associated with this reference
+     */
+    public int getAlignedRecordCount() {
+        return alignedRecords;
+    }
+
+    /**
+     * @return the count of unaligned records associated with this reference
+     */
+    public int getUnalignedRecordCount() {
+        return unAlignedRecords;
+    }
+
+    /**
+     * @return the count of records with no coordinate information in the bam file
+     */
+    public long getNoCoordinateRecordCount() {
+        return noCoordinateRecords;
+    }
+
+    /**
      * Call for each new reference sequence encountered
      */
     void newReference() {
@@ -146,13 +167,6 @@ public class BAMIndexMetaData {
     }
 
     /**
-     * @return the count of records with no coordinate information in the bam file
-     */
-    long getNoCoordinateRecordCount() {
-        return noCoordinateRecords;
-    }
-
-    /**
      * @return the first virtual file offset used by this reference
      */
     long getFirstOffset() {
@@ -164,21 +178,6 @@ public class BAMIndexMetaData {
      */
     long getLastOffset() {
         return lastOffset;
-    }
-
-    /**
-     * @return the count of unaligned records associated with this reference
-     */
-    int getUnalignedRecordCount() {
-        return unAlignedRecords;
-    }
-
-
-    /**
-     * @return the count of aligned records associated with this reference
-     */
-    int getAlignedRecordCount() {
-        return alignedRecords;
     }
 
     /**
