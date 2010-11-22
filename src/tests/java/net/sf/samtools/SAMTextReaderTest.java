@@ -49,11 +49,11 @@ public class SAMTextReaderTest {
         final float floatValue = 1.2345f;
         final String stringTag = "XS";
         final String stringValue = "Hi,Mom!";
-        final String samExample = "@HD\tVN:" + fileFormatVersion + "\t" + charTag + ":A:" + charValue + "\n" +
-                "@SQ\tSN:" + sequence + "\tAS:HG18\tLN:" + sequenceLength + "\t" + intTag + ":i:" + intValue + "\n" +
-                "@RG\tID:L1\tPU:SC_1_10\tLB:SC_1\tSM:NA12891" + "\t" + floatTag + ":f:" + floatValue + "\n" +
+        final String samExample = "@HD\tVN:" + fileFormatVersion + "\t" + charTag + ":" + charValue + "\n" +
+                "@SQ\tSN:" + sequence + "\tAS:HG18\tLN:" + sequenceLength + "\t" + intTag + ":" + intValue + "\n" +
+                "@RG\tID:L1\tPU:SC_1_10\tLB:SC_1\tSM:NA12891" + "\t" + floatTag + ":" + floatValue + "\n" +
                 "@RG\tID:L2\tPU:SC_2_12\tLB:SC_2\tSM:NA12891\n" +
-                "@PG\tID:0\tVN:1.0\tCL:yo baby\t" + stringTag + ":Z:" + stringValue + "\n" +
+                "@PG\tID:0\tVN:1.0\tCL:yo baby\t" + stringTag + ":" + stringValue + "\n" +
                 "@PG\tID:2\tVN:1.1\tCL:whassup? ? ? ?\n" +
                 "read_28833_29006_6945\t99\tchr20\t28833\t20\t10M1D25M\t=\t28993\t195\t" +
                 seq1.toLowerCase() + "\t" + qual1 + "\t" +
@@ -73,12 +73,12 @@ public class SAMTextReaderTest {
         final SAMFileHeader fileHeader = samReader.getFileHeader();
 
         Assert.assertEquals(fileHeader.getVersion(), fileFormatVersion);
-        Assert.assertEquals(fileHeader.getAttribute(charTag), charValue);
+        Assert.assertEquals(fileHeader.getAttribute(charTag), Character.toString(charValue));
         final SAMSequenceRecord sequenceRecord = fileHeader.getSequence(sequence);
         Assert.assertNotNull(sequenceRecord);
         Assert.assertEquals(sequenceRecord.getSequenceLength(), sequenceLength);
-        Assert.assertEquals(sequenceRecord.getAttribute(intTag), intValue);
-        Assert.assertEquals(fileHeader.getReadGroup("L1").getAttribute(floatTag), floatValue);
+        Assert.assertEquals(sequenceRecord.getAttribute(intTag), Integer.toString(intValue));
+        Assert.assertEquals(fileHeader.getReadGroup("L1").getAttribute(floatTag), Float.toString(floatValue));
         Assert.assertEquals(fileHeader.getProgramRecord("0").getAttribute(stringTag), stringValue);
 
         final CloseableIterator<SAMRecord> iterator = samReader.iterator();

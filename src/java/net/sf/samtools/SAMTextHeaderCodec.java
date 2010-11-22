@@ -127,22 +127,14 @@ public class SAMTextHeaderCodec {
 
     /**
      * Transfer standard and non-standard tags from text representation to in-memory representation.
-     * Standard tags are treated as Strings.  Non-standard tags are typed.
+     * All values are now stored as Strings.
      * @param record attributes get set into this object.
      * @param textAttributes Map of tag type to value.  Some values may be removed by this method.
      */
     private void transferAttributes(final AbstractSAMHeaderRecord record, final Map<String, String> textAttributes) {
-        // Transfer standard tags that are of type String
-        for (final String standardTag : record.getStandardTags()) {
-            final String value = textAttributes.remove(standardTag);
-            if (value != null) {
-                record.setAttribute(standardTag, value);
-            }
-        }
-        // Transfer any non-standard typed tags
+        // All header tags are now of type String, so no need to distinguish standard from non-standard.
         for (final Map.Entry<String, String> entry : textAttributes.entrySet()) {
-            final Object value = mTagCodec.decodeTypeAndValue(entry.getValue());
-            record.setAttribute(entry.getKey(), value);
+            record.setAttribute(entry.getKey(), entry.getValue());
         }
 
     }
@@ -172,8 +164,8 @@ public class SAMTextHeaderCodec {
                 (String)samReadGroupRecord.getAttribute(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG);
         if (predictedMedianInsertSize != null) {
             try {
-                samReadGroupRecord.setAttribute(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG,
-                    Integer.parseInt(predictedMedianInsertSize));
+                Integer.parseInt(predictedMedianInsertSize);
+                samReadGroupRecord.setAttribute(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG,predictedMedianInsertSize);
             } catch (NumberFormatException e) {
                 reportErrorParsingLine(SAMReadGroupRecord.PREDICTED_MEDIAN_INSERT_SIZE_TAG +
                         " is not numeric: " + predictedMedianInsertSize, SAMValidationError.Type.INVALID_PREDICTED_MEDIAN_INSERT_SIZE,
@@ -194,7 +186,7 @@ public class SAMTextHeaderCodec {
                 dateRunProduced + "' is not parseable as a date", SAMValidationError.Type.INVALID_DATE_STRING,
                         e);
             }
-            samReadGroupRecord.setAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, date);
+            samReadGroupRecord.setAttribute(SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG, date.toString());
         }
 
         readGroups.add(samReadGroupRecord);
@@ -401,7 +393,7 @@ public class SAMTextHeaderCodec {
         // output get CURRENT_VERSION instead of whatever the version of the input header was.
         final SAMFileHeader newHeader = new SAMFileHeader();
 
-        for (final Map.Entry<String, Object> entry : mFileHeader.getAttributes()) {
+        for (final Map.Entry<String, String> entry : mFileHeader.getAttributes()) {
             if (!entry.getKey().equals(SAMFileHeader.VERSION_TAG)) {
                 newHeader.setAttribute(entry.getKey(), entry.getValue());
             }
@@ -430,14 +422,8 @@ public class SAMTextHeaderCodec {
      * @param offset where to start putting text tag representations.
      */
     private void encodeTags(final AbstractSAMHeaderRecord rec, final String[] fields, int offset) {
-        for (final Map.Entry<String, Object> entry: rec.getAttributes()) {
-            final String textTagRepresentation;
-            if (rec.getStandardTags().contains(entry.getKey())) {
-                textTagRepresentation = mTagCodec.encodeUntypedTag(entry.getKey(), entry.getValue());
-            } else {
-                textTagRepresentation = mTagCodec.encode(entry.getKey(), entry.getValue());
-            }
-            fields[offset++] = textTagRepresentation;
+        for (final Map.Entry<String, String> entry: rec.getAttributes()) {
+            fields[offset++] = mTagCodec.encodeUntypedTag(entry.getKey(), entry.getValue());
         }
     }
 

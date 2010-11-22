@@ -54,7 +54,7 @@ public class SAMTextWriterTest {
         tagMap.put("XF", 1.2345f);
         tagMap.put("XS", "Hi,Mom!");
         for (final Map.Entry<String, Object> entry : tagMap.entrySet()) {
-            inputSAM.getFileHeader().setAttribute(entry.getKey(), entry.getValue());
+            inputSAM.getFileHeader().setAttribute(entry.getKey(), entry.getValue().toString());
         }
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(inputSAM.getFileHeader(), false, samFile);
         for (final SAMRecord samRecord : inputSAM) {
@@ -66,7 +66,7 @@ public class SAMTextWriterTest {
         inputSAM = recordSetBuilder.getSamReader();
         // Stuff in the attributes again since this has been created again.
         for (final Map.Entry<String, Object> entry : tagMap.entrySet()) {
-            inputSAM.getFileHeader().setAttribute(entry.getKey(), entry.getValue());
+            inputSAM.getFileHeader().setAttribute(entry.getKey(), entry.getValue().toString());
         }
 
         final SAMFileReader newSAM = new SAMFileReader(samFile);

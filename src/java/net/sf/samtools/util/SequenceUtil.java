@@ -80,11 +80,11 @@ public class SequenceUtil {
         for (int i = 0; i < s1.size(); ++i) {
             if (!s1.get(i).isSameSequence(s2.get(i))) {
                 String s1Attrs = "";
-                for (final java.util.Map.Entry<String, Object> entry : s1.get(i).getAttributes()) {
+                for (final java.util.Map.Entry<String, String> entry : s1.get(i).getAttributes()) {
                     s1Attrs += "/" + entry.getKey() + "=" + entry.getValue();
                 }
                 String s2Attrs = "";
-                for (final java.util.Map.Entry<String, Object> entry : s2.get(i).getAttributes()) {
+                for (final java.util.Map.Entry<String, String> entry : s2.get(i).getAttributes()) {
                     s2Attrs += "/" + entry.getKey() + "=" + entry.getValue();
                 }
                 throw new SequenceListsDifferException("Sequences at index " + i + " don't match: " +

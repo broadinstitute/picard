@@ -32,10 +32,22 @@ import java.util.Set;
  * access to the attributes.
  */
 public abstract class AbstractSAMHeaderRecord {
-    private final Map<String,Object> mAttributes = new HashMap<String, Object>();
+    private final Map<String,String> mAttributes = new HashMap<String, String>();
 
-    public Object getAttribute(final String key) {
+    public String getAttribute(final String key) {
         return mAttributes.get(key);
+    }
+
+    /**
+     * Set the given value for the attribute named 'key'.  Replaces an existing value, if any.
+     * If value is null, the attribute is removed.
+     * Otherwise, the value will be converted to a String with toString.
+     * @param key attribute name
+     * @param value attribute value
+     * @deprecated Use the version that takes a String value instead
+     */
+    public void setAttribute(final String key, final Object value) {
+        setAttribute(key, value == null? null: value.toString());
     }
 
     /**
@@ -46,18 +58,17 @@ public abstract class AbstractSAMHeaderRecord {
      * @param key attribute name
      * @param value attribute value
      */
-    public void setAttribute(final String key, final Object value) {
+    public void setAttribute(final String key, final String value) {
         if (value == null) {
             mAttributes.remove(key);
         } else {
             mAttributes.put(key, value);
         }
     }
-
     /**
      * Returns the Set of attributes.
      */
-    public Set<Map.Entry<String,Object>> getAttributes() {
+    public Set<Map.Entry<String,String>> getAttributes() {
         return mAttributes.entrySet();
     }
 
