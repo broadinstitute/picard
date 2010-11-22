@@ -176,7 +176,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     public final SAMSequenceRecord clone() {
         final SAMSequenceRecord ret = new SAMSequenceRecord(this.mSequenceName, this.mSequenceLength);
         ret.mSequenceIndex = this.mSequenceIndex;
-        for (final Map.Entry<String, Object> entry : this.getAttributes()) {
+        for (final Map.Entry<String, String> entry : this.getAttributes()) {
             ret.setAttribute(entry.getKey(), entry.getValue());
         }
         return ret;

@@ -53,7 +53,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
 
     public SAMReadGroupRecord(final String id, SAMReadGroupRecord srcProgramRecord) {
         mReadGroupId = id;
-        for (final Map.Entry<String, Object> entry : srcProgramRecord.getAttributes()) {
+        for (final Map.Entry<String, String> entry : srcProgramRecord.getAttributes()) {
             setAttribute(entry.getKey(), entry.getValue());
         }
     }
@@ -73,7 +73,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public String getPlatform() { return (String) getAttribute(PLATFORM_TAG); }
     public void setPlatform(final String platform) { setAttribute(PLATFORM_TAG, platform); }
 
-    public Date getRunDate() { return (Date) getAttribute(DATE_RUN_PRODUCED_TAG); }
+    public Date getRunDate() { return new Iso8601Date(getAttribute(DATE_RUN_PRODUCED_TAG)); }
 
     /**
      * Converts to Iso8601Date if not already in that form.
@@ -82,7 +82,7 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
         if (runDate != null && !(runDate instanceof Iso8601Date)) {
             runDate = new Iso8601Date(runDate);
         }
-        setAttribute(DATE_RUN_PRODUCED_TAG, runDate);
+        setAttribute(DATE_RUN_PRODUCED_TAG, runDate.toString());
     }
 
     public String getSequencingCenter() { return (String) getAttribute(SEQUENCING_CENTER_TAG); }
@@ -91,8 +91,15 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
     public void setDescription(final String description) { setAttribute(DESCRIPTION_TAG, description); }
 
-    public Integer getPredictedMedianInsertSize() { return (Integer) getAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG); }
-    public void setPredictedMedianInsertSize(final Integer predictedMedianInsertSize) { setAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG, predictedMedianInsertSize); }
+    public Integer getPredictedMedianInsertSize() {
+        final String stringRep = getAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG);
+        if (stringRep == null) return null;
+        return Integer.parseInt(stringRep); 
+    }
+    public void setPredictedMedianInsertSize(final Integer predictedMedianInsertSize) {
+
+        setAttribute(PREDICTED_MEDIAN_INSERT_SIZE_TAG, (predictedMedianInsertSize == null? null: predictedMedianInsertSize.toString())); 
+    }
 
     /**
      * @return true if this == that except for the read group ID, which is arbitrary
