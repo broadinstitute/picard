@@ -217,7 +217,7 @@ public abstract class AbstractAlignmentMerger {
         alignedIterator.close();
 
         final SAMFileWriter writer =
-                new SAMFileWriterFactory().makeBAMWriter(header, true, this.targetBamFile);
+                new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
         int count = 0;
         CloseableIterator<SAMRecord> it = alignmentSorted.iterator();
         while (it.hasNext()) {
