@@ -142,10 +142,40 @@ public class Cigar {
             // clipping operator can only be at start or end of CIGAR
             final CigarOperator op = element.getOperator();
             if (isClippingOperator(op)) {
-                if (i != 0 && i != cigarElements.size() - 1) {
-                    if (ret == null) ret = new ArrayList<SAMValidationError>();
-                    ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
-                            "Clipping operator not at start or end of CIGAR", readName, recordNumber));
+                if (op == CigarOperator.H) {
+                    if (i != 0 && i != cigarElements.size() - 1) {
+                        if (ret == null) ret = new ArrayList<SAMValidationError>();
+                        ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                                "Hard clipping operator not at start or end of CIGAR", readName, recordNumber));
+                    }
+                } else {
+                    if (op != CigarOperator.S) throw new IllegalStateException("Should never happen: " + op.name());
+                    if (i == 0 || i == cigarElements.size() - 1) {
+                        // Soft clip at either end is fine
+                    } else if (i == 1) {
+                        if (cigarElements.size() == 3 && cigarElements.get(2).getOperator() == CigarOperator.H) {
+                            // Handle funky special case in which S operator is both one from the beginning and one
+                            // from the end.
+                        } else if (cigarElements.get(0).getOperator() != CigarOperator.H) {
+                            if (ret == null) ret = new ArrayList<SAMValidationError>();
+                            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                                "Soft clipping CIGAR operator can only be inside of hard clipping operator",
+                                    readName, recordNumber));
+                        }
+                    } else if (i == cigarElements.size() - 2) {
+                        if (cigarElements.get(cigarElements.size() - 1).getOperator() != CigarOperator.H) {
+                            if (ret == null) ret = new ArrayList<SAMValidationError>();
+                            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                                "Soft clipping CIGAR operator can only be inside of hard clipping operator",
+                                    readName, recordNumber));
+                        }
+                    } else {
+                        if (ret == null) ret = new ArrayList<SAMValidationError>();
+                        ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                            "Soft clipping CIGAR operator can at start or end of read, or be inside of hard clipping operator",
+                                readName, recordNumber));
+                    }
+
                 }
             } else if (isRealOperator(op)) {
                 // Must be at least one real operator (MIDN)
