@@ -61,10 +61,10 @@
         <os family="unix"/>
     </condition>
     <target name="set_excluded_test_groups_unix" if="isUnix">
-        <property name="excludedTestGroups" value="slow, broken, unix"/>
+        <property name="excludedTestGroups" value="slow, broken"/>
     </target>
     <target name="set_excluded_test_groups_non_unix" unless="isUnix">
-        <property name="excludedTestGroups" value="slow, broken"/>
+        <property name="excludedTestGroups" value="slow, broken, unix"/>
     </target>
     <target name="set_excluded_test_groups" depends="set_excluded_test_groups_unix,set_excluded_test_groups_non_unix"/>
 
