@@ -121,7 +121,8 @@ public class FixMateInformation extends CommandLineProgram {
                 for (SAMFileReader reader : readers) {
                     headers.add(reader.getFileHeader());
                 }
-                final SamFileHeaderMerger merger = new SamFileHeaderMerger(SortOrder.unsorted, headers, false);
+                final SortOrder sortOrder = (allQueryNameSorted? SortOrder.queryname: SortOrder.unsorted);
+                final SamFileHeaderMerger merger = new SamFileHeaderMerger(sortOrder, headers, false);
                 tmp = new MergingSamRecordIterator(merger, readers, false);
                 header = merger.getMergedHeader();
             }
