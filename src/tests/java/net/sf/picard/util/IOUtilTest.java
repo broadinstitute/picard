@@ -53,15 +53,27 @@ public class IOUtilTest {
         Assert.assertEquals(IOUtil.isRegularPath(file), expectedIsRegularFile);
     }
 
+    @Test(dataProvider = "unixFileTypeTestCases", groups={"unix"})
+    public void testFileTypeUnix(final String path, boolean expectedIsRegularFile) {
+        final File file = new File(path);
+        Assert.assertEquals(IOUtil.isRegularPath(file), expectedIsRegularFile);
+    }
+
     @DataProvider(name = "fileTypeTestCases")
     private Object[][] fileTypeTestCases() {
+        return new Object[][] {
+                {existingTempFile.getAbsolutePath(), Boolean.TRUE},
+                {systemTempDir, Boolean.FALSE}
+
+        };
+    }
+
+    @DataProvider(name = "unixFileTypeTestCases")
+    private Object[][] unixFileTypeTestCases() {
         return new Object[][] {
                 {"/dev/null",   Boolean.FALSE},
                 {"/dev/stdout", Boolean.FALSE},
                 {"/non/existent/file", Boolean.TRUE},
-                {existingTempFile.getAbsolutePath(), Boolean.TRUE},
-                {systemTempDir, Boolean.FALSE}
-
         };
     }
 }

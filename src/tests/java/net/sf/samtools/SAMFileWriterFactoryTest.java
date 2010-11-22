@@ -31,7 +31,7 @@ import java.io.File;
 public class SAMFileWriterFactoryTest {
 
     /** PIC-442Confirm that writing to a special file does not cause exception when writing additional files. */
-    @Test
+    @Test(groups={"unix"})
     public void specialFileWriterTest() {
         createSmallBam(new File("/dev/null"));
     }
