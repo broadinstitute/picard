@@ -46,6 +46,9 @@ public class CigarTest {
         // I followed by D and vice versa is now allowed.
         Assert.assertNull(codec.decode("1M1I1D1M").isValid(null, -1));
         Assert.assertNull(codec.decode("1M1D1I1M").isValid(null, -1));
+
+        // Soft-clip inside of hard-clip now allowed.
+        Assert.assertNull(codec.decode("29M1S15H").isValid(null, -1));
     }
 
     @Test
@@ -57,6 +60,16 @@ public class CigarTest {
 
         // Cannot have two consecutive deletions
         errors = codec.decode("1M1D1D1M").isValid(null, -1);
+        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
+
+        // Soft clip must be at end of read or inside of hard clip
+        errors = codec.decode("1M1D1S1M").isValid(null, -1);
+        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
+
+        // Soft clip must be at end of read or inside of hard clip
+        errors = codec.decode("1M1D1S1M1H").isValid(null, -1);
         Assert.assertEquals(errors.size(), 1);
         Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
 
