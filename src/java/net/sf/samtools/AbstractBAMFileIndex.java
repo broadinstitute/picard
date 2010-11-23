@@ -203,12 +203,42 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
 
     /**
      * Return meta data for the given reference including information about number of aligned, unaligned, and noCoordinate records
+     *
      * @param reference the reference of interest
      * @return meta data for the reference
      */
     public BAMIndexMetaData getMetaData(int reference) {
-        BAMIndexContent content = query(reference, 0, -1); // todo: it would be faster just to skip to the last bin
-        return content.getMetaData();
+        seek(4);
+
+        List<Chunk> metaDataChunks = new ArrayList<Chunk>();
+
+        final int sequenceCount = readInteger();
+
+        if (reference >= sequenceCount) {
+            return null;
+        }
+
+        skipToSequence(reference);
+
+        int binCount = readInteger();
+        for (int binNumber = 0; binNumber < binCount; binNumber++) {
+            final int indexBin = readInteger();
+            final int nChunks = readInteger();
+            // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
+            Chunk lastChunk = null;
+            if (indexBin == MAX_BINS) {
+                for (int ci = 0; ci < nChunks; ci++) {
+                    final long chunkBegin = readLong();
+                    final long chunkEnd = readLong();
+                    lastChunk = new Chunk(chunkBegin, chunkEnd);
+                    metaDataChunks.add(lastChunk);
+                }
+                continue;
+            } else {
+                skipBytes(16 * nChunks);
+            }
+        }
+        return new BAMIndexMetaData(metaDataChunks);
     }
 
     /**
