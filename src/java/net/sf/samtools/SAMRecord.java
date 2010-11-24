@@ -240,15 +240,10 @@ public class SAMRecord implements Cloneable
     }
 
     public void setBaseQualityString(final String value) {
-        try {
-            if (NULL_QUALS_STRING.equals(value)) {
-                setBaseQualities(NULL_QUALS);
-            } else {
-                setBaseQualities(SAMUtils.fastqToPhred(value));
-            }
-        } catch (Exception e) {
-            setBaseQualities(NULL_QUALS);      // todo DO NOT COMMIT  *********
-            System.err.println(e.getMessage() + " Exception setting base quality on "+ this);
+        if (NULL_QUALS_STRING.equals(value)) {
+            setBaseQualities(NULL_QUALS);
+        } else {
+            setBaseQualities(SAMUtils.fastqToPhred(value));
         }
     }
 
@@ -1386,9 +1381,11 @@ public class SAMRecord implements Cloneable
             if (getCigarLength() == 0) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR, "CIGAR should have > zero elements for mapped read.", getReadName()));
+            /* todo - will uncomment once unit tests are added
             } else if (getCigar().getReadLength() != getReadLength()) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR, "CIGAR read length " + getCigar().getReadLength() + " doesn't match read length " + getReadLength(), getReadName()));
+            */
             }
             if (getHeader().getSequenceDictionary().size() == 0) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
