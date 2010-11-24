@@ -90,8 +90,8 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     BAMFileReader(final File file, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
         throws IOException {
         this(new BlockCompressedInputStream(file), indexFile!=null ? indexFile : findIndexFile(file), eagerDecode, file.getAbsolutePath(), validationStringency);
-        if (indexFile != null && indexFile.lastModified() < file.lastModified()) {
-            System.err.println("WARNING: BAM index file " + indexFile.getAbsolutePath() +
+        if (mIndexFile != null && mIndexFile.lastModified() < file.lastModified()) {
+            System.err.println("WARNING: BAM index file " + mIndexFile.getAbsolutePath() +
                     " is older than BAM " + file.getAbsolutePath());
         }        
     }
