@@ -95,9 +95,9 @@ mkdir Picard-public
 cd Picard-public
 svn co $SVNROOT/tags/$RELEASE_ID .
 
-ant test
+ant -lib lib/ant test
 
-ant clean all javadoc
+ant -lib lib/ant clean all javadoc
 
 REVISION=`svn info $SVNROOT/tags/$RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
 PREV_REVISION=`svn info $SVNROOT/tags/$PREV_RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
