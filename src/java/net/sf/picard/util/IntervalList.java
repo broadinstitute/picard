@@ -26,6 +26,7 @@ package net.sf.picard.util;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.SAMTextHeaderCodec;
 import net.sf.samtools.util.StringLineReader;
 
@@ -51,6 +52,8 @@ import java.util.*;
 public class IntervalList implements Iterable<Interval> {
     private final SAMFileHeader header;
     private final List<Interval> intervals = new ArrayList<Interval>();
+
+    private static final Log log = Log.getInstance(IntervalList.class);
 
     /** Constructs a new interval list using the supplied header information. */
     public IntervalList(final SAMFileHeader header) {
@@ -176,6 +179,7 @@ public class IntervalList implements Iterable<Interval> {
             final StringLineReader headerReader = new StringLineReader(builder.toString());
             final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
             final IntervalList list = new IntervalList(codec.decode(headerReader, "BufferedReader"));
+            final SAMSequenceDictionary dict = list.getHeader().getSequenceDictionary();
 
             // Then read in the intervals
             final FormatUtil format = new FormatUtil();
@@ -202,7 +206,12 @@ public class IntervalList implements Iterable<Interval> {
                 final String name = fields[4];
 
                 final Interval interval = new Interval(seq, start, end, negative, name);
-                list.intervals.add(interval);
+                if (dict.getSequence(seq) == null) {
+                    log.warn("Ignoring interval for unknown reference: " + interval);
+                }
+                else {
+                    list.intervals.add(interval);
+                }
             }
             while ((line = in.readLine()) != null);
 
