@@ -304,63 +304,67 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 }
             }
 
-            if (line == null) {
-                throw new PicardException("No lines in metrics file after header.");
+            //read space between starting headers and metrics
+            while (line != null && !line.startsWith(MAJOR_HEADER_PREFIX)) {
+                line = in.readLine();
             }
-            // Then read the metrics if there are any
-            while (!line.startsWith(MAJOR_HEADER_PREFIX)) {
-                line = in.readLine().trim();
-            }
-            if (line.startsWith(METRIC_HEADER)) {
-                // Get the metric class from the header
-                String className = line.split(SEPARATOR)[1];
-                Class<?> type = null;
-                try {
-                    type = loadClass(className, true);
-                }
-                catch (ClassNotFoundException cnfe) {
-                    throw new PicardException("Could not locate class with name " + className, cnfe);
-                }
 
-                // Read the next line with the column headers
-                String[] fieldNames = in.readLine().split(SEPARATOR);
-                Field[] fields = new Field[fieldNames.length];
-                for (int i=0; i<fieldNames.length; ++i) {
+
+            if(line != null) {
+                line = line.trim();
+            
+                // Then read the metrics if there are any
+                if (line.startsWith(METRIC_HEADER)) {
+                    // Get the metric class from the header
+                    String className = line.split(SEPARATOR)[1];
+                    Class<?> type = null;
                     try {
-                        fields[i] = type.getField(fieldNames[i]);
+                        type = loadClass(className, true);
                     }
-                    catch (Exception e) {
-                        throw new PicardException("Could not get field with name " + fieldNames[i] +
-                            " from class " + type.getName());
+                    catch (ClassNotFoundException cnfe) {
+                        throw new PicardException("Could not locate class with name " + className, cnfe);
                     }
-                }
 
-                // Now read the values
-                while ((line = in.readLine()) != null) {
-                    if ("".equals(line.trim())) {
-                        break;
-                    }
-                    else {
-                        String[] values = line.split(SEPARATOR, -1);
-                        BEAN bean = null;
-
-                        try { bean = (BEAN) type.newInstance(); }
-                        catch (Exception e) { throw new PicardException("Error instantiating a " + type.getName(), e); }
-
-                        for (int i=0; i<fields.length; ++i) {
-                            Object value = null;
-                            if (values[i] != null && values[i].length() > 0) {
-                                value = formatter.parseObject(values[i], fields[i].getType());
-                            }
-
-                            try { fields[i].set(bean, value); }
-                            catch (Exception e) {
-                                throw new PicardException("Error setting field " + fields[i].getName() +
-                                        " on class of type " + type.getName(), e);
-                            }
+                    // Read the next line with the column headers
+                    String[] fieldNames = in.readLine().split(SEPARATOR);
+                    Field[] fields = new Field[fieldNames.length];
+                    for (int i=0; i<fieldNames.length; ++i) {
+                        try {
+                            fields[i] = type.getField(fieldNames[i]);
                         }
+                        catch (Exception e) {
+                            throw new PicardException("Could not get field with name " + fieldNames[i] +
+                                " from class " + type.getName());
+                        }
+                    }
 
-                        this.metrics.add(bean);
+                    // Now read the values
+                    while ((line = in.readLine()) != null) {
+                        if ("".equals(line.trim())) {
+                            break;
+                        }
+                        else {
+                            String[] values = line.split(SEPARATOR, -1);
+                            BEAN bean = null;
+
+                            try { bean = (BEAN) type.newInstance(); }
+                            catch (Exception e) { throw new PicardException("Error instantiating a " + type.getName(), e); }
+
+                            for (int i=0; i<fields.length; ++i) {
+                                Object value = null;
+                                if (values[i] != null && values[i].length() > 0) {
+                                    value = formatter.parseObject(values[i], fields[i].getType());
+                                }
+
+                                try { fields[i].set(bean, value); }
+                                catch (Exception e) {
+                                    throw new PicardException("Error setting field " + fields[i].getName() +
+                                            " on class of type " + type.getName(), e);
+                                }
+                            }
+
+                            this.metrics.add(bean);
+                        }
                     }
                 }
             }
