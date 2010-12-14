@@ -130,6 +130,18 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
 
+        if(header != null) {
+            for(final SAMReadGroupRecord readGroup : header.getReadGroups()) {
+                final String library = readGroup.getLibrary();
+                DuplicationMetrics metrics = metricsByLibrary.get(library);
+                if (metrics == null) {
+                    metrics = new DuplicationMetrics();
+                    metrics.LIBRARY = library;
+                    metricsByLibrary.put(library, metrics);
+                }
+            }
+        }
+
         for (final SAMRecord rec : in) {
             final String library = getLibraryName(header, rec);
             DuplicationMetrics metrics = metricsByLibrary.get(library);
