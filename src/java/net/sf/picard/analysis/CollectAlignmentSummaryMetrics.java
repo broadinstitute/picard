@@ -84,7 +84,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     @Usage
     public String USAGE = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
     @Option(shortName="I", doc="SAM or BAM file") public File INPUT;
-    @Option(shortName="O", doc="File to write insert size metrics to") public File OUTPUT;
+    @Option(shortName="O", doc="File to write alignment summary metrics to") public File OUTPUT;
     @Option(shortName="R", doc="Reference sequence file", optional=true) public File REFERENCE_SEQUENCE;
     @Option(doc="If true (default), \"unsorted\" SAM/BAM files will be considerd coordinate sorted",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
@@ -180,7 +180,9 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
             file.addMetric(pairCollector.getMetrics());
         }
 
-        if (unpairedCollector.getMetrics().TOTAL_READS > 0) {
+        //if there are no reads in any category then we will returned an unpaired alignment summary metric with all zero values
+        if (unpairedCollector.getMetrics().TOTAL_READS > 0 ||
+            (firstOfPairCollector.getMetrics().TOTAL_READS == 0 && unpairedCollector.getMetrics().TOTAL_READS == 0)) {
             file.addMetric(unpairedCollector.getMetrics());
         }
 
@@ -317,15 +319,18 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         }
 
         public void onComplete() {
-            metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
-            metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
-            metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
-            
-            if(doRefMetrics) {
-                metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-                metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
-                metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
-                metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+            if (metrics.TOTAL_READS > 0)
+            {
+                metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
+                metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
+                metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
+
+                if(doRefMetrics) {
+                    metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
+                    metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
+                    metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
+                    metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+                }
             }
         }
 
@@ -420,17 +425,19 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         }
 
         public void onComplete() {
-            if(doRefMetrics) {
-            metrics.PF_HQ_MEDIAN_MISMATCHES = mismatchHistogram.getMedian();
-            metrics.PF_HQ_ERROR_RATE = mismatchHistogram.getSum() / (double)metrics.getErrorRateDenominator();
-            }
+            if(metrics.TOTAL_READS > 0) {
+                if(doRefMetrics) {
+                metrics.PF_HQ_MEDIAN_MISMATCHES = mismatchHistogram.getMedian();
+                metrics.PF_HQ_ERROR_RATE = mismatchHistogram.getSum() / (double)metrics.getErrorRateDenominator();
+                }
 
-            metrics.BAD_CYCLES = 0;
+                metrics.BAD_CYCLES = 0;
 
-            for (final Histogram<Integer>.Bin cycleBin : badCycleHistogram.values()) {
-                final double badCyclePercentage = cycleBin.getValue() / metrics.TOTAL_READS;
-                if (badCyclePercentage >= .8) {
-                    metrics.BAD_CYCLES++;
+                for (final Histogram<Integer>.Bin cycleBin : badCycleHistogram.values()) {
+                    final double badCyclePercentage = cycleBin.getValue() / metrics.TOTAL_READS;
+                    if (badCyclePercentage >= .8) {
+                        metrics.BAD_CYCLES++;
+                    }
                 }
             }
         }
