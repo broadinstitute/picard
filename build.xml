@@ -250,7 +250,7 @@
         </javadoc>
     </target>
 
-    <target name="package-commands" depends="compile">
+    <target name="package-commands" depends="compile, sam-jar, picard-jar">
         <delete dir="${command_tmp}"/>
 
         <mkdir dir="${command_tmp}"/>
