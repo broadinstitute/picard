@@ -61,7 +61,8 @@ public class RevertSam extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME, doc="True to restore original qualities from the OQ field to the QUAL field if available.")
     public boolean RESTORE_ORIGINAL_QUALITIES = true;
 
-    @Option(doc="Remove duplicate read flags from all reads")
+    @Option(doc="Remove duplicate read flags from all reads.  Note that if this is true and REMOVE_ALIGNMENT_INFORMATION==false, " +
+            " the output may have the unusual but sometimes desirable trait of having unmapped reads that are marked as duplicates.")
     public boolean REMOVE_DUPLICATE_INFORMATION = true;
 
     @Option(doc="Remove all alignment information from the file.")
@@ -167,7 +168,6 @@ public class RevertSam extends CommandLineProgram {
                 rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
 
                 if (!rec.getReadUnmappedFlag()) {
-                    rec.setDuplicateReadFlag(false);
                     rec.setInferredInsertSize(0);
                     rec.setNotPrimaryAlignmentFlag(false);
                     rec.setProperPairFlag(false);
