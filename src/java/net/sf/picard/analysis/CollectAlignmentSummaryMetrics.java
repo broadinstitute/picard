@@ -231,6 +231,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
      * @return true if the read matches an adapter and false otherwise 
      */
     protected boolean isAdapterSequence(final byte[] read) {
+        if (read.length < ADAPTER_MATCH_LENGTH) return false;
         StringUtil.toUpperCase(read);
         
         for (final byte[] adapter : ADAPTER_SEQUENCES) {
