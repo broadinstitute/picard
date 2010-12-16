@@ -196,4 +196,20 @@ public class CollectAlignmentSummaryMetricsTest {
         }
     }
 
+    @Test
+    public void testZeroLengthReads() throws IOException {
+        CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
+        program.INPUT = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
+        program.OUTPUT = File.createTempFile("alignmentMetrics", ".txt");
+        program.OUTPUT.deleteOnExit();
+        program.REFERENCE_SEQUENCE = null;
+        Assert.assertEquals(program.doWork(), 0);
+
+        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        output.read(new FileReader(program.OUTPUT));
+        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            // test that it doesn't blow up
+        }
+    }
+
 }
