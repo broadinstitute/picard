@@ -28,6 +28,8 @@ import net.sf.picard.util.Histogram.Bin;
 
 import java.util.*;
 
+import static java.lang.Math.pow;
+
 /**
  * Class for computing and accessing histogram type data.  Stored internally in
  * a sorted Map so that keys can be iterated in order.
@@ -192,12 +194,20 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     }
 
     public double getStandardDeviation() {
+        final double mean = getMean();
+
+        double count = 0;
         double total = 0;
+
         for (final Bin bin : values()) {
-            total += bin.getValue() * bin.getIdValue() * bin.getIdValue();
+            final double localCount = bin.getValue();
+            final double value = bin.getIdValue();
+
+            count += localCount;
+            total += localCount * pow(value - mean, 2);
         }
 
-        return Math.sqrt((total / getCount()) - (getMean() * getMean()));
+        return Math.sqrt(total / (count-1));
     }
 
     /**
