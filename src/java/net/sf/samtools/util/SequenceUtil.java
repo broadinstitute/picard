@@ -65,6 +65,14 @@ public class SequenceUtil {
         return base == 'N' || base == 'n' || base == '.';
     }
 
+    /** Returns true if the byte is in [acgtACGT]. */
+    public static boolean isValidBase(final byte b){
+        return b == a || b == A ||
+               b == c || b == C ||
+               b == g || b == G ||
+               b == t || b == T;
+    }
+
     /**
      * Throws an exception if both parameters are not null sequenceListsEqual returns false
      * @param s1 a list of sequence headers
