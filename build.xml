@@ -270,6 +270,7 @@
         <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
         <package-and-document-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
         <package-and-document-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
+        <package-and-document-command title="CollectMultipleMetrics"         main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
         <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
         <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
         <package-and-document-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>

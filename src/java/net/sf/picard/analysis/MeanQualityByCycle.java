@@ -24,6 +24,7 @@
 
 package net.sf.picard.analysis;
 
+import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.RExecutor;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -32,6 +33,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.util.Histogram;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 
@@ -45,13 +47,7 @@ import java.io.File;
  *
  * @author Tim Fennell
  */
-public class MeanQualityByCycle extends CommandLineProgram {
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input BAM file to process")
-    public File INPUT;
-
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="A file to write the table of qualities to")
-    public File OUTPUT;
-
+public class MeanQualityByCycle extends SinglePassSamProgram {
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to")
     public File CHART_OUTPUT;
 
@@ -61,7 +57,8 @@ public class MeanQualityByCycle extends CommandLineProgram {
     @Option(doc="If set to true calculate mean quality over PF reads only")
     public boolean PF_READS_ONLY = false;
 
-    @Option(doc="Stop after processing N reads, mainly for debugging.") public int STOP_AFTER = 0;
+    private HistogramGenerator q  = new HistogramGenerator(false);
+    private HistogramGenerator oq = new HistogramGenerator(true);
 
     /** Required main method. */
     public static void main(String[] args) {
@@ -112,31 +109,24 @@ public class MeanQualityByCycle extends CommandLineProgram {
         }
     }
 
-    /**
-     * Does all the work of calcuating the mean qualities and writing out the files.
-     */
-    protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+
+    @Override
+    protected void setup(final SAMFileHeader header, final File samFile) {
         IoUtil.assertFileIsWritable(CHART_OUTPUT);
+    }
 
-        SAMFileReader in = new SAMFileReader(INPUT);
-        HistogramGenerator q  = new HistogramGenerator(false);
-        HistogramGenerator oq = new HistogramGenerator(true);
+    @Override
+    protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        // Skip unwanted records
+        if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) return;
+        if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
 
-        // Read through the SAM file and aggregate total quality and observations by cycle
-        int i = 0;
-        for (SAMRecord rec : in) {
-            // Skip unwanted records
-            if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) continue;
-            if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) continue;
+        q.addRecord(rec);
+        oq.addRecord(rec);
+    }
 
-            q.addRecord(rec);
-            oq.addRecord(rec);
-
-            if (STOP_AFTER > 0 && ++i >= STOP_AFTER) break;
-        }
-
+    @Override
+    protected void finish() {
         // Generate a "histogram" of mean quality and write it to the file
         MetricsFile<?,Integer> metrics = getMetricsFile();
         metrics.addHistogram(q.getMeanQualityHistogram());
@@ -153,8 +143,6 @@ public class MeanQualityByCycle extends CommandLineProgram {
         if (rResult != 0) {
             throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
         }
-
-        return 0;
     }
 }
 

@@ -51,7 +51,7 @@ public class CollectAlignmentSummaryMetricsTest {
         program.OUTPUT = File.createTempFile("alignmentMetrics", ".txt");
         program.OUTPUT.deleteOnExit();
         program.REFERENCE_SEQUENCE = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        Assert.assertEquals(program.doWork(), 0);
+        Assert.assertEquals(program.testDoWork(), 0);
         
         MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(program.OUTPUT));
@@ -105,7 +105,7 @@ public class CollectAlignmentSummaryMetricsTest {
         format.setMaximumFractionDigits(4);
 
         
-        Assert.assertEquals(program.doWork(), 0);
+        Assert.assertEquals(program.testDoWork(), 0);
 
         MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(program.OUTPUT));
@@ -154,7 +154,7 @@ public class CollectAlignmentSummaryMetricsTest {
         program.OUTPUT = File.createTempFile("alignmentMetrics", ".txt");
         program.OUTPUT.deleteOnExit();
         program.REFERENCE_SEQUENCE = null;
-        Assert.assertEquals(program.doWork(), 0);
+        Assert.assertEquals(program.testDoWork(), 0);
 
         MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(program.OUTPUT));
@@ -203,7 +203,7 @@ public class CollectAlignmentSummaryMetricsTest {
         program.OUTPUT = File.createTempFile("alignmentMetrics", ".txt");
         program.OUTPUT.deleteOnExit();
         program.REFERENCE_SEQUENCE = null;
-        Assert.assertEquals(program.doWork(), 0);
+        Assert.assertEquals(program.testDoWork(), 0);
 
         MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(program.OUTPUT));
