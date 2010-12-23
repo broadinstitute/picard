@@ -28,8 +28,10 @@ import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.util.RExecutor;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.PicardException;
@@ -44,13 +46,7 @@ import net.sf.samtools.SAMRecord;
  *
  * @author Tim Fennell
  */
-public class QualityScoreDistribution extends CommandLineProgram {
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input BAM file to process")
-    public File INPUT;
-
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="A file to write the table of qualities to")
-    public File OUTPUT;
-
+public class QualityScoreDistribution extends SinglePassSamProgram {
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to")
     public File CHART_OUTPUT;
 
@@ -63,49 +59,43 @@ public class QualityScoreDistribution extends CommandLineProgram {
     @Option(doc="If set to true, include quality for no-call bases in the distribution")
     public boolean INCLUDE_NO_CALLS = false;
 
-    @Option(doc="Stop after processing N reads. Mostly for debugging purposes.")
-    public int STOP_AFTER = 0;
+    private final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
+    private final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
 
     /** Required main method. */
     public static void main(final String[] args) {
         System.exit(new QualityScoreDistribution().instanceMain(args));
     }
 
-    /**
-     * Does all the work of calculating the mean qualities and writing out the files.
-     */
-    protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
+
+    @Override
+    protected void setup(final SAMFileHeader header, final File samFile) {
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(CHART_OUTPUT);
+    }
 
-        final SAMFileReader in = new SAMFileReader(INPUT);
-        final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
-        final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
+    @Override
+    protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        // Skip unwanted records
+        if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) return;
+        if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
 
-        // Read through the SAM file and aggregate total quality and observations by cycle
-        int processed = 0;
-        for (final SAMRecord rec : in) {
-            // Skip unwanted records
-            if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) continue;
-            if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) continue;
+        final byte[] bases = rec.getReadBases();
+        final byte[] quals = rec.getBaseQualities();
+        final byte[] oq    = rec.getOriginalBaseQualities();
 
-            final byte[] bases = rec.getReadBases();
-            final byte[] quals = rec.getBaseQualities();
-            final byte[] oq    = rec.getOriginalBaseQualities();
+        final int length = quals.length;
 
-            final int length = quals.length;
-
-            for (int i=0; i<length; ++i) {
-                if (INCLUDE_NO_CALLS || !SequenceUtil.isNoCall(bases[i])) {
-                    qHisto.increment(quals[i]);
-                    if (oq != null) oqHisto.increment(oq[i]);
-                }
+        for (int i=0; i<length; ++i) {
+            if (INCLUDE_NO_CALLS || !SequenceUtil.isNoCall(bases[i])) {
+                qHisto.increment(quals[i]);
+                if (oq != null) oqHisto.increment(oq[i]);
             }
-
-            if (STOP_AFTER > 0 && ++processed > STOP_AFTER) break;
         }
+    }
 
+    @Override
+    protected void finish() {
         final MetricsFile<?,Byte> metrics = getMetricsFile();
         metrics.addHistogram(qHisto);
         if (!oqHisto.isEmpty()) metrics.addHistogram(oqHisto);
@@ -121,7 +111,5 @@ public class QualityScoreDistribution extends CommandLineProgram {
         if (rResult != 0) {
             throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
         }
-
-        return 0;
     }
 }

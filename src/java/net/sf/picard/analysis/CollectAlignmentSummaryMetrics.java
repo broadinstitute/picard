@@ -24,16 +24,14 @@
 
 package net.sf.picard.analysis;
 
+import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.CollectionUtil;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.*;
-import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.analysis.AlignmentSummaryMetrics.Category;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
@@ -41,7 +39,6 @@ import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.AlignmentBlock;
 import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.StringUtil;
 
@@ -69,7 +66,7 @@ import java.util.*;
  * 
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
+public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private static final int MAPPING_QUALITY_THRESHOLD = 20;
     private static final int BASE_QUALITY_THRESHOLD = 20;
 
@@ -78,19 +75,18 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     private byte[][] ADAPTER_SEQUENCES;
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
-
+    final MetricCollector<AlignmentSummaryMetrics> unpairedCollector     = constructCollector(Category.UNPAIRED);
+    final MetricCollector<AlignmentSummaryMetrics> firstOfPairCollector  = constructCollector(Category.FIRST_OF_PAIR);
+    final MetricCollector<AlignmentSummaryMetrics> secondOfPairCollector = constructCollector(Category.SECOND_OF_PAIR);
+    final MetricCollector<AlignmentSummaryMetrics> pairCollector         = constructCollector(Category.PAIR);
 
     // Usage and parameters
     @Usage
     public String USAGE = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
-    @Option(shortName="I", doc="SAM or BAM file") public File INPUT;
-    @Option(shortName="O", doc="File to write alignment summary metrics to") public File OUTPUT;
-    @Option(shortName="R", doc="Reference sequence file", optional=true) public File REFERENCE_SEQUENCE;
-    @Option(doc="If true (default), \"unsorted\" SAM/BAM files will be considerd coordinate sorted",
-            shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
-    public Boolean ASSUME_SORTED = Boolean.TRUE;
+
     @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;
+
     @Option() public List<String> ADAPTER_SEQUENCE = CollectionUtil.makeList(
         IlluminaUtil.AdapterPair.SINGLE_END.get5PrimeAdapter(),
         IlluminaUtil.AdapterPair.SINGLE_END.get3PrimeAdapter(),
@@ -99,68 +95,49 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         IlluminaUtil.AdapterPair.INDEXED.get5PrimeAdapter(),
         IlluminaUtil.AdapterPair.INDEXED.get3PrimeAdapter()
     );
-    // also List options are only appended to, not replaced
+
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
-    private ReferenceSequenceFileWalker referenceSequenceWalker;
-    private SAMFileHeader samFileHeader;
     private boolean doRefMetrics;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
-        System.exit(new CollectAlignmentSummaryMetrics().instanceMain(argv));
+        new CollectAlignmentSummaryMetrics().instanceMainWithExit(argv);
     }
 
-    @Override
-    protected int doWork() {
+    /** Silly method that is necessary to give unit test access to call doWork() */
+    protected final int testDoWork() { return doWork(); }
+
+    @Override protected void setup(final SAMFileHeader header, final File samFile) {
         prepareAdapterSequences();
-
         doRefMetrics = REFERENCE_SEQUENCE != null;
-
-        // Check the files are readable/writable
-        IoUtil.assertFileIsReadable(INPUT);
-        if(doRefMetrics) IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
         IoUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader in = new SAMFileReader(INPUT);
-        assertCoordinateSortOrder(in);
 
-        if(doRefMetrics) {this.referenceSequenceWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);}
-        this.samFileHeader = in.getFileHeader();
-
-        if (!samFileHeader.getSequenceDictionary().isEmpty()) {
-            if(doRefMetrics){
-                SequenceUtil.assertSequenceDictionariesEqual(
-
-                    samFileHeader.getSequenceDictionary(),
-                    this.referenceSequenceWalker.getSequenceDictionary());
-            }
-        } else {
+        if (header.getSequenceDictionary().isEmpty()) {
             log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
                     "in the file are aligned then alignment summary metrics collection will fail.");
         }
 
-        final MetricCollector<AlignmentSummaryMetrics, SAMRecord> unpairedCollector =  constructCollector(Category.UNPAIRED);
-        final MetricCollector<AlignmentSummaryMetrics, SAMRecord> firstOfPairCollector = constructCollector(Category.FIRST_OF_PAIR);
-        final MetricCollector<AlignmentSummaryMetrics, SAMRecord> secondOfPairCollector = constructCollector(Category.SECOND_OF_PAIR);
-        final MetricCollector<AlignmentSummaryMetrics, SAMRecord> pairCollector =  constructCollector(Category.PAIR);
+    }
 
-        // Loop over the reads applying them to the correct collectors
-        for (final SAMRecord record : in) {
-            if (record.getReadPairedFlag()) {
-                if (record.getFirstOfPairFlag()) firstOfPairCollector.addRecord(record);
-                else secondOfPairCollector.addRecord(record);
-
-                pairCollector.addRecord(record);
+    @Override protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        if (rec.getReadPairedFlag()) {
+            if (rec.getFirstOfPairFlag()) {
+                firstOfPairCollector.addRecord(rec, ref);
             }
             else {
-                unpairedCollector.addRecord(record);
+                secondOfPairCollector.addRecord(rec, ref);
             }
 
+            pairCollector.addRecord(rec, ref);
         }
+        else {
+            unpairedCollector.addRecord(rec, ref);
+        }
+    }
 
-        in.close();
-
+    @Override protected void finish() {
         // Let the collectors do any summary computations etc.
         firstOfPairCollector.onComplete();
         secondOfPairCollector.onComplete();
@@ -187,27 +164,6 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
         }
 
         file.write(OUTPUT);
-
-        return 0;
-    }
-
-    /**
-     * Checks that the SAM is either coordinate sorted according to it's header, or that the header
-     * doesn't specify a sort and that the user has supplied the argument to assume that it is
-     * sorted correctly.
-     */
-    private void assertCoordinateSortOrder(final SAMFileReader in) {
-        switch (in.getFileHeader().getSortOrder()) {
-        case coordinate:
-            break;
-        case unsorted:
-            if (this.ASSUME_SORTED) {
-                break;
-            }
-        default:
-            log.warn("May not be able collect summary statistics in file " + INPUT.getAbsoluteFile() +
-            " because it is not sorted in coordinate order.  If any of the reads are aligned this will blow up.");
-        }
     }
 
     /** Converts the supplied adapter sequences to byte arrays in both fwd and rc. */
@@ -252,9 +208,9 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     }
 
     /** Constructs a metrics collector for the supplied category. */
-    private MetricCollector<AlignmentSummaryMetrics, SAMRecord> constructCollector(final Category category) {
-        final MetricCollector<AlignmentSummaryMetrics, SAMRecord> collector =
-            new AggregateMetricCollector<AlignmentSummaryMetrics, SAMRecord>(new ReadCounter(), new QualityMappingCounter());
+    private MetricCollector<AlignmentSummaryMetrics> constructCollector(final Category category) {
+        final MetricCollector<AlignmentSummaryMetrics> collector =
+            new AggregateMetricCollector<AlignmentSummaryMetrics>(new ReadCounter(), new QualityMappingCounter());
         collector.setMetrics(new AlignmentSummaryMetrics());
         collector.getMetrics().CATEGORY = category;
         return collector;
@@ -263,14 +219,14 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     /**
      * Class that counts reads that match various conditions
      */
-    private class ReadCounter implements MetricCollector<AlignmentSummaryMetrics, SAMRecord> {
+    private class ReadCounter implements MetricCollector<AlignmentSummaryMetrics> {
         private long numPositiveStrand = 0;
         private final Histogram<Integer> readLengthHistogram = new Histogram<Integer>();
         private AlignmentSummaryMetrics metrics;
         private long chimeras;
         private long adapterReads;
 
-        public void addRecord(final SAMRecord record) {
+        public void addRecord(final SAMRecord record, final ReferenceSequence ref) {
             if (record.getNotPrimaryAlignmentFlag()) {
                 // only want 1 count per read so skip non primary alignments
                 return;
@@ -352,12 +308,12 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
     /**
      * Class that counts quality mappings & base calls that match various conditions
      */
-    private class QualityMappingCounter implements MetricCollector<AlignmentSummaryMetrics, SAMRecord> {
+    private class QualityMappingCounter implements MetricCollector<AlignmentSummaryMetrics> {
         private final Histogram<Long> mismatchHistogram = new Histogram<Long>();
         private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
         private AlignmentSummaryMetrics metrics;
 
-        public void addRecord(final SAMRecord record) {
+        public void addRecord(final SAMRecord record, final ReferenceSequence reference) {
             if (record.getNotPrimaryAlignmentFlag()) {
                 return;
             }
@@ -373,7 +329,7 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
                 if (highQualityMapping) metrics.PF_HQ_ALIGNED_READS++;
 
                 final byte[] readBases = record.getReadBases();
-                final byte[] refBases = referenceSequenceWalker.get(record.getReferenceIndex()).getBases();
+                final byte[] refBases = reference.getBases();
                 final byte[] qualities  = record.getBaseQualities();
                 final int refLength = refBases.length;
                 long mismatchCount = 0;
@@ -449,6 +405,69 @@ public class CollectAlignmentSummaryMetrics extends CommandLineProgram {
 
         public AlignmentSummaryMetrics getMetrics() {
             return this.metrics;
+        }
+    }
+
+    /**
+     * Interface for objects that collect metrics.
+     *
+     * @author Doug Voet (dvoet at broadinstitute dot org)
+     *
+     * @param <T> the type of the metrics object
+     */
+    public static interface MetricCollector<T extends MetricBase> {
+        T getMetrics();
+
+        /** Called after collector is constructed to populate the metrics object. */
+        void setMetrics(T metrics);
+
+        /**
+         * Called when collection is complete. Implementations can do any calculations
+         * that must wait until all records are visited at this time.
+         */
+        void onComplete();
+
+        /**
+         * Visitor method called to have a record considered by the collector.
+         */
+        void addRecord(SAMRecord record, ReferenceSequence reference);
+    }
+
+    /**
+     * Collector that aggregates a number of other collectors.
+     *
+     * @author Doug Voet (dvoet at broadinstitute dot org)
+     */
+    public static class AggregateMetricCollector<T extends MetricBase> implements MetricCollector<T> {
+        private final MetricCollector<T>[] collectors;
+
+        public AggregateMetricCollector(final MetricCollector<T>... collectors) {
+            if (collectors.length == 0) {
+                throw new IllegalArgumentException("Must supply at least one collector.");
+            }
+            this.collectors = collectors;
+        }
+
+        public void addRecord(final SAMRecord record, ReferenceSequence ref) {
+            for (final MetricCollector<T> collector : this.collectors) {
+                collector.addRecord(record, ref);
+            }
+        }
+
+        public void onComplete() {
+            for (final MetricCollector<T> collector : this.collectors) {
+                collector.onComplete();
+            }
+        }
+
+        public void setMetrics(final T metrics) {
+            for (final MetricCollector<T> collector : this.collectors) {
+                collector.setMetrics(metrics);
+            }
+        }
+
+        public T getMetrics() {
+            return this.collectors[0].getMetrics();
         }
     }
 }

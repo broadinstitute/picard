@@ -223,5 +223,14 @@ public abstract class CommandLineProgram {
     public String getCommandLine() {
         return commandLine;
     }
+
+    public void setDefaultHeaders(List<Header> headers) {
+        this.defaultHeaders.clear();
+        this.defaultHeaders.addAll(headers);
+    }
+
+    public List<Header> getDefaultHeaders() {
+        return this.defaultHeaders;
+    }
 }
 

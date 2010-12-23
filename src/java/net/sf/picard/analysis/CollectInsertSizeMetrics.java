@@ -29,20 +29,18 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
+import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.sam.SamPairUtil;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.RExecutor;
-import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.util.CloseableIterator;
 import net.sf.picard.sam.SamPairUtil.PairOrientation;
 
 /**
@@ -51,7 +49,7 @@ import net.sf.picard.sam.SamPairUtil.PairOrientation;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-public class CollectInsertSizeMetrics extends CommandLineProgram {
+public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     private static final String HISTOGRAM_R_SCRIPT = "net/sf/picard/analysis/insertSizeHistogram.R";
     // Usage and parameters
@@ -60,24 +58,27 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
             "the statistical distribution of insert size (excluding duplicates) " +
             "and generates a histogram plot.\n";
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="SAM or BAM file") public File INPUT;
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="File to write insert size metrics to") public File OUTPUT;
-    @Option(shortName="H", doc="File to write insert size histogram chart to") public File HISTOGRAM_FILE;
+    @Option(shortName="H", doc="File to write insert size histogram chart to")
+    public File HISTOGRAM_FILE;
+
     @Option(shortName="T", doc="When calculating mean and stdev stop when the bins in the tail of the distribution " +
                                "contain fewer than mode/TAIL_LIMIT items. This also limits how much data goes into each data category of the histogram.")
     public int TAIL_LIMIT = 10000;
+
     @Option(shortName="W", doc="Explicitly sets the histogram width, overriding the TAIL_LIMIT option. Also, when calculating " +
                                "mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
+
     @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1)")
     public float MINIMUM_PCT = 0.01f;
 
-    @Option(doc="Stop after processing N reads, mainly for debugging.") public int STOP_AFTER = 0;
+
+    final HashMap<PairOrientation, Histogram<Integer>> histograms = new HashMap<PairOrientation, Histogram<Integer>>();
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
-        System.exit(new CollectInsertSizeMetrics().instanceMain(argv));
+        new CollectInsertSizeMetrics().instanceMainWithExit(argv);
     }
 
     /**
@@ -93,100 +94,56 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
          if (MINIMUM_PCT < 0 || MINIMUM_PCT > 0.5) {
              return new String[]{"MINIMUM_PCT was set to " + MINIMUM_PCT + ". It must be between 0 and 0.5 so all data categories don't get discarded."};
          }
+
          return super.customCommandLineValidation();
     }
 
+    @Override protected boolean usesNoRefReads() { return false; }
 
-    @Override
-    protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
+    @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(HISTOGRAM_FILE);
 
-        final SAMFileReader in = new SAMFileReader(INPUT);
-        in.setValidationStringency(ValidationStringency.SILENT);
-        final MetricsFile<InsertSizeMetrics, Integer> file = collectMetrics(in.iterator());
-        in.close();
-
-        if (file == null || file.getMetrics().get(0).READ_PAIRS == 0) {
-            log.warn("Input file did not contain any records with insert size information.");
-        }
-        else  {
-            file.write(OUTPUT);
-
-            final int rResult;
-            if(HISTOGRAM_WIDTH == null) {
-                rResult = RExecutor.executeFromClasspath(
-                    HISTOGRAM_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
-                    INPUT.getName());
-            } else {
-                rResult = RExecutor.executeFromClasspath(
-                    HISTOGRAM_R_SCRIPT,
-                    OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
-                    INPUT.getName(),
-                    String.valueOf( HISTOGRAM_WIDTH ) ); //HISTOGRAM_WIDTH is passed because R automatically sets histogram width to the last
-                                                         //bin that has data, which may be less than HISTOGRAM_WIDTH and confuse the user.
-            }
-
-            if (rResult != 0) {
-                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
-            }
-        }
-
-        return 0;
+        histograms.put(PairOrientation.FR,     new Histogram<Integer>("insert_size", "fr_count"));
+        histograms.put(PairOrientation.TANDEM, new Histogram<Integer>("insert_size", "tandem_count"));
+        histograms.put(PairOrientation.RF,     new Histogram<Integer>("insert_size", "rf_count"));
     }
 
-    /**
-    * Does all the work of iterating through the sam file and collecting insert size metrics.
-    */
-    MetricsFile<InsertSizeMetrics, Integer> collectMetrics(final CloseableIterator<SAMRecord> samIterator) {
-
-        HashMap<PairOrientation, Histogram<Integer>> histograms = new HashMap<PairOrientation, Histogram<Integer>>();
-        histograms.put(PairOrientation.FR, new Histogram<Integer>("insert_size", "fr_count"));
-        histograms.put(PairOrientation.TANDEM, new Histogram<Integer>("insert_size", "tandem_count"));
-        histograms.put(PairOrientation.RF, new Histogram<Integer>("insert_size", "rf_count"));
-
-        int validRecordCounter = 0;
-        while (samIterator.hasNext()) {
-            final SAMRecord record = samIterator.next();
-
-            // Cut out if we're into the unaligned reads at the end of the file
-            if (record.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) break;
-
-            if (!record.getReadPairedFlag() ||
-                    record.getReadUnmappedFlag() ||
-                    record.getMateUnmappedFlag() ||
-                    record.getFirstOfPairFlag() ||
-                    record.getNotPrimaryAlignmentFlag() ||
-                    record.getDuplicateReadFlag() ||
-                    record.getInferredInsertSize() == 0) {
-                continue;
-            }
-
-            //add record to 1 of the 3 data categories
-            final int insertSize = Math.abs(record.getInferredInsertSize());
-            final PairOrientation orientation = SamPairUtil.getPairOrientation(record);
-            histograms.get(orientation).increment(insertSize);
-
-            validRecordCounter++;
-            if (STOP_AFTER > 0 && validRecordCounter >= STOP_AFTER) break;
+    @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
+        if (!record.getReadPairedFlag() ||
+                record.getReadUnmappedFlag() ||
+                record.getMateUnmappedFlag() ||
+                record.getFirstOfPairFlag() ||
+                record.getNotPrimaryAlignmentFlag() ||
+                record.getDuplicateReadFlag() ||
+                record.getInferredInsertSize() == 0) {
+            return;
         }
 
+        //add record to 1 of the 3 data categories
+        final int insertSize = Math.abs(record.getInferredInsertSize());
+        final PairOrientation orientation = SamPairUtil.getPairOrientation(record);
+        histograms.get(orientation).increment(insertSize);
+    }
+
+    @Override protected void finish() {
         final MetricsFile<InsertSizeMetrics, Integer> file = getMetricsFile();
-        for(Entry<PairOrientation, Histogram<Integer>> entry : histograms.entrySet())
-        {
-            PairOrientation pairOrientation = entry.getKey();
-            Histogram<Integer> histogram = entry.getValue();
+
+        double totalInserts = 0;
+        for (final Histogram<Integer> h : this.histograms.values()) totalInserts += h.getCount();
+
+        for(Entry<PairOrientation, Histogram<Integer>> entry : histograms.entrySet()) {
+            final PairOrientation pairOrientation = entry.getKey();
+            final Histogram<Integer> histogram = entry.getValue();
             final double total = histogram.getCount();
-            final InsertSizeMetrics metrics = new InsertSizeMetrics();
-            if( total > validRecordCounter * MINIMUM_PCT ) {
-                metrics.PAIR_ORIENTATION = pairOrientation;
-                metrics.READ_PAIRS = (long) total;
-                metrics.MAX_INSERT_SIZE = (int) histogram.getMax();
-                metrics.MIN_INSERT_SIZE = (int) histogram.getMin();
+
+            // Only include a category if it has a sufficient percentage of the data in it
+            if( total > totalInserts * MINIMUM_PCT ) {
+                final InsertSizeMetrics metrics = new InsertSizeMetrics();
+                metrics.PAIR_ORIENTATION   = pairOrientation;
+                metrics.READ_PAIRS         = (long) total;
+                metrics.MAX_INSERT_SIZE    = (int) histogram.getMax();
+                metrics.MIN_INSERT_SIZE    = (int) histogram.getMin();
                 metrics.MEDIAN_INSERT_SIZE = histogram.getMedian();
 
                 final double median  = histogram.getMedian();
@@ -237,14 +194,34 @@ public class CollectInsertSizeMetrics extends CommandLineProgram {
         }
 
         if(file.getNumHistograms() == 0) {
-            //can happen if user sets MINIMUM_PCT = 0.95, etc.
+            //can happen if user sets MINIMUM_PCT = 0.5, etc.
             log.warn("All data categories were discarded because they contained < " + MINIMUM_PCT +
                      " of the total aligned paired data.");
-            log.warn("Total mapped pairs in all categories: " + validRecordCounter);
-            return null;
+            log.warn("Total mapped pairs in all categories: " + totalInserts);
         }
+        else  {
+            file.write(OUTPUT);
 
-        return file;
+            final int rResult;
+            if(HISTOGRAM_WIDTH == null) {
+                rResult = RExecutor.executeFromClasspath(
+                    HISTOGRAM_R_SCRIPT,
+                    OUTPUT.getAbsolutePath(),
+                    HISTOGRAM_FILE.getAbsolutePath(),
+                    INPUT.getName());
+            } else {
+                rResult = RExecutor.executeFromClasspath(
+                    HISTOGRAM_R_SCRIPT,
+                    OUTPUT.getAbsolutePath(),
+                    HISTOGRAM_FILE.getAbsolutePath(),
+                    INPUT.getName(),
+                    String.valueOf( HISTOGRAM_WIDTH ) ); //HISTOGRAM_WIDTH is passed because R automatically sets histogram width to the last
+                                                         //bin that has data, which may be less than HISTOGRAM_WIDTH and confuse the user.
+            }
+
+            if (rResult != 0) {
+                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+            }
+        }
     }
-
 }
