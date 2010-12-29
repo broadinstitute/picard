@@ -74,8 +74,10 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             IoUtil.assertFileIsReadable(referenceSequence);
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
-            SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                                                         walker.getSequenceDictionary());
+            if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
+                SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
+                                                             walker.getSequenceDictionary());
+            }
         }
 
         // Check on the sort order of the BAM file
