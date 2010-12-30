@@ -144,7 +144,7 @@ public abstract class CommandLineProgram {
         if (!TMP_DIR.exists()) {
             // Intentially not checking the return value, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
-            TMP_DIR.mkdir();
+            TMP_DIR.mkdirs();
         }
         System.setProperty("java.io.tmpdir", TMP_DIR.getAbsolutePath());
         if (!QUIET) {
