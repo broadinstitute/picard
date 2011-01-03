@@ -34,7 +34,7 @@ public interface ResourceLimitedMapFunctor<Key, Value> {
     /**
      * Create a new value corresponding to the key
      * @param key
-     * @return
+     * @return a new value corresponding to the key
      */
     Value makeValue(final Key key);
 
