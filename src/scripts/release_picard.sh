@@ -104,11 +104,11 @@ PREV_REVISION=`svn info $SVNROOT/tags/$PREV_RELEASE_ID | egrep '^Last Changed Re
 
 mkdir -p deploy/picard-tools/$RELEASE_ID
 
-svn log -r $PREV_REVISION:$REVISION -v > deploy/picard-tools/$RELEASE_ID/release_notes.txt
+svn log -r $PREV_REVISION:$REVISION -v > deploy/picard-tools/$RELEASE_ID/README.txt
 
 echo 'Edit release notes and exit editor when finished.'
 
-$EDITOR deploy/picard-tools/$RELEASE_ID/release_notes.txt
+$EDITOR deploy/picard-tools/$RELEASE_ID/README.txt
 
 cp dist/picard-tools-$RELEASE_ID.zip deploy/picard-tools/$RELEASE_ID/
 mkdir -p deploy/sam-jdk/$RELEASE_ID
