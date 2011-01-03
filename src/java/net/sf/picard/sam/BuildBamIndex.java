@@ -126,7 +126,7 @@ public class BuildBamIndex extends CommandLineProgram {
      * Generates a BAM index file from an input BAM file
      *
      * @param reader SAMFileReader for input BAM file
-     * @para output  File for output index file
+     * @param output  File for output index file
      */
     public static void createIndex(SAMFileReader reader, File output) {
 
