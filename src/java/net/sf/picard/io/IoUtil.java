@@ -303,7 +303,7 @@ public class IoUtil {
      * 
      * @param directory
      * @param regexp
-     * @return
+     * @return list of files matching regexp.
      */
     public static File[] getFilesMatchingRegexp(final File directory, final String regexp) {
         final Pattern pattern = Pattern.compile(regexp);
