@@ -1418,7 +1418,7 @@ public class SAMRecord implements Cloneable
             if (ret == null) ret = new ArrayList<SAMValidationError>();
             ret.addAll(errors);
         }
-        if (this.getReadLength() == 0) {
+        if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {
             String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
             String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
             if (cq == null || cq.length() == 0 || cs == null || cs.length() == 0) {
