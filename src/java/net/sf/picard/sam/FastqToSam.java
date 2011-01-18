@@ -83,6 +83,9 @@ public class FastqToSam extends CommandLineProgram {
     @Option(shortName="PL", doc="The platform type (e.g. illumina, solid) to insert into the read group header", optional=true)
     public String PLATFORM;
 
+    @Option(shortName="CN", doc="The sequencing center from which the data originated", optional=true)
+    public String SEQUENCING_CENTER;
+
     @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
@@ -185,6 +188,7 @@ public class FastqToSam extends CommandLineProgram {
         if (this.LIBRARY_NAME != null) rgroup.setLibrary(this.LIBRARY_NAME);
         if (this.PLATFORM != null) rgroup.setPlatform(this.PLATFORM);
         if (this.PLATFORM_UNIT != null) rgroup.setPlatformUnit(this.PLATFORM_UNIT);
+        if (this.SEQUENCING_CENTER != null) rgroup.setSequencingCenter(SEQUENCING_CENTER);
 
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
