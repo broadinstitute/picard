@@ -36,6 +36,7 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.SolexaQualityConverter;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.util.Iso8601Date;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
@@ -85,6 +86,15 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(shortName="CN", doc="The sequencing center from which the data originated", optional=true)
     public String SEQUENCING_CENTER;
+
+    @Option(shortName = "PI", doc = "Predicted median insert size, to insert into the read group header", optional = true)
+    public Integer PREDICTED_INSERT_SIZE;
+
+    @Option(shortName = "DS", doc = "Inserted into the read group header", optional = true)
+    public String DESCRIPTION;
+
+    @Option(shortName = "DT", doc = "Date the run was produced, to insert into the read group header", optional = true)
+    public Iso8601Date RUN_DATE;
 
     @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
@@ -189,6 +199,9 @@ public class FastqToSam extends CommandLineProgram {
         if (this.PLATFORM != null) rgroup.setPlatform(this.PLATFORM);
         if (this.PLATFORM_UNIT != null) rgroup.setPlatformUnit(this.PLATFORM_UNIT);
         if (this.SEQUENCING_CENTER != null) rgroup.setSequencingCenter(SEQUENCING_CENTER);
+        if (this.PREDICTED_INSERT_SIZE != null) rgroup.setPredictedMedianInsertSize(PREDICTED_INSERT_SIZE);
+        if (this.DESCRIPTION != null) rgroup.setDescription(this.DESCRIPTION);
+        if (this.RUN_DATE != null) rgroup.setRunDate(this.RUN_DATE);
 
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
