@@ -23,10 +23,7 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMTag;
-import net.sf.samtools.SAMTextHeaderCodec;
+import net.sf.samtools.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -111,6 +108,25 @@ public class SequenceUtilTest {
                 {"ACGTACGTACGT", "6M2N6M2H", "4GA0TG4", false, "ACGTGATGACGT"},
                 {"ACGTACGTACGT", "6M2N6M2H", "4GATG4", true, "ACGTGANNTGACGT"},
                 {"ACGTACGTACGT", "6M2N6M2H", "4GATG4", false, "ACGTGATGACGT"},
+        };
+    }
+
+    @Test(dataProvider = "countInsertedAndDeletedBasesTestCases")
+    public void testCountInsertedAndDeletedBases(final String cigarString, final int insertedBases, final int deletedBases) {
+        final TextCigarCodec codec = new TextCigarCodec();
+        final Cigar cigar = codec.decode(cigarString);
+        Assert.assertEquals(SequenceUtil.countInsertedBases(cigar), insertedBases);
+        Assert.assertEquals(SequenceUtil.countDeletedBases(cigar), deletedBases);
+    }
+
+    @DataProvider(name = "countInsertedAndDeletedBasesTestCases")
+    public Object[][] countInsertedAndDeletedBasesTestCases() {
+        return new Object[][] {
+                {"2H2S32M", 0, 0},
+                {"2H2S32M12I2M2I3M", 14, 0},
+                {"32M2D10M", 0, 2},
+                {"32M2D10M3D1M", 0, 5},
+                {"2H2S32M12I2M3D1M2I3M2D1M", 14, 5}
         };
     }
 }

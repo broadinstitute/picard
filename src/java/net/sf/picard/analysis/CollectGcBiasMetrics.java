@@ -147,7 +147,9 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                         if (windowGc >= 0) {
                             ++readsByGc[windowGc];
                             basesByGc[windowGc]  += rec.getReadLength();
-                            errorsByGc[windowGc] += SequenceUtil.countMismatches(rec, refBases);
+                            errorsByGc[windowGc] +=
+                                    SequenceUtil.countMismatches(rec, refBases) +
+                                            SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
                         }
                     }
                 }
