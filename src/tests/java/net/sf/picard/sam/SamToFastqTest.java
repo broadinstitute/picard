@@ -155,10 +155,14 @@ public class SamToFastqTest {
     @Test (dataProvider = "badFiles", expectedExceptions= PicardException.class)
     public void testBadFile(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
+        final File pair1 = File.createTempFile("tt-pair1.", ".fastq");
+        final File pair2 = File.createTempFile("tt-pair2.", ".fastq");
+        pair1.deleteOnExit();
+        pair2.deleteOnExit();
         convertFile(new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
-              "FASTQ=tt-pair1.fastq",
-              "SECOND_END_FASTQ=tt-pair2.fastq"
+              "FASTQ=" + pair1.getAbsolutePath(),
+              "SECOND_END_FASTQ=" + pair2.getAbsolutePath()
         });
     }
 
