@@ -131,12 +131,10 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
             final int refLength = refBases.length;
             final int lastWindowStart = refLength - WINDOW_SIZE;
 
-            byte[] gc = null;
-            for (int countSeq=0 ; iterator.hasNext() && iterator.peek().getReferenceIndex() == ref.getContigIndex() ; countSeq++) {
+            byte[] gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
+            while (iterator.hasNext() && iterator.peek().getReferenceIndex() == ref.getContigIndex()) {
                 SAMRecord rec = iterator.next();
-                if (countSeq == 0) { 
-                    gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart) ;
-                    }
+
                 if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
 
                 if (!rec.getReadUnmappedFlag()) {
