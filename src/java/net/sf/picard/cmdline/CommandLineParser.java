@@ -128,7 +128,7 @@ public class CommandLineParser {
     public CommandLineParser(final Object callerOptions) {
         this.callerOptions = callerOptions;
 
-        for (final Field field : this.callerOptions.getClass().getFields()) {
+        for (final Field field : getAllFields(this.callerOptions.getClass())) {
             if (field.getAnnotation(PositionalArguments.class) != null) {
                 handlePositionalArgumentAnnotation(field);
             }
@@ -147,6 +147,15 @@ public class CommandLineParser {
                 usagePreamble = defaultUsagePreambleWithPositionalArguments;
             }
         }
+    }
+
+    private List<Field> getAllFields(Class clazz) {
+        final List<Field> ret = new ArrayList<Field>();
+        do {
+            ret.addAll(Arrays.asList(clazz.getDeclaredFields()));
+            clazz = clazz.getSuperclass();
+        } while (clazz != null);
+        return ret;
     }
 
     /**
@@ -617,6 +626,7 @@ public class CommandLineParser {
 
     private void handleOptionAnnotation(final Field field) {
         try {
+            field.setAccessible(true);
             final Option optionAnnotation = field.getAnnotation(Option.class);
             final boolean isCollection = isCollectionField(field);
             if (isCollection) {
@@ -674,6 +684,7 @@ public class CommandLineParser {
                     ("@Usage cannot be used more than once in an option class.");
         }
         try {
+            field.setAccessible(true);
             usagePreamble = (String)field.get(callerOptions);
             final Usage usageAnnotation = field.getAnnotation(Usage.class);
             if (usageAnnotation.programVersion().length() > 0) {
