@@ -377,6 +377,30 @@ public class SequenceUtil {
         return qualities;
     }
 
+    public static int countInsertedBases(final Cigar cigar) {
+        int ret = 0;
+        for (final CigarElement element : cigar.getCigarElements()) {
+            if (element.getOperator() == CigarOperator.INSERTION) ret += element.getLength();
+        }
+        return ret;
+    }
+
+    public static int countDeletedBases(final Cigar cigar) {
+        int ret = 0;
+        for (final CigarElement element : cigar.getCigarElements()) {
+            if (element.getOperator() == CigarOperator.DELETION) ret += element.getLength();
+        }
+        return ret;
+    }
+
+    public static int countInsertedBases(final SAMRecord read) {
+        return countInsertedBases(read.getCigar());
+    }
+
+    public static int countDeletedBases(final SAMRecord read) {
+        return countDeletedBases(read.getCigar());
+    }
+
     /**
      * Calculates the for the predefined NM tag from the SAM spec. To the result of
      * countMismatches() it adds 1 for each indel.
