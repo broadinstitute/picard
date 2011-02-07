@@ -38,6 +38,7 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 
 import java.io.File;
+import java.util.Arrays;
 
 
 /**
@@ -67,8 +68,11 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     private static class HistogramGenerator {
         final boolean useOriginalQualities;
-        Histogram<Integer> totalQ = new Histogram<Integer>();
-        Histogram<Integer> countOfBases = new Histogram<Integer>();
+        int maxLengthSoFar = 0;
+        double[] firstReadTotalsByCycle  = new double[maxLengthSoFar];
+        long[]   firstReadCountsByCycle  = new long[maxLengthSoFar];
+        double[] secondReadTotalsByCycle = new double[maxLengthSoFar];
+        long[]   secondReadCountsByCycle = new long[maxLengthSoFar];
 
         private HistogramGenerator(boolean useOriginalQualities) {
             this.useOriginalQualities = useOriginalQualities;
@@ -80,32 +84,58 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
             final int length = quals.length;
             final boolean rc = !rec.getReadUnmappedFlag() && rec.getReadNegativeStrandFlag();
+            ensureArraysBigEnough(length+1);
 
             for (int i=0; i<length; ++i) {
                 int cycle = rc ? length-i : i+1;
 
                 if (rec.getReadPairedFlag() && rec.getSecondOfPairFlag()) {
-                    cycle = rec.getReadLength() + cycle;
+                    secondReadTotalsByCycle[cycle] += quals[i];
+                    secondReadCountsByCycle[cycle] += 1;
                 }
-
-                totalQ.increment(cycle, quals[i]);
-                countOfBases.increment(cycle);
+                else {
+                    firstReadTotalsByCycle[cycle] += quals[i];
+                    firstReadCountsByCycle[cycle] += 1;
+                }
             }
         }
+
+        private void ensureArraysBigEnough(int length) {
+            if (length > maxLengthSoFar) {
+                this.firstReadTotalsByCycle  = Arrays.copyOf(this.firstReadTotalsByCycle, length);
+                this.firstReadCountsByCycle  = Arrays.copyOf(this.firstReadCountsByCycle, length);
+                this.secondReadTotalsByCycle = Arrays.copyOf(this.secondReadTotalsByCycle , length);
+                this.secondReadCountsByCycle = Arrays.copyOf(secondReadCountsByCycle, length);
+            }
+        }
+
 
         Histogram<Integer> getMeanQualityHistogram() {
             final String label = useOriginalQualities ? "MEAN_ORIGINAL_QUALITY" : "MEAN_QUALITY";
             final Histogram<Integer> meanQualities = new Histogram<Integer>("CYCLE", label);
 
-            for (Integer cycle : countOfBases.keySet()) {
-                meanQualities.increment(cycle, (totalQ.get(cycle).getValue() / countOfBases.get(cycle).getValue()));
+            int firstReadLength = 0;
+
+            for (int cycle=0; cycle < firstReadTotalsByCycle.length; ++cycle) {
+                if (firstReadTotalsByCycle[cycle] > 0) {
+                    meanQualities.increment(cycle, firstReadTotalsByCycle[cycle] / firstReadCountsByCycle[cycle]);
+                    firstReadLength = cycle;
+                }
+            }
+
+            for (int i=0; i< secondReadTotalsByCycle.length; ++i) {
+                final int cycle = firstReadLength + i;
+
+                if (secondReadCountsByCycle[i] > 0) {
+                    meanQualities.increment(cycle, secondReadTotalsByCycle[i] / firstReadCountsByCycle[i]);
+                }
             }
 
             return meanQualities;
         }
 
         boolean isEmpty() {
-            return totalQ.isEmpty();
+            return this.maxLengthSoFar > 0;
         }
     }
 
