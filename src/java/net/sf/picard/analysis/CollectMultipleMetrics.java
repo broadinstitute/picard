@@ -8,6 +8,7 @@ import net.sf.picard.util.CollectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -90,7 +91,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
 
         final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
-        for (Program program : PROGRAM) {
+        for (Program program : new HashSet<Program>(PROGRAM)) {
             SinglePassSamProgram instance = program.makeInstance(OUTPUT);
 
             // Generally programs should not be accessing these directly but it might make things smoother
