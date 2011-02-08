@@ -110,4 +110,19 @@ public class MetricBase {
 
         return buffer.toString();
     }
+
+    public boolean equals(MetricBase that) {
+        for (Field field : this.getClass().getFields()) {
+            try {
+                if (!field.get(this).equals(field.get(that))) {
+                    return false;
+                }
+            }
+            catch (IllegalAccessException ex) {
+                return false;
+            }
+        }
+        return true;
+
+    }
 }

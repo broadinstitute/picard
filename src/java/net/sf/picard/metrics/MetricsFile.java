@@ -447,17 +447,29 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         }
         MetricsFile that = (MetricsFile) o;
 
-        if (!this.headers.equals(that.headers)) {
+        if (!areHeadersEqual(that)) {
             return false;
         }
-        if (!this.metrics.equals(that.metrics)) {
+        if (!areMetricsEqual(that)) {
             return false;
         }
-        if (!this.histograms.equals(that.histograms)) {
+        if (!areHistogramsEqual(that)) {
             return false;
         }
 
         return true;
+    }
+
+    public boolean areHeadersEqual(MetricsFile that) {
+        return this.headers.equals(that.headers);
+    }
+
+    public boolean areMetricsEqual(MetricsFile that) {
+        return this.metrics.equals(that.metrics);
+    }
+
+    public boolean areHistogramsEqual(MetricsFile that) {
+        return this.histograms.equals(that.histograms);
     }
 
     @Override
