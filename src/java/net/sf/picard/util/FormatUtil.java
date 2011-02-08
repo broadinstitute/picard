@@ -161,6 +161,7 @@ public class FormatUtil {
         if (returnType == Double.class  || returnType == Double.TYPE)  return parseDouble(value);
         if (returnType == Boolean.class || returnType == Boolean.TYPE) return parseBoolean(value);
         if (returnType == Date.class)                                  return parseDate(value);
+        if (returnType == Byte.class    || returnType == Byte.TYPE)    return parseInt(value);
         if (Enum.class.isAssignableFrom(returnType)) return parseEnum(value, (Class<? extends Enum>)returnType);
         if (returnType == String.class) return value;
 
