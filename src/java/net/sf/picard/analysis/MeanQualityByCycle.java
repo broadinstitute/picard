@@ -106,6 +106,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
                 this.firstReadCountsByCycle  = Arrays.copyOf(this.firstReadCountsByCycle, length);
                 this.secondReadTotalsByCycle = Arrays.copyOf(this.secondReadTotalsByCycle , length);
                 this.secondReadCountsByCycle = Arrays.copyOf(secondReadCountsByCycle, length);
+                this.maxLengthSoFar = length;
             }
         }
 
@@ -135,7 +136,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         }
 
         boolean isEmpty() {
-            return this.maxLengthSoFar > 0;
+            return this.maxLengthSoFar == 0;
         }
     }
 
