@@ -30,6 +30,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Histogram;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.RExecutor;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.SequenceUtil;
@@ -61,6 +62,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     private final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
     private final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
+
+    private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     /** Required main method. */
     public static void main(final String[] args) {
@@ -101,15 +104,20 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         if (!oqHisto.isEmpty()) metrics.addHistogram(oqHisto);
         metrics.write(OUTPUT);
 
-        // Now run R to generate a chart
-        final int rResult = RExecutor.executeFromClasspath(
-                "net/sf/picard/analysis/qualityScoreDistribution.R",
-                OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
-                INPUT.getName());
+        if (qHisto.isEmpty() && oqHisto.isEmpty()) {
+            log.warn("No valid bases found in input file. No plot will be produced.");
+        }
+        else {
+            // Now run R to generate a chart
+            final int rResult = RExecutor.executeFromClasspath(
+                    "net/sf/picard/analysis/qualityScoreDistribution.R",
+                    OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath(),
+                    INPUT.getName());
 
-        if (rResult != 0) {
-            throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
+            if (rResult != 0) {
+                throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
+            }
         }
     }
 }

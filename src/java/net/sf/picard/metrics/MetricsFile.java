@@ -215,23 +215,28 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
     /** Prints the histogram if one is present. */
     private void printHistogram(BufferedWriter out, FormatUtil formatter) throws IOException {
-        if (this.histograms.isEmpty()) {
+        final List<Histogram<HKEY>> nonEmptyHistograms = new ArrayList<Histogram<HKEY>>();
+        for (Histogram<HKEY> histo : this.histograms) {
+            if (!histo.isEmpty()) nonEmptyHistograms.add(histo);
+        }
+
+        if (nonEmptyHistograms.isEmpty()) {
             return;
         }
 
         // Build a combined key set.  Assume comparator is the same for all Histograms
-        java.util.Set<HKEY> keys = new TreeSet<HKEY>(histograms.get(0).comparator());
-        for (Histogram<HKEY> histo : histograms) {
+        java.util.Set<HKEY> keys = new TreeSet<HKEY>(nonEmptyHistograms.get(0).comparator());
+        for (Histogram<HKEY> histo : nonEmptyHistograms) {
             if (histo != null) keys.addAll(histo.keySet());
         }
 
         // Add a header for the histogram key type
-        out.append(HISTO_HEADER + this.histograms.get(0).keySet().iterator().next().getClass().getName());
+        out.append(HISTO_HEADER + nonEmptyHistograms.get(0).keySet().iterator().next().getClass().getName());
         out.newLine();
 
         // Output a header row
-        out.append(StringUtil.assertCharactersNotInString(this.histograms.get(0).getBinLabel(), '\t', '\n'));
-        for (Histogram<HKEY> histo : this.histograms) {
+        out.append(StringUtil.assertCharactersNotInString(nonEmptyHistograms.get(0).getBinLabel(), '\t', '\n'));
+        for (Histogram<HKEY> histo : nonEmptyHistograms) {
             out.append(SEPARATOR);
             out.append(StringUtil.assertCharactersNotInString(histo.getValueLabel(), '\t', '\n'));
         }
@@ -240,7 +245,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         for (HKEY key : keys) {
             out.append(key.toString());
 
-            for (Histogram<HKEY> histo : this.histograms) {
+            for (Histogram<HKEY> histo : nonEmptyHistograms) {
                 Histogram<HKEY>.Bin bin = histo.get(key);
                 final double value = (bin == null ? 0 : bin.getValue());
 
