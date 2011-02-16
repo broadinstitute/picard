@@ -265,7 +265,9 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
-        String fileName = IoUtil.makeFileNameSafe(readGroup.getPlatformUnit());
+        String fileName = readGroup.getPlatformUnit();
+        if (fileName == null) fileName = readGroup.getReadGroupId();
+        fileName = IoUtil.makeFileNameSafe(fileName);
         if(preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
 
