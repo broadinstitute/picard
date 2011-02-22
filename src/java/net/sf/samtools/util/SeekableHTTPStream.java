@@ -8,6 +8,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 
 /**
@@ -18,8 +19,16 @@ public class SeekableHTTPStream extends SeekableStream {
     private long position = 0;
     private long contentLength = -1;
     private final URL url;
+    private final Proxy proxy;
 
     public SeekableHTTPStream(final URL url) {
+        this(url, null);
+
+    }
+
+    public SeekableHTTPStream(final URL url, Proxy proxy) {
+
+        this.proxy = proxy;
         this.url = url;
 
         // Try to get the file length
@@ -62,11 +71,13 @@ public class SeekableHTTPStream extends SeekableStream {
         String byteRange = "";
         int n = 0;
         try {
-            connection = (HttpURLConnection) url.openConnection();
+            connection = proxy == null ?
+                    (HttpURLConnection) url.openConnection() :
+                    (HttpURLConnection) url.openConnection(proxy);
 
             long endRange = position + len - 1;
             // IF we know the total content length, limit the end range to that.
-            if(contentLength > 0) {
+            if (contentLength > 0) {
                 endRange = Math.min(endRange, contentLength);
             }
             byteRange = "bytes=" + position + "-" + endRange;
