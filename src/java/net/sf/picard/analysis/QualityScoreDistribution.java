@@ -24,9 +24,7 @@
 
 package net.sf.picard.analysis;
 
-import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Histogram;
@@ -39,7 +37,6 @@ import net.sf.picard.PicardException;
 
 import java.io.File;
 
-import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 
 /**
@@ -60,8 +57,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     @Option(doc="If set to true, include quality for no-call bases in the distribution")
     public boolean INCLUDE_NO_CALLS = false;
 
-    private final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
-    private final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
+    private final long[] qCounts  = new long[128];
+    private final long[] oqCounts = new long[128];
 
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
@@ -91,14 +88,23 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
         for (int i=0; i<length; ++i) {
             if (INCLUDE_NO_CALLS || !SequenceUtil.isNoCall(bases[i])) {
-                qHisto.increment(quals[i]);
-                if (oq != null) oqHisto.increment(oq[i]);
+                qCounts[quals[i]]++;
+                if (oq != null) oqCounts[oq[i]]++;
             }
         }
     }
 
     @Override
     protected void finish() {
+        // Built the histograms out of the long[]s
+        final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
+        final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
+
+        for (int i=0; i< qCounts.length; ++i) {
+            if (qCounts[i]  > 0) qHisto.increment( (byte) i, (double) qCounts[i]);
+            if (oqCounts[i] > 0) oqHisto.increment((byte) i, (double) oqCounts[i]);
+        }
+
         final MetricsFile<?,Byte> metrics = getMetricsFile();
         metrics.addHistogram(qHisto);
         if (!oqHisto.isEmpty()) metrics.addHistogram(oqHisto);
