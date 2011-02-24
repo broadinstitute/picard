@@ -25,6 +25,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
 
+import net.sf.picard.cmdline.Option;
 import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
@@ -39,7 +40,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Tests for BamToFastq
+ * Tests for SamToFastq
  */
 public class SamToFastqTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/bam2fastq/paired");
@@ -229,7 +230,7 @@ public class SamToFastqTest {
         final Map<String, Map<String,MatePair>> map = createPUPairsMap(samFile);
 
         for(final Map.Entry<String, Map<String, MatePair>> groupEntry : map.entrySet()) {
-            // Ensure that fore each group, each mate of each pair in the SAM file is in the correct fastq pair file
+            // Ensure that for each group, each mate of each pair in the SAM file is in the correct fastq pair file
             for (final Map.Entry<String,MatePair> entry : groupEntry.getValue().entrySet() ) {
                 final MatePair mpair = entry.getValue();
                 outputHeaderSet1 = outputSets.get(groupEntry.getKey() + "_1");
@@ -272,7 +273,49 @@ public class SamToFastqTest {
             f1.deleteOnExit();
             f1.deleteOnExit();
         }
-    }                                         
+    }
+
+    @Test(dataProvider = "trimmedData")
+    public void testTrimming(final String samFilename, final int read1Trim,
+                             final int read1MaxBases, final int expectedRead1Length, final int read2Trim,
+                             final int read2MaxBases, final int expectedRead2Length) throws IOException {
+
+        final File samFile = new File(TEST_DATA_DIR, samFilename);
+        final File pair1File = newTempFastqFile("pair1");
+        final File pair2File = newTempFastqFile("pair2");
+        pair1File.deleteOnExit();
+        pair2File.deleteOnExit();
+
+        convertFile(new String[]{
+              "INPUT=" + samFile.getAbsolutePath(),
+              "FASTQ=" + pair1File.getAbsolutePath(),
+              "SECOND_END_FASTQ=" + pair2File.getAbsolutePath(),
+              "READ1_TRIM=" + read1Trim,
+              "READ1_MAX_BASES_TO_WRITE=" + read1MaxBases,
+              "READ2_TRIM=" + read2Trim,
+              "READ2_MAX_BASES_TO_WRITE=" + read2MaxBases
+        });
+
+        for (Iterator<FastqRecord> it = new FastqReader(pair1File).iterator(); it.hasNext();) {
+            FastqRecord first = it.next();
+            Assert.assertEquals(first.getReadString().length(), expectedRead1Length, "Incorrect read length");
+            Assert.assertEquals(first.getBaseQualityString().length(), expectedRead1Length, "Incorrect quality string length");
+        }
+        for (Iterator<FastqRecord> it = new FastqReader(pair2File).iterator(); it.hasNext();) {
+            FastqRecord second = it.next();
+            Assert.assertEquals(second.getReadString().length(), expectedRead2Length, "Incorrect read length");
+            Assert.assertEquals(second.getBaseQualityString().length(), expectedRead2Length, "Incorrect quality string length");
+        }
+    }
+
+    @DataProvider(name = "trimmedData")
+    public Object[][] trimmedData() {
+        return new Object[][] {
+            // There are 13 bases in each of these reads
+            {"ok/sorted-pair.sam", 6, 7, 7, 5, 8, 8}, // exact matches for everything
+            {"ok/sorted-pair.sam", 7, 7, 6, 3, 8, 8}  // fewer or more bases
+        };
+    }
 
     private Set<String> createFastqReadHeaderSet(final File file) {
         final Set<String> set = new HashSet<String>();
