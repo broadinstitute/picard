@@ -89,6 +89,12 @@ public class SamPairUtil {
 
     // TODO: KT and TF say this is more complicated than what I have here
     public static boolean isProperPair(final SAMRecord firstEnd, final SAMRecord secondEnd, boolean jumpingLibrary) {
+        //TODO: simplifies to:
+        // are both records mapped
+        // AND are they both mapped to the same chromosome
+        // AND is the pair orientation in the set of expected orientations
+
+
         if (firstEnd.getReadUnmappedFlag() || secondEnd.getReadUnmappedFlag()) {
             return false;
         }
