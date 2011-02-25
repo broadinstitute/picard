@@ -283,6 +283,7 @@
         <package-and-document-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
         <package-and-document-command title="ExtractSequences"               main-class="net.sf.picard.reference.ExtractSequences"/>
         <package-and-document-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
+        <package-and-document-command title="ReorderSam" id=""               main-class="net.sf.picard.sam.ReorderSam"/>
         <package-and-document-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
         <package-and-document-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
         <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
