@@ -44,6 +44,21 @@ import java.util.TreeSet;
  * possibly in SAM format, possibly in other formats, and merging that with the set of all reads
  * for which alignment was attempted, stored in an unmapped SAM file.
  *
+ * The order of processing is as follows:
+ *
+ *   1.  Get records from the unmapped bam and the alignment data
+ *   2.  Merge the alignment information and public tags ONLY from the aligned SAMRecords
+ *   3.  Do additional modifications -- handle clipping, trimming, etc.
+ *   4.  Fix up mate information on paired reads
+ *   5.  Do a final calculation of the NM and UQ tags.
+ *   6.  Write the records to the output file.
+ *
+ * Concrete subclasses which extend AbstractAlignmentMerger should implement getQueryNameSortedAlignedRecords.
+ * If these records are not in queryname order, mergeAlignment will throw an IllegalStateException.
+ *
+ * Subclasses may optionally implement ignoreAlignment(), which can be used to skip over certain alignments.
+ *
+ *
  * @author ktibbett@broadinstitute.org
  */
 public abstract class AbstractAlignmentMerger {
@@ -65,33 +80,44 @@ public abstract class AbstractAlignmentMerger {
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<String>();
     private final File referenceFasta;
+    private final Integer read1BasesTrimmed;
+    private final Integer read2BasesTrimmed;
 
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
     
+    protected boolean ignoreAlignment(SAMRecord sam) { return false; } // default implementation
 
     /**
      * Constructor
      *
      * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
-     *                          include info on all the reads that did not map
-     * @param targetBamFile     The file to which to write the merged SAM records
-     * @param referenceFasta    The reference sequence for the map files
-     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read
-     * @param bisulfiteSequence Whether the reads are bisulfite sequence
-     * @param jumpingLibrary    Whether this is a jumping library
+     *                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta    The reference sequence for the map files. Optional.  If the referenceFasta
+     *                          is present, then it is required that a sequence dictionary with the same
+     *                          name but a ".dict" extension be present in the same directory as the
+     *                          fasta file.
+     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read.
+     *                          Required.
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
+     *                          NM and UQ tags). Required.
+     * @param jumpingLibrary    Whether this is a jumping library.  Required.
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param programRecord     Program record for taget file SAMRecords created.
+     * @param programRecord     Program record for taget file SAMRecords created. Required.
      * @param attributesToRetain  private attributes from the alignment record that should be
      *                          included when merging.  This overrides the exclusion of
      *                          attributes whose tags start with the reserved characters
      *                          of X, Y, and Z
+     * @param read1BasesTrimmed The number of bases trimmed from read 1 prior to alignment.  Optional.
+     * @param read2BasesTrimmed The number of bases trimmed from read 2 prior to alignment.  Optional.
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean jumpingLibrary,
                                    final boolean alignedReadsOnly, final SAMProgramRecord programRecord,
-                                   final List<String> attributesToRetain) {
+                                   final List<String> attributesToRetain, final Integer read1BasesTrimmed,
+                                   final Integer read2BasesTrimmed) {
         this.unmappedBamFile = unmappedBamFile;
         this.targetBamFile = targetBamFile;
         this.referenceFasta = referenceFasta;
@@ -124,6 +150,8 @@ public abstract class AbstractAlignmentMerger {
         if (attributesToRetain != null) {
             this.attributesToRetain.addAll(attributesToRetain);
         }
+        this.read1BasesTrimmed = read1BasesTrimmed;
+        this.read2BasesTrimmed = read2BasesTrimmed;
 
     }
 
@@ -131,62 +159,108 @@ public abstract class AbstractAlignmentMerger {
      * Constructor
      *
      * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
-     *                          include info on all the reads that did not map
-     * @param targetBamFile     The file to which to write the merged SAM records
-     * @param referenceFasta    The reference sequence for the map files
-     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read
-     * @param bisulfiteSequence Whether the reads are bisulfite sequence
-     * @param jumpingLibrary    Whether this is a jumping library
+     *                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta    The reference sequence for the map files. Optional.  If the referenceFasta
+     *                          is present, then it is required that a sequence dictionary with the same
+     *                          name but a ".dict" extension be present in the same directory as the
+     *                          fasta file.
+     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read.
+     *                          Required.
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
+     *                          NM and UQ tags). Required.
+     * @param jumpingLibrary    Whether this is a jumping library.  Required.
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param programRecord     Program record for taget file SAMRecords created.
+     * @param programRecord     Program record for taget file SAMRecords created. Required.
+     * @param attributesToRetain  private attributes from the alignment record that should be
+     *                          included when merging.  This overrides the exclusion of
+     *                          attributes whose tags start with the reserved characters
+     *                          of X, Y, and Z
+     * @deprecated              Retained for backwards-compatibility only.
      */
+    @Deprecated
+    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
+                                   final File referenceFasta, final boolean clipAdapters,
+                                   final boolean bisulfiteSequence, final boolean jumpingLibrary,
+                                   final boolean alignedReadsOnly, final SAMProgramRecord programRecord,
+                                   final List<String> attributesToRetain) {
+        this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
+             jumpingLibrary, alignedReadsOnly, programRecord, attributesToRetain, null, null);
+
+    }
+
+    /**
+     * Constructor
+     *
+     * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
+     *                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta    The reference sequence for the map files. Optional.  If the referenceFasta
+     *                          is present, then it is required that a sequence dictionary with the same
+     *                          name but a ".dict" extension be present in the same directory as the
+     *                          fasta file.
+     * @param clipAdapters      Whether adapters marked in unmapped BAM file are clipped from the read.
+     *                          Required.
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
+     *                          NM and UQ tags). Required.
+     * @param jumpingLibrary    Whether this is a jumping library.  Required.
+     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
+     * @param programRecord     Program record for taget file SAMRecords created. Required.
+     * @deprecated              Retained for backwards-compatibility only.
+     */
+    @Deprecated
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean jumpingLibrary,
                                    final boolean alignedReadsOnly, final SAMProgramRecord programRecord) {
         this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-             jumpingLibrary, alignedReadsOnly, programRecord, null);
+             jumpingLibrary, alignedReadsOnly, programRecord, null, null, null);
     }
 
+
     /**
-     * Merges the alignment from the map file with the non-aligned records from the source BAM file.
+     * Merges the alignment data with the non-aligned records from the source BAM file.
      */
     public void mergeAlignment() {
 
-        SAMFileReader unmappedSam = null;
-        if (this.unmappedBamFile != null) {
-            unmappedSam = new SAMFileReader(IoUtil.openFileForReading(this.unmappedBamFile));
-        }
+        final SAMRecordQueryNameComparator comparator = new SAMRecordQueryNameComparator();
 
-        // Write the read groups to the header
-        if (unmappedSam != null) header.setReadGroups(unmappedSam.getFileHeader().getReadGroups());
+        // Open the file of unmapped records and write the read groups to the the header for the merged file
+        final SAMFileReader unmappedSam = new SAMFileReader(IoUtil.openFileForReading(this.unmappedBamFile));
+        final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
+        header.setReadGroups(unmappedSam.getFileHeader().getReadGroups());
 
         int aligned = 0;
         int unmapped = 0;
 
-        final PeekableIterator<SAMRecord> alignedIterator = 
-                new PeekableIterator(getQuerynameSortedAlignedRecords());
-        final SortingCollection<SAMRecord> alignmentSorted = SortingCollection.newInstance(
+        // Get the aligned records and set up the first one
+        final CloseableIterator<SAMRecord> alignedIterator = getQuerynameSortedAlignedRecords();
+        SAMRecord nextAligned = alignedIterator.hasNext() ? alignedIterator.next() : null;
+
+        // Create the sorting collection that will write the records in coordinate order
+        // to the final bam file
+        final SortingCollection<SAMRecord> coordinateSorted = SortingCollection.newInstance(
             SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
             MAX_RECORDS_IN_RAM);
-        final ClippedPairFixer pairFixer = new ClippedPairFixer(alignmentSorted, header, alignedReadsOnly);
 
-        final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
-        SAMRecord nextAligned = alignedIterator.hasNext() ? alignedIterator.next() : null;
-        SAMRecord lastAligned = null;
+        // A wrapper around the sorting collection that makes sure that reads get their mate
+        // information properly set
+        final ClippedPairFixer pairFixer = new ClippedPairFixer(coordinateSorted, header, alignedReadsOnly);
 
-        final UnmappedReadSorter unmappedSorter = new UnmappedReadSorter(unmappedIterator);
-        while (unmappedSorter.hasNext()) {
-            final SAMRecord rec = unmappedSorter.next();
-            rec.setReadName(cleanReadName(rec.getReadName()));
-            if (nextAligned != null && rec.getReadName().compareTo(nextAligned.getReadName()) > 0) {
-                throw new PicardException("Aligned Record iterator (" + nextAligned.getReadName() +
-                        ") is behind the umapped reads (" + rec.getReadName() + ")");
+
+        while (unmappedIterator.hasNext()) {
+            final SAMRecord rec = unmappedIterator.next();
+
+            if (nextAligned != null && comparator.compare(rec, nextAligned) > 0) {
+                throw new IllegalStateException("Aligned record iterator (" + nextAligned.getReadName() +
+                        ") is behind the unmapped reads (" + rec.getReadName() + ")");
             }
+            rec.setReadName(cleanReadName(rec.getReadName()));
             rec.setHeader(header);
 
+            // If the next record is a match and is an acceptable alignment, pull the info over to the unmapped record
             if (isMatch(rec, nextAligned)) {
-                if (!ignoreAlignment(nextAligned)) {
+                if (!(nextAligned.getReadUnmappedFlag() || ignoreAlignment(nextAligned))) {
                     setValuesFromAlignment(rec, nextAligned);
                     if (programRecord != null) {
                         rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID,
@@ -212,19 +286,19 @@ public abstract class AbstractAlignmentMerger {
         }
         unmappedIterator.close();
         if (alignedIterator.hasNext()) {
-            throw new PicardException("Reads remaining on alignment iterator!");
+            throw new IllegalStateException("Reads remaining on alignment iterator: " + alignedIterator.next().getReadName() + "!");
         }
         alignedIterator.close();
 
-        final SAMFileWriter writer =
-                new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+        // Write the records to the output file in coordinate sorted order,
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
         int count = 0;
-        CloseableIterator<SAMRecord> it = alignmentSorted.iterator();
+        CloseableIterator<SAMRecord> it = coordinateSorted.iterator();
         while (it.hasNext()) {
             SAMRecord rec = it.next();
             if (!rec.getReadUnmappedFlag()) {
                 if (refSeq != null) {
-                    byte referenceBases[] = refSeq.get(rec.getReferenceIndex()).getBases();
+                    byte referenceBases[] = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
                     rec.setAttribute(SAMTag.NM.name(),
                         SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
                     if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
@@ -261,7 +335,7 @@ public abstract class AbstractAlignmentMerger {
      * and adds all the alignment info from Maq
      *
      * @param rec           The unaligned read record
-     * @param alignment     The Maq alignment record
+     * @param alignment     The alignment record
      */
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment) {
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
@@ -272,7 +346,7 @@ public abstract class AbstractAlignmentMerger {
             }
         }
         rec.setReadUnmappedFlag(alignment.getReadUnmappedFlag());
-        rec.setReferenceIndex(alignment.getReferenceIndex());
+        rec.setReferenceName(alignment.getReferenceName());
         rec.setAlignmentStart(alignment.getAlignmentStart());
         rec.setReadNegativeStrandFlag(alignment.getReadNegativeStrandFlag());
         if (!alignment.getReadUnmappedFlag()) {
@@ -283,11 +357,7 @@ public abstract class AbstractAlignmentMerger {
         }
         if (rec.getReadPairedFlag()) {
             rec.setProperPairFlag(alignment.getProperPairFlag());
-            rec.setInferredInsertSize(alignment.getInferredInsertSize());
-            rec.setMateUnmappedFlag(alignment.getMateUnmappedFlag());
-            rec.setMateReferenceIndex(alignment.getMateReferenceIndex());
-            rec.setMateAlignmentStart(alignment.getMateAlignmentStart());
-            rec.setMateNegativeStrandFlag(alignment.getMateNegativeStrandFlag());
+            // Mate info and alignment size will get set by the ClippedPairFixer.
         }
 
         // If it's on the negative strand, reverse complement the bases
@@ -296,48 +366,22 @@ public abstract class AbstractAlignmentMerger {
             SAMRecordUtil.reverseComplement(rec);
         }
 
+        // Factor the trimmed bases into the cigar
+        int basesAligned = alignment.getReadLength();
+        int readLength = rec.getReadLength();
+        int trimmed = (!rec.getReadPairedFlag()) || rec.getFirstOfPairFlag()
+                ? read1BasesTrimmed != null ? read1BasesTrimmed : 0
+                : read2BasesTrimmed != null ? read2BasesTrimmed : 0;
+        int notWritten = readLength - (basesAligned + trimmed);
+
+        rec.setCigar(CigarUtil.addSoftClippedBasesToEndsOfCigar(
+            rec.getCigar(), rec.getReadNegativeStrandFlag(), notWritten, trimmed));
+
         if (clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null){
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
         }
     }
 
-    /**
-     * Temporary class to wrap around unaligned BAM files which may be sorted using the *old*
-     * SAMRecordQueryNameComparator (which did not use read ordering, and so first and second read
-     * are not necessarily in order).  Keeps the next three records in a sorted set and returns the
-     * next one from it rather than the order un the unmapped reads iterator.
-     */
-    protected static class UnmappedReadSorter  {
-
-        private final TreeSet<SAMRecord> reallySorted = new TreeSet<SAMRecord>(new SAMRecordQueryNameComparator());
-        private final CloseableIterator<SAMRecord> unmappedReads;
-
-        public UnmappedReadSorter(final CloseableIterator<SAMRecord> unmappedReads) {
-            this.unmappedReads = unmappedReads;
-            // Add the first three records to our sorter
-            for (int i = 0; i < 3; i++) {
-                if (unmappedReads.hasNext()) {
-                    reallySorted.add(unmappedReads.next());
-                }
-            }
-        }
-
-        public boolean hasNext() {
-            return reallySorted.size() > 0;
-        }
-
-        public SAMRecord next() {
-            if (reallySorted.size() == 0) {
-                throw new ArrayIndexOutOfBoundsException("No such element in UnmappedReadSorter!");
-            }
-            final SAMRecord next = reallySorted.first();
-            reallySorted.remove(next);
-            if (unmappedReads.hasNext()) {
-                reallySorted.add(unmappedReads.next());
-            }
-            return next;
-        }
-    }
 
     /**
      * Wrapper around the sorting collection to make sure reads get their mate information
@@ -434,7 +478,6 @@ public abstract class AbstractAlignmentMerger {
     }
     protected boolean isJumpingLibrary() { return this.jumpingLibrary; }
     protected SAMFileHeader getHeader() { return this.header; }
-    protected boolean ignoreAlignment(SAMRecord sam) { return false; } // default implementation
 
     protected void setRefSeqFileWalker() {
         if (this.referenceFasta != null && this.referenceFasta.exists()) {

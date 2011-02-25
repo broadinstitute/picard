@@ -53,8 +53,12 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(shortName="UNMAPPED", doc="Original SAM or BAM file of unmapped reads, which must " +
             "be in queryname order.")
         public File UNMAPPED_BAM;
-    @Option(shortName="ALIGNED", doc="SAM or BAM file with alignment data.")
-        public File ALIGNED_BAM;
+    @Option(shortName="ALIGNED", doc="SAM or BAM file(s) with alignment data.", mutex={"READ1_ALIGNED_BAM","READ2_ALIGNED_BAM"}, optional=true)
+        public List<File> ALIGNED_BAM;
+    @Option(shortName="R1_ALIGNED", doc="SAM or BAM file(s) with alignment data from the first read of a pair.", mutex={"ALIGNED_BAM"}, optional=true)
+        public List<File> READ1_ALIGNED_BAM;
+    @Option(shortName="R2_ALIGNED", doc="SAM or BAM file(s) with alignment data from the second read of a pair.", mutex={"ALIGNED_BAM"}, optional=true)
+        public List<File> READ2_ALIGNED_BAM;
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Merged SAM or BAM file " +
         "to write to.") public File OUTPUT;
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Path to the fasta " +
@@ -81,6 +85,10 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc="Reserved alignment attributes (tags starting with X, Y, or Z) that should be " +
             "brought over from the alignment data when merging.")
     public List<String> ATTRIBUTES_TO_RETAIN = new ArrayList<String>();
+    @Option(shortName="R1_TRIM", doc="The number of bases trimmed from the beginning of read 1 prior to alignment")
+    public int READ1_TRIM = 0;
+    @Option(shortName="R2_TRIM", doc="The number of bases trimmed from the beginning of read 2 prior to alignment")
+    public int READ2_TRIM = 0;
 
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
@@ -92,7 +100,6 @@ public class MergeBamAlignment extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-
         // Check the files are readable/writable
         SAMProgramRecord prod = null;
         if (PROGRAM_RECORD_ID != null) {
@@ -104,7 +111,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
             JUMP_SIZE != null, ALIGNED_READS_ONLY, ALIGNED_BAM,
-            MAX_INSERTIONS_OR_DELETIONS, ATTRIBUTES_TO_RETAIN);
+            MAX_INSERTIONS_OR_DELETIONS, ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
+            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM);
         merger.mergeAlignment();
         return 0;
     }
@@ -117,6 +125,7 @@ public class MergeBamAlignment extends CommandLineProgram {
      *         an array of error messages to be written to the appropriate place.
      */
     protected String[] customCommandLineValidation() {
+
         if ((PROGRAM_RECORD_ID != null || PROGRAM_GROUP_VERSION != null ||
              PROGRAM_GROUP_COMMAND_LINE != null) &&
             (PROGRAM_RECORD_ID == null || PROGRAM_GROUP_VERSION == null ||
@@ -126,6 +135,20 @@ public class MergeBamAlignment extends CommandLineProgram {
                     "PROGRAM_GROUP_COMMAND_LINE must all be supplied or none should " +
                     "be included."};
         }
+
+        boolean r1sExist = READ1_ALIGNED_BAM != null && READ1_ALIGNED_BAM.size() > 0;
+        boolean r2sExist = READ2_ALIGNED_BAM != null && READ2_ALIGNED_BAM.size() > 0;
+        if ((r1sExist && !r2sExist) || (r2sExist && !r1sExist)) {
+            return new String[] {"READ1_ALIGNED_BAM and READ2_ALIGNED_BAM " +
+                    "must both be supplied or neither should be included.  For " +
+                    "single-end read use ALIGNED_BAM."};
+        }
+        if (ALIGNED_BAM == null || ALIGNED_BAM.size() == 0 && !(r1sExist && r2sExist)) {
+            return new String[] {"Either ALIGNED_BAM or the combination of " +
+                    "READ1_ALIGNED_BAM and READ2_ALIGNED_BAM must be supplied."};
+
+        }
+
         return null;
     }
 

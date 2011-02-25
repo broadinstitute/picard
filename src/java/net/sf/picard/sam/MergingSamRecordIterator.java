@@ -61,9 +61,9 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
      * Constructs a new merging iterator with the same set of readers and sort order as
      * provided by the header merger parameter.
      * @param headerMerger The merged header and contents of readers.
-     * @param forcePresorted True to ensure that the iterator checks the headers of the readers for appropriate sort order.
+     * @param assumeSorted false ensures that the iterator checks the headers of the readers for appropriate sort order.
      */
-    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, Collection<SAMFileReader> readers, final boolean forcePresorted) {
+    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, Collection<SAMFileReader> readers, final boolean assumeSorted) {
         this.samHeaderMerger = headerMerger;
         this.sortOrder = headerMerger.getMergedHeader().getSortOrder();
         this.comparator = getComparator();
@@ -72,7 +72,7 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         this.pq = new PriorityQueue<ComparableSamRecordIterator>(readers.size());
 
         for (final SAMFileReader reader : readers) {
-            if (!forcePresorted && this.sortOrder != SAMFileHeader.SortOrder.unsorted &&
+            if (!assumeSorted && this.sortOrder != SAMFileHeader.SortOrder.unsorted &&
                     reader.getFileHeader().getSortOrder() != this.sortOrder){
                 throw new PicardException("Files are not compatible with sort order");
             }
