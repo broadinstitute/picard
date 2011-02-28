@@ -46,16 +46,7 @@ public class BAMIndexWriterTest {
     private final File BAM_FILE = new File(BAM_FILE_LOCATION);
     private final File BAI_FILE = new File(BAI_FILE_LOCATION);
 
-    // another larger test case
-    private final URL bamURL;
-    private final String LARGE_BAM_URL_STRING = "http://picard.sourceforge.net/testdata/test_human.bam";
-    private final File BAM_Index_File = new File("testdata/net/sf/samtools/BAMFileIndexTest/test_human.bai");
-    
     private final boolean mVerbose = true;
-
-    public BAMIndexWriterTest() throws Exception {
-        bamURL = new URL(LARGE_BAM_URL_STRING);
-    }
 
     @Test(enabled=true)
     public void testWriteText() throws Exception {
@@ -98,27 +89,6 @@ public class BAMIndexWriterTest {
         javaBaiFile.deleteOnExit();
         cRegeneratedBaiFile.deleteOnExit();
 
-    }
-
-    @Test(enabled=true)
-    public void testBadIndex() throws Exception {
-        // This test case is one that fails when bin meta data is incorrectly used as data
-
-        final String sequence = "chr22";
-        final int startPos = 624553;
-        final int endPos = 5892114;
-        int startWindow = LinearIndex.convertToLinearIndexOffset(startPos);
-
-        verbose("Testing query " + sequence + ":" + startPos + "-" + endPos + " in window " + startWindow + " ...");
-
-        final SAMFileReader reader1 = new SAMFileReader(bamURL, BAM_Index_File, false);
-        final Iterator<SAMRecord> iter = reader1.queryOverlapping(sequence, startPos, endPos);
-        int count = 0;
-        while (iter.hasNext()){
-            count ++;
-        }
-        verbose("Found " + count + " records in " + sequence + " at position " + startPos + " in window " + startWindow);
-        assertEquals(count, 0);
     }
 
     @Test(enabled = false, dataProvider = "linearIndexTestData")
