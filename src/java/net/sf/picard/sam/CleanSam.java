@@ -30,6 +30,8 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.CigarUtil;
 import net.sf.samtools.*;
+import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.util.List;
@@ -67,9 +69,20 @@ public class CleanSam extends CommandLineProgram {
         }
         SAMFileReader reader = new SAMFileReader(INPUT);
         SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-        CigarClippingIterator it = new CigarClippingIterator(reader.iterator());
-        while (it.hasNext()) {
-            writer.addAlignment(it.next());
+        CloseableIterator<SAMRecord> it = reader.iterator();
+
+        // If the read maps off the end of the alignment, clip it
+        while(it.hasNext()) {
+            SAMRecord rec = it.next();
+            SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
+            if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
+                // 1-based index of first base in read to clip.
+                int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+                List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
+                rec.setCigar(new Cigar(newCigarElements));
+            }
+            writer.addAlignment(rec);
+
         }
         writer.close();
         it.close();

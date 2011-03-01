@@ -34,44 +34,48 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     /**
      * Constructor
      *
-     * @param unmappedBamFile     The BAM file that was used as the input to the Maq aligner, which will
-     *                            include info on all the reads that did not map.  Required.
-     * @param targetBamFile       The file to which to write the merged SAM records. Required.
-     * @param referenceFasta      The reference sequence for the map files. Optional
-     * @param programRecord       Program record for taget file SAMRecords created.
-     * @param clipAdapters        Whether adapters marked in BAM file are clipped from the read. Required.
-     * @param bisulfiteSequence   Whether the reads are bisulfite sequence. Required.
+     * @param unmappedBamFile   The BAM file that was used as the input to the aligner, which will
+     *                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta    The reference sequence for the map files. Required.
+     * @param programRecord     Program record for taget file SAMRecords created.
+     * @param clipAdapters      Whether adapters marked in unmapped BAM file should be marked as
+     *                          soft clipped in the merged bam. Required.
+     * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
+     *                          NM and UQ tags). Required.
      * @param pairedRun           Whether the run is a paired-end run. Required.
-     * @param jumpingLibrary      Whether this is a jumping library. Required,
-     * @param alignedReadsOnly    Whether to output only those reads that have alignment data. Required.
+     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
      * @param alignedSamFile      The SAM file(s) with alignment information.  Optional.  If this is
      *                            not provided, then read1AlignedSamFile and read2AlignedSamFile must be.
      * @param maxGaps             The maximum number of insertions or deletions permitted in an
      *                            alignment.  Alignments with more than this many gaps will be ignored.
      * @param attributesToRetain  private attributes from the alignment record that should be
-     *                            included when merging.  This overrides the exclusion of
-     *                            attributes whose tags start with the reserved characters
-     *                            of X, Y, and Z
-     * @param read1BasesTrimmed   The number of bases trimmed from read 1 prior to alignment
-     * @param read2BasesTrimmed   The number of bases trimmed from read 2 prior to alignment
+     *                          included when merging.  This overrides the exclusion of
+     *                          attributes whose tags start with the reserved characters
+     *                          of X, Y, and Z
+     * @param read1BasesTrimmed The number of bases trimmed from start of read 1 prior to alignment.  Optional.
+     * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
      * @param read1AlignedSamFile The alignment records for read1.  Used when the two ends of a read are
      *                            aligned separately.  This is optional, but must be specified if
      *                            alignedSamFile is not.
      * @param read2AlignedSamFile The alignment records for read1.  Used when the two ends of a read are
      *                            aligned separately.  This is optional, but must be specified if
      *                            alignedSamFile is not.
+     * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
+     *                          aligned pairs.  Used to determine the properPair flag.
      *
      */
     public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                  final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
-                 final boolean pairedRun, final boolean jumpingLibrary, final boolean alignedReadsOnly,
+                 final boolean pairedRun, final boolean alignedReadsOnly,
                  final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
                  final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                 final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile) {
+                 final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                 final List<SamPairUtil.PairOrientation> expectedOrientations) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-              jumpingLibrary, alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
-              read2BasesTrimmed);
+              alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
+              read2BasesTrimmed, expectedOrientations);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&
             (read1AlignedSamFile == null || read1AlignedSamFile.size() == 0 ||
@@ -129,69 +133,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     }
 
     /**
-     * Constructor for backwards compatibility
-     *
-     * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
-     *                          include info on all the reads that did not map
-     * @param targetBamFile     The file to which to write the merged SAM records
-     * @param referenceFasta    The reference sequence for the map files
-     * @param programRecord     Program record for taget file SAMRecords created.
-     * @param clipAdapters      Whether adapters marked in BAM file are clipped from the read
-     * @param bisulfiteSequence Whether the reads are bisulfite sequence
-     * @param pairedRun         Whether the run is a paired-end run
-     * @param jumpingLibrary    Whether this is a jumping library
-     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param alignedSamFile    The SAM file with alignment information
-     * @param maxGaps           The maximum number of insertions or deletions permitted in an
-     *                          alignment.  Alignments with more than this many gaps will be ignored.
-     * @param attributesToRetain  private attributes from the alignment record that should be
-     *                          included when merging.  This overrides the exclusion of
-     *                          attributes whose tags start with the reserved characters
-     *                          of X, Y, and Z
-     * @deprecated              Retained for backwards-compatibliity only
-     */
-    @Deprecated
-    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
-                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
-                 final boolean pairedRun, final boolean jumpingLibrary, final boolean alignedReadsOnly,
-                 final File alignedSamFile, final int maxGaps, final List<String> attributesToRetain) {
-
-        this(unmappedBamFile, targetBamFile, referenceFasta, programRecord, clipAdapters, bisulfiteSequence,
-             pairedRun, jumpingLibrary, alignedReadsOnly, Arrays.asList(new File[]{alignedSamFile}), maxGaps,
-             attributesToRetain, null, null, null, null);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param unmappedBamFile   The BAM file that was used as the input to the Maq aligner, which will
-     *                          include info on all the reads that did not map
-     * @param targetBamFile     The file to which to write the merged SAM records
-     * @param referenceFasta    The reference sequence for the map files
-     * @param programRecord     Program record for taget file SAMRecords created.
-     * @param clipAdapters      Whether adapters marked in BAM file are clipped from the read
-     * @param bisulfiteSequence Whether the reads are bisulfite sequence
-     * @param pairedRun         Whether the run is a paired-end run
-     * @param jumpingLibrary    Whether this is a jumping library
-     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param alignedSamFile    The SAM file with alignment information
-     * @param maxGaps           The maximum number of insertions or deletions permitted in an
-     *                          alignment.  Alignments with more than this many gaps will be ignored.
-     * @deprecated              Retained for backwards-compatibliity only
-     */
-    @Deprecated
-    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
-                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
-                 final boolean pairedRun, final boolean jumpingLibrary, final boolean alignedReadsOnly,
-                 final File alignedSamFile, final int maxGaps) {
-
-        this(unmappedBamFile, targetBamFile, referenceFasta, programRecord, clipAdapters, bisulfiteSequence,
-              pairedRun, jumpingLibrary, alignedReadsOnly, Arrays.asList(new File[]{alignedSamFile}),
-              maxGaps, null, null, null, null, null);
-    }
-
-
-    /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
      * Overrides mergeAlignment in AbstractAlignmentMerger.  Tries first to proceed on the assumption
      * that the alignment records are pre-sorted.  If not, catches the exception, forces a sort, and
@@ -203,7 +144,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
         catch(IllegalStateException e) {
             forceSort = true;
-            setRefSeqFileWalker();
+            resetRefSeqFileWalker();
             super.mergeAlignment();
         }
     }
@@ -241,100 +182,31 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
 
         if (!forceSort) {
-            return new SortedAlignmentIterator(mergingIterator);
+            return mergingIterator;
         }
 
 
         SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                     new BAMRecordCodec(header), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
 
-        Map<String, SAMRecord> readNameToReadPending = new HashMap<String,SAMRecord>();
         int count = 0;
-        for (CloseableIterator<SAMRecord> it = new CigarClippingIterator(mergingIterator); it.hasNext();) {
-            SAMRecord sam = it.next();
-            sam.setReadName(cleanReadName(sam.getReadName()));
-            if (pairedRun) {
-                SAMRecord mate = readNameToReadPending.remove(sam.getReadName());
-                if (mate != null) {
-                    if ((!sam.getReadUnmappedFlag()) || (!mate.getReadUnmappedFlag())) {
-                        setProperPairFlag(sam, mate);
-                        alignmentSorter.add(sam);
-                        alignmentSorter.add(mate);
-                        count += 2;
-                    }
-                }
-                else {
-                    readNameToReadPending.put(sam.getReadName(), sam);
-                }
-            }
-            else {
-                if (!sam.getReadUnmappedFlag()) {
-                    alignmentSorter.add(sam);
-                    count++;
-                }
-            }
+        while (mergingIterator.hasNext()) {
+            alignmentSorter.add(mergingIterator.next());
+            count++;
             if (count > 0 && count % 1000000 == 0) {
                 log.info("Read " + count + " records from alignment SAM/BAM.");
             }
         }
         log.info("Finished reading " + count + " total records from alignment SAM/BAM.");
 
-        if (readNameToReadPending.size() > 0) {
-            throw new PicardException("Unmatched reads left in pending map.");
-        }
-        
         mergingIterator.close();
         return alignmentSorter.iterator();
-    }
-
-    private class SortedAlignmentIterator implements CloseableIterator<SAMRecord> {
-
-        CloseableIterator<SAMRecord> wrappedIterator;
-        private SAMRecord next = null;
-
-        public SortedAlignmentIterator(CloseableIterator<SAMRecord> it) {
-            wrappedIterator = new CigarClippingIterator(it);
-        }
-
-        public void close() {
-            wrappedIterator.close();
-        }
-
-        public boolean hasNext() {
-            return wrappedIterator.hasNext() || next != null;
-        }
-
-        public SAMRecord next() {
-
-            if (!pairedRun) {
-                return wrappedIterator.next();
-            }
-
-            if (next == null) {
-                SAMRecord firstOfPair = wrappedIterator.next();
-                next = wrappedIterator.next();
-                setProperPairFlag(firstOfPair, next);
-                firstOfPair.setReadName(cleanReadName(firstOfPair.getReadName()));
-                return firstOfPair;
-            }
-            else {
-                SAMRecord secondOfPair = next;
-                secondOfPair.setReadName(cleanReadName(secondOfPair.getReadName()));
-                next = null;
-                return secondOfPair;
-            }
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException("remove() not supported");
-        }
     }
 
     private class SeparateEndAlignmentIterator implements CloseableIterator<SAMRecord> {
 
         private final PeekableIterator<SAMRecord> read1Iterator;
         private final PeekableIterator<SAMRecord> read2Iterator;
-        private final SAMRecordQueryNameComparator comparator = new SAMRecordQueryNameComparator();
         private final SAMFileHeader header;
 
         public SeparateEndAlignmentIterator(List<File> read1Alignments, List<File> read2Alignments) {
@@ -371,9 +243,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         public SAMRecord next() {
             if (read1Iterator.hasNext()) {
                 if (read2Iterator.hasNext()) {
-System.out.println("comparing " + read1Iterator.peek().getReadName() + " with " + read2Iterator.peek().getReadName());
-System.out.println(comparator.compare(read1Iterator.peek(), read2Iterator.peek()));
-                    return (comparator.compare(read1Iterator.peek(), read2Iterator.peek()) <= 0)
+                    return (read1Iterator.peek().getReadName().compareTo(read2Iterator.peek().getReadName()) <= 0)
                         ? setPairFlags(read1Iterator.next(), true)
                         : setPairFlags(read2Iterator.next(), false);
                 }
@@ -400,14 +270,6 @@ System.out.println(comparator.compare(read1Iterator.peek(), read2Iterator.peek()
         }
     }
 
-    private void setProperPairFlag(SAMRecord first, SAMRecord second) {
-        if ((!first.getReadUnmappedFlag()) || (!second.getReadUnmappedFlag())) {
-            final boolean proper = SamPairUtil.isProperPair(first, second, isJumpingLibrary());
-            first.setProperPairFlag(proper);
-            second.setProperPairFlag(proper);
-        }
-    }
-
     /**
      * For now, we only ignore those alignments that have more than <code>maxGaps</code> insertions
      * or deletions.
@@ -415,8 +277,7 @@ System.out.println(comparator.compare(read1Iterator.peek(), read2Iterator.peek()
     protected boolean ignoreAlignment(SAMRecord sam) {
         int gaps = 0;
         for (CigarElement el : sam.getCigar().getCigarElements()) {
-            if (el.getOperator() == CigarOperator.I || el.getOperator() == CigarOperator.D ||
-                el.getOperator() == CigarOperator.N) {
+            if (el.getOperator() == CigarOperator.I || el.getOperator() == CigarOperator.D ) {
                 gaps++;
             }
         }
