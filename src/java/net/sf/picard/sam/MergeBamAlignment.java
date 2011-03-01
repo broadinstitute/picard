@@ -32,6 +32,7 @@ import net.sf.samtools.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -73,7 +74,8 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(shortName="PG_NAME", doc="The name of the program group (if not supplied by " +
             "the aligned file).", optional=true)public String PROGRAM_GROUP_NAME;
     @Option(doc="Whether this is a paired-end run. ", shortName="PE") public Boolean PAIRED_RUN;
-    @Option(doc="The expected jump size (required if this is a jumping library).", shortName="JUMP",
+    @Option(doc="The expected jump size (required if this is a jumping library).  Deprecated.  " +
+            "Use EXPECTED_ORIENTATIONS instead", shortName="JUMP", mutex="EXPECTED_ORIENTATIONS",
             optional=true) public Integer JUMP_SIZE;
     @Option(doc="Whether to clip adapters where identified.") public boolean CLIP_ADAPTERS = true;
     @Option(doc="Whether the lane is bisulfite sequence (used when caculating the NM tag).")
@@ -89,7 +91,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     public int READ1_TRIM = 0;
     @Option(shortName="R2_TRIM", doc="The number of bases trimmed from the beginning of read 2 prior to alignment")
     public int READ2_TRIM = 0;
-
+    @Option(shortName="ORIENTATIONS", doc="The expected orientation of proper read pairs.  Replaces JUMP_SIZE",
+            mutex = "JUMP_SIZE", optional=true)
+    public List<SamPairUtil.PairOrientation> EXPECTED_ORIENTATIONS;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
@@ -108,11 +112,19 @@ public class MergeBamAlignment extends CommandLineProgram {
             prod.setCommandLine(PROGRAM_GROUP_COMMAND_LINE);
             prod.setProgramName(PROGRAM_GROUP_NAME);
         }
+        // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
+        if (JUMP_SIZE != null) {
+            EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.RF});
+        }
+        else if (EXPECTED_ORIENTATIONS == null) {
+            EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
+        }
+
         SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
-            JUMP_SIZE != null, ALIGNED_READS_ONLY, ALIGNED_BAM,
-            MAX_INSERTIONS_OR_DELETIONS, ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
-            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM);
+            ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
+            ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
+            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS);
         merger.mergeAlignment();
         return 0;
     }

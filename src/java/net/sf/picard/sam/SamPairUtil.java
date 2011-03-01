@@ -28,6 +28,9 @@ import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMTag;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * Utility methods for pairs of SAMRecords
  */
@@ -88,39 +91,24 @@ public class SamPairUtil {
 
 
     // TODO: KT and TF say this is more complicated than what I have here
-    public static boolean isProperPair(final SAMRecord firstEnd, final SAMRecord secondEnd, boolean jumpingLibrary) {
-        //TODO: simplifies to:
-        // are both records mapped
-        // AND are they both mapped to the same chromosome
-        // AND is the pair orientation in the set of expected orientations
-
-
+    public static boolean isProperPair(final SAMRecord firstEnd, final SAMRecord secondEnd,
+                                       final List<PairOrientation> expectedOrientations) {
+        // are both records mapped?
         if (firstEnd.getReadUnmappedFlag() || secondEnd.getReadUnmappedFlag()) {
             return false;
         }
         if (firstEnd.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME)) {
             return false;
         }
+        // AND are they both mapped to the same chromosome
+
         if (!firstEnd.getReferenceName().equals(secondEnd.getReferenceName())) {
             return false;
         }
-        if (firstEnd.getReadNegativeStrandFlag() == secondEnd.getReadNegativeStrandFlag()) {
-            return false;
-        }
-        final SAMRecord positiveEnd;
-        final SAMRecord negativeEnd;
-        if (firstEnd.getReadNegativeStrandFlag()) {
-            positiveEnd = secondEnd;
-            negativeEnd = firstEnd;
-        } else {
-            positiveEnd = firstEnd;
-            negativeEnd = secondEnd;
-        }
-        if (!jumpingLibrary) {
-            return positiveEnd.getAlignmentStart() < negativeEnd.getAlignmentStart() + negativeEnd.getReadBases().length;
-        } else {
-            return negativeEnd.getAlignmentStart() < positiveEnd.getAlignmentStart() + positiveEnd.getReadBases().length;
-        }
+
+        // AND is the pair orientation in the set of expected orientations
+        PairOrientation actual = getPairOrientation(firstEnd);
+        return expectedOrientations.contains(actual);
     }
 
     /**
@@ -203,5 +191,16 @@ public class SamPairUtil {
         final int insertSize = SamPairUtil.computeInsertSize(rec1, rec2);
         rec1.setInferredInsertSize(insertSize);
         rec2.setInferredInsertSize(-insertSize);
+    }
+
+    public static void setProperPairAndMateInfo(final SAMRecord rec1, final SAMRecord rec2,
+                                                final SAMFileHeader header,
+                                                final List<PairOrientation> exepectedOrientations) {
+        setMateInfo(rec1, rec2, header);
+        boolean properPair =  (!rec1.getReadUnmappedFlag() && !rec2.getReadUnmappedFlag())
+            ? isProperPair(rec1, rec2, exepectedOrientations)
+            : false;
+        rec1.setProperPairFlag(properPair);
+        rec2.setProperPairFlag(properPair);
     }
 }
