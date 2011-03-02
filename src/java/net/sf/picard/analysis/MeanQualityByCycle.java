@@ -83,7 +83,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             if (quals == null) return;
 
             final int length = quals.length;
-            final boolean rc = !rec.getReadUnmappedFlag() && rec.getReadNegativeStrandFlag();
+            final boolean rc = rec.getReadNegativeStrandFlag();
             ensureArraysBigEnough(length+1);
 
             for (int i=0; i<length; ++i) {
