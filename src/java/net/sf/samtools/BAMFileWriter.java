@@ -40,8 +40,6 @@ public class BAMFileWriter extends SAMFileWriterImpl {
     private final BlockCompressedOutputStream blockCompressedOutputStream;
     private BAMIndexer bamIndexer = null;
 
-    private boolean makeBamIndex = false;
-
     public BAMFileWriter(final File path) {
         blockCompressedOutputStream = new BlockCompressedOutputStream(path);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
@@ -70,9 +68,6 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         if (bamRecordCodec == null) {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
             bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream());
-            if (makeBamIndex && bamIndexer == null) {
-                bamIndexer = createBamIndex(outputBinaryCodec.getOutputFileName());
-            }
         }
     }
 
@@ -82,7 +77,7 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         if (!getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
            throw new SAMException("Not creating BAM index since not sorted by coordinates: " + getSortOrder());
         }
-        makeBamIndex = true;
+        bamIndexer = createBamIndex(outputBinaryCodec.getOutputFileName());
     }
 
     private BAMIndexer createBamIndex(String path) {
@@ -137,13 +132,13 @@ public class BAMFileWriter extends SAMFileWriterImpl {
 
     protected void finish() {
         outputBinaryCodec.close();
-        if (bamIndexer != null){
             try {
-                bamIndexer.finish();
+                if (bamIndexer != null) {
+                    bamIndexer.finish();
+                }
             } catch (Exception e) {
                 throw new SAMException("Exception writing BAM index file", e);
             }
-        }
     }
 
     protected String getFilename() {
