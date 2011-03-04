@@ -331,6 +331,20 @@ public class IoUtil {
     }
 
     /**
+     * Returns the size (in bytes) of the file or directory and all it's children.
+     */
+    public static long sizeOfTree(final File fileOrDirectory) {
+        long total = fileOrDirectory.length();
+        if (fileOrDirectory.isDirectory()) {
+            for (final File f : fileOrDirectory.listFiles()) {
+                total += sizeOfTree(f);
+            }
+        }
+
+        return total;
+    }
+
+    /**
      * Create a temporary subdirectory in the default temporary-file directory, using the given prefix and suffix to generate the name.
      * Note that this method is not completely safe, because it create a temporary file, deletes it, and then creates
      * a directory with the same name as the file.  Should be good enough.
