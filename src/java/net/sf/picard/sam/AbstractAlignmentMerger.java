@@ -217,8 +217,8 @@ public abstract class AbstractAlignmentMerger {
                 else { // Now we should have the pair, but may not if the aligner used does retain the
                        // unmapped read from a pair (e.g. Maq)
                     if (!rec.getReadName().equals(firstOfPair.getReadName())) {
-                        coordinateSorted.add(firstOfPair);
-                        firstOfPair = rec;
+                        throw new PicardException("Second read from pair not found in unmapped bam: " +
+                            rec.getReadName());
                     }
                     else {
                         // IF at least one of the reads is mapped or we are writing them all
