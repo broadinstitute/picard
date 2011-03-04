@@ -218,7 +218,7 @@ public abstract class AbstractAlignmentMerger {
                        // unmapped read from a pair (e.g. Maq)
                     if (!rec.getReadName().equals(firstOfPair.getReadName())) {
                         throw new PicardException("Second read from pair not found in unmapped bam: " +
-                            rec.getReadName());
+                            firstOfPair.getReadName() + ", " + rec.getReadName());
                     }
                     else {
                         // IF at least one of the reads is mapped or we are writing them all
@@ -228,9 +228,9 @@ public abstract class AbstractAlignmentMerger {
                             SamPairUtil.setProperPairAndMateInfo(rec, firstOfPair, header, expectedOrientations);
                             coordinateSorted.add(firstOfPair);
                             coordinateSorted.add(rec);
-                            firstOfPair = null;
                         }
-                    }
+                        firstOfPair = null;
+build                    }
                 }
             }
         }
