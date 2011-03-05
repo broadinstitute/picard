@@ -388,7 +388,18 @@ public class IoUtil {
         else {
             return full;
         }
-    }    
+    }
+
+    /** Returns the name of the file extension (i.e. text after the last "." in the filename) including the . */
+    public static String fileSuffix(final File f) {
+        final String full = f.getName();
+        final int index = full.lastIndexOf(".");
+        if (index > 0 && index > full.lastIndexOf(File.separator)) {
+            return full.substring(index);
+        } else {
+            return null;
+        }
+    }
 
     /** Returns the full path to the file with all symbolic links resolved **/
     public static String getFullCanonicalPath(File file) {
