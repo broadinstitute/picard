@@ -28,7 +28,6 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.CigarUtil;
 import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SequenceUtil;
@@ -37,8 +36,6 @@ import net.sf.samtools.util.SortingCollection;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Abstract class that coordinates the general task of taking in a set of alignment information,
@@ -230,7 +227,7 @@ public abstract class AbstractAlignmentMerger {
                             coordinateSorted.add(rec);
                         }
                         firstOfPair = null;
-build                    }
+                    }
                 }
             }
         }
