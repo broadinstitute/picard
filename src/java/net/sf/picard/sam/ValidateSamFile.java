@@ -153,7 +153,8 @@ public class ValidateSamFile extends CommandLineProgram {
                 result = validator.validateSamFileVerbose(samReader, reference);
                 break;
         }
-        
+        out.flush();
+
         return result ? 0 : 1;
     }
 }
