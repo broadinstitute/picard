@@ -321,13 +321,17 @@ public class IoUtil {
     /**
      * Delete the given file or directory.  If a directory, all enclosing files and subdirs are also deleted.
      */
-    public static void deleteDirectoryTree(final File fileOrDirectory) {
+    public static boolean deleteDirectoryTree(final File fileOrDirectory) {
+        boolean success = true;
+
         if (fileOrDirectory.isDirectory()) {
             for (final File child : fileOrDirectory.listFiles()) {
-                deleteDirectoryTree(child);
+                success = success && deleteDirectoryTree(child);
             }
         }
-        net.sf.samtools.util.IOUtil.deleteFiles(fileOrDirectory);
+
+        success = success && fileOrDirectory.delete();
+        return success;
     }
 
     /**
