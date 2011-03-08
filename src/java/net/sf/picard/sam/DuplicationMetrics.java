@@ -35,7 +35,10 @@ public class DuplicationMetrics extends MetricBase {
     /** The library on which the duplicate marking was performed. */
     public String LIBRARY;
 
-    /** The number of mapped reads examined which did not have a mapped mate pair. */
+    /**
+     * The number of mapped reads examined which did not have a mapped mate pair,
+     * either because the read is unpaired, or the read is paired to an unmapped mate.
+     */
     public long UNPAIRED_READS_EXAMINED;
 
     /** The number of mapped read pairs examined. */
