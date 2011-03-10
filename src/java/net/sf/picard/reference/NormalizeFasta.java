@@ -9,6 +9,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
+import net.sf.picard.util.Log;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
@@ -37,6 +38,8 @@ public class NormalizeFasta extends CommandLineProgram {
     @Option(doc="Truncate sequence names at first whitespace.")
     public boolean TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=false;
 
+    private final Log log = Log.getInstance(NormalizeFasta.class);
+
     public static void main(final String[] args) {
         new NormalizeFasta().instanceMainWithExit(args);
     }
@@ -63,12 +66,17 @@ public class NormalizeFasta extends CommandLineProgram {
                 out.write(name);
                 out.newLine();
 
-                for (int i=0; i<bases.length; ++i) {
-                    if (i > 0 && i % LINE_LENGTH == 0) out.write("\n");
-                    out.write(bases[i]);
+                if (bases.length == 0) {
+                    log.warn("Sequence " + name + " contains 0 bases.");
                 }
+                else {
+                    for (int i=0; i<bases.length; ++i) {
+                        if (i > 0 && i % LINE_LENGTH == 0) out.write("\n");
+                        out.write(bases[i]);
+                    }
 
-                out.write("\n");
+                    out.write("\n");
+                }
             }
             catch (IOException ioe) {
                 throw new PicardException("Error writing to file " + OUTPUT.getAbsolutePath(), ioe);
