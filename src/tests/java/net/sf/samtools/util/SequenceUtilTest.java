@@ -90,8 +90,6 @@ public class SequenceUtilTest {
         rec.setAttribute(SAMTag.MD.name(), md);
         final byte[] refBases = SequenceUtil.makeReferenceFromAlignment(rec, includeReferenceBasesForDeletions);
         Assert.assertEquals(StringUtil.bytesToString(refBases), expectedReference);
-        final byte[] refBases2 = SequenceUtil.makeReferenceFromAlignment(rec, includeReferenceBasesForDeletions, StringUtil.stringToBytes(expectedReference));
-        Assert.assertEquals(StringUtil.bytesToString(refBases), expectedReference);
     }
 
     @DataProvider(name = "makeReferenceFromAlignment")

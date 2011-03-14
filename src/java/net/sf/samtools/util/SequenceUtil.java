@@ -25,7 +25,6 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,15 +46,24 @@ public class SequenceUtil {
         return net.sf.samtools.util.StringUtil.bytesToString(bases);
     }
 
-    /** Attempts to efficiently compare two bases stored as bytes for equality. */
-    public static boolean basesEqual(byte lhs, byte rhs) {
+    /** Attempts to efficiently compare two bases stored as bytes for equality.
+     * Assumes 'N' doesn't match.
+     */
+    public static boolean basesEqual(final byte lhs, final byte rhs) {
+        return basesEqual(lhs, rhs, false);
+    }
+
+    /** Attempts to efficiently compare two bases stored as bytes for equality.
+     * @param nMatches whether 'n' or 'N' should be considered matches */
+    public static boolean basesEqual(byte lhs, byte rhs, final boolean nMatches) {
+        final byte N = StringUtil.charToByte('N');
         if (lhs == rhs) return true;
         else {
             if (lhs > 90) lhs -= 32;
             if (rhs > 90) rhs -= 32;
         }
 
-        return lhs == rhs;
+        return lhs == rhs || (nMatches && (rhs == N || lhs == N ));
     }
     
     /**
@@ -201,12 +209,12 @@ public class SequenceUtil {
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
-        return countMismatches(read, referenceBases, 0, false);
+        return countMismatches(read, referenceBases, 0, false, false);
     }
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
-        return countMismatches(read, referenceBases, referenceOffset, false);
+        return countMismatches(read, referenceBases, referenceOffset);
     }
 
     /**
@@ -219,9 +227,10 @@ public class SequenceUtil {
      * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
      *      and C->T on the positive strand and G->A on the negative strand will not be counted
      *      as mismatches.
+     * @param nMatches If true, assume that N matches any base.
      */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset,
-                                      final boolean bisulfiteSequence) {
+                                      final boolean bisulfiteSequence, final boolean nMatches) {
         try {
             int mismatches = 0;
 
@@ -234,7 +243,7 @@ public class SequenceUtil {
 
                 for (int i=0; i<length; ++i) {
                     if (!bisulfiteSequence) {
-                        if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
+                        if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i], nMatches)) {
                             ++mismatches;
                         }
                     }
@@ -418,7 +427,18 @@ public class SequenceUtil {
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
                                         final int referenceOffset) {
-        return calculateSamNmTag(read, referenceBases, referenceOffset, false);
+        return calculateSamNmTag(read, referenceBases, referenceOffset, false, false);
+    }
+     /**
+     * Calculates the for the predefined NM tag from the SAM spec. To the result of
+     * countMismatches() it adds 1 for each indel.
+
+     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
+     * of that reference sequence.
+     */
+    public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
+                                        final int referenceOffset, final boolean bisulfiteSequence) {
+        return calculateSamNmTag(read, referenceBases, referenceOffset, bisulfiteSequence, false);
     }
     /**
      * Calculates the for the predefined NM tag from the SAM spec. To the result of
@@ -431,8 +451,8 @@ public class SequenceUtil {
      *      as mismatches.
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
-                                        final int referenceOffset, final boolean bisulfiteSequence) {
-        int samNm = countMismatches(read, referenceBases, referenceOffset, bisulfiteSequence);
+                                        final int referenceOffset, final boolean bisulfiteSequence, final boolean nMatches) {
+        int samNm = countMismatches(read, referenceBases, referenceOffset, bisulfiteSequence, nMatches);
         for (final CigarElement el : read.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
                 samNm += el.getLength();
@@ -490,7 +510,7 @@ public class SequenceUtil {
 
     
     /** Reverses the quals in place. */
-    public static void reverse(final byte[] quals) {
+    public static void reverseQualities(final byte[] quals) {
         final int lastIndex = quals.length - 1;
 
         int i, j;
@@ -504,7 +524,7 @@ public class SequenceUtil {
     /** Returns true if the bases are equal OR if the mismatch cannot be accounted for by
      * bisfulite treatment.  C->T on the positive strand and G->A on the negative strand
      * do not count as mismatches */
-    public static boolean bisulfiteBasesEqual(boolean negativeStrand, byte read, byte reference) {
+    public static boolean bisulfiteBasesEqual(final boolean negativeStrand, final byte read, final byte reference) {
 
         if (basesEqual(read, reference)) {
             return true;
@@ -537,6 +557,8 @@ public class SequenceUtil {
      */
     static final Pattern mdPat = Pattern.compile("\\G(?:([0-9]+)|([ACTGNactgn])|(\\^[ACTGNactgn]+))");
 
+    static final char READ_DASH = '-';     // 45
+
     /**
      * Produce reference bases from an aligned SAMRecord with MD string and Cigar.
      * @param rec Must contain non-empty CIGAR and MD attribute.
@@ -546,7 +568,7 @@ public class SequenceUtil {
      * '-'.  If the read is soft-clipped, reference contains '0'.  If there is a skipped region and
      * includeReferenceBasesForDeletions==true, reference will have Ns for the skipped region.
      */
-    public static byte[] makeReferenceFromAlignment(final SAMRecord rec, boolean includeReferenceBasesForDeletions) {
+    public static byte[] makeReferenceFromAlignment(final SAMRecord rec, final boolean includeReferenceBasesForDeletions) {
         final String md = rec.getStringAttribute(SAMTag.MD.name());
         if (md == null) {
             throw new SAMException("Cannot create reference from SAMRecord with no MD tag, read: " + rec.getReadName());
@@ -563,15 +585,15 @@ public class SequenceUtil {
         final byte[] ret = new byte[maxOutputLength];
         int outIndex = 0;
 
-        Matcher match = mdPat.matcher(md);
+        final Matcher match = mdPat.matcher(md);
         int curSeqPos = 0;
 
         int savedBases = 0;
         final byte[] seq = rec.getReadBases();
         for (final CigarElement cigEl : cigar.getCigarElements())
         {
-            int cigElLen = cigEl.getLength();
-            CigarOperator cigElOp = cigEl.getOperator();
+            final int cigElLen = cigEl.getLength();
+            final CigarOperator cigElOp = cigEl.getOperator();
 
 
             if (cigElOp == CigarOperator.SKIPPED_REGION) {
@@ -607,7 +629,7 @@ public class SequenceUtil {
                         if ( ((mg = match.group(1)) !=null) && (mg.length() > 0) )
                         {
                             // It's a number , meaning a series of matches
-                            int num = Integer.parseInt(mg);
+                            final int num = Integer.parseInt(mg);
                             for (int i = 0; i < num; i++)
                             {
                                 if (basesMatched<cigElLen)
@@ -678,7 +700,7 @@ public class SequenceUtil {
                 // We have an insertion in read
                 for (int i = 0; i < cigElLen; i++)
                 {
-                    char c = (cigElOp == CigarOperator.SOFT_CLIP) ? '0' : '-';
+                    final char c = (cigElOp == CigarOperator.SOFT_CLIP) ? '0' : '-';
                     ret[outIndex++] =  StringUtil.charToByte(c);
                     curSeqPos++;
                 }
@@ -690,71 +712,10 @@ public class SequenceUtil {
 
         }
         if (outIndex < ret.length) {
-            byte[] shorter = new byte[outIndex];
+            final byte[] shorter = new byte[outIndex];
             System.arraycopy(ret, 0, shorter, 0, outIndex);
             return shorter;
         }
         return ret;
-    }
-    
-    /**
-     * Produce reference bases from an aligned SAMRecord with a Cigar but without an MD string
-     * @param rec Must contain non-empty CIGAR attribute.
-     * @param includeReferenceBasesForDeletions If true, include reference bases that are deleted in the read.
-     * This will make the returned array not line up with the read if there are deletions.
-     * @param refSeqBases The reference bases
-     * @return References bases corresponding to the read.
-     *  If there is an insertion in the read, reference contains '-'.
-     *  Soft and hard clipping are ignored.
-     *  If there is a skipped region (Cigar 'N') reference will have Ns for the skipped region.
-     *  If there is a deletion or N, and includeReferenceBasesForDeletions is set, the reference base is included.
-     */
-    public static byte[] makeReferenceFromAlignment(final SAMRecord rec, final boolean includeReferenceBasesForDeletions, final byte[] refSeqBases) {
-        // Not sure how long output will be, but it will be no longer than this.
-        int maxOutputLength = 0;
-        final Cigar cigar = rec.getCigar();
-        if (cigar == null) {
-            throw new SAMException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
-        }
-        for (final CigarElement cigarElement : cigar.getCigarElements()) {
-            final CigarOperator operator = cigarElement.getOperator();
-            if (operator != CigarOperator.SOFT_CLIP && operator != CigarOperator.HARD_CLIP)
-                maxOutputLength += cigarElement.getLength();
-        }
-        final byte[] result = new byte[maxOutputLength];
-        try {
-
-            int refPos = rec.getAlignmentStart();
-            int refLength = refSeqBases.length;
-            if (refPos != 0) refPos--;
-            int resultPos = 0;
-            for (final CigarElement c: rec.getCigar().getCigarElements()){
-                final CigarOperator op = c.getOperator();
-                final int length = c.getLength();
-
-                if ((op.equals(CigarOperator.D) || op.equals(CigarOperator.N) ) && !includeReferenceBasesForDeletions){
-                     continue; // do nothing. will change the readbases for this
-                } else if (op.consumesReferenceBases()){
-                     final int lengthToCopy = (refPos + length >= refLength)? refLength - refPos : length;
-                     System.arraycopy(refSeqBases, refPos, result, resultPos, lengthToCopy);
-                     refPos += lengthToCopy;
-                } else if (op.equals(CigarOperator.H) || op.equals(CigarOperator.S)){
-                    continue; // do nothing
-                } else {   // I or P
-                     //  insert opCount '-' into the result
-                     final byte DASH = 45;
-                     Arrays.fill(result, resultPos , resultPos + length, DASH);
-                 }
-                 resultPos += length;
-            }
-            if (resultPos < result.length){
-                byte[] shorter = new byte[resultPos];
-                System.arraycopy(result, 0, shorter, 0, resultPos);
-                return shorter;
-            }
-        } catch (Exception e) {
-            throw new SAMException("Exception making reference from alignment "+ rec, e);
-        }
-        return result;
     }
 }
