@@ -25,7 +25,7 @@
 package net.sf.picard.analysis;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map.Entry;
 
 import net.sf.picard.PicardException;
@@ -74,7 +74,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     public float MINIMUM_PCT = 0.01f;
 
 
-    final HashMap<PairOrientation, Histogram<Integer>> histograms = new HashMap<PairOrientation, Histogram<Integer>>();
+    final EnumMap<PairOrientation, Histogram<Integer>> histograms = new EnumMap<PairOrientation, Histogram<Integer>>(PairOrientation.class);
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {

@@ -159,7 +159,10 @@ public class RevertSam extends CommandLineProgram {
             }
 
             if (REMOVE_ALIGNMENT_INFORMATION) {
-                final boolean rc = !rec.getReadUnmappedFlag() && rec.getReadNegativeStrandFlag();
+                if (rec.getReadNegativeStrandFlag()) {
+                    SAMRecordUtil.reverseComplement(rec);
+                    rec.setReadNegativeStrandFlag(false);
+                }
 
                 // Remove all alignment based information about the read itself
                 rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
@@ -171,13 +174,8 @@ public class RevertSam extends CommandLineProgram {
                     rec.setInferredInsertSize(0);
                     rec.setNotPrimaryAlignmentFlag(false);
                     rec.setProperPairFlag(false);
-                    rec.setReadNegativeStrandFlag(false);
                     rec.setReadUnmappedFlag(true);
 
-                    // Reverse complement the sequence if needed
-                    if (rc) {
-                        SAMRecordUtil.reverseComplement(rec);
-                    }
                 }
 
                 // Then remove any mate flags and info related to alignment

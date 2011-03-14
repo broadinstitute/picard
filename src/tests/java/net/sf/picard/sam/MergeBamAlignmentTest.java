@@ -80,6 +80,7 @@ public class MergeBamAlignmentTest {
         merger.PAIRED_RUN = true;
         merger.REFERENCE_SEQUENCE = fasta;
         merger.OUTPUT = output;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
 
         Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed");
         SAMFileReader result = new SAMFileReader(output);
@@ -151,6 +152,7 @@ public class MergeBamAlignmentTest {
         merger.PAIRED_RUN = true;
         merger.REFERENCE_SEQUENCE = fasta;
         merger.OUTPUT = output;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
 
         Assert.assertEquals(merger.doWork(), 0);
 
@@ -187,6 +189,7 @@ public class MergeBamAlignmentTest {
         merger.PAIRED_RUN = true;
         merger.REFERENCE_SEQUENCE = fasta;
         merger.OUTPUT = output;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
 
         Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed");
         SAMFileReader result = new SAMFileReader(output);
@@ -241,7 +244,9 @@ public class MergeBamAlignmentTest {
 
         File target = File.createTempFile("target", "bam");
         SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
-                 true, false, false, aligned, 1);
+                 true, false, Arrays.asList(new File[]{aligned}), 1, null, null, null, null, null,
+                Arrays.asList(new SamPairUtil.PairOrientation[] {SamPairUtil.PairOrientation.FR}));
+
         merger.mergeAlignment();
         Assert.assertEquals(sorted, !merger.getForceSort());
         SAMRecordIterator it = new SAMFileReader(target).iterator();
@@ -275,7 +280,6 @@ public class MergeBamAlignmentTest {
          File output = File.createTempFile("mergeMultileAlignmentsTest", ".sam");
          output.deleteOnExit();
 
-System.out.println(testName);
          MergeBamAlignment merger = new MergeBamAlignment();
          merger.UNMAPPED_BAM = unmapped;
          merger.ALIGNED_READS_ONLY = false;
@@ -293,6 +297,7 @@ System.out.println(testName);
          merger.READ1_TRIM = r1Trim;
          merger.READ2_TRIM = r2Trim;
          merger.OUTPUT = output;
+         merger.EXPECTED_ORIENTATIONS=Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
 
          Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed: " + testName);
          SAMFileReader result = new SAMFileReader(output);
@@ -373,6 +378,7 @@ System.out.println(testName);
         merger.REFERENCE_SEQUENCE = fasta;
         merger.OUTPUT = merged;
         merger.PAIRED_RUN = true;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
         merger.doWork();
         Assert.fail("Merger should have failed because unmapped reads are not in queryname order but didn't");
     }

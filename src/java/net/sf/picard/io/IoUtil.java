@@ -321,13 +321,31 @@ public class IoUtil {
     /**
      * Delete the given file or directory.  If a directory, all enclosing files and subdirs are also deleted.
      */
-    public static void deleteDirectoryTree(final File fileOrDirectory) {
+    public static boolean deleteDirectoryTree(final File fileOrDirectory) {
+        boolean success = true;
+
         if (fileOrDirectory.isDirectory()) {
             for (final File child : fileOrDirectory.listFiles()) {
-                deleteDirectoryTree(child);
+                success = success && deleteDirectoryTree(child);
             }
         }
-        net.sf.samtools.util.IOUtil.deleteFiles(fileOrDirectory);
+
+        success = success && fileOrDirectory.delete();
+        return success;
+    }
+
+    /**
+     * Returns the size (in bytes) of the file or directory and all it's children.
+     */
+    public static long sizeOfTree(final File fileOrDirectory) {
+        long total = fileOrDirectory.length();
+        if (fileOrDirectory.isDirectory()) {
+            for (final File f : fileOrDirectory.listFiles()) {
+                total += sizeOfTree(f);
+            }
+        }
+
+        return total;
     }
 
     /**
@@ -374,7 +392,18 @@ public class IoUtil {
         else {
             return full;
         }
-    }    
+    }
+
+    /** Returns the name of the file extension (i.e. text after the last "." in the filename) including the . */
+    public static String fileSuffix(final File f) {
+        final String full = f.getName();
+        final int index = full.lastIndexOf(".");
+        if (index > 0 && index > full.lastIndexOf(File.separator)) {
+            return full.substring(index);
+        } else {
+            return null;
+        }
+    }
 
     /** Returns the full path to the file with all symbolic links resolved **/
     public static String getFullCanonicalPath(File file) {

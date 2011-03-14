@@ -434,6 +434,13 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                         return loadClass(p + className.substring(className.lastIndexOf(".")), false);
                     }
                     catch (ClassNotFoundException cnf2) {/* do nothing */}
+                    // If it ws an inner class, try and see if it's a stand-alone class now
+                    if (className.indexOf("$") > -1) {
+                        try {
+                            return loadClass(p + "." + className.substring(className.lastIndexOf("$") + 1), false);
+                        }
+                        catch (ClassNotFoundException cnf2) {/* do nothing */}
+                    }
                 }
             }
 

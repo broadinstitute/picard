@@ -146,13 +146,13 @@ public class SAMFileWriterFactory {
 
     private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted, boolean createIndex) {
         writer.setSortOrder(header.getSortOrder(), presorted);
+        writer.setHeader(header);
         if (createIndex && writer.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
             writer.enableBamIndexConstruction();
         }
         if (maxRecordsInRam != null) {
             writer.setMaxRecordsInRam(maxRecordsInRam);
         }
-        writer.setHeader(header);
     }
 
     /**
