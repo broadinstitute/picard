@@ -51,10 +51,21 @@ public class ReservedTagConstants {
     /** The original sequence before 454 cafie and homopolymer correction */
     public static final String XS = "XS";
 
-    /** The original pred quals before 454 cafie and homopolymer correction */
-    public static final String XP = "XP";   // todo consider whether OQ would suffice
+    /** The Four54 edit string of 454 cafie and homopolymer corrections
+     * <pre>
+     *   editString ::= {base operator position [- position]}* ;  // Cafie needs 2 positions
+     *   base ::= A | T | G | C | N ;   // N only for undercall
+     *   operator ::= o | u | c ;       // o = Overcall, u = Undercall, c = Cafie.
+     *   position is 0 based position of the correction (assuming forward strand) .  Cafie positions are to-from.
+     *   For example: XF :Z:Gc4-6Nu11Co15 means a cafie correction moved a G from position 6 to 4,
+     *   an N was inserted for an undercall at position 11, and a C was removed as an overcall at position 15
+     */
+    public static final String XF = "XF";
 
-    /** The original cigar before 454 cafie and homopolymer correction */
-    public static final String XC = "XC";
+    /** The original pred quality scores before modifications such as 454 cafie and homopolymer correction */
+    public static final String OQ = SAMTag.OQ.name();
+
+    /** The original cigar before indel cleaning, or 454 cafie and homopolymer correction */
+    public static final String OC = "OC";
 
 }
