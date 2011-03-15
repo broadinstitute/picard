@@ -29,7 +29,7 @@ package net.sf.samtools;
 public class SAMRecordQueryNameComparator implements SAMRecordComparator {
 
     public int compare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
-        final int cmp = fileOrderCompare(samRecord1, samRecord2);
+        int cmp = fileOrderCompare(samRecord1, samRecord2);
         if (cmp != 0) {
             return cmp;
         }
@@ -44,8 +44,22 @@ public class SAMRecordQueryNameComparator implements SAMRecordComparator {
             else if (samRecord1.getSecondOfPairFlag() && samRecord2.getFirstOfPairFlag()) return 1;
         }
 
-        if (samRecord1.getReadNegativeStrandFlag() == samRecord2.getReadNegativeStrandFlag()) return 0;
-        else return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
+        if (samRecord1.getReadNegativeStrandFlag() != samRecord2.getReadNegativeStrandFlag()) {
+            return (samRecord1.getReadNegativeStrandFlag()? 1: -1);
+        }
+        if (samRecord1.getNotPrimaryAlignmentFlag() != samRecord2.getNotPrimaryAlignmentFlag()) {
+            return samRecord2.getNotPrimaryAlignmentFlag()? -1: 1;
+        }
+        final Integer hitIndex1 = samRecord1.getIntegerAttribute(SAMTag.HI.name());
+        final Integer hitIndex2 = samRecord2.getIntegerAttribute(SAMTag.HI.name());
+        if (hitIndex1 != null) {
+            if (hitIndex2 == null) return 1;
+            else {
+                cmp = hitIndex1.compareTo(hitIndex2);
+                if (cmp != 0) return cmp;
+            }
+        } else if (hitIndex2 != null) return -1;
+        return 0;
     }
 
     /**
@@ -56,6 +70,14 @@ public class SAMRecordQueryNameComparator implements SAMRecordComparator {
      * @return negative if samRecord1 < samRecord2,  0 if equal, else positive
      */
     public int fileOrderCompare(final SAMRecord samRecord1, final SAMRecord samRecord2) {
-        return samRecord1.getReadName().compareTo(samRecord2.getReadName());
+        return compareReadNames(samRecord1.getReadName(), samRecord2.getReadName());
+    }
+
+    /**
+     * Encapsulate algorithm for comparing read names in queryname-sorted file, since there have been
+     * conversations about changing the behavior.
+     */
+    public static int compareReadNames(final String readName1, final String readName2) {
+        return readName1.compareTo(readName2);
     }
 }
