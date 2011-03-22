@@ -83,19 +83,6 @@ public class SeekableHTTPStream extends SeekableStream {
             byteRange = "bytes=" + position + "-" + endRange;
             connection.setRequestProperty("Range", byteRange);
 
-            /*
-             * This peculiar line of code is to work around the problem described here:
-             * http://sourceforge.net/apps/trac/sourceforge/ticket/17600
-             * Unit tests that read a BAM over HTTP hosted on SourceForge were failing with
-             * java.net.SocketException: Unexpected end of file from server.  This problem started happening
-             * sometime between 08 Feb 2011, 2:22:32 PM and 10 Feb 2011, 1:39:34 PM (based on when Bamboo build
-             * started failing).  It may have been caused by SourceForge changes to deal with an attack on SF.
-             * Error log on SourceForge had messages like this:
-             * [Mon Feb 14 22:26:13 2011] [error] [client 172.29.30.68] (70014)End of file found: mod_mime_magic: read failed from uncompress of /home/project-web/picard/htdocs/testdata/test_human.bam
-             * I have no idea why the line below fixes the problem.
-             */
-            connection.setRequestProperty("Cookie", "");
-
             is = connection.getInputStream();
 
             while (n < len) {
