@@ -28,6 +28,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 
 import java.io.File;
@@ -41,12 +42,20 @@ public class SortSam extends CommandLineProgram {
     public String USAGE = getStandardUsagePreamble() + "Sorts the input SAM or BAM.\n" + "" +
             "Input and output formats are determined by file extension.";
 
-    @Option(doc="The BAM or SAM file to sort.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
-    @Option(doc="The sorted BAM or SAM output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) public File OUTPUT;
+    @Option(doc="The BAM or SAM file to sort.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
+    public File INPUT;
+
+    @Option(doc="The sorted BAM or SAM output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    public File OUTPUT;
+
     @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc="Sort order of output file")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
+    private final Log log = Log.getInstance(SortSam.class);
+
     protected int doWork() {
+        long n = 0;
+
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
         SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
@@ -56,7 +65,11 @@ public class SortSam extends CommandLineProgram {
         final Iterator<SAMRecord> iterator = reader.iterator();
         while (iterator.hasNext()) {
             writer.addAlignment(iterator.next());
+            if (++n % 10000000 == 0) log.info("Read " + n + " records.");
         }
+
+        log.info("Finished reading inputs, merging and writing to output now.");
+
         reader.close();
         writer.close();
         return 0;

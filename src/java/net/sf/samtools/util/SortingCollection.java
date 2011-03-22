@@ -23,8 +23,6 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.samtools.util.CloserUtil;
-
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -316,15 +314,15 @@ public class SortingCollection<T>
      * location in the PriorityQueue
      */
     class MergingIterator implements CloseableIterator<T> {
-        private final PriorityQueue<PeekFileRecordIterator> priorityQueue;
+        private final TreeSet<PeekFileRecordIterator> queue;
 
         MergingIterator() {
-            this.priorityQueue = new PriorityQueue<PeekFileRecordIterator>(SortingCollection.this.files.size(),
-                                                                           new PeekFileRecordIteratorComparator());
+            this.queue = new TreeSet<PeekFileRecordIterator>(new PeekFileRecordIteratorComparator());
+            int n = 0;
             for (final File f : SortingCollection.this.files) {
                 final FileRecordIterator it = new FileRecordIterator(f);
                 if (it.hasNext()) {
-                    this.priorityQueue.offer(new PeekFileRecordIterator(it));
+                    this.queue.add(new PeekFileRecordIterator(it, n++));
                 }
                 else {
                     it.close();
@@ -333,7 +331,7 @@ public class SortingCollection<T>
         }
 
         public boolean hasNext() {
-            return !this.priorityQueue.isEmpty();
+            return !this.queue.isEmpty();
         }
 
         public T next() {
@@ -341,10 +339,10 @@ public class SortingCollection<T>
                 throw new NoSuchElementException();
             }
 
-            final PeekFileRecordIterator fileIterator = priorityQueue.poll();
+            final PeekFileRecordIterator fileIterator = queue.pollFirst();
             final T ret = fileIterator.next();
             if (fileIterator.hasNext()) {
-                this.priorityQueue.offer(fileIterator);
+                this.queue.add(fileIterator);
             }
             else {
                 ((CloseableIterator<T>)fileIterator.getUnderlyingIterator()).close();
@@ -358,8 +356,8 @@ public class SortingCollection<T>
         }
 
         public void close() {
-            while (!this.priorityQueue.isEmpty()) {
-                final PeekFileRecordIterator it = this.priorityQueue.poll();
+            while (!this.queue.isEmpty()) {
+                final PeekFileRecordIterator it = this.queue.pollFirst();
                 ((CloseableIterator<T>)it.getUnderlyingIterator()).close();
             }
         }
@@ -418,15 +416,19 @@ public class SortingCollection<T>
      * Just a typedef
      */
     class PeekFileRecordIterator extends PeekIterator<T> {
-        PeekFileRecordIterator(final Iterator<T> underlyingIterator) {
+        final int n; // A serial number used for tie-breaking in the sort
+        PeekFileRecordIterator(final Iterator<T> underlyingIterator, final int n) {
             super(underlyingIterator);
+            this.n = n;
         }
     }
 
     class PeekFileRecordIteratorComparator implements Comparator<PeekFileRecordIterator> {
 
-        public int compare(final PeekFileRecordIterator peekFileRecordIterator, final PeekFileRecordIterator peekFileRecordIterator1) {
-            return comparator.compare(peekFileRecordIterator.peek(), peekFileRecordIterator1.peek());
+        public int compare(final PeekFileRecordIterator lhs, final PeekFileRecordIterator rhs) {
+            final int result = comparator.compare(lhs.peek(), rhs.peek());
+            if (result == 0) return lhs.n - rhs.n;
+            else return result;
         }
     }
 }
