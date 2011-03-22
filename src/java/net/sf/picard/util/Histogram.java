@@ -64,13 +64,10 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
     /** Copy constructor for a histogram. */
     public Histogram(final Histogram<K> in) {
+        super(in);
         this.binLabel = in.binLabel;
         this.valueLabel = in.valueLabel;
         this.mean = in.mean;
-
-        for (final Bin bin : in.values()) {
-            increment(bin.id, bin.value);
-        }
     }
 
     /** Represents a bin in the Histogram. */
@@ -344,7 +341,6 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
         final List<K> binsToKeep = new ArrayList<K>();
         for (Histogram<K>.Bin bin : values()) {
-            System.err.println(bin.getIdValue() + "  < " + width);
             double binId = ((Number)bin.getId()).doubleValue();
             if (binId <= width) {
                 binsToKeep.add(bin.getId());
