@@ -128,6 +128,7 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
+        SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
@@ -155,6 +156,7 @@ public abstract class CommandLineProgram {
         try {
             ret = doWork();
         } finally {
+            SAMFileReader.setDefaultValidationStringency(originalStringency);
             // Emit the time even if program throws
             if (!QUIET) {
                 System.err.println("[" + new Date() + "] " + getClass().getName() + " done.");

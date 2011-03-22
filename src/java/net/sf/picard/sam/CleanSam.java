@@ -64,28 +64,33 @@ public class CleanSam extends CommandLineProgram {
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
+        SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         if (VALIDATION_STRINGENCY == SAMFileReader.ValidationStringency.STRICT) {
             SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
         }
-        SAMFileReader reader = new SAMFileReader(INPUT);
-        SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-        CloseableIterator<SAMRecord> it = reader.iterator();
+        try {
+            SAMFileReader reader = new SAMFileReader(INPUT);
+            SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+            CloseableIterator<SAMRecord> it = reader.iterator();
 
-        // If the read maps off the end of the alignment, clip it
-        while(it.hasNext()) {
-            SAMRecord rec = it.next();
-            SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-            if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
-                // 1-based index of first base in read to clip.
-                int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-                List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
-                rec.setCigar(new Cigar(newCigarElements));
+            // If the read maps off the end of the alignment, clip it
+            while(it.hasNext()) {
+                SAMRecord rec = it.next();
+                SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
+                if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
+                    // 1-based index of first base in read to clip.
+                    int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+                    List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
+                    rec.setCigar(new Cigar(newCigarElements));
+                }
+                writer.addAlignment(rec);
+
             }
-            writer.addAlignment(rec);
-
+            writer.close();
+            it.close();
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
-        writer.close();
-        it.close();
         return 0;
     }
 

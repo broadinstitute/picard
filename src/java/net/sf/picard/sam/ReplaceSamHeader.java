@@ -63,25 +63,30 @@ public class ReplaceSamHeader extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
+        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsReadable(HEADER);
-        IoUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader headerReader = new SAMFileReader(HEADER);
-        final SAMFileHeader replacementHeader = headerReader.getFileHeader();
-        final SAMFileReader recordReader = new SAMFileReader(INPUT);
-        if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
-            throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
-            ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
+        try {
+            IoUtil.assertFileIsReadable(INPUT);
+            IoUtil.assertFileIsReadable(HEADER);
+            IoUtil.assertFileIsWritable(OUTPUT);
+            final SAMFileReader headerReader = new SAMFileReader(HEADER);
+            final SAMFileHeader replacementHeader = headerReader.getFileHeader();
+            final SAMFileReader recordReader = new SAMFileReader(INPUT);
+            if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
+                throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
+                ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
+            }
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+            for (final SAMRecord rec : recordReader) {
+                rec.setHeader(replacementHeader);
+                writer.addAlignment(rec);
+            }
+            writer.close();
+            headerReader.close();
+            recordReader.close();
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
-        for (final SAMRecord rec : recordReader) {
-            rec.setHeader(replacementHeader);
-            writer.addAlignment(rec);
-        }
-        writer.close();
-        headerReader.close();
-        recordReader.close();
         return 0;
     }
 }
