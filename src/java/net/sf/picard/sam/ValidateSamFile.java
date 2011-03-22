@@ -116,44 +116,50 @@ public class ValidateSamFile extends CommandLineProgram {
             out = new PrintWriter(System.out);
         }
 
+        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-        final SAMFileReader samReader = new SAMFileReader(INPUT);
-        if (!samReader.isBinary()) VALIDATE_INDEX=false;
-        if (VALIDATE_INDEX){
-            samReader.enableIndexCaching(true);
-        }
-        samReader.enableCrcChecking(true);
+        boolean result;
+        try {
+            final SAMFileReader samReader = new SAMFileReader(INPUT);
+            if (!samReader.isBinary()) VALIDATE_INDEX=false;
+            if (VALIDATE_INDEX){
+                samReader.enableIndexCaching(true);
+            }
+            samReader.enableCrcChecking(true);
 
-        final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
-        validator.setErrorsToIgnore(IGNORE);
-        
-        if (IGNORE_WARNINGS) {
-            validator.setIgnoreWarnings(IGNORE_WARNINGS);
-        }
-        if (MODE == ValidateSamFile.Mode.SUMMARY) {
-            validator.setVerbose(false, 0);
-        } else {
-            validator.setVerbose(true, MAX_OUTPUT);
-        }
-        if (IS_BISULFITE_SEQUENCED) {
-            validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
-        }
-        if (VALIDATE_INDEX){
-            validator.setValidateIndex(VALIDATE_INDEX);
-        }
-        validator.validateBamFileTermination(INPUT);
+            final SamFileValidator validator = new SamFileValidator(out, MAX_OPEN_TEMP_FILES);
+            validator.setErrorsToIgnore(IGNORE);
 
-        boolean result = false;
+            if (IGNORE_WARNINGS) {
+                validator.setIgnoreWarnings(IGNORE_WARNINGS);
+            }
+            if (MODE == Mode.SUMMARY) {
+                validator.setVerbose(false, 0);
+            } else {
+                validator.setVerbose(true, MAX_OUTPUT);
+            }
+            if (IS_BISULFITE_SEQUENCED) {
+                validator.setBisulfiteSequenced(IS_BISULFITE_SEQUENCED);
+            }
+            if (VALIDATE_INDEX){
+                validator.setValidateIndex(VALIDATE_INDEX);
+            }
+            validator.validateBamFileTermination(INPUT);
 
-        switch (MODE) {
-            case SUMMARY:
-                result = validator.validateSamFileSummary(samReader, reference);
-                break;
-            case VERBOSE:
-                result = validator.validateSamFileVerbose(samReader, reference);
-                break;
+            result = false;
+
+            switch (MODE) {
+                case SUMMARY:
+                    result = validator.validateSamFileSummary(samReader, reference);
+                    break;
+                case VERBOSE:
+                    result = validator.validateSamFileVerbose(samReader, reference);
+                    break;
+            }
+            out.flush();
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
-        out.flush();
 
         return result ? 0 : 1;
     }

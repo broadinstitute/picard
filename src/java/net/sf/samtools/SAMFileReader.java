@@ -45,6 +45,10 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     /**
      * Set validation stringency for all subsequently-created SAMFileReaders.  This is the only way to
      * change the validation stringency for SAM header.
+     * NOTE: Programs that change this should make sure to have a try/finally clause wrapping the work that
+     * they do, so that the original stringency can be restored after the program's work is done.  This facilitates
+     * calling a program that is usually run stand-alone from another program, without messing up the original
+     * validation stringency.
      */
     public static void setDefaultValidationStringency(final ValidationStringency defaultValidationStringency) {
         SAMFileReader.defaultValidationStringency = defaultValidationStringency;
