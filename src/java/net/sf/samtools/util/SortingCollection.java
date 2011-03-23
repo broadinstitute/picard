@@ -107,6 +107,8 @@ public class SortingCollection<T>
      */
     private final List<File> files = new ArrayList<File>();
 
+    private boolean destructiveIteration = false;
+
     /**
      * Prepare to accumulate records to be sorted
      * @param componentType Class of the record to be sorted.  Necessary because of Java generic lameness.
@@ -165,6 +167,22 @@ public class SortingCollection<T>
 
         // Facilitate GC
         this.ramRecords = null;
+    }
+
+    /**
+     * @return True if this collection is allowed to discard data during iteration in order to reduce memory
+     * footprint, precluding a second iteration over the collection.
+     */
+    public boolean isDestructiveIteration() {
+        return destructiveIteration;
+    }
+
+    /**
+     * Tell this collection that it is allowed to discard data during iteration in order to reduce memory footprint,
+     * precluding a second iteration.  This is true by default.
+     */
+    public void setDestructiveIteration(boolean destructiveIteration) {
+        this.destructiveIteration = destructiveIteration;
     }
 
     /**
@@ -290,7 +308,10 @@ public class SortingCollection<T>
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return SortingCollection.this.ramRecords[iterationIndex++];
+            T ret = SortingCollection.this.ramRecords[iterationIndex];
+            if (destructiveIteration) SortingCollection.this.ramRecords[iterationIndex] = null;
+            ++iterationIndex;
+            return ret;
         }
 
         public void remove() {
