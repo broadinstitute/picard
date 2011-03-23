@@ -96,6 +96,7 @@ public class SortingCollectionTest {
         Arrays.sort(strings, new StringComparator());
 
         Assert.assertEquals(tmpDirIsEmpty(), numStringsToGenerate <= maxRecordsInRam);
+        sortingCollection.setDestructiveIteration(false);
         assertIteratorEqualsList(strings, sortingCollection);
         assertIteratorEqualsList(strings, sortingCollection);
         
