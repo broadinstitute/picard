@@ -157,10 +157,15 @@ public abstract class CommandLineProgram {
             ret = doWork();
         } finally {
             SAMFileReader.setDefaultValidationStringency(originalStringency);
-            // Emit the time even if program throws
-            if (!QUIET) {
-                System.err.println("[" + new Date() + "] " + getClass().getName() + " done.");
-                System.err.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+            try {
+                // Emit the time even if program throws
+                if (!QUIET) {
+                    System.err.println("[" + new Date() + "] " + getClass().getName() + " done.");
+                    System.err.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+                }
+            }
+            catch (Throwable e) {
+                // do nothing
             }
         }
         return ret;
