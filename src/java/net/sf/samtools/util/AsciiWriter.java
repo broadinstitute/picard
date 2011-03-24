@@ -34,7 +34,7 @@ public class AsciiWriter extends Writer {
 
     private final OutputStream os;
     // Buffer size has not been tuned.
-    private final byte[] buffer = new byte[10000];
+    private final byte[] buffer = new byte[IOUtil.STANDARD_BUFFER_SIZE];
     private int numBytes;
 
     /**

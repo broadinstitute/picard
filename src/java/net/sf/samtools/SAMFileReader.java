@@ -479,7 +479,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
 
         try {
             final BufferedInputStream bufferedStream;
-            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file));
+            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file), IOUtil.STANDARD_BUFFER_SIZE);
             else bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;

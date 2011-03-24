@@ -194,7 +194,7 @@ public class SortingCollection<T>
             final File f = File.createTempFile("sortingcollection.", ".tmp", this.tmpDir);
             OutputStream os = null;
             try {
-                os = new BufferedOutputStream(new FileOutputStream(f));
+                os = new BufferedOutputStream(new FileOutputStream(f), IOUtil.STANDARD_BUFFER_SIZE);
                 this.codec.setOutputStream(os);
                 f.deleteOnExit();
                 for (int i = 0; i < this.numRecordsInRam; ++i) {
@@ -398,7 +398,7 @@ public class SortingCollection<T>
             try {
                 this.is = new FileInputStream(file);
                 this.codec = SortingCollection.this.codec.clone();
-                this.codec.setInputStream(new BufferedInputStream(this.is));
+                this.codec.setInputStream(new BufferedInputStream(this.is, IOUtil.STANDARD_BUFFER_SIZE));
                 advance();
             }
             catch (FileNotFoundException e) {

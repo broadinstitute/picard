@@ -37,7 +37,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * @author Tim Fennell
  */
-public class IoUtil {
+public class IoUtil extends net.sf.samtools.util.IOUtil {
     /**
      * Checks that a file is non-null, exists, is not a directory and is readable.  If any
      * condition is false then a runtime exception is thrown.
@@ -231,7 +231,7 @@ public class IoUtil {
      */
     public static BufferedWriter openFileForBufferedWriting(final File file, final boolean append) {
         try {
-            return new BufferedWriter(new FileWriter(file, append));
+            return new BufferedWriter(new FileWriter(file, append), STANDARD_BUFFER_SIZE);
         } catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
         }
@@ -242,7 +242,7 @@ public class IoUtil {
      */
     public static BufferedWriter openFileForBufferedWriting(final File file) {
         try {
-            return new BufferedWriter(new FileWriter(file, false));
+            return new BufferedWriter(new FileWriter(file, false), STANDARD_BUFFER_SIZE);
         } catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
         }
@@ -374,7 +374,7 @@ public class IoUtil {
 
     /** Checks that a file exists and is readable, and then returns a buffered reader for it. */
     public static BufferedReader openFileForBufferedReading(final File file) throws IOException {
-        return new BufferedReader(new InputStreamReader(openFileForReading(file)));
+        return new BufferedReader(new InputStreamReader(openFileForReading(file)), STANDARD_BUFFER_SIZE);
 	}
 
     /** Takes a string and replaces any characters that are not safe for filenames with an underscore */
@@ -427,7 +427,7 @@ public class IoUtil {
      */
     public static String readFully(final InputStream in) {
         try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(in));
+            BufferedReader r = new BufferedReader(new InputStreamReader(in), STANDARD_BUFFER_SIZE);
             StringBuilder builder = new StringBuilder(512);
             String line = null;
 
