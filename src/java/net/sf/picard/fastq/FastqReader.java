@@ -24,6 +24,7 @@
 package net.sf.picard.fastq;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.RuntimeIOException;
 import net.sf.samtools.util.StringUtil;
 import net.sf.picard.io.IoUtil;
 import java.util.Iterator;
@@ -40,9 +41,14 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
     private int line=1; 
 
     public FastqReader(final File file) {
-        fastqFile = file;
-        reader = new BufferedReader(new InputStreamReader(IoUtil.openFileForReading(fastqFile)));
-        nextRecord = readNextRecord();
+        try {
+            fastqFile = file;
+            reader = IoUtil.openFileForBufferedReading(fastqFile);
+            nextRecord = readNextRecord();
+        }
+        catch (IOException ioe) {
+            throw new RuntimeIOException(ioe);
+        }
     }
 
     private FastqRecord readNextRecord() {

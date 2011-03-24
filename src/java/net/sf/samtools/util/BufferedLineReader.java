@@ -42,7 +42,7 @@ public class BufferedLineReader implements LineReader {
     private String peekedLine;
 
     public BufferedLineReader(final InputStream is) {
-        reader = new BufferedReader(new InputStreamReader(is));
+        this(is, IOUtil.STANDARD_BUFFER_SIZE);
     }
 
     public BufferedLineReader(final InputStream is, final int bufferSize) {

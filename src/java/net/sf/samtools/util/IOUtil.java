@@ -32,6 +32,9 @@ import java.io.File;
  * Miscellaneous stateless static IO-oriented methods.
  */
 public class IOUtil {
+    // Purposely not final to give folks a back door to change it!
+    public static int STANDARD_BUFFER_SIZE = 1024 * 128; // == 128k
+
     /**
      * Wrap the given stream in a BufferedInputStream, if it isn't already wrapper
      * @param stream stream to be wrapped
@@ -41,7 +44,7 @@ public class IOUtil {
         if (stream instanceof BufferedInputStream) {
             return (BufferedInputStream) stream;
         } else {
-            return new BufferedInputStream(stream);
+            return new BufferedInputStream(stream, STANDARD_BUFFER_SIZE);
         }
     }
 

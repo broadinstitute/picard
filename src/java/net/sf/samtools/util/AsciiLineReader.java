@@ -50,11 +50,7 @@ public class AsciiLineReader implements LineReader {
      * @param is need not be buffered, because this class does buffered reading
      */
     public AsciiLineReader(final InputStream is) {
-        if (useAsciiLineReaderImpl) {
-            readerImpl = new AsciiLineReaderImpl(is);
-        } else {
-            readerImpl = new BufferedLineReader(is);
-        }
+        this(is, IOUtil.STANDARD_BUFFER_SIZE);
     }
 
     /**

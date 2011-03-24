@@ -115,7 +115,7 @@ public class IntervalList implements Iterable<Interval> {
                                         previous.getStart(),
                                         Math.max(previous.getEnd(), next.getEnd()),
                                         previous.isNegativeStrand(),
-                                        previous.getName());
+                                        previous.getName() + "|" + next.getName());
             }
             else {
                 unique.add(previous);
@@ -149,7 +149,7 @@ public class IntervalList implements Iterable<Interval> {
      * @return an IntervalList object that contains the headers and intervals from the file
      */
     public static IntervalList fromFile(final File file) {
-        return fromReader(new BufferedReader(new InputStreamReader(IoUtil.openFileForReading(file))));
+        return fromReader(new BufferedReader(new InputStreamReader(IoUtil.openFileForReading(file)), IoUtil.STANDARD_BUFFER_SIZE));
     }
 
     /**
@@ -231,7 +231,7 @@ public class IntervalList implements Iterable<Interval> {
      */
     public void write(final File file) {
         try {
-            final BufferedWriter out = new BufferedWriter(new OutputStreamWriter(IoUtil.openFileForWriting(file)));
+            final BufferedWriter out = new BufferedWriter(new OutputStreamWriter(IoUtil.openFileForWriting(file)), IoUtil.STANDARD_BUFFER_SIZE);
             final FormatUtil format = new FormatUtil();
 
             // Write out the header
