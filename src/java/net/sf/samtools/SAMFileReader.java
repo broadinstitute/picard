@@ -87,6 +87,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     static abstract class ReaderImplementation {
         abstract void enableFileSource(final SAMFileReader reader, final boolean enabled);
         abstract void enableIndexCaching(final boolean enabled);
+        abstract void enableIndexMemoryMapping(final boolean enabled);
         abstract void enableCrcChecking(final boolean enabled);
         abstract boolean hasIndex();
         abstract BAMIndex getIndex();
@@ -213,6 +214,18 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         if(mIndex != null)
             throw new SAMException("Unable to turn on index caching; index file has already been loaded.");
         mReader.enableIndexCaching(enabled);
+    }
+
+    /**
+     * If false, disable the use of memory mapping for accessing index files (default behavior is to use memory mapping).
+     * This is slower but more scalable when accessing large numbers of BAM files sequentially.
+     * @param enabled True to use memory mapping, false to use regular I/O.
+     */
+    public void enableIndexMemoryMapping(final boolean enabled) {
+        if (mIndex != null) {
+            throw new SAMException("Unable to change index memory mapping; index file has already been loaded.");
+        }
+        mReader.enableIndexMemoryMapping(enabled);
     }
 
     /**

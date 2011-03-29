@@ -60,6 +60,11 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     private boolean mEnableIndexCaching = false;
 
     /**
+     * Use the traditional memory-mapped implementation for BAM file indexes rather than regular I/O.
+     */
+    private boolean mEnableIndexMemoryMapping = true;
+
+    /**
      * Add information about the origin (reader and position) to SAM records.
      */
     private SAMFileReader mFileReader = null;
@@ -132,6 +137,18 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this.mEnableIndexCaching = enabled;
     }
 
+    /**
+     * If false, disable the use of memory mapping for accessing index files (default behavior is to use memory mapping).
+     * This is slower but more scalable when accessing large numbers of BAM files sequentially.
+     * @param enabled True to use memory mapping, false to use regular I/O.
+     */
+    public void enableIndexMemoryMapping(final boolean enabled) {
+        if (mIndex != null) {
+            throw new SAMException("Unable to change index memory mapping; index file has already been loaded.");
+        }
+        this.mEnableIndexMemoryMapping = enabled;
+    }
+
     @Override
     void enableCrcChecking(boolean enabled) {
         this.mCompressedInputStream.setCheckCrcs(enabled);
@@ -152,14 +169,17 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if(mIndexFile == null)
             throw new SAMException("No index is available for this BAM file.");
         if(mIndex == null)
-            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary())
-                                         : new DiskBasedBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary() );
+            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping)
+                                         : new DiskBasedBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping);
         return mIndex;
-    }    
+    }
 
     void close() {
         if (mStream != null) {
             mStream.close();
+        }
+        if (mIndex != null) {
+            mIndex.close();
         }
         mStream = null;
         mFileHeader = null;
