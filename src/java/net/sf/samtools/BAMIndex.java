@@ -57,4 +57,9 @@ public interface BAMIndex {
      * @return meta data for the reference
      */
     public BAMIndexMetaData getMetaData(int reference);
+
+    /**
+     * Close the index and release any associated resources.
+     */
+    void close();
 }

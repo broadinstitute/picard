@@ -37,6 +37,10 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
         super(file, dictionary);
     }
 
+    DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
+        super(file, dictionary, useMemoryMapping);
+    }
+
     /**
      * Get list of regions of BAM file that may contain SAMRecords for the given range
      * @param referenceIndex sequence of desired SAMRecords

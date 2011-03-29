@@ -62,26 +62,18 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
 
     private final File mFile;
-    private final MappedByteBuffer mFileBuffer;
+    private final IndexFileBuffer mIndexBuffer;
 
     private SAMSequenceDictionary mBamDictionary = null;
 
     protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
+        this(file, dictionary, true);
+    }
+
+    protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
         mFile = file;
         mBamDictionary = dictionary;
-        // Open the file stream.
-        try {
-            FileInputStream fileStream = new FileInputStream(mFile);
-            FileChannel fileChannel = fileStream.getChannel();
-            mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
-            mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            fileChannel.close();
-            fileStream.close();
-        }
-        catch (IOException exc) {
-            throw new RuntimeIOException(exc.getMessage(), exc);
-        }
+        mIndexBuffer = (useMemoryMapping ? new MemoryMappedFileBuffer(file) : new RandomAccessFileBuffer(file));
 
         // Verify the magic number.
         seek(0);
@@ -91,6 +83,13 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             throw new RuntimeException("Invalid file header in BAM index " + mFile +
                                        ": " + new String(buffer));
         }
+    }
+
+    /**
+     * Close this index and release any associated resources.
+     */
+    public void close() {
+        mIndexBuffer.close();
     }
 
     /**
@@ -434,22 +433,187 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     }
 
     private void readBytes(final byte[] bytes) {
-        mFileBuffer.get(bytes);
+        mIndexBuffer.readBytes(bytes);
     }
 
     private int readInteger() {
-        return mFileBuffer.getInt();
+        return mIndexBuffer.readInteger();
     }
 
     private long readLong() {
-        return mFileBuffer.getLong();
+        return mIndexBuffer.readLong();
     }
 
     private void skipBytes(final int count) {
-        mFileBuffer.position(mFileBuffer.position() + count);
+        mIndexBuffer.skipBytes(count);
     }
 
     private void seek(final int position) {
-        mFileBuffer.position(position);
+        mIndexBuffer.seek(position);
+    }
+
+    private abstract static class IndexFileBuffer {
+        abstract void readBytes(final byte[] bytes);
+        abstract int readInteger();
+        abstract long readLong();
+        abstract void skipBytes(final int count);
+        abstract void seek(final int position);
+        abstract void close();
+    }
+
+    /**
+     * Traditional implementation of BAM index file access using memory mapped files.
+     */
+    private static class MemoryMappedFileBuffer extends IndexFileBuffer {
+        private MappedByteBuffer mFileBuffer;
+
+        MemoryMappedFileBuffer(File file) {
+            try {
+                // Open the file stream.
+                FileInputStream fileStream = new FileInputStream(file);
+                FileChannel fileChannel = fileStream.getChannel();
+                mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
+                mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                fileChannel.close();
+                fileStream.close();
+            } catch (IOException exc) {
+                throw new RuntimeIOException(exc.getMessage(), exc);
+            }
+        }
+
+        void readBytes(final byte[] bytes) {
+            mFileBuffer.get(bytes);
+        }
+
+        int readInteger() {
+            return mFileBuffer.getInt();
+        }
+
+        long readLong() {
+            return mFileBuffer.getLong();
+        }
+
+        void skipBytes(final int count) {
+            mFileBuffer.position(mFileBuffer.position() + count);
+        }
+
+        void seek(final int position) {
+            mFileBuffer.position(position);
+        }
+
+        void close() {
+            mFileBuffer = null;
+        }
+    }
+
+    /**
+     * Alternative implementation of BAM index file access using regular I/O instead of memory mapping.
+     * 
+     * This implementation can be more scalable for certain applications that need to access large numbers of BAM files.
+     * Java provides no way to explicitly release a memory mapping.  Instead, you need to wait for the garbage collector
+     * to finalize the MappedByteBuffer.  Because of this, when accessing many BAM files or when querying many BAM files
+     * sequentially, you cannot easily control the physical memory footprint of the java process.
+     * This can limit scalability and can have bad interactions with load management software like LSF, forcing you
+     * to reserve enough physical memory for a worst case scenario.
+     * The use of regular I/O allows you to trade somewhat slower performance for a small, fixed memory footprint
+     * if that is more suitable for your application.
+     */
+    private static class RandomAccessFileBuffer extends IndexFileBuffer {
+        private static final int PAGE_SIZE = 4 * 1024;
+        private static final int PAGE_OFFSET_MASK = PAGE_SIZE-1;
+        private static final int PAGE_MASK = ~PAGE_OFFSET_MASK;
+        private static final int INVALID_PAGE = 1;
+        private File mFile;
+        private RandomAccessFile mRandomAccessFile;
+        private int mFileLength;
+        private int mFilePointer = 0;
+        private int mCurrentPage = INVALID_PAGE;
+        private final byte[] mBuffer = new byte[PAGE_SIZE];
+
+        RandomAccessFileBuffer(File file) {
+            mFile = file;
+            try {
+                mRandomAccessFile = new RandomAccessFile(file, "r");
+                long fileLength = mRandomAccessFile.length();
+                if (fileLength > Integer.MAX_VALUE) {
+                    throw new RuntimeException("BAM index file " + mFile + " is too large: " + fileLength);
+                }
+                mFileLength = (int) fileLength;
+            } catch (IOException exc) {
+                throw new RuntimeIOException(exc.getMessage(), exc);
+            }
+        }
+
+        void readBytes(final byte[] bytes) {
+            int resultOffset = 0;
+            int resultLength = bytes.length;
+            if (mFilePointer + resultLength > mFileLength) {
+                throw new RuntimeException("Attempt to read past end of BAM index file (file is truncated?): " + mFile);
+            }
+            while (resultLength > 0) {
+                loadPage(mFilePointer);
+                final int pageOffset = mFilePointer & PAGE_OFFSET_MASK;
+                final int copyLength = Math.min(resultLength, PAGE_SIZE - pageOffset);
+                System.arraycopy(mBuffer, pageOffset, bytes, resultOffset, copyLength);
+                mFilePointer += copyLength;
+                resultOffset += copyLength;
+                resultLength -= copyLength;
+            }
+        }
+
+        int readInteger() {
+            // This takes advantage of the fact that integers in BAM index files are always 4-byte aligned.
+            loadPage(mFilePointer);
+            final int pageOffset = mFilePointer & PAGE_OFFSET_MASK;
+            mFilePointer += 4;
+            return((mBuffer[pageOffset + 0] & 0xFF) |
+                   ((mBuffer[pageOffset + 1] & 0xFF) << 8) | 
+                   ((mBuffer[pageOffset + 2] & 0xFF) << 16) |
+                   ((mBuffer[pageOffset + 3] & 0xFF) << 24));
+        }
+
+        long readLong() {
+            // BAM index files are always 4-byte aligned, but not necessrily 8-byte aligned.
+            // So, rather than fooling with complex page logic we simply read the long in two 4-byte chunks.
+            long lower = readInteger();
+            long upper = readInteger();
+            return ((upper << 32) | (lower & 0xFFFFFFFFL));
+        }
+
+        void skipBytes(final int count) {
+            mFilePointer += count;
+        }
+        
+        void seek(final int position) {
+            mFilePointer = position;
+        }
+
+        void close() {
+            mFilePointer = 0;
+            mCurrentPage = INVALID_PAGE;
+            if (mRandomAccessFile != null) {
+                try {
+                    mRandomAccessFile.close();
+                } catch (IOException exc) {
+                    throw new RuntimeIOException(exc.getMessage(), exc);
+                }
+                mRandomAccessFile = null;
+            }
+        }
+
+        private void loadPage(int filePosition) {
+            final int page = filePosition & PAGE_MASK;
+            if (page == mCurrentPage) {
+                return;
+            }
+            try {
+                mRandomAccessFile.seek(page);
+                final int readLength = Math.min(mFileLength - page, PAGE_SIZE);
+                mRandomAccessFile.readFully(mBuffer, 0, readLength);
+                mCurrentPage = page;
+            } catch (IOException exc) {
+                throw new RuntimeIOException("Exception reading BAM index file " + mFile + ": " + exc.getMessage(), exc);
+            }
+        }
     }
 }

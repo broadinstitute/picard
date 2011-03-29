@@ -101,6 +101,10 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
         throw new UnsupportedOperationException("Cannot enable index caching for a SAM text reader");
     }
 
+    void enableIndexMemoryMapping(final boolean enabled) {
+        throw new UnsupportedOperationException("Cannot enable index memory mapping for a SAM text reader");
+    }
+
     void enableCrcChecking(boolean enabled) {
         // Do nothing - this has no meaning for SAM reading
     }
