@@ -46,26 +46,17 @@ public class SequenceUtil {
         return net.sf.samtools.util.StringUtil.bytesToString(bases);
     }
 
-    /** Attempts to efficiently compare two bases stored as bytes for equality.
-     * Assumes 'N' doesn't match.
-     */
-    public static boolean basesEqual(final byte lhs, final byte rhs) {
-        return basesEqual(lhs, rhs, false);
-    }
-
-    /** Attempts to efficiently compare two bases stored as bytes for equality.
-     * @param nMatches whether 'n' or 'N' should be considered matches */
-    public static boolean basesEqual(byte lhs, byte rhs, final boolean nMatches) {
-        final byte N = StringUtil.charToByte('N');
+    /** Attempts to efficiently compare two bases stored as bytes for equality. */
+    public static boolean basesEqual(byte lhs, byte rhs) {
         if (lhs == rhs) return true;
         else {
             if (lhs > 90) lhs -= 32;
             if (rhs > 90) rhs -= 32;
         }
 
-        return lhs == rhs || (nMatches && (rhs == N || lhs == N ));
+        return lhs == rhs;
     }
-    
+
     /**
      * returns true if the value of base represents a no call
      */
@@ -209,12 +200,12 @@ public class SequenceUtil {
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases) {
-        return countMismatches(read, referenceBases, 0, false, false);
+        return countMismatches(read, referenceBases, 0, false);
     }
 
     /** Calculates the number of mismatches between the read and the reference sequence provided. */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
-        return countMismatches(read, referenceBases, referenceOffset);
+        return countMismatches(read, referenceBases, referenceOffset, false);
     }
 
     /**
@@ -227,10 +218,9 @@ public class SequenceUtil {
      * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
      *      and C->T on the positive strand and G->A on the negative strand will not be counted
      *      as mismatches.
-     * @param nMatches If true, assume that N matches any base.
      */
     public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset,
-                                      final boolean bisulfiteSequence, final boolean nMatches) {
+                                      final boolean bisulfiteSequence) {
         try {
             int mismatches = 0;
 
@@ -243,7 +233,7 @@ public class SequenceUtil {
 
                 for (int i=0; i<length; ++i) {
                     if (!bisulfiteSequence) {
-                        if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i], nMatches)) {
+                        if (!basesEqual(readBases[readBlockStart+i], referenceBases[referenceBlockStart+i])) {
                             ++mismatches;
                         }
                     }
@@ -427,19 +417,9 @@ public class SequenceUtil {
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
                                         final int referenceOffset) {
-        return calculateSamNmTag(read, referenceBases, referenceOffset, false, false);
+        return calculateSamNmTag(read, referenceBases, referenceOffset, false);
     }
-     /**
-     * Calculates the for the predefined NM tag from the SAM spec. To the result of
-     * countMismatches() it adds 1 for each indel.
 
-     * @param referenceOffset 0-based offset of the first element of referenceBases relative to the start
-     * of that reference sequence.
-     */
-    public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
-                                        final int referenceOffset, final boolean bisulfiteSequence) {
-        return calculateSamNmTag(read, referenceBases, referenceOffset, bisulfiteSequence, false);
-    }
     /**
      * Calculates the for the predefined NM tag from the SAM spec. To the result of
      * countMismatches() it adds 1 for each indel.
@@ -451,8 +431,8 @@ public class SequenceUtil {
      *      as mismatches.
      */
     public static int calculateSamNmTag(final SAMRecord read, final byte[] referenceBases,
-                                        final int referenceOffset, final boolean bisulfiteSequence, final boolean nMatches) {
-        int samNm = countMismatches(read, referenceBases, referenceOffset, bisulfiteSequence, nMatches);
+                                        final int referenceOffset, final boolean bisulfiteSequence) {
+        int samNm = countMismatches(read, referenceBases, referenceOffset, bisulfiteSequence);
         for (final CigarElement el : read.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.INSERTION || el.getOperator() == CigarOperator.DELETION) {
                 samNm += el.getLength();
@@ -556,8 +536,6 @@ public class SequenceUtil {
      *
      */
     static final Pattern mdPat = Pattern.compile("\\G(?:([0-9]+)|([ACTGNactgn])|(\\^[ACTGNactgn]+))");
-
-    static final char READ_DASH = '-';     // 45
 
     /**
      * Produce reference bases from an aligned SAMRecord with MD string and Cigar.
