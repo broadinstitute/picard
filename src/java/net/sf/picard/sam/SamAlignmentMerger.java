@@ -49,6 +49,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *                            not provided, then read1AlignedSamFile and read2AlignedSamFile must be.
      * @param maxGaps             The maximum number of insertions or deletions permitted in an
      *                            alignment.  Alignments with more than this many gaps will be ignored.
+     *                            -1 means to allow any number of gaps.
      * @param attributesToRetain  private attributes from the alignment record that should be
      *                          included when merging.  This overrides the exclusion of
      *                          attributes whose tags start with the reserved characters
@@ -275,6 +276,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * or deletions.
      */
     protected boolean ignoreAlignment(SAMRecord sam) {
+        if (maxGaps == -1) return false;
         int gaps = 0;
         for (CigarElement el : sam.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.I || el.getOperator() == CigarOperator.D ) {
