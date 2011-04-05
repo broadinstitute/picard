@@ -82,7 +82,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         public boolean IS_BISULFITE_SEQUENCE = false;
     @Option(doc="Whether to output only aligned reads.  ") public boolean ALIGNED_READS_ONLY = false;
     @Option(doc="The maximum number of insertions or deletions permitted for an alignment to be " +
-            "included.  Alignments with more than this many insertions or deletions will be ignored.",
+            "included.  Alignments with more than this many insertions or deletions will be ignored.  " +
+            "Set to -1 to allow any number of insertions or deletions.",
             shortName="MAX_GAPS") public int MAX_INSERTIONS_OR_DELETIONS = 1;
     @Option(doc="Reserved alignment attributes (tags starting with X, Y, or Z) that should be " +
             "brought over from the alignment data when merging.")
