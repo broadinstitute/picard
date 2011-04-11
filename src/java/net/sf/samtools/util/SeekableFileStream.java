@@ -40,7 +40,11 @@ public class SeekableFileStream extends SeekableStream {
         while (n < length) {
             final int count = fis.read(buffer, offset + n, length - n);
             if (count < 0) {
+              if (n > 0) {
                 return n;
+              } else {
+                return count;
+              }
             }
             n += count;
         }
