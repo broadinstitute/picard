@@ -56,8 +56,14 @@ public class IoUtilTest {
 
     @Test(groups={"unix"})
     public void testGetCanonicalPath() throws IOException {
+        String tmpPath = System.getProperty("java.io.tmpdir");
+        String userName = System.getProperty("user.name");
 
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name"));
+        if(tmpPath.endsWith(userName)) {
+            tmpPath = tmpPath.substring(0, tmpPath.length() - userName.length());
+        }
+
+        File tmpDir = new File(tmpPath, userName);
         File actual = new File(tmpDir, "actual.txt");
         ProcessExecutor.execute(new String[]{"touch", actual.getAbsolutePath()});
         File symlink = new File(tmpDir, "symlink.txt");
