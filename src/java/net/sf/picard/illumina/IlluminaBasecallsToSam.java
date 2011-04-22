@@ -55,8 +55,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public String USAGE =
         getStandardUsagePreamble() +  "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n";
 
+    @Option(doc="Deprecated.  This does nothing.")
+    public boolean GENERATE_SECONDARY_BASE_CALLS = false;
     @Option(doc="Deprecated option; Use BASECALLS_DIR", mutex="BASECALLS_DIR")
     public File BUSTARD_DIR;
+    
     @Option(doc="The basecalls output directory. ", shortName="B", mutex = "BUSTARD_DIR")
     public File BASECALLS_DIR;
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
