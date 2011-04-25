@@ -1252,6 +1252,7 @@ public class SAMRecord implements Cloneable
         eagerDecode();
         samRecord.eagerDecode();
 
+        if (mReadName != null ? !mReadName.equals(samRecord.mReadName) : samRecord.mReadName != null) return false;
         if (mAttributes != null ? !mAttributes.equals(samRecord.mAttributes) : samRecord.mAttributes != null)
             return false;
         if (!Arrays.equals(mBaseQualities, samRecord.mBaseQualities)) return false;
@@ -1260,7 +1261,6 @@ public class SAMRecord implements Cloneable
         if (mMateReferenceName != null ? !mMateReferenceName.equals(samRecord.mMateReferenceName) : samRecord.mMateReferenceName != null)
             return false;
         if (!Arrays.equals(mReadBases, samRecord.mReadBases)) return false;
-        if (mReadName != null ? !mReadName.equals(samRecord.mReadName) : samRecord.mReadName != null) return false;
         if (mReferenceName != null ? !mReferenceName.equals(samRecord.mReferenceName) : samRecord.mReferenceName != null)
             return false;
 
