@@ -269,6 +269,7 @@
         <package-and-document-command title="CalculateHsMetrics"             main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
         <package-and-document-command title="CleanSam"                       main-class="net.sf.picard.sam.CleanSam"/>
         <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
+        <package-and-document-command title="CollectCDnaMetrics"             main-class="net.sf.picard.analysis.CollectCDnaMetrics"/>
         <package-and-document-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
         <package-and-document-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
         <package-and-document-command title="CollectMultipleMetrics"         main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
