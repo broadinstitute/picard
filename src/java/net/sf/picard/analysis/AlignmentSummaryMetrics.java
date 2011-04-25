@@ -71,6 +71,11 @@ public class AlignmentSummaryMetrics extends MetricBase {
      * The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS
      */
     public double PCT_PF_READS_ALIGNED;
+    
+    /**
+     * The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.
+     */
+    public long PF_ALIGNED_BASES;
 
     /**
      * The number of PF reads that were aligned to the reference sequence with a mapping quality of
@@ -96,6 +101,11 @@ public class AlignmentSummaryMetrics extends MetricBase {
      * to the reference at high quality (i.e. PF_HQ_ALIGNED READS).
      */
     public double PF_HQ_MEDIAN_MISMATCHES;
+
+    /**
+     * The rate of bases mismatching the reference for all bases aligned to the reference sequence.
+     */
+    public double PF_MISMATCH_RATE;
 
     /**
      * The percentage of bases that mismatch the reference in PF HQ aligned reads.
@@ -142,12 +152,4 @@ public class AlignmentSummaryMetrics extends MetricBase {
      * start of the read.
      */
     public double PCT_ADAPTER;
-
-    /**
-     * The denominator used when calculating the error rate.  This is equivalent to PF_HQ_ALIGNED_BASES less any bases
-     * that may be mismatches because of methylation.
-     */
-    private long errorRateDenominator = 0;
-    public void incrementErrorRateDenominator() { errorRateDenominator++; }
-    public long getErrorRateDenominator() { return errorRateDenominator; }
 }

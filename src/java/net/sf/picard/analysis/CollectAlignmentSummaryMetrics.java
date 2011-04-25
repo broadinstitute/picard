@@ -75,10 +75,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private byte[][] ADAPTER_SEQUENCES;
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
-    final MetricCollector<AlignmentSummaryMetrics> unpairedCollector     = constructCollector(Category.UNPAIRED);
-    final MetricCollector<AlignmentSummaryMetrics> firstOfPairCollector  = constructCollector(Category.FIRST_OF_PAIR);
-    final MetricCollector<AlignmentSummaryMetrics> secondOfPairCollector = constructCollector(Category.SECOND_OF_PAIR);
-    final MetricCollector<AlignmentSummaryMetrics> pairCollector         = constructCollector(Category.PAIR);
+    final AlignmentSummaryMetricsCollector unpairedCollector     = new AlignmentSummaryMetricsCollector(Category.UNPAIRED);
+    final AlignmentSummaryMetricsCollector firstOfPairCollector  = new AlignmentSummaryMetricsCollector(Category.FIRST_OF_PAIR);
+    final AlignmentSummaryMetricsCollector secondOfPairCollector = new AlignmentSummaryMetricsCollector(Category.SECOND_OF_PAIR);
+    final AlignmentSummaryMetricsCollector pairCollector         = new AlignmentSummaryMetricsCollector(Category.PAIR);
 
     // Usage and parameters
     @Usage
@@ -158,8 +158,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         }
 
         //if there are no reads in any category then we will returned an unpaired alignment summary metric with all zero values
-        if (unpairedCollector.getMetrics().TOTAL_READS > 0 ||
-            (firstOfPairCollector.getMetrics().TOTAL_READS == 0 && unpairedCollector.getMetrics().TOTAL_READS == 0)) {
+        if (unpairedCollector.getMetrics().TOTAL_READS > 0 || firstOfPairCollector.getMetrics().TOTAL_READS == 0) {
             file.addMetric(unpairedCollector.getMetrics());
         }
 
@@ -207,24 +206,26 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         return false;
     }
 
-    /** Constructs a metrics collector for the supplied category. */
-    private MetricCollector<AlignmentSummaryMetrics> constructCollector(final Category category) {
-        final MetricCollector<AlignmentSummaryMetrics> collector =
-            new AggregateMetricCollector<AlignmentSummaryMetrics>(new ReadCounter(), new QualityMappingCounter());
-        collector.setMetrics(new AlignmentSummaryMetrics());
-        collector.getMetrics().CATEGORY = category;
-        return collector;
-    }
-
     /**
      * Class that counts reads that match various conditions
      */
-    private class ReadCounter implements MetricCollector<AlignmentSummaryMetrics> {
+    private class AlignmentSummaryMetricsCollector {
         private long numPositiveStrand = 0;
         private final Histogram<Integer> readLengthHistogram = new Histogram<Integer>();
         private AlignmentSummaryMetrics metrics;
         private long chimeras;
         private long adapterReads;
+
+        private int nonBisulfiteAlignedBases = 0;
+        private int hqNonBisulfiteAlignedBases = 0;
+        private final Histogram<Long> mismatchHistogram = new Histogram<Long>();
+        private final Histogram<Long> hqMismatchHistogram = new Histogram<Long>();
+        private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
+
+        public AlignmentSummaryMetricsCollector(Category pairingCategory) {
+            metrics = new AlignmentSummaryMetrics();
+            metrics.CATEGORY = pairingCategory;
+        }
 
         public void addRecord(final SAMRecord record, final ReferenceSequence ref) {
             if (record.getNotPrimaryAlignmentFlag()) {
@@ -232,6 +233,42 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 return;
             }
 
+            collectReadData(record, ref);
+            collectQualityData(record, ref);
+        }
+
+        public void onComplete() {
+
+            //summarize read data
+            if (metrics.TOTAL_READS > 0)
+            {
+                metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
+                metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
+                metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
+
+                //Calculate BAD_CYCLES
+                metrics.BAD_CYCLES = 0;
+                for (final Histogram<Integer>.Bin cycleBin : badCycleHistogram.values()) {
+                    final double badCyclePercentage = cycleBin.getValue() / metrics.TOTAL_READS;
+                    if (badCyclePercentage >= .8) {
+                        metrics.BAD_CYCLES++;
+                    }
+                }
+
+                if(doRefMetrics) {
+                    metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
+                    metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
+                    metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
+                    metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+
+                    metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
+                    metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
+                    metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
+                }
+            }
+        }
+
+        private void collectReadData(final SAMRecord record, final ReferenceSequence ref) {
             metrics.TOTAL_READS++;
             readLengthHistogram.increment(record.getReadBases().length);
 
@@ -275,48 +312,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             }
         }
 
-        public void onComplete() {
-            if (metrics.TOTAL_READS > 0)
-            {
-                metrics.PCT_PF_READS = (double) metrics.PF_READS / (double) metrics.TOTAL_READS;
-                metrics.PCT_ADAPTER = this.adapterReads / (double) metrics.PF_READS;
-                metrics.MEAN_READ_LENGTH = readLengthHistogram.getMean();
-
-                if(doRefMetrics) {
-                    metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-                    metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
-                    metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
-                    metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
-                }
-            }
-        }
-
-        private boolean isNoiseRead(final SAMRecord record) {
-            final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
-            return (noiseAttribute != null && noiseAttribute.equals(1));
-        }
-
-        public void setMetrics(final AlignmentSummaryMetrics metrics) {
-            this.metrics = metrics;
-        }
-
-        public AlignmentSummaryMetrics getMetrics() {
-            return this.metrics;
-        }
-    }
-
-    /**
-     * Class that counts quality mappings & base calls that match various conditions
-     */
-    private class QualityMappingCounter implements MetricCollector<AlignmentSummaryMetrics> {
-        private final Histogram<Long> mismatchHistogram = new Histogram<Long>();
-        private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
-        private AlignmentSummaryMetrics metrics;
-
-        public void addRecord(final SAMRecord record, final ReferenceSequence reference) {
-            if (record.getNotPrimaryAlignmentFlag()) {
-                return;
-            }
+        private void collectQualityData(final SAMRecord record, final ReferenceSequence reference)
+        {
             if (record.getReadUnmappedFlag() || !doRefMetrics) {
                 final byte[] readBases = record.getReadBases();
                 for (int i = 0; i < readBases.length; i++) {
@@ -332,7 +329,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 final byte[] refBases = reference.getBases();
                 final byte[] qualities  = record.getBaseQualities();
                 final int refLength = refBases.length;
-                long mismatchCount = 0;
+                long mismatchCount   = 0;
+                long hqMismatchCount = 0;
 
                 for (final AlignmentBlock alignmentBlock : record.getAlignmentBlocks()) {
                     final int readIndex = alignmentBlock.getReadStart() - 1;
@@ -355,16 +353,24 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                                 mismatch = false;
                             }
                         }
+
+                        if(mismatch) mismatchCount++;
+
+                        metrics.PF_ALIGNED_BASES++;
+                        if(!bisulfiteBase) {
+                            nonBisulfiteAlignedBases++;
+                        }
+                        
                         if (highQualityMapping) {
                             metrics.PF_HQ_ALIGNED_BASES++;
                             if (!bisulfiteBase) {
-                                metrics.incrementErrorRateDenominator();
+                                hqNonBisulfiteAlignedBases++;
                             }
                             if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) {
                                 metrics.PF_HQ_ALIGNED_Q20_BASES++;
                             }
                             if (mismatch) {
-                                mismatchCount++;
+                                hqMismatchCount++;
                             }
                         }
                         if (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex])) {
@@ -372,8 +378,15 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                         }
                     }
                 }
+
                 mismatchHistogram.increment(mismatchCount);
+                hqMismatchHistogram.increment(hqMismatchCount);
             }
+        }
+
+        private boolean isNoiseRead(final SAMRecord record) {
+            final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
+            return (noiseAttribute != null && noiseAttribute.equals(1));
         }
 
         private boolean isHighQualityMapping(final SAMRecord record) {
@@ -381,93 +394,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD;
         }
 
-        public void onComplete() {
-            if(metrics.TOTAL_READS > 0) {
-                if(doRefMetrics) {
-                metrics.PF_HQ_MEDIAN_MISMATCHES = mismatchHistogram.getMedian();
-                metrics.PF_HQ_ERROR_RATE = mismatchHistogram.getSum() / (double)metrics.getErrorRateDenominator();
-                }
-
-                metrics.BAD_CYCLES = 0;
-
-                for (final Histogram<Integer>.Bin cycleBin : badCycleHistogram.values()) {
-                    final double badCyclePercentage = cycleBin.getValue() / metrics.TOTAL_READS;
-                    if (badCyclePercentage >= .8) {
-                        metrics.BAD_CYCLES++;
-                    }
-                }
-            }
-        }
-
-        public void setMetrics(final AlignmentSummaryMetrics metrics) {
-            this.metrics = metrics;
-        }
-
         public AlignmentSummaryMetrics getMetrics() {
             return this.metrics;
-        }
-    }
-
-    /**
-     * Interface for objects that collect metrics.
-     *
-     * @author Doug Voet (dvoet at broadinstitute dot org)
-     *
-     * @param <T> the type of the metrics object
-     */
-    public static interface MetricCollector<T extends MetricBase> {
-        T getMetrics();
-
-        /** Called after collector is constructed to populate the metrics object. */
-        void setMetrics(T metrics);
-
-        /**
-         * Called when collection is complete. Implementations can do any calculations
-         * that must wait until all records are visited at this time.
-         */
-        void onComplete();
-
-        /**
-         * Visitor method called to have a record considered by the collector.
-         */
-        void addRecord(SAMRecord record, ReferenceSequence reference);
-    }
-
-    /**
-     * Collector that aggregates a number of other collectors.
-     *
-     * @author Doug Voet (dvoet at broadinstitute dot org)
-     */
-    public static class AggregateMetricCollector<T extends MetricBase> implements MetricCollector<T> {
-        private final MetricCollector<T>[] collectors;
-
-        public AggregateMetricCollector(final MetricCollector<T>... collectors) {
-            if (collectors.length == 0) {
-                throw new IllegalArgumentException("Must supply at least one collector.");
-            }
-            this.collectors = collectors;
-        }
-
-        public void addRecord(final SAMRecord record, ReferenceSequence ref) {
-            for (final MetricCollector<T> collector : this.collectors) {
-                collector.addRecord(record, ref);
-            }
-        }
-
-        public void onComplete() {
-            for (final MetricCollector<T> collector : this.collectors) {
-                collector.onComplete();
-            }
-        }
-
-        public void setMetrics(final T metrics) {
-            for (final MetricCollector<T> collector : this.collectors) {
-                collector.setMetrics(metrics);
-            }
-        }
-
-        public T getMetrics() {
-            return this.collectors[0].getMetrics();
         }
     }
 }
