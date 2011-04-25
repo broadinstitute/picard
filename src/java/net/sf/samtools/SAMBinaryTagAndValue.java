@@ -51,7 +51,7 @@ public class SAMBinaryTagAndValue {
         if (this.tag != that.tag) return false;
         if ((this.value == null) ? that.value == null : this.value.equals(that.value)) {
             if (this.next == null) return that.next == null;
-            else return this.next.typeSafeEquals(that.next);
+            else return this.next.equals(that.next);
         }
         else {
             return false;
