@@ -23,14 +23,10 @@
  */
 package net.sf.picard.annotation;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.util.OverlapDetector;
-import net.sf.picard.util.TabbedTextFileParser;
 import net.sf.samtools.SAMSequenceDictionary;
 
-import java.io.Console;
 import java.io.File;
-import java.util.*;
 
 /**
  * Load gene annotations into an OverlapDetector of Gene objects.

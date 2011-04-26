@@ -41,7 +41,7 @@ import net.sf.samtools.util.CloseableIterator;
  *
  * @author Kathleen Tibbetts
  */
-public abstract class AbstractTextFileParser
+public abstract class AbstractInputParser
 extends AbstractIterator<String[]>
 implements Iterable<String[]>, CloseableIterator<String[]> {
 

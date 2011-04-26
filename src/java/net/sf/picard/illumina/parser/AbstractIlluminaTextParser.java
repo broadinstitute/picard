@@ -23,7 +23,7 @@
  */
 package net.sf.picard.illumina.parser;
 
-import net.sf.picard.util.BasicTextFileParser;
+import net.sf.picard.util.BasicInputParser;
 
 import java.io.File;
 import java.util.NoSuchElementException;
@@ -54,7 +54,7 @@ abstract class AbstractIlluminaTextParser implements IlluminaParser {
 
     private boolean treatGroupedDelimitersAsOne = true;
 
-    private BasicTextFileParser parser;
+    private BasicInputParser parser;
     private final Log log = Log.getInstance(AbstractIlluminaTextParser.class);
 
     public AbstractIlluminaTextParser(final ReadConfiguration readConfiguration, final int lane, final File directory) {
@@ -95,7 +95,7 @@ abstract class AbstractIlluminaTextParser implements IlluminaParser {
         for (int i = fileIndex; i < this.files.length; ++i) {
             files[i-fileIndex] = this.files[i].file;
         }
-        parser = new BasicTextFileParser(treatGroupedDelimitersAsOne, files);
+        parser = new BasicInputParser(treatGroupedDelimitersAsOne, files);
     }
 
     /**

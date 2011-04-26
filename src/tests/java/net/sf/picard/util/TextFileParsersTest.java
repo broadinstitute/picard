@@ -23,11 +23,14 @@
  */
 package net.sf.picard.util;
 
+import net.sf.picard.io.IoUtil;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
 import org.testng.Assert;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 import net.sf.picard.PicardException;
 
@@ -45,10 +48,12 @@ public class TextFileParsersTest {
         { 15.0d, 23, 55, 67.88888}
     };
 
-    @Test
-    public void testTextFileParser() {
+    @Test(dataProvider = "basicInputParserData")
+    public void testTextFileParser(Object fileOrStream) {
         FormatUtil format = new FormatUtil();
-        BasicTextFileParser parser = new BasicTextFileParser(true, new File(testFile1));
+        BasicInputParser parser = fileOrStream instanceof File
+            ? new BasicInputParser(true, (File)fileOrStream )
+            : new BasicInputParser(true, (InputStream)fileOrStream);
         int index = 0;
         while (parser.hasNext())
         {
@@ -69,9 +74,20 @@ public class TextFileParsersTest {
         }
     }
 
-    @Test
-    public void testTextFileParserNoGrouping() {
-        BasicTextFileParser parser = new BasicTextFileParser(true, new File(testFile3));
+    @DataProvider(name = "basicInputParserData")
+    private Object[][] getBasicInputParserData()
+    {
+        return new Object[][] {
+                {new File(testFile1)},
+                {IoUtil.openFileForReading(new File(testFile1))}
+        };
+    }
+
+    @Test(dataProvider = "noGroupingData")
+    public void testTextFileParserNoGrouping(Object fileOrStream) {
+        BasicInputParser parser = fileOrStream instanceof File
+            ? new BasicInputParser(true, (File)fileOrStream)
+            : new BasicInputParser(true, (InputStream)fileOrStream);
         parser.setTreatGroupedDelimitersAsOne(false);
         while (parser.hasNext()) {
             String parts[] = parser.next();
@@ -83,9 +99,21 @@ public class TextFileParsersTest {
         }
     }
 
-    @Test
-    public void testTextFileParserLeadingWhitespace() {
-        BasicTextFileParser parser = new BasicTextFileParser(true, new File(testFile2));
+    @DataProvider(name = "noGroupingData")
+    private Object[][] getNoGroupingData()
+    {
+        return new Object[][] {
+                {new File(testFile3)},
+                {IoUtil.openFileForReading(new File(testFile3))}
+        };
+    }
+
+
+    @Test(dataProvider = "leadingWhiteSpaceData")
+    public void testTextFileParserLeadingWhitespace(Object fileOrStream) {
+        BasicInputParser parser = fileOrStream instanceof File
+            ? new BasicInputParser(true, (File)fileOrStream)
+            : new BasicInputParser(true, (InputStream)fileOrStream);
         while (parser.hasNext())
         {
             String parts[] = parser.next();
@@ -94,18 +122,41 @@ public class TextFileParsersTest {
         }
     }
 
-    @Test(expectedExceptions= PicardException.class)
-    public void testTooManyWords() {
-        BasicTextFileParser parser = new BasicTextFileParser(true, 3, new File(testFile1));
+    @DataProvider(name = "leadingWhiteSpaceData")
+    private Object[][] getLeadingWhiteSpaceData()
+    {
+        return new Object[][] {
+                {new File(testFile2)},
+                {IoUtil.openFileForReading(new File(testFile2))}
+        };
+    }
+
+
+    @Test(expectedExceptions= PicardException.class, dataProvider = "tooManyWordsData")
+    public void testTooManyWords(Object fileOrStream) {
+        BasicInputParser parser = fileOrStream instanceof File
+            ? new BasicInputParser(true, 3, (File)fileOrStream)
+            : new BasicInputParser(true, 3, (InputStream)fileOrStream);
         if (parser.hasNext()) {
             String parts[] = parser.next();
         }
         Assert.fail("Attempt to parse extra-long file should have failed but didn't.");
     }
 
-    @Test
-    public void testTabbedFileParser() {
-        TabbedTextFileParser parser = new TabbedTextFileParser(false, new File(testFile4));
+    @DataProvider(name = "tooManyWordsData")
+    private Object[][] getTooManyWordsData()
+    {
+        return new Object[][] {
+                {new File(testFile1)},
+                {IoUtil.openFileForReading(new File(testFile1))}
+        };
+    }
+
+    @Test(dataProvider = "tabbedData")
+    public void testTabbedFileParser(Object fileOrStream) {
+        TabbedInputParser parser = fileOrStream instanceof File
+            ? new TabbedInputParser(false, (File)fileOrStream)
+            : new TabbedInputParser(false, (InputStream)fileOrStream);
         while (parser.hasNext()) {
             String parts[] = parser.next();
             for (int i = 0; i < parts.length; i++) {
@@ -114,6 +165,15 @@ public class TextFileParsersTest {
                 }
             }
         }
+    }
+
+    @DataProvider(name = "tabbedData")
+    private Object[][] getTabbedData()
+    {
+        return new Object[][] {
+                {new File(testFile4)},
+                {IoUtil.openFileForReading(new File(testFile4))}
+        };
     }
 
     @Test(dataProvider="data")
@@ -144,7 +204,7 @@ public class TextFileParsersTest {
     /**
      * Toy class for testing the word count functionality
      */
-    private static class WordCountTestParser extends AbstractTextFileParser {
+    private static class WordCountTestParser extends AbstractInputParser {
 
         private char delimiters[] = null;
         

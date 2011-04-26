@@ -23,7 +23,7 @@
  */
 package net.sf.picard.illumina.parser;
 
-import net.sf.picard.util.BasicTextFileParser;
+import net.sf.picard.util.BasicInputParser;
 import net.sf.picard.PicardException;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.samtools.util.StringUtil;
@@ -192,7 +192,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
     }
 
     public static int getReadLength(final File qseqFile) {
-        final BasicTextFileParser parser = new BasicTextFileParser(true, qseqFile);
+        final BasicInputParser parser = new BasicInputParser(true, qseqFile);
         if (!parser.hasNext()) {
             throw new PicardException("Unexpected empty qseq file: " + qseqFile);
         }
