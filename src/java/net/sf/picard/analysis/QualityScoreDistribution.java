@@ -79,6 +79,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         // Skip unwanted records
         if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) return;
         if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
+        if (rec.getNotPrimaryAlignmentFlag()) return;
 
         final byte[] bases = rec.getReadBases();
         final byte[] quals = rec.getBaseQualities();
