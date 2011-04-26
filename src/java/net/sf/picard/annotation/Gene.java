@@ -34,14 +34,14 @@ import java.util.Map;
  * The transcripts must all be relative to the same strand.
  */
 public class Gene extends Interval implements Iterable<Transcript>  {
-    private Map<String, Transcript> transcripts = new HashMap<String, Transcript>();
+    private final Map<String, Transcript> transcripts = new HashMap<String, Transcript>();
 
 
-    public Gene(String sequence, int start, int end, boolean negative, String name) {
+    public Gene(final String sequence, final int start, final int end, final boolean negative, final String name) {
         super(sequence, start, end, negative, name);
     }
 
-    public Gene(String sequence, int start, int end, boolean negative, String name, Iterable<Transcript> transcriptIterable) {
+    public Gene(final String sequence, final int start, final int end, final boolean negative, final String name, final Iterable<Transcript> transcriptIterable) {
         super(sequence, start, end, negative, name);
         for (final Transcript transcript : transcriptIterable) {
             addTranscript(transcript);

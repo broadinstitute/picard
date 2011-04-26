@@ -25,9 +25,6 @@ package net.sf.picard.annotation;
 
 import net.sf.samtools.util.CoordMath;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * A single transcript of a gene.
  */
@@ -39,7 +36,7 @@ public class Transcript {
     public final int codingEnd;
     public final Exon[] exons;
 
-    public Transcript(String name, int transcriptionStart, int transcriptionEnd, int codingStart, int codingEnd, Exon[] exons) {
+    public Transcript(final String name, final int transcriptionStart, final int transcriptionEnd, final int codingStart, final int codingEnd, final Exon[] exons) {
         this.name = name;
         this.transcriptionStart = transcriptionStart;
         this.transcriptionEnd = transcriptionEnd;
@@ -63,7 +60,7 @@ public class Transcript {
      * @param start
      * @param locusFunctions
      */
-    public void getLocusFunctionForRange(int start, LocusFunction[] locusFunctions) {
+    public void getLocusFunctionForRange(final int start, final LocusFunction[] locusFunctions) {
         for (int i = Math.max(start, transcriptionStart);
                 i <= Math.min(transcriptionEnd, CoordMath.getEnd(start, locusFunctions.length)); ++i) {
 
@@ -80,11 +77,11 @@ public class Transcript {
         }
     }
 
-    private boolean utr(int locus) {
+    private boolean utr(final int locus) {
         return locus < codingStart || locus > codingEnd;
     }
 
-    private boolean inExon(int locus) {
+    private boolean inExon(final int locus) {
         for (int i = 0; i < exons.length; ++i) {
             final Exon exon = exons[i];
             if (exon.start > locus) return false;
@@ -95,7 +92,7 @@ public class Transcript {
 
 
 
-    private boolean inRange(int start, int end, int locus) {
+    private boolean inRange(final int start, final int end, final int locus) {
         return (locus >= start && locus <= end);
     }
 }
