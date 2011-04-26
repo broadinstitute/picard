@@ -122,6 +122,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     }
 
     @Override protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        if (rec.getNotPrimaryAlignmentFlag()) return;
         if (rec.getReadPairedFlag()) {
             if (rec.getFirstOfPairFlag()) {
                 firstOfPairCollector.addRecord(rec, ref);
