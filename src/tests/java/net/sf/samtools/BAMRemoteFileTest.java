@@ -40,7 +40,7 @@ import java.util.Random;
 public class BAMRemoteFileTest {
     private final File BAM_INDEX_FILE = new File("testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam.bai");
     private final File BAM_FILE = new File("testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam");
-    private final String BAM_URL_STRING = "http://picard.sourceforge.net/testdata/index_test.bam";
+    private final String BAM_URL_STRING = "http://www.broadinstitute.org/~picard/testdata/index_test.bam";
     private final URL bamURL;
 
     private final boolean mVerbose = false;
