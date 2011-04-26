@@ -38,12 +38,12 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
-import sun.jvm.hotspot.tools.FinalizerInfo;
-//import net.sf.picard.analysis.LocusFunction.*;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+
+//import net.sf.picard.analysis.LocusFunction.*;
 
 /**
  * Program to collect metrics about the alignment of cDNA to the various functional classes of loci in the genome:
@@ -71,8 +71,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
     public boolean STRIP_LEADING_CHR_IN_REF_FLAT = true;
 
     private OverlapDetector<Gene> geneOverlapDetector;
-    private SAMSequenceDictionary sequenceDictionary;
-    private OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
+    private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
 
     private CDnaMetrics metrics;
 
@@ -82,24 +81,24 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(SAMFileHeader header, File samFile) {
-        sequenceDictionary = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+    protected void setup(final SAMFileHeader header, final File samFile) {
+        SAMSequenceDictionary sequenceDictionary = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
         geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, sequenceDictionary, STRIP_LEADING_CHR_IN_REF_FLAT);
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
-        IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
+        final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
         ribosomalIntervals.unique();
-        List<Interval> intervals = ribosomalIntervals.getIntervals();
+        final List<Interval> intervals = ribosomalIntervals.getIntervals();
         ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
         metrics = new CDnaMetrics();
     }
 
     @Override
-    protected void acceptRead(SAMRecord rec, ReferenceSequence ref) {
+    protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
         if (rec.getReadUnmappedFlag() || rec.getReadFailsVendorQualityCheckFlag() || rec.getNotPrimaryAlignmentFlag()) return;
         final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
         final Collection<Gene> overlappingGenes = geneOverlapDetector.getOverlaps(readInterval);
         final Collection<Interval> overlappingRibosomalIntervals = ribosomalSequenceOverlapDetector.getOverlaps(readInterval);
-        List<AlignmentBlock> alignmentBlocks = rec.getAlignmentBlocks();
+        final List<AlignmentBlock> alignmentBlocks = rec.getAlignmentBlocks();
         boolean overlapsExon = false;
         for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
             final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
@@ -113,20 +112,32 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
                     transcript.getLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
                 }
             }
-            for (int i = 0; i < locusFunctions.length; ++i) {
+            for (LocusFunction locusFunction : locusFunctions) {
                 ++metrics.ALIGNED_PF_BASES;
-                switch (locusFunctions[i]) {
-                    case INTRAGENIC: ++metrics.INTRAGENIC_BASES; break;
-                    case INTRONIC:   ++metrics.INTRONIC_BASES;   break;
-                    case UTR:        ++metrics.UTR_BASES;        overlapsExon = true; break;
-                    case CODING:     ++metrics.CODING_BASES;     overlapsExon = true; break;
-                    case RIBOSOMAL:  ++metrics.RIBOSOMAL_BASES;  break;
+                switch (locusFunction) {
+                    case INTRAGENIC:
+                        ++metrics.INTRAGENIC_BASES;
+                        break;
+                    case INTRONIC:
+                        ++metrics.INTRONIC_BASES;
+                        break;
+                    case UTR:
+                        ++metrics.UTR_BASES;
+                        overlapsExon = true;
+                        break;
+                    case CODING:
+                        ++metrics.CODING_BASES;
+                        overlapsExon = true;
+                        break;
+                    case RIBOSOMAL:
+                        ++metrics.RIBOSOMAL_BASES;
+                        break;
                 }
             }
         }
         if (overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
-            boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
-            boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
+            final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
+            final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
             if (negativeReadStrand == negativeTranscriptionStrand &&
                     rec.getFirstOfPairFlag() == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND)) {
                 ++metrics.CORRECT_STRAND_READS;
