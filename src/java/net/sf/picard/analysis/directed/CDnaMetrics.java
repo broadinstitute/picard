@@ -27,17 +27,20 @@ import net.sf.picard.metrics.MetricBase;
 
 /**
  * Metrics about the alignment of cDNA reads within a SAM file to genes, produced by the CollectCDnaMetrics
- * program and usually stored in a file with the extension ".cDNA_metrics".  These metrics are counted base by base
- * rather than looking at an entire read at a time.
+ * program and usually stored in a file with the extension ".cDNA_metrics".
  */
 public class CDnaMetrics extends MetricBase{
     /**
-     * The total number of aligned PF bases.
+     * The total number of aligned PF bases.  Non-primary alignments are not counted.
      */
     public long ALIGNED_PF_BASES;
 
     /**
-     * Number of bases in primary aligments that align to a coding base for some gene.
+     * Number of bases in primary aligments that align to ribosomal sequence.
+     */
+    public long RIBOSOMAL_BASES;
+    /**
+     * Number of bases in primary aligments that align to a coding base for some gene, and not ribosomal sequence.
      */
     public long CODING_BASES;
 
@@ -55,6 +58,11 @@ public class CDnaMetrics extends MetricBase{
      * Number of bases in primary aligments that do not align to any gene.
      */
     public long INTRAGENIC_BASES;
+
+    /**
+     * RIBOSOMAL_BASES / ALIGNED_PF_BASES
+     */
+    public double PCT_RIBOSOMAL_BASES;
 
     /**
      * CODING_BASES / ALIGNED_PF_BASES
@@ -75,4 +83,8 @@ public class CDnaMetrics extends MetricBase{
      * INTRAGENIC_BASES / ALIGNED_PF_BASES
      */
     public double PCT_INTRAGENIC_BASES;
+
+    public long CORRECT_STRAND_READS;
+
+    public long INCORRECT_STRAND_READS;
 }

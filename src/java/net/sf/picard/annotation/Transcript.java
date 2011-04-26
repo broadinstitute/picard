@@ -66,6 +66,9 @@ public class Transcript {
     public void getLocusFunctionForRange(int start, LocusFunction[] locusFunctions) {
         for (int i = Math.max(start, transcriptionStart);
                 i <= Math.min(transcriptionEnd, CoordMath.getEnd(start, locusFunctions.length)); ++i) {
+
+            if (locusFunctions[i - start].ordinal() > LocusFunction.CODING.ordinal()) continue;
+
             final LocusFunction locusFunction;
             if (inExon(i)) {
                 if (utr(i)) locusFunction = LocusFunction.UTR;
