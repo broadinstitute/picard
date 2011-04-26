@@ -38,10 +38,11 @@ import net.sf.samtools.util.RuntimeIOException;
  *
  * @author Kathleen Tibbetts
  */
-public class BasicTextFileParser extends AbstractTextFileParser
+public class BasicInputParser extends AbstractInputParser
 {
     private AsciiLineReader reader;
-    private final ArrayList<File> files = new ArrayList<File>();
+    private final ArrayList<InputStream> inputs = new ArrayList<InputStream>();
+    private final ArrayList<String> fileNames = new ArrayList<String>();
     String currentFileName = null;
     private String currentLine;
     private int currentLineNumber;
@@ -49,17 +50,31 @@ public class BasicTextFileParser extends AbstractTextFileParser
     /**
      * Constructor.  Opens up a buffered reader and reads the first line.
      *
+     * @param inputStreams  the file(s) to parse, in order
+     */
+    public BasicInputParser(final boolean treatGroupedDelimitersAsOne, final InputStream... inputStreams) {
+        if (inputStreams.length == 0) {
+            throw new IllegalArgumentException("At least one input must be specified.");
+        }
+        this.inputs.addAll(Arrays.asList(inputStreams));
+        reader = new AsciiLineReader(this.inputs.remove(0));
+        this.setTreatGroupedDelimitersAsOne(treatGroupedDelimitersAsOne);
+    }
+
+    public BasicInputParser(final boolean treatGroupedDelimitersAsOne, final int wordCount, final InputStream... inputStreams) {
+        this(treatGroupedDelimitersAsOne, inputStreams);
+        setWordCount(wordCount);
+    }
+
+    /**
+     * Constructor.  Opens up a buffered reader and reads the first line.
+     *
      * @param files  the file(s) to parse, in order
      */
-    public BasicTextFileParser(final boolean treatGroupedDelimitersAsOne, final File... files) {
-        if (files.length == 0) {
-            throw new IllegalArgumentException("At least one file must be specified.");
-        }
-        this.files.addAll(Arrays.asList(files));
-        final File f = this.files.remove(0);
-        currentFileName = f.getAbsolutePath();
-        reader = new AsciiLineReader(IoUtil.openFileForReading(f));
-        this.setTreatGroupedDelimitersAsOne(treatGroupedDelimitersAsOne);
+    public BasicInputParser(final boolean treatGroupedDelimitersAsOne, final File... files) {
+        this(treatGroupedDelimitersAsOne, filesToInputStreams(files));
+        for (File f : files) fileNames.add(f.getAbsolutePath());
+        this.currentFileName = fileNames.remove(0);
     }
 
     /**
@@ -69,10 +84,11 @@ public class BasicTextFileParser extends AbstractTextFileParser
      * @param files      the file(s) to parse
      * @param wordCount number of whitespace-separated "words" per line
      */
-    public BasicTextFileParser(final boolean treatGroupedDelimitersAsOne, final int wordCount, final File... files) {
+    public BasicInputParser(final boolean treatGroupedDelimitersAsOne, final int wordCount, final File... files) {
         this(treatGroupedDelimitersAsOne, files);
         setWordCount(wordCount);
     }
+
     /**
      * Workhorse method that reads the next line from the underlying reader
      *
@@ -87,10 +103,10 @@ public class BasicTextFileParser extends AbstractTextFileParser
                 currentLine = line;
                 return line.getBytes();
             }
-            if (files.size() > 0) {
-                currentFileName = files.get(0).getAbsolutePath();
+            if (inputs.size() > 0) {
+                currentFileName = fileNames.size() > 0 ? fileNames.remove(0) : null;
                 currentLineNumber = 0;
-                reader = new AsciiLineReader(IoUtil.openFileForReading(files.remove(0)));
+                reader = new AsciiLineReader(inputs.remove(0));
                 return readNextLine();
             }
             return null;
@@ -115,12 +131,12 @@ public class BasicTextFileParser extends AbstractTextFileParser
      * @return  the name of the file being parsed
      */
     public String getFileName() {
-        return this.currentFileName;
+        return this.currentFileName != null ? this.currentFileName : "(file name unavailable)";
     }
 
     /**
      * Provides access to the current (just parsed) line in pre-parsed format.
-     * NOTE: Because AbstractTextFileParser pre-fetches the next line, this method actually returns the
+     * NOTE: Because AbstractInputParser pre-fetches the next line, this method actually returns the
      * next line, not the most recent line returned by next().
      */
     public String getCurrentLine() {
@@ -128,10 +144,18 @@ public class BasicTextFileParser extends AbstractTextFileParser
     }
 
     /**
-     * NOTE: Because AbstractTextFileParser pre-fetches the next line, this method actually returns the
+     * NOTE: Because AbstractInputParser pre-fetches the next line, this method actually returns the
      * next line, not the most recent line returned by next().
      */
     public int getCurrentLineNumber() {
         return currentLineNumber;
+    }
+
+    private static InputStream[] filesToInputStreams(final File files[]) {
+        final InputStream result[] = new InputStream[files.length];
+        for (int i = 0; i < files.length; i++) {
+            result[i] = IoUtil.openFileForReading(files[i]);
+        }
+        return result;
     }
 }

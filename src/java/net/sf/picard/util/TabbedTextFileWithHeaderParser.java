@@ -83,11 +83,11 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
      * Map from column label to positional index.
      */
     private final Map<String, Integer> columnLabelIndices = new HashMap<String, Integer>();
-    private final TabbedTextFileParser parser;
+    private final TabbedInputParser parser;
     private TheIterator extantIterator;
 
     public TabbedTextFileWithHeaderParser(final File file) {
-        parser = new TabbedTextFileParser(false, file);
+        parser = new TabbedInputParser(false, file);
         if (!parser.hasNext()) {
             throw new PicardException("No header line found in file " + file);
         }

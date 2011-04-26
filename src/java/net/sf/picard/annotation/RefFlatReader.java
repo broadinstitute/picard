@@ -23,10 +23,9 @@
  */
 package net.sf.picard.annotation;
 
-import net.sf.picard.PicardException;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.OverlapDetector;
-import net.sf.picard.util.TabbedTextFileParser;
+import net.sf.picard.util.TabbedInputParser;
 import net.sf.samtools.SAMSequenceDictionary;
 
 import java.io.File;
@@ -58,7 +57,7 @@ class RefFlatReader {
             final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
 
             final int expectedColumns = RefFlatColumns.values().length;
-            TabbedTextFileParser parser = new TabbedTextFileParser(false, refFlatFile);
+            TabbedInputParser parser = new TabbedInputParser(false, refFlatFile);
             Map<String, List<String[]>> refFlatLinesByGene = new HashMap<String, List<String[]>>();
             for (final String[] fields : parser) {
                 final int lineNumber = parser.getCurrentLineNumber() - 1; // getCurrentLineNumber returns the number of the next line

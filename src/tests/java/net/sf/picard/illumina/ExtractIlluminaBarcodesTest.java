@@ -23,6 +23,7 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.util.BasicInputParser;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
@@ -36,7 +37,6 @@ import java.util.ArrayList;
 
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.util.BasicTextFileParser;
 import net.sf.picard.illumina.parser.*;
 
 /**
@@ -152,7 +152,7 @@ public class ExtractIlluminaBarcodesTest {
         final File[] barcodeFiles = IoUtil.getFilesMatchingRegexp(basecallsDir, "s_" + lane + "_\\d{4}_barcode.txt");
         Arrays.sort(barcodeFiles);
 
-        final BasicTextFileParser barcodeParser = new BasicTextFileParser(true, barcodeFiles);
+        final BasicInputParser barcodeParser = new BasicInputParser(true, barcodeFiles);
 
         // Exact match
         String[] illuminaFields = barcodeParser.next();
