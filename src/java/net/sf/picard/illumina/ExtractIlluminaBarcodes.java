@@ -77,7 +77,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc="Deprecated option; use BASECALLS_DIR", mutex = "BASECALLS_DIR")
     public File BUSTARD_DIR;
 
-    @Option(doc="The Illumina basecalls output directory. ", shortName="B")
+    @Option(doc="The Illumina basecalls output directory. ", mutex = "BUSTARD_DIR", shortName="B")
     public File BASECALLS_DIR;
 
     @Option(doc="Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.", optional = true)
