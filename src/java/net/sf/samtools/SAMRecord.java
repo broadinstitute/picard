@@ -426,35 +426,6 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @offset 0-based location within the unclipped sequence
-     * @return 1-based inclusive reference position of the unclippped sequence at a given offset,
-     * or 0 if there is no position.
-     * For example, given the sequence NNNAAACCCGGG, cigar 3S9M, and an alignment start of 1,
-     * and a (0-based)offset 9 (start of GGG) it returns 7 (1-based offset starting after the soft clip.
-     * Another example: given the sequence AAACCCGGGTTT, cigar 4M1D6M, an alignment start of 1,
-     * an offset of 3 returns reference position 4, an offset of 4 returns reference position 6.
-     */
-    public int getAlignmentAtPosition(final int offset) {
-
-        for (final AlignmentBlock alignmentBlock : getAlignmentBlocks()) {
-            if (alignmentBlock.getReadStart() + alignmentBlock.getLength() -1 <= offset){
-                continue;
-            }
-            return alignmentBlock.getReferenceStart() + 1 + offset - alignmentBlock.getReadStart();
-            /* this equivalent loop is perhaps more readable
-            for (int i = 0; i < alignmentBlock.getLength(); ++i) {
-                // readStart is 0-based offset into the read of the current base
-                if (alignmentBlock.getReadStart() + i - 1 >= offset){
-                    // referenceStart is 1-based reference position that the current base aligns to
-                    return alignmentBlock.getReferenceStart() + i;
-                }
-            }
-            */
-        }
-        return 0;
-    }
-
-    /**
      * @return the alignment start (1-based, inclusive) adjusted for clipped bases.  For example if the read
      * has an alignment start of 100 but the first 4 bases were clipped (hard or soft clipped)
      * then this method will return 96.
