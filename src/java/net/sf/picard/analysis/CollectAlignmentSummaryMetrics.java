@@ -217,8 +217,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         private long chimeras;
         private long adapterReads;
 
-        private int nonBisulfiteAlignedBases = 0;
-        private int hqNonBisulfiteAlignedBases = 0;
+        private long nonBisulfiteAlignedBases = 0;
+        private long hqNonBisulfiteAlignedBases = 0;
         private final Histogram<Long> mismatchHistogram = new Histogram<Long>();
         private final Histogram<Long> hqMismatchHistogram = new Histogram<Long>();
         private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
