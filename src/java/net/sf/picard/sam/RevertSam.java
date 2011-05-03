@@ -146,6 +146,7 @@ public class RevertSam extends CommandLineProgram {
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
 
         for (final SAMRecord rec : in) {
+            if (rec.getNotPrimaryAlignmentFlag()) continue;
             if (RESTORE_ORIGINAL_QUALITIES) {
                 final byte[] oq = rec.getOriginalBaseQualities();
                 if (oq != null) {
