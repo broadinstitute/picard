@@ -24,6 +24,7 @@
 package net.sf.picard.cmdline;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import net.sf.picard.metrics.Header;
@@ -160,7 +161,10 @@ public abstract class CommandLineProgram {
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {
-                    System.err.println("[" + new Date() + "] " + getClass().getName() + " done.");
+                    final Date endDate = new Date();
+                    final double elapsedMinutes = (endDate.getTime() - startDate.getTime()) / (1000d * 60d);
+                    final String elapsedString  = new DecimalFormat("#,##0.00").format(elapsedMinutes);
+                    System.err.println("[" + endDate + "] " + getClass().getName() + " done. Elapsed time: " + elapsedString + " minutes.");
                     System.err.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
                 }
             }
