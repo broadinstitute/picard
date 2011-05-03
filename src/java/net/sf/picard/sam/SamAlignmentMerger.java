@@ -6,6 +6,7 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.DelegatingIterator;
 import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
@@ -187,7 +188,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
 
 
-        SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
+        final SortingCollection<SAMRecord> alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
                     new BAMRecordCodec(header), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
 
         int count = 0;
@@ -201,7 +202,13 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         log.info("Finished reading " + count + " total records from alignment SAM/BAM.");
 
         mergingIterator.close();
-        return alignmentSorter.iterator();
+        return new DelegatingIterator(alignmentSorter.iterator()) {
+            @Override
+            public void close() {
+                super.close();
+                alignmentSorter.cleanup();
+            }
+        };
     }
 
     private class SeparateEndAlignmentIterator implements CloseableIterator<SAMRecord> {
