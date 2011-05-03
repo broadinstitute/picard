@@ -302,7 +302,7 @@ public abstract class AbstractAlignmentMerger {
             }
         }
         writer.close();
-
+        coordinateSorted.cleanup();
 
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }

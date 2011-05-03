@@ -197,6 +197,8 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
 
+        this.duplicateIndexes.cleanup();
+
         reportMemoryStats("Before output close");
         out.close();
         reportMemoryStats("After output close");
@@ -464,6 +466,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
         markDuplicatePairs(nextChunk);
+        this.pairSort.cleanup();
         this.pairSort = null;
 
         // Now deal with the fragments
@@ -490,6 +493,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
         markDuplicateFragments(nextChunk, containsPairs);
+        this.fragSort.cleanup();
         this.fragSort = null;
 
         log.info("Sorting list of duplicate records.");

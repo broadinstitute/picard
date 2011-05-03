@@ -147,7 +147,13 @@ public class FixMateInformation extends CommandLineProgram {
 
                 }
 
-                iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+                iterator = new PeekableIterator<SAMRecord>(sorter.iterator()) {
+                    @Override
+                    public void close() {
+                        super.close();
+                        sorter.cleanup();
+                    }
+                };
                 log.info("Sorting by queryname complete.");
             }
 
@@ -185,6 +191,7 @@ public class FixMateInformation extends CommandLineProgram {
                 log.info("Processed " + count + " records.");
             }
         }
+        iterator.close();
 
         if (header.getSortOrder() == SortOrder.queryname) {
             log.info("Closing output file.");

@@ -333,6 +333,9 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
             }
         }
 
+        iterator.close();
+        sorter.cleanup();
+
         final MetricsFile<DuplicationMetrics,Integer> file = getMetricsFile();
         for (final String library : duplicationHistosByLibrary.keySet()) {
             final Histogram<Integer> duplicationHisto = duplicationHistosByLibrary.get(library);
