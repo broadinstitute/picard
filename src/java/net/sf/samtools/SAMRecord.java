@@ -24,6 +24,7 @@
 package net.sf.samtools;
 
 
+import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.StringUtil;
 
 import java.util.*;
@@ -471,6 +472,33 @@ public class SAMRecord implements Cloneable
         }
 
         return pos;               
+    }
+
+    /**
+     * @return 1-based inclusive reference position of the unclippped sequence at a given offset,
+     *         or 0 if there is no position.
+     *         For example, given the sequence NNNAAACCCGGG, cigar 3S9M, and an alignment start of 1,
+     *         and a (1-based)offset 10 (start of GGG) it returns 7 (1-based offset starting after the soft clip.
+     *         For example: given the sequence AAACCCGGGTTT, cigar 4M1D6M, an alignment start of 1,
+     *         an offset of 4 returns reference position 4, an offset of 5 returns reference position 6.
+     *         Another example: given the sequence AAACCCGGGTTT, cigar 4M1I6M, an alignment start of 1,
+     *         an offset of 4 returns reference position 4, an offset of 5 returns 0.
+     * @offset 1-based location within the unclipped sequence
+     */
+    public int getReferencePositionAtReadPosition(final int offset) {
+
+        if (offset == 0) return 0;
+
+        for (final AlignmentBlock alignmentBlock : getAlignmentBlocks()) {
+            if (CoordMath.getEnd(alignmentBlock.getReadStart(), alignmentBlock.getLength()) < offset) {
+                continue;
+            } else if (offset < alignmentBlock.getReadStart()) {
+                return 0;
+            } else {
+                return alignmentBlock.getReferenceStart() + offset - alignmentBlock.getReadStart();
+            }
+        }
+        return 0; // offset not located in an alignment block
     }
 
     /**
