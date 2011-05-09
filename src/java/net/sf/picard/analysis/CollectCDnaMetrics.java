@@ -82,7 +82,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        SAMSequenceDictionary sequenceDictionary = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+        final SAMSequenceDictionary sequenceDictionary = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
         geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, sequenceDictionary, STRIP_LEADING_CHR_IN_REF_FLAT);
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
         final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
@@ -112,7 +112,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
                     transcript.getLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
                 }
             }
-            for (LocusFunction locusFunction : locusFunctions) {
+            for (final LocusFunction locusFunction : locusFunctions) {
                 ++metrics.ALIGNED_PF_BASES;
                 switch (locusFunction) {
                     case INTRAGENIC:
