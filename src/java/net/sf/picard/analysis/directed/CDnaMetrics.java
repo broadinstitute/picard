@@ -57,7 +57,7 @@ public class CDnaMetrics extends MetricBase{
     /**
      * Number of bases in primary aligments that do not align to any gene.
      */
-    public long INTRAGENIC_BASES;
+    public long INTERGENIC_BASES;
 
     /**
      * RIBOSOMAL_BASES / ALIGNED_PF_BASES
@@ -80,9 +80,9 @@ public class CDnaMetrics extends MetricBase{
     public double PCT_INTRONIC_BASES;
 
     /**
-     * INTRAGENIC_BASES / ALIGNED_PF_BASES
+     * INTERGENIC_BASES / ALIGNED_PF_BASES
      */
-    public double PCT_INTRAGENIC_BASES;
+    public double PCT_INTERGENIC_BASES;
 
     public long CORRECT_STRAND_READS;
 

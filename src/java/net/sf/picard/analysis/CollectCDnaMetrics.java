@@ -102,7 +102,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
         boolean overlapsExon = false;
         for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
             final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
-            for (int i = 0; i < locusFunctions.length; ++i) locusFunctions[i] = LocusFunction.INTRAGENIC;
+            for (int i = 0; i < locusFunctions.length; ++i) locusFunctions[i] = LocusFunction.INTERGENIC;
             for (final Interval ribosomalInterval : overlappingRibosomalIntervals) {
                 assignValueForOverlappingRange(ribosomalInterval, alignmentBlock.getReferenceStart(),
                         locusFunctions, LocusFunction.RIBOSOMAL);
@@ -115,8 +115,8 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
             for (final LocusFunction locusFunction : locusFunctions) {
                 ++metrics.ALIGNED_PF_BASES;
                 switch (locusFunction) {
-                    case INTRAGENIC:
-                        ++metrics.INTRAGENIC_BASES;
+                    case INTERGENIC:
+                        ++metrics.INTERGENIC_BASES;
                         break;
                     case INTRONIC:
                         ++metrics.INTRONIC_BASES;
@@ -154,7 +154,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
             metrics.PCT_CODING_BASES =     metrics.CODING_BASES     / (double) metrics.ALIGNED_PF_BASES;
             metrics.PCT_UTR_BASES =        metrics.UTR_BASES        / (double) metrics.ALIGNED_PF_BASES;
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.ALIGNED_PF_BASES;
-            metrics.PCT_INTRAGENIC_BASES = metrics.INTRAGENIC_BASES / (double) metrics.ALIGNED_PF_BASES;
+            metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.ALIGNED_PF_BASES;
         }
         final MetricsFile<CDnaMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
