@@ -28,5 +28,5 @@ package net.sf.picard.annotation;
  * so that if a locus is CODING in one gene and UTR in another, we count it as CODING.
  */
 public enum LocusFunction {
-    INTRAGENIC, INTRONIC, UTR, CODING, RIBOSOMAL
+    INTERGENIC, INTRONIC, UTR, CODING, RIBOSOMAL
 }
