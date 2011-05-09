@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * @author jrobinso
@@ -67,12 +66,14 @@ public class SeekableHTTPStream extends SeekableStream {
             return 0;
         }
 
-        URLConnection connection = null;
+        HttpURLConnection connection = null;
         InputStream is = null;
         String byteRange = "";
         int n = 0;
         try {
-            connection = proxy == null ? url.openConnection() : url.openConnection(proxy);
+            connection = proxy == null ?
+                    (HttpURLConnection) url.openConnection() :
+                    (HttpURLConnection) url.openConnection(proxy);
 
             long endRange = position + len - 1;
             // IF we know the total content length, limit the end range to that.
@@ -128,12 +129,7 @@ public class SeekableHTTPStream extends SeekableStream {
                 is.close();
             }
             if (connection != null) {
-                if (connection instanceof HttpURLConnection) {
-                    ((HttpURLConnection)connection).disconnect();
-                }
-                else if (connection instanceof sun.net.www.URLConnection) {
-                    ((sun.net.www.URLConnection)connection).close();
-                }
+                connection.disconnect();
             }
         }
     }
