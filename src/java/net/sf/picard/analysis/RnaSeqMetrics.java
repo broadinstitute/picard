@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis.directed;
+package net.sf.picard.analysis;
 
 import net.sf.picard.metrics.MetricBase;
 
