@@ -134,11 +134,16 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
                 }
             }
         }
-        if (overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
+        if (rec.getReadPairedFlag() && overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
             final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
             final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
-            if (negativeReadStrand == negativeTranscriptionStrand &&
-                    rec.getFirstOfPairFlag() == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND)) {
+            // If the read strand is the same as the strand of the transcript, and the end is the one that is supposed to agree,
+            // then the strand specificity for this read is correct.
+            // -- OR --
+            // If the read strand is not the same as the strand of the transcript, and the end is not the one that is supposed
+            // to agree, then the strand specificity for this read is correct.
+            if ((negativeReadStrand == negativeTranscriptionStrand) ==
+                (rec.getFirstOfPairFlag() == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND))) {
                 ++metrics.CORRECT_STRAND_READS;
             } else {
                 ++metrics.INCORRECT_STRAND_READS;
