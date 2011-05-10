@@ -60,6 +60,15 @@ public class RnaSeqMetrics extends MetricBase{
     public long INTERGENIC_BASES;
 
     /**
+     * Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.
+     */
+    public long CORRECT_STRAND_READS;
+
+    /**
+     * Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.
+     */
+    public long INCORRECT_STRAND_READS;
+    /**
      * RIBOSOMAL_BASES / ALIGNED_PF_BASES
      */
     public double PCT_RIBOSOMAL_BASES;
@@ -85,12 +94,7 @@ public class RnaSeqMetrics extends MetricBase{
     public double PCT_INTERGENIC_BASES;
 
     /**
-     * Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.
+     * CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.
      */
-    public long CORRECT_STRAND_READS;
-
-    /**
-     * Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.
-     */
-    public long INCORRECT_STRAND_READS;
+    public double PCT_CORRECT_STRAND_READS;
 }

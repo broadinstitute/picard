@@ -155,6 +155,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.ALIGNED_PF_BASES;
             metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.ALIGNED_PF_BASES;
         }
+        if (metrics.CORRECT_STRAND_READS > 0 || metrics.INCORRECT_STRAND_READS > 0) {
+            metrics.PCT_CORRECT_STRAND_READS = metrics.CORRECT_STRAND_READS/(double)(metrics.CORRECT_STRAND_READS + metrics.INCORRECT_STRAND_READS);
+        }
         final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
         file.write(OUTPUT);
