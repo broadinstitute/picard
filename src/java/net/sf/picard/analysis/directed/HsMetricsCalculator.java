@@ -334,7 +334,7 @@ public class HsMetricsCalculator {
         for (int i=0; i<10000; ++i) {
             double uniquePairMultiplier = DuplicationMetrics.estimateRoi(hsLibrarySize, pairMultiplier, pairs, uniquePairs);
 
-            if (Math.abs(uniquePairMultiplier - uniquePairGoalMultiplier) <= 0.01) {
+            if (Math.abs(uniquePairMultiplier - uniquePairGoalMultiplier) / uniquePairGoalMultiplier <= 0.001) {
                 finalPairMultiplier  = pairMultiplier;
                 break;
             }
