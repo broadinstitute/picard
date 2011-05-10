@@ -23,7 +23,7 @@
  */
 package net.sf.picard.analysis;
 
-import net.sf.picard.analysis.directed.CDnaMetrics;
+import net.sf.picard.analysis.directed.RnaSeqMetrics;
 import net.sf.picard.annotation.Gene;
 import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.annotation.LocusFunction;
@@ -46,11 +46,11 @@ import java.util.List;
 //import net.sf.picard.analysis.LocusFunction.*;
 
 /**
- * Program to collect metrics about the alignment of cDNA to the various functional classes of loci in the genome:
+ * Program to collect metrics about the alignment of RNA to the various functional classes of loci in the genome:
  * coding, intronic, UTR, intragenic.
  */
-public class CollectCDnaMetrics  extends SinglePassSamProgram {
-    private static final Log LOG = Log.getInstance(CollectCDnaMetrics.class);
+public class CollectRnaSeqMetrics extends SinglePassSamProgram {
+    private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}
 
@@ -73,11 +73,11 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
     private OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
 
-    private CDnaMetrics metrics;
+    private RnaSeqMetrics metrics;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
-        new CollectCDnaMetrics().instanceMainWithExit(argv);
+        new CollectRnaSeqMetrics().instanceMainWithExit(argv);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
         ribosomalIntervals.unique();
         final List<Interval> intervals = ribosomalIntervals.getIntervals();
         ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
-        metrics = new CDnaMetrics();
+        metrics = new RnaSeqMetrics();
     }
 
     @Override
@@ -156,7 +156,7 @@ public class CollectCDnaMetrics  extends SinglePassSamProgram {
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.ALIGNED_PF_BASES;
             metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.ALIGNED_PF_BASES;
         }
-        final MetricsFile<CDnaMetrics, Integer> file = getMetricsFile();
+        final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
         file.write(OUTPUT);
     }

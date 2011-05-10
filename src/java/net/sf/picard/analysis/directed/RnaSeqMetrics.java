@@ -26,10 +26,10 @@ package net.sf.picard.analysis.directed;
 import net.sf.picard.metrics.MetricBase;
 
 /**
- * Metrics about the alignment of cDNA reads within a SAM file to genes, produced by the CollectCDnaMetrics
- * program and usually stored in a file with the extension ".cDNA_metrics".
+ * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
+ * program and usually stored in a file with the extension ".RNA_metrics".
  */
-public class CDnaMetrics extends MetricBase{
+public class RnaSeqMetrics extends MetricBase{
     /**
      * The total number of aligned PF bases.  Non-primary alignments are not counted.
      */
@@ -84,7 +84,13 @@ public class CDnaMetrics extends MetricBase{
      */
     public double PCT_INTERGENIC_BASES;
 
+    /**
+     * Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.
+     */
     public long CORRECT_STRAND_READS;
 
+    /**
+     * Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.
+     */
     public long INCORRECT_STRAND_READS;
 }
