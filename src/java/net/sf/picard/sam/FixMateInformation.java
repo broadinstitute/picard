@@ -214,6 +214,18 @@ public class FixMateInformation extends CommandLineProgram {
                         log.warn("Could not delete old file: " + old.getAbsolutePath());
                         return 1;
                     }
+
+                    if (CREATE_INDEX) {
+                        final File newIndex = new File(OUTPUT.getParent(),
+                                                       OUTPUT.getName().substring(0, OUTPUT.getName().length()-4) + ".bai");
+                        final File oldIndex = new File(soleInput.getParent(),
+                                                       soleInput.getName().substring(0, soleInput.getName().length()-4) + ".bai");
+
+                        if (!newIndex.renameTo(oldIndex)) {
+                            log.warn("Could not overwrite index file: " + oldIndex.getAbsolutePath());
+                        }
+                    }
+
                 }
                 else {
                     log.error("Could not move new file to " + soleInput.getAbsolutePath());
