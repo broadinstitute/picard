@@ -39,10 +39,11 @@ import java.util.Map;
 public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWithHeaderParser.Row> {
     public class Row {
         private final String[] fields;
-        private String currentLine;
+        private final String currentLine;
 
-        Row(final String[] fields) {
+        Row(final String[] fields, final String source) {
             this.fields = fields;
+            this.currentLine = source;
         }
 
         /**
@@ -54,10 +55,6 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
 
         public String getField(final String columnLabel) {
             return fields[columnLabelIndices.get(columnLabel)];
-        }
-
-        public void setCurrentLine(String line) {
-            this.currentLine = line;
         }
 
         public String getCurrentLine() {
@@ -77,9 +74,9 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
 
         @Override
         public Row next() {
-            final Row row = new Row(parser.next());
-            row.setCurrentLine(parser.getCurrentLine());
-            return row;
+            final String source = parser.getCurrentLine();
+            final String[] fields = parser.next();
+            return new Row(fields, source);
         }
 
         @Override
