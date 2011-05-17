@@ -40,6 +40,7 @@ import java.util.Map;
  */
 class RefFlatReader {
     private static final Log LOG = Log.getInstance(RefFlatReader.class);
+    // These are in the order that columns appear in refFlat format.
     private enum RefFlatColumns{GENE_NAME, TRANSCRIPT_NAME, CHROMOSOME, STRAND, TX_START, TX_END, CDS_START, CDS_END,
         EXON_COUNT, EXON_STARTS, EXON_ENDS}
 

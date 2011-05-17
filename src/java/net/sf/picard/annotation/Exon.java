@@ -24,7 +24,7 @@
 package net.sf.picard.annotation;
 
 /**
- * 1-based, inclusive representation of an exon.
+ * 1-based, inclusive representation of an exon.  The sequence name is stored in an enclosing object (class Gene).
  */
 public class Exon {
     public final int start;

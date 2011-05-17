@@ -42,11 +42,9 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-//import net.sf.picard.analysis.LocusFunction.*;
-
 /**
  * Program to collect metrics about the alignment of RNA to the various functional classes of loci in the genome:
- * coding, intronic, UTR, intragenic.
+ * coding, intronic, UTR, intragenic. ribosomal.  Also determines strand-specificity for strand-specific libraries.
  */
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
@@ -100,17 +98,25 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         final List<AlignmentBlock> alignmentBlocks = rec.getAlignmentBlocks();
         boolean overlapsExon = false;
         for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
+            // Get functional class for each position in the alignment block.
             final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
+
+            // By default, if base does not overlap with rRNA or gene, it is intergenic.
             for (int i = 0; i < locusFunctions.length; ++i) locusFunctions[i] = LocusFunction.INTERGENIC;
-            for (final Interval ribosomalInterval : overlappingRibosomalIntervals) {
-                assignValueForOverlappingRange(ribosomalInterval, alignmentBlock.getReferenceStart(),
-                        locusFunctions, LocusFunction.RIBOSOMAL);
-            }
+
             for (final Gene gene : overlappingGenes) {
                 for (final Transcript transcript : gene) {
                     transcript.getLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
                 }
             }
+
+            // Do this last because ribosomal takes precedence over the other functions.
+            for (final Interval ribosomalInterval : overlappingRibosomalIntervals) {
+                assignValueForOverlappingRange(ribosomalInterval, alignmentBlock.getReferenceStart(),
+                        locusFunctions, LocusFunction.RIBOSOMAL);
+            }
+
+            // Tally the function of each base in the alignment block.
             for (final LocusFunction locusFunction : locusFunctions) {
                 ++metrics.ALIGNED_PF_BASES;
                 switch (locusFunction) {
@@ -134,6 +140,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
                 }
             }
         }
+
+        // Strand-specificity is tallied on read basis rather than base at a time.  A read that aligns to more than one
+        // gene is not counted.
         if (rec.getReadPairedFlag() && overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
             final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
             final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
