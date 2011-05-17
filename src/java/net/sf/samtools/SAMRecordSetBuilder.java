@@ -108,6 +108,14 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     }
 
     /**
+     * Set the seed of the random number generator for cases in which repeatable result is desired.
+     * @param seed
+     */
+    public void setRandomSeed(final long seed) {
+        random.setSeed(seed);
+    }
+
+    /**
      * Adds the given program record to the header, and assigns the PG tag to any SAMRecords
      * created after it has been added. May be called multiple times in order to assign different
      * PG IDs to different SAMRecords.  programRecord may be null to stop assignment of PG tag.
