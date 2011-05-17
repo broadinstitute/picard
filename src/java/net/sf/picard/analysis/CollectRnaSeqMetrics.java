@@ -57,11 +57,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Option(doc="Gene annotations in refFlat form")
     public File REF_FLAT;
 
-    @Option(doc="Location of rRNA sequences in genome, in interval_list format")
+    @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
+            "If not specified no bases will be identified as being ribosomal.", optional = true)
     public File RIBOSOMAL_INTERVALS;
-
-    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME)
-    public File SEQUENCE_DICTIONARY;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep")
     public StrandSpecificity STRAND_SPECIFICITY;
@@ -81,13 +79,15 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        final SAMSequenceDictionary sequenceDictionary = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
-        geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, sequenceDictionary, STRIP_LEADING_CHR_IN_REF_FLAT);
+        geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary(),
+                STRIP_LEADING_CHR_IN_REF_FLAT);
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
-        final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
-        ribosomalIntervals.unique();
-        final List<Interval> intervals = ribosomalIntervals.getIntervals();
-        ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
+        if (RIBOSOMAL_INTERVALS != null) {
+            final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
+            ribosomalIntervals.unique();
+            final List<Interval> intervals = ribosomalIntervals.getIntervals();
+            ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
+        }
         metrics = new RnaSeqMetrics();
     }
 
