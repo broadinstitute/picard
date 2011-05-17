@@ -46,12 +46,10 @@ class RefFlatReader {
 
     private final File refFlatFile;
     private final SAMSequenceDictionary sequenceDictionary;
-    private final boolean stripLeadingChr;
 
-    RefFlatReader(File refFlatFile, SAMSequenceDictionary sequenceDictionary, boolean stripLeadingChr) {
+    RefFlatReader(File refFlatFile, SAMSequenceDictionary sequenceDictionary) {
         this.refFlatFile = refFlatFile;
         this.sequenceDictionary = sequenceDictionary;
-        this.stripLeadingChr = stripLeadingChr;
     }
 
     OverlapDetector<Gene> load() {
@@ -70,10 +68,6 @@ class RefFlatReader {
                 final String transcriptName = fields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()];
                 final String transcriptDescription = geneName + ":" + transcriptName;
                 String chromosome = fields[RefFlatColumns.CHROMOSOME.ordinal()];
-                if (stripLeadingChr && chromosome.startsWith("chr")) {
-                    chromosome = chromosome.substring("chr".length());
-                    fields[RefFlatColumns.CHROMOSOME.ordinal()] = chromosome;
-                }
                 if (!isSequenceRecognized(chromosome)) {
                     LOG.info("Skipping " + transcriptDescription + " due to unrecognized sequence " + chromosome);
                 } else {

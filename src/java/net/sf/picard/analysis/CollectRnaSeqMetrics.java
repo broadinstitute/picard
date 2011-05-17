@@ -29,6 +29,7 @@ import net.sf.picard.annotation.LocusFunction;
 import net.sf.picard.annotation.Transcript;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
+import net.sf.picard.cmdline.Usage;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Interval;
@@ -42,28 +43,28 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Program to collect metrics about the alignment of RNA to the various functional classes of loci in the genome:
- * coding, intronic, UTR, intragenic. ribosomal.  Also determines strand-specificity for strand-specific libraries.
- */
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
+
+    @Usage
+    public final String USAGE = getStandardUsagePreamble() +
+            "Program to collect metrics about the alignment of RNA to the various functional classes of loci in the genome:" +
+            " coding, intronic, UTR, intragenic. ribosomal.\n" +
+            "Also determines strand-specificity for strand-specific libraries.";
 
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}
 
 
-    @Option(doc="Gene annotations in refFlat form")
+    @Option(doc="Gene annotations in refFlat form.")
     public File REF_FLAT;
 
     @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
-    @Option(shortName = "STRAND", doc="For strand-specific library prep")
+    @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
+            "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
     public StrandSpecificity STRAND_SPECIFICITY;
-
-    @Option
-    public boolean STRIP_LEADING_CHR_IN_REF_FLAT = true;
 
     private OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
@@ -77,8 +78,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary(),
-                STRIP_LEADING_CHR_IN_REF_FLAT);
+        geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
         if (RIBOSOMAL_INTERVALS != null) {
             final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
@@ -146,13 +146,14 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         if (rec.getReadPairedFlag() && overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
             final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
             final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
+            final boolean readOneOrUnpaired = !rec.getReadPairedFlag() || rec.getFirstOfPairFlag();
             // If the read strand is the same as the strand of the transcript, and the end is the one that is supposed to agree,
             // then the strand specificity for this read is correct.
             // -- OR --
             // If the read strand is not the same as the strand of the transcript, and the end is not the one that is supposed
             // to agree, then the strand specificity for this read is correct.
             if ((negativeReadStrand == negativeTranscriptionStrand) ==
-                (rec.getFirstOfPairFlag() == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND))) {
+                (readOneOrUnpaired == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND))) {
                 ++metrics.CORRECT_STRAND_READS;
             } else {
                 ++metrics.INCORRECT_STRAND_READS;
