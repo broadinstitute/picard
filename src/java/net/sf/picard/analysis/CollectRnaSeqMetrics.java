@@ -143,7 +143,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
         // Strand-specificity is tallied on read basis rather than base at a time.  A read that aligns to more than one
         // gene is not counted.
-        if (rec.getReadPairedFlag() && overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
+        if (overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
             final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
             final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
             final boolean readOneOrUnpaired = !rec.getReadPairedFlag() || rec.getFirstOfPairFlag();
