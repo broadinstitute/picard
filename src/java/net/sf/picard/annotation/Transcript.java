@@ -26,7 +26,7 @@ package net.sf.picard.annotation;
 import net.sf.samtools.util.CoordMath;
 
 /**
- * A single transcript of a gene.
+ * A single transcript of a gene.  Sequence name is stored in the enclosing object (class Gene).
  */
 public class Transcript {
     public final String name;

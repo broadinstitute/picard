@@ -27,7 +27,7 @@ import net.sf.picard.metrics.MetricBase;
 
 /**
  * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
- * program and usually stored in a file with the extension ".RNA_metrics".
+ * program and usually stored in a file with the extension ".rna_metrics".
  */
 public class RnaSeqMetrics extends MetricBase{
     /**
