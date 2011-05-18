@@ -24,8 +24,6 @@
 
 package net.sf.picard.analysis;
 
-import net.sf.picard.analysis.GcBiasDetailMetrics;
-import net.sf.picard.analysis.GcBiasSummaryMetrics;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -59,8 +57,6 @@ import net.sf.picard.util.QualityUtil;
  * @author Tim Fennell
  */
 public class CollectGcBiasMetrics extends CommandLineProgram {
-    private static final Log LOG = Log.getInstance(CollectGcBiasMetrics.class);
-
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "net/sf/picard/analysis/gcBias.R";
 
@@ -76,7 +72,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
     @Option(shortName="CHART", doc="The PDF file to render the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc="The text file to write summary metrics to.", optional=true)
+    @Option(shortName="S", doc="The text file to write summary metrics to.", optional=true)
     public File SUMMARY_OUTPUT;
 
     @Option(doc="The size of windows on the genome that are used to bin reads.")
@@ -85,12 +81,14 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
     @Option(doc="For summary metrics, exclude GC windows that include less than this fraction of the genome.")
     public double MINIMUM_GENOME_FRACTION = 0.00001;
 
+    private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
+
     // Used to keep track of the total clusters as this is kinda important for bias
     private int totalClusters = 0;
     private int totalAlignedReads = 0;
 
     /** Stock main method. */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.exit(new CollectGcBiasMetrics().instanceMain(args));
     }
 
@@ -103,19 +101,19 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
         // Histograms to track the number of windows at each GC, and the number of read starts
         // at windows of each GC
-        int[] windowsByGc = new int[101];
-        int[] readsByGc   = new int[101];
-        long[] basesByGc  = new long[101];
-        long[] errorsByGc = new long[101];
+        final int[] windowsByGc = new int[101];
+        final int[] readsByGc   = new int[101];
+        final long[] basesByGc  = new long[101];
+        final long[] errorsByGc = new long[101];
 
-        SAMFileReader sam = new SAMFileReader(INPUT);
-        PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sam.iterator());
-        ReferenceSequenceFile referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
+        final SAMFileReader sam = new SAMFileReader(INPUT);
+        final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sam.iterator());
+        final ReferenceSequenceFile referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
         {
             // Check that the sequence dictionaries match if present
-            SAMSequenceDictionary referenceDictionary= referenceFile.getSequenceDictionary();
-            SAMSequenceDictionary samFileDictionary = sam.getFileHeader().getSequenceDictionary();
+            final SAMSequenceDictionary referenceDictionary= referenceFile.getSequenceDictionary();
+            final SAMSequenceDictionary samFileDictionary = sam.getFileHeader().getSequenceDictionary();
             if (referenceDictionary != null && samFileDictionary != null) {
                 SequenceUtil.assertSequenceDictionariesEqual(referenceDictionary, samFileDictionary);
             }
@@ -131,18 +129,18 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
             final int refLength = refBases.length;
             final int lastWindowStart = refLength - WINDOW_SIZE;
 
-            byte[] gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
+            final byte[] gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
             while (iterator.hasNext() && iterator.peek().getReferenceIndex() == ref.getContigIndex()) {
-                SAMRecord rec = iterator.next();
+                final SAMRecord rec = iterator.next();
 
                 if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
 
                 if (!rec.getReadUnmappedFlag()) {
-                    int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - WINDOW_SIZE : rec.getAlignmentStart();
+                    final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - WINDOW_SIZE : rec.getAlignmentStart();
                     ++this.totalAlignedReads;
 
                     if (pos > 0) {
-                        int windowGc = gc[pos];
+                        final int windowGc = gc[pos];
 
                         if (windowGc >= 0) {
                             ++readsByGc[windowGc];
@@ -155,12 +153,12 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                 }
             }
 
-            LOG.info("Processed: " + ref.getName());
+            log.info("Processed reference sequence: " + ref.getName());
         }
 
         // Finish up the reads, presumably all unaligned
         while (iterator.hasNext()) {
-            SAMRecord rec = iterator.next();
+            final SAMRecord rec = iterator.next();
             if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
 
         }
@@ -168,11 +166,11 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         /////////////////////////////////////////////////////////////////////////////
         // Synthesize the normalized coverage metrics and write it all out to a file
         /////////////////////////////////////////////////////////////////////////////
-        MetricsFile<GcBiasDetailMetrics,?> metricsFile = getMetricsFile();
-        double totalWindows = sum(windowsByGc);
-        double totalReads   = sum(readsByGc);
-        double meanReadsPerWindow = totalReads / totalWindows;
-        double minimumWindowsToCountInSummary = totalWindows * this.MINIMUM_GENOME_FRACTION;
+        final MetricsFile<GcBiasDetailMetrics,?> metricsFile = getMetricsFile();
+        final double totalWindows = sum(windowsByGc);
+        final double totalReads   = sum(readsByGc);
+        final double meanReadsPerWindow = totalReads / totalWindows;
+        final double minimumWindowsToCountInSummary = totalWindows * this.MINIMUM_GENOME_FRACTION;
 
         for (int i=0; i<windowsByGc.length; ++i) {
             if (windowsByGc[i] == 0) continue;
@@ -192,26 +190,22 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
         // Synthesize the high level metrics
         if (SUMMARY_OUTPUT != null) {
-            MetricsFile<GcBiasSummaryMetrics,?> summaryMetricsFile = getMetricsFile();
-            GcBiasSummaryMetrics summary = new GcBiasSummaryMetrics();
+            final MetricsFile<GcBiasSummaryMetrics,?> summaryMetricsFile = getMetricsFile();
+            final GcBiasSummaryMetrics summary = new GcBiasSummaryMetrics();
             summary.WINDOW_SIZE    = this.WINDOW_SIZE;
             summary.TOTAL_CLUSTERS = this.totalClusters;
             summary.ALIGNED_READS  = this.totalAlignedReads;
-            summary.LOW_GC_BIAS  = calculateSummaryMetric(metricsFile.getMetrics(), minimumWindowsToCountInSummary, 0,  33);
-            summary.MID_GC_BIAS  = calculateSummaryMetric(metricsFile.getMetrics(), minimumWindowsToCountInSummary, 34,  66);
-            summary.HIGH_GC_BIAS = calculateSummaryMetric(metricsFile.getMetrics(), minimumWindowsToCountInSummary, 67, 100);
-            summary.TOTAL_BIAS   = calculateSummaryMetric(metricsFile.getMetrics(), minimumWindowsToCountInSummary,  0, 100);
-            summary.JAFFE_BIAS_METRIC = calculateJaffeMetric(metricsFile.getMetrics(), minimumWindowsToCountInSummary, 0, 100);
+            calculateDropoutMetrics(metricsFile.getMetrics(), summary);
 
             summaryMetricsFile.addMetric(summary);
-            if (SUMMARY_OUTPUT != null) summaryMetricsFile.write(SUMMARY_OUTPUT);
+            summaryMetricsFile.write(SUMMARY_OUTPUT);
         }
 
         // Plot the results
-        NumberFormat fmt = NumberFormat.getIntegerInstance();
+        final NumberFormat fmt = NumberFormat.getIntegerInstance();
         fmt.setGroupingUsed(true);
-        String subtitle = "Total clusters: " + fmt.format(this.totalClusters) +
-                          ", Aligned reads: " + fmt.format(this.totalAlignedReads);
+        final String subtitle = "Total clusters: " + fmt.format(this.totalClusters) +
+                                ", Aligned reads: " + fmt.format(this.totalAlignedReads);
         RExecutor.executeFromClasspath(R_SCRIPT,
                                        OUTPUT.getAbsolutePath(),
                                        CHART_OUTPUT.getAbsolutePath(),
@@ -234,75 +228,40 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         return total;
     }
 
-    /**
-     * Calculates a summary metric that is intended to confer whether or not a set of reads exhibits
-     * significant bias.
-     */
-    private double calculateSummaryMetric(Collection<GcBiasDetailMetrics> details, double minimumWindows, int minGc, int maxGc) {
-        double retval = 0;
-        double totalBins = 0;
+    /** Calculates the Illumina style AT and GC dropout numbers. */
+    private void calculateDropoutMetrics(final Collection<GcBiasDetailMetrics> details,
+                                         final GcBiasSummaryMetrics summary) {
+        // First calculate the totals
+        double totalReads   = 0;
+        double totalWindows = 0;
 
-        Map<Integer, GcBiasDetailMetrics> metricsByGc = new TreeMap<Integer, GcBiasDetailMetrics>();
-        for (GcBiasDetailMetrics detail : details) metricsByGc.put(detail.GC, detail);
+        for (final GcBiasDetailMetrics detail : details) {
+            totalReads += detail.READ_STARTS;
+            totalWindows += detail.WINDOWS;
+        }
 
-        int[][] loopvars = new int[][] {new int[] {50,-1, -1}, new int[] {51, 101, 1}};
+        double atDropout = 0;
+        double gcDropout = 0;
 
-        for (int[] limits : loopvars) {
-            double last=0;
+        for (final GcBiasDetailMetrics detail : details) {
+            final double relativeReads   = detail.READ_STARTS / totalReads;
+            final double relativeWindows = detail.WINDOWS / totalWindows;
+            final double dropout = (relativeWindows - relativeReads) * 100;
 
-            for (int gc=limits[0]; gc != limits[1]; gc += limits[2]) {
-                GcBiasDetailMetrics detail = metricsByGc.get(gc);
-
-                if (detail != null && detail.WINDOWS >= minimumWindows) {
-                    double current = detail.NORMALIZED_COVERAGE + detail.ERROR_BAR_WIDTH;
-                    if (current == 0) current = last;
-                    else last = current;
-
-                    if (detail.GC >= minGc && detail.GC <= maxGc) {
-                        totalBins += 1;
-                        if (current > 0 && current < 1) {
-                            retval += (1d/current);
-                        }
-                    }
-                }
+            if (dropout > 0) {
+                if (detail.GC <= 50) atDropout += dropout;
+                if (detail.GC >= 50) gcDropout += dropout;
             }
         }
 
-        if (totalBins > 0) {
-            return retval / totalBins;
-        }
-        else {
-            return 0;
-        }
-    }
-
-    private double calculateJaffeMetric(Collection<GcBiasDetailMetrics> details, double minimumWindows, int minGc, int maxGc) {
-        double jaffeMetric = 0;
-        double binsCounted = 0;
-        GcBiasDetailMetrics previous = null;
-
-        for (GcBiasDetailMetrics detail : details) {
-//            if (detail.WINDOWS < minimumWindows && detail.GC >= minGc && detail.GC <= maxGc) {
-                if (previous != null) {
-                    double h = detail.GC - previous.GC;
-                    double fx0 = Math.pow((1d - previous.NORMALIZED_COVERAGE), 2);
-                    double fx1 = Math.pow((1d - detail.NORMALIZED_COVERAGE), 2);
-                    jaffeMetric += (h/2.0)*(fx0 + fx1);
-
-//                    binsCounted++;
-//                }
-
-                previous = detail;
-            }
-        }
-
-        return 100d * Math.sqrt(jaffeMetric) / details.size();
+        summary.AT_DROPOUT = atDropout;
+        summary.GC_DROPOUT = gcDropout;
     }
 
     /** Calculcate all the GC values for all windows. */
-    private byte[] calculateAllGcs(byte [] refBases, int [] windowsByGc, int lastWindowStart) {
+    private byte[] calculateAllGcs(final byte [] refBases, final int [] windowsByGc, final int lastWindowStart) {
         final int refLength = refBases.length;
-        byte[] gc = new byte[refLength + 1];
+        final byte[] gc = new byte[refLength + 1];
         final CalculateGcState state = new CalculateGcState();
         for (int i=1; i<lastWindowStart; ++i) {
             final int windowEnd = i + WINDOW_SIZE;
@@ -317,7 +276,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
      * Calculates GC as a number from 0 to 100 in the specified window. If the window includes
      * more than five no-calls then -1 is returned.
      */
-    private int calculateGc(final byte[] bases, final int startIndex, final int endIndex, CalculateGcState state) {
+    private int calculateGc(final byte[] bases, final int startIndex, final int endIndex, final CalculateGcState state) {
         if (state.init) {
             state.init = false ;
             state.gcCount = 0;
@@ -328,7 +287,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                 else if (base == 'N') ++state.nCount;
             }
         } else {
-            byte newBase = bases[endIndex-1];
+            final byte newBase = bases[endIndex-1];
             if (newBase == 'G' || newBase == 'C') ++state.gcCount;
             else if (newBase == 'N') ++state.nCount;
 
