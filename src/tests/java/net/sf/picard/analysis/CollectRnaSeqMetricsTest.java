@@ -39,6 +39,7 @@ import java.io.PrintStream;
 public class CollectRnaSeqMetricsTest {
     @Test
     public void basic() throws Exception {
+        // Create an interval list with one ribosomal interval.
         final String sequence = "chr1";
         final SAMFileHeader header = new SAMFileHeader();
         header.addSequence(new SAMSequenceRecord(sequence, 1000000));
@@ -49,6 +50,8 @@ public class CollectRnaSeqMetricsTest {
         rRnaIntervalsFile.deleteOnExit();
         rRnaIntervalList.write(rRnaIntervalsFile);
 
+        // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
+        // ribosomal interval.
         final String[] refFlatFields = new String[RefFlatColumns.values().length];
         refFlatFields[RefFlatColumns.GENE_NAME.ordinal()] = "myGene";
         refFlatFields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()] = "myTranscript";
@@ -68,6 +71,7 @@ public class CollectRnaSeqMetricsTest {
         refFlatStream.println(StringUtil.join("\t", refFlatFields));
         refFlatStream.close();
 
+        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
         final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
         // Set seed so that strandedness is consistent among runs.
         builder.setRandomSeed(0);
@@ -84,6 +88,7 @@ public class CollectRnaSeqMetricsTest {
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
 
+        // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
         final int ret = new CollectRnaSeqMetrics().instanceMain(new String[]{
