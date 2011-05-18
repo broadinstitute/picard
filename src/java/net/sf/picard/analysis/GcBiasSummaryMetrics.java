@@ -34,18 +34,23 @@ import net.sf.picard.metrics.MetricBase;
 public class GcBiasSummaryMetrics extends MetricBase {
     /** The window size on the genome used to calculate the GC of the sequence. */
     public int WINDOW_SIZE;
+
     /** The total number of clusters that were seen in the gc bias calculation. */
     public int TOTAL_CLUSTERS;
+
     /** The total number of aligned reads used to compute the gc bias metrics. */
     public int ALIGNED_READS;
-    /** The total bias metric for GC bins 0-100. */
-    public double TOTAL_BIAS;
-    /** The bias metric calculated for GC bins 0-33. */
-    public double LOW_GC_BIAS;
-    /** The bias metric calculated for GC bins 34-66. */
-    public double MID_GC_BIAS;
-    /** The bias metric calculated for GC bins 67-100. */
-    public double HIGH_GC_BIAS;
-    /** The Jaffe GC bias metric */
-    public double JAFFE_BIAS_METRIC;
+
+    /**
+     * Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
+     * (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].
+     */
+    public double AT_DROPOUT;
+
+    /**
+     * Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
+     * (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].
+     */
+    public double GC_DROPOUT;
+
 }
