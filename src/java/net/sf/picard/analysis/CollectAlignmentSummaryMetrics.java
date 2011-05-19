@@ -88,12 +88,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     public int MAX_INSERT_SIZE = 100000;
 
     @Option() public List<String> ADAPTER_SEQUENCE = CollectionUtil.makeList(
-        IlluminaUtil.AdapterPair.SINGLE_END.get5PrimeAdapter(),
-        IlluminaUtil.AdapterPair.SINGLE_END.get3PrimeAdapter(),
-        IlluminaUtil.AdapterPair.PAIRED_END.get5PrimeAdapter(),
-        IlluminaUtil.AdapterPair.PAIRED_END.get3PrimeAdapter(),
-        IlluminaUtil.AdapterPair.INDEXED.get5PrimeAdapter(),
-        IlluminaUtil.AdapterPair.INDEXED.get3PrimeAdapter()
+        IlluminaUtil.IlluminaAdapterPair.SINGLE_END.get5PrimeAdapter(),
+        IlluminaUtil.IlluminaAdapterPair.SINGLE_END.get3PrimeAdapter(),
+        IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapter(),
+        IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapter(),
+        IlluminaUtil.IlluminaAdapterPair.INDEXED.get5PrimeAdapter(),
+        IlluminaUtil.IlluminaAdapterPair.INDEXED.get3PrimeAdapter()
     );
 
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")

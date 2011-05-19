@@ -646,15 +646,15 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     if (ird.isPairedEnd()){
                         assert (sam.getFirstOfPairFlag() && sam2.getSecondOfPairFlag());
                         String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(sam, sam2,
-                            isBarcoded() ? IlluminaUtil.AdapterPair.INDEXED
-                                         : IlluminaUtil.AdapterPair.PAIRED_END);
+                            isBarcoded() ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
+                                         : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
                        if (warnString != null){
                             log.debug("Adapter trimming " + warnString);
                         }
                     } else {
                         ClippingUtility.adapterTrimIlluminaSingleRead(sam,
-                            isBarcoded() ? IlluminaUtil.AdapterPair.INDEXED
-                                         : IlluminaUtil.AdapterPair.PAIRED_END);
+                            isBarcoded() ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
+                                         : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
                         // note if not barcoded, it could instead be SINGLE_END
                         // we're assuming one read of paired_end is more common
                         // Note, the single_end adapters have first 13-18 bases in common with paired_end
