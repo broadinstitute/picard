@@ -46,4 +46,50 @@ public class TabbedTextFileWithHeaderParserTest {
 
         Assert.assertEquals(i, data.length);
     }
+
+    @Test
+    public void parsingWithColumnHeadersTest() throws Exception {
+        final String[][] data = new String[][] {
+                new String[] {"1", "2", "3"},
+                new String[] {"a", "b", "2"},
+                new String[] {"foo", "bar", ""},
+        };
+
+        final String[] headers = {"STRING", "STRING2", "NUMBER"};
+
+        final File tmp = File.createTempFile("tabbedTextTest.", ".txt");
+        tmp.deleteOnExit();
+        final BufferedWriter out = new BufferedWriter(new FileWriter(tmp));
+
+        for (final String[] fields : data) {
+            out.write(StringUtil.join("\t", fields));
+            out.newLine();
+        }
+
+        out.close();
+
+        final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(tmp, headers);
+        for (final String col : headers) Assert.assertTrue(parser.hasColumn(col));
+
+        int i=0;
+        for (final Row row : parser) {
+            final String[] expected = data[i++];
+            final String[] actual = row.getFields();
+            for (int j = 0; j < expected.length; j++) {
+                Assert.assertTrue((expected[j].equals("") && actual[j] == null) || expected[j].equals(actual[j]));
+            }
+            Assert.assertEquals(row.getCurrentLine(), StringUtil.join("\t", expected));
+            try {
+                row.getField(headers[0]);
+                row.getField(headers[1]);
+                row.getIntegerField(headers[2]);
+            }
+            catch(Exception e) {
+                Assert.fail("Failed to parse one of the fields in " + row.getCurrentLine() + ": " + e.getMessage());
+            }
+        }
+
+        Assert.assertEquals(i, data.length);
+    }
+
 }
