@@ -57,11 +57,14 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
             return fields[columnLabelIndices.get(columnLabel)];
         }
 
+        public Integer getIntegerField(final String columnLabel) {
+            if (fields[columnLabelIndices.get(columnLabel)] == null)  return null;
+            return Integer.parseInt(fields[columnLabelIndices.get(columnLabel)]);
+        }
+
         public String getCurrentLine() {
             return this.currentLine;
         }
-
-
 
     }
 
@@ -105,6 +108,17 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
         final String[] columnLabels = parser.next();
         for (int i = 0; i < columnLabels.length; ++i) {
             columnLabelIndices.put(columnLabels[i], i);
+        }
+    }
+
+    public TabbedTextFileWithHeaderParser(final File file, final String[] columnHeaders) {
+        parser = new TabbedInputParser(false, file);
+        if (!parser.hasNext()) {
+            throw new PicardException("No header line found in file " + file);
+        }
+
+        for (int i = 0; i < columnHeaders.length; ++i) {
+            columnLabelIndices.put(columnHeaders[i], i);
         }
     }
 
