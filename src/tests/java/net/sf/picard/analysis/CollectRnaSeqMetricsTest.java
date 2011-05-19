@@ -39,16 +39,7 @@ import java.io.PrintStream;
 public class CollectRnaSeqMetricsTest {
     @Test
     public void basic() throws Exception {
-        // Create an interval list with one ribosomal interval.
         final String sequence = "chr1";
-        final SAMFileHeader header = new SAMFileHeader();
-        header.addSequence(new SAMSequenceRecord(sequence, 1000000));
-        final Interval rRnaInterval = new Interval(sequence, 1, 100, true, "rRNA");
-        final IntervalList rRnaIntervalList = new IntervalList(header);
-        rRnaIntervalList.add(rRnaInterval);
-        final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
-        rRnaIntervalsFile.deleteOnExit();
-        rRnaIntervalList.write(rRnaIntervalsFile);
 
         // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
         // ribosomal interval.
@@ -57,12 +48,12 @@ public class CollectRnaSeqMetricsTest {
         refFlatFields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()] = "myTranscript";
         refFlatFields[RefFlatColumns.CHROMOSOME.ordinal()] = sequence;
         refFlatFields[RefFlatColumns.STRAND.ordinal()] = "+";
-        refFlatFields[RefFlatColumns.TX_START.ordinal()] = "50";
+        refFlatFields[RefFlatColumns.TX_START.ordinal()] = "49";
         refFlatFields[RefFlatColumns.TX_END.ordinal()] = "500";
-        refFlatFields[RefFlatColumns.CDS_START.ordinal()] = "75";
+        refFlatFields[RefFlatColumns.CDS_START.ordinal()] = "74";
         refFlatFields[RefFlatColumns.CDS_END.ordinal()] = "400";
         refFlatFields[RefFlatColumns.EXON_COUNT.ordinal()] = "2";
-        refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = "50,250";
+        refFlatFields[RefFlatColumns.EXON_STARTS.ordinal()] = "49,249";
         refFlatFields[RefFlatColumns.EXON_ENDS.ordinal()] = "200,500";
 
         final File refFlatFile = File.createTempFile("tmp.", ".refFlat");
@@ -88,6 +79,14 @@ public class CollectRnaSeqMetricsTest {
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
 
+        // Create an interval list with one ribosomal interval.
+        final Interval rRnaInterval = new Interval(sequence, 1, 100, true, "rRNA");
+        final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+        rRnaIntervalList.add(rRnaInterval);
+        final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
+        rRnaIntervalsFile.deleteOnExit();
+        rRnaIntervalList.write(rRnaIntervalsFile);
+
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
@@ -104,7 +103,7 @@ public class CollectRnaSeqMetricsTest {
         output.read(new FileReader(metricsFile));
 
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
-        Assert.assertEquals(metrics.ALIGNED_PF_BASES, 324);
+        Assert.assertEquals(metrics.PF_ALIGNED_BASES, 324);
         Assert.assertEquals(metrics.RIBOSOMAL_BASES, 47);
         Assert.assertEquals(metrics.CODING_BASES, 119);
         Assert.assertEquals(metrics.UTR_BASES, 62);

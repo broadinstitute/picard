@@ -34,6 +34,6 @@ import java.io.File;
  */
 public class GeneAnnotationReader {
     public static OverlapDetector<Gene> loadRefFlat(File refFlatFile, SAMSequenceDictionary sequenceDictionary) {
-        return new RefFlatReader(refFlatFile, sequenceDictionary).load();
+        return RefFlatReader.load(refFlatFile, sequenceDictionary);
     }
 }

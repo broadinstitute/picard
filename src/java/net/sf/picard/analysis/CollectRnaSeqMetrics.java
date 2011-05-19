@@ -26,9 +26,7 @@ package net.sf.picard.analysis;
 import net.sf.picard.annotation.Gene;
 import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.annotation.LocusFunction;
-import net.sf.picard.annotation.Transcript;
 import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
@@ -38,8 +36,10 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.OverlapDetector;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
+import net.sf.samtools.util.SequenceUtil;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,18 +48,19 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Usage
     public final String USAGE = getStandardUsagePreamble() +
-            "Program to collect metrics about the alignment of RNA to the various functional classes of loci in the genome:" +
-            " coding, intronic, UTR, intragenic. ribosomal.\n" +
+            "Program to collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
+            " coding, intronic, UTR, intergenic, ribosomal.\n" +
             "Also determines strand-specificity for strand-specific libraries.";
 
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}
 
 
-    @Option(doc="Gene annotations in refFlat form.")
+    @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;
 
     @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
-            "If not specified no bases will be identified as being ribosomal.", optional = true)
+            "If not specified no bases will be identified as being ribosomal.  " +
+            "Format described here: http://picard.sourceforge.net/javadoc/net/sf/picard/util/IntervalList.html", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
@@ -82,6 +83,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
         if (RIBOSOMAL_INTERVALS != null) {
             final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
+            SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
             ribosomalIntervals.unique();
             final List<Interval> intervals = ribosomalIntervals.getIntervals();
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
@@ -102,11 +104,11 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
 
             // By default, if base does not overlap with rRNA or gene, it is intergenic.
-            for (int i = 0; i < locusFunctions.length; ++i) locusFunctions[i] = LocusFunction.INTERGENIC;
+            Arrays.fill(locusFunctions, 0, locusFunctions.length, LocusFunction.INTERGENIC);
 
             for (final Gene gene : overlappingGenes) {
-                for (final Transcript transcript : gene) {
-                    transcript.getLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
+                for (final Gene.Transcript transcript : gene) {
+                    transcript.assignLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
                 }
             }
 
@@ -118,7 +120,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
             // Tally the function of each base in the alignment block.
             for (final LocusFunction locusFunction : locusFunctions) {
-                ++metrics.ALIGNED_PF_BASES;
+                ++metrics.PF_ALIGNED_BASES;
                 switch (locusFunction) {
                     case INTERGENIC:
                         ++metrics.INTERGENIC_BASES;
@@ -146,14 +148,16 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         if (overlapsExon && STRAND_SPECIFICITY != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
             final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
             final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
+            final boolean readAndTranscriptStrandsAgree = negativeReadStrand == negativeTranscriptionStrand;
             final boolean readOneOrUnpaired = !rec.getReadPairedFlag() || rec.getFirstOfPairFlag();
+            final boolean firstReadExpectedToAgree = STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND;
+            final boolean thisReadExpectedToAgree = readOneOrUnpaired == firstReadExpectedToAgree;
             // If the read strand is the same as the strand of the transcript, and the end is the one that is supposed to agree,
             // then the strand specificity for this read is correct.
             // -- OR --
             // If the read strand is not the same as the strand of the transcript, and the end is not the one that is supposed
             // to agree, then the strand specificity for this read is correct.
-            if ((negativeReadStrand == negativeTranscriptionStrand) ==
-                (readOneOrUnpaired == (STRAND_SPECIFICITY == StrandSpecificity.FIRST_READ_TRANSCRIPTION_STRAND))) {
+            if (readAndTranscriptStrandsAgree == thisReadExpectedToAgree) {
                 ++metrics.CORRECT_STRAND_READS;
             } else {
                 ++metrics.INCORRECT_STRAND_READS;
@@ -163,12 +167,13 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Override
     protected void finish() {
-        if (metrics.ALIGNED_PF_BASES > 0) {
-            metrics.PCT_RIBOSOMAL_BASES =  metrics.RIBOSOMAL_BASES  / (double) metrics.ALIGNED_PF_BASES;
-            metrics.PCT_CODING_BASES =     metrics.CODING_BASES     / (double) metrics.ALIGNED_PF_BASES;
-            metrics.PCT_UTR_BASES =        metrics.UTR_BASES        / (double) metrics.ALIGNED_PF_BASES;
-            metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.ALIGNED_PF_BASES;
-            metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.ALIGNED_PF_BASES;
+        if (metrics.PF_ALIGNED_BASES > 0) {
+            metrics.PCT_RIBOSOMAL_BASES =  metrics.RIBOSOMAL_BASES  / (double) metrics.PF_ALIGNED_BASES;
+            metrics.PCT_CODING_BASES =     metrics.CODING_BASES     / (double) metrics.PF_ALIGNED_BASES;
+            metrics.PCT_UTR_BASES =        metrics.UTR_BASES        / (double) metrics.PF_ALIGNED_BASES;
+            metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.PF_ALIGNED_BASES;
+            metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.PF_ALIGNED_BASES;
+            metrics.PCT_RNA_BASES =        metrics.PCT_CODING_BASES + metrics.PCT_UTR_BASES;
         }
         if (metrics.CORRECT_STRAND_READS > 0 || metrics.INCORRECT_STRAND_READS > 0) {
             metrics.PCT_CORRECT_STRAND_READS = metrics.CORRECT_STRAND_READS/(double)(metrics.CORRECT_STRAND_READS + metrics.INCORRECT_STRAND_READS);

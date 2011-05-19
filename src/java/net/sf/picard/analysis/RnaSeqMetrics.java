@@ -33,14 +33,14 @@ public class RnaSeqMetrics extends MetricBase{
     /**
      * The total number of aligned PF bases.  Non-primary alignments are not counted.
      */
-    public long ALIGNED_PF_BASES;
+    public long PF_ALIGNED_BASES;
 
     /**
      * Number of bases in primary aligments that align to ribosomal sequence.
      */
     public long RIBOSOMAL_BASES;
     /**
-     * Number of bases in primary aligments that align to a coding base for some gene, and not ribosomal sequence.
+     * Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence.
      */
     public long CODING_BASES;
 
@@ -69,29 +69,34 @@ public class RnaSeqMetrics extends MetricBase{
      */
     public long INCORRECT_STRAND_READS;
     /**
-     * RIBOSOMAL_BASES / ALIGNED_PF_BASES
+     * RIBOSOMAL_BASES / PF_ALIGNED_BASES
      */
     public double PCT_RIBOSOMAL_BASES;
 
     /**
-     * CODING_BASES / ALIGNED_PF_BASES
+     * CODING_BASES / PF_ALIGNED_BASES
      */
     public double PCT_CODING_BASES;
 
     /**
-     * UTR_BASES / ALIGNED_PF_BASES
+     * UTR_BASES / PF_ALIGNED_BASES
      */
     public double PCT_UTR_BASES;
 
     /**
-     * INTRONIC_BASES / ALIGNED_PF_BASES
+     * INTRONIC_BASES / PF_ALIGNED_BASES
      */
     public double PCT_INTRONIC_BASES;
 
     /**
-     * INTERGENIC_BASES / ALIGNED_PF_BASES
+     * INTERGENIC_BASES / PF_ALIGNED_BASES
      */
     public double PCT_INTERGENIC_BASES;
+
+    /**
+     * PCT_UTR_BASES + PCT_CODING_BASES
+     */
+    public double PCT_RNA_BASES;
 
     /**
      * CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.
