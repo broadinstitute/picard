@@ -23,7 +23,7 @@
  */
 package net.sf.picard.util;
 
-import net.sf.picard.util.IlluminaUtil.AdapterPair;
+import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 import org.testng.annotations.Test;
@@ -55,15 +55,15 @@ public class ClippingUtilityTest {
        rec2.setReadString(read2);
        rec2.setSecondOfPairFlag(true);
 
-       String result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2, AdapterPair.PAIRED_END);
+       String result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2, IlluminaAdapterPair.PAIRED_END.adapterPair);
        Assert.assertEquals(result, expected, testName);
    }
 
     @DataProvider(name="clipTestData")
     public Object[][] getClipTestData() {
-        final String FORWARD = AdapterPair.PAIRED_END.get3PrimeAdapter();
-        final String SE_FORWARD = AdapterPair.SINGLE_END.get3PrimeAdapter();
-        final String REVERSE = AdapterPair.PAIRED_END.get5PrimeAdapterInReadOrder();
+        final String FORWARD = IlluminaAdapterPair.PAIRED_END.get3PrimeAdapter();
+        final String SE_FORWARD = IlluminaAdapterPair.SINGLE_END.get3PrimeAdapter();
+        final String REVERSE = IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterInReadOrder();
         return new Object[][] { 
             new Object[] {"Simple test 1", "AAAAACCCCCAGATCGGAAGAGCG", "AGATCGGAAGAGCG", 6, 0.15, 10},
             new Object[] {"Simple test 2", "AAAAACCCCCGGGGGAGATCGGAAGAGCG", "AGATCGGAAGAGCG", 6, 0.15, 15},

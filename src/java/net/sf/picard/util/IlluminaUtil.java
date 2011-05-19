@@ -1,7 +1,6 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
 /**
@@ -105,7 +104,7 @@ public class IlluminaUtil {
     }
 
     /** Describes adapters used on each pair of strands */
-    public static enum AdapterPair {
+    public static enum IlluminaAdapterPair {
 
         PAIRED_END("AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT",  //58 bases)
                    "AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG"), // 61 bases
@@ -119,27 +118,21 @@ public class IlluminaUtil {
         ALTERNATIVE_SINGLE_END("AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGACGATC",
                           "TCGTATGCCGTCTTCTGCTTG");
 
-        final String fivePrime, threePrime, fivePrimeReadOrder;
-        final byte[]  fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
+        public final ClippingUtility.AdapterPair adapterPair;
 
-        private AdapterPair(final String fivePrime, final String threePrime) {  // constructor
-            this.threePrime = threePrime;
-            this.fivePrime = fivePrime;
-            this.fivePrimeReadOrder = SequenceUtil.reverseComplement(fivePrime);
-            this.threePrimeBytes = StringUtil.stringToBytes(threePrime);
-            this.fivePrimeBytes = StringUtil.stringToBytes(fivePrime);
-            this.fivePrimeReadOrderBytes = StringUtil.stringToBytes(fivePrimeReadOrder);
 
+        private IlluminaAdapterPair(final String fivePrime, final String threePrime) {
+            adapterPair = new ClippingUtility.AdapterPair(fivePrime, threePrime);
         }
 
-        public String get3PrimeAdapter(){ return threePrime; }
-        public String get5PrimeAdapter(){ return fivePrime; }
-        public String get3PrimeAdapterInReadOrder(){ return threePrime; }
-        public String get5PrimeAdapterInReadOrder() { return fivePrimeReadOrder; }
-        public byte[] get3PrimeAdapterBytes() { return threePrimeBytes; }
-        public byte[] get5PrimeAdapterBytes() { return fivePrimeBytes; }
-        public byte[] get3PrimeAdapterBytesInReadOrder() { return threePrimeBytes; }
-        public byte[] get5PrimeAdapterBytesInReadOrder()  { return fivePrimeReadOrderBytes; }
+        public String get3PrimeAdapter(){ return adapterPair.get3PrimeAdapter(); }
+        public String get5PrimeAdapter(){ return adapterPair.get5PrimeAdapter(); }
+        public String get3PrimeAdapterInReadOrder(){ return adapterPair.get3PrimeAdapterInReadOrder(); }
+        public String get5PrimeAdapterInReadOrder() { return adapterPair.get5PrimeAdapterInReadOrder(); }
+        public byte[] get3PrimeAdapterBytes() { return adapterPair.get3PrimeAdapterBytes(); }
+        public byte[] get5PrimeAdapterBytes() { return adapterPair.get5PrimeAdapterBytes(); }
+        public byte[] get3PrimeAdapterBytesInReadOrder() { return adapterPair.get3PrimeAdapterBytesInReadOrder(); }
+        public byte[] get5PrimeAdapterBytesInReadOrder()  { return adapterPair.get5PrimeAdapterBytesInReadOrder(); }
     }
 
 }

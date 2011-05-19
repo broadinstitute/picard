@@ -24,7 +24,6 @@
 
 package net.sf.picard.util;
 
-import net.sf.picard.util.IlluminaUtil;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.SAMRecord;
@@ -68,7 +67,7 @@ public class ClippingUtility {
      * @param read    SAM/BAM read to trim
      * @param adapter which adapters to use (indexed, paired_end, or single_end)
      */
-    public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final IlluminaUtil.AdapterPair adapter) {
+    public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter) {
         adapterTrimIlluminaSingleRead(read, adapter, MIN_MATCH_BASES, MAX_ERROR_RATE);
     }
 
@@ -82,7 +81,7 @@ public class ClippingUtility {
      * @param minMatchBases minimum number of contiguous bases to match against in a read
      * @param maxErrorRate  maximum error rate when matching read bases
      */
-    public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final IlluminaUtil.AdapterPair adapter,
+    public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter,
         final int minMatchBases, final double maxErrorRate) {
         final byte[] bases = read.getReadBases();
         int indexOfAdapterSequence = findIndex(bases, read.getReadNegativeStrandFlag(),
@@ -104,7 +103,7 @@ public class ClippingUtility {
      * @param adapters which adapters to use (indexed, paired_end, or single_end)
      * @return warning information about the trimming for logging
      */
-    public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final IlluminaUtil.AdapterPair adapters) {
+    public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2, final AdapterPair adapters) {
         return adapterTrimIlluminaPairedReads(read1, read2, adapters, MIN_MATCH_PE_BASES, MAX_PE_ERROR_RATE);
     }
 
@@ -123,7 +122,7 @@ public class ClippingUtility {
      * @return warning      information about the trimming for logging
      */
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
-        final IlluminaUtil.AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
+        final AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
 
         String warnString = null;
 
@@ -177,7 +176,7 @@ public class ClippingUtility {
     private static String oneSidedMatch(SAMRecord read1, SAMRecord read2,
                                         byte[] bases1, byte[] bases2,
                                         int index1, int index2,
-                                        IlluminaUtil.AdapterPair adapters,
+                                        AdapterPair adapters,
                                         final int stricterMinMatchBases,
                                         final double maxErrorRate) {
         String warnString;
@@ -226,7 +225,7 @@ public class ClippingUtility {
     // does the adapter still match even at normal thresholds
     // preCondition - the adapter matches only one set of bases at the relaxed thresholds
     private static int indexOfStrictMatchingBase(int index1, byte[] bases1, byte[] bases2,
-                                                 IlluminaUtil.AdapterPair adapters,
+                                                 AdapterPair adapters,
                                                  int stricterMinMatchBases) {
         byte[] basesToCheck, adapterToCheck;
         if (index1 == NO_MATCH) {
@@ -269,4 +268,28 @@ public class ClippingUtility {
 
         return NO_MATCH;
     }
+    public static class AdapterPair {
+        final String fivePrime, threePrime, fivePrimeReadOrder;
+        final byte[]  fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
+
+        public AdapterPair(final String fivePrime, final String threePrime) {
+            this.threePrime = threePrime;
+            this.fivePrime = fivePrime;
+            this.fivePrimeReadOrder = SequenceUtil.reverseComplement(fivePrime);
+            this.threePrimeBytes = StringUtil.stringToBytes(threePrime);
+            this.fivePrimeBytes = StringUtil.stringToBytes(fivePrime);
+            this.fivePrimeReadOrderBytes = StringUtil.stringToBytes(fivePrimeReadOrder);
+
+        }
+
+        public String get3PrimeAdapter(){ return threePrime; }
+        public String get5PrimeAdapter(){ return fivePrime; }
+        public String get3PrimeAdapterInReadOrder(){ return threePrime; }
+        public String get5PrimeAdapterInReadOrder() { return fivePrimeReadOrder; }
+        public byte[] get3PrimeAdapterBytes() { return threePrimeBytes; }
+        public byte[] get5PrimeAdapterBytes() { return fivePrimeBytes; }
+        public byte[] get3PrimeAdapterBytesInReadOrder() { return threePrimeBytes; }
+        public byte[] get5PrimeAdapterBytesInReadOrder()  { return fivePrimeReadOrderBytes; }
+    }
+
 }
