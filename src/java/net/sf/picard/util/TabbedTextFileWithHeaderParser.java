@@ -150,4 +150,8 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
     public void close() {
         parser.close();
     }
+
+    public int getCurrentLineNumber() {
+        return parser.getCurrentLineNumber();
+    }
 }

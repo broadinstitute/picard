@@ -25,7 +25,7 @@ package net.sf.picard.annotation;
 
 import net.sf.picard.util.Log;
 import net.sf.picard.util.OverlapDetector;
-import net.sf.picard.util.TabbedInputParser;
+import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.samtools.SAMSequenceDictionary;
 
 import java.io.File;
@@ -44,113 +44,135 @@ public class RefFlatReader {
     public enum RefFlatColumns{GENE_NAME, TRANSCRIPT_NAME, CHROMOSOME, STRAND, TX_START, TX_END, CDS_START, CDS_END,
         EXON_COUNT, EXON_STARTS, EXON_ENDS}
 
+    private static final String[] RefFlatColumnLabels = new String[RefFlatColumns.values().length];
+
+    static {
+        for (int i = 0; i < RefFlatColumnLabels.length; ++i) {
+            RefFlatColumnLabels[i] = RefFlatColumns.values()[i].name();
+        }
+    }
+
     private final File refFlatFile;
     private final SAMSequenceDictionary sequenceDictionary;
 
-    RefFlatReader(File refFlatFile, SAMSequenceDictionary sequenceDictionary) {
+    RefFlatReader(final File refFlatFile, final SAMSequenceDictionary sequenceDictionary) {
         this.refFlatFile = refFlatFile;
         this.sequenceDictionary = sequenceDictionary;
     }
 
-    OverlapDetector<Gene> load() {
-            final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
+    static OverlapDetector<Gene> load(final File refFlatFile, final SAMSequenceDictionary sequenceDictionary) {
+        return new RefFlatReader(refFlatFile, sequenceDictionary).load();
+    }
 
-            final int expectedColumns = RefFlatColumns.values().length;
-            TabbedInputParser parser = new TabbedInputParser(false, refFlatFile);
-            Map<String, List<String[]>> refFlatLinesByGene = new HashMap<String, List<String[]>>();
-            for (final String[] fields : parser) {
-                final int lineNumber = parser.getCurrentLineNumber() - 1; // getCurrentLineNumber returns the number of the next line
-                if (fields.length != expectedColumns) {
-                    throw new AnnotationException("Wrong number of fields in refFlat file " + refFlatFile + " at line " +
-                            lineNumber);
-                }
-                final String geneName = fields[RefFlatColumns.GENE_NAME.ordinal()];
-                final String transcriptName = fields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()];
-                final String transcriptDescription = geneName + ":" + transcriptName;
-                String chromosome = fields[RefFlatColumns.CHROMOSOME.ordinal()];
-                if (!isSequenceRecognized(chromosome)) {
-                    LOG.info("Skipping " + transcriptDescription + " due to unrecognized sequence " + chromosome);
-                } else {
-                    List<String[]> transcriptLines = refFlatLinesByGene.get(geneName);
-                    if (transcriptLines == null) {
-                        transcriptLines = new ArrayList<String[]>();
-                        refFlatLinesByGene.put(geneName, transcriptLines);
-                    }
-                    transcriptLines.add(fields);
-                }
+    OverlapDetector<Gene> load() {
+        final OverlapDetector<Gene> overlapDetector = new OverlapDetector<Gene>(0, 0);
+
+        final int expectedColumns = RefFlatColumns.values().length;
+        final TabbedTextFileWithHeaderParser parser = new TabbedTextFileWithHeaderParser(refFlatFile, RefFlatColumnLabels);
+        final Map<String, List<TabbedTextFileWithHeaderParser.Row>> refFlatLinesByGene =
+                new HashMap<String, List<TabbedTextFileWithHeaderParser.Row>>();
+
+        for (final TabbedTextFileWithHeaderParser.Row row : parser) {
+            final int lineNumber = parser.getCurrentLineNumber() - 1; // getCurrentLineNumber returns the number of the next line
+            if (row.getFields().length != expectedColumns) {
+                throw new AnnotationException("Wrong number of fields in refFlat file " + refFlatFile + " at line " +
+                        lineNumber);
             }
-            for (final List<String[]> transcriptLines : refFlatLinesByGene.values()) {
-                try {
-                    final Gene gene = makeGeneFromRefFlatLines(transcriptLines);
-                    overlapDetector.addLhs(gene, gene);
-                } catch (AnnotationException e) {
-                    LOG.info(e.getMessage());
+            final String geneName = row.getField(RefFlatColumns.GENE_NAME.name());
+            final String transcriptName = row.getField(RefFlatColumns.TRANSCRIPT_NAME.name());
+            final String transcriptDescription = geneName + ":" + transcriptName;
+            final String chromosome = row.getField(RefFlatColumns.CHROMOSOME.name());
+            if (!isSequenceRecognized(chromosome)) {
+                LOG.debug("Skipping " + transcriptDescription + " due to unrecognized sequence " + chromosome);
+            } else {
+                List<TabbedTextFileWithHeaderParser.Row> transcriptLines = refFlatLinesByGene.get(geneName);
+                if (transcriptLines == null) {
+                    transcriptLines = new ArrayList<TabbedTextFileWithHeaderParser.Row>();
+                    refFlatLinesByGene.put(geneName, transcriptLines);
                 }
+                transcriptLines.add(row);
             }
-            return overlapDetector;
         }
 
-    private boolean isSequenceRecognized(String sequence) {
+        int longestInterval = 0;
+        int numIntervalsOver1MB = 0;
+
+        for (final List<TabbedTextFileWithHeaderParser.Row> transcriptLines : refFlatLinesByGene.values()) {
+            try {
+                final Gene gene = makeGeneFromRefFlatLines(transcriptLines);
+                overlapDetector.addLhs(gene, gene);
+                if (gene.length() > longestInterval) longestInterval = gene.length();
+                if (gene.length() > 1000000) ++numIntervalsOver1MB;
+            } catch (AnnotationException e) {
+                LOG.debug(e.getMessage() + " -- skipping");
+            }
+        }
+        LOG.debug("Longest gene: " + longestInterval + "; number of genes > 1MB: " + numIntervalsOver1MB);
+        return overlapDetector;
+    }
+
+    private boolean isSequenceRecognized(final String sequence) {
         return (sequenceDictionary.getSequence(sequence) != null);
     }
 
-        private Gene makeGeneFromRefFlatLines(List<String[]> transcriptLines) {
-            final String geneName = transcriptLines.get(0)[RefFlatColumns.GENE_NAME.ordinal()];
-            final String strandStr = transcriptLines.get(0)[RefFlatColumns.STRAND.ordinal()];
+        private Gene makeGeneFromRefFlatLines(final List<TabbedTextFileWithHeaderParser.Row> transcriptLines) {
+            final String geneName = transcriptLines.get(0).getField(RefFlatColumns.GENE_NAME.name());
+            final String strandStr = transcriptLines.get(0).getField(RefFlatColumns.STRAND.name());
             final boolean negative = strandStr.equals("-");
-            final String chromosome = transcriptLines.get(0)[RefFlatColumns.CHROMOSOME.ordinal()];
-            final List<Transcript> transcripts = new ArrayList<Transcript>(transcriptLines.size());
-            for (final String[] fields: transcriptLines) {
-                if (!strandStr.equals(fields[RefFlatColumns.STRAND.ordinal()])) {
-                    throw new AnnotationException("Strand disagreement in refFlat file for gene " + geneName + " -- ignoring gene");
+            final String chromosome = transcriptLines.get(0).getField(RefFlatColumns.CHROMOSOME.name());
+            final List<Gene.Transcript> transcripts = new ArrayList<Gene.Transcript>(transcriptLines.size());
+            for (final TabbedTextFileWithHeaderParser.Row row: transcriptLines) {
+                if (!strandStr.equals(row.getField(RefFlatColumns.STRAND.name()))) {
+                    throw new AnnotationException("Strand disagreement in refFlat file for gene " + geneName);
                 }
-                if (!chromosome.equals(fields[RefFlatColumns.CHROMOSOME.ordinal()])) {
-                    throw new AnnotationException("Chromosome disagreement(" + chromosome + " != " + fields[RefFlatColumns.CHROMOSOME.ordinal()] +
-                            ") in refFlat file for gene " + geneName + " -- ignoring gene");
+                if (!chromosome.equals(row.getField(RefFlatColumns.CHROMOSOME.name()))) {
+                    throw new AnnotationException("Chromosome disagreement(" + chromosome + " != " + row.getField(RefFlatColumns.CHROMOSOME.name()) +
+                            ") in refFlat file for gene " + geneName);
                 }
-                transcripts.add(makeTranscriptFromRefFlatLine(fields));
+                transcripts.add(makeTranscriptFromRefFlatLine(row));
             }
             int start = Integer.MAX_VALUE;
             int end = Integer.MIN_VALUE;
-            for (final Transcript transcript : transcripts) {
+            for (final Gene.Transcript transcript : transcripts) {
                 start = Math.min(start, transcript.start());
                 end = Math.max(end, transcript.end());
             }
             return new Gene(chromosome, start, end, negative, geneName, transcripts);
         }
 
-        private Transcript makeTranscriptFromRefFlatLine(final String[] fields) {
-            final String geneName = fields[RefFlatColumns.GENE_NAME.ordinal()];
-            final String transcriptName = fields[RefFlatColumns.TRANSCRIPT_NAME.ordinal()];
+    /**
+     * Conversion from 0-based half-open to 1-based inclusive intervals is done here.
+     */
+    private Gene.Transcript makeTranscriptFromRefFlatLine(final TabbedTextFileWithHeaderParser.Row row) {
+            final String geneName = row.getField(RefFlatColumns.GENE_NAME.name());
+            final String transcriptName = row.getField(RefFlatColumns.TRANSCRIPT_NAME.name());
             final String transcriptDescription = geneName + ":" + transcriptName;
-            final int exonCount = Integer.parseInt(fields[RefFlatColumns.EXON_COUNT.ordinal()]);
-            final String[] exonStarts = fields[RefFlatColumns.EXON_STARTS.ordinal()].split(",");
-            final String[] exonEnds = fields[RefFlatColumns.EXON_ENDS.ordinal()].split(",");
+            final int exonCount = Integer.parseInt(row.getField(RefFlatColumns.EXON_COUNT.name()));
+            final String[] exonStarts = row.getField(RefFlatColumns.EXON_STARTS.name()).split(",");
+            final String[] exonEnds = row.getField(RefFlatColumns.EXON_ENDS.name()).split(",");
             if (exonCount != exonStarts.length) {
                 throw new AnnotationException("Number of exon starts does not agree with number of exons for " +
-                        transcriptDescription + " -- ignoring gene");
+                        transcriptDescription);
             }
             if (exonCount != exonEnds.length) {
                 throw new AnnotationException("Number of exon ends does not agree with number of exons for " +
-                        transcriptDescription + " -- ignoring gene");
+                        transcriptDescription);
             }
-            Exon[] exons = new Exon[exonCount];
+            final Gene.Transcript.Exon[] exons = new Gene.Transcript.Exon[exonCount];
             for (int i = 0; i < exonCount; ++i) {
-                exons[i] = new Exon(Integer.parseInt(exonStarts[i]), Integer.parseInt(exonEnds[i]));
+                exons[i] = new Gene.Transcript.Exon(Integer.parseInt(exonStarts[i]) + 1, Integer.parseInt(exonEnds[i]));
                 if (exons[i].start >= exons[i].end) {
-                    throw new AnnotationException("Exon has 0 or negative extent for " + transcriptDescription +
-                            " -- ignoring gene");
+                    throw new AnnotationException("Exon has 0 or negative extent for " + transcriptDescription);
                 }
                 if (i > 0 && exons[i-1].end >= exons[i].start) {
-                    throw new AnnotationException("Exons overlap for " + transcriptDescription +
-                            " -- ignoring gene");
+                    throw new AnnotationException("Exons overlap for " + transcriptDescription);
                 }
             }
-            final int transcriptionStart = Integer.parseInt(fields[RefFlatColumns.TX_START.ordinal()]);
-            final int transcriptionEnd = Integer.parseInt(fields[RefFlatColumns.TX_END.ordinal()]);
-            final int codingStart = Integer.parseInt(fields[RefFlatColumns.CDS_START.ordinal()]);
-            final int codingEnd = Integer.parseInt(fields[RefFlatColumns.CDS_END.ordinal()]);
-            return new Transcript(transcriptName, transcriptionStart, transcriptionEnd, codingStart, codingEnd, exons);
+            final int transcriptionStart = row.getIntegerField(RefFlatColumns.TX_START.name()) + 1;
+            final int transcriptionEnd = row.getIntegerField(RefFlatColumns.TX_END.name());
+            final int codingStart = row.getIntegerField(RefFlatColumns.CDS_START.name()) + 1;
+            final int codingEnd = row.getIntegerField(RefFlatColumns.CDS_END.name());
+            return new Gene.Transcript(transcriptName, transcriptionStart, transcriptionEnd, codingStart, codingEnd, exons);
         }
 
 }
