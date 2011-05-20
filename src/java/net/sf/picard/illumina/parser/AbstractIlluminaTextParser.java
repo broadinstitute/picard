@@ -108,15 +108,12 @@ abstract class AbstractIlluminaTextParser implements IlluminaParser {
             throw new NoSuchElementException();
         }
 
-        // Grab these before calling next(), because AbstractIterator reads ahead so otherwise they point to the next line.
-        final int lineNumber = parser.getCurrentLineNumber();
-        final String line = parser.getCurrentLine();
         try {
             final String[] fields = parser.next();
             processLine(data, fields);
         }
         catch (RuntimeException re) {
-            log.error(re, "Error parsing " + parser.getFileName() + ":" + lineNumber + " - " + line);
+            log.error(re, "Error parsing " + parser.getFileName() + ":" + parser.getCurrentLineNumber() + " - " + parser.getCurrentLine());
             throw re;
         }
     }
