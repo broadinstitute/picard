@@ -44,8 +44,10 @@ public class BasicInputParser extends AbstractInputParser
     private final ArrayList<InputStream> inputs = new ArrayList<InputStream>();
     private final ArrayList<String> fileNames = new ArrayList<String>();
     String currentFileName = null;
-    private String currentLine;
-    private int currentLineNumber;
+    private String currentLine = null;
+    private String nextLine = null;
+    private int currentLineNumber = 0;
+    private int nextLineNumber = 0;
 
     /**
      * Constructor.  Opens up a buffered reader and reads the first line.
@@ -98,14 +100,19 @@ public class BasicInputParser extends AbstractInputParser
     {
         try {
             final String line = reader.readLine();
+            if (nextLine != null && !isComment(nextLine.getBytes())) {
+                currentLineNumber = nextLineNumber;
+                currentLine = nextLine;
+            }
             if (line != null) {
-                currentLineNumber++;
-                currentLine = line;
+                nextLineNumber++;
+                nextLine = line;
                 return line.getBytes();
             }
             if (inputs.size() > 0) {
                 currentFileName = fileNames.size() > 0 ? fileNames.remove(0) : null;
-                currentLineNumber = 0;
+                nextLineNumber = 0;
+                nextLine = null;
                 reader = new AsciiLineReader(inputs.remove(0));
                 return readNextLine();
             }

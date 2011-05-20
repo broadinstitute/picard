@@ -77,8 +77,8 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
 
         @Override
         public Row next() {
-            final String source = parser.getCurrentLine();
             final String[] fields = parser.next();
+            final String source = parser.getCurrentLine();
             return new Row(fields, source);
         }
 
