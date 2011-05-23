@@ -34,8 +34,8 @@
     <property name="classes.test" value="testclasses"/>
     <property name="test.output" value="dist/test"/>
     <property name="javac.debug" value="true"/>
-    <property name="sam-version" value="1.45"/>
-    <property name="picard-version" value="1.45"/>
+    <property name="sam-version" value="1.46"/>
+    <property name="picard-version" value="1.46"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
 
