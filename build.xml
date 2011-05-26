@@ -281,6 +281,7 @@
         <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
         <package-and-document-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
         <package-and-document-command title="IlluminaBasecallsToSam"         main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
+        <package-and-document-command title="IntervalListTools"              main-class="net.sf.picard.util.IntervalListTools"/>
         <package-and-document-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
         <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
         <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
