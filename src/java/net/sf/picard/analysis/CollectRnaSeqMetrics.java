@@ -23,6 +23,7 @@
  */
 package net.sf.picard.analysis;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.annotation.Gene;
 import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.annotation.LocusFunction;
@@ -83,7 +84,12 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
         if (RIBOSOMAL_INTERVALS != null) {
             final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
-            SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
+            try {
+                SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
+            } catch (SequenceUtil.SequenceListsDifferException e) {
+                throw new PicardException("Sequence dictionaries differ in " + INPUT.getAbsolutePath() + " and " + RIBOSOMAL_INTERVALS.getAbsolutePath(),
+                        e);
+            }
             ribosomalIntervals.unique();
             final List<Interval> intervals = ribosomalIntervals.getIntervals();
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
