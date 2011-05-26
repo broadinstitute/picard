@@ -308,6 +308,7 @@
     <target name="all" depends="compile, sam-jar, picard-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
+            <zipfileset dir="${lib}" includes="snappy*.jar"/>
         </zip>
     </target>
 
