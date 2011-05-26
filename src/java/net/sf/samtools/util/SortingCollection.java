@@ -36,6 +36,9 @@ import java.util.*;
  *
  * When iterating over the collection, the number of file handles required is numRecordsInCollection/maxRecordsInRam.
  * If this becomes a limiting factor, a file handle cache could be added.
+ *
+ * If Snappy DLL is available and snappy.disable system property is not set to true, then Snappy is used
+ * to compress temporary files.
  */
 public class SortingCollection<T>
         implements Iterable<T> {
@@ -108,6 +111,8 @@ public class SortingCollection<T>
     private final List<File> files = new ArrayList<File>();
 
     private boolean destructiveIteration = false;
+
+    private TempStreamFactory tempStreamFactory = new TempStreamFactory();
 
     /**
      * Prepare to accumulate records to be sorted
@@ -194,7 +199,7 @@ public class SortingCollection<T>
             final File f = File.createTempFile("sortingcollection.", ".tmp", this.tmpDir);
             OutputStream os = null;
             try {
-                os = new BufferedOutputStream(new FileOutputStream(f), IOUtil.STANDARD_BUFFER_SIZE);
+                os = tempStreamFactory.wrapTempOutputStream(new FileOutputStream(f), IOUtil.STANDARD_BUFFER_SIZE);
                 this.codec.setOutputStream(os);
                 f.deleteOnExit();
                 for (int i = 0; i < this.numRecordsInRam; ++i) {
@@ -398,7 +403,7 @@ public class SortingCollection<T>
             try {
                 this.is = new FileInputStream(file);
                 this.codec = SortingCollection.this.codec.clone();
-                this.codec.setInputStream(new BufferedInputStream(this.is, IOUtil.STANDARD_BUFFER_SIZE));
+                this.codec.setInputStream(tempStreamFactory.wrapTempInputStream(this.is, IOUtil.STANDARD_BUFFER_SIZE));
                 advance();
             }
             catch (FileNotFoundException e) {
