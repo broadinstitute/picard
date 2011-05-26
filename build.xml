@@ -258,6 +258,11 @@
             <fileset dir="${classes}" includes="**/*"/>
         </copy>
 
+        <unzip dest=".command_tmp">
+            <fileset dir="${lib}">
+                <include  name="*.jar"/>
+            </fileset>
+        </unzip>
         <delete dir="${command-line-html-dir}"/>
 
         <!-- The order of these elements determines the order they appear in the on-line help -->
@@ -275,7 +280,7 @@
         <package-and-document-command title="CollectRnaSeqMetrics"           main-class="net.sf.picard.analysis.CollectRnaSeqMetrics"/>
         <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
         <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
-        <package-and-document-command title="DownsampleSampl         "       main-class="net.sf.picard.sam.DownsampleSam"/>
+        <package-and-document-command title="DownsampleSam"                  main-class="net.sf.picard.sam.DownsampleSam"/>
         <package-and-document-command title="ExtractIlluminaBarcodes"        main-class="net.sf.picard.illumina.ExtractIlluminaBarcodes"/>
         <package-and-document-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
         <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
@@ -320,6 +325,7 @@
         <sequential>
             <classfileset dir="${command_tmp}" id="reqdClasses">
                 <root classname="@{main-class}"/>
+                <root classname="org.xerial.snappy.SnappyInputStream"/>
             </classfileset>
             <jar destfile="${dist}/@{title}.jar">
                 <fileset  refid="reqdClasses"/>
