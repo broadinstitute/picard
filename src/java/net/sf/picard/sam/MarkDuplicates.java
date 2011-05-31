@@ -81,6 +81,10 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             "This number can be found by executing the 'ulimit -n' command on a Unix system.", shortName = "MAX_FILE_HANDLES")
     public int MAX_FILE_HANDLES_FOR_READ_ENDS_MAP = 8000;
 
+    @Option(doc="This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
+            "some of the sorting collections.  If you are running out of memory, try reducing this number.")
+    public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
+
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
     private SortingLongCollection duplicateIndexes;
@@ -247,7 +251,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * duplication, caching to disk as necssary to sort them.
      */
     private void buildSortedReadEndLists() {
-        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * 0.25) / ReadEnds.SIZE_OF);
+        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / ReadEnds.SIZE_OF);
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
         this.pairSort = SortingCollection.newInstance(ReadEnds.class,
