@@ -448,6 +448,8 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
      * not contain any no-calls.
      */
     boolean passesQualityCheck(final byte[] bases, final byte[] quals, final int seedLength, final int minQuality) {
+        if (bases.length < seedLength) return false;
+
         for (int i=0; i<seedLength; ++i) {
             if (SequenceUtil.isNoCall(bases[i])) return false;
         }
