@@ -1,13 +1,10 @@
 package net.sf.picard.util;
 
-import static java.lang.Math.abs;
-
-import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
+import static java.lang.Math.abs;
 
 /**
  *
