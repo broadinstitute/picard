@@ -152,7 +152,7 @@ public class CollectAlignmentSummaryMetricsTest {
                 Assert.assertEquals(metrics.TOTAL_READS, 2);
                 Assert.assertEquals(metrics.PF_READS, 2);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 202);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 11.5);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 202);
                 Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*23D/199D*/0.115578);
                 Assert.assertEquals(metrics.BAD_CYCLES, 23);
