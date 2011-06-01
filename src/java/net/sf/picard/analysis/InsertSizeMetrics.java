@@ -38,6 +38,13 @@ import net.sf.picard.metrics.MetricBase;
 public class InsertSizeMetrics extends MetricBase {
     /** The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome. */
     public double MEDIAN_INSERT_SIZE;
+
+    /**
+     * The median absolute deviation of the distribution.  If the distribution is essentially normal then
+     * the standard deviation can be estimated as ~1.4826 * MAD.
+     */
+    public double MEDIAN_ABSOLUTE_DEVIATION;
+
     /** The minimum measured insert size.  This is usually 1 and not very useful as it is likely artifactual. */
     public int MIN_INSERT_SIZE;
     /**

@@ -61,9 +61,10 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     @Option(shortName="H", doc="File to write insert size histogram chart to")
     public File HISTOGRAM_FILE;
 
-    @Option(shortName="T", doc="When calculating mean and stdev stop when the bins in the tail of the distribution " +
-                               "contain fewer than mode/TAIL_LIMIT items. This also limits how much data goes into each data category of the histogram.")
-    public int TAIL_LIMIT = 10000;
+    @Option(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
+            "This is done because insert size data typically includes enough anomolous values from chimeras and other " +
+            "artifacts to make the mean and sd grossly misleading regardling the real distribution.")
+    public double DEVIATIONS = 10;
 
     @Option(shortName="W", doc="Explicitly sets the histogram width, overriding the TAIL_LIMIT option. Also, when calculating " +
                                "mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
@@ -71,7 +72,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1)")
-    public float MINIMUM_PCT = 0.01f;
+    public float MINIMUM_PCT = 0.05f;
 
 
     final EnumMap<PairOrientation, Histogram<Integer>> histograms = new EnumMap<PairOrientation, Histogram<Integer>>(PairOrientation.class);
@@ -145,6 +146,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
                 metrics.MAX_INSERT_SIZE    = (int) histogram.getMax();
                 metrics.MIN_INSERT_SIZE    = (int) histogram.getMin();
                 metrics.MEDIAN_INSERT_SIZE = histogram.getMedian();
+                metrics.MEDIAN_ABSOLUTE_DEVIATION = histogram.getMedianAbsoluteDeviation();
 
                 final double median  = histogram.getMedian();
                 double covered = 0;
@@ -179,11 +181,11 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
                 // Trim the histogram down to get rid of outliers that would make the chart useless.
                 final Histogram<Integer> trimmedHisto = histogram; //alias it
-                if(HISTOGRAM_WIDTH != null) {
-                    trimmedHisto.trimByWidth(HISTOGRAM_WIDTH);
-                } else {
-                    trimmedHisto.trimByTailLimit(TAIL_LIMIT);
+                if (HISTOGRAM_WIDTH == null) {
+                    HISTOGRAM_WIDTH = (int) (metrics.MEDIAN_INSERT_SIZE + (DEVIATIONS * metrics.MEDIAN_ABSOLUTE_DEVIATION));
                 }
+
+                trimmedHisto.trimByWidth(HISTOGRAM_WIDTH);
 
                 metrics.MEAN_INSERT_SIZE = trimmedHisto.getMean();
                 metrics.STANDARD_DEVIATION = trimmedHisto.getStandardDeviation();
