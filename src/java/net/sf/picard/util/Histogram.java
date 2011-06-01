@@ -28,7 +28,7 @@ import net.sf.picard.util.Histogram.Bin;
 
 import java.util.*;
 
-import static java.lang.Math.pow;
+import static java.lang.Math.*;
 
 /**
  * Class for computing and accessing histogram type data.  Stored internally in
@@ -256,6 +256,27 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         return 0;
     }
 
+    /** Gets the median absolute deviation of the distribution. */
+    public double getMedianAbsoluteDeviation() {
+        final double median = getMedian();
+        final Histogram<Double> deviations = new Histogram<Double>();
+        for (final Bin bin : values()) {
+            final double dev = abs(bin.getIdValue() - median);
+            deviations.increment(dev, bin.getValue());
+        }
+
+        return deviations.getMedian();
+    }
+
+    /**
+     * Returns a value that is intended to estimate the mean of the distribution, if the distribution is
+     * essentially normal, by using the median absolute deviation to remove the effect of
+     * erroneous massive outliers.
+     */
+    public double estimateSdViaMad() {
+        return 1.4826 * getMedianAbsoluteDeviation();
+    }
+
     /** Returns id of the Bin that's the mode of the distribution (i.e. the largest bin). */
     public double getMode() {
 
@@ -291,6 +312,18 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         }
 
         return count;
+    }
+
+    /** Gets the geometric mean of the distribution. */
+    public double getGeometricMean() {
+        double total = 0;
+        double count = 0;
+        for (final Bin bin : values()) {
+            total += bin.value * log(bin.getIdValue());
+            count += bin.value;
+        }
+
+        return exp(total / count);
     }
 
     /**
