@@ -246,14 +246,32 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
 
     public double getMedian() {
         double total = 0;
-        final double halfCount = getCount() / 2;
+        double count = getCount();
+
+        // Base cases
+        if (count == 0) return 0;
+        if (count == 1) return values().iterator().next().getIdValue();
+
+        final double midLow, midHigh;
+        if (count % 2 == 0) {
+            midLow = count / 2;
+            midHigh = midLow + 1;
+        }
+        else {
+            midLow = Math.ceil(count / 2);
+            midHigh = midLow;
+        }
+
+        Double midLowValue  = null;
+        Double midHighValue = null;
         for (final Bin bin : values()) {
             total += bin.getValue();
-            if (total >= halfCount) {
-                return bin.getIdValue();
-            }
+            if (midLowValue  == null && total >= midLow)  midLowValue  = bin.getIdValue();
+            if (midHighValue == null && total >= midHigh) midHighValue = bin.getIdValue();
+            if (midLowValue != null && midHighValue != null) break;
         }
-        return 0;
+
+        return (midLowValue + midHighValue) / 2;
     }
 
     /** Gets the median absolute deviation of the distribution. */

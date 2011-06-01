@@ -2,6 +2,7 @@ package net.sf.picard.util;
 
 import static java.lang.Math.abs;
 
+import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -42,6 +43,24 @@ public class HistogramTest {
         final Histogram<Integer> histo = new Histogram<Integer>();
         for (final int i : is) histo.increment(i);
         Assert.assertTrue(abs(histo.getGeometricMean() - 6.216797) < 0.00001);
+    }
+
+    @Test(dataProvider = "medianTestData")
+    public void testMedian(final int [] values, final double median) {
+        final Histogram<Integer> histo = new Histogram<Integer>();
+        for (final int i : values) histo.increment(i);
+        Assert.assertEquals(histo.getMedian(), median);
+    }
+
+    @DataProvider(name = "medianTestData")
+    public Object[][] medianTestData() {
+        return new Object[][] {
+                new Object[] {new int[] {} , 0d},
+                new Object[] {new int[] {999} , 999d},
+                new Object[] {new int[] {1,2,3,4,5,6} , 3.5d},
+                new Object[] {new int[] {5,5,5,5,5,6,6} , 5d},
+                new Object[] {new int[] {5,5,5,5,5,6,6,6,6,6} , 5.5d},
+        };
     }
 
     @Test
