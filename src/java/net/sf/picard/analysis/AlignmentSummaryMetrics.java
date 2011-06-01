@@ -113,6 +113,12 @@ public class AlignmentSummaryMetrics extends MetricBase {
     public double PF_HQ_ERROR_RATE;
 
     /**
+     * The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
+     * as the numerator, not the number of inserted or deleted bases.
+     */
+    public double PF_INDEL_RATE;
+
+    /**
      * The mean read length of the set of reads examined.  When looking at the data for a single lane with
      * equal length reads this number is just the read length.  When looking at data for merged lanes with
      * differing read lengths this is the mean read length of all reads.
