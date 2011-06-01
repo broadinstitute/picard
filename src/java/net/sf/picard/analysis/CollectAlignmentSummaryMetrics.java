@@ -35,11 +35,9 @@ import net.sf.picard.metrics.*;
 import net.sf.picard.analysis.AlignmentSummaryMetrics.Category;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
+import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.AlignmentBlock;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
@@ -216,6 +214,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         private AlignmentSummaryMetrics metrics;
         private long chimeras;
         private long adapterReads;
+        private long indels;
 
         private long nonBisulfiteAlignedBases = 0;
         private long hqNonBisulfiteAlignedBases = 0;
@@ -265,6 +264,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                     metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
+                    metrics.PF_INDEL_RATE = this.indels / (double) metrics.PF_ALIGNED_BASES;
                 }
             }
         }
@@ -322,7 +322,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                         badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
                     }
                 }
-            } else {
+            }
+            else {
                 final boolean highQualityMapping = isHighQualityMapping(record);
                 if (highQualityMapping) metrics.PF_HQ_ALIGNED_READS++;
 
@@ -382,6 +383,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
                 mismatchHistogram.increment(mismatchCount);
                 hqMismatchHistogram.increment(hqMismatchCount);
+
+                // Add any insertions and/or deletions to the global count
+                for (final CigarElement elem : record.getCigar().getCigarElements()) {
+                    final CigarOperator op = elem.getOperator();
+                    if (op == CigarOperator.INSERTION || op == CigarOperator.DELETION) ++ this.indels;
+                }
             }
         }
 
