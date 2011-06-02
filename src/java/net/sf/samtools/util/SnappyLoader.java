@@ -42,6 +42,9 @@ public class SnappyLoader {
     private final Constructor<OutputStream> SnappyOutputStreamCtor;
     public final boolean SnappyAvailable;
 
+    // Force Snappy-java code to be loaded into executable jars.
+    private final SnappyInputStream ignoreMe = null;
+
     // Force bcel to load Snappy.
     //private static final Class SnappyClass = SnappyInputStream.class;
 
