@@ -326,7 +326,6 @@
         <sequential>
             <classfileset dir="${command_tmp}" id="reqdClasses">
                 <root classname="@{main-class}"/>
-                <root classname="org.xerial.snappy.SnappyInputStream"/>
             </classfileset>
             <jar destfile="${dist}/@{title}.jar">
                 <fileset  refid="reqdClasses"/>
