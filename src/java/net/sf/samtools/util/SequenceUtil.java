@@ -72,6 +72,17 @@ public class SequenceUtil {
                b == t || b == T;
     }
 
+    /** Calculates the fraction of bases that are G/C in the sequence. */
+    public static double calculateGc(final byte[] bases) {
+        int gcs = 0;
+        for (int i=0; i<bases.length; ++i) {
+            final byte b = bases[i];
+            if (b == 'C' || b == 'G' || b == 'c' || b == 'g') ++gcs;
+        }
+
+        return gcs / (double) bases.length;
+    }
+
     /**
      * Throws an exception if both parameters are not null sequenceListsEqual returns false
      * @param s1 a list of sequence headers
