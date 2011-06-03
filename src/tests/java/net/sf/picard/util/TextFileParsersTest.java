@@ -23,9 +23,7 @@
  */
 package net.sf.picard.util;
 
-import com.sun.jdi.Value;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.StringUtil;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
 import org.testng.Assert;
@@ -33,11 +31,8 @@ import org.testng.Assert;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UnknownFormatConversionException;
 
 import net.sf.picard.PicardException;
-import sun.awt.image.OffScreenImage;
-import sun.util.resources.CurrencyNames_th_TH;
 
 public class TextFileParsersTest {
 
