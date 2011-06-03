@@ -24,20 +24,22 @@
 
 package net.sf.picard.analysis.directed;
 
+import net.sf.picard.reference.ReferenceSequence;
+import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.sam.DuplicationMetrics;
-import net.sf.picard.util.Interval;
-import net.sf.picard.util.IntervalList;
-import net.sf.picard.util.Log;
-
-import java.util.*;
-import java.io.*;
-
-import net.sf.picard.util.OverlapDetector;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMSequenceRecord;
-import net.sf.samtools.SAMRecord;
+import net.sf.picard.util.*;
 import net.sf.samtools.AlignmentBlock;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.util.CoordMath;
+import net.sf.samtools.util.RuntimeIOException;
+import net.sf.samtools.util.SequenceUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 
 /**
  * Calculates HS metrics for a given SAM or BAM file. Requires the input of a list of
@@ -57,6 +59,8 @@ public class HsMetricsCalculator {
     private final File targetFile;
     private final IntervalList baits;
     private final IntervalList targets;
+    private ReferenceSequenceFile reference = null;
+    private File perTargetOutput = null;
 
     // Overlap detector for finding overlaps between reads and the experimental targets
     private final OverlapDetector<Interval> targetDetector = new OverlapDetector<Interval>(0,0);
@@ -64,7 +68,7 @@ public class HsMetricsCalculator {
 	// Overlap detector for finding overlaps between the reads and the baits (and the near bait space)
     private final OverlapDetector<Interval> baitDetector = new OverlapDetector<Interval>(-NEAR_BAIT_DISTANCE,0);
 
-    // A Map to accumulate per-bait-region (i.e. merge of overlapping baits) coverage. */
+    // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage. */
     private final Map<Interval, Coverage> coverageByTarget;
 
     private final HsMetrics metrics = new HsMetrics();
@@ -104,10 +108,20 @@ public class HsMetricsCalculator {
         }
 
         // Populate the coverage by target map
-        this.coverageByTarget = new HashMap<Interval, Coverage>(uniqueTargets.size() * 2, 0.5f);
+        this.coverageByTarget = new LinkedHashMap<Interval, Coverage>(uniqueTargets.size() * 2, 0.5f);
         for (final Interval target : uniqueTargets) {
             this.coverageByTarget.put(target, new Coverage(target, 0));
         }
+    }
+
+    /** Sets the reference sequence which can be used to generate GC bias metrics. */
+    public void setReference(final ReferenceSequenceFile ref) {
+        this.reference = ref;
+    }
+
+    /** If set, the metrics calculator will output per target coverage information to this file. */
+    public void setPerTargetOutput(final File perTargetOutput) {
+        this.perTargetOutput = perTargetOutput;
     }
 
     /** Iterates over all records in the file and collects metrics. */
@@ -231,6 +245,7 @@ public class HsMetricsCalculator {
 
         this.metrics.calculateDerivedMetrics();
         calculateTargetCoverageMetrics();
+        calculateGcMetrics();
 
         this.metrics.HS_PENALTY_10X = calculateHsPenalty(10);
         this.metrics.HS_PENALTY_20X = calculateHsPenalty(20);
@@ -280,7 +295,7 @@ public class HsMetricsCalculator {
         int targetBases30x = 0;
 
         for (final Coverage c : this.coverageByTarget.values()) {
-            for (short depth : c.getDepths()) {
+            for (final short depth : c.getDepths()) {
                 ++totalTargetBases;
 
                 if (depth >= 2) {
@@ -302,6 +317,76 @@ public class HsMetricsCalculator {
         this.metrics.PCT_TARGET_BASES_10X = (double) targetBases10x / (double) totalTargetBases;
         this.metrics.PCT_TARGET_BASES_20X = (double) targetBases20x / (double) totalTargetBases;
         this.metrics.PCT_TARGET_BASES_30X = (double) targetBases30x / (double) totalTargetBases;
+    }
+
+    private void calculateGcMetrics() {
+        log.info("Calculating GC metrics");
+
+        // Setup the output file if we're outputting per-target coverage
+        FormatUtil fmt = new FormatUtil();
+        final PrintWriter out;
+        try {
+            if (perTargetOutput != null) {
+                out = new PrintWriter(perTargetOutput);
+                out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage");
+            }
+            else {
+                out = null;
+            }
+        }
+        catch (IOException ioe) { throw new RuntimeIOException(ioe); }
+
+        final int bins = 101;
+        final long[] targetBasesByGc  = new long[bins];
+        final long[] alignedBasesByGc = new long[bins];
+
+        for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
+            final Interval interval = entry.getKey();
+            final Coverage cov = entry.getValue();
+
+            final ReferenceSequence ref = this.reference.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
+            final double gcDouble = SequenceUtil.calculateGc(ref.getBases());
+            final int gc = (int) Math.round(gcDouble * 100);
+
+            targetBasesByGc[gc]  += interval.length();
+            alignedBasesByGc[gc] += cov.getTotal();
+
+            if (out != null) {
+                final double coverage = alignedBasesByGc[gc] / (double) targetBasesByGc[gc];
+
+                out.println(interval.getSequence() + "\t" +
+                            interval.getStart() + "\t" +
+                            interval.getEnd() + "\t" +
+                            interval.length() + "\t" +
+                            interval.getName() + "\t" +
+                            fmt.format(gcDouble) + "\t" +
+                            fmt.format(coverage) + "\t" +
+                            fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE)
+                );
+            }
+        }
+
+        // Total things up
+        long totalTarget = 0;
+        long totalBases  = 0;
+        for (int i=0; i<targetBasesByGc.length; ++i) {
+            totalTarget += targetBasesByGc[i];
+            totalBases  += alignedBasesByGc[i];
+        }
+
+        // Re-express things as % of the totals and calculate dropout metrics
+        for (int i=0; i<targetBasesByGc.length; ++i) {
+            final double targetPct  = targetBasesByGc[i]  / (double) totalTarget;
+            final double alignedPct = alignedBasesByGc[i] / (double) totalBases;
+
+            double dropout = (alignedPct - targetPct) * 100d;
+            if (dropout < 0) {
+                dropout = Math.abs(dropout);
+
+                if (i <=50) this.metrics.AT_DROPOUT += dropout;
+                if (i >=50) this.metrics.GC_DROPOUT += dropout;
+            }
+        }
     }
 
     /**
@@ -332,7 +417,7 @@ public class HsMetricsCalculator {
         // to the coverage multiplier we desire.  If we can't get there with 1000X coverage,
         // we're not going to get there!
         for (int i=0; i<10000; ++i) {
-            double uniquePairMultiplier = DuplicationMetrics.estimateRoi(hsLibrarySize, pairMultiplier, pairs, uniquePairs);
+            final double uniquePairMultiplier = DuplicationMetrics.estimateRoi(hsLibrarySize, pairMultiplier, pairs, uniquePairs);
 
             if (Math.abs(uniquePairMultiplier - uniquePairGoalMultiplier) / uniquePairGoalMultiplier <= 0.001) {
                 finalPairMultiplier  = pairMultiplier;
@@ -351,7 +436,7 @@ public class HsMetricsCalculator {
             return -1;
         }
         else {
-            double uniqueFraction = (uniquePairs * uniquePairGoalMultiplier) / (pairs * finalPairMultiplier);
+            final double uniqueFraction = (uniquePairs * uniquePairGoalMultiplier) / (pairs * finalPairMultiplier);
             return (1 / uniqueFraction) * fold80 * (1 / onTargetPct);
         }
     }
@@ -389,5 +474,11 @@ public class HsMetricsCalculator {
 
             /** Gets the coverage depths as an array of shorts. */
             public short[] getDepths() { return this.depths; }
+
+            public int getTotal() {
+                int total = 0;
+                for (int i=0; i<depths.length; ++i) total += depths[i];
+                return total;
+            }
         }
 }
