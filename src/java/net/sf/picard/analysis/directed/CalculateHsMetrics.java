@@ -24,8 +24,6 @@
 
 package net.sf.picard.analysis.directed;
 
-import net.sf.picard.analysis.directed.HsMetrics;
-import net.sf.picard.analysis.directed.HsMetricsCalculator;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
@@ -35,6 +33,9 @@ import net.sf.picard.metrics.MetricsFile;
 
 import java.io.File;
 
+import net.sf.picard.reference.ReferenceSequence;
+import net.sf.picard.reference.ReferenceSequenceFile;
+import net.sf.picard.reference.ReferenceSequenceFileFactory;
 import net.sf.picard.util.IntervalList;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.util.SequenceUtil;
@@ -47,7 +48,9 @@ import net.sf.samtools.util.SequenceUtil;
 public class CalculateHsMetrics extends CommandLineProgram {
     @Usage public final String USAGE =
             "Calculates a set of Hybrid Selection specific metrics from an aligned SAM" +
-            "or BAM file.";
+            "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
+            "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
+            "mean coverage information for every target.";
     @Option(shortName="BI", doc="An interval list file that contains the locations of the baits used.")
     public File BAIT_INTERVALS;
 
@@ -63,8 +66,14 @@ public class CalculateHsMetrics extends CommandLineProgram {
     @Option(shortName="M", mutex="OUTPUT", doc="Legacy synonym for OUTPUT, should not be used.")
     public File METRICS_FILE;
 
+    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, optional=true, doc="The reference sequence aligned to.")
+    public File REFERENCE_SEQUENCE;
+
+    @Option(optional=true, doc="An optional file to output per target coverage information to.")
+    public File PER_TARGET_COVERAGE;
+
     /** Stock main method. */
-    public static void main(String[] argv) {
+    public static void main(final String[] argv) {
         System.exit(new CalculateHsMetrics().instanceMain(argv));
     }
 
@@ -79,9 +88,15 @@ public class CalculateHsMetrics extends CommandLineProgram {
         IoUtil.assertFileIsReadable(TARGET_INTERVALS);
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
+        if (PER_TARGET_COVERAGE != null) IoUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
 
-        HsMetricsCalculator calculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS);
-        SAMFileReader sam = new SAMFileReader(INPUT);
+        if (REFERENCE_SEQUENCE == null && PER_TARGET_COVERAGE != null) {
+            throw new IllegalArgumentException("Must supply REFERENCE_SEQUENCE when supplying PER_TARGET_COVERAGE");
+        }
+
+        final HsMetricsCalculator calculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS);
+
+        final SAMFileReader sam = new SAMFileReader(INPUT);
 
         // Validate that the targets and baits fore for the same references as the reads files
         SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
@@ -89,9 +104,21 @@ public class CalculateHsMetrics extends CommandLineProgram {
         SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
                 IntervalList.fromFile(BAIT_INTERVALS).getHeader().getSequenceDictionary());
         
+        final ReferenceSequenceFile ref;
+        if (REFERENCE_SEQUENCE != null) {
+            IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+            ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
+            SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary());
+            calculator.setReference(ref);
+        }
+        else {
+            ref = null;
+        }
+
+        calculator.setPerTargetOutput(PER_TARGET_COVERAGE);
         calculator.analyze(sam.iterator());
 
-        MetricsFile<HsMetrics, Integer> metrics = getMetricsFile();
+        final MetricsFile<HsMetrics, Integer> metrics = getMetricsFile();
         metrics.addMetric(calculator.getMetrics());
 
         metrics.write(OUTPUT);
