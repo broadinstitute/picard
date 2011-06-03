@@ -26,13 +26,10 @@ package net.sf.samtools.util;
 import net.sf.samtools.SAMException;
 import org.xerial.snappy.LoadSnappy;
 import org.xerial.snappy.SnappyInputStream;
-import org.xerial.snappy.SnappyOutputStream;
-import sun.font.TrueTypeFont;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * If Snappy is available, obtain single-arg ctors for SnappyInputStream and SnappyOutputStream.
@@ -54,7 +51,7 @@ public class SnappyLoader {
         this(DefaultVerbosity);
     }
 
-    public SnappyLoader(boolean verbose) {
+    public SnappyLoader(final boolean verbose) {
         Constructor<InputStream> inputStreamCtor = null;
         Constructor<OutputStream> outputStreamCtor = null;
         if (java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
