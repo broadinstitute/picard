@@ -320,71 +320,73 @@ public class HsMetricsCalculator {
     }
 
     private void calculateGcMetrics() {
-        log.info("Calculating GC metrics");
+        if (this.reference != null) {
+            log.info("Calculating GC metrics");
 
-        // Setup the output file if we're outputting per-target coverage
-        FormatUtil fmt = new FormatUtil();
-        final PrintWriter out;
-        try {
-            if (perTargetOutput != null) {
-                out = new PrintWriter(perTargetOutput);
-                out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage");
+            // Setup the output file if we're outputting per-target coverage
+            FormatUtil fmt = new FormatUtil();
+            final PrintWriter out;
+            try {
+                if (perTargetOutput != null) {
+                    out = new PrintWriter(perTargetOutput);
+                    out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage");
+                }
+                else {
+                    out = null;
+                }
             }
-            else {
-                out = null;
+            catch (IOException ioe) { throw new RuntimeIOException(ioe); }
+
+            final int bins = 101;
+            final long[] targetBasesByGc  = new long[bins];
+            final long[] alignedBasesByGc = new long[bins];
+
+            for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
+                final Interval interval = entry.getKey();
+                final Coverage cov = entry.getValue();
+
+                final ReferenceSequence ref = this.reference.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
+                final double gcDouble = SequenceUtil.calculateGc(ref.getBases());
+                final int gc = (int) Math.round(gcDouble * 100);
+
+                targetBasesByGc[gc]  += interval.length();
+                alignedBasesByGc[gc] += cov.getTotal();
+
+                if (out != null) {
+                    final double coverage = alignedBasesByGc[gc] / (double) targetBasesByGc[gc];
+
+                    out.println(interval.getSequence() + "\t" +
+                                interval.getStart() + "\t" +
+                                interval.getEnd() + "\t" +
+                                interval.length() + "\t" +
+                                interval.getName() + "\t" +
+                                fmt.format(gcDouble) + "\t" +
+                                fmt.format(coverage) + "\t" +
+                                fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE)
+                    );
+                }
             }
-        }
-        catch (IOException ioe) { throw new RuntimeIOException(ioe); }
 
-        final int bins = 101;
-        final long[] targetBasesByGc  = new long[bins];
-        final long[] alignedBasesByGc = new long[bins];
-
-        for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
-            final Interval interval = entry.getKey();
-            final Coverage cov = entry.getValue();
-
-            final ReferenceSequence ref = this.reference.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
-            final double gcDouble = SequenceUtil.calculateGc(ref.getBases());
-            final int gc = (int) Math.round(gcDouble * 100);
-
-            targetBasesByGc[gc]  += interval.length();
-            alignedBasesByGc[gc] += cov.getTotal();
-
-            if (out != null) {
-                final double coverage = alignedBasesByGc[gc] / (double) targetBasesByGc[gc];
-
-                out.println(interval.getSequence() + "\t" +
-                            interval.getStart() + "\t" +
-                            interval.getEnd() + "\t" +
-                            interval.length() + "\t" +
-                            interval.getName() + "\t" +
-                            fmt.format(gcDouble) + "\t" +
-                            fmt.format(coverage) + "\t" +
-                            fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE)
-                );
+            // Total things up
+            long totalTarget = 0;
+            long totalBases  = 0;
+            for (int i=0; i<targetBasesByGc.length; ++i) {
+                totalTarget += targetBasesByGc[i];
+                totalBases  += alignedBasesByGc[i];
             }
-        }
 
-        // Total things up
-        long totalTarget = 0;
-        long totalBases  = 0;
-        for (int i=0; i<targetBasesByGc.length; ++i) {
-            totalTarget += targetBasesByGc[i];
-            totalBases  += alignedBasesByGc[i];
-        }
+            // Re-express things as % of the totals and calculate dropout metrics
+            for (int i=0; i<targetBasesByGc.length; ++i) {
+                final double targetPct  = targetBasesByGc[i]  / (double) totalTarget;
+                final double alignedPct = alignedBasesByGc[i] / (double) totalBases;
 
-        // Re-express things as % of the totals and calculate dropout metrics
-        for (int i=0; i<targetBasesByGc.length; ++i) {
-            final double targetPct  = targetBasesByGc[i]  / (double) totalTarget;
-            final double alignedPct = alignedBasesByGc[i] / (double) totalBases;
+                double dropout = (alignedPct - targetPct) * 100d;
+                if (dropout < 0) {
+                    dropout = Math.abs(dropout);
 
-            double dropout = (alignedPct - targetPct) * 100d;
-            if (dropout < 0) {
-                dropout = Math.abs(dropout);
-
-                if (i <=50) this.metrics.AT_DROPOUT += dropout;
-                if (i >=50) this.metrics.GC_DROPOUT += dropout;
+                    if (i <=50) this.metrics.AT_DROPOUT += dropout;
+                    if (i >=50) this.metrics.GC_DROPOUT += dropout;
+                }
             }
         }
     }
