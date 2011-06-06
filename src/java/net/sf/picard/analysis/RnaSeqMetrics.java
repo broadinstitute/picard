@@ -96,7 +96,7 @@ public class RnaSeqMetrics extends MetricBase{
     /**
      * PCT_UTR_BASES + PCT_CODING_BASES
      */
-    public double PCT_RNA_BASES;
+    public double PCT_MRNA_BASES;
 
     /**
      * CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.
