@@ -54,7 +54,8 @@ public class SnappyLoader {
     public SnappyLoader(final boolean verbose) {
         Constructor<InputStream> inputStreamCtor = null;
         Constructor<OutputStream> outputStreamCtor = null;
-        if (java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
+        // Disable Snappy until memory issues can be resolved.
+        if (true || java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
             System.err.println("Snappy is disabled via system property.");
         } else {
             try {
