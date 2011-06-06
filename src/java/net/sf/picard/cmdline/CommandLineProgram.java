@@ -123,9 +123,6 @@ public abstract class CommandLineProgram {
             return 1;
         }
 
-        // TODO: remove this hack once Snappy is better tested
-        System.setProperty("snappy.disable", "true");
-
         // Build the default headers
         final Date startDate = new Date();
         this.defaultHeaders.add(new StringHeader(commandLine));
