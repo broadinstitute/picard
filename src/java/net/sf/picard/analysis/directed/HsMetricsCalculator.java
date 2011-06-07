@@ -367,6 +367,8 @@ public class HsMetricsCalculator {
                 }
             }
 
+            if (out != null) out.close();
+
             // Total things up
             long totalTarget = 0;
             long totalBases  = 0;
