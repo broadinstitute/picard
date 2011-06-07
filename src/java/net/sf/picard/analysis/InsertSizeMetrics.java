@@ -53,9 +53,10 @@ public class InsertSizeMetrics extends MetricBase {
      */
     public int MAX_INSERT_SIZE;
     /**
-     * The mean insert size of the "core" of the distrubution.  The "core" is defined as follows: take the count of
-     * read pairs in the mode (most populated) bin and walk to higher insert size bins until you find a bin that
-     * contains 1/10000 the number of read pairs as the mode bin, or less; cap the distribution at this point.
+     * The mean insert size of the "core" of the distribution. Artefactual outliers in the distribution often
+     * cause calculation of nonsensical mean and stdev values.  To avoid this the distribution is first trimmed
+     * to a "core" distribution of +/- N median absolute deviations around the median insert size. By default
+     * N=10, but this is configurable.
      */
     public double MEAN_INSERT_SIZE;
     /** Standard deviation of insert sizes over the "core" of the distrubution. */
