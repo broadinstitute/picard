@@ -35,6 +35,7 @@ import java.lang.reflect.Constructor;
  * If Snappy is available, obtain single-arg ctors for SnappyInputStream and SnappyOutputStream.
  */
 public class SnappyLoader {
+    private static final int SNAPPY_BLOCK_SIZE = 32768;  // keep this as small as can be without hurting compression ratio.
     private final Constructor<InputStream> SnappyInputStreamCtor;
     private final Constructor<OutputStream> SnappyOutputStreamCtor;
     public final boolean SnappyAvailable;
@@ -55,14 +56,14 @@ public class SnappyLoader {
         Constructor<InputStream> inputStreamCtor = null;
         Constructor<OutputStream> outputStreamCtor = null;
         // Disable Snappy until memory issues can be resolved.
-        if (true || java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
+        if (java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
             System.err.println("Snappy is disabled via system property.");
         } else {
             try {
                 final Class<InputStream> snappyInputStreamClass = (Class<InputStream>)Class.forName("org.xerial.snappy.SnappyInputStream");
                 final Class<OutputStream> snappyOutputStreamClass = (Class<OutputStream>)Class.forName("org.xerial.snappy.SnappyOutputStream");
                 inputStreamCtor = snappyInputStreamClass.getConstructor(InputStream.class);
-                outputStreamCtor = snappyOutputStreamClass.getConstructor(OutputStream.class);
+                outputStreamCtor = snappyOutputStreamClass.getConstructor(OutputStream.class, Integer.TYPE);
             } catch (NoSuchMethodException e) {
             } catch (ClassNotFoundException e) {
             }
@@ -94,7 +95,7 @@ public class SnappyLoader {
 
     public OutputStream wrapOutputStream(OutputStream outputStream) {
         try {
-            return SnappyOutputStreamCtor.newInstance(outputStream);
+            return SnappyOutputStreamCtor.newInstance(outputStream, SNAPPY_BLOCK_SIZE);
         } catch (Exception e) {
             throw new SAMException("Error instantiating SnappyOutputStream", e);
         }

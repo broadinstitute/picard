@@ -22,11 +22,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/snappy-java-1.0.2-SNAPSHOT.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/snappy-java-1.0.3-rc2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../snappy/snappy-java/src/snappy-java/src/main/java" />
+          <root url="file://$MODULE_DIR$/../../snappy/snappy-java/1.0.3-rc2" />
         </SOURCES>
       </library>
     </orderEntry>
