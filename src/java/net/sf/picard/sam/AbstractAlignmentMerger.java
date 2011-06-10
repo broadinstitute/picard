@@ -35,6 +35,8 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +67,7 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X','Y', 'Z'};
+    private final NumberFormat FMT = new DecimalFormat("#,###");
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final File unmappedBamFile;
@@ -154,7 +157,6 @@ public abstract class AbstractAlignmentMerger {
      * Merges the alignment data with the non-aligned records from the source BAM file.
      */
     public void mergeAlignment() {
-
         // Open the file of unmapped records and write the read groups to the the header for the merged file
         final SAMFileReader unmappedSam = new SAMFileReader(this.unmappedBamFile);
         final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
@@ -184,29 +186,22 @@ public abstract class AbstractAlignmentMerger {
                 secondOfPair.setHeader(this.header);
 
                 // Validate that paired reads arrive as first of pair followed by second of pair
-                if (!rec.getReadName().equals(secondOfPair.getReadName())) {
-                    throw new PicardException("Second read from pair not found in unmapped bam: " +
-                        rec.getReadName() + ", " + secondOfPair.getReadName());
-                }
-                if (!rec.getFirstOfPairFlag()) {
-                    throw new PicardException("First record in unmapped bam is not first of pair: " + rec.getReadName());
-                }
-                if (!secondOfPair.getReadPairedFlag()) {
-                    throw new PicardException("Second record in unmapped bam is not marked as paired: " + secondOfPair.getReadName());
-                }
-                if (!secondOfPair.getSecondOfPairFlag()) {
-                    throw new PicardException("Second record in unmapped bam is not second of pair: " + secondOfPair.getReadName());
-                }
-            } else {
+                if (!rec.getReadName().equals(secondOfPair.getReadName()))
+                    throw new PicardException("Second read from pair not found in unmapped bam: " + rec.getReadName() + ", " + secondOfPair.getReadName());
+
+                if (!rec.getFirstOfPairFlag()) throw new PicardException("First record in unmapped bam is not first of pair: " + rec.getReadName());
+                if (!secondOfPair.getReadPairedFlag())  throw new PicardException("Second record in unmapped bam is not marked as paired: " + secondOfPair.getReadName());
+                if (!secondOfPair.getSecondOfPairFlag())  throw new PicardException("Second record in unmapped bam is not second of pair: " + secondOfPair.getReadName());
+            }
+            else {
                 secondOfPair = null;
             }
 
             // See if there are alignments for current unaligned read or read pair.
             if (nextAligned != null && rec.getReadName().equals(nextAligned.getReadName())) {
-
                 // If there are multiple alignments for a read (pair), then the unaligned SAMRecord must be cloned
                 // before copying info from the aligned record to the unaligned.
-                boolean clone = nextAligned.numHits() > 1;
+                final boolean clone = nextAligned.numHits() > 1;
 
                 if (rec.getReadPairedFlag()) {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
@@ -221,10 +216,10 @@ public abstract class AbstractAlignmentMerger {
                         }
                         // firstAligned or secondAligned may be null, if there wasn't an alignment for the end,
                         // or if the alignment was rejected by ignoreAlignment.
-                        SAMRecord firstAligned = nextAligned.getFirstOfPair(i);
-                        SAMRecord secondAligned = nextAligned.getSecondOfPair(i);
+                        final SAMRecord firstAligned = nextAligned.getFirstOfPair(i);
+                        final SAMRecord secondAligned = nextAligned.getSecondOfPair(i);
 
-                        boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.getNotPrimaryAlignmentFlag()) ||
+                        final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.getNotPrimaryAlignmentFlag()) ||
                                 (secondAligned != null && !secondAligned.getNotPrimaryAlignmentFlag());
 
                         transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned);
@@ -243,12 +238,7 @@ public abstract class AbstractAlignmentMerger {
                     }
                 } else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
-                        final SAMRecord recToWrite;
-                        if (clone) {
-                            recToWrite = clone(rec);
-                        } else {
-                            recToWrite = rec;
-                        }
+                        final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
                         coordinateSorted.add(recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
@@ -272,6 +262,10 @@ public abstract class AbstractAlignmentMerger {
                         ++unmapped;
                     }
                 }
+            }
+
+            if ((aligned + unmapped) % 1000000 == 0) {
+                log.info("Processed " + FMT.format(aligned + unmapped) + " records in query name order.");
             }
         }
         unmappedIterator.close();
@@ -298,7 +292,7 @@ public abstract class AbstractAlignmentMerger {
             }
             writer.addAlignment(rec);
             if (++count % 1000000 == 0) {
-                log.info(count + " SAMRecords written to " + targetBamFile.getName());
+                log.info(FMT.format(count) + " SAMRecords written to " + targetBamFile.getName());
             }
         }
         writer.close();
