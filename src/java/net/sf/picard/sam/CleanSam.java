@@ -76,12 +76,14 @@ public class CleanSam extends CommandLineProgram {
             // If the read maps off the end of the alignment, clip it
             while(it.hasNext()) {
                 SAMRecord rec = it.next();
-                SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-                if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
-                    // 1-based index of first base in read to clip.
-                    int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-                    List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
-                    rec.setCigar(new Cigar(newCigarElements));
+                if (!rec.getReadUnmappedFlag()) {
+                    SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
+                    if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
+                        // 1-based index of first base in read to clip.
+                        int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+                        List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
+                        rec.setCigar(new Cigar(newCigarElements));
+                    }
                 }
                 writer.addAlignment(rec);
 
