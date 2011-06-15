@@ -25,6 +25,7 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -137,6 +138,17 @@ public class SequenceUtil {
         assertSequenceListsEqual(s1.getSequences(), s2.getSequences());
     }
 
+    /**
+     * Throws an exception if both parameters are non-null and unequal, including the filenames.
+     */
+    public static void assertSequenceDictionariesEqual(final SAMSequenceDictionary s1, final SAMSequenceDictionary s2,
+                                                       final File f1, final File f2) {
+        try {
+            assertSequenceDictionariesEqual(s1, s2);
+        } catch (SequenceListsDifferException e) {
+            throw new SequenceListsDifferException("In files " + f1.getAbsolutePath() + " and " + f1.getAbsolutePath(), e);
+        }
+    }
     /**
      * Create a simple ungapped cigar string, which might have soft clipping at either end
      * @param alignmentStart raw aligment start, which may result in read hanging off beginning or end of read
