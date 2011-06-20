@@ -34,8 +34,8 @@
     <property name="classes.test" value="testclasses"/>
     <property name="test.output" value="dist/test"/>
     <property name="javac.debug" value="true"/>
-    <property name="sam-version" value="1.47"/>
-    <property name="picard-version" value="1.47"/>
+    <property name="sam-version" value="1.48"/>
+    <property name="picard-version" value="1.48"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
@@ -270,6 +270,9 @@
 
         <!-- The order of these elements determines the order they appear in the on-line help -->
         <!-- If you don't want to generate on-line doc for a command, use package-command instead of package-and-document-command -->
+        <package-command title="MakeCoverageIntervalList"         main-class="net.sf.picard.test.MakeCoverageIntervalList"/>
+        <package-and-document-command title="SynthesizeFastqFromFasta"         main-class="net.sf.picard.test.SynthesizeFastqFromFasta"/>
+        <package-and-document-command title="FilterSam"         main-class="net.sf.picard.test.FilterSam"/>
         <package-and-document-command title="AddOrReplaceReadGroups"         main-class="net.sf.picard.sam.AddOrReplaceReadGroups"/>
         <package-and-document-command title="BamToBfq"                       main-class="net.sf.picard.fastq.BamToBfq"/>
         <package-and-document-command title="BamIndexStats"                  main-class="net.sf.picard.sam.BamIndexStats"/>
