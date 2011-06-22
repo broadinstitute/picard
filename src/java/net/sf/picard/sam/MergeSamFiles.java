@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
@@ -143,12 +144,15 @@ public class MergeSamFiles extends CommandLineProgram {
         // Lastly loop through and write out the records
         if (USE_THREADING) {
             final BlockingQueue<SAMRecord> queue = new ArrayBlockingQueue<SAMRecord>(10000);
+            final AtomicBoolean producerSuccceeded = new AtomicBoolean(false);
+            final AtomicBoolean consumerSuccceeded = new AtomicBoolean(false);
             Runnable producer = new Runnable() {
                 public void run() {
                     try {
                         while (iterator.hasNext()) {
                             queue.put(iterator.next());
                         }
+                        producerSuccceeded.set(true);
                     }
                     catch (InterruptedException ie) {
                         throw new PicardException("Interrupted reading SAMRecord to merge.", ie);
@@ -166,6 +170,7 @@ public class MergeSamFiles extends CommandLineProgram {
                             out.addAlignment(rec);
                             if (++i % PROGRESS_INTERVAL == 0) log.info(i + " records processed.");
                         }
+                        consumerSuccceeded.set(true);
                     }
                     catch (InterruptedException ie) {
                         throw new PicardException("Interrupted writing SAMRecord to output file.", ie);
@@ -180,11 +185,17 @@ public class MergeSamFiles extends CommandLineProgram {
 
             try {
                 consumerThread.join();
+                producerThread.join();
             }
             catch (InterruptedException ie) {
                 throw new PicardException("Interrupted while waiting for threads to finished writing.", ie);
             }
-
+            if (!producerSuccceeded.get()) {
+                throw new PicardException("Error reading or merging inputs.");
+            }
+            if (!consumerSuccceeded.get()) {
+                throw new PicardException("Error writing output");
+            }
         }
         else {
             for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
