@@ -152,10 +152,12 @@ public class SAMTextHeaderCodec {
 
     private void parseRGLine(final ParsedHeaderLine parsedHeaderLine) {
         assert(HeaderRecordType.RG.equals(parsedHeaderLine.getHeaderRecordType()));
-        if (!parsedHeaderLine.requireTag(SAMReadGroupRecord.READ_GROUP_ID_TAG) ||
-            !parsedHeaderLine.requireTag(SAMReadGroupRecord.READ_GROUP_SAMPLE_TAG)) {
+        if (!parsedHeaderLine.requireTag(SAMReadGroupRecord.READ_GROUP_ID_TAG)) {
             return;
         }
+        // Allow no SM tag if validation stringency is not strict.  This call has the side effect of reporting an error
+        // or throwing an exception depending on validation stringency if this is missing.
+        parsedHeaderLine.requireTag(SAMReadGroupRecord.READ_GROUP_SAMPLE_TAG);
         final SAMReadGroupRecord samReadGroupRecord = new SAMReadGroupRecord(parsedHeaderLine.removeValue(SAMReadGroupRecord.READ_GROUP_ID_TAG));
         transferAttributes(samReadGroupRecord, parsedHeaderLine.mKeyValuePairs);
 
