@@ -56,7 +56,8 @@ public class ReorderSam extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output file (bam or sam) to write extracted reads to.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence to reorder reads to match")
+    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence to reorder reads to match.  " +
+            "A sequence dictionary corresponding to the reference fasta is required.  Create one with CreateSequenceDictionary.jar.")
     public File REFERENCE;
 
     @Option(shortName="S", doc="If true, then allows only a partial overlap of the BAM contigs with the new reference " +
@@ -87,9 +88,9 @@ public class ReorderSam extends CommandLineProgram {
         SAMSequenceDictionary refDict = reference.getSequenceDictionary();
 
         if (refDict == null) {
-        	log.error("No reference sequence dictionary found. Aborting.");
+        	log.error("No reference sequence dictionary found. Aborting.  You can create a sequence dictionary for the reference fasta using CreateSequenceDictionary.jar.");
         	in.close();
-        	System.exit(1);
+        	return 1;
         }
 
         printDictionary("SAM/BAM file", in.getFileHeader().getSequenceDictionary());
