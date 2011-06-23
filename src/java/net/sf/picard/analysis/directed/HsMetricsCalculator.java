@@ -59,17 +59,18 @@ public class HsMetricsCalculator {
     private final File targetFile;
     private final IntervalList baits;
     private final IntervalList targets;
-    private ReferenceSequenceFile reference = null;
-    private File perTargetOutput = null;
 
     // Overlap detector for finding overlaps between reads and the experimental targets
-    private final OverlapDetector<Interval> targetDetector = new OverlapDetector<Interval>(0,0);
+    private final OverlapDetector<Interval> targetDetector;
 
 	// Overlap detector for finding overlaps between the reads and the baits (and the near bait space)
-    private final OverlapDetector<Interval> baitDetector = new OverlapDetector<Interval>(-NEAR_BAIT_DISTANCE,0);
+    private final OverlapDetector<Interval> baitDetector;
 
     // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage. */
     private final Map<Interval, Coverage> coverageByTarget;
+
+    private Map<Interval,Double> intervalToGc = null;
+    private File perTargetOutput = null;
 
     private final HsMetrics metrics = new HsMetrics();
     private double PF_BASES = 0; // Not reported in HsMetrics but needed for calculations
@@ -81,12 +82,16 @@ public class HsMetricsCalculator {
 	 * Constructor that parses the squashed reference to genome reference file and stores the
 	 * information in a map for later use.
 	 */
-    public HsMetricsCalculator(final File baits, final File targets) {
+    public HsMetricsCalculator(final File baits, final File targets, final ReferenceSequenceFile reference,
+                               final String sample, final String library, final String readGroup) {
         this.baitFile     = baits;
         this.targetFile   = targets;
         this.baits        = IntervalList.fromFile(baits);
         this.targets      = IntervalList.fromFile(targets);
 
+        this.metrics.SAMPLE           = sample;
+        this.metrics.LIBRARY          = library;
+        this.metrics.READ_GROUP       = readGroup;
         this.metrics.BAIT_SET = baits.getName();
         {
             final int tmp = this.metrics.BAIT_SET.indexOf(".");
@@ -96,10 +101,12 @@ public class HsMetricsCalculator {
         }
 
         final List<Interval> uniqueBaits = this.baits.getUniqueIntervals();
+        this.baitDetector = new OverlapDetector<Interval>(-NEAR_BAIT_DISTANCE,0);
         this.baitDetector.addAll(uniqueBaits, uniqueBaits);
         this.metrics.BAIT_TERRITORY = Interval.countBases(uniqueBaits);
 
         final List<Interval> uniqueTargets = this.targets.getUniqueIntervals();
+        targetDetector = new OverlapDetector<Interval>(0,0);
         this.targetDetector.addAll(uniqueTargets, uniqueTargets);
         this.metrics.TARGET_TERRITORY = Interval.countBases(uniqueTargets);
 
@@ -112,11 +119,52 @@ public class HsMetricsCalculator {
         for (final Interval target : uniqueTargets) {
             this.coverageByTarget.put(target, new Coverage(target, 0));
         }
+
+        if (reference != null) {
+            intervalToGc = new HashMap<Interval,Double>();
+            for (final Interval target : uniqueTargets) {
+                final ReferenceSequence rs = reference.getSubsequenceAt(target.getSequence(), target.getStart(), target.getEnd());
+                intervalToGc.put(target,SequenceUtil.calculateGc(rs.getBases()));
+            }
+        }
     }
 
-    /** Sets the reference sequence which can be used to generate GC bias metrics. */
-    public void setReference(final ReferenceSequenceFile ref) {
-        this.reference = ref;
+    private HsMetricsCalculator(final File baitFile, final File targetFile, final IntervalList baits,
+                                final IntervalList targets, final String baitSet,
+                                final OverlapDetector<Interval> baitDetector, final long baitTerritory,
+                                final OverlapDetector<Interval> targetDetector, final long targetTerritory,
+                                final long genomeSize, final Map<Interval, Coverage> coverageByTarget,
+                                final Map<Interval, Double> intervalToGc) {
+
+        this.baitFile = baitFile;
+        this.targetFile = targetFile;
+        this.baits = baits;
+        this.targets = targets;
+        this.metrics.BAIT_SET = baitSet;
+        this.targetDetector = targetDetector;
+        this.metrics.BAIT_TERRITORY = baitTerritory;
+        this.baitDetector = baitDetector;
+        this.metrics.TARGET_TERRITORY = targetTerritory;
+        this.metrics.GENOME_SIZE = genomeSize;
+        this.coverageByTarget = new LinkedHashMap<Interval, Coverage>(coverageByTarget.keySet().size() * 2, 0.5f);
+        for (Interval target : coverageByTarget.keySet()) {
+            this.coverageByTarget.put(target, new Coverage(target,0));
+        }
+        this.intervalToGc = intervalToGc;
+    }
+
+    public HsMetricsCalculator cloneMetricsCalculator(String sample, String library, String readGroup) {
+
+        HsMetricsCalculator result = new HsMetricsCalculator(this.baitFile, this.targetFile, this.baits,
+                this.targets, this.metrics.BAIT_SET, this.baitDetector, this.metrics.BAIT_TERRITORY,
+                this.targetDetector, this.metrics.TARGET_TERRITORY, this.metrics.GENOME_SIZE,
+                this.coverageByTarget, this.intervalToGc);
+
+        result.metrics.SAMPLE = sample;
+        result.metrics.LIBRARY = library;
+        result.metrics.READ_GROUP = readGroup;
+
+        return result;
     }
 
     /** If set, the metrics calculator will output per target coverage information to this file. */
@@ -143,6 +191,11 @@ public class HsMetricsCalculator {
         
         this.metrics.TOTAL_READS += 1;
 
+        // Check for PF reads
+        if (rec.getReadFailsVendorQualityCheckFlag()) {
+            return;
+        }
+
         // Prefetch the list of target and bait overlaps here as they're needed multiple times.
         final Collection<Interval> targets;
         final Collection<Interval> baits;
@@ -157,20 +210,14 @@ public class HsMetricsCalculator {
             baits = null;
         }
 
-        // Check for PF reads
-        if (rec.getReadFailsVendorQualityCheckFlag()) {
-            return;
-        }
-        else {
-            ++this.metrics.PF_READS;
-            this.PF_BASES += rec.getReadLength();
+        ++this.metrics.PF_READS;
+        this.PF_BASES += rec.getReadLength();
 
-            // And now calculate the values we need for HS_LIBRARY_SIZE
-            if (rec.getReadPairedFlag() && rec.getFirstOfPairFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
-                if (baits != null && !baits.isEmpty()) {
-                    ++this.PF_SELECTED_PAIRS;
-                    if (!rec.getDuplicateReadFlag()) ++this.PF_SELECTED_UNIQUE_PAIRS;
-                }
+        // And now calculate the values we need for HS_LIBRARY_SIZE
+        if (rec.getReadPairedFlag() && rec.getFirstOfPairFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
+            if (baits != null && !baits.isEmpty()) {
+                ++this.PF_SELECTED_PAIRS;
+                if (!rec.getDuplicateReadFlag()) ++this.PF_SELECTED_UNIQUE_PAIRS;
             }
         }
 
@@ -320,7 +367,7 @@ public class HsMetricsCalculator {
     }
 
     private void calculateGcMetrics() {
-        if (this.reference != null) {
+        if (this.intervalToGc != null) {
             log.info("Calculating GC metrics");
 
             // Setup the output file if we're outputting per-target coverage
@@ -345,8 +392,7 @@ public class HsMetricsCalculator {
                 final Interval interval = entry.getKey();
                 final Coverage cov = entry.getValue();
 
-                final ReferenceSequence ref = this.reference.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());
-                final double gcDouble = SequenceUtil.calculateGc(ref.getBases());
+                final double gcDouble = this.intervalToGc.get(interval);
                 final int gc = (int) Math.round(gcDouble * 100);
 
                 targetBasesByGc[gc]  += interval.length();

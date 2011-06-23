@@ -5,7 +5,13 @@
 # third is a name for the plot
 
 args <- commandArgs(trailing=T)
-startFinder <- scan(args[1], what="character", sep="\n", quiet=TRUE, blank.lines.skip=FALSE)
+metricsFile <- args[1]
+pdfFile <- args[2]
+bamName <- args[3]
+histoWidth <- ifelse(length(args) < 4, 0, as.numeric(args[4]))
+
+
+startFinder <- scan(metricsFile, what="character", sep="\n", quiet=TRUE, blank.lines.skip=FALSE)
 
 firstBlankLine=0
 
@@ -18,58 +24,75 @@ for (i in 1:length(startFinder))
                         secondBlankLine=i+1
                         break
                 }
-        }
+        } 
 }
 
-metrics <- read.table(args[1], header=T, nrows=1, skip=firstBlankLine)
-histogram <- read.table(args[1], header=T, skip=secondBlankLine)
+histogram <- read.table(metricsFile, header=T, skip=secondBlankLine)
 
-xrange <- max(histogram$insert_size)
-yrange <- max(histogram$fr_count, histogram$rf_count, histogram$tandem_count)
-
-if(length(args) >= 4) {
-    xrange <- as.numeric(args[4])
+# The histogram has a fr_count/rf_count/tandem_count for each metric "level"
+# This code parses out the distinct levels so we can output one graph per level
+headers <- sapply(sub(".fr_count","",names(histogram),fixed=TRUE), "[[" ,1)
+headers <- sapply(sub(".rf_count","",headers,fixed=TRUE), "[[" ,1)
+headers <- sapply(sub(".tandem_count","",headers,fixed=TRUE), "[[" ,1)
+levels <- c()
+for (i in 2:length(headers)) {
+    if (!(headers[i] %in% levels)) {
+        levels[length(levels)+1] <- headers[i]
+    }
 }
 
-pdf(args[2])
-plot(x=NULL, y=NULL,
-    type="n",
-    main=paste(args[3], "Insert Size Histogram"),
-    xlab="Insert Size",
-    ylab="Count",
-    xlim=range(0, xrange),
-    ylim=range(0, yrange))
+
+pdf(pdfFile)
 
 
+for (i in 1:length(levels)) {
 
-colors <- c()
-labels <- c()
+    # Reconstitutes the histogram column headers for this level
+    fr <- paste(levels[i], "fr_count", sep=".")
+    rf <- paste(levels[i], "rf_count", sep=".")
+    tandem <- paste(levels[i], "tandem_count", sep=".")
 
-if( length(histogram$fr_count) > 0 )
-{
-    lines(histogram$insert_size, histogram$fr_count,  type="h", col="red")
-    colors <- c(colors, "red")
-    labels <- c(labels, "FR")
+    frrange = ifelse(fr %in% names(histogram), max(histogram[fr]), 0)
+    rfrange = ifelse(rf %in% names(histogram), max(histogram[rf]), 0)
+    tandemrange = ifelse(tandem %in% names(histogram), max(histogram[tandem]), 0)
+
+    yrange <- max(frrange, rfrange, tandemrange)
+    xrange <- ifelse(histoWidth > 0, histoWidth, max(histogram$insert_size))
+
+    plot(x=NULL, y=NULL,
+        type="n",
+        main=paste("Insert Size Histogram for", levels[i], "\nin file", bamName),
+        xlab="Insert Size",
+        ylab="Count",
+        xlim=range(0, xrange),
+        ylim=range(0, yrange))
+
+    colors <- c()
+    labels <- c()
+
+    if( fr %in% names(histogram) )
+    {
+        lines(histogram$insert_size, as.matrix(histogram[fr]),  type="h", col="red")
+        colors <- c(colors, "red")
+        labels <- c(labels, "FR")
+    }
+    if( rf %in% names(histogram) )
+    {
+        lines(histogram$insert_size, as.matrix(histogram[rf]),  type="h", col="blue")
+        colors <- c(colors, "blue")
+        labels <- c(labels, "RF")
+    }
+
+    if( tandem %in% names(histogram) )
+    {
+        lines(histogram$insert_size, as.matrix(histogram[tandem]),  type="h", col="orange")
+        colors <- c(colors, "orange")
+        labels <- c(labels, "TANDEM")
+    }
+
+    # Create the legend
+    legend("topright", labels, fill=colors, col=colors, cex=0.7);
+
 }
-
-if( length(histogram$rf_count) > 0 )
-{
-    lines(histogram$insert_size, histogram$rf_count,  type="h", col="blue")
-    colors <- c(colors, "blue")
-    labels <- c(labels, "RF")
-}
-
-if( length(histogram$tandem_count) > 0 )
-{
-    lines(histogram$insert_size, histogram$tandem_count,  type="h", col="orange")
-    colors <- c(colors, "orange")
-    labels <- c(labels, "TANDEM")
-}
-
-paste(labels, "=", colors) # Print legend to console
-
-# Create the legend
-legend("topright", labels, fill=colors, col=colors, cex=0.7);
-
 dev.off()
 

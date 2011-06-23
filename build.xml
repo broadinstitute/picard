@@ -32,6 +32,7 @@
     <property name="dist" value="dist"/>
     <property name="classes" value="classes"/>
     <property name="classes.test" value="testclasses"/>
+    <property name="scripts" value="src/scripts"/>
     <property name="test.output" value="dist/test"/>
     <property name="javac.debug" value="true"/>
     <property name="sam-version" value="1.48"/>
@@ -176,6 +177,7 @@
             <classpath>
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>
+                <pathelement path="${scripts}"/>
             </classpath>
             <classfileset dir="${classes.test}">
                  <include name="**/Test*.class"/>
@@ -204,6 +206,7 @@
             <classpath>
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>
+                <pathelement path="${scripts}"/>
             </classpath>
             <classfileset dir="${classes.test}">
                 <include name="**/${name}.class"/>
