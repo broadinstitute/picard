@@ -26,7 +26,7 @@
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../snappy/snappy-java/src-1.0.3-rc3-20110610.011644-1" />
+          <root url="file://$MODULE_DIR$/../../snappy/snappy-java/snappy-java-1.0.3-rc3-sources" />
         </SOURCES>
       </library>
     </orderEntry>
