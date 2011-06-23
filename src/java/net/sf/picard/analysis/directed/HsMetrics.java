@@ -32,6 +32,18 @@ import net.sf.picard.metrics.MetricBase;
  * @author Tim Fennell
  */
 public class HsMetrics extends MetricBase {
+    /** The sample to which these hybrid selection metrics apply.  If null, it means they apply
+     * to all reads in the file. */
+    public String SAMPLE;
+
+    /** The library to which these hybrid selection metrics apply.  If null, it means that the
+     * metrics were accumulated at the sample level. */
+    public String LIBRARY = null;
+
+    /** The read group to which these hybrid selection metrics apply.  If null, it means that
+     * the metrics were accumulated at the library or sample level.*/
+    public String READ_GROUP = null;
+
     /** The name of the bait set used in the hybrid selection. */
     public String BAIT_SET;
 

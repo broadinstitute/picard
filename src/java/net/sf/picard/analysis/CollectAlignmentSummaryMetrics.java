@@ -73,10 +73,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private byte[][] ADAPTER_SEQUENCES;
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
-    final AlignmentSummaryMetricsCollector unpairedCollector     = new AlignmentSummaryMetricsCollector(Category.UNPAIRED);
-    final AlignmentSummaryMetricsCollector firstOfPairCollector  = new AlignmentSummaryMetricsCollector(Category.FIRST_OF_PAIR);
-    final AlignmentSummaryMetricsCollector secondOfPairCollector = new AlignmentSummaryMetricsCollector(Category.SECOND_OF_PAIR);
-    final AlignmentSummaryMetricsCollector pairCollector         = new AlignmentSummaryMetricsCollector(Category.PAIR);
+    final GroupAlignmentSummaryMetricsCollector allReadsCollector  = new GroupAlignmentSummaryMetricsCollector(null, null, null);
+    final Map<String,GroupAlignmentSummaryMetricsCollector> sampleCollectors    = new HashMap<String,GroupAlignmentSummaryMetricsCollector>();
+    final Map<String,GroupAlignmentSummaryMetricsCollector> libraryCollectors   = new HashMap<String,GroupAlignmentSummaryMetricsCollector>();
+    final Map<String,GroupAlignmentSummaryMetricsCollector> readGroupCollectors = new HashMap<String,GroupAlignmentSummaryMetricsCollector>();
 
     // Usage and parameters
     @Usage
@@ -94,10 +94,17 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         IlluminaUtil.IlluminaAdapterPair.INDEXED.get3PrimeAdapter()
     );
 
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
     private boolean doRefMetrics;
+    private boolean calculateAll = false;
+    private boolean calculateSample = false;
+    private boolean calculateLibrary = false;
+    private boolean calculateReadGroup = false;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -117,48 +124,64 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     "in the file are aligned then alignment summary metrics collection will fail.");
         }
 
+        calculateAll = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS);
+        calculateSample = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.SAMPLE);
+        calculateLibrary = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.LIBRARY);
+        calculateReadGroup = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.READ_GROUP);
+
+        for (SAMReadGroupRecord rg : header.getReadGroups()) {
+            if (calculateSample) {
+                if (!sampleCollectors.containsKey(rg.getSample())) {
+                    sampleCollectors.put(rg.getSample(),
+                        new GroupAlignmentSummaryMetricsCollector(rg.getSample(), null, null));
+                }
+            }
+            if (calculateLibrary) {
+                if (!libraryCollectors.containsKey(rg.getLibrary())) {
+                    libraryCollectors.put(rg.getLibrary(),
+                        new GroupAlignmentSummaryMetricsCollector(rg.getSample(), rg.getLibrary(), null));
+                }
+            }
+            if (calculateReadGroup) {
+                if (!readGroupCollectors.containsKey(rg.getPlatformUnit())) {
+                    readGroupCollectors.put(rg.getPlatformUnit(),
+                        new GroupAlignmentSummaryMetricsCollector(rg.getSample(), rg.getLibrary(), rg.getPlatformUnit()));
+                }
+            }
+        }
     }
 
     @Override protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
         if (rec.getNotPrimaryAlignmentFlag()) return;
-        if (rec.getReadPairedFlag()) {
-            if (rec.getFirstOfPairFlag()) {
-                firstOfPairCollector.addRecord(rec, ref);
-            }
-            else {
-                secondOfPairCollector.addRecord(rec, ref);
-            }
-
-            pairCollector.addRecord(rec, ref);
+        final SAMReadGroupRecord rg = rec.getReadGroup();
+        if (calculateAll) {
+            allReadsCollector.addRecord(rec, ref);
         }
-        else {
-            unpairedCollector.addRecord(rec, ref);
+        if (calculateSample) {
+            sampleCollectors.get(rg.getSample()).addRecord(rec, ref);
+        }
+        if (calculateLibrary) {
+            libraryCollectors.get(rg.getLibrary()).addRecord(rec, ref);
+        }
+        if (calculateReadGroup) {
+            readGroupCollectors.get(rg.getPlatformUnit()).addRecord(rec, ref);
         }
     }
 
     @Override protected void finish() {
-        // Let the collectors do any summary computations etc.
-        firstOfPairCollector.onComplete();
-        secondOfPairCollector.onComplete();
-        pairCollector.onComplete();
-        unpairedCollector.onComplete();
+        final List<Map<String,GroupAlignmentSummaryMetricsCollector>> collectorMaps =
+                Arrays.asList(sampleCollectors, libraryCollectors, readGroupCollectors);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> file = getMetricsFile();
 
-        if (firstOfPairCollector.getMetrics().TOTAL_READS > 0) {
-            // override how bad cycle is determined for paired reads, it should be
-            // the sum of first and second reads
-            pairCollector.getMetrics().BAD_CYCLES = firstOfPairCollector.getMetrics().BAD_CYCLES +
-                                                    secondOfPairCollector.getMetrics().BAD_CYCLES;
-
-            file.addMetric(firstOfPairCollector.getMetrics());
-            file.addMetric(secondOfPairCollector.getMetrics());
-            file.addMetric(pairCollector.getMetrics());
+        if (METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS)) {
+            allReadsCollector.addMetricsToFile(file);
         }
 
-        //if there are no reads in any category then we will returned an unpaired alignment summary metric with all zero values
-        if (unpairedCollector.getMetrics().TOTAL_READS > 0 || firstOfPairCollector.getMetrics().TOTAL_READS == 0) {
-            file.addMetric(unpairedCollector.getMetrics());
+        for (final Map<String,GroupAlignmentSummaryMetricsCollector> collectorMap : collectorMaps) {
+            for (final GroupAlignmentSummaryMetricsCollector collector : collectorMap.values()) {
+                collector.addMetricsToFile(file);
+            }
         }
 
         file.write(OUTPUT);
@@ -205,6 +228,67 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         return false;
     }
 
+    private class GroupAlignmentSummaryMetricsCollector {
+        final AlignmentSummaryMetricsCollector unpairedCollector;
+        final AlignmentSummaryMetricsCollector firstOfPairCollector;
+        final AlignmentSummaryMetricsCollector secondOfPairCollector;
+        final AlignmentSummaryMetricsCollector pairCollector;
+        final String sample;
+        final String library;
+        final String readGroup;
+
+        public GroupAlignmentSummaryMetricsCollector(final String sample, final String library, final String readGroup) {
+            this.sample = sample;
+            this.library = library;
+            this.readGroup = readGroup;
+            unpairedCollector     = new AlignmentSummaryMetricsCollector(Category.UNPAIRED, sample, library, readGroup);
+            firstOfPairCollector  = new AlignmentSummaryMetricsCollector(Category.FIRST_OF_PAIR, sample, library, readGroup);
+            secondOfPairCollector = new AlignmentSummaryMetricsCollector(Category.SECOND_OF_PAIR, sample, library, readGroup);
+            pairCollector         = new AlignmentSummaryMetricsCollector(Category.PAIR, sample, library, readGroup);
+        }
+
+        public void addRecord(final SAMRecord rec, final ReferenceSequence ref) {
+            if (rec.getReadPairedFlag()) {
+                if (rec.getFirstOfPairFlag()) {
+                    firstOfPairCollector.addRecord(rec, ref);
+                }
+                else {
+                    secondOfPairCollector.addRecord(rec, ref);
+                }
+
+                pairCollector.addRecord(rec, ref);
+            }
+            else {
+                unpairedCollector.addRecord(rec, ref);
+            }
+        }
+
+        public void addMetricsToFile(final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> file) {
+            // Let the collectors do any summary computations etc.
+            unpairedCollector.onComplete();
+            firstOfPairCollector.onComplete();
+            secondOfPairCollector.onComplete();
+            pairCollector.onComplete();
+
+            if (firstOfPairCollector.getMetrics().TOTAL_READS > 0) {
+                // override how bad cycle is determined for paired reads, it should be
+                // the sum of first and second reads
+                pairCollector.getMetrics().BAD_CYCLES = firstOfPairCollector.getMetrics().BAD_CYCLES +
+                                                        secondOfPairCollector.getMetrics().BAD_CYCLES;
+
+                file.addMetric(firstOfPairCollector.getMetrics());
+                file.addMetric(secondOfPairCollector.getMetrics());
+                file.addMetric(pairCollector.getMetrics());
+            }
+
+            //if there are no reads in any category then we will returned an unpaired alignment summary metric with all zero values
+            if (unpairedCollector.getMetrics().TOTAL_READS > 0 || firstOfPairCollector.getMetrics().TOTAL_READS == 0) {
+                file.addMetric(unpairedCollector.getMetrics());
+            }
+        }
+
+    }
+
     /**
      * Class that counts reads that match various conditions
      */
@@ -222,9 +306,15 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         private final Histogram<Long> hqMismatchHistogram = new Histogram<Long>();
         private final Histogram<Integer> badCycleHistogram = new Histogram<Integer>();
 
-        public AlignmentSummaryMetricsCollector(Category pairingCategory) {
+        public AlignmentSummaryMetricsCollector(final Category pairingCategory,
+                                                final String sample,
+                                                final String library,
+                                                final String readGroup) {
             metrics = new AlignmentSummaryMetrics();
             metrics.CATEGORY = pairingCategory;
+            metrics.SAMPLE = sample;
+            metrics.LIBRARY = library;
+            metrics.READ_GROUP = readGroup;
         }
 
         public void addRecord(final SAMRecord record, final ReferenceSequence ref) {

@@ -24,6 +24,7 @@
 
 package net.sf.picard.analysis.directed;
 
+import net.sf.picard.analysis.MetricAccumulationLevel;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
@@ -32,12 +33,16 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 
 import java.io.File;
+import java.util.*;
 
+import net.sf.picard.util.*;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
-import net.sf.picard.util.IntervalList;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMReadGroupRecord;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMSequenceRecord;
 import net.sf.samtools.util.SequenceUtil;
 
 /**
@@ -46,6 +51,10 @@ import net.sf.samtools.util.SequenceUtil;
  * @author Tim Fennell
  */
 public class CalculateHsMetrics extends CommandLineProgram {
+
+    private static final Log log = Log.getInstance(CalculateHsMetrics.class);
+    private HsMetricsCalculator baseCalculator = null;
+
     @Usage public final String USAGE =
             "Calculates a set of Hybrid Selection specific metrics from an aligned SAM" +
             "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
@@ -65,6 +74,9 @@ public class CalculateHsMetrics extends CommandLineProgram {
 
     @Option(shortName="M", mutex="OUTPUT", doc="Legacy synonym for OUTPUT, should not be used.")
     public File METRICS_FILE;
+
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, optional=true, doc="The reference sequence aligned to.")
     public File REFERENCE_SEQUENCE;
@@ -90,39 +102,136 @@ public class CalculateHsMetrics extends CommandLineProgram {
         IoUtil.assertFileIsWritable(OUTPUT);
         if (PER_TARGET_COVERAGE != null) IoUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
 
+        final SAMFileReader samReader = new SAMFileReader(INPUT);
+
         if (REFERENCE_SEQUENCE == null && PER_TARGET_COVERAGE != null) {
             throw new IllegalArgumentException("Must supply REFERENCE_SEQUENCE when supplying PER_TARGET_COVERAGE");
         }
 
-        final HsMetricsCalculator calculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS);
+        boolean calculateAll = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS);
+        boolean calculateSample = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.SAMPLE);
+        boolean calculateLibrary = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.LIBRARY);
+        boolean calculateReadGroup = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.READ_GROUP);
 
-        final SAMFileReader sam = new SAMFileReader(INPUT);
+        // Validate that the targets and baits have the same references as the reads file
+        SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(),
+                IntervalList.fromFile(TARGET_INTERVALS).getHeader().getSequenceDictionary(),
+                INPUT, TARGET_INTERVALS);
+        SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(),
+                IntervalList.fromFile(BAIT_INTERVALS).getHeader().getSequenceDictionary(),
+                INPUT, BAIT_INTERVALS);
 
-        // Validate that the targets and baits fore for the same references as the reads files
-        SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
-                IntervalList.fromFile(TARGET_INTERVALS).getHeader().getSequenceDictionary());
-        SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(),
-                IntervalList.fromFile(BAIT_INTERVALS).getHeader().getSequenceDictionary());
-        
-        final ReferenceSequenceFile ref;
+        ReferenceSequenceFile ref = null;
         if (REFERENCE_SEQUENCE != null) {
             IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-            SequenceUtil.assertSequenceDictionariesEqual(sam.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary());
-            calculator.setReference(ref);
-        }
-        else {
-            ref = null;
+            SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
+                INPUT, REFERENCE_SEQUENCE);
         }
 
-        calculator.setPerTargetOutput(PER_TARGET_COVERAGE);
-        calculator.analyze(sam.iterator());
+        final HsMetricsCalculator allReadsCalculator = calculateAll
+              ? createCalculator(null, null, null, ref)
+              : null;
+        if (calculateAll && PER_TARGET_COVERAGE != null) {
+            allReadsCalculator.setPerTargetOutput(PER_TARGET_COVERAGE);
+        }
 
+        final Map<String,HsMetricsCalculator> sampleCalculators    = new HashMap<String,HsMetricsCalculator>();
+        final Map<String,HsMetricsCalculator> libraryCalculators   = new HashMap<String,HsMetricsCalculator>();
+        final Map<String,HsMetricsCalculator> readGroupCalculators = new HashMap<String,HsMetricsCalculator>();
+
+        for (SAMReadGroupRecord rg : samReader.getFileHeader().getReadGroups()) {
+            if (calculateSample) {
+                if (!sampleCalculators.containsKey(rg.getSample())) {
+                    sampleCalculators.put(rg.getSample(), createCalculator(rg.getSample(), null, null, ref));
+                }
+            }
+            if (calculateLibrary) {
+                if (!libraryCalculators.containsKey(rg.getLibrary())) {
+                    libraryCalculators.put(rg.getLibrary(), createCalculator(rg.getSample(), rg.getLibrary(), null, ref));
+                }
+            }
+            if (calculateReadGroup) {
+                if (!readGroupCalculators.containsKey(rg.getPlatformUnit())) {
+                    readGroupCalculators.put(rg.getPlatformUnit(), createCalculator(rg.getSample(), rg.getLibrary(),
+                            rg.getPlatformUnit(), ref));
+                }
+            }
+        }
+
+
+        // Add each record to the requested collectors
+        final Iterator<SAMRecord> records = samReader.iterator();
+        int i = 0;
+        while (records.hasNext()) {
+            final SAMRecord sam = records.next();
+
+            if (calculateAll) {
+                allReadsCalculator.analyze(sam);
+            }
+
+            if (calculateSample) {
+                sampleCalculators.get(sam.getReadGroup().getSample()).analyze(sam);
+            }
+
+            if (calculateLibrary) {
+                libraryCalculators.get(sam.getReadGroup().getLibrary()).analyze(sam);
+            }
+
+            if (calculateReadGroup) {
+                readGroupCalculators.get(sam.getReadGroup().getPlatformUnit()).analyze(sam);
+            }
+
+            if (++i % 1000000 == 0) {
+                log.info("Processed " + i + " records so far.");
+            }
+        }
+
+        // Write the output file
         final MetricsFile<HsMetrics, Integer> metrics = getMetricsFile();
-        metrics.addMetric(calculator.getMetrics());
+
+        if (calculateAll)  metrics.addMetric(allReadsCalculator.getMetrics());
+
+        if (calculateSample) {
+            for (final HsMetricsCalculator calculator : sampleCalculators.values()) {
+                metrics.addMetric(calculator.getMetrics());
+            }
+        }
+
+        if (calculateLibrary) {
+            for (final HsMetricsCalculator calculator : libraryCalculators.values()) {
+                metrics.addMetric(calculator.getMetrics());
+            }
+        }
+
+        if (calculateReadGroup) {
+            for (final HsMetricsCalculator calculator : readGroupCalculators.values()) {
+                metrics.addMetric(calculator.getMetrics());
+            }
+        }
 
         metrics.write(OUTPUT);
         return 0;
+    }
+
+    private HsMetricsCalculator createCalculator(final String sample, final String library, final String readGroup,
+                                                 final ReferenceSequenceFile ref) {
+        if (baseCalculator == null) {
+            baseCalculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS, ref, sample, library, readGroup);
+            return baseCalculator;
+        }
+        else {
+            return baseCalculator.cloneMetricsCalculator(sample, library, readGroup);
+        }
+    }
+
+    protected String[] customCommandLineValidation() {
+        if (PER_TARGET_COVERAGE != null && (METRIC_ACCUMULATION_LEVEL.size() != 1 ||
+            METRIC_ACCUMULATION_LEVEL.iterator().next() != MetricAccumulationLevel.ALL_READS)) {
+            return new String[] {"PER_TARGET_COVERAGE can be specified only when METRIC_ACCUMULATION_LEVEL is set " +
+                    "to ALL_READS."};
+        }
+        return super.customCommandLineValidation();
     }
 
 }

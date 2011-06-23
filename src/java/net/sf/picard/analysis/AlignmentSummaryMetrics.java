@@ -35,9 +35,29 @@ public class AlignmentSummaryMetrics extends MetricBase {
     public enum Category { UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR }
 
     /**
+     * The sample to which these alignment metrics apply.  If null, it means these metrics
+     * apply to all reads in the file.
+     */
+    public String SAMPLE;
+
+    /**
+     * The library to which these alignment metrics apply.  If null, it means these metrics
+     * were calculated on the sample and include all libraries in the file that contribute
+     * to that sample.
+     */
+    public String LIBRARY = null;
+
+    /**
+     * The read group to which these alignment metrics apply.  If null, it means these metrics
+     * were calculated on the sample or library level, and include all read groups in the file
+     * that contribute to the sample or library.
+     */
+    public String READ_GROUP = null;
+
+    /**
      * One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
      * first read in a paired run, SECOND_OF_PAIR when the metrics are for only the second read
-     * in a paired run or PAIR when the metrics are aggregeted for both first and second reads
+     * in a paired run or PAIR when the metrics are aggregated for both first and second reads
      * in a pair.
      */
     public Category CATEGORY;
@@ -158,4 +178,5 @@ public class AlignmentSummaryMetrics extends MetricBase {
      * start of the read.
      */
     public double PCT_ADAPTER;
+
 }

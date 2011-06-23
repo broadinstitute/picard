@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2011 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package net.sf.picard.analysis;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-public class CollectionUtil {
-
-    public static <T> List<T> makeList (T... list) {
-        List<T> result = new ArrayList<T>();
-        for (T item : list) {
-            result.add(item);
-        }
-        return result;
-    }
-
-    public static <T> Set<T> makeSet (T... list) {
-        Set<T> result = new HashSet<T>();
-        for (T item : list) {
-            result.add(item);
-        }
-        return result;
-    }
+/**
+ * For use with Picard metrics programs that may output metrics for multiple levels
+ * of aggregation with an analysis.  Used to specify which metrics to output
+ */
+public enum MetricAccumulationLevel {
+    ALL_READS, SAMPLE, LIBRARY, READ_GROUP
 }
