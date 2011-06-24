@@ -24,6 +24,7 @@
 package net.sf.picard.cmdline;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -151,6 +152,16 @@ public abstract class CommandLineProgram {
         System.setProperty("java.io.tmpdir", TMP_DIR.getAbsolutePath());
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
+
+            // Output a one liner about who/where and what software/os we're running on
+            try {
+            System.err.println("[" + new Date() + "] Executing as " +
+                                       System.getProperty("user.name") + "@" + InetAddress.getLocalHost().getHostName() +
+                                       " on " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
+                                       " " + System.getProperty("os.arch") + "; " + System.getProperty("java.vm.name") +
+                                       " " + System.getProperty("java.runtime.version"));
+            }
+            catch (Exception e) { /* Unpossible! */ }
         }
         final int ret;
 
