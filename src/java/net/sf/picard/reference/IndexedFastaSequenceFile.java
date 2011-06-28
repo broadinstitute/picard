@@ -175,7 +175,7 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
      * @return The partial reference sequence associated with this range.
      */
     public ReferenceSequence getSubsequenceAt( String contig, long start, long stop ) {
-        if(start > stop)
+        if(start > stop + 1)
             throw new PicardException(String.format("Malformed query; start point %d lies after end point %d",start,stop));
 
         FastaSequenceIndexEntry indexEntry = index.getIndexEntry(contig);
