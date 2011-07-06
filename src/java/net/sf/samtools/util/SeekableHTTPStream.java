@@ -60,7 +60,7 @@ public class SeekableHTTPStream extends SeekableStream {
     public int read(byte[] buffer, int offset, int len) throws IOException {
 
         if (offset < 0 || len < 0 || (offset + len) > buffer.length) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("Offset="+offset+",len="+len+",buflen="+buffer.length);
         }
         if (len == 0) {
             return 0;
@@ -141,7 +141,9 @@ public class SeekableHTTPStream extends SeekableStream {
 
 
     public int read() throws IOException {
-        throw new UnsupportedOperationException("read() not support for SeekableHTTPStreams");
+    	byte []tmp=new byte[1];
+    	read(tmp,0,1);
+    	return (int) tmp[0] & 0xFF; 
     }
 
     @Override
