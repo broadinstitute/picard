@@ -177,7 +177,10 @@ public class SAMValidationError {
         DUPLICATE_PROGRAM_GROUP_ID,
 
         /** Read is marked as paired, but its pair was not found.  */
-        MATE_NOT_FOUND;
+        MATE_NOT_FOUND,
+
+        /** Both mates are marked as first of pair, or both mates are marked as second of pair. */
+        MATES_ARE_SAME_END;
 
         public final Severity severity;
 
