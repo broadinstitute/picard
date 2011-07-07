@@ -320,7 +320,7 @@ public final class SAMUtils
      * @param validationErrors List of errors to report, or null if there are no errors.
      * @param samRecordIndex Record number of the SAMRecord corresponding to the validation errors, or -1 if
      * the record number is not known.
-     * @param validationStringency If STRICT, throw a RuntimeException.  If LENIENT, print the validation
+     * @param validationStringency If STRICT, throw a SAMFormatException.  If LENIENT, print the validation
      * errors to stderr.  If SILENT, do nothing.
      */
     static void processValidationErrors(final List<SAMValidationError> validationErrors,
@@ -331,7 +331,7 @@ public final class SAMUtils
                 validationError.setRecordNumber(samRecordIndex);
             }
             if (validationStringency == SAMFileReader.ValidationStringency.STRICT) {
-                throw new RuntimeException("SAM validation error: " + validationErrors.get(0));
+                throw new SAMFormatException("SAM validation error: " + validationErrors.get(0));
             }
             else if (validationStringency == SAMFileReader.ValidationStringency.LENIENT) {
                 for (final SAMValidationError error : validationErrors) {
@@ -344,7 +344,7 @@ public final class SAMUtils
     static void processValidationError(final SAMValidationError validationError,
                                        SAMFileReader.ValidationStringency validationStringency) {
         if (validationStringency == SAMFileReader.ValidationStringency.STRICT) {
-            throw new RuntimeException("SAM validation error: " + validationError);
+            throw new SAMFormatException("SAM validation error: " + validationError);
         }
         else if (validationStringency == SAMFileReader.ValidationStringency.LENIENT) {
             System.err.println("Ignoring SAM validation error: " + validationError);
