@@ -502,6 +502,8 @@ public class SamFileValidator {
         private final int mateReferenceIndex;
         private final boolean mateNegStrandFlag;
         private final boolean mateUnmappedFlag;
+
+        private final boolean firstOfPairFlag;
         
         private final long recordNumber;
         
@@ -517,9 +519,13 @@ public class SamFileValidator {
             this.mateNegStrandFlag = record.getMateNegativeStrandFlag();
             this.mateReferenceIndex = record.getMateReferenceIndex();
             this.mateUnmappedFlag = record.getMateUnmappedFlag();
+
+            this.firstOfPairFlag = record.getFirstOfPairFlag();
         }
 
-        private PairEndInfo(int readAlignmentStart, int readReferenceIndex, boolean readNegStrandFlag, boolean readUnmappedFlag, int mateAlignmentStart, int mateReferenceIndex, boolean mateNegStrandFlag, boolean mateUnmappedFlag, long recordNumber) {
+        private PairEndInfo(int readAlignmentStart, int readReferenceIndex, boolean readNegStrandFlag, boolean readUnmappedFlag,
+                            int mateAlignmentStart, int mateReferenceIndex, boolean mateNegStrandFlag, boolean mateUnmappedFlag,
+                            boolean firstOfPairFlag, long recordNumber) {
             this.readAlignmentStart = readAlignmentStart;
             this.readReferenceIndex = readReferenceIndex;
             this.readNegStrandFlag = readNegStrandFlag;
@@ -528,6 +534,7 @@ public class SamFileValidator {
             this.mateReferenceIndex = mateReferenceIndex;
             this.mateNegStrandFlag = mateNegStrandFlag;
             this.mateUnmappedFlag = mateUnmappedFlag;
+            this.firstOfPairFlag = firstOfPairFlag;
             this.recordNumber = recordNumber;
         }
 
@@ -535,6 +542,16 @@ public class SamFileValidator {
             final List<SAMValidationError> errors = new ArrayList<SAMValidationError>();
             validateMateFields(this, mate, readName, errors);
             validateMateFields(mate, this, readName, errors);
+            // Validations that should not be repeated on both ends
+            if (this.firstOfPairFlag == mate.firstOfPairFlag) {
+                final String whichEnd = this.firstOfPairFlag? "first": "second";
+                errors.add(new SAMValidationError(
+                        Type.MATES_ARE_SAME_END,
+                        "Both mates are marked as " + whichEnd + " of pair",
+                        readName,
+                        this.recordNumber
+                ));
+            }
             return errors;
         }
         
@@ -617,6 +634,7 @@ public class SamFileValidator {
                     out.writeInt(record.mateReferenceIndex);
                     out.writeBoolean(record.mateNegStrandFlag);
                     out.writeBoolean(record.mateUnmappedFlag);
+                    out.writeBoolean(record.firstOfPairFlag);
                     out.writeLong(record.recordNumber);
                 } catch (IOException e) {
                     throw new PicardException("Error spilling PairInfo to disk", e);
@@ -636,8 +654,12 @@ public class SamFileValidator {
                     final boolean mateNegStrandFlag = in.readBoolean();
                     final boolean mateUnmappedFlag = in.readBoolean();
 
+                    final boolean firstOfPairFlag = in.readBoolean();
+
                     final long recordNumber = in.readLong();
-                    final PairEndInfo rec = new PairEndInfo(readAlignmentStart, readReferenceIndex, readNegStrandFlag, readUnmappedFlag, mateAlignmentStart, mateReferenceIndex, mateNegStrandFlag, mateUnmappedFlag, recordNumber);
+                    final PairEndInfo rec = new PairEndInfo(readAlignmentStart, readReferenceIndex, readNegStrandFlag,
+                            readUnmappedFlag, mateAlignmentStart, mateReferenceIndex, mateNegStrandFlag, mateUnmappedFlag,
+                            firstOfPairFlag, recordNumber);
                     return new AbstractMap.SimpleEntry(key, rec);
                 } catch (IOException e) {
                     throw new PicardException("Error reading PairInfo from disk", e);
