@@ -289,8 +289,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      */
     private BarcodeMatch findBestBarcode(final String readSubsequence, final boolean passingFilter) {
         BarcodeMetric bestBarcodeMetric = null;
-        int numMismatchesInBestBarcode = readSubsequence.length();
-        int numMismatchesInSecondBestBarcode = readSubsequence.length();
+        // PIC-506 When forcing all reads to match a single barcode, allow a read to match even if every
+        // base is a mismatch.
+        int numMismatchesInBestBarcode = readSubsequence.length() + 1;
+        int numMismatchesInSecondBestBarcode = readSubsequence.length() + 1;
 
         final byte[] readBytes = net.sf.samtools.util.StringUtil.stringToBytes(readSubsequence);
         int numNoCalls = 0;
