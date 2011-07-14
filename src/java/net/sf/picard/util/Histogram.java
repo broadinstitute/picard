@@ -386,28 +386,12 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
      * Trims the histogram so that only bins <= width are kept.
      */
     public void trimByWidth(final int width) {
-        if (isEmpty()) {
-            return;
-        }
+        final Iterator<K> it = descendingKeySet().iterator();
+        while (it.hasNext()) {
 
-        final List<K> binsToKeep = new ArrayList<K>();
-        for (Histogram<K>.Bin bin : values()) {
-            double binId = ((Number)bin.getId()).doubleValue();
-            if (binId <= width) {
-                binsToKeep.add(bin.getId());
-            } else {
-                break;
-            }
-
-        }
-
-        final Object keys[] = keySet().toArray();
-        for (Object binId : keys) {
-            if (!binsToKeep.contains((K)binId)) {
-                remove(binId);
-            }
+            if (((Number)it.next()).doubleValue() > width) {
+                it.remove();
+            } else break;
         }
     }
-
-
 }
