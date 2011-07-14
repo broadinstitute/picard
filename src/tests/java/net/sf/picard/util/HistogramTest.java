@@ -12,12 +12,13 @@ import static java.lang.Math.abs;
 public class HistogramTest {
 
     @Test(dataProvider = "histogramData")
-    public void testHistogramFunctions(final int[] values, final double mean, final double stdev) {
+    public void testHistogramFunctions(final int[] values, final double mean, final double stdev, final Integer trimByWidth) {
         final Histogram<Integer> histo = new Histogram<Integer>();
         for (int value : values) {
             histo.increment(value);
         }
 
+        if (trimByWidth != null) histo.trimByWidth(trimByWidth);
         final double m = histo.getMean();
         final double sd = histo.getStandardDeviation();
 
@@ -28,9 +29,12 @@ public class HistogramTest {
     @DataProvider(name = "histogramData")
     public Object[][] histogramData() {
         return new Object[][] {
-            new Object[] {new int[] {1,2,3,4,5,6,7,8,9,10} , 5.5d, 3.027650d },
-            new Object[] {new int[] {1,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,9}, 6.333333d, 2.236068d },
-            new Object[] {new int[] {-5, -4, -3, -2, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}, 5d, 6.204837d }
+            new Object[] {new int[] {1,2,3,4,5,6,7,8,9,10} , 5.5d, 3.027650d, null },
+            new Object[] {new int[] {1,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,9}, 6.333333d, 2.236068d, null  },
+            new Object[] {new int[] {-5, -4, -3, -2, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}, 5d, 6.204837d, null  },
+                new Object[] {new int[] {1,2,3,4,5,6,7,8,9,10, 11, 11, 12, 100, 1000} , 5.5d, 3.027650d, 10 },
+                new Object[] {new int[] {1,2,2,3,3,3,4,4,4,4,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,9, 20, 20, 21, 25, 25}, 6.333333d, 2.236068d, 11  },
+                new Object[] {new int[] {-5, -4, -3, -2, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 101, 102, 103, 200, 2000}, 5d, 6.204837d, 20  }
         };
     }
 
