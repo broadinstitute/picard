@@ -201,8 +201,8 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
         this.mProgramRecordMap.put(programRecord.getProgramGroupId(), programRecord);
     }
 
-    public SAMProgramRecord getProgramRecord(final String name) {
-        return this.mProgramRecordMap.get(name);
+    public SAMProgramRecord getProgramRecord(final String pgId) {
+        return this.mProgramRecordMap.get(pgId);
     }
 
     /**
