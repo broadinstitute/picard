@@ -24,16 +24,16 @@
 package net.sf.samtools.util;
 
 
-import net.sf.samtools.FileTruncatedException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.net.URL;
+import java.util.Arrays;
+
+import net.sf.samtools.FileTruncatedException;
 
 /*
  * Utility class for reading BGZF block compressed files.  The caller can treat this file like any other InputStream.
@@ -156,6 +156,47 @@ public class BlockCompressedInputStream extends InputStream {
     public int read(final byte[] buffer)
         throws IOException {
         return read(buffer, 0, buffer.length);
+    }
+    
+    private final StringBuilder buf = new StringBuilder();
+    private final byte eol = '\n';
+    /**
+     * Reads a whole line. A line is considered to be terminated by a line feed ('\n')
+     *
+     * @return  A String containing the contents of the line, excluding the line terminating
+     *          character, or null if the end of the stream has been reached
+     *
+     * @exception  IOException  If an I/O error occurs
+     */
+    public String readLine() throws IOException {
+        if(eof()){
+            return null;
+        }
+    	buf.setLength(0);
+    	int available = available();
+    	boolean done = false;
+        while (!done) {
+        	int linetmpPos = mCurrentOffset;
+        	int bCnt = 0;
+        	while((available-- > 0)){
+        		final byte c = mCurrentBlock[linetmpPos++];
+				if(c == eol){
+        			done = true;
+        			break;
+        		}
+				++bCnt;
+        	}
+        	if(mCurrentOffset < linetmpPos){
+				buf.append(new String(mCurrentBlock, mCurrentOffset, bCnt));
+	        	mCurrentOffset = linetmpPos;
+        	}
+        	available = available();    
+        	if(available == 0){
+        		// EOF
+        		done = true;
+        	}
+        }
+    	return buf.toString();
     }
 
     /**
