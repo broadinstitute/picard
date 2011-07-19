@@ -99,6 +99,12 @@ public class FastqToSam extends CommandLineProgram {
     @Option(shortName="SO", doc="The sort order for the output sam/bam file.")
     public SortOrder SORT_ORDER = SortOrder.queryname;
 
+    @Option(doc="Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.")
+    public int MIN_Q = 0;
+
+    @Option(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
+    public int MAX_Q = SAMUtils.MAX_PHRED_SCORE;
+
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
     /** Stock main method. */
@@ -182,6 +188,13 @@ public class FastqToSam extends CommandLineProgram {
         srec.setAttribute(ReservedTagConstants.READ_GROUP_ID, READ_GROUP_NAME);
         final byte[] quals = StringUtil.stringToBytes(frec.getBaseQualityString());
         convertQuality(quals, QUALITY_FORMAT);
+        for (final byte qual : quals) {
+            final int uQual = qual & 0xff;
+            if (uQual < MIN_Q || uQual > MAX_Q) {
+                throw new PicardException("Base quality " + uQual + " is not in the range " + MIN_Q + ".." +
+                MAX_Q + " for read " + frec.getReadHeader());
+            }
+        }
         srec.setBaseQualities(quals);
 
         if (paired) {
@@ -292,5 +305,12 @@ public class FastqToSam extends CommandLineProgram {
     private String getReadName(final String fastaqHeader) {
         final int idx = fastaqHeader.indexOf(" ");
         return (idx == -1) ? fastaqHeader : fastaqHeader.substring(0,idx); 
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (MIN_Q < 0) return new String[]{"MIN_Q must be >= 0"};
+        if (MAX_Q > SAMUtils.MAX_PHRED_SCORE) return new String[]{"MAX_Q must be <= " + SAMUtils.MAX_PHRED_SCORE};
+        return null;
     }
 }

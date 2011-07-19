@@ -108,7 +108,7 @@ public class FastqToSamTest {
         final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
     }
 
-    @Test(dataProvider = "badVersionFiles", expectedExceptions= IllegalArgumentException.class)
+    @Test(dataProvider = "badVersionFiles", expectedExceptions= PicardException.class)
     public void testFastqVersionBad(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
         final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
     }
