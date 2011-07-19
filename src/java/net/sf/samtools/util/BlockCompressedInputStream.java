@@ -99,6 +99,8 @@ public class BlockCompressedInputStream extends InputStream {
     /**
      * @return the number of bytes that can be read (or skipped over) from this input stream without blocking by the
      * next caller of a method for this input stream. The next caller might be the same thread or another thread.
+     * Note that although the next caller can read this many bytes without blocking, the available() method call itself
+     * may block in order to fill an internal buffer if it has been exhausted.
      */
     public int available()
         throws IOException {
