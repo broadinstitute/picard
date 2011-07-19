@@ -108,6 +108,10 @@ public class SamToFastq extends CommandLineProgram {
             "value is null then all bases left after trimming will be written.", optional=true)
     public Integer READ2_MAX_BASES_TO_WRITE;
 
+    @Option(doc="If true, include non-primary alignments in the output.  Support of non-primary alignments in SamToFastq " +
+    "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
+    public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS=false;
+
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
     }
@@ -119,6 +123,7 @@ public class SamToFastq extends CommandLineProgram {
         final Map<SAMReadGroupRecord, List<FastqWriter>> writers = new HashMap<SAMReadGroupRecord, List<FastqWriter>>();
 
         for (final SAMRecord currentRecord : reader ) {
+            if (currentRecord.getNotPrimaryAlignmentFlag() && !INCLUDE_NON_PRIMARY_ALIGNMENTS) continue;
 
             // Skip non-PF reads as necessary
             if (currentRecord.getReadFailsVendorQualityCheckFlag() && !INCLUDE_NON_PF_READS) continue;
