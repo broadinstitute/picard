@@ -31,7 +31,7 @@ import java.io.*;
 /**
  * Writer for text-format SAM files.
  */
-class SAMTextWriter extends SAMFileWriterImpl {
+public class SAMTextWriter extends SAMFileWriterImpl {
     private static final String FIELD_SEPARATOR = "\t";
 
     private final Writer out;
@@ -44,7 +44,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
      * Prepare to write SAM text file.
      * @param file Where to write the output.
      */
-    SAMTextWriter(final File file) {
+    public SAMTextWriter(final File file) {
         try {
             this.file = file;
             this.out = new AsciiWriter(new FileOutputStream(file));
@@ -57,7 +57,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
      * Constructs a SAMTextWriter for outputting to a stream instead of to a file.
      * @param stream Need not be buffered because this class provides buffering. 
      */
-    SAMTextWriter(final OutputStream stream) {
+    public SAMTextWriter(final OutputStream stream) {
         this.file = null;
         this.out = new AsciiWriter(stream);
     }
@@ -68,7 +68,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
      *
      * @param alignment
      */
-    protected void writeAlignment(final SAMRecord alignment) {
+    public void writeAlignment(final SAMRecord alignment) {
         try {
             out.write(alignment.getReadName());
             out.write(FIELD_SEPARATOR);
@@ -116,7 +116,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
      *
      * @param textHeader for convenience if the implementation needs it.  Must be newline-terminated.
      */
-    protected void writeHeader(final String textHeader) {
+    public void writeHeader(final String textHeader) {
         try {
             out.write(textHeader);
         } catch (IOException e) {
@@ -127,7 +127,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
     /**
      * Do any required flushing here.
      */
-    protected void finish() {
+    public void finish() {
         try {
             out.close();
         } catch (IOException e) {
@@ -140,7 +140,7 @@ class SAMTextWriter extends SAMFileWriterImpl {
      *
      * @return Output filename, or null if there isn't one.
      */
-    protected String getFilename() {
+    public String getFilename() {
         if (file == null) {
             return null;
         }
