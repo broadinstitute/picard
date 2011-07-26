@@ -704,6 +704,7 @@ public class CommandLineParser {
             throw new CommandLineParserDefinitionException
                     ("@PositionalArguments cannot be used more than once in an option class.");
         }
+        field.setAccessible(true);
         positionalArguments = field;
         if (!isCollectionField(field)) {
             throw new CommandLineParserDefinitionException("@PositionalArguments must be applied to a Collection");
