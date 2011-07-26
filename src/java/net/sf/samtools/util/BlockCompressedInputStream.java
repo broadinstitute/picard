@@ -169,11 +169,11 @@ public class BlockCompressedInputStream extends InputStream {
      * @exception  IOException  If an I/O error occurs
      */
     public String readLine() throws IOException {
-        if(eof()){
+    	int available = available();
+        if (available == 0) {
             return null;
         }
-    	buf.setLength(0);
-    	int available = available();
+        buf.setLength(0);
     	boolean done = false;
         while (!done) {
         	int linetmpPos = mCurrentOffset;
