@@ -25,24 +25,23 @@ package net.sf.picard.analysis;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.annotation.Gene;
+import net.sf.picard.annotation.Gene.Transcript;
 import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.annotation.LocusFunction;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
+import net.sf.picard.illumina.parser.IntParser;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.Interval;
-import net.sf.picard.util.IntervalList;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.OverlapDetector;
+import net.sf.picard.util.*;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
+import org.testng.junit.IJUnitTestRunner;
+import sun.text.normalizer.IntTrie;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
@@ -68,8 +67,12 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
     public StrandSpecificity STRAND_SPECIFICITY;
 
+    @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
+    public int MINIMUM_LENGTH = 500;
+
     private OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
+    private final Map<Transcript, int[]> coverageByTranscript = new HashMap<Transcript, int[]>();
 
     private RnaSeqMetrics metrics;
 
@@ -115,6 +118,16 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             for (final Gene gene : overlappingGenes) {
                 for (final Gene.Transcript transcript : gene) {
                     transcript.assignLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
+
+                    // Add coverage to our coverage counter for this transcript
+                    int[] coverage = this.coverageByTranscript.get(transcript);
+                    if (coverage == null) {
+                        coverage = new int[transcript.length()];
+                        this.coverageByTranscript.put(transcript, coverage);
+                    }
+                    transcript.addCoverageCounts(alignmentBlock.getReferenceStart(),
+                                                 CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength()),
+                                                 coverage);
                 }
             }
 
@@ -179,14 +192,119 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             metrics.PCT_UTR_BASES =        metrics.UTR_BASES        / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.PF_ALIGNED_BASES;
-            metrics.PCT_MRNA_BASES =        metrics.PCT_CODING_BASES + metrics.PCT_UTR_BASES;
+            metrics.PCT_MRNA_BASES =       metrics.PCT_CODING_BASES + metrics.PCT_UTR_BASES;
         }
+
         if (metrics.CORRECT_STRAND_READS > 0 || metrics.INCORRECT_STRAND_READS > 0) {
             metrics.PCT_CORRECT_STRAND_READS = metrics.CORRECT_STRAND_READS/(double)(metrics.CORRECT_STRAND_READS + metrics.INCORRECT_STRAND_READS);
         }
+
+        // Compute metrics based on coverage of top 1000 genes
+        computeCoverageMetrics();
+
+
         final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
         file.write(OUTPUT);
+    }
+
+    /**
+     * Computes a set of coverage based metrics on the mostly highly expressed genes' most highly
+     * expressed transcripts.
+     */
+    private void computeCoverageMetrics() {
+        final Histogram<Double> cvs = new Histogram<Double>();
+        final Histogram<Double> fivePrimeSkews = new Histogram<Double>();
+        final Histogram<Double> threePrimeSkews = new Histogram<Double>();
+        final Histogram<Double> gapBasesPerKb = new Histogram<Double>();
+
+        for (final Map.Entry<Transcript,int[]> entry : pickTranscripts(coverageByTranscript).entrySet()) {
+            final Transcript tx = entry.getKey();
+            final double[] coverage = MathUtil.promote(entry.getValue());
+            final double mean = MathUtil.mean(coverage, 0, coverage.length);
+
+            // Calculate the CV of coverage for this tx
+            final double stdev = MathUtil.stddev(coverage, 0, coverage.length, mean);
+            final double cv    = stdev / mean;
+            cvs.increment(cv);
+
+            // Calculate the 5' and 3' biases
+            {
+                final int PRIME_BASES = 100;
+                final double fivePrimeBias  = MathUtil.mean(coverage, 0, PRIME_BASES) / mean;
+                final double threePrimeBias = MathUtil.mean(coverage, coverage.length-PRIME_BASES, coverage.length) / mean;
+
+                // Coverage is in genome order, not tx order....
+                if (tx.getGene().isPositiveStrand()) {
+                    fivePrimeSkews.increment(fivePrimeBias);
+                    threePrimeSkews.increment(threePrimeBias);
+                }
+                else {
+                    fivePrimeSkews.increment(threePrimeBias);
+                    threePrimeSkews.increment(fivePrimeBias);
+                }
+            }
+
+            // Calculate gap bases per kilobase
+//            {
+//                int gapBases = 0;
+//                final double minCoverage = mean * 0.1;
+//                for (int i=0; i<coverage.length; ++i) {
+//                    if (coverage[i] < minCoverage) ++gapBases;
+//                }
+//                gapBasesPerKb.increment(gapBases / (coverage.length / 1000d));
+//            }
+        }
+
+        metrics.MEDIAN_CV_COVERAGE = cvs.getMedian();
+        metrics.MEDIAN_5PRIME_BIAS = fivePrimeSkews.getMedian();
+        metrics.MEDIAN_3PRIME_BIAS = threePrimeSkews.getMedian();
+    }
+
+    /** Picks the set of transcripts on which the coverage metrics are to be calculated. */
+    public Map<Transcript, int[]> pickTranscripts(final Map<Transcript, int[]> transcriptCoverage) {
+        final Map<Transcript, Double> bestPerGene = new HashMap<Transcript, Double>();
+
+        // Make a map of the best transcript per gene to it's mean coverage
+        for (final Gene gene : this.geneOverlapDetector.getAll()) {
+            Transcript best = null;
+            double bestMean = 0;
+
+            for (final Transcript tx : gene) {
+                final int[] cov = transcriptCoverage.get(tx);
+
+                if (tx.length() < Math.max(MINIMUM_LENGTH, 100)) continue;
+                if (cov == null) continue;
+
+                final double mean = MathUtil.mean(MathUtil.promote(cov), 0, cov.length);
+                if (best == null || mean > bestMean) {
+                    best = tx;
+                    bestMean = mean;
+                }
+            }
+
+            if (best != null) bestPerGene.put(best, bestMean);
+        }
+
+        // Find the 1000th best coverage value
+        final double[] coverages = new double[bestPerGene.size()];
+        int i=0;
+        for (final double d : bestPerGene.values()) coverages[i++] = d;
+        Arrays.sort(coverages);
+        final double min = coverages.length == 0 ? 0 : coverages[Math.max(0, coverages.length - 1001)];
+
+        // And finally build the output map
+        final Map<Transcript, int[]> retval = new HashMap<Transcript, int[]>();
+        for (final Map.Entry<Transcript,Double> entry : bestPerGene.entrySet()) {
+            final Transcript tx = entry.getKey();
+            final double coverage = entry.getValue();
+
+            if (coverage >= min) {
+                retval.put(tx, transcriptCoverage.get(tx));
+            }
+        }
+
+        return retval;
     }
 
     private void assignValueForOverlappingRange(final Interval interval, final int start,

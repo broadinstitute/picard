@@ -25,6 +25,7 @@ package net.sf.picard.annotation;
 
 import net.sf.picard.util.Interval;
 import net.sf.samtools.util.CoordMath;
+import sun.tools.tree.LengthExpression;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,19 +43,15 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
         super(sequence, start, end, negative, name);
     }
 
-    public Gene(final String sequence, final int start, final int end, final boolean negative, final String name, final Iterable<Transcript> transcriptIterable) {
-        super(sequence, start, end, negative, name);
-        for (final Transcript transcript : transcriptIterable) {
-            addTranscript(transcript);
+    public Transcript addTranscript(final String name, final int transcriptionStart, final int transcriptionEnd, final int codingStart, final int codingEnd, final int numExons) {
+        if (transcripts.containsKey(name)) {
+            throw new AnnotationException("Transcript " + name + " for gene " + this.getName() + " appears more than once");
         }
-    }
-
-    public void addTranscript(final Transcript transcript) {
-        if (transcripts.containsKey(transcript.name)) {
-            throw new AnnotationException("Transcript " + transcript.name + " for gene " +
-            this.getName() + " appears more than once");
+        else {
+            final Transcript tx = new Transcript(name, transcriptionStart, transcriptionEnd, codingStart, codingEnd, numExons);
+            transcripts.put(name, tx);
+            return tx;
         }
-        transcripts.put(transcript.name, transcript);
     }
 
     public Iterator<Transcript> iterator() {
@@ -64,21 +61,47 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
     /**
      * A single transcript of a gene.  Sequence name is stored in the enclosing object (class Gene).
      */
-    public static class Transcript {
+    public class Transcript {
         public final String name;
         public final int transcriptionStart;
         public final int transcriptionEnd;
         public final int codingStart;
         public final int codingEnd;
         public final Exon[] exons;
+        private int length; // the number of bases in the transcript
 
-        public Transcript(final String name, final int transcriptionStart, final int transcriptionEnd, final int codingStart, final int codingEnd, final Exon[] exons) {
+        /**
+         * 1-based, inclusive representation of an exon.  The sequence name is stored in an enclosing object (class Gene).
+         */
+        public class Exon {
+            public final int start;
+            public final int end;
+
+            public Exon(final int start, final int end) {
+                this.start = start;
+                this.end = end;
+            }
+        }
+
+        public Transcript(final String name, final int transcriptionStart, final int transcriptionEnd, final int codingStart, final int codingEnd, final int numExons) {
             this.name = name;
             this.transcriptionStart = transcriptionStart;
             this.transcriptionEnd = transcriptionEnd;
             this.codingStart = codingStart;
             this.codingEnd = codingEnd;
-            this.exons = exons;
+            this.exons = new Exon[numExons];
+        }
+
+        public Exon addExon(final int start, final int end) {
+            for (int i=0; i<this.exons.length; ++i) {
+                if (exons[i] == null) {
+                    exons[i] = new Exon(start, end);
+                    this.length += CoordMath.getLength(start, end);
+                    return exons[i];
+                }
+            }
+
+            throw new IllegalStateException("Attempting to add more exons that exist for transcript.");
         }
 
         public int start() {
@@ -87,6 +110,18 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
 
         public int end() {
             return exons[exons.length -1].end;
+        }
+
+        public int length() {
+            return this.length;
+        }
+
+        public boolean isSoloTranscript() {
+            return Gene.this.transcripts.size() == 1;
+        }
+
+        public Gene getGene() {
+            return Gene.this;
         }
 
         /**
@@ -113,6 +148,34 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
             }
         }
 
+        /**
+         *
+         * @param genomeStart
+         * @param genomeEnd
+         * @param coverage
+         */
+        public void addCoverageCounts(final int genomeStart, final int genomeEnd, final int[] coverage) {
+            for (int i=genomeStart; i<genomeEnd; ++i) {
+                final int txBase = getTranscriptCoordinate(i);
+                if (txBase > 0) coverage[txBase-1]++;
+            }
+        }
+
+        /** Given a coordinate on the genome (same chromosome) give the corresponding coordinate in the transcript. */
+        public int getTranscriptCoordinate(final int genomeCoordinate) {
+            int exonOffset = 0;
+            for (final Exon e : exons) {
+                if (genomeCoordinate >= e.start && genomeCoordinate <=e.end) {
+                    return (genomeCoordinate - e.start + 1) + exonOffset;
+                }
+                else {
+                    exonOffset += CoordMath.getLength(e.start, e.end);
+                }
+            }
+
+            return -1;
+        }
+
         private boolean utr(final int locus) {
             return locus < codingStart || locus > codingEnd;
         }
@@ -126,23 +189,34 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
             return false;
         }
 
-
-
         private boolean inRange(final int start, final int end, final int locus) {
             return (locus >= start && locus <= end);
         }
 
-        /**
-         * 1-based, inclusive representation of an exon.  The sequence name is stored in an enclosing object (class Gene).
-         */
-        public static class Exon {
-            public final int start;
-            public final int end;
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-            public Exon(int start, int end) {
-                this.start = start;
-                this.end = end;
-            }
+            final Transcript that = (Transcript) o;
+
+            if (codingEnd != that.codingEnd) return false;
+            if (codingStart != that.codingStart) return false;
+            if (transcriptionEnd != that.transcriptionEnd) return false;
+            if (transcriptionStart != that.transcriptionStart) return false;
+            if (!name.equals(that.name)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name.hashCode();
+            result = 31 * result + transcriptionStart;
+            result = 31 * result + transcriptionEnd;
+            result = 31 * result + codingStart;
+            result = 31 * result + codingEnd;
+            return result;
         }
     }
 }

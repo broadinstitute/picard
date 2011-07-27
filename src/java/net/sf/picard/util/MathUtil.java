@@ -92,6 +92,13 @@ public class MathUtil {
         return min;
     }
 
+    /** "Promotes" an int[] into a double array with the same values (or as close as precision allows). */
+    public static double[] promote(final int[] is) {
+        final double[] ds = new double[is.length];
+        for (int i=0; i<is.length; ++i) ds[i] = is[i];
+        return ds;
+    }
+
     /**
      * Takes a complete set of mutually exclusive log likelihoods and converts them to probabilities
      * that sum to 1 with as much fidelity as possible.
