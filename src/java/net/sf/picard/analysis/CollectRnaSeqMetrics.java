@@ -37,8 +37,6 @@ import net.sf.picard.util.*;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
-import org.testng.junit.IJUnitTestRunner;
-import sun.text.normalizer.IntTrie;
 
 import java.io.File;
 import java.util.*;
