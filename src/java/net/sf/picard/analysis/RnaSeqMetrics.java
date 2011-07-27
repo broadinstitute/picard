@@ -102,4 +102,21 @@ public class RnaSeqMetrics extends MetricBase{
      * CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.
      */
     public double PCT_CORRECT_STRAND_READS;
+
+    /**
+     * The median CV of coverage of the 1000 most highly expressed transcripts.
+     */
+    public double MEDIAN_CV_COVERAGE;
+
+    /**
+     * The median 5 prime bias of the 1000 most highly expressed transcripts, where 5 prime bias is calculated per
+     * transcript as: mean coverage of the 5' most 100 bases divided by the mean coverage of the whole transcript.
+     */
+    public double MEDIAN_5PRIME_BIAS;
+
+    /**
+     * The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per
+     * transcript as: mean coverage of the 3' most 100 bases divided by the mean coverage of the whole transcript.
+     */
+    public double MEDIAN_3PRIME_BIAS;
 }
