@@ -125,7 +125,11 @@ public class MergeSamFiles extends CommandLineProgram {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SORT_ORDER, headers, MERGE_SEQUENCE_DICTIONARIES);
             iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORTED);
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerMerger.getMergedHeader(), true, OUTPUT);
+            final SAMFileHeader header = headerMerger.getMergedHeader();
+            for (String comment : COMMENT) {
+                header.addComment(comment);
+            }
+            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
         }
         else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
