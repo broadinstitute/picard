@@ -118,32 +118,29 @@ public class MergeSamFiles extends CommandLineProgram {
         // If all the input sort orders match the output sort order then just merge them and
         // write on the fly, otherwise setup to merge and sort before writing out the final file
         IoUtil.assertFileIsWritable(OUTPUT);
-        final MergingSamRecordIterator iterator;
-        final SAMFileWriter out;
+        final boolean presorted;
+        final SAMFileHeader.SortOrder headerMergerSortOrder;
+        final boolean mergingSamRecordIteratorAssumeSorted;
 
         if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED) {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SORT_ORDER, headers, MERGE_SEQUENCE_DICTIONARIES);
-            iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORTED);
-            final SAMFileHeader header = headerMerger.getMergedHeader();
-            for (String comment : COMMENT) {
-                header.addComment(comment);
-            }
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
+            headerMergerSortOrder = SORT_ORDER;
+            mergingSamRecordIteratorAssumeSorted = ASSUME_SORTED;
+            presorted = true;
         }
         else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.unsorted,
-                                                                             headers,
-                                                                             MERGE_SEQUENCE_DICTIONARIES);
-            iterator = new MergingSamRecordIterator(headerMerger, readers, false);
-            final SAMFileHeader header = headerMerger.getMergedHeader();
-            header.setSortOrder(SORT_ORDER);
-            for (String comment : COMMENT) {
-                header.addComment(comment);
-            }
-            out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+            headerMergerSortOrder = SAMFileHeader.SortOrder.unsorted;
+            mergingSamRecordIteratorAssumeSorted = false;
+            presorted = false;
         }
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headerMergerSortOrder, headers, MERGE_SEQUENCE_DICTIONARIES);
+        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, mergingSamRecordIteratorAssumeSorted);
+        final SAMFileHeader header = headerMerger.getMergedHeader();
+        for (String comment : COMMENT) {
+            header.addComment(comment);
+        }
+        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, OUTPUT);
 
         // Lastly loop through and write out the records
         if (USE_THREADING) {
