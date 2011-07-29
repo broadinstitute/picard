@@ -30,82 +30,58 @@ import net.sf.picard.metrics.MetricBase;
  * program and usually stored in a file with the extension ".rna_metrics".
  */
 public class RnaSeqMetrics extends MetricBase{
-    /**
-     * The total number of aligned PF bases.  Non-primary alignments are not counted.
-     */
+    /** The total number of PF bases including non-aligned reads. */
+    public long PF_BASES;
+
+    /** The total number of aligned PF bases.  Non-primary alignments are not counted. */
     public long PF_ALIGNED_BASES;
 
-    /**
-     * Number of bases in primary aligments that align to ribosomal sequence.
-     */
+    /** Number of bases in primary aligments that align to ribosomal sequence. */
     public long RIBOSOMAL_BASES;
-    /**
-     * Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence.
-     */
+
+    /** Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence. */
     public long CODING_BASES;
 
-    /**
-     * Number of bases in primary aligments that align to a UTR base for some gene, and not a coding base.
-     */
+    /** Number of bases in primary aligments that align to a UTR base for some gene, and not a coding base. */
     public long UTR_BASES;
 
-    /**
-     * Number of bases in primary aligments that align to an intronic base for some gene, and not a coding or UTR base.
-     */
+    /** Number of bases in primary aligments that align to an intronic base for some gene, and not a coding or UTR base. */
     public long INTRONIC_BASES;
 
-    /**
-     * Number of bases in primary aligments that do not align to any gene.
-     */
+    /** Number of bases in primary aligments that do not align to any gene. */
     public long INTERGENIC_BASES;
 
-    /**
-     * Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.
-     */
+    /** Number of aligned reads that map to the correct strand.  0 if library is not strand-specific. */
     public long CORRECT_STRAND_READS;
 
-    /**
-     * Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.
-     */
+    /** Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific. */
     public long INCORRECT_STRAND_READS;
-    /**
-     * RIBOSOMAL_BASES / PF_ALIGNED_BASES
-     */
+
+    /** RIBOSOMAL_BASES / PF_ALIGNED_BASES */
     public double PCT_RIBOSOMAL_BASES;
 
-    /**
-     * CODING_BASES / PF_ALIGNED_BASES
-     */
+    /** CODING_BASES / PF_ALIGNED_BASES */
     public double PCT_CODING_BASES;
 
-    /**
-     * UTR_BASES / PF_ALIGNED_BASES
-     */
+    /** UTR_BASES / PF_ALIGNED_BASES */
     public double PCT_UTR_BASES;
 
-    /**
-     * INTRONIC_BASES / PF_ALIGNED_BASES
-     */
+    /** INTRONIC_BASES / PF_ALIGNED_BASES */
     public double PCT_INTRONIC_BASES;
 
-    /**
-     * INTERGENIC_BASES / PF_ALIGNED_BASES
-     */
+    /** INTERGENIC_BASES / PF_ALIGNED_BASES */
     public double PCT_INTERGENIC_BASES;
 
-    /**
-     * PCT_UTR_BASES + PCT_CODING_BASES
-     */
+    /** PCT_UTR_BASES + PCT_CODING_BASES */
     public double PCT_MRNA_BASES;
 
-    /**
-     * CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.
-     */
+    /** The percentage of bases mapping to mRNA divided by the total number of PF bases. */
+    public double PCT_USABLE_BASES;
+
+    /** CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. */
     public double PCT_CORRECT_STRAND_READS;
 
-    /**
-     * The median CV of coverage of the 1000 most highly expressed transcripts.
-     */
+    /** The median CV of coverage of the 1000 most highly expressed transcripts. */
     public double MEDIAN_CV_COVERAGE;
 
     /**
@@ -119,4 +95,7 @@ public class RnaSeqMetrics extends MetricBase{
      * transcript as: mean coverage of the 3' most 100 bases divided by the mean coverage of the whole transcript.
      */
     public double MEDIAN_3PRIME_BIAS;
+
+    /** The ratio of coverage at the 5' end of to the 3' end based on the 1000 most highly expressed transcripts. */
+    public double MEDIAN_5PRIME_TO_3PRIME_BIAS;
 }
