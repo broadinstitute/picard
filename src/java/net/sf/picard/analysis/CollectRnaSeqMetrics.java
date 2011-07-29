@@ -30,7 +30,6 @@ import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.annotation.LocusFunction;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.IntParser;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.*;
@@ -100,12 +99,18 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Override
     protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
-        if (rec.getReadUnmappedFlag() || rec.getReadFailsVendorQualityCheckFlag() || rec.getNotPrimaryAlignmentFlag()) return;
+        // Filter out some reads, and collect the total number of PF bases
+        if (rec.getReadFailsVendorQualityCheckFlag() || rec.getNotPrimaryAlignmentFlag()) return;
+        this.metrics.PF_BASES += rec.getReadLength();
+        if (rec.getReadUnmappedFlag()) return;
+
+        // Grab information about the alignment and overlapping genes etc.
         final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
-        final Collection<Gene> overlappingGenes = geneOverlapDetector.getOverlaps(readInterval);
+        final Collection<Gene> overlappingGenes                  = geneOverlapDetector.getOverlaps(readInterval);
         final Collection<Interval> overlappingRibosomalIntervals = ribosomalSequenceOverlapDetector.getOverlaps(readInterval);
-        final List<AlignmentBlock> alignmentBlocks = rec.getAlignmentBlocks();
+        final List<AlignmentBlock> alignmentBlocks               = rec.getAlignmentBlocks();
         boolean overlapsExon = false;
+
         for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
             // Get functional class for each position in the alignment block.
             final LocusFunction[] locusFunctions = new LocusFunction[alignmentBlock.getLength()];
@@ -191,6 +196,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_INTERGENIC_BASES = metrics.INTERGENIC_BASES / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_MRNA_BASES =       metrics.PCT_CODING_BASES + metrics.PCT_UTR_BASES;
+            metrics.PCT_USABLE_BASES =     (metrics.CODING_BASES + metrics.UTR_BASES) / (double) metrics.PF_BASES;
         }
 
         if (metrics.CORRECT_STRAND_READS > 0 || metrics.INCORRECT_STRAND_READS > 0) {
@@ -215,6 +221,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         final Histogram<Double> fivePrimeSkews = new Histogram<Double>();
         final Histogram<Double> threePrimeSkews = new Histogram<Double>();
         final Histogram<Double> gapBasesPerKb = new Histogram<Double>();
+        final Histogram<Double> fiveToThreeSkews = new Histogram<Double>();
 
         for (final Map.Entry<Transcript,int[]> entry : pickTranscripts(coverageByTranscript).entrySet()) {
             final Transcript tx = entry.getKey();
@@ -229,17 +236,22 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             // Calculate the 5' and 3' biases
             {
                 final int PRIME_BASES = 100;
-                final double fivePrimeBias  = MathUtil.mean(coverage, 0, PRIME_BASES) / mean;
-                final double threePrimeBias = MathUtil.mean(coverage, coverage.length-PRIME_BASES, coverage.length) / mean;
+                final double fivePrimeCoverage = MathUtil.mean(coverage, 0, PRIME_BASES);
+                final double threePrimeCoverage = MathUtil.mean(coverage, coverage.length - PRIME_BASES, coverage.length);
+
+                final double fivePrimeBias  = fivePrimeCoverage / mean;
+                final double threePrimeBias = threePrimeCoverage / mean;
 
                 // Coverage is in genome order, not tx order....
                 if (tx.getGene().isPositiveStrand()) {
                     fivePrimeSkews.increment(fivePrimeBias);
                     threePrimeSkews.increment(threePrimeBias);
+                    fiveToThreeSkews.increment(fivePrimeCoverage / threePrimeCoverage);
                 }
                 else {
                     fivePrimeSkews.increment(threePrimeBias);
                     threePrimeSkews.increment(fivePrimeBias);
+                    fiveToThreeSkews.increment(threePrimeCoverage / fivePrimeCoverage);
                 }
             }
 
@@ -257,6 +269,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         metrics.MEDIAN_CV_COVERAGE = cvs.getMedian();
         metrics.MEDIAN_5PRIME_BIAS = fivePrimeSkews.getMedian();
         metrics.MEDIAN_3PRIME_BIAS = threePrimeSkews.getMedian();
+        metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS = fiveToThreeSkews.getMedian();
     }
 
     /** Picks the set of transcripts on which the coverage metrics are to be calculated. */
