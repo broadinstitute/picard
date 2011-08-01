@@ -30,6 +30,7 @@ import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.CigarUtil;
 import net.sf.picard.util.Log;
 import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
@@ -84,6 +85,7 @@ public abstract class AbstractAlignmentMerger {
     private final Integer read1BasesTrimmed;
     private final Integer read2BasesTrimmed;
     private final List<SamPairUtil.PairOrientation> expectedOrientations;
+    private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
     private SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(SAMRecord record) {
@@ -116,13 +118,16 @@ public abstract class AbstractAlignmentMerger {
      * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
      * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
      *                          aligned pairs.  Used to determine the properPair flag.
+     * @param sortOrder           The order in which the merged records should be output.  If null,
+     *                            output will be coordinate-sorted
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean alignedReadsOnly,
                                    final SAMProgramRecord programRecord, final List<String> attributesToRetain,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                                   final List<SamPairUtil.PairOrientation> expectedOrientations) {
+                                   final List<SamPairUtil.PairOrientation> expectedOrientations,
+                                   final SAMFileHeader.SortOrder sortOrder) {
         IoUtil.assertFileIsReadable(unmappedBamFile);
         IoUtil.assertFileIsWritable(targetBamFile);
         IoUtil.assertFileIsReadable(referenceFasta);
@@ -139,7 +144,8 @@ public abstract class AbstractAlignmentMerger {
         this.alignedReadsOnly = alignedReadsOnly;
 
         this.header = new SAMFileHeader();
-        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        this.sortOrder = sortOrder != null ? sortOrder : SortOrder.coordinate;
+        header.setSortOrder(SortOrder.coordinate);
         if (programRecord != null) {
             setProgramRecord(programRecord);
         }
@@ -150,7 +156,23 @@ public abstract class AbstractAlignmentMerger {
         this.read1BasesTrimmed = read1BasesTrimmed;
         this.read2BasesTrimmed = read2BasesTrimmed;
         this.expectedOrientations = expectedOrientations;
+    }
 
+    /**
+     * Constructor retained for backwards compatibility
+     *
+     * @deprecated  Use construct that specifies sortOrder
+     */
+    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
+                                   final File referenceFasta, final boolean clipAdapters,
+                                   final boolean bisulfiteSequence, final boolean alignedReadsOnly,
+                                   final SAMProgramRecord programRecord, final List<String> attributesToRetain,
+                                   final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
+                                   final List<SamPairUtil.PairOrientation> expectedOrientations) {
+
+        this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
+             alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed, read2BasesTrimmed,
+             expectedOrientations, SortOrder.coordinate);
     }
 
     /**
@@ -169,9 +191,9 @@ public abstract class AbstractAlignmentMerger {
         alignedIterator = new MultiHitAlignedReadIterator(getQuerynameSortedAlignedRecords());
         MultiHitAlignedReadIterator.HitsForInsert nextAligned = nextAligned();
 
-        // Create the sorting collection that will write the records in coordinate order
+        // Create the sorting collection that will write the records in the coordinate order
         // to the final bam file
-        final SortingCollection<SAMRecord> coordinateSorted = SortingCollection.newInstance(
+        final SortingCollection<SAMRecord> sorted = SortingCollection.newInstance(
             SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
             MAX_RECORDS_IN_RAM);
 
@@ -226,12 +248,12 @@ public abstract class AbstractAlignmentMerger {
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
                         if (!firstToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            coordinateSorted.add(firstToWrite);
+                            sorted.add(firstToWrite);
                             if (firstToWrite.getReadUnmappedFlag()) ++unmapped;
                             else ++aligned;
                         }
                         if (!secondToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            coordinateSorted.add(secondToWrite);
+                            sorted.add(secondToWrite);
                             if (!secondToWrite.getReadUnmappedFlag()) ++aligned;
                             else ++unmapped;
                         }
@@ -240,7 +262,7 @@ public abstract class AbstractAlignmentMerger {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
-                        coordinateSorted.add(recToWrite);
+                        sorted.add(recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
                         else ++aligned;
                     }
@@ -255,10 +277,10 @@ public abstract class AbstractAlignmentMerger {
                 }
                 // No matching read from alignedIterator -- just output reads as is.
                 if (!alignedReadsOnly) {
-                    coordinateSorted.add(rec);
+                    sorted.add(rec);
                     ++unmapped;
                     if (secondOfPair != null) {
-                        coordinateSorted.add(secondOfPair);
+                        sorted.add(secondOfPair);
                         ++unmapped;
                     }
                 }
@@ -275,10 +297,12 @@ public abstract class AbstractAlignmentMerger {
         }
         alignedIterator.close();
 
-        // Write the records to the output file in coordinate sorted order,
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+        // Write the records to the output file in specified sorted order,
+        header.setSortOrder(this.sortOrder);
+        boolean presorted = this.sortOrder == SortOrder.coordinate;
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, this.targetBamFile);
         int count = 0;
-        for (final SAMRecord rec : coordinateSorted) {
+        for (final SAMRecord rec : sorted) {
             if (!rec.getReadUnmappedFlag()) {
                 if (refSeq != null) {
                     byte referenceBases[] = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
@@ -296,7 +320,7 @@ public abstract class AbstractAlignmentMerger {
             }
         }
         writer.close();
-        coordinateSorted.cleanup();
+        sorted.cleanup();
 
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }

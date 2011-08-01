@@ -5,6 +5,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.DelegatingIterator;
 import net.sf.samtools.util.SortingCollection;
@@ -65,7 +66,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *                            alignedSamFile is not.
      * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
      *                          aligned pairs.  Used to determine the properPair flag.
-     *
+     * @param sortOrder           The order in which the merged records should be output.  If null,
+     *                            output will be coordinate-sorted
      */
     public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                  final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -73,11 +75,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                  final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
                  final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                  final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
-                 final List<SamPairUtil.PairOrientation> expectedOrientations) {
+                 final List<SamPairUtil.PairOrientation> expectedOrientations,
+                 final SortOrder sortOrder) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
               alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
-              read2BasesTrimmed, expectedOrientations);
+              read2BasesTrimmed, expectedOrientations, sortOrder);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&
             (read1AlignedSamFile == null || read1AlignedSamFile.size() == 0 ||
@@ -133,6 +136,25 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
+
+    /**
+     * Constructor retained for backwards compatibility
+     *
+     * @deprecated  Use construct that specifies sortOrder
+     */
+    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
+                 final boolean pairedRun, final boolean alignedReadsOnly,
+                 final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                 final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
+                 final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                 final List<SamPairUtil.PairOrientation> expectedOrientations) {
+
+        this(unmappedBamFile, targetBamFile, referenceFasta, programRecord, clipAdapters, bisulfiteSequence,
+             pairedRun, alignedReadsOnly, alignedSamFile, maxGaps, attributesToRetain, read1BasesTrimmed, read2BasesTrimmed,
+             read1AlignedSamFile, read2AlignedSamFile, expectedOrientations, SortOrder.coordinate);
+    }
+
 
     /**
      * Merges the alignment from the map file with the non-aligned records from the source BAM file.
