@@ -29,6 +29,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.util.Log;
 import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -95,6 +96,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(shortName="ORIENTATIONS", doc="The expected orientation of proper read pairs.  Replaces JUMP_SIZE",
             mutex = "JUMP_SIZE", optional=true)
     public List<SamPairUtil.PairOrientation> EXPECTED_ORIENTATIONS;
+    @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME,
+            doc="The order in which the merged reads should be output.")
+    public SortOrder SORT_ORDER = SortOrder.coordinate;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
@@ -125,7 +129,7 @@ public class MergeBamAlignment extends CommandLineProgram {
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
             ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
-            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS);
+            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER);
         merger.mergeAlignment();
         return 0;
     }
