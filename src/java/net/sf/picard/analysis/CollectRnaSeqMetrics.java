@@ -219,14 +219,13 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         // Compute metrics based on coverage of top 1000 genes
         final Histogram<Integer> normalizedCovByPos = computeCoverageMetrics();
 
-
         final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
         file.addHistogram(normalizedCovByPos);
         file.write(OUTPUT);
 
         // Generate the coverage by position plot
-        if (CHART_OUTPUT != null) {
+        if (CHART_OUTPUT != null && !normalizedCovByPos.isEmpty()) {
             final int rResult = RExecutor.executeFromClasspath("net/sf/picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
                                                                CHART_OUTPUT.getAbsolutePath(),
