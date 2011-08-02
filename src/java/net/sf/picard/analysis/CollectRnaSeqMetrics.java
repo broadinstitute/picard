@@ -39,6 +39,7 @@ import net.sf.samtools.util.SequenceUtil;
 
 import java.io.File;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
@@ -67,11 +68,15 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
     public int MINIMUM_LENGTH = 500;
 
+    @Option(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
+    public File CHART_OUTPUT;
+
     private OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
     private final Map<Transcript, int[]> coverageByTranscript = new HashMap<Transcript, int[]>();
 
     private RnaSeqMetrics metrics;
+    private String ID_STRING;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -95,6 +100,14 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
         }
         metrics = new RnaSeqMetrics();
+
+        if (header.getReadGroups().size() == 1) {
+            SAMReadGroupRecord rg = header.getReadGroups().get(0);
+            ID_STRING = rg.getPlatformUnit() + " " + rg.getLibrary();
+        }
+        else {
+            ID_STRING = INPUT.getName();
+        }
     }
 
     @Override
@@ -204,28 +217,50 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         }
 
         // Compute metrics based on coverage of top 1000 genes
-        computeCoverageMetrics();
+        final Histogram<Integer> normalizedCovByPos = computeCoverageMetrics();
 
 
         final MetricsFile<RnaSeqMetrics, Integer> file = getMetricsFile();
         file.addMetric(metrics);
+        file.addHistogram(normalizedCovByPos);
         file.write(OUTPUT);
+
+        // Generate the coverage by position plot
+        if (CHART_OUTPUT != null) {
+            final int rResult = RExecutor.executeFromClasspath("net/sf/picard/analysis/rnaSeqCoverage.R",
+                                                               OUTPUT.getAbsolutePath(),
+                                                               CHART_OUTPUT.getAbsolutePath(),
+                                                               ID_STRING);
+
+            if (rResult != 0) {
+                throw new PicardException("Problem invoking R to generate plot.");
+            }
+        }
     }
 
     /**
      * Computes a set of coverage based metrics on the mostly highly expressed genes' most highly
      * expressed transcripts.
      */
-    private void computeCoverageMetrics() {
+    private Histogram<Integer> computeCoverageMetrics() {
         final Histogram<Double> cvs = new Histogram<Double>();
         final Histogram<Double> fivePrimeSkews = new Histogram<Double>();
         final Histogram<Double> threePrimeSkews = new Histogram<Double>();
         final Histogram<Double> gapBasesPerKb = new Histogram<Double>();
         final Histogram<Double> fiveToThreeSkews = new Histogram<Double>();
+        final Histogram<Integer> normalizedCoverageByNormalizedPosition = new Histogram<Integer>("normalized_position", "normalized_coverage");
 
-        for (final Map.Entry<Transcript,int[]> entry : pickTranscripts(coverageByTranscript).entrySet()) {
+        final Map<Transcript,int[]> transcripts = pickTranscripts(coverageByTranscript);
+        final double transcriptCount = transcripts.size();
+
+        for (final Map.Entry<Transcript,int[]> entry : transcripts.entrySet()) {
             final Transcript tx = entry.getKey();
-            final double[] coverage = MathUtil.promote(entry.getValue());
+            final double[] coverage;
+            {
+                final double[] tmp = MathUtil.promote(entry.getValue());
+                if (tx.getGene().isPositiveStrand())  coverage = tmp;
+                else coverage = copyAndReverse(tmp);
+            }
             final double mean = MathUtil.mean(coverage, 0, coverage.length);
 
             // Calculate the CV of coverage for this tx
@@ -239,19 +274,25 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
                 final double fivePrimeCoverage = MathUtil.mean(coverage, 0, PRIME_BASES);
                 final double threePrimeCoverage = MathUtil.mean(coverage, coverage.length - PRIME_BASES, coverage.length);
 
-                final double fivePrimeBias  = fivePrimeCoverage / mean;
-                final double threePrimeBias = threePrimeCoverage / mean;
+                fivePrimeSkews.increment(fivePrimeCoverage / mean);
+                threePrimeSkews.increment(threePrimeCoverage / mean);
+                fiveToThreeSkews.increment(fivePrimeCoverage / threePrimeCoverage);
+            }
 
-                // Coverage is in genome order, not tx order....
-                if (tx.getGene().isPositiveStrand()) {
-                    fivePrimeSkews.increment(fivePrimeBias);
-                    threePrimeSkews.increment(threePrimeBias);
-                    fiveToThreeSkews.increment(fivePrimeCoverage / threePrimeCoverage);
-                }
-                else {
-                    fivePrimeSkews.increment(threePrimeBias);
-                    threePrimeSkews.increment(fivePrimeBias);
-                    fiveToThreeSkews.increment(threePrimeCoverage / fivePrimeCoverage);
+            // Calculate normalized coverage vs. normalized position
+            {
+                final int lastIndex = coverage.length - 1;
+
+                for (int percent=0; percent<=100; ++percent) {
+                    final double p = percent / 100d;
+                    final int start  = (int) Math.max(0,         lastIndex * (p-0.005));
+                    final int end    = (int) Math.min(lastIndex, lastIndex * (p+0.005));
+                    final int length = end - start + 1;
+
+                    double sum = 0;
+                    for (int i=start; i<=end; ++i) sum += coverage[i];
+                    final double normalized = (sum / length) / mean;
+                    normalizedCoverageByNormalizedPosition.increment(percent, normalized / transcriptCount);
                 }
             }
 
@@ -270,6 +311,15 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         metrics.MEDIAN_5PRIME_BIAS = fivePrimeSkews.getMedian();
         metrics.MEDIAN_3PRIME_BIAS = threePrimeSkews.getMedian();
         metrics.MEDIAN_5PRIME_TO_3PRIME_BIAS = fiveToThreeSkews.getMedian();
+
+        return normalizedCoverageByNormalizedPosition;
+    }
+
+    /** Little method to copy an array and reverse it at the same time. */
+    private double[] copyAndReverse(final double[] in) {
+        final double[] out = new double[in.length];
+        for (int i=0, j=in.length-1; i<in.length; ++i, --j) out[j] = in[i];
+        return out;
     }
 
     /** Picks the set of transcripts on which the coverage metrics are to be calculated. */
@@ -288,6 +338,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
                 if (cov == null) continue;
 
                 final double mean = MathUtil.mean(MathUtil.promote(cov), 0, cov.length);
+                if (mean < 1d) continue;
                 if (best == null || mean > bestMean) {
                     best = tx;
                     bestMean = mean;
