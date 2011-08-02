@@ -24,6 +24,7 @@
 package net.sf.samtools.util;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -157,37 +158,49 @@ public class BlockCompressedInputStream extends InputStream {
         throws IOException {
         return read(buffer, 0, buffer.length);
     }
+
+    private final ByteArrayOutputStream buf = new ByteArrayOutputStream(8192);
+    private static final byte eol = '\n';
+    private static final byte eolCr = '\r';
     
-    private final StringBuilder buf = new StringBuilder();
-    private final byte eol = '\n';
     /**
-     * Reads a whole line. A line is considered to be terminated by a line feed ('\n')
+     * Reads a whole line. A line is considered to be terminated by either a line feed ('\n'), 
+     * carriage return ('\r') or carriage return followed by a line feed ("\r\n").
      *
      * @return  A String containing the contents of the line, excluding the line terminating
      *          character, or null if the end of the stream has been reached
      *
      * @exception  IOException  If an I/O error occurs
+     * @
      */
     public String readLine() throws IOException {
     	int available = available();
         if (available == 0) {
             return null;
         }
-        buf.setLength(0);
+        buf.reset();
     	boolean done = false;
+    	boolean foundCr = false; // \r found flag
         while (!done) {
         	int linetmpPos = mCurrentOffset;
         	int bCnt = 0;
         	while((available-- > 0)){
         		final byte c = mCurrentBlock[linetmpPos++];
-				if(c == eol){
+        		if(c == eol){ // found \n
         			done = true;
         			break;
+        		} else if(foundCr){  // previous char was \r
+        			--linetmpPos; // current char is not \n so put it back
+        			done = true;
+        			break;
+        		} else if(c == eolCr){ // found \r
+					foundCr = true;
+        			continue; // no ++bCnt
         		}
 				++bCnt;
         	}
         	if(mCurrentOffset < linetmpPos){
-				buf.append(new String(mCurrentBlock, mCurrentOffset, bCnt));
+				buf.write(mCurrentBlock, mCurrentOffset, bCnt);
 	        	mCurrentOffset = linetmpPos;
         	}
         	available = available();    
