@@ -159,7 +159,7 @@ public class BlockCompressedInputStream extends InputStream {
         return read(buffer, 0, buffer.length);
     }
 
-    private final ByteArrayOutputStream buf = new ByteArrayOutputStream(8192);
+    private volatile ByteArrayOutputStream buf = null;
     private static final byte eol = '\n';
     private static final byte eolCr = '\r';
     
@@ -177,6 +177,9 @@ public class BlockCompressedInputStream extends InputStream {
     	int available = available();
         if (available == 0) {
             return null;
+        }
+        if(null == buf){ // lazy initialisation 
+        	buf = new ByteArrayOutputStream(8192);
         }
         buf.reset();
     	boolean done = false;
