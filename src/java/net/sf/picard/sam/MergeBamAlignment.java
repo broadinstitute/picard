@@ -121,7 +121,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         if (JUMP_SIZE != null) {
             EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.RF});
         }
-        else if (EXPECTED_ORIENTATIONS == null) {
+        else if (EXPECTED_ORIENTATIONS == null || EXPECTED_ORIENTATIONS.isEmpty()) {
             EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
         }
 
