@@ -45,14 +45,12 @@ public class MergeSamFilesTest {
                 "I=" + new File(unsortedInputTestDataDir, "1.sam").getAbsolutePath(),
                 "I=" + new File(unsortedInputTestDataDir, "2.sam").getAbsolutePath(),
                 "O=" + mergedOutput.getAbsolutePath(),
-                "SO=coordinate",
-                "CREATE_INDEX=True"
+                "SO=coordinate"
         };
         final int mergeExitStatus = new MergeSamFiles().instanceMain(args);
         Assert.assertEquals(mergeExitStatus, 0);
         final SAMFileReader reader = new SAMFileReader(mergedOutput);
         Assert.assertEquals(reader.getFileHeader().getSortOrder(), SAMFileHeader.SortOrder.coordinate);
-        Assert.assertTrue(reader.hasIndex());
 
         final int validateExitStatus = new ValidateSamFile().instanceMain(new String[] {"I=" + mergedOutput.getAbsolutePath()});
         Assert.assertEquals(validateExitStatus, 0);
