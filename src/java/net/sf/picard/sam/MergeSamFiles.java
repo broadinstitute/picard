@@ -140,6 +140,7 @@ public class MergeSamFiles extends CommandLineProgram {
         for (String comment : COMMENT) {
             header.addComment(comment);
         }
+        header.setSortOrder(SORT_ORDER);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, OUTPUT);
 
         // Lastly loop through and write out the records
