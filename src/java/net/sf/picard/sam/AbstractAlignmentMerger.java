@@ -87,6 +87,7 @@ public abstract class AbstractAlignmentMerger {
     private final List<SamPairUtil.PairOrientation> expectedOrientations;
     private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
+    private boolean clipOverlappingReads = true;
     private SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(SAMRecord record) {
             return ignoreAlignment(record);
@@ -372,7 +373,7 @@ public abstract class AbstractAlignmentMerger {
     private void transferAlignmentInfoToPairedRead(SAMRecord firstUnaligned, SAMRecord secondUnaligned, SAMRecord firstAligned, SAMRecord secondAligned) {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
         if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned);
-        clipForOverlappingReads(firstUnaligned, secondUnaligned);
+        if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
         SamPairUtil.setProperPairAndMateInfo(secondUnaligned, firstUnaligned, header, expectedOrientations);
     }
 
@@ -518,5 +519,13 @@ public abstract class AbstractAlignmentMerger {
 
     protected void resetRefSeqFileWalker() {
         this.refSeq = new ReferenceSequenceFileWalker(referenceFasta);
+    }
+
+    public boolean isClipOverlappingReads() {
+        return clipOverlappingReads;
+    }
+
+    public void setClipOverlappingReads(boolean clipOverlappingReads) {
+        this.clipOverlappingReads = clipOverlappingReads;
     }
 }
