@@ -100,6 +100,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             doc="The order in which the merged reads should be output.")
     public SortOrder SORT_ORDER = SortOrder.coordinate;
 
+    @Option(doc="For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.")
+    public boolean CLIP_OVERLAPPING_READS = true;
+
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
     /** Required main method implementation. */
@@ -130,6 +133,7 @@ public class MergeBamAlignment extends CommandLineProgram {
             ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
             READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER);
+        merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.mergeAlignment();
         return 0;
     }
