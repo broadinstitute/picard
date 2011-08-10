@@ -27,7 +27,9 @@ for (i in 1:length(startFinder))
         } 
 }
 
-histogram <- read.table(metricsFile, header=T, skip=secondBlankLine)
+print(secondBlankLine)
+
+histogram <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
 
 # The histogram has a fr_count/rf_count/tandem_count for each metric "level"
 # This code parses out the distinct levels so we can output one graph per level
