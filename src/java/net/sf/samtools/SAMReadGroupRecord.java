@@ -38,6 +38,8 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public static final String READ_GROUP_SAMPLE_TAG = "SM";
     public static final String PREDICTED_MEDIAN_INSERT_SIZE_TAG = "PI";
     public static final String DATE_RUN_PRODUCED_TAG = "DT";
+    public static final String FLOW_ORDER_TAG = "FO";
+    public static final String KEY_SEQUENCE_TAG = "KS";
     public static final String DESCRIPTION_TAG = "DS";
     public static final String PLATFORM_UNIT_TAG = "PU";
     public static final String SEQUENCING_CENTER_TAG = "CN";
@@ -47,11 +49,11 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public static final Set<String> STANDARD_TAGS =
             new HashSet<String>(Arrays.asList(READ_GROUP_ID_TAG, READ_GROUP_SAMPLE_TAG, LIBRARY_TAG,
         DESCRIPTION_TAG, PLATFORM_UNIT_TAG, PREDICTED_MEDIAN_INSERT_SIZE_TAG, SEQUENCING_CENTER_TAG,
-            DATE_RUN_PRODUCED_TAG, PLATFORM_TAG));
+            DATE_RUN_PRODUCED_TAG, PLATFORM_TAG, FLOW_ORDER_TAG, KEY_SEQUENCE_TAG));
 
     public SAMReadGroupRecord(final String id) { mReadGroupId = id; }
 
-    public SAMReadGroupRecord(final String id, SAMReadGroupRecord srcProgramRecord) {
+    public SAMReadGroupRecord(final String id, final SAMReadGroupRecord srcProgramRecord) {
         mReadGroupId = id;
         for (final Map.Entry<String, String> entry : srcProgramRecord.getAttributes()) {
             setAttribute(entry.getKey(), entry.getValue());
@@ -61,19 +63,25 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public String getId() { return getReadGroupId();  }
     public String getReadGroupId() { return mReadGroupId; }
 
-    public String getSample() { return (String) getAttribute(READ_GROUP_SAMPLE_TAG); }
+    public String getSample() { return getAttribute(READ_GROUP_SAMPLE_TAG); }
     public void setSample(final String value) { setAttribute(READ_GROUP_SAMPLE_TAG, value); }
 
-    public String getLibrary() { return (String) getAttribute(LIBRARY_TAG); }
+    public String getLibrary() { return getAttribute(LIBRARY_TAG); }
     public void setLibrary(final String value) { setAttribute(LIBRARY_TAG, value); }
 
-    public String getPlatformUnit() { return (String) getAttribute(PLATFORM_UNIT_TAG); }
+    public String getPlatformUnit() { return getAttribute(PLATFORM_UNIT_TAG); }
     public void setPlatformUnit(final String pu) { setAttribute(PLATFORM_UNIT_TAG, pu); }
 
-    public String getPlatform() { return (String) getAttribute(PLATFORM_TAG); }
+    public String getPlatform() { return getAttribute(PLATFORM_TAG); }
     public void setPlatform(final String platform) { setAttribute(PLATFORM_TAG, platform); }
 
     public Date getRunDate() { return new Iso8601Date(getAttribute(DATE_RUN_PRODUCED_TAG)); }
+
+    public String getFlowOrder() { return getAttribute(FLOW_ORDER_TAG); }
+    public void setFlowOrder(final String flowOrder) { setAttribute(FLOW_ORDER_TAG, flowOrder); }
+
+    public String getKeySequence() { return getAttribute(KEY_SEQUENCE_TAG); }
+    public void setKeySequence(final String keySequence) { setAttribute(KEY_SEQUENCE_TAG, keySequence); }
 
     /**
      * Converts to Iso8601Date if not already in that form.
@@ -82,13 +90,13 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
         if (runDate != null && !(runDate instanceof Iso8601Date)) {
             runDate = new Iso8601Date(runDate);
         }
-        setAttribute(DATE_RUN_PRODUCED_TAG, runDate.toString());
+        setAttribute(DATE_RUN_PRODUCED_TAG, runDate != null ? runDate.toString() : null);
     }
 
-    public String getSequencingCenter() { return (String) getAttribute(SEQUENCING_CENTER_TAG); }
+    public String getSequencingCenter() { return getAttribute(SEQUENCING_CENTER_TAG); }
     public void setSequencingCenter(final String center) { setAttribute(SEQUENCING_CENTER_TAG, center); }
 
-    public String getDescription() { return (String) getAttribute(DESCRIPTION_TAG); }
+    public String getDescription() { return getAttribute(DESCRIPTION_TAG); }
     public void setDescription(final String description) { setAttribute(DESCRIPTION_TAG, description); }
 
     public Integer getPredictedMedianInsertSize() {
