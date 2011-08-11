@@ -30,10 +30,10 @@ package net.sf.samtools;
  *
  * @author alecw@broadinstitute.org
  */
-public class SAMBinaryTagAndValue {
+class SAMBinaryTagAndValue {
     public final short tag;
     public final Object value;
-    private SAMBinaryTagAndValue next = null;
+    protected SAMBinaryTagAndValue next = null;
 
     public SAMBinaryTagAndValue(final short tag, final Object value) {
         this.tag = tag;
@@ -117,5 +117,9 @@ public class SAMBinaryTagAndValue {
         if (this.tag == tag) return this;
         else if (this.tag > tag || this.next == null) return null;
         else return this.next.find(tag); 
+    }
+
+    public boolean isUnsignedArray() {
+        return false;
     }
 }

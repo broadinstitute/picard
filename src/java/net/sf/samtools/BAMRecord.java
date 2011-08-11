@@ -27,7 +27,6 @@ import net.sf.samtools.util.StringUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.List;
 
 
 /**
@@ -179,10 +178,10 @@ class BAMRecord
     }
 
     @Override
-    protected void setAttribute(final short tag, final Object value) {
+    protected void setAttribute(final short tag, final Object value, final boolean isUnsignedArray) {
         // populate all the attributes from the binary block before overwriting one
         getBinaryAttributes();
-        super.setAttribute(tag, value);
+        super.setAttribute(tag, value, isUnsignedArray);
         mBinaryDataStale = true;
     }
 
@@ -299,7 +298,7 @@ class BAMRecord
         mAttributesDecoded = true;
         final int tagsOffset = readNameSize() + cigarSize() + basesSize() + qualsSize();
         final int tagsSize = mRestOfBinaryData.length - tagsOffset;
-        SAMBinaryTagAndValue attributes = BinaryTagCodec.readTags(mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
+        final SAMBinaryTagAndValue attributes = BinaryTagCodec.readTags(mRestOfBinaryData, tagsOffset, tagsSize, getValidationStringency());
         setAttributes(attributes);
     }
 

@@ -27,7 +27,11 @@ package net.sf.samtools;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.StringUtil;
 
-import java.util.*;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -951,6 +955,7 @@ public class SAMRecord implements Cloneable
         throw new SAMException("Value for tag " + tag + " is not a Float: " + val.getClass());
     }
 
+    /** Will work for signed byte array, unsigned byte array, or old-style hex array */
     public byte[] getByteArrayAttribute(final String tag) {
         final Object val = getAttribute(tag);
         if (val == null) return null;
@@ -958,6 +963,85 @@ public class SAMRecord implements Cloneable
             return (byte[])val;
         }
         throw new SAMException("Value for tag " + tag + " is not a byte[]: " + val.getClass());
+    }
+
+    public byte[] getUnsignedByteArrayAttribute(final String tag) {
+        final byte[] ret = getByteArrayAttribute(tag);
+        if (ret != null) requireUnsigned(tag);
+        return ret;
+    }
+
+    /** Will work for signed byte array or old-style hex array */
+    public byte[] getSignedByteArrayAttribute(final String tag) {
+        final byte[] ret = getByteArrayAttribute(tag);
+        if (ret != null) requireSigned(tag);
+        return ret;
+    }
+
+    public short[] getUnsignedShortArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof short[]) {
+            requireUnsigned(tag);
+            return (short[]) val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a short[]: " + val.getClass());
+    }
+
+    public short[] getSignedShortArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof short[]) {
+            requireSigned(tag);
+            return (short[]) val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a short[]: " + val.getClass());
+    }
+
+    public int[] getUnsignedIntArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof int[]) {
+            requireUnsigned(tag);
+            return (int[]) val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a int[]: " + val.getClass());
+    }
+
+    public int[] getSignedIntArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val == null) return null;
+        if (val instanceof int[]) {
+            requireSigned(tag);
+            return (int[]) val;
+        }
+        throw new SAMException("Value for tag " + tag + " is not a int[]: " + val.getClass());
+    }
+
+    public float[] getFloatArrayAttribute(final String tag) {
+        final Object val = getAttribute(tag);
+        if (val != null && !(val instanceof float[])) {
+            throw new SAMException("Value for tag " + tag + " is not a float[]: " + val.getClass());
+        }
+        return (float[]) val;
+    }
+
+    /**
+     * @return True if this tag is an unsigned array, else false.
+     * @throws SAMException if the tag is not present.
+     */
+    public boolean isUnsignedArrayAttribute(final String tag) {
+        final SAMBinaryTagAndValue tmp = this.mAttributes.find(SAMTagUtil.getSingleton().makeBinaryTag(tag));
+        if (tmp != null) return tmp.isUnsignedArray();
+        throw new SAMException("Tag " + tag + " is not present in this SAMRecord");
+    }
+
+    private void requireSigned(final String tag) {
+        if (isUnsignedArrayAttribute(tag))  throw new SAMException("Value for tag " + tag + " is not signed");
+    }
+
+    private void requireUnsigned(final String tag) {
+        if (!isUnsignedArrayAttribute(tag))  throw new SAMException("Value for tag " + tag + " is not unsigned");
     }
 
     protected Object getAttribute(final short tag) {
@@ -972,7 +1056,7 @@ public class SAMRecord implements Cloneable
     /**
      * Set a named attribute onto the SAMRecord.  Passing a null value causes the attribute to be cleared.
      * @param tag two-character tag name.  See http://samtools.sourceforge.net/SAM1.pdf for standard and user-defined tags.
-     * @param value Supported types are String, Char, Integer, Float, byte[].
+     * @param value Supported types are String, Char, Integer, Float, byte[], short[]. int[], float[].
      * If value == null, tag is cleared.
      *
      * Byte and Short are allowed but discouraged.  If written to a SAM file, these will be converted to Integer,
@@ -980,25 +1064,62 @@ public class SAMRecord implements Cloneable
      *
      * Long with value between 0 and MAX_UINT is allowed for BAM but discouraged.  Attempting to write such a value
      * to SAM will cause an exception to be thrown.
+     *
+     * To set unsigned byte[], unsigned short[] or unsigned int[] (which is discouraged because of poor Java language
+     * support), setUnsignedArrayAttribute() must be used instead of this method.
      */
     public void setAttribute(final String tag, final Object value) {
+        if (value != null && value.getClass().isArray() && Array.getLength(value) == 0) {
+            throw new IllegalArgumentException("Empty value passed for tag " + tag);
+        }
         setAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag), value);
     }
 
+    /**
+     * Because Java does not support unsigned integer types, we think it is a bad idea to encode them in SAM
+     * files.  If you must do so, however, you must call this method rather than setAttribute, because calling
+     * this method is the way to indicate that, e.g. a short array should be interpreted as unsigned shorts.
+     * @param value must be one of byte[], short[], int[]
+     */
+    public void setUnsignedArrayAttribute(final String tag, final Object value) {
+        if (!value.getClass().isArray()) {
+            throw new IllegalArgumentException("Non-array passed to setUnsignedArrayAttribute for tag " + tag);
+        }
+        if (Array.getLength(value) == 0) {
+            throw new IllegalArgumentException("Empty array passed to setUnsignedArrayAttribute for tag " + tag);
+        }
+        setAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag), value, true);
+    }
+    
     protected void setAttribute(final short tag, final Object value) {
+        setAttribute(tag, value, false);
+    }
+
+    protected void setAttribute(final short tag, final Object value, boolean isUnsignedArray) {
         if (value != null &&
                 !(value instanceof Byte || value instanceof Short || value instanceof Integer ||
                 value instanceof String || value instanceof Character || value instanceof Float ||
-                value instanceof byte[])) {
+                value instanceof byte[] || value instanceof short[] || value instanceof int[] ||
+                        value instanceof float[])) {
             throw new SAMException("Attribute type " + value.getClass() + " not supported. Tag: " +
                     SAMTagUtil.getSingleton().makeStringTag(tag));
         }
-        // It's a new tag
         if (value == null) {
             if (this.mAttributes != null) this.mAttributes = this.mAttributes.remove(tag);
         }
         else {
-            final SAMBinaryTagAndValue tmp = new SAMBinaryTagAndValue(tag, value);
+            final SAMBinaryTagAndValue tmp;
+            if(!isUnsignedArray) {
+                tmp = new SAMBinaryTagAndValue(tag, value);
+            }
+            else {
+                if (!value.getClass().isArray() || value instanceof float[]) {
+                    throw new SAMException("Attribute type " + value.getClass() +
+                            " cannot be encoded as an unsigned array. Tag: " +
+                            SAMTagUtil.getSingleton().makeStringTag(tag));
+                }
+                tmp = new SAMBinaryTagAndUnsignedArrayValue(tag, value);
+            }
             if (this.mAttributes == null) this.mAttributes = tmp;
             else this.mAttributes = this.mAttributes.insert(tmp);
         }

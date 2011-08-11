@@ -27,6 +27,7 @@ import net.sf.samtools.util.Iso8601Date;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.DateParser;
 
+import java.lang.reflect.Array;
 import java.util.Map;
 import java.util.Date;
 import java.text.DateFormat;
@@ -47,11 +48,6 @@ class TextTagCodec {
     private final String[] fields = new String[NUM_TAG_FIELDS];
 
     /**
-     * This is really a local variable of decodeTypeAndValue(), but allocated here to reduce allocations.
-     */
-    private final String[] typeAndValueFields = new String[NUM_TAG_FIELDS - 1];
-
-    /**
      * Convert in-memory representation of tag to SAM text representation.
      * @param tagName Two-character tag name.
      * @param value Tag value as approriate Object subclass.
@@ -70,7 +66,10 @@ class TextTagCodec {
                 tagType = 'i';
         }
         if (tagType == 'H') {
+            // H should never happen anymore.
             value = StringUtil.bytesToHexString((byte[])value);
+        } else if (tagType == 'B') {
+            value = getArrayType(value, false) + "," + encodeArrayValue(value);
         } else if (tagType == 'i') {
             final long longVal = ((Number) value).longValue();
             if (longVal > Integer.MAX_VALUE || longVal < Integer.MIN_VALUE) {
@@ -81,6 +80,53 @@ class TextTagCodec {
         sb.append(':');
         sb.append(value.toString());
         return sb.toString();
+    }
+
+    private char getArrayType(final Object array, final boolean isUnsigned) {
+        final char type;
+        final Class<?> componentType = array.getClass().getComponentType();
+        if (componentType == Float.TYPE) {
+            if (isUnsigned) throw new IllegalArgumentException("float array cannot be unsigned");
+            return 'f';
+        }
+        else if (componentType == Byte.TYPE)    type = 'c';
+        else if (componentType == Short.TYPE)   type = 's';
+        else if (componentType == Integer.TYPE) type = 'i';
+        else throw new IllegalArgumentException("Unrecognized array type " + componentType);
+        return (isUnsigned? Character.toUpperCase(type): type);
+    }
+
+    private String encodeArrayValue(final Object value) {
+        final StringBuilder ret = new StringBuilder(Array.get(value, 0).toString());
+        final int length = Array.getLength(value);
+        for (int i = 1; i < length; ++i) {
+            ret.append(",");
+            ret.append(Array.get(value, i).toString());
+        }
+        return ret.toString();
+
+    }
+
+    private long[] widenToUnsigned(final Object array) {
+        final Class<?> componentType = array.getClass().getComponentType();
+        final long mask;
+        if (componentType == Byte.TYPE)    mask = 0xffL;
+        else if (componentType == Short.TYPE)   mask = 0xffffL;
+        else if (componentType == Integer.TYPE) mask = 0xffffffffL;
+        else throw new IllegalArgumentException("Unrecognized unsigned array type " + componentType);
+        final long[] ret = new long[Array.getLength(array)];
+        for (int i = 0; i < ret.length; ++i) {
+            ret[i] = Array.getLong(array, i) & mask;
+        }
+        return ret;
+    }
+
+    String encodeUnsignedArray(final String tagName, final Object array) {
+        if (!array.getClass().isArray()) {
+            throw new IllegalArgumentException("Non-array passed to encodeUnsignedArray: " + array.getClass());
+        }
+        final long[] widened = widenToUnsigned(array);
+        return tagName + ":B:" + getArrayType(array, true) + "," + encodeArrayValue(widened);
     }
 
     /**
@@ -101,6 +147,7 @@ class TextTagCodec {
      * Convert typed tag in SAM text format (name:type:value) into tag name and Object value representation.
      * @param tag SAM text format name:type:value tag.
      * @return Tag name as 2-character String, and tag value in appropriate class based on tag type.
+     * If value is an unsigned array, then the value is a TagValueAndUnsignedArrayFlag object.
      */
     Map.Entry<String, Object> decode(final String tag) {
         final int numFields = StringUtil.splitConcatenateExcessTokens(tag, fields, ':');
@@ -126,52 +173,134 @@ class TextTagCodec {
         };
     }
 
-    /**
-     * Similar to decode() method above, but the tag name has already been stripped off.
-     * @param typeAndValue type:string-value, or, for backward-compatibility, just string-value.
-     * @return Value converted into the appropriate type.
-     */
-    Object decodeTypeAndValue(final String typeAndValue) {
-        // Allow colon in tag value
-        final int numFields = StringUtil.splitConcatenateExcessTokens(typeAndValue,  typeAndValueFields, ':');
-        if (numFields == 1) {
-            // For backward compatibility, if no colon, treat as String type
-            return typeAndValue;
-        }
-        return convertStringToObject(typeAndValueFields[0], typeAndValueFields[1]);
-    }
-
     private Object convertStringToObject(final String type, final String stringVal) {
-        final Object val;
         if (type.equals("Z")) {
-            val = stringVal;
+            return stringVal;
         } else if (type.equals("A")) {
             if (stringVal.length() != 1) {
                 throw new SAMFormatException("Tag of type A should have a single-character value");
             }
-            val = stringVal.charAt(0);
+            return stringVal.charAt(0);
         } else if (type.equals("i")) {
             try {
-                val = new Integer(stringVal);
+                return new Integer(stringVal);
             } catch (NumberFormatException e) {
                 throw new SAMFormatException("Tag of type i should have signed decimal value");
             }
         } else if (type.equals("f")) {
             try {
-                val = new Float(stringVal);
+                return new Float(stringVal);
             } catch (NumberFormatException e) {
                 throw new SAMFormatException("Tag of type f should have single-precision floating point value");
             }
         } else if (type.equals("H")) {
             try {
-                val = StringUtil.hexStringToBytes(stringVal);
+                return StringUtil.hexStringToBytes(stringVal);
             } catch (NumberFormatException e) {
                 throw new SAMFormatException("Tag of type H should have valid hex string with even number of digits");
             }
+        } else if (type.equals("B")) {
+            return covertStringArrayToObject(stringVal);
         } else {
             throw new SAMFormatException("Unrecognized tag type: " + type);
         }
-        return val;
+    }
+
+    private Object covertStringArrayToObject(final String stringVal) {
+        final String[] elementTypeAndValue = new String[2];
+        if (StringUtil.splitConcatenateExcessTokens(stringVal, elementTypeAndValue, ',') != 2) {
+            throw new SAMFormatException("Tag of type B should have an element type followed by comma");
+        }
+        if (elementTypeAndValue[0].length() != 1) {
+            throw new SAMFormatException("Unrecognized element type for array tag value: " + elementTypeAndValue[0]);
+        }
+        final char elementType = elementTypeAndValue[0].charAt(0);
+        final String[] stringValues = elementTypeAndValue[1].split(",");
+        if (stringValues.length == 0) throw new SAMFormatException("Tag of type B should have at least one element");
+        if (elementType == 'f') {
+            final float[] ret = new float[stringValues.length];
+            for (int i = 0; i < stringValues.length; ++i) {
+                try {
+                    ret[i] = Float.parseFloat(stringValues[i]);
+                } catch (NumberFormatException e) {
+                    throw new SAMFormatException("Array tag of type f should have single-precision floating point value");
+                }
+            }
+            return ret;
+        }
+        long mask = Long.MAX_VALUE;
+        long minValue = Long.MAX_VALUE;
+        long maxValue = Long.MIN_VALUE;
+        final boolean isUnsigned = Character.isUpperCase(elementType);
+        switch (Character.toLowerCase(elementType)) {
+            case 'c':
+                if (isUnsigned) {
+                    mask = 0xffL;
+                } else {
+                    minValue = Byte.MIN_VALUE;
+                    maxValue = Byte.MAX_VALUE;
+                }
+                break;
+            case 's':
+                if (isUnsigned) {
+                    mask = 0xffffL;
+                } else {
+                    minValue = Short.MIN_VALUE;
+                    maxValue = Short.MAX_VALUE;
+                }
+                break;
+            case 'i':
+                if (isUnsigned) {
+                    mask = 0xffffffffL;
+                } else {
+                    minValue = Integer.MIN_VALUE;
+                    maxValue = Integer.MAX_VALUE;
+                }
+                break;
+            default:
+                throw new SAMFormatException("Unrecognized array tag element type: " + elementType);
+        }
+        if (isUnsigned) {
+            minValue = 0;
+            maxValue = mask;
+        }
+        final long[] longValues = new long[stringValues.length];
+        for (int i = 0; i < stringValues.length; ++i) {
+            final long longValue;
+            try {
+                longValue = Long.parseLong(stringValues[i]);
+            } catch (NumberFormatException e) {
+                throw new SAMFormatException("Array tag of type " + elementType + " should have integral value");
+            }
+            if (longValue < minValue || longValue > maxValue) {
+                throw new SAMFormatException("Value for element of array tag of type " + elementType +
+                " is out of allowed range: " + longValue);
+            }
+            longValues[i] = longValue;
+        }
+
+        switch (Character.toLowerCase(elementType)) {
+            case 'c': {
+                final byte[] array = new byte[longValues.length];
+                for (int i = 0; i < longValues.length; ++i) array[i] = (byte)longValues[i];
+                if (isUnsigned) return new TagValueAndUnsignedArrayFlag(array, true);
+                else return array;
+            }
+            case 's': {
+                final short[] array = new short[longValues.length];
+                for (int i = 0; i < longValues.length; ++i) array[i] = (short)longValues[i];
+                if (isUnsigned) return new TagValueAndUnsignedArrayFlag(array, true);
+                else return array;
+            }
+            case 'i':{
+                final int[] array = new int[longValues.length];
+                for (int i = 0; i < longValues.length; ++i) array[i] = (int)longValues[i];
+                if (isUnsigned) return new TagValueAndUnsignedArrayFlag(array, true);
+                else return array;
+            }
+            default:
+                throw new SAMFormatException("Unrecognized array tag element type: " + elementType);
+        }
     }
 
     Iso8601Date decodeDate(final String dateStr) {
