@@ -24,8 +24,8 @@ for (i in 1:length(startFinder))
         }
 }
 
-metrics <- read.table(metricsFile, header=T, nrows=1, skip=firstBlankLine)
-histogram <- read.table(metricsFile, header=T, skip=secondBlankLine)
+metrics <- read.table(metricsFile, header=T, nrows=1, sep="\t", skip=firstBlankLine)
+histogram <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
 
 # Then plot the histogram as a PDF
 pdf(outputFile)
