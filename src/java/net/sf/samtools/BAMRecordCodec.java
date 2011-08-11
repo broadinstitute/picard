@@ -141,7 +141,7 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
             this.binaryCodec.writeBytes(qualities);
             SAMBinaryTagAndValue attribute = alignment.getBinaryAttributes();
             while (attribute != null) {
-                this.binaryTagCodec.writeTag(attribute.tag, attribute.value);
+                this.binaryTagCodec.writeTag(attribute.tag, attribute.value, attribute.isUnsignedArray());
                 attribute = attribute.getNext();
             }
         }

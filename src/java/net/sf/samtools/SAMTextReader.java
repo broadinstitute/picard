@@ -105,7 +105,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
         throw new UnsupportedOperationException("Cannot enable index memory mapping for a SAM text reader");
     }
 
-    void enableCrcChecking(boolean enabled) {
+    void enableCrcChecking(final boolean enabled) {
         // Do nothing - this has no meaning for SAM reading
     }
 
@@ -162,7 +162,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
      * @param fileSpan The file span.
      * @return An iterator over the given file span.
      */
-    CloseableIterator<SAMRecord> getIterator(SAMFileSpan fileSpan) {
+    CloseableIterator<SAMRecord> getIterator(final SAMFileSpan fileSpan) {
         throw new UnsupportedOperationException("Cannot directly iterate over regions within SAM text files.");
     }
 
@@ -445,7 +445,17 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
                 reportErrorParsingLine(e);
             }
             if (entry != null) {
-                samRecord.setAttribute(entry.getKey(), entry.getValue());
+                if (entry.getValue() instanceof TagValueAndUnsignedArrayFlag) {
+                    final TagValueAndUnsignedArrayFlag valueAndFlag = (TagValueAndUnsignedArrayFlag) entry.getValue();
+                    if (valueAndFlag.isUnsignedArray) {
+                        samRecord.setUnsignedArrayAttribute(entry.getKey(), valueAndFlag.value);
+                    }
+                    else {
+                        samRecord.setAttribute(entry.getKey(), valueAndFlag.value);
+                    }
+                } else {
+                    samRecord.setAttribute(entry.getKey(), entry.getValue());
+                }
             }
         }
     }
