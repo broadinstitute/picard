@@ -46,7 +46,9 @@ public class CloserUtil {
      * @param obj   The potentially closeable object
      */
     public static void close(Object obj) {
-        close(Arrays.asList(obj));
+        if (obj != null) {
+            close(Arrays.asList(obj));
+        }
     }
 
     /**
