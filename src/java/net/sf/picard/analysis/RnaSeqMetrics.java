@@ -51,6 +51,13 @@ public class RnaSeqMetrics extends MetricBase{
     /** Number of bases in primary aligments that do not align to any gene. */
     public long INTERGENIC_BASES;
 
+    /**
+     * Number of primary alignments that map to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
+     * counted in PF_ALIGNED_BASES, CORRECT_STRAND_READS, INCORRECT_STRAND_READS, or any of the base-counting metrics.
+     * These reads are counted in PF_BASES.
+     */
+    public long IGNORED_READS;
+
     /** Number of aligned reads that map to the correct strand.  0 if library is not strand-specific. */
     public long CORRECT_STRAND_READS;
 

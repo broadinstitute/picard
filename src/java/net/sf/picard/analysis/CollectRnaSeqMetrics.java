@@ -71,6 +71,12 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Option(doc="The PDF file to write out a plot of normalized position vs. coverage.", shortName="CHART", optional = true)
     public File CHART_OUTPUT;
 
+    @Option(doc="If a read maps to a sequence specified with this option, all the bases in the read are counted as ignored bases.  " +
+    "These reads are not counted as ")
+    public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
+
+    private Set<Integer> ignoredSequenceIndices = new HashSet<Integer>();
+
     private OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
     private final Map<Transcript, int[]> coverageByTranscript = new HashMap<Transcript, int[]>();
@@ -108,6 +114,14 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         else {
             ID_STRING = INPUT.getName();
         }
+
+        for (final String sequenceName: IGNORE_SEQUENCE) {
+            final SAMSequenceRecord sequenceRecord = header.getSequence(sequenceName);
+            if (sequenceRecord == null) {
+                throw new PicardException("Unrecognized sequence " + sequenceName + " passed as argument to IGNORE_SEQUENCE");
+            }
+            ignoredSequenceIndices.add(sequenceRecord.getSequenceIndex());
+        }
     }
 
     @Override
@@ -116,6 +130,11 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         if (rec.getReadFailsVendorQualityCheckFlag() || rec.getNotPrimaryAlignmentFlag()) return;
         this.metrics.PF_BASES += rec.getReadLength();
         if (rec.getReadUnmappedFlag()) return;
+
+        if (ignoredSequenceIndices.contains(rec.getReferenceIndex())) {
+            ++this.metrics.IGNORED_READS;
+            return;
+        }
 
         // Grab information about the alignment and overlapping genes etc.
         final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
