@@ -40,6 +40,7 @@ public class CollectRnaSeqMetricsTest {
     @Test
     public void basic() throws Exception {
         final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
 
         // Create a refFlat file with a single gene containing two exons, one of which is overlapped by the
         // ribosomal interval.
@@ -74,6 +75,8 @@ public class CollectRnaSeqMetricsTest {
         builder.addFrag("frag2", sequenceIndex, 450, true);
         builder.addFrag("frag3", sequenceIndex, 225, false);
 
+        builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
+
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
@@ -95,7 +98,8 @@ public class CollectRnaSeqMetricsTest {
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
                 "REF_FLAT=" +            refFlatFile.getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
-                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND"
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                "IGNORE_SEQUENCE=" +ignoredSequence
         });
         Assert.assertEquals(ret, 0);
 
@@ -104,6 +108,7 @@ public class CollectRnaSeqMetricsTest {
 
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.PF_ALIGNED_BASES, 324);
+        Assert.assertEquals(metrics.PF_BASES, 360);
         Assert.assertEquals(metrics.RIBOSOMAL_BASES, 47);
         Assert.assertEquals(metrics.CODING_BASES, 119);
         Assert.assertEquals(metrics.UTR_BASES, 62);
@@ -111,5 +116,6 @@ public class CollectRnaSeqMetricsTest {
         Assert.assertEquals(metrics.INTERGENIC_BASES, 46);
         Assert.assertEquals(metrics.CORRECT_STRAND_READS, 4);
         Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 3);
+        Assert.assertEquals(metrics.IGNORED_READS, 1);
     }
 }
