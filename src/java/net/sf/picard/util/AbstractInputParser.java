@@ -49,6 +49,7 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
     private int wordCount = 0;      /* The number of delimiter-separated "words" per line of the file.
                                        We can save a little caclulation, or handle files with varying numbers of
                                        words per line, by specifying this if known in advance */
+    private boolean skipBlankLines = true;
 
     /**
      * Closes this stream and releases any system resources associated with it.
@@ -83,7 +84,7 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
         do {
             nextLine = readNextLine();
         }
-        while (nextLine != null && isComment(nextLine));
+        while (nextLine != null && (isComment(nextLine) || (this.skipBlankLines && isBlank(nextLine))));
         return nextLine == null ? null : parseLine(nextLine);
     }
 
@@ -166,6 +167,16 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
     }
 
     /**
+     * Determines whether a given line is a comment
+     *
+     * @param line  the line to evaluate
+     * @return  true if the line is a comment (and should be ignored) otherwise false
+     */
+    protected boolean isBlank(final byte[] line) {
+        return line.length == 0;
+    }
+
+    /**
      * Determines whether a given character is a delimiter
      *
      * @param b the character to evaluate
@@ -180,5 +191,9 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
     protected boolean isTreatGroupedDelimitersAsOne() { return treatGroupedDelimitersAsOne; }
     protected void setTreatGroupedDelimitersAsOne(final boolean treatGroupedDelimitersAsOne) {
         this.treatGroupedDelimitersAsOne = treatGroupedDelimitersAsOne;
+    }
+    protected boolean isSkipBlankLines() { return this.skipBlankLines; }
+    protected void setSkipBlankLines(final boolean skipBlankLines) {
+        this.skipBlankLines = skipBlankLines;
     }
 }
