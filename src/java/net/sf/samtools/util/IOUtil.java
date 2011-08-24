@@ -25,6 +25,7 @@ package net.sf.samtools.util;
 
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
 
@@ -34,6 +35,10 @@ import java.io.File;
 public class IOUtil {
     // Purposely not final to give folks a back door to change it!
     public static int STANDARD_BUFFER_SIZE = 1024 * 128; // == 128k
+
+    public static final long ONE_GB   = 1024 * 1024 * 1024;
+    public static final long TWO_GBS  = 2 * ONE_GB;
+    public static final long FIVE_GBS = 5 * ONE_GB;
 
     /**
      * Wrap the given stream in a BufferedInputStream, if it isn't already wrapper
@@ -78,4 +83,31 @@ public class IOUtil {
         return !file.exists() || file.isFile();
     }
 
+    /**
+     * Creates a new tmp file on one of the available temp filesystems, registers it for deletion
+     * on JVM exit and then returns it.
+     */
+    public static File newTempFile(final String prefix, final String suffix,
+                                   final File[] tmpDirs, final long minBytesFree) throws IOException {
+        File f = null;
+
+        for (int i=0; i<tmpDirs.length; ++i) {
+            if (tmpDirs[i].getUsableSpace() > minBytesFree || i == tmpDirs.length-1) {
+                f = File.createTempFile(prefix, suffix, tmpDirs[i]);
+                f.deleteOnExit();
+                break;
+            }
+        }
+
+        return f;
+    }
+
+    /** Returns a default tmp directory. */
+    public static File getDefaultTmpDir() {
+        final String user = System.getProperty("user.name");
+        final String tmp = System.getProperty("java.io.tmpdir");
+
+        if (tmp.endsWith("/" + user)) return new File(tmp);
+        else return new File(tmp, user);
+    }
 }

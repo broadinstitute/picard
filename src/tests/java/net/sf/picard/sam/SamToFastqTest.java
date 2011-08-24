@@ -31,6 +31,7 @@ import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -189,7 +190,7 @@ public class SamToFastqTest {
         final Map<String, Set<String>> outputSets = new HashMap<String, Set<String>>(groupFiles.length);
 
         SamToFastq samToFq = new SamToFastq();
-        String tmpDir = samToFq.TMP_DIR + "/";
+        String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
         String [] args = new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",

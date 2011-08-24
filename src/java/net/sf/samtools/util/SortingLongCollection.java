@@ -59,7 +59,7 @@ public class SortingLongCollection {
     /**
      * Where files of sorted values go.
      */
-    private final File tmpDir;
+    private final File[] tmpDir;
 
     private final int maxValuesInRam;
     private int numValuesInRam = 0;
@@ -92,7 +92,7 @@ public class SortingLongCollection {
      * @param maxValuesInRam how many values to accumulate before spilling to disk
      * @param tmpDir Where to write files of values that will not fit in RAM
      */
-    public SortingLongCollection(final int maxValuesInRam, final File tmpDir) {
+    public SortingLongCollection(final int maxValuesInRam, final File... tmpDir) {
         if (maxValuesInRam <= 0) {
             throw new IllegalArgumentException("maxValuesInRam must be > 0");
         }
@@ -152,7 +152,7 @@ public class SortingLongCollection {
     private void spillToDisk() {
         try {
             Arrays.sort(this.ramValues, 0, this.numValuesInRam);
-            final File f = File.createTempFile("sortingcollection.", ".tmp", this.tmpDir);
+            final File f = IOUtil.newTempFile("sortingcollection.", ".tmp", this.tmpDir, IOUtil.FIVE_GBS);
             RandomAccessFile os = null;
             try {
                 final long numBytes = this.numValuesInRam * SIZEOF;
