@@ -28,6 +28,7 @@ import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.*;
+import java.util.Set;
 
 /**
  * Parse a tabbed text file in which columns are found by looking at a header line rather than by position.
@@ -126,6 +127,14 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
      */
     public boolean hasColumn(final String columnLabel) {
         return columnLabelIndices.containsKey(columnLabel);
+    }
+
+    /**
+     *
+     * @return The set of column labels for this file in no particular order.
+     */
+    public Set<String> columnLabels() {
+        return columnLabelIndices.keySet();
     }
 
     /**

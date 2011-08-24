@@ -24,35 +24,15 @@
 
 package net.sf.picard.analysis;
 
-import net.sf.picard.metrics.MetricBase;
+import net.sf.picard.metrics.MultilevelMetrics;
 
 /**
  * High level metrics about the alignment of reads within a SAM file, produced by
  * the CollectAlignmentSummaryMetrics program and usually stored in a file with
  * the extension ".alignment_summary_metrics".
  */
-public class AlignmentSummaryMetrics extends MetricBase {
+public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public enum Category { UNPAIRED, FIRST_OF_PAIR, SECOND_OF_PAIR, PAIR }
-
-    /**
-     * The sample to which these alignment metrics apply.  If null, it means these metrics
-     * apply to all reads in the file.
-     */
-    public String SAMPLE;
-
-    /**
-     * The library to which these alignment metrics apply.  If null, it means these metrics
-     * were calculated on the sample and include all libraries in the file that contribute
-     * to that sample.
-     */
-    public String LIBRARY = null;
-
-    /**
-     * The read group to which these alignment metrics apply.  If null, it means these metrics
-     * were calculated on the sample or library level, and include all read groups in the file
-     * that contribute to the sample or library.
-     */
-    public String READ_GROUP = null;
 
     /**
      * One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the

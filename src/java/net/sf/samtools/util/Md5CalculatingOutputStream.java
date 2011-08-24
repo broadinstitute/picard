@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.SAMException;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -38,6 +40,7 @@ public class Md5CalculatingOutputStream extends OutputStream {
     private final OutputStream os;
     private final MessageDigest md5;
     private final File digestFile;
+    private String hash;
 
     /**
      * Constructor that takes in the OutputStream that we are wrapping
@@ -45,6 +48,7 @@ public class Md5CalculatingOutputStream extends OutputStream {
      */
     public Md5CalculatingOutputStream(OutputStream os, File digestFile) {
         super();
+        this.hash = null;
         this.os = os;
         this.digestFile = digestFile;
 
@@ -71,23 +75,38 @@ public class Md5CalculatingOutputStream extends OutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         md5.update(b, off, len);
         os.write(b, off, len);
-
     }
 
-    private String getDigest() {
-        String hash = new BigInteger(1, md5.digest()).toString(16);
-        if (hash.length() != 32) {
-            final String zeros = "00000000000000000000000000000000";
-            hash = zeros.substring(0, 32 - hash.length()) + hash;
+    public String md5() {
+        if(hash == null) {
+            throw new SAMException("Attempting to access md5 digest before the entire file is written!  Call close first.");
         }
+
         return hash;
+    }
+
+    private String makeHash() {
+        if(hash == null) {
+            hash = new BigInteger(1, md5.digest()).toString(16);
+            if (hash.length() != 32) {
+                final String zeros = "00000000000000000000000000000000";
+                hash = zeros.substring(0, 32 - hash.length()) + hash;
+            }
+            return hash;
+        } else {
+            throw new SAMException("Calling close on Md5CalculatingOutputStream twice!");
+        }
     }
 
     public void close() throws IOException {
         os.close();
-        BufferedWriter writer = new BufferedWriter(new FileWriter(digestFile));
-        writer.write(getDigest());
-        writer.close();
+        makeHash();
+
+        if(digestFile != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(digestFile));
+            writer.write(hash);
+            writer.close();
+        }
     }
 
     // Pass-through method

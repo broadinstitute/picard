@@ -114,6 +114,27 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /**
+     * Checks that a directory is non-null, extent, readable and a directory
+     * otherwise a runtime exception is thrown.
+     *
+     * @param dir the dir to check for writability
+     */
+    public static void assertDirectoryIsReadable(final File dir) {
+        if (dir == null) {
+            throw new IllegalArgumentException("Cannot check readability of null file.");
+        }
+        else if (!dir.exists()) {
+            throw new PicardException("Directory does not exist: " + dir.getAbsolutePath());
+        }
+        else if (!dir.isDirectory()) {
+            throw new PicardException("Cannot read from directory because it is not a directory: " + dir.getAbsolutePath());
+        }
+        else if (!dir.canRead()) {
+            throw new PicardException("Directory exists but is not readable: " + dir.getAbsolutePath());
+        }
+    }
+
+    /**
      * Checks that the two files are the same length, and have the same content, otherwise throws a runtime exception.
      */
     public static void assertFilesEqual(final File f1, final File f2) {
