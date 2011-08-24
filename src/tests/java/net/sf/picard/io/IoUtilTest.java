@@ -24,10 +24,12 @@
 package net.sf.picard.io;
 
 import net.sf.picard.util.ProcessExecutor;
+import net.sf.samtools.util.CloserUtil;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 
 import java.io.*;
+import java.nio.charset.Charset;
 
 public class IoUtilTest {
 
@@ -85,4 +87,25 @@ public class IoUtilTest {
         lnToSymlink.delete();
         lnDir.delete();
     }
+
+    @Test
+    public void testUtfWriting() throws IOException {
+        final String utf8 = new StringWriter().append((char)168).append((char)197).toString();
+        for (String ext : TEST_FILE_EXTENSIONS) {
+            final File f = File.createTempFile(TEST_FILE_PREFIX, ext);
+            f.deleteOnExit();
+
+            final BufferedWriter writer = IoUtil.openFileForBufferedUtf8Writing(f);
+            writer.write(utf8);
+            CloserUtil.close(writer);
+
+            final BufferedReader reader = IoUtil.openFileForBufferedUtf8Reading(f);
+            final String line = reader.readLine();
+            Assert.assertEquals(utf8, line, f.getAbsolutePath());
+
+            CloserUtil.close(reader);
+
+        }
+    }
+
 }

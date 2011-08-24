@@ -27,6 +27,7 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -262,11 +263,25 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
      */
     public static BufferedWriter openFileForBufferedWriting(final File file) {
-        try {
-            return new BufferedWriter(new FileWriter(file, false), STANDARD_BUFFER_SIZE);
-        } catch (IOException ioe) {
-            throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
-        }
+        return openFileForBufferedWriting(file, false);
+    }
+
+    /**
+     * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
+     */
+    public static BufferedWriter openFileForBufferedUtf8Writing(final File file) {
+        return new BufferedWriter(new OutputStreamWriter(
+            openFileForWriting(file), Charset.forName("UTF-8")), STANDARD_BUFFER_SIZE);
+    }
+
+    /**
+     * Opens a file for reading, decompressing it if necessary
+     *
+     * @param file  The file to open
+     * @return the input stream to read from
+     */
+    public static BufferedReader openFileForBufferedUtf8Reading(final File file) {
+        return new BufferedReader(new InputStreamReader(openFileForReading(file), Charset.forName("UTF-8")));
     }
 
     /**
