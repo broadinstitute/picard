@@ -27,9 +27,7 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Parse a tabbed text file in which columns are found by looking at a header line rather than by position.
@@ -153,5 +151,9 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
 
     public int getCurrentLineNumber() {
         return parser.getCurrentLineNumber();
+    }
+
+    public Set<String> getColumnNames() {
+        return Collections.unmodifiableSet(this.columnLabelIndices.keySet());
     }
 }
