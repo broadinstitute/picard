@@ -80,8 +80,16 @@ public class IntervalList implements Iterable<Interval> {
 
     /** Sorts and uniques the list of intervals held within this interval list. */
     public void unique() {
+        unique(true);
+    }
+
+    /**
+     * Sorts and uniques the list of intervals held within this interval list.
+     * @param concatenateNames If false, interval names are not concatenated when merging intervals to save space.
+     */
+    public void unique(final boolean concatenateNames) {
         sort();
-        final List<Interval> tmp = getUniqueIntervals();
+        final List<Interval> tmp = getUniqueIntervals(concatenateNames);
         this.intervals.clear();
         this.intervals.addAll(tmp);
     }
@@ -101,6 +109,14 @@ public class IntervalList implements Iterable<Interval> {
      * @return the set of unique intervals condensed from the contained intervals
      */
     public List<Interval> getUniqueIntervals() {
+        return getUniqueIntervals(true);
+    }
+
+    /**
+     * Merges list of intervals and reduces them like net.sf.picard.util.IntervalList#getUniqueIntervals()
+     * @param concatenateNames If false, the merged interval has the name of the earlier interval.  This keeps name shorter.
+     */
+    public List<Interval> getUniqueIntervals(final boolean concatenateNames) {
         if (getHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             sort();
         }
@@ -111,11 +127,12 @@ public class IntervalList implements Iterable<Interval> {
         while (iterator.hasNext()) {
             final Interval next = iterator.next();
             if (previous.intersects(next) || previous.abuts(next)) {
+                final String intervalName = (concatenateNames? previous.getName() + "|" + next.getName(): previous.getName());
                 previous = new Interval(previous.getSequence(),
                                         previous.getStart(),
                                         Math.max(previous.getEnd(), next.getEnd()),
                                         previous.isNegativeStrand(),
-                                        previous.getName() + "|" + next.getName());
+                                        intervalName);
             }
             else {
                 unique.add(previous);
