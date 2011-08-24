@@ -25,7 +25,7 @@
 package net.sf.picard.analysis;
 
 import net.sf.picard.sam.SamPairUtil.PairOrientation;
-import net.sf.picard.metrics.MetricBase;
+import net.sf.picard.metrics.MultilevelMetrics;
 
 /**
  * Metrics about the insert size distribution of a paired-end library, created by the
@@ -35,26 +35,7 @@ import net.sf.picard.metrics.MetricBase;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-public class InsertSizeMetrics extends MetricBase {
-    /**
-     * The sample to which these insert size metrics apply.  If null, it means these metrics
-     * apply to all reads in the file.
-     */
-    public String SAMPLE;
-
-    /**
-     * The library to which these insert size metrics apply.  If null, it means these metrics
-     * were calculated on the sample and include all libraries in the file that contribute
-     * to that sample
-     */
-    public String LIBRARY = null;
-
-    /**
-     * The read group to which these insert size metrics apply.  If null, it means these metrics
-     * were calculated on the sample or library level, and include all read groups in the file
-     * that contribute to the sample or library.
-     */
-    public String READ_GROUP = null;
+public class InsertSizeMetrics extends MultilevelMetrics {
 
     /** The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome. */
     public double MEDIAN_INSERT_SIZE;

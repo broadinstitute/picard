@@ -48,6 +48,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     public static final String HISTO_HEADER = "## HISTOGRAM\t";
     public static final String METRIC_HEADER = "## METRICS CLASS\t";
 
+    private final Set<String> columnLabels = new HashSet<String>();
     private final List<Header> headers = new ArrayList<Header>();
     private final List<BEAN> metrics = new ArrayList<BEAN>();
     private final List<Histogram<HKEY>> histograms = new ArrayList<Histogram<HKEY>>();
@@ -59,10 +60,12 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     public List<Header> getHeaders() { return Collections.unmodifiableList(this.headers); }
 
     /** Adds a bean to the collection of metrics. */
-    public void addMetric(BEAN bean) { this.metrics.add(bean); }
+    public void addMetric(final BEAN bean) { this.metrics.add(bean); }
 
     /** Returns the list of headers. */
     public List<BEAN> getMetrics() { return Collections.unmodifiableList(this.metrics); }
+
+    public Set<String> getMetricsColumnLabels() { return Collections.unmodifiableSet(this.columnLabels); }
 
     /** Returns the histogram contained in the metrics file if any. */
     public Histogram<HKEY> getHistogram() {
@@ -71,7 +74,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Sets the histogram contained in the metrics file. */
-    public void setHistogram(Histogram<HKEY> histogram) {
+    public void setHistogram(final Histogram<HKEY> histogram) {
         if (this.histograms.isEmpty()) {
             if (histogram != null) this.histograms.add(histogram);
         }
@@ -81,8 +84,13 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Adds a histogram to the list of histograms in the metrics file. */
-    public void addHistogram(Histogram<HKEY> histogram) {
+    public void addHistogram(final Histogram<HKEY> histogram) {
         this.histograms.add(histogram);
+    }
+
+    //** Returns an unmodifiable version of the histogram list */
+    public List<Histogram<HKEY>> getAllHistograms() {
+        return Collections.unmodifiableList(histograms);
     }
 
     /** Returns the number of histograms added to the metrics file. */
@@ -92,9 +100,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
     
     /** Returns the list of headers with the specified type. */
-    public List<Header> getHeaders(Class<? extends Header> type) {
+    public List<Header> getHeaders(final Class<? extends Header> type) {
         List<Header> tmp = new ArrayList<Header>();
-        for (Header h : this.headers) {
+        for (final Header h : this.headers) {
             if (h.getClass().equals(type)) {
                 tmp.add(h);
             }
@@ -109,7 +117,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
      *
      * @param f a File into which to write the metrics
      */
-    public void write(File f) {
+    public void write(final File f) {
         FileWriter w = null;
         try {
             w = new FileWriter(f);
@@ -134,10 +142,10 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
      *
      * @param w a Writer into which to write the metrics
      */
-    public void write(Writer w) {
+    public void write(final Writer w) {
         try {
-            FormatUtil formatter = new FormatUtil();
-            BufferedWriter out = new BufferedWriter(w);
+            final FormatUtil formatter = new FormatUtil();
+            final BufferedWriter out = new BufferedWriter(w);
             printHeaders(out);
             out.newLine();
 
@@ -154,8 +162,8 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Prints the headers into the provided PrintWriter. */
-    private void printHeaders(BufferedWriter out) throws IOException {
-        for (Header h : this.headers) {
+    private void printHeaders(final BufferedWriter out) throws IOException {
+        for (final Header h : this.headers) {
             out.append(MAJOR_HEADER_PREFIX);
             out.append(h.getClass().getName());
             out.newLine();
@@ -166,7 +174,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Prints each of the metrics entries into the provided PrintWriter. */
-    private void printBeanMetrics(BufferedWriter out, FormatUtil formatter) throws IOException {
+    private void printBeanMetrics(final BufferedWriter out, final FormatUtil formatter) throws IOException {
         if (this.metrics.isEmpty()) {
             return;
         }
@@ -176,7 +184,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         out.newLine();
 
         // Write out the column headers
-        Field[] fields = getBeanType().getFields();
+        final Field[] fields = getBeanType().getFields();
         final int fieldCount = fields.length;
 
         for (int i=0; i<fieldCount; ++i) {
@@ -190,10 +198,10 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         }
 
         // Write out each of the data rows
-        for (BEAN bean : this.metrics) {
+        for (final BEAN bean : this.metrics) {
             for (int i=0; i<fieldCount; ++i) {
                 try {
-                    Object value = fields[i].get(bean);
+                    final Object value = fields[i].get(bean);
                     out.append(StringUtil.assertCharactersNotInString(formatter.format(value), '\t', '\n'));
 
                     if (i < fieldCount - 1) {
@@ -214,9 +222,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Prints the histogram if one is present. */
-    private void printHistogram(BufferedWriter out, FormatUtil formatter) throws IOException {
+    private void printHistogram(final BufferedWriter out, final FormatUtil formatter) throws IOException {
         final List<Histogram<HKEY>> nonEmptyHistograms = new ArrayList<Histogram<HKEY>>();
-        for (Histogram<HKEY> histo : this.histograms) {
+        for (final Histogram<HKEY> histo : this.histograms) {
             if (!histo.isEmpty()) nonEmptyHistograms.add(histo);
         }
 
@@ -225,8 +233,8 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         }
 
         // Build a combined key set.  Assume comparator is the same for all Histograms
-        java.util.Set<HKEY> keys = new TreeSet<HKEY>(nonEmptyHistograms.get(0).comparator());
-        for (Histogram<HKEY> histo : nonEmptyHistograms) {
+        final java.util.Set<HKEY> keys = new TreeSet<HKEY>(nonEmptyHistograms.get(0).comparator());
+        for (final Histogram<HKEY> histo : nonEmptyHistograms) {
             if (histo != null) keys.addAll(histo.keySet());
         }
 
@@ -236,17 +244,17 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
         // Output a header row
         out.append(StringUtil.assertCharactersNotInString(nonEmptyHistograms.get(0).getBinLabel(), '\t', '\n'));
-        for (Histogram<HKEY> histo : nonEmptyHistograms) {
+        for (final Histogram<HKEY> histo : nonEmptyHistograms) {
             out.append(SEPARATOR);
             out.append(StringUtil.assertCharactersNotInString(histo.getValueLabel(), '\t', '\n'));
         }
         out.newLine();
 
-        for (HKEY key : keys) {
+        for (final HKEY key : keys) {
             out.append(key.toString());
 
-            for (Histogram<HKEY> histo : nonEmptyHistograms) {
-                Histogram<HKEY>.Bin bin = histo.get(key);
+            for (final Histogram<HKEY> histo : nonEmptyHistograms) {
+                final Histogram<HKEY>.Bin bin = histo.get(key);
                 final double value = (bin == null ? 0 : bin.getValue());
 
                 out.append(SEPARATOR);
@@ -267,9 +275,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Reads the Metrics in from the given reader. */
-    public void read(Reader r) {
-        BufferedReader in = new BufferedReader(r);
-        FormatUtil formatter = new FormatUtil();
+    public void read(final Reader r) {
+        final BufferedReader in = new BufferedReader(r);
+        final FormatUtil formatter = new FormatUtil();
         String line = null;
 
         try {
@@ -288,7 +296,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                         throw new IllegalStateException("Consecutive header class lines encountered.");
                     }
                     
-                    String className = line.substring(MAJOR_HEADER_PREFIX.length()).trim();
+                    final String className = line.substring(MAJOR_HEADER_PREFIX.length()).trim();
                     try {
                         header = (Header) loadClass(className, true).newInstance();
                     }
@@ -321,7 +329,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 // Then read the metrics if there are any
                 if (line.startsWith(METRIC_HEADER)) {
                     // Get the metric class from the header
-                    String className = line.split(SEPARATOR)[1];
+                    final String className = line.split(SEPARATOR)[1];
                     Class<?> type = null;
                     try {
                         type = loadClass(className, true);
@@ -331,8 +339,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                     }
 
                     // Read the next line with the column headers
-                    String[] fieldNames = in.readLine().split(SEPARATOR);
-                    Field[] fields = new Field[fieldNames.length];
+                    final String[] fieldNames = in.readLine().split(SEPARATOR);
+                    Collections.addAll(columnLabels, fieldNames);
+                    final Field[] fields = new Field[fieldNames.length];
                     for (int i=0; i<fieldNames.length; ++i) {
                         try {
                             fields[i] = type.getField(fieldNames[i]);
@@ -380,25 +389,25 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
             }
             if (line != null && line.startsWith(HISTO_HEADER)) {
                 // Get the key type of the histogram
-                String keyClassName = line.split(SEPARATOR)[1].trim();
+                final String keyClassName = line.split(SEPARATOR)[1].trim();
                 Class<?> keyClass = null;
 
                 try { keyClass = loadClass(keyClassName, true); }
                 catch (ClassNotFoundException cnfe) { throw new PicardException("Could not load class with name " + keyClassName); }
 
                 // Read the next line with the bin and value labels
-                String[] labels = in.readLine().split(SEPARATOR);
+                final String[] labels = in.readLine().split(SEPARATOR);
                 for (int i=1; i<labels.length; ++i) {
                     this.histograms.add(new Histogram<HKEY>(labels[0], labels[i]));
                 }
 
                 // Read the entries in the histograms
                 while ((line = in.readLine()) != null && !"".equals(line)) {
-                    String[] fields = line.trim().split(SEPARATOR);
-                    HKEY key = (HKEY) formatter.parseObject(fields[0], keyClass);
+                    final String[] fields = line.trim().split(SEPARATOR);
+                    final HKEY key = (HKEY) formatter.parseObject(fields[0], keyClass);
 
                     for (int i=1; i<fields.length; ++i) {
-                        double value = formatter.parseDouble(fields[i]);
+                        final double value = formatter.parseDouble(fields[i]);
                         this.histograms.get(i-1).increment(key, value);
                     }
                 }
@@ -410,9 +419,9 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
     }
 
     /** Attempts to load a class, taking into account that some classes have "migrated" from the broad to sf. */
-    private Class<?> loadClass(String className, boolean tryOtherPackages) throws ClassNotFoundException {
+    private Class<?> loadClass(final String className, final boolean tryOtherPackages) throws ClassNotFoundException {
         // List of alternative packages to check in case classes moved around
-        String[] packages = new String[] {
+        final String[] packages = new String[] {
                 "edu.mit.broad.picard.genotype.concordance",
                 "edu.mit.broad.picard.genotype.fingerprint",
                 "edu.mit.broad.picard.ic",
@@ -450,14 +459,14 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
     /** Checks that the headers, metrics and histogram are all equal. */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o == null) {
             return false;
         }
         if (getClass() != o.getClass()) {
             return false;
         }
-        MetricsFile that = (MetricsFile) o;
+        final MetricsFile that = (MetricsFile) o;
 
         if (!areHeadersEqual(that)) {
             return false;
@@ -472,15 +481,15 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         return true;
     }
 
-    public boolean areHeadersEqual(MetricsFile that) {
+    public boolean areHeadersEqual(final MetricsFile that) {
         return this.headers.equals(that.headers);
     }
 
-    public boolean areMetricsEqual(MetricsFile that) {
+    public boolean areMetricsEqual(final MetricsFile that) {
         return this.metrics.equals(that.metrics);
     }
 
-    public boolean areHistogramsEqual(MetricsFile that) {
+    public boolean areHistogramsEqual(final MetricsFile that) {
         return this.histograms.equals(that.histograms);
     }
 
