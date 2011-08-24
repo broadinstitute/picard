@@ -80,7 +80,7 @@ public class FixMateInformation extends CommandLineProgram {
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
         for (final File f : INPUT) {
             IoUtil.assertFileIsReadable(f);
-            SAMFileReader reader = new SAMFileReader(f);
+            final SAMFileReader reader = new SAMFileReader(f);
             readers.add(new SAMFileReader(f));
             if (reader.getFileHeader().getSortOrder() != SortOrder.queryname) allQueryNameSorted = false;
         }
@@ -117,8 +117,8 @@ public class FixMateInformation extends CommandLineProgram {
             // Deal with merging if necessary
             Iterator<SAMRecord> tmp;
             if (INPUT.size() > 1) {
-                List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
-                for (SAMFileReader reader : readers) {
+                final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
+                for (final SAMFileReader reader : readers) {
                     headers.add(reader.getFileHeader());
                 }
                 final SortOrder sortOrder = (allQueryNameSorted? SortOrder.queryname: SortOrder.unsorted);
@@ -249,13 +249,13 @@ public class FixMateInformation extends CommandLineProgram {
         return 0;
     }
 
-    protected void createSamFileWriter(SAMFileHeader header) {
+    protected void createSamFileWriter(final SAMFileHeader header) {
         out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
                   header.getSortOrder() == SortOrder.queryname, OUTPUT);
 
     }
 
-    protected void writeAlignment(SAMRecord sam) {
+    protected void writeAlignment(final SAMRecord sam) {
         out.addAlignment(sam);
     }
 

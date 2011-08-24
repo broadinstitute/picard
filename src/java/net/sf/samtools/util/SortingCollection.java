@@ -40,8 +40,7 @@ import java.util.*;
  * If Snappy DLL is available and snappy.disable system property is not set to true, then Snappy is used
  * to compress temporary files.
  */
-public class SortingCollection<T>
-        implements Iterable<T> {
+public class SortingCollection<T> implements Iterable<T> {
 
     /**
      * Client must implement this class, which defines the way in which records are written to and
@@ -80,10 +79,11 @@ public class SortingCollection<T>
         Codec<T> clone();
     }
 
-    /**
-     * Where files of sorted records go.
-     */
-    private final File tmpDir;
+    /** Directories where files of sorted records go. */
+    private final File[] tmpDirs;
+
+    /** The minimum amount of space free on a temp filesystem to write a file there. */
+    private final long TMP_SPACE_FREE = IOUtil.FIVE_GBS;
 
     /**
      * Used to write records to file, and used as a prototype to create codecs for reading.
@@ -123,11 +123,16 @@ public class SortingCollection<T>
      * @param tmpDir Where to write files of records that will not fit in RAM
      */
     private SortingCollection(final Class<T> componentType, final SortingCollection.Codec<T> codec,
-                             final Comparator<T> comparator, final int maxRecordsInRam, final File tmpDir) {
+                             final Comparator<T> comparator, final int maxRecordsInRam, final File... tmpDir) {
         if (maxRecordsInRam <= 0) {
             throw new IllegalArgumentException("maxRecordsInRam must be > 0");
         }
-        this.tmpDir = tmpDir;
+
+        if (tmpDir == null || tmpDir.length == 0) {
+            throw new IllegalArgumentException("At least one temp directory must be provided.");
+        }
+
+        this.tmpDirs = tmpDir;
         this.codec = codec;
         this.comparator = comparator;
         this.maxRecordsInRam = maxRecordsInRam;
@@ -196,12 +201,11 @@ public class SortingCollection<T>
     private void spillToDisk() {
         try {
             Arrays.sort(this.ramRecords, 0, this.numRecordsInRam, this.comparator);
-            final File f = File.createTempFile("sortingcollection.", ".tmp", this.tmpDir);
+            final File f = newTempFile();
             OutputStream os = null;
             try {
                 os = tempStreamFactory.wrapTempOutputStream(new FileOutputStream(f), IOUtil.STANDARD_BUFFER_SIZE);
                 this.codec.setOutputStream(os);
-                f.deleteOnExit();
                 for (int i = 0; i < this.numRecordsInRam; ++i) {
                     this.codec.encode(ramRecords[i]);
                     // Facilitate GC
@@ -223,6 +227,14 @@ public class SortingCollection<T>
         catch (IOException e) {
             throw new RuntimeIOException(e);
         }
+    }
+
+    /**
+     * Creates a new tmp file on one of the available temp filesystems, registers it for deletion
+     * on JVM exit and then returns it.
+     */
+    private File newTempFile() throws IOException {
+        return IOUtil.newTempFile("sortingcollection.", ".tmp", this.tmpDirs, TMP_SPACE_FREE);
     }
 
     /**
@@ -266,10 +278,33 @@ public class SortingCollection<T>
                                                        final SortingCollection.Codec<T> codec,
                                                        final Comparator<T> comparator,
                                                        final int maxRecordsInRAM,
-                                                       final File tmpDir) {
+                                                       final File... tmpDir) {
         return new SortingCollection<T>(componentType, codec, comparator, maxRecordsInRAM, tmpDir);
 
     }
+
+    /**
+     * Syntactic sugar around the ctor, to save some typing of type parameters
+     *
+     * @param componentType Class of the record to be sorted.  Necessary because of Java generic lameness.
+     * @param codec For writing records to file and reading them back into RAM
+     * @param comparator Defines output sort order
+     * @param maxRecordsInRAM how many records to accumulate in memory before spilling to disk
+     * @param tmpDirs Where to write files of records that will not fit in RAM
+     */
+    public static <T> SortingCollection<T> newInstance(final Class<T> componentType,
+                                                       final SortingCollection.Codec<T> codec,
+                                                       final Comparator<T> comparator,
+                                                       final int maxRecordsInRAM,
+                                                       final Collection<File> tmpDirs) {
+        return new SortingCollection<T>(componentType,
+                                        codec,
+                                        comparator,
+                                        maxRecordsInRAM,
+                                        tmpDirs.toArray(new File[tmpDirs.size()]));
+
+    }
+
 
     /**
      * Syntactic sugar around the ctor, to save some typing of type parameters.  Writes files to java.io.tmpdir

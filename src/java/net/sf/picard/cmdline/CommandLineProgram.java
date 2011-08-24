@@ -38,6 +38,7 @@ import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.BlockCompressedStreamConstants;
+import net.sf.samtools.util.IOUtil;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -64,10 +65,8 @@ import net.sf.samtools.util.BlockCompressedStreamConstants;
  */
 public abstract class CommandLineProgram {
 
-    @Option(common=true)
-    public File TMP_DIR = (System.getProperty("java.io.tmpdir").endsWith("/" + System.getProperty("user.name"))?
-            new File(System.getProperty("java.io.tmpdir")):
-            new File(System.getProperty("java.io.tmpdir"), System.getProperty("user.name")));
+    @Option(common=true, optional=true)
+    public List<File> TMP_DIR = new ArrayList<File>();
 
     @Option(doc = "Control verbosity of logging.", common=true)
     public Log.LogLevel VERBOSITY = Log.LogLevel.INFO;
@@ -124,6 +123,10 @@ public abstract class CommandLineProgram {
             return 1;
         }
 
+        // Provide one temp directory if the caller didn't
+        if (this.TMP_DIR == null) this.TMP_DIR = new ArrayList<File>();
+        if (this.TMP_DIR.isEmpty()) TMP_DIR.add(IOUtil.getDefaultTmpDir());
+
         // Build the default headers
         final Date startDate = new Date();
         this.defaultHeaders.add(new StringHeader(commandLine));
@@ -144,12 +147,13 @@ public abstract class CommandLineProgram {
 
         SAMFileWriterFactory.setDefaultCreateMd5File(CREATE_MD5_FILE);
 
-        if (!TMP_DIR.exists()) {
+        for (final File f : TMP_DIR) {
             // Intentially not checking the return value, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
-            TMP_DIR.mkdirs();
+            if (!f.exists()) f.mkdirs();
+            System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
         }
-        System.setProperty("java.io.tmpdir", TMP_DIR.getAbsolutePath());
+
         if (!QUIET) {
             System.err.println("[" + new Date() + "] " + commandLine);
 
@@ -246,7 +250,7 @@ public abstract class CommandLineProgram {
         return commandLine;
     }
 
-    public void setDefaultHeaders(List<Header> headers) {
+    public void setDefaultHeaders(final List<Header> headers) {
         this.defaultHeaders.clear();
         this.defaultHeaders.addAll(headers);
     }

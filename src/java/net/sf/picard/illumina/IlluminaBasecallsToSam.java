@@ -418,7 +418,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         private final SortingCollection.Codec<SAMRecord> codec;
         private final SAMFileWriter writer;
         private final int maxRecordsInRam;
-        private final File tmpDir;
+        private final List<File> tmpDirs;
         private SortingCollection<SAMRecord> records;
         private int numRecords = 0;
 
@@ -428,9 +428,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          * @param writer Where to write the records.
          * @param maxRecordsInRam Passed through to sorting collection
          */
-        private SamRecordSorter(final int maxRecordsInRam, final SAMFileWriter writer, final File tmpDir) {
+        private SamRecordSorter(final int maxRecordsInRam, final SAMFileWriter writer, final List<File> tmpDirs) {
             this.maxRecordsInRam = maxRecordsInRam;
-            this.tmpDir = tmpDir;
+            this.tmpDirs = tmpDirs;
             codec = new BAMRecordCodec(writer.getFileHeader());
             this.writer = writer;
             createSortingCollection();
@@ -438,7 +438,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         private void createSortingCollection() {
 			if (records != null) records.cleanup();
-            records = SortingCollection.newInstance(SAMRecord.class, codec, comparator, maxRecordsInRam, tmpDir);
+            records = SortingCollection.newInstance(SAMRecord.class, codec, comparator, maxRecordsInRam, tmpDirs);
         }
 
         void addAlignment(final SAMRecord rec) {
