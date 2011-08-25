@@ -84,7 +84,7 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
         do {
             nextLine = readNextLine();
         }
-        while (nextLine != null && (isComment(nextLine) || (this.skipBlankLines && isBlank(nextLine))));
+        while (nextLine != null && ((this.skipBlankLines && isBlank(nextLine)) || isComment(nextLine)));
         return nextLine == null ? null : parseLine(nextLine);
     }
 

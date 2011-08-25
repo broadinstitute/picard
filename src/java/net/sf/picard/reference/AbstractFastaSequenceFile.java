@@ -29,7 +29,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.SAMTextHeaderCodec;
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,7 +55,7 @@ abstract class AbstractFastaSequenceFile implements ReferenceSequenceFile {
 
             try {
                 final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
-                final SAMFileHeader header = codec.decode(new AsciiLineReader(new FileInputStream(dictionary)),
+                final SAMFileHeader header = codec.decode(new BufferedLineReader(new FileInputStream(dictionary)),
                         dictionary.toString());
                 if (header.getSequenceDictionary() != null && header.getSequenceDictionary().size() > 0) {
                     this.sequenceDictionary = header.getSequenceDictionary();

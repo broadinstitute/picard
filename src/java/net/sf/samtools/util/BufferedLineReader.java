@@ -27,6 +27,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 
 /**
  * Implementation of LineReader that is a thin wrapper around BufferedReader.  On Linux, this is faster
@@ -46,7 +47,7 @@ public class BufferedLineReader implements LineReader {
     }
 
     public BufferedLineReader(final InputStream is, final int bufferSize) {
-        reader = new BufferedReader(new InputStreamReader(is), bufferSize);
+        reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")), bufferSize);
     }
 
     /**
