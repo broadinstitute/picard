@@ -74,6 +74,7 @@ public class CollectRnaSeqMetricsTest {
         builder.addFrag("frag1", sequenceIndex, 150, true);
         builder.addFrag("frag2", sequenceIndex, 450, true);
         builder.addFrag("frag3", sequenceIndex, 225, false);
+        builder.addPair("rrnaPair", sequenceIndex, 400, 500);
 
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
 
@@ -83,7 +84,7 @@ public class CollectRnaSeqMetricsTest {
         samWriter.close();
 
         // Create an interval list with one ribosomal interval.
-        final Interval rRnaInterval = new Interval(sequence, 1, 100, true, "rRNA");
+        final Interval rRnaInterval = new Interval(sequence, 300, 520, true, "rRNA");
         final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
         rRnaIntervalList.add(rRnaInterval);
         final File rRnaIntervalsFile = File.createTempFile("tmp.rRna.", ".interval_list");
@@ -107,15 +108,15 @@ public class CollectRnaSeqMetricsTest {
         output.read(new FileReader(metricsFile));
 
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
-        Assert.assertEquals(metrics.PF_ALIGNED_BASES, 324);
-        Assert.assertEquals(metrics.PF_BASES, 360);
-        Assert.assertEquals(metrics.RIBOSOMAL_BASES, 47);
-        Assert.assertEquals(metrics.CODING_BASES, 119);
-        Assert.assertEquals(metrics.UTR_BASES, 62);
+        Assert.assertEquals(metrics.PF_ALIGNED_BASES, 396);
+        Assert.assertEquals(metrics.PF_BASES, 432);
+        Assert.assertEquals(metrics.RIBOSOMAL_BASES, 108);
+        Assert.assertEquals(metrics.CODING_BASES, 136);
+        Assert.assertEquals(metrics.UTR_BASES, 51);
         Assert.assertEquals(metrics.INTRONIC_BASES, 50);
-        Assert.assertEquals(metrics.INTERGENIC_BASES, 46);
-        Assert.assertEquals(metrics.CORRECT_STRAND_READS, 4);
-        Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 3);
+        Assert.assertEquals(metrics.INTERGENIC_BASES, 51);
+        Assert.assertEquals(metrics.CORRECT_STRAND_READS, 3);
+        Assert.assertEquals(metrics.INCORRECT_STRAND_READS, 4);
         Assert.assertEquals(metrics.IGNORED_READS, 1);
     }
 }

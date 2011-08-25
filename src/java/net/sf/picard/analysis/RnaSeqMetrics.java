@@ -33,7 +33,10 @@ public class RnaSeqMetrics extends MetricBase{
     /** The total number of PF bases including non-aligned reads. */
     public long PF_BASES;
 
-    /** The total number of aligned PF bases.  Non-primary alignments are not counted. */
+    /**
+     * The total number of aligned PF bases.  Non-primary alignments are not counted. Bases in aligned reads that
+     * do not correspond to reference (e.g. soft clips, insertions) are not counted.
+     */
     public long PF_ALIGNED_BASES;
 
     /** Number of bases in primary aligments that align to ribosomal sequence. */
