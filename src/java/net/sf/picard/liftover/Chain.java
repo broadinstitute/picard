@@ -27,7 +27,7 @@ import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Interval;
 import net.sf.picard.util.OverlapDetector;
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -311,7 +311,7 @@ class Chain {
      */
     static OverlapDetector<Chain> loadChains(final File chainFile) {
         final Set<Integer> ids = new HashSet<Integer>();
-        AsciiLineReader reader = new AsciiLineReader(IoUtil.openFileForReading(chainFile));
+        BufferedLineReader reader = new BufferedLineReader(IoUtil.openFileForReading(chainFile));
         final OverlapDetector<Chain> ret = new OverlapDetector<Chain>(0, 0);
         Chain chain;
         while ((chain = Chain.loadChain(reader, chainFile.toString())) != null) {
@@ -331,7 +331,7 @@ class Chain {
      * @param chainFile For error messages only.
      * @return New Chain with associated ContinuousBlocks.
      */
-    private static Chain loadChain(final AsciiLineReader reader, final String chainFile) {
+    private static Chain loadChain(final BufferedLineReader reader, final String chainFile) {
         String line = reader.readLine();
         if (line == null) {
             return null;

@@ -35,7 +35,7 @@ import java.util.regex.Matcher;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.util.Log;
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 
 /**
  * Class for specifying options for parsing Illumina basecall output files for a lane, and then creating
@@ -610,9 +610,9 @@ public class IlluminaDataProviderFactory {
     private void detectPipelineVersion() {
         final File solexaBuildVersion = new File(basecallDirectory, ".solexaBuildVersion");
         if (solexaBuildVersion.exists()) {
-            final AsciiLineReader reader;
+            final BufferedLineReader reader;
             try {
-                reader = new AsciiLineReader(new FileInputStream(solexaBuildVersion));
+                reader = new BufferedLineReader(new FileInputStream(solexaBuildVersion));
             } catch (FileNotFoundException e) {
                 throw new PicardException("Unexpected FileNotFound: " + solexaBuildVersion, e);
             }

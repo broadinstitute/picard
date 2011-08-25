@@ -24,7 +24,7 @@
 package net.sf.samtools;
 
 
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.StringUtil;
 
@@ -56,7 +56,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
     // Read string must contain only these characters
     private static final Pattern VALID_BASES = Pattern.compile("^[acgtnACGTN.=]+$");
 
-    private AsciiLineReader mReader;
+    private BufferedLineReader mReader;
     private SAMFileHeader mFileHeader = null;
     private String mCurrentLine = null;
     private RecordIterator mIterator = null;
@@ -74,7 +74,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
     SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
-        mReader = new AsciiLineReader(stream);
+        mReader = new BufferedLineReader(stream);
         this.validationStringency = validationStringency;
         readHeader();
     }

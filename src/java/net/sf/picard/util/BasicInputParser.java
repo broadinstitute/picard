@@ -30,7 +30,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 import net.sf.samtools.util.RuntimeIOException;
 
 /**
@@ -40,7 +40,7 @@ import net.sf.samtools.util.RuntimeIOException;
  */
 public class BasicInputParser extends AbstractInputParser
 {
-    private AsciiLineReader reader;
+    private BufferedLineReader reader;
     private final ArrayList<InputStream> inputs = new ArrayList<InputStream>();
     private final ArrayList<String> fileNames = new ArrayList<String>();
     String currentFileName = null;
@@ -59,7 +59,7 @@ public class BasicInputParser extends AbstractInputParser
             throw new IllegalArgumentException("At least one input must be specified.");
         }
         this.inputs.addAll(Arrays.asList(inputStreams));
-        reader = new AsciiLineReader(this.inputs.remove(0));
+        reader = new BufferedLineReader(this.inputs.remove(0));
         this.setTreatGroupedDelimitersAsOne(treatGroupedDelimitersAsOne);
     }
 
@@ -113,7 +113,7 @@ public class BasicInputParser extends AbstractInputParser
                 currentFileName = fileNames.size() > 0 ? fileNames.remove(0) : null;
                 nextLineNumber = 0;
                 nextLine = null;
-                reader = new AsciiLineReader(inputs.remove(0));
+                reader = new BufferedLineReader(inputs.remove(0));
                 return readNextLine();
             }
             return null;

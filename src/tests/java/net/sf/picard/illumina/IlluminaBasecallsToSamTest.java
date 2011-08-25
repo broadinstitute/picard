@@ -35,7 +35,7 @@ import java.util.ArrayList;
 
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.LineReader;
-import net.sf.samtools.util.AsciiLineReader;
+import net.sf.samtools.util.BufferedLineReader;
 
 /**
  * Run IlluminaBasecallsToSam in various barcode & non-barcode modes
@@ -129,7 +129,7 @@ public class IlluminaBasecallsToSamTest {
         final File barcodeParams = new File(outputDir, "barcode.params");
         barcodeParams.deleteOnExit();
         final List<File> samFiles = new ArrayList<File>();
-        final LineReader reader = new AsciiLineReader(new FileInputStream(new File(TEST_DATA_DIR, "barcode.params")));
+        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, "barcode.params")));
         final PrintWriter writer = new PrintWriter(barcodeParams);
         final String header = reader.readLine();
         writer.println(header + "\tOUTPUT");
