@@ -75,6 +75,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     "These reads are not counted as ")
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
+    @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair by this must in order to be considered rRNA.")
+    public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
+
     private Set<Integer> ignoredSequenceIndices = new HashSet<Integer>();
 
     private OverlapDetector<Gene> geneOverlapDetector;
@@ -138,8 +141,40 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
         // Grab information about the alignment and overlapping genes etc.
         final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
+
+        // Attempt to get an interval for the entire fragment (if paired read) else just use the read itself.
+        // If paired read is chimeric or has one end unmapped, don't create an interval.
+        final Interval fragmentInterval;
+        if (!rec.getReadPairedFlag()) {
+            fragmentInterval = readInterval;
+        } else if (rec.getMateUnmappedFlag() || rec.getReferenceIndex() != rec.getMateReferenceIndex()) {
+            fragmentInterval = null;
+        } else {
+            final int fragmentStart = Math.min(rec.getAlignmentStart(), rec.getMateAlignmentStart());
+            final int fragmentEnd = CoordMath.getEnd(fragmentStart, Math.abs(rec.getInferredInsertSize()));
+            fragmentInterval = new Interval(rec.getReferenceName(), fragmentStart, fragmentEnd);
+        }
+        if (fragmentInterval != null) {
+            final Collection<Interval> overlappingRibosomalIntervals = ribosomalSequenceOverlapDetector.getOverlaps(fragmentInterval);
+            int intersectionLength = 0;
+            for (final Interval overlappingInterval : overlappingRibosomalIntervals) {
+                final int thisIntersectionLength = overlappingInterval.getIntersectionLength(fragmentInterval);
+                intersectionLength = Math.max(intersectionLength, thisIntersectionLength);
+            }
+            if (intersectionLength/(double)fragmentInterval.length() >= RRNA_FRAGMENT_PERCENTAGE) {
+                // Assume entire read is ribosomal.
+                // TODO: Should count reads, not bases?
+                metrics.RIBOSOMAL_BASES += rec.getReadLength();
+                int numAlignedBases = 0;
+                for (final AlignmentBlock alignmentBlock : rec.getAlignmentBlocks()) {
+                    numAlignedBases += alignmentBlock.getLength();
+                }
+                metrics.PF_ALIGNED_BASES += numAlignedBases;
+                return;
+            }
+        }
+
         final Collection<Gene> overlappingGenes                  = geneOverlapDetector.getOverlaps(readInterval);
-        final Collection<Interval> overlappingRibosomalIntervals = ribosomalSequenceOverlapDetector.getOverlaps(readInterval);
         final List<AlignmentBlock> alignmentBlocks               = rec.getAlignmentBlocks();
         boolean overlapsExon = false;
 
@@ -164,12 +199,6 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
                                                  CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength()),
                                                  coverage);
                 }
-            }
-
-            // Do this last because ribosomal takes precedence over the other functions.
-            for (final Interval ribosomalInterval : overlappingRibosomalIntervals) {
-                assignValueForOverlappingRange(ribosomalInterval, alignmentBlock.getReferenceStart(),
-                        locusFunctions, LocusFunction.RIBOSOMAL);
             }
 
             // Tally the function of each base in the alignment block.
