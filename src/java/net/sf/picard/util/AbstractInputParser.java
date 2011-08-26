@@ -163,7 +163,7 @@ implements Iterable<String[]>, CloseableIterator<String[]> {
      * @return  true if the line is a comment (and should be ignored) otherwise false
      */
     protected boolean isComment(final byte[] line) {
-        return line[0] == '#';
+        return line.length > 0 && line[0] == '#';
     }
 
     /**
