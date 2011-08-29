@@ -156,12 +156,12 @@ public class ReorderSam extends CommandLineProgram {
             counter++;
             final SAMRecord read = it.next();
             int oldRefIndex = read.getReferenceIndex();
+            int oldMateIndex = read.getMateReferenceIndex();
             int newRefIndex = newOrderIndex(read, oldRefIndex, newOrder);
 
             read.setHeader(out.getFileHeader());
             read.setReferenceIndex(newRefIndex);
 
-            int oldMateIndex = read.getMateReferenceIndex();
             int newMateIndex = newOrderIndex(read, oldMateIndex, newOrder);
             if ( oldMateIndex != -1 && newMateIndex == -1 ) { // becoming unmapped
                 read.setMateAlignmentStart(0);
