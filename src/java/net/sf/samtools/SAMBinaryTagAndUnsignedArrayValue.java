@@ -29,7 +29,7 @@ package net.sf.samtools;
  *
  * @author alecw@broadinstitute.org
  */
-class SAMBinaryTagAndUnsignedArrayValue extends SAMBinaryTagAndValue {
+public class SAMBinaryTagAndUnsignedArrayValue extends SAMBinaryTagAndValue {
     public SAMBinaryTagAndUnsignedArrayValue(final short tag, final Object value) {
         super(tag, value);
     }

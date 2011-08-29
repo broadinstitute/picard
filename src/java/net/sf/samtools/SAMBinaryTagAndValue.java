@@ -30,7 +30,7 @@ package net.sf.samtools;
  *
  * @author alecw@broadinstitute.org
  */
-class SAMBinaryTagAndValue {
+public class SAMBinaryTagAndValue {
     public final short tag;
     public final Object value;
     protected SAMBinaryTagAndValue next = null;
