@@ -100,6 +100,17 @@ public class SAMSequenceDictionary {
         return mSequences.size();
     }
 
+    /**
+     * @return The sum of the lengths of the sequences in this dictionary
+     */
+    public long getReferenceLength() {
+        long len = 0L;
+        for (final SAMSequenceRecord seq : getSequences()) {
+            len += seq.getSequenceLength();
+        }
+        return len;
+    }
+
     public boolean isEmpty() {
         return mSequences.isEmpty();
     }
