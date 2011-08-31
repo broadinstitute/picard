@@ -41,12 +41,12 @@ import java.util.List;
  * do not necessarily mean that a read is aligned.  Those values may merely be set to force a SAMRecord
  * to appear in a certain place in the sort order.  The readUnmappedFlag must be checked to determine whether
  * or not a read is mapped.  Only if the readUnmappedFlag is false can the reference name/index and alignment start
- * be interpretted as indicating an actual alignment position.
+ * be interpreted as indicating an actual alignment position.
  *
  * Likewise, presence of mate reference name/index and mate alignment start do not necessarily mean that the
  * mate is aligned.  These may be set for an unaligned mate if the mate has been forced into a particular place
  * in the sort order per the above paragraph.  Only if the mateUnmappedFlag is false can the mate reference name/index
- * and mate alignment start be interpretted as indicating the actual alignment position of the mate.
+ * and mate alignment start be interpreted as indicating the actual alignment position of the mate.
  *
  * Note also that there are a number of getters & setters that are linked, i.e. they present different representations
  * of the same underlying data.  In these cases there is typically a representation that is preferred because it
@@ -73,6 +73,9 @@ import java.util.List;
  * Some of the get() methods return values that are mutable, due to the limitations of Java.  A caller should
  * never change the value returned by a get() method.  If you want to change the value of some attribute of a
  * SAMRecord, create a new value object and call the appropriate set() method.
+ *
+ * By default, extensive validation of SAMRecords is done when they are read.  Very limited validation is done when
+ * values are set onto SAMRecords.
  */
 public class SAMRecord implements Cloneable
 {
@@ -1067,6 +1070,8 @@ public class SAMRecord implements Cloneable
      *
      * To set unsigned byte[], unsigned short[] or unsigned int[] (which is discouraged because of poor Java language
      * support), setUnsignedArrayAttribute() must be used instead of this method.
+     *
+     * String values are not validated to ensure that they conform to SAM spec.
      */
     public void setAttribute(final String tag, final Object value) {
         if (value != null && value.getClass().isArray() && Array.getLength(value) == 0) {
