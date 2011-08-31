@@ -1237,6 +1237,12 @@ public class SAMRecord implements Cloneable
         return -1;
     }
 
+    /**
+     *
+     * @return String representation of this.
+     * @deprecated This method is not guaranteed to return a valid SAM text representation of the SAMRecord.
+     * To get standard SAM text representation, use net.sf.samtools.SAMRecord#getSAMString().
+     */
     public String format() {
         final StringBuilder buffer = new StringBuilder();
         addField(buffer, getReadName(), null, null);
@@ -1704,6 +1710,14 @@ public class SAMRecord implements Cloneable
         }
 
         return builder.toString();
+    }
+
+    /**
+	Returns the record in the SAM line-based text format.  Fields are
+	separated by '\t' characters, and the String is terminated by '\n'.
+    */
+    public String getSAMString() {
+	return SAMTextWriter.getSAMString(this);
     }
 }
 

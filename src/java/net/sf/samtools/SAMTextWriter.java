@@ -41,7 +41,16 @@ public class SAMTextWriter extends SAMFileWriterImpl {
     private final SAMTagUtil tagUtil = new SAMTagUtil();
 
     /**
-     * Prepare to write SAM text file.
+     * Constructs a SAMTextWriter that outputs to a Writer.
+     * @param out Writer.
+     */
+    public SAMTextWriter(Writer out) {
+	this.out = out;
+	this.file = null;
+    }
+
+    /**
+     * Constructs a SAMTextWriter that writes to a File.
      * @param file Where to write the output.
      */
     public SAMTextWriter(final File file) {
@@ -54,7 +63,15 @@ public class SAMTextWriter extends SAMFileWriterImpl {
     }
 
     /**
-     * Constructs a SAMTextWriter for outputting to a stream instead of to a file.
+     * Returns the Writer used by this instance.  Useful for flushing the output.
+     */
+    public Writer getWriter() {
+	return out;
+    }
+
+    /**
+     * Constructs a SAMTextWriter that writes to an OutputStream.  The OutputStream
+     * is wrapped in an AsciiWriter, which can be retrieved with getWriter().
      * @param stream Need not be buffered because this class provides buffering. 
      */
     public SAMTextWriter(final OutputStream stream) {
@@ -63,10 +80,9 @@ public class SAMTextWriter extends SAMFileWriterImpl {
     }
 
     /**
-     * Writes the record to disk.  Sort order has been taken care of by the time
-     * this method is called.
+     * Write the record.
      *
-     * @param alignment
+     * @param alignment SAMRecord.
      */
     public void writeAlignment(final SAMRecord alignment) {
         try {
@@ -117,10 +133,22 @@ public class SAMTextWriter extends SAMFileWriterImpl {
         }
     }
 
+    /* This method is called by SAMRecord.getSAMString(). */
+    private static SAMTextWriter textWriter = null;
+    private static StringWriter stringWriter = null;
+    static synchronized String getSAMString(final SAMRecord alignment) {
+	if (stringWriter == null) stringWriter = new StringWriter();
+	if (textWriter == null) textWriter = new SAMTextWriter(stringWriter);
+	stringWriter.getBuffer().setLength(0);
+	textWriter.writeAlignment(alignment);
+	return stringWriter.toString();
+    }
+
     /**
-     * Write the header to disk.  Header object is available via getHeader().
+     * Write the header text.  This method can also be used to write
+     * an arbitrary String, not necessarily the header.
      *
-     * @param textHeader for convenience if the implementation needs it.  Must be newline-terminated.
+     * @param textHeader String containing the text to write.
      */
     public void writeHeader(final String textHeader) {
         try {
