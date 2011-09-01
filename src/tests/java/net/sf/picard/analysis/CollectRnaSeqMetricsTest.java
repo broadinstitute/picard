@@ -110,7 +110,7 @@ public class CollectRnaSeqMetricsTest {
         final RnaSeqMetrics metrics = output.getMetrics().get(0);
         Assert.assertEquals(metrics.PF_ALIGNED_BASES, 396);
         Assert.assertEquals(metrics.PF_BASES, 432);
-        Assert.assertEquals(metrics.RIBOSOMAL_BASES, 108);
+        Assert.assertEquals(metrics.RIBOSOMAL_BASES.longValue(), 108L);
         Assert.assertEquals(metrics.CODING_BASES, 136);
         Assert.assertEquals(metrics.UTR_BASES, 51);
         Assert.assertEquals(metrics.INTRONIC_BASES, 50);
