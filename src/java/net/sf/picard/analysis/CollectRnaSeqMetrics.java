@@ -96,7 +96,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     protected void setup(final SAMFileHeader header, final File samFile) {
         geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
+        metrics = new RnaSeqMetrics();
         if (RIBOSOMAL_INTERVALS != null) {
+            metrics.RIBOSOMAL_BASES = 0L;
             final IntervalList ribosomalIntervals = IntervalList.fromFile(RIBOSOMAL_INTERVALS);
             try {
                 SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
@@ -108,7 +110,6 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             final List<Interval> intervals = ribosomalIntervals.getIntervals();
             ribosomalSequenceOverlapDetector.addAll(intervals, intervals);
         }
-        metrics = new RnaSeqMetrics();
 
         if (header.getReadGroups().size() == 1) {
             SAMReadGroupRecord rg = header.getReadGroups().get(0);
@@ -251,7 +252,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Override
     protected void finish() {
         if (metrics.PF_ALIGNED_BASES > 0) {
-            metrics.PCT_RIBOSOMAL_BASES =  metrics.RIBOSOMAL_BASES  / (double) metrics.PF_ALIGNED_BASES;
+            if (metrics.RIBOSOMAL_BASES != null) {
+                metrics.PCT_RIBOSOMAL_BASES =  metrics.RIBOSOMAL_BASES  / (double) metrics.PF_ALIGNED_BASES;
+            }
             metrics.PCT_CODING_BASES =     metrics.CODING_BASES     / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_UTR_BASES =        metrics.UTR_BASES        / (double) metrics.PF_ALIGNED_BASES;
             metrics.PCT_INTRONIC_BASES =   metrics.INTRONIC_BASES   / (double) metrics.PF_ALIGNED_BASES;
