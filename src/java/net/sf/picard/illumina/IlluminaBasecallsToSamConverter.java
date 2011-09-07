@@ -35,6 +35,7 @@ import java.util.Arrays;
 
 import net.sf.picard.illumina.parser.IlluminaReadData;
 import net.sf.picard.illumina.parser.IlluminaEndData;
+import net.sf.samtools.util.StringUtil;
 
 /**
  * Convert IlluminaReadData into SAMRecord.
@@ -103,7 +104,12 @@ public class IlluminaBasecallsToSamConverter {
         if (this.readGroupId != null) {
             sam.setAttribute("RG", readGroupId);
         }
+
+        // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode read as an optional tag
+        if (ird.getMatchedBarcode() == null && ird.getBarcodeRead() != null) {
+            sam.setAttribute("BC", StringUtil.bytesToString(ird.getBarcodeRead().getBases()));
+        }
+
         return sam;
     }
-
 }
