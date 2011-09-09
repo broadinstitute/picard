@@ -107,7 +107,7 @@ public class IlluminaBasecallsToSamConverter {
 
         // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode read as an optional tag
         if (ird.getMatchedBarcode() == null && ird.getBarcodeRead() != null) {
-            sam.setAttribute("BC", StringUtil.bytesToString(ird.getBarcodeRead().getBases()));
+            sam.setAttribute("BC", StringUtil.bytesToString(ird.getBarcodeRead().getBases()).replace('.', 'N'));
         }
 
         return sam;
