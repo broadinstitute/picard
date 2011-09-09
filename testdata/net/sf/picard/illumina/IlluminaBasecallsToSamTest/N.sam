@@ -1,225 +1,225 @@
 @HD	VN:1.0	SO:queryname
 @RG	ID:HiMom.7	PL:illumina	PU:HiMom.7.N	LB:LN_N	SM:SA_N	CN:BI
-HiMom:7:1:0:1038	516	*	0	0	*	*	0	0	.....C..CA...C...C.CC...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1093	516	*	0	0	*	*	0	0	.....C..GT...A...G.AA...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:113	516	*	0	0	*	*	0	0	........G...........A.........	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1193	516	*	0	0	*	*	0	0	........T....T...T..T...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1291	516	*	0	0	*	*	0	0	........A........A..T.........	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1307	516	*	0	0	*	*	0	0	........C....A...T..T...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1434	516	*	0	0	*	*	0	0	..............................	##############################	RG:Z:HiMom.7	XN:i:1
-HiMom:7:1:0:1475	516	*	0	0	*	*	0	0	.....G..A....A...A..A...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1690	516	*	0	0	*	*	0	0	........A........G..C...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:1703	516	*	0	0	*	*	0	0	........A...........A.........	##############################	RG:Z:HiMom.7	XN:i:1
-HiMom:7:1:0:1940	516	*	0	0	*	*	0	0	........C........T..T.........	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:2001	516	*	0	0	*	*	0	0	.....A..TG...G...A.GC...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:205	516	*	0	0	*	*	0	0	........A........A..T...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:275	516	*	0	0	*	*	0	0	.....A..CA...T...G.CC...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:324	516	*	0	0	*	*	0	0	........T........T..A...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:37	516	*	0	0	*	*	0	0	........A........C..T...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:464	516	*	0	0	*	*	0	0	..............................	##############################	RG:Z:HiMom.7	XN:i:1
-HiMom:7:1:0:586	516	*	0	0	*	*	0	0	........C........C..C...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:841	516	*	0	0	*	*	0	0	........C...........T.........	##############################	RG:Z:HiMom.7
-HiMom:7:1:0:879	516	*	0	0	*	*	0	0	........T...........T.........	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1013	516	*	0	0	*	*	0	0	..C..T.CAG...C...A.GT...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:111	516	*	0	0	*	*	0	0	..C..T.GCG...T...A.CT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1153	516	*	0	0	*	*	0	0	..T..T.TGG...T...C.TC...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1184	516	*	0	0	*	*	0	0	..A..G.TCG...A...T.CA...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1241	516	*	0	0	*	*	0	0	..A..G.TGG...T...C.TG...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1243	516	*	0	0	*	*	0	0	..A..A.GGA...A...C.TA...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1247	516	*	0	0	*	*	0	0	.CCAGC.TTT...T...T.CT...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1282	516	*	0	0	*	*	0	0	..A..A.GGG...T...G.AG...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:132	516	*	0	0	*	*	0	0	..A..G.GGG...G...G.GG...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1320	516	*	0	0	*	*	0	0	..A..T.AGT...G...G.TA...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1372	516	*	0	0	*	*	0	0	.ACATTTTTTAG.T.A.TTGTT.AC.A...	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1379	516	*	0	0	*	*	0	0	.AATATAATT...T...TTAGA.TT.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1391	516	*	0	0	*	*	0	0	..G..T.TAA...A...T.AT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:140	516	*	0	0	*	*	0	0	..A..T.TAA...G...C.TT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1513	516	*	0	0	*	*	0	0	.....A..TT...A...A.AA...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1521	516	*	0	0	*	*	0	0	.AACAA.ATT...T...A.TA..TA.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:155	516	*	0	0	*	*	0	0	..G..C.AGT...C...A.TT...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1555	516	*	0	0	*	*	0	0	..T..G.AGA...A...C.TA...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:164	516	*	0	0	*	*	0	0	..A..A.TAA...T...T.AT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1684	516	*	0	0	*	*	0	0	..G..A.GGT...G...T.TC...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1696	516	*	0	0	*	*	0	0	..A..G..GC...G...A.AC...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:170	516	*	0	0	*	*	0	0	..T..C.CAC...G...G.TC...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:173	516	*	0	0	*	*	0	0	.....A..AT...T...C.TT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1733	516	*	0	0	*	*	0	0	..A..G.GTC...T...T.AG...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1770	516	*	0	0	*	*	0	0	..C..T.CTG...G...G.CA...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:18	516	*	0	0	*	*	0	0	.ATCAG.CTG...A...T.GT..AA.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1815	516	*	0	0	*	*	0	0	.ATGAAAATA...T...TAAAT.AT.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1836	516	*	0	0	*	*	0	0	.....G..TA...G...T.CT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:184	516	*	0	0	*	*	0	0	..C..T.TAA...A...T.AT...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1886	4	*	0	0	*	*	0	0	.ACATATGCATACATATATAATAGATA...	%.9:;<217;:999;<;;<<<;;#######	RG:Z:HiMom.7
-HiMom:7:1:1:1906	516	*	0	0	*	*	0	0	..T..C.ATA...C...T.CT...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1917	516	*	0	0	*	*	0	0	.....T..GA...C...A.AA...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:195	516	*	0	0	*	*	0	0	..A..G.GTG...G...C.AT...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:1954	516	*	0	0	*	*	0	0	.AGA.T.CTT...G...G.AG...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:2	516	*	0	0	*	*	0	0	..A..G.GAA...C................	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:2011	516	*	0	0	*	*	0	0	.ACAGCTGGCA..T...AGAGC.AG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:240	516	*	0	0	*	*	0	0	..G..A.GTA...T...T.CC...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:262	516	*	0	0	*	*	0	0	..C..G.CAT...A...C.TG...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:264	516	*	0	0	*	*	0	0	.AACTG.AAT...C...A.CA..CT.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:299	516	*	0	0	*	*	0	0	..C..T.GCA...A...C.AA...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:30	516	*	0	0	*	*	0	0	..A..A.TTT...T...G.TC...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:353	516	*	0	0	*	*	0	0	..A..T.TAG...A...T.AT...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:367	516	*	0	0	*	*	0	0	..A..T.AGC...G...A.GT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:41	516	*	0	0	*	*	0	0	..A..C.AAA...G...T.CA...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:416	516	*	0	0	*	*	0	0	..A..C.AAT...G...G.AC...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:483	516	*	0	0	*	*	0	0	..G..G.GGG...G...G.TT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:486	516	*	0	0	*	*	0	0	..A..A.TTT...A...A.AG...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:495	516	*	0	0	*	*	0	0	..C..A.CGT...T...T.AA...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:508	516	*	0	0	*	*	0	0	..G..C.CAG...T...C.CT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:517	516	*	0	0	*	*	0	0	.TCATAAAACATCA.TATTGGAAAGGA...	%.75:<999578##################	RG:Z:HiMom.7
-HiMom:7:1:1:535	516	*	0	0	*	*	0	0	.GCCCAAGTATTGA.TATGTGCTCTAA...	%.599:7187:940%0::52599#######	RG:Z:HiMom.7
-HiMom:7:1:1:55	516	*	0	0	*	*	0	0	.TTTATGTCCTT.A.AACTTAG.AGTT...	%/9<<83599####################	RG:Z:HiMom.7
-HiMom:7:1:1:554	516	*	0	0	*	*	0	0	..A..G.AGA...G...T.TC...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:567	516	*	0	0	*	*	0	0	..C..C.GTT...C...G.AC...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:59	516	*	0	0	*	*	0	0	..A..G.TGC...T...T.AC...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:613	516	*	0	0	*	*	0	0	..G..A.TAT...C...G.AT...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:622	516	*	0	0	*	*	0	0	..T..C.AGT...C...A.CT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:627	516	*	0	0	*	*	0	0	..A..T.GAC...T...A.GC...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:684	516	*	0	0	*	*	0	0	..T..T.AGA...C...A.AG...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:72	516	*	0	0	*	*	0	0	.ACACACATATCAC.CACATCATACAC...	%..48696;5:6;.%)49;;;9########	RG:Z:HiMom.7
-HiMom:7:1:1:812	516	*	0	0	*	*	0	0	..A..C.AAG...T...A.TC...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:874	516	*	0	0	*	*	0	0	..A..A.GCC...G...T.TA...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:931	516	*	0	0	*	*	0	0	..T..G.GAT...G...C.TT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:965	516	*	0	0	*	*	0	0	.ACTAATCTTCCGC.CATATCCCCAAA...	##############################	RG:Z:HiMom.7
-HiMom:7:1:1:994	516	*	0	0	*	*	0	0	..A..T.GAT...T...G.TT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1158	4	*	0	0	*	*	0	0	.GGGTCCTTCATAGTTTTTTTCTACTTTCC	%0777646;099:::95;;;688::99###	RG:Z:HiMom.7
-HiMom:7:1:2:1238	516	*	0	0	*	*	0	0	.TCCTTATATTCAATTATTAATATTTTTAC	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1275	4	*	0	0	*	*	0	0	.AGTGAAATAAGCCAGACACAGAAAGACA.	%/5204:99971773,44755-39717###	RG:Z:HiMom.7
-HiMom:7:1:2:1301	516	*	0	0	*	*	0	0	.AGTAGACTGCATTAATTAATTGGAAGAG.	%0370)024263144:48;;##########	RG:Z:HiMom.7
-HiMom:7:1:2:1453	4	*	0	0	*	*	0	0	.ATATCTTATTTTCTTTTCTTTCAGGCTCT	%.:7,,395255##################	RG:Z:HiMom.7
-HiMom:7:1:2:150	516	*	0	0	*	*	0	0	.AAGACTTGATTATATCCCTTGTATGA...	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1592	4	*	0	0	*	*	0	0	.GAAAACTGGCACAAGACAAGGATGCCCTC	%,67786861,3466(8485868648583#	RG:Z:HiMom.7
-HiMom:7:1:2:1706	4	*	0	0	*	*	0	0	.GATATGTGGATACAGCTCACAAAGAG...	%,99:6/566999/7###############	RG:Z:HiMom.7
-HiMom:7:1:2:1722	516	*	0	0	*	*	0	0	.AAAGAAAATTAAAGAAAAATATACACGT.	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1727	516	*	0	0	*	*	0	0	.TATTGAAGGACTTTTGTATCCTCCTTAT.	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1753	516	*	0	0	*	*	0	0	.GTTCACACAAGGATAATATTTTTGATTAT	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1782	4	*	0	0	*	*	0	0	.ACCAAGTGTTTGGAGTATGCTGCCTA...	%0:::668885-5335/85###########	RG:Z:HiMom.7
-HiMom:7:1:2:1827	4	*	0	0	*	*	0	0	.AACCGAGGATGTACACTGTCCCTGTGAAA	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:1932	4	*	0	0	*	*	0	0	.AGCGATCCTCCCGCCTCTGCCTCCCA...	%,1545541455##################	RG:Z:HiMom.7
-HiMom:7:1:2:1946	516	*	0	0	*	*	0	0	.ATCTTCTGGAATTTCTAACAGCTTGGAA.	%0515.,.35<997################	RG:Z:HiMom.7
-HiMom:7:1:2:209	516	*	0	0	*	*	0	0	.GACTCAACTCCTGGGCTCCCTACGACCAT	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:246	516	*	0	0	*	*	0	0	.GGAGGTTTCATTTAGCCGATATTGTG...	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:25	516	*	0	0	*	*	0	0	.GCTTTGGCAAGACAAATCTCCCGTCTGG.	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:307	516	*	0	0	*	*	0	0	.GGATGAACAGAAACTAAAATAACACA...	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:363	516	*	0	0	*	*	0	0	.ATATTCTTTTTTTTTATTTATCAGAT...	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:449	516	*	0	0	*	*	0	0	.ATTCTAATTCTAGGAAATTAACAATC...	%.9315<936970%0###############	RG:Z:HiMom.7
-HiMom:7:1:2:546	516	*	0	0	*	*	0	0	.GGTTGTGTCTCTCTCAGCCTTTGGGATC.	%,46888444685-35##############	RG:Z:HiMom.7
-HiMom:7:1:2:605	4	*	0	0	*	*	0	0	.GCATTGAGCAGACGTGGCATCCAGAT...	%)085222/55453################	RG:Z:HiMom.7
-HiMom:7:1:2:69	516	*	0	0	*	*	0	0	.TCAGTCTGCTGTTTTAAAAAAATACTGTG	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:747	516	*	0	0	*	*	0	0	.AACAACAGCGGAAAATAATAAAAAAAAA.	##############################	RG:Z:HiMom.7
-HiMom:7:1:2:786	4	*	0	0	*	*	0	0	.TAAACAATAATCTGATGATTTATAATCC.	%09<<<<;<;<8<9;<9<;<::<<::####	RG:Z:HiMom.7
-HiMom:7:1:2:858	4	*	0	0	*	*	0	0	.AAACGTTGCTGATCTTCTGTTTTAAACTA	%/;7-222265366-6977035:::;626;	RG:Z:HiMom.7
-HiMom:7:1:2:943	4	*	0	0	*	*	0	0	.AATACCAATAAACCTAGAATGTCTCATAC	%08<9646<6378744774:1005799<4#	RG:Z:HiMom.7
-HiMom:7:1:2:974	4	*	0	0	*	*	0	0	.GATCAATGATCACATCTTTGGATATGTAT	%/9979<99:999::9;;:7511<<<77<<	RG:Z:HiMom.7
-HiMom:7:1:2:988	4	*	0	0	*	*	0	0	.AAAGGAATGTTCAGCTCTGTGAGTTGAAC	%/92/04:2-2785-3875/404362-162	RG:Z:HiMom.7
-HiMom:7:1:3:1233	516	*	0	0	*	*	0	0	.AACCAATTTCTTTACATACCAAATACGCC	##############################	RG:Z:HiMom.7
-HiMom:7:1:3:1294	516	*	0	0	*	*	0	0	TGTAACTTTACTTTAGTTGCTTATTTGTAG	BA############################	RG:Z:HiMom.7
-HiMom:7:1:3:405	516	*	0	0	*	*	0	0	AAAAAACATAGAACGGGGTCAATATTTTAT	(?A>8(7B?<(:')?@)8(:(*:<8:0>'>	RG:Z:HiMom.7
-HiMom:7:1:3:579	516	*	0	0	*	*	0	0	.GAAAAATGACCACACTTGCCTCCTGAGAA	##############################	RG:Z:HiMom.7
-HiMom:7:1:3:673	516	*	0	0	*	*	0	0	TCCTCAAAAACAAGATAAAACGGTTGAAAT	>()>)''85BBC?#################	RG:Z:HiMom.7
-HiMom:7:1:3:890	516	*	0	0	*	*	0	0	TGCTTCTGTTTCCGTTAGCTAGATAAAGTT	##############################	RG:Z:HiMom.7
-HiMom:7:1:3:905	516	*	0	0	*	*	0	0	TGTTATGTTTAATTTTCTTTAGCACCCTTC	>7>?A:-<BA@0>@:@8=A;5%7;9?=:9@	RG:Z:HiMom.7
-HiMom:7:1:3:918	516	*	0	0	*	*	0	0	TTTTCATTCCTAGTCATCCACCCCATCAGA	0()@A=:2>3:>(/((<22A>:0(20:@)@	RG:Z:HiMom.7
-HiMom:7:2:0:1073	516	*	0	0	*	*	0	0	.....A.CAC...C...C.CA...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1135	516	*	0	0	*	*	0	0	.....G..GT...A...T.TA...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1198	516	*	0	0	*	*	0	0	.....T.CTA...T...C.CA...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1278	516	*	0	0	*	*	0	0	........TA...T...C..A...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:135	516	*	0	0	*	*	0	0	........A...........G.........	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1547	516	*	0	0	*	*	0	0	........C...........G...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1598	516	*	0	0	*	*	0	0	........AT...T...A..G...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1620	516	*	0	0	*	*	0	0	........CA.......A..C...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:1668	516	*	0	0	*	*	0	0	.....A.ATA...A...G.TG...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:186	516	*	0	0	*	*	0	0	........CC...A...T..T...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:205	516	*	0	0	*	*	0	0	........A........T..C...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:287	516	*	0	0	*	*	0	0	........CC...C...T..A...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:382	516	*	0	0	*	*	0	0	........CA...T...T..A...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:441	516	*	0	0	*	*	0	0	........TT...A...A..T...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:50	516	*	0	0	*	*	0	0	........T........T..G...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:501	516	*	0	0	*	*	0	0	.....G..AG...A...C.CT...C.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:73	516	*	0	0	*	*	0	0	.....A.CAT...G...A.AC...G.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:740	516	*	0	0	*	*	0	0	........TT...A...T..A...A.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:766	516	*	0	0	*	*	0	0	........TG...A...A..T...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:0:87	516	*	0	0	*	*	0	0	........G........A..T...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1004	516	*	0	0	*	*	0	0	.ATTTATCACTA.A.ATCCGCAAACCCTCC	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1034	516	*	0	0	*	*	0	0	.ATCATTTTCAT.C.TTTCACTGATACATT	%.737:887471%-%1:8555545;696::	RG:Z:HiMom.7
-HiMom:7:2:1:1159	516	*	0	0	*	*	0	0	..ACTT.TAG...G...AAAT..CC.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1168	516	*	0	0	*	*	0	0	..TCTA.CTT...T...ATTG..TT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1180	516	*	0	0	*	*	0	0	..ATGG.CTT...C...AGAA..TC.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1214	516	*	0	0	*	*	0	0	.AAAAAAAAAAA.A.TATAAGAAAGAATCA	%035:#########################	RG:Z:HiMom.7
-HiMom:7:2:1:1221	516	*	0	0	*	*	0	0	.GGTCACACTCACATAGTGTTCAGAGCACT	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1306	516	*	0	0	*	*	0	0	..ACAT.AAA...T...AACA..GT.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1351	516	*	0	0	*	*	0	0	.....C.ATA...T...A.AA...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1424	516	*	0	0	*	*	0	0	..TCAT.TAG...C...ATGG..GT.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1452	516	*	0	0	*	*	0	0	.GAAATTTGTAAAA.CACCTGCAGAATACT	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1515	516	*	0	0	*	*	0	0	.ATTAAATAT.A.A..GTAATAATAATA..	%/9###########################	RG:Z:HiMom.7
-HiMom:7:2:1:1521	516	*	0	0	*	*	0	0	..ACAC.AAA...G...ATCT..TT.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1536	516	*	0	0	*	*	0	0	.AGCAAAGACTT.G.ACCAACCCAAATGTT	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1543	516	*	0	0	*	*	0	0	..TTGA.ATC...A...AATA..TA.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1617	516	*	0	0	*	*	0	0	..CCAT.ATC...G...CCAG..GT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1627	516	*	0	0	*	*	0	0	..TGGT.AGA...C...AAAA..CA.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1646	516	*	0	0	*	*	0	0	.TTAATTATA...A..TAAACATTCTAA..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1653	516	*	0	0	*	*	0	0	..AATT.AAA...T...ATCT..AG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1682	516	*	0	0	*	*	0	0	..TCTT.TTT...G...AAAA..AA.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:170	4	*	0	0	*	*	0	0	.AGAAGAAATGGGATCCTGCTGTGGCCAGT	%/888865284168866767663(6874/5	RG:Z:HiMom.7
-HiMom:7:2:1:1731	516	*	0	0	*	*	0	0	..TATA.GAA...T...TGCT..AG.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1755	516	*	0	0	*	*	0	0	..GT.A.TCT...C...C.TG...G.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1812	516	*	0	0	*	*	0	0	..TTGC.CAC...C...CCAT..AA.G...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1853	516	*	0	0	*	*	0	0	..ATCT.TTC...A...AGTG..AT.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1919	516	*	0	0	*	*	0	0	..AATT.AAA...A...AGAA..AG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1924	516	*	0	0	*	*	0	0	.ATATTCTGAAG.A..CCAATGAACCAAA.	%116<9579<7###################	RG:Z:HiMom.7
-HiMom:7:2:1:1933	516	*	0	0	*	*	0	0	.AGGGTACAT.T.C..AATGTGCGGGTT..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1938	4	*	0	0	*	*	0	0	.AGTCCAGTGTCTCTGCTTCCGCAGGGACA	%/818865/058858644866457646668	RG:Z:HiMom.7
-HiMom:7:2:1:1950	516	*	0	0	*	*	0	0	..TT.A.AAA...C...T.CA...T.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:1959	516	*	0	0	*	*	0	0	.GACACATTCCTAC.ACAGAGAAAAATTTA	%*77;;<;<<:<;,%.::;:6:9::<4488	RG:Z:HiMom.7
-HiMom:7:2:1:1987	516	*	0	0	*	*	0	0	..AT.G.ACA...C...T.GT...T.....	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:2006	516	*	0	0	*	*	0	0	..GTAT.TGA...G...CCTT..AG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:211	516	*	0	0	*	*	0	0	..CTGA.ACA...G...TGCA..AC.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:234	516	*	0	0	*	*	0	0	.AAGCCTGTGGG.A..CCCAGTGGGAGCG.	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:242	516	*	0	0	*	*	0	0	..GCTC.AGC...A...ATAT..TT.G...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:262	516	*	0	0	*	*	0	0	..ATTG.AAT...C...TTCC..AT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:298	516	*	0	0	*	*	0	0	..TCAA.TTG...T...CTGC..TT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:312	516	*	0	0	*	*	0	0	..TTGC.AGA...A...AACT..TG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:363	4	*	0	0	*	*	0	0	.GAAAGGTTTTGCAGCATGTGCAAACTCAC	%-5565678:8177656503512/377856	RG:Z:HiMom.7
-HiMom:7:2:1:37	516	*	0	0	*	*	0	0	.TGTAAACGA...C..TTCCTGTTCAGC..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:370	516	*	0	0	*	*	0	0	..CTGG.AGC...T...CATA..AA.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:377	516	*	0	0	*	*	0	0	..AGAA.GTG...T...AAAT..AA.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:414	516	*	0	0	*	*	0	0	..TAGA.AGC...A...TCAG..AC.G...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:421	516	*	0	0	*	*	0	0	..GTTA.TTC...A...CGTG..AT.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:428	516	*	0	0	*	*	0	0	.ATGTGAATA.T.A..TAGTTGGGATTCA.	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:44	516	*	0	0	*	*	0	0	.ACTACCTCA.G.A..AAGCAGGTTCTAA.	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:466	516	*	0	0	*	*	0	0	.ACACTCACA.C.A..TGTTTGGAATGA..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:555	516	*	0	0	*	*	0	0	..CAAT.TCT...G...TACA..CT.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:558	516	*	0	0	*	*	0	0	.AAAATATCA.T.A..AATAAATAATCA..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:56	516	*	0	0	*	*	0	0	..GCCA.GGT...A...TCAC..GG.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:569	516	*	0	0	*	*	0	0	..AGGC.AGT...G...GTCC..GT.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:604	516	*	0	0	*	*	0	0	.ATGATGAAACTCT.TCTCTACTAAAAATA	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:628	516	*	0	0	*	*	0	0	.AGTATGCCC.C.C..ACCACTCCTATT..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:64	516	*	0	0	*	*	0	0	.ATTAATCTT...T..GCACAATTCATT..	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:684	516	*	0	0	*	*	0	0	.AAAAATCAAATGA.CATAATTTTATAAAA	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:699	516	*	0	0	*	*	0	0	..AATT.TTG...T...ATTT..GA.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:714	516	*	0	0	*	*	0	0	.ATTAACTTA.A.T..ACCACAACCTAA..	%.:###########################	RG:Z:HiMom.7
-HiMom:7:2:1:722	516	*	0	0	*	*	0	0	..CCTC.CTG...C...CTGT..TG.C...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:749	516	*	0	0	*	*	0	0	..AGTG.TAC...T...CTTG..CT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:760	516	*	0	0	*	*	0	0	.GTCTGTTTTATGT.AAATATTTTGTTTAA	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:8	516	*	0	0	*	*	0	0	..TGCG.TGG...C...AGGC..TT.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:833	516	*	0	0	*	*	0	0	..GAGC.CCT...A...CTCC..GA.G...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:848	516	*	0	0	*	*	0	0	..TACT.AGT...G...TGTT..GC.T...	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:893	516	*	0	0	*	*	0	0	.GAGACAGAGTCTC.CTCTGTTCCCTAGCC	##############################	RG:Z:HiMom.7
-HiMom:7:2:1:998	516	*	0	0	*	*	0	0	..ATGT.TGC...A...TATA..GG.A...	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:0	516	*	0	0	*	*	0	0	.ATTCCTT.A....................	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:131	4	*	0	0	*	*	0	0	.ATATATTGACAGCAGTCATGTTGTTGAAG	%0<<<:<959874492:96999969:7784	RG:Z:HiMom.7
-HiMom:7:2:2:1636	516	*	0	0	*	*	0	0	.GTGTAAAAGTAGGGAAATACTATAGCAAG	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:1974	516	*	0	0	*	*	0	0	.ACGCCAATACAAAAATGTTGAAGCTAGCT	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:351	516	*	0	0	*	*	0	0	.GGGGTTGAGGTGTAAATAGAACATTTGTA	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:646	516	*	0	0	*	*	0	0	.GAATCTAAGAAGACACAAAACTAAGGAAA	##############################	RG:Z:HiMom.7
-HiMom:7:2:2:828	516	*	0	0	*	*	0	0	.TCAAGTCAATTTGGGACTTGAAACAGCTC	##############################	RG:Z:HiMom.7
-HiMom:7:2:3:1529	516	*	0	0	*	*	0	0	.TTATATGAATAGATAAATAAATAATCAAT	##############################	RG:Z:HiMom.7
-HiMom:7:2:3:179	516	*	0	0	*	*	0	0	CATTATTGTTAGACTGATTTTTTATAATCT	B@)104..*0-A(@@(<A9A<(+9)-=6(B	RG:Z:HiMom.7
-HiMom:7:2:3:198	516	*	0	0	*	*	0	0	TGTCATTTTCTTTGCCTTAATTGTTCTTCT	5@CBB7-*<=####################	RG:Z:HiMom.7
-HiMom:7:2:3:2030	516	*	0	0	*	*	0	0	CGAGATAATTTTTTAAAAAAAGTCCAAAAA	((@;()@==*7<(5A@<C>###########	RG:Z:HiMom.7
-HiMom:7:2:3:247	516	*	0	0	*	*	0	0	TGTACATGACCAGGTAATTTGGTTATGTGA	<@596353;)>@A7=:,A0'6>########	RG:Z:HiMom.7
-HiMom:7:2:3:4	516	*	0	0	*	*	0	0	AGAGGCAATAAGTTTTAA............	A>BA@9BAB3AA##################	RG:Z:HiMom.7
-HiMom:7:2:3:862	516	*	0	0	*	*	0	0	.CTTTAAGAAATCATTCATTCTGCAAACAC	##############################	RG:Z:HiMom.7
+HiMom:7:1:0:1038	516	*	0	0	*	*	0	0	.....C..CA...C...C.CC...C.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:0:1093	516	*	0	0	*	*	0	0	.....C..GT...A...G.AA...A.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
+HiMom:7:1:0:113	516	*	0	0	*	*	0	0	........G...........A.........	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:1:0:1193	516	*	0	0	*	*	0	0	........T....T...T..T...C.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:0:1291	516	*	0	0	*	*	0	0	........A........A..T.........	##############################	BC:Z:NNNNNGNN	RG:Z:HiMom.7
+HiMom:7:1:0:1307	516	*	0	0	*	*	0	0	........C....A...T..T...C.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:1:0:1434	516	*	0	0	*	*	0	0	..............................	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7	XN:i:1
+HiMom:7:1:0:1475	516	*	0	0	*	*	0	0	.....G..A....A...A..A...A.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:0:1690	516	*	0	0	*	*	0	0	........A........G..C...C.....	##############################	BC:Z:NNNNNANN	RG:Z:HiMom.7
+HiMom:7:1:0:1703	516	*	0	0	*	*	0	0	........A...........A.........	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7	XN:i:1
+HiMom:7:1:0:1940	516	*	0	0	*	*	0	0	........C........T..T.........	##############################	BC:Z:NNNNNCNN	RG:Z:HiMom.7
+HiMom:7:1:0:2001	516	*	0	0	*	*	0	0	.....A..TG...G...A.GC...A.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:0:205	516	*	0	0	*	*	0	0	........A........A..T...A.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:0:275	516	*	0	0	*	*	0	0	.....A..CA...T...G.CC...A.....	##############################	BC:Z:NNNNNATN	RG:Z:HiMom.7
+HiMom:7:1:0:324	516	*	0	0	*	*	0	0	........T........T..A...A.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:0:37	516	*	0	0	*	*	0	0	........A........C..T...C.....	##############################	BC:Z:NNNNNGNN	RG:Z:HiMom.7
+HiMom:7:1:0:464	516	*	0	0	*	*	0	0	..............................	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7	XN:i:1
+HiMom:7:1:0:586	516	*	0	0	*	*	0	0	........C........C..C...A.....	##############################	BC:Z:NNNNNCNN	RG:Z:HiMom.7
+HiMom:7:1:0:841	516	*	0	0	*	*	0	0	........C...........T.........	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:1:0:879	516	*	0	0	*	*	0	0	........T...........T.........	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:1:1:1013	516	*	0	0	*	*	0	0	..C..T.CAG...C...A.GT...G.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:111	516	*	0	0	*	*	0	0	..C..T.GCG...T...A.CT...T.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1153	516	*	0	0	*	*	0	0	..T..T.TGG...T...C.TC...T.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:1:1:1184	516	*	0	0	*	*	0	0	..A..G.TCG...A...T.CA...T.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:1:1:1241	516	*	0	0	*	*	0	0	..A..G.TGG...T...C.TG...A.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:1:1:1243	516	*	0	0	*	*	0	0	..A..A.GGA...A...C.TA...T.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
+HiMom:7:1:1:1247	516	*	0	0	*	*	0	0	.CCAGC.TTT...T...T.CT...G.....	##############################	BC:Z:NNNNNACN	RG:Z:HiMom.7
+HiMom:7:1:1:1282	516	*	0	0	*	*	0	0	..A..A.GGG...T...G.AG...C.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:1:132	516	*	0	0	*	*	0	0	..A..G.GGG...G...G.GG...G.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
+HiMom:7:1:1:1320	516	*	0	0	*	*	0	0	..A..T.AGT...G...G.TA...C.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1372	516	*	0	0	*	*	0	0	.ACATTTTTTAG.T.A.TTGTT.AC.A...	##############################	BC:Z:NNNGNTTA	RG:Z:HiMom.7
+HiMom:7:1:1:1379	516	*	0	0	*	*	0	0	.AATATAATT...T...TTAGA.TT.....	##############################	BC:Z:NNNCNGAT	RG:Z:HiMom.7
+HiMom:7:1:1:1391	516	*	0	0	*	*	0	0	..G..T.TAA...A...T.AT...T.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:1:1:140	516	*	0	0	*	*	0	0	..A..T.TAA...G...C.TT...T.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:1:1:1513	516	*	0	0	*	*	0	0	.....A..TT...A...A.AA...C.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:1:1:1521	516	*	0	0	*	*	0	0	.AACAA.ATT...T...A.TA..TA.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:1:155	516	*	0	0	*	*	0	0	..G..C.AGT...C...A.TT...G.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:1:1:1555	516	*	0	0	*	*	0	0	..T..G.AGA...A...C.TA...A.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:1:1:164	516	*	0	0	*	*	0	0	..A..A.TAA...T...T.AT...T.....	##############################	BC:Z:NNNNNTTN	RG:Z:HiMom.7
+HiMom:7:1:1:1684	516	*	0	0	*	*	0	0	..G..A.GGT...G...T.TC...T.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1696	516	*	0	0	*	*	0	0	..A..G..GC...G...A.AC...T.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:1:1:170	516	*	0	0	*	*	0	0	..T..C.CAC...G...G.TC...G.....	##############################	BC:Z:NNNNNACN	RG:Z:HiMom.7
+HiMom:7:1:1:173	516	*	0	0	*	*	0	0	.....A..AT...T...C.TT...T.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:1:1733	516	*	0	0	*	*	0	0	..A..G.GTC...T...T.AG...A.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:1770	516	*	0	0	*	*	0	0	..C..T.CTG...G...G.CA...A.....	##############################	BC:Z:NNNNNTCN	RG:Z:HiMom.7
+HiMom:7:1:1:18	516	*	0	0	*	*	0	0	.ATCAG.CTG...A...T.GT..AA.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1815	516	*	0	0	*	*	0	0	.ATGAAAATA...T...TAAAT.AT.....	##############################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:1:1:1836	516	*	0	0	*	*	0	0	.....G..TA...G...T.CT...C.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:1:184	516	*	0	0	*	*	0	0	..C..T.TAA...A...T.AT...G.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:1:1886	4	*	0	0	*	*	0	0	.ACATATGCATACATATATAATAGATA...	%.9:;<217;:999;<;;<<<;;#######	BC:Z:NNNGNGCC	RG:Z:HiMom.7
+HiMom:7:1:1:1906	516	*	0	0	*	*	0	0	..T..C.ATA...C...T.CT...G.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1917	516	*	0	0	*	*	0	0	.....T..GA...C...A.AA...A.....	##############################	BC:Z:NNNNNACN	RG:Z:HiMom.7
+HiMom:7:1:1:195	516	*	0	0	*	*	0	0	..A..G.GTG...G...C.AT...A.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:1954	516	*	0	0	*	*	0	0	.AGA.T.CTT...G...G.AG...C.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:1:2	516	*	0	0	*	*	0	0	..A..G.GAA...C................	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:1:1:2011	516	*	0	0	*	*	0	0	.ACAGCTGGCA..T...AGAGC.AG.A...	##############################	BC:Z:NNNGNTAG	RG:Z:HiMom.7
+HiMom:7:1:1:240	516	*	0	0	*	*	0	0	..G..A.GTA...T...T.CC...C.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:262	516	*	0	0	*	*	0	0	..C..G.CAT...A...C.TG...C.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:1:1:264	516	*	0	0	*	*	0	0	.AACTG.AAT...C...A.CA..CT.....	##############################	BC:Z:NNNNNCGA	RG:Z:HiMom.7
+HiMom:7:1:1:299	516	*	0	0	*	*	0	0	..C..T.GCA...A...C.AA...T.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:30	516	*	0	0	*	*	0	0	..A..A.TTT...T...G.TC...T.....	##############################	BC:Z:NNNNNACN	RG:Z:HiMom.7
+HiMom:7:1:1:353	516	*	0	0	*	*	0	0	..A..T.TAG...A...T.AT...A.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:1:367	516	*	0	0	*	*	0	0	..A..T.AGC...G...A.GT...C.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:1:1:41	516	*	0	0	*	*	0	0	..A..C.AAA...G...T.CA...C.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:416	516	*	0	0	*	*	0	0	..A..C.AAT...G...G.AC...C.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:483	516	*	0	0	*	*	0	0	..G..G.GGG...G...G.TT...T.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:1:1:486	516	*	0	0	*	*	0	0	..A..A.TTT...A...A.AG...T.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
+HiMom:7:1:1:495	516	*	0	0	*	*	0	0	..C..A.CGT...T...T.AA...C.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:508	516	*	0	0	*	*	0	0	..G..C.CAG...T...C.CT...C.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:1:1:517	516	*	0	0	*	*	0	0	.TCATAAAACATCA.TATTGGAAAGGA...	%.75:<999578##################	BC:Z:NNNCNAGA	RG:Z:HiMom.7
+HiMom:7:1:1:535	516	*	0	0	*	*	0	0	.GCCCAAGTATTGA.TATGTGCTCTAA...	%.599:7187:940%0::52599#######	BC:Z:NNNCNCGA	RG:Z:HiMom.7
+HiMom:7:1:1:55	516	*	0	0	*	*	0	0	.TTTATGTCCTT.A.AACTTAG.AGTT...	%/9<<83599####################	BC:Z:NNNGNTTA	RG:Z:HiMom.7
+HiMom:7:1:1:554	516	*	0	0	*	*	0	0	..A..G.AGA...G...T.TC...A.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:1:1:567	516	*	0	0	*	*	0	0	..C..C.GTT...C...G.AC...C.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:1:1:59	516	*	0	0	*	*	0	0	..A..G.TGC...T...T.AC...A.....	##############################	BC:Z:NNNNNACN	RG:Z:HiMom.7
+HiMom:7:1:1:613	516	*	0	0	*	*	0	0	..G..A.TAT...C...G.AT...A.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:1:1:622	516	*	0	0	*	*	0	0	..T..C.AGT...C...A.CT...T.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:1:1:627	516	*	0	0	*	*	0	0	..A..T.GAC...T...A.GC...C.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:684	516	*	0	0	*	*	0	0	..T..T.AGA...C...A.AG...A.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:72	516	*	0	0	*	*	0	0	.ACACACATATCAC.CACATCATACAC...	%..48696;5:6;.%)49;;;9########	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:1:1:812	516	*	0	0	*	*	0	0	..A..C.AAG...T...A.TC...A.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:1:1:874	516	*	0	0	*	*	0	0	..A..A.GCC...G...T.TA...T.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:1:1:931	516	*	0	0	*	*	0	0	..T..G.GAT...G...C.TT...C.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:1:1:965	516	*	0	0	*	*	0	0	.ACTAATCTTCCGC.CATATCCCCAAA...	##############################	BC:Z:NNNTNTAA	RG:Z:HiMom.7
+HiMom:7:1:1:994	516	*	0	0	*	*	0	0	..A..T.GAT...T...G.TT...C.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:1:2:1158	4	*	0	0	*	*	0	0	.GGGTCCTTCATAGTTTTTTTCTACTTTCC	%0777646;099:::95;;;688::99###	BC:Z:NNCTTAGC	RG:Z:HiMom.7
+HiMom:7:1:2:1238	516	*	0	0	*	*	0	0	.TCCTTATATTCAATTATTAATATTTTTAC	##############################	BC:Z:NNCTAAGC	RG:Z:HiMom.7
+HiMom:7:1:2:1275	4	*	0	0	*	*	0	0	.AGTGAAATAAGCCAGACACAGAAAGACA.	%/5204:99971773,44755-39717###	BC:Z:NNNANCTG	RG:Z:HiMom.7
+HiMom:7:1:2:1301	516	*	0	0	*	*	0	0	.AGTAGACTGCATTAATTAATTGGAAGAG.	%0370)024263144:48;;##########	BC:Z:NNNTAACA	RG:Z:HiMom.7
+HiMom:7:1:2:1453	4	*	0	0	*	*	0	0	.ATATCTTATTTTCTTTTCTTTCAGGCTCT	%.:7,,395255##################	BC:Z:NNACCAGG	RG:Z:HiMom.7
+HiMom:7:1:2:150	516	*	0	0	*	*	0	0	.AAGACTTGATTATATCCCTTGTATGA...	##############################	BC:Z:NNNANCCT	RG:Z:HiMom.7
+HiMom:7:1:2:1592	4	*	0	0	*	*	0	0	.GAAAACTGGCACAAGACAAGGATGCCCTC	%,67786861,3466(8485868648583#	BC:Z:NNNGAGCC	RG:Z:HiMom.7
+HiMom:7:1:2:1706	4	*	0	0	*	*	0	0	.GATATGTGGATACAGCTCACAAAGAG...	%,99:6/566999/7###############	BC:Z:NNNCNGAT	RG:Z:HiMom.7
+HiMom:7:1:2:1722	516	*	0	0	*	*	0	0	.AAAGAAAATTAAAGAAAAATATACACGT.	##############################	BC:Z:NNNTCGAC	RG:Z:HiMom.7
+HiMom:7:1:2:1727	516	*	0	0	*	*	0	0	.TATTGAAGGACTTTTGTATCCTCCTTAT.	##############################	BC:Z:NNNTNCTT	RG:Z:HiMom.7
+HiMom:7:1:2:1753	516	*	0	0	*	*	0	0	.GTTCACACAAGGATAATATTTTTGATTAT	##############################	BC:Z:NNTGCTTA	RG:Z:HiMom.7
+HiMom:7:1:2:1782	4	*	0	0	*	*	0	0	.ACCAAGTGTTTGGAGTATGCTGCCTA...	%0:::668885-5335/85###########	BC:Z:NNNTNAGC	RG:Z:HiMom.7
+HiMom:7:1:2:1827	4	*	0	0	*	*	0	0	.AACCGAGGATGTACACTGTCCCTGTGAAA	##############################	BC:Z:NNCAACTG	RG:Z:HiMom.7
+HiMom:7:1:2:1932	4	*	0	0	*	*	0	0	.AGCGATCCTCCCGCCTCTGCCTCCCA...	%,1545541455##################	BC:Z:NNNCNAGA	RG:Z:HiMom.7
+HiMom:7:1:2:1946	516	*	0	0	*	*	0	0	.ATCTTCTGGAATTTCTAACAGCTTGGAA.	%0515.,.35<997################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:1:2:209	516	*	0	0	*	*	0	0	.GACTCAACTCCTGGGCTCCCTACGACCAT	##############################	BC:Z:NNCATTTC	RG:Z:HiMom.7
+HiMom:7:1:2:246	516	*	0	0	*	*	0	0	.GGAGGTTTCATTTAGCCGATATTGTG...	##############################	BC:Z:NNNANTTC	RG:Z:HiMom.7
+HiMom:7:1:2:25	516	*	0	0	*	*	0	0	.GCTTTGGCAAGACAAATCTCCCGTCTGG.	##############################	BC:Z:NNNGATGA	RG:Z:HiMom.7
+HiMom:7:1:2:307	516	*	0	0	*	*	0	0	.GGATGAACAGAAACTAAAATAACACA...	##############################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:1:2:363	516	*	0	0	*	*	0	0	.ATATTCTTTTTTTTTATTTATCAGAT...	##############################	BC:Z:NNNTNCTT	RG:Z:HiMom.7
+HiMom:7:1:2:449	516	*	0	0	*	*	0	0	.ATTCTAATTCTAGGAAATTAACAATC...	%.9315<936970%0###############	BC:Z:NNNGNTGT	RG:Z:HiMom.7
+HiMom:7:1:2:546	516	*	0	0	*	*	0	0	.GGTTGTGTCTCTCTCAGCCTTTGGGATC.	%,46888444685-35##############	BC:Z:NNNANGTT	RG:Z:HiMom.7
+HiMom:7:1:2:605	4	*	0	0	*	*	0	0	.GCATTGAGCAGACGTGGCATCCAGAT...	%)085222/55453################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:1:2:69	516	*	0	0	*	*	0	0	.TCAGTCTGCTGTTTTAAAAAAATACTGTG	##############################	BC:Z:NNGGAGCC	RG:Z:HiMom.7
+HiMom:7:1:2:747	516	*	0	0	*	*	0	0	.AACAACAGCGGAAAATAATAAAAAAAAA.	##############################	BC:Z:NNNCCAGG	RG:Z:HiMom.7
+HiMom:7:1:2:786	4	*	0	0	*	*	0	0	.TAAACAATAATCTGATGATTTATAATCC.	%09<<<<;<;<8<9;<9<;<::<<::####	BC:Z:NNNGATGT	RG:Z:HiMom.7
+HiMom:7:1:2:858	4	*	0	0	*	*	0	0	.AAACGTTGCTGATCTTCTGTTTTAAACTA	%/;7-222265366-6977035:::;626;	BC:Z:NNACATCT	RG:Z:HiMom.7
+HiMom:7:1:2:943	4	*	0	0	*	*	0	0	.AATACCAATAAACCTAGAATGTCTCATAC	%08<9646<6378744774:1005799<4#	BC:Z:NNACCAGG	RG:Z:HiMom.7
+HiMom:7:1:2:974	4	*	0	0	*	*	0	0	.GATCAATGATCACATCTTTGGATATGTAT	%/9979<99:999::9;;:7511<<<77<<	BC:Z:NNTATGTT	RG:Z:HiMom.7
+HiMom:7:1:2:988	4	*	0	0	*	*	0	0	.AAAGGAATGTTCAGCTCTGTGAGTTGAAC	%/92/04:2-2785-3875/404362-162	BC:Z:NNTGGCGA	RG:Z:HiMom.7
+HiMom:7:1:3:1233	516	*	0	0	*	*	0	0	.AACCAATTTCTTTACATACCAAATACGCC	##############################	BC:Z:CCAACAGG	RG:Z:HiMom.7
+HiMom:7:1:3:1294	516	*	0	0	*	*	0	0	TGTAACTTTACTTTAGTTGCTTATTTGTAG	BA############################	BC:Z:TCACAATG	RG:Z:HiMom.7
+HiMom:7:1:3:405	516	*	0	0	*	*	0	0	AAAAAACATAGAACGGGGTCAATATTTTAT	(?A>8(7B?<(:')?@)8(:(*:<8:0>'>	BC:Z:ACACAAGA	RG:Z:HiMom.7
+HiMom:7:1:3:579	516	*	0	0	*	*	0	0	.GAAAAATGACCACACTTGCCTCCTGAGAA	##############################	BC:Z:AATCATGT	RG:Z:HiMom.7
+HiMom:7:1:3:673	516	*	0	0	*	*	0	0	TCCTCAAAAACAAGATAAAACGGTTGAAAT	>()>)''85BBC?#################	BC:Z:TGCCCAAA	RG:Z:HiMom.7
+HiMom:7:1:3:890	516	*	0	0	*	*	0	0	TGCTTCTGTTTCCGTTAGCTAGATAAAGTT	##############################	BC:Z:GTCACCAT	RG:Z:HiMom.7
+HiMom:7:1:3:905	516	*	0	0	*	*	0	0	TGTTATGTTTAATTTTCTTTAGCACCCTTC	>7>?A:-<BA@0>@:@8=A;5%7;9?=:9@	BC:Z:ACATCCTA	RG:Z:HiMom.7
+HiMom:7:1:3:918	516	*	0	0	*	*	0	0	TTTTCATTCCTAGTCATCCACCCCATCAGA	0()@A=:2>3:>(/((<22A>:0(20:@)@	BC:Z:ACTACCTT	RG:Z:HiMom.7
+HiMom:7:2:0:1073	516	*	0	0	*	*	0	0	.....A.CAC...C...C.CA...C.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:2:0:1135	516	*	0	0	*	*	0	0	.....G..GT...A...T.TA...G.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:2:0:1198	516	*	0	0	*	*	0	0	.....T.CTA...T...C.CA...A.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:2:0:1278	516	*	0	0	*	*	0	0	........TA...T...C..A...G.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:2:0:135	516	*	0	0	*	*	0	0	........A...........G.........	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:2:0:1547	516	*	0	0	*	*	0	0	........C...........G...A.....	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:2:0:1598	516	*	0	0	*	*	0	0	........AT...T...A..G...C.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:2:0:1620	516	*	0	0	*	*	0	0	........CA.......A..C...C.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
+HiMom:7:2:0:1668	516	*	0	0	*	*	0	0	.....A.ATA...A...G.TG...T.....	##############################	BC:Z:NNNNNCTN	RG:Z:HiMom.7
+HiMom:7:2:0:186	516	*	0	0	*	*	0	0	........CC...A...T..T...T.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:2:0:205	516	*	0	0	*	*	0	0	........A........T..C...T.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:2:0:287	516	*	0	0	*	*	0	0	........CC...C...T..A...A.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:2:0:382	516	*	0	0	*	*	0	0	........CA...T...T..A...A.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:2:0:441	516	*	0	0	*	*	0	0	........TT...A...A..T...T.....	##############################	BC:Z:NNNNNAGN	RG:Z:HiMom.7
+HiMom:7:2:0:50	516	*	0	0	*	*	0	0	........T........T..G...G.....	##############################	BC:Z:NNNNNGAN	RG:Z:HiMom.7
+HiMom:7:2:0:501	516	*	0	0	*	*	0	0	.....G..AG...A...C.CT...C.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:2:0:73	516	*	0	0	*	*	0	0	.....A.CAT...G...A.AC...G.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:2:0:740	516	*	0	0	*	*	0	0	........TT...A...T..A...A.....	##############################	BC:Z:NNNNNGGN	RG:Z:HiMom.7
+HiMom:7:2:0:766	516	*	0	0	*	*	0	0	........TG...A...A..T...T.....	##############################	BC:Z:NNNNNCCN	RG:Z:HiMom.7
+HiMom:7:2:0:87	516	*	0	0	*	*	0	0	........G........A..T...T.....	##############################	BC:Z:NNNNNCGN	RG:Z:HiMom.7
+HiMom:7:2:1:1004	516	*	0	0	*	*	0	0	.ATTTATCACTA.A.ATCCGCAAACCCTCC	##############################	BC:Z:NNNGCCGA	RG:Z:HiMom.7
+HiMom:7:2:1:1034	516	*	0	0	*	*	0	0	.ATCATTTTCAT.C.TTTCACTGATACATT	%.737:887471%-%1:8555545;696::	BC:Z:NNNAGCCT	RG:Z:HiMom.7
+HiMom:7:2:1:1159	516	*	0	0	*	*	0	0	..ACTT.TAG...G...AAAT..CC.A...	##############################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:2:1:1168	516	*	0	0	*	*	0	0	..TCTA.CTT...T...ATTG..TT.T...	##############################	BC:Z:NNNGNTAG	RG:Z:HiMom.7
+HiMom:7:2:1:1180	516	*	0	0	*	*	0	0	..ATGG.CTT...C...AGAA..TC.A...	##############################	BC:Z:NNNTNAGC	RG:Z:HiMom.7
+HiMom:7:2:1:1214	516	*	0	0	*	*	0	0	.AAAAAAAAAAA.A.TATAAGAAAGAATCA	%035:#########################	BC:Z:NNNCATGA	RG:Z:HiMom.7
+HiMom:7:2:1:1221	516	*	0	0	*	*	0	0	.GGTCACACTCACATAGTGTTCAGAGCACT	##############################	BC:Z:NNGGATGT	RG:Z:HiMom.7
+HiMom:7:2:1:1306	516	*	0	0	*	*	0	0	..ACAT.AAA...T...AACA..GT.A...	##############################	BC:Z:NNNANCTG	RG:Z:HiMom.7
+HiMom:7:2:1:1351	516	*	0	0	*	*	0	0	.....C.ATA...T...A.AA...T.....	##############################	BC:Z:NNNNNTTN	RG:Z:HiMom.7
+HiMom:7:2:1:1424	516	*	0	0	*	*	0	0	..TCAT.TAG...C...ATGG..GT.C...	##############################	BC:Z:NNNCNTCT	RG:Z:HiMom.7
+HiMom:7:2:1:1452	516	*	0	0	*	*	0	0	.GAAATTTGTAAAA.CACCTGCAGAATACT	##############################	BC:Z:NNAGATCC	RG:Z:HiMom.7
+HiMom:7:2:1:1515	516	*	0	0	*	*	0	0	.ATTAAATAT.A.A..GTAATAATAATA..	%/9###########################	BC:Z:NNNGNATG	RG:Z:HiMom.7
+HiMom:7:2:1:1521	516	*	0	0	*	*	0	0	..ACAC.AAA...G...ATCT..TT.C...	##############################	BC:Z:NNNCNAGG	RG:Z:HiMom.7
+HiMom:7:2:1:1536	516	*	0	0	*	*	0	0	.AGCAAAGACTT.G.ACCAACCCAAATGTT	##############################	BC:Z:NNACATCT	RG:Z:HiMom.7
+HiMom:7:2:1:1543	516	*	0	0	*	*	0	0	..TTGA.ATC...A...AATA..TA.C...	##############################	BC:Z:NNNANTTC	RG:Z:HiMom.7
+HiMom:7:2:1:1617	516	*	0	0	*	*	0	0	..CCAT.ATC...G...CCAG..GT.T...	##############################	BC:Z:NNNCNAGG	RG:Z:HiMom.7
+HiMom:7:2:1:1627	516	*	0	0	*	*	0	0	..TGGT.AGA...C...AAAA..CA.T...	##############################	BC:Z:NNNANCTG	RG:Z:HiMom.7
+HiMom:7:2:1:1646	516	*	0	0	*	*	0	0	.TTAATTATA...A..TAAACATTCTAA..	##############################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:2:1:1653	516	*	0	0	*	*	0	0	..AATT.AAA...T...ATCT..AG.A...	##############################	BC:Z:NNNGNTGT	RG:Z:HiMom.7
+HiMom:7:2:1:1682	516	*	0	0	*	*	0	0	..TCTT.TTT...G...AAAA..AA.T...	##############################	BC:Z:NNNGNGCC	RG:Z:HiMom.7
+HiMom:7:2:1:170	4	*	0	0	*	*	0	0	.AGAAGAAATGGGATCCTGCTGTGGCCAGT	%/888865284168866767663(6874/5	BC:Z:NNGAGCCT	RG:Z:HiMom.7
+HiMom:7:2:1:1731	516	*	0	0	*	*	0	0	..TATA.GAA...T...TGCT..AG.T...	##############################	BC:Z:NNNTNAGC	RG:Z:HiMom.7
+HiMom:7:2:1:1755	516	*	0	0	*	*	0	0	..GT.A.TCT...C...C.TG...G.A...	##############################	BC:Z:NNNNNCAN	RG:Z:HiMom.7
+HiMom:7:2:1:1812	516	*	0	0	*	*	0	0	..TTGC.CAC...C...CCAT..AA.G...	##############################	BC:Z:NNNCNTAT	RG:Z:HiMom.7
+HiMom:7:2:1:1853	516	*	0	0	*	*	0	0	..ATCT.TTC...A...AGTG..AT.C...	##############################	BC:Z:NNNCNCGA	RG:Z:HiMom.7
+HiMom:7:2:1:1919	516	*	0	0	*	*	0	0	..AATT.AAA...A...AGAA..AG.A...	##############################	BC:Z:NNNANCTG	RG:Z:HiMom.7
+HiMom:7:2:1:1924	516	*	0	0	*	*	0	0	.ATATTCTGAAG.A..CCAATGAACCAAA.	%116<9579<7###################	BC:Z:NNNAACTG	RG:Z:HiMom.7
+HiMom:7:2:1:1933	516	*	0	0	*	*	0	0	.AGGGTACAT.T.C..AATGTGCGGGTT..	##############################	BC:Z:NNNTTAGC	RG:Z:HiMom.7
+HiMom:7:2:1:1938	4	*	0	0	*	*	0	0	.AGTCCAGTGTCTCTGCTTCCGCAGGGACA	%/818865/058858644866457646668	BC:Z:NNCTCGAC	RG:Z:HiMom.7
+HiMom:7:2:1:1950	516	*	0	0	*	*	0	0	..TT.A.AAA...C...T.CA...T.C...	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
+HiMom:7:2:1:1959	516	*	0	0	*	*	0	0	.GACACATTCCTAC.ACAGAGAAAAATTTA	%*77;;<;<<:<;,%.::;:6:9::<4488	BC:Z:NNTGCTTA	RG:Z:HiMom.7
+HiMom:7:2:1:1987	516	*	0	0	*	*	0	0	..AT.G.ACA...C...T.GT...T.....	##############################	BC:Z:NNNNNTAN	RG:Z:HiMom.7
+HiMom:7:2:1:2006	516	*	0	0	*	*	0	0	..GTAT.TGA...G...CCTT..AG.A...	##############################	BC:Z:NNNGNGCC	RG:Z:HiMom.7
+HiMom:7:2:1:211	516	*	0	0	*	*	0	0	..CTGA.ACA...G...TGCA..AC.C...	##############################	BC:Z:NNNGNTGT	RG:Z:HiMom.7
+HiMom:7:2:1:234	516	*	0	0	*	*	0	0	.AAGCCTGTGGG.A..CCCAGTGGGAGCG.	##############################	BC:Z:NNNGCTTA	RG:Z:HiMom.7
+HiMom:7:2:1:242	516	*	0	0	*	*	0	0	..GCTC.AGC...A...ATAT..TT.G...	##############################	BC:Z:NNNCNCGC	RG:Z:HiMom.7
+HiMom:7:2:1:262	516	*	0	0	*	*	0	0	..ATTG.AAT...C...TTCC..AT.T...	##############################	BC:Z:NNNCNAGG	RG:Z:HiMom.7
+HiMom:7:2:1:298	516	*	0	0	*	*	0	0	..TCAA.TTG...T...CTGC..TT.T...	##############################	BC:Z:NNNGNTAG	RG:Z:HiMom.7
+HiMom:7:2:1:312	516	*	0	0	*	*	0	0	..TTGC.AGA...A...AACT..TG.A...	##############################	BC:Z:NNNANGTT	RG:Z:HiMom.7
+HiMom:7:2:1:363	4	*	0	0	*	*	0	0	.GAAAGGTTTTGCAGCATGTGCAAACTCAC	%-5565678:8177656503512/377856	BC:Z:NNTATGTT	RG:Z:HiMom.7
+HiMom:7:2:1:37	516	*	0	0	*	*	0	0	.TGTAAACGA...C..TTCCTGTTCAGC..	##############################	BC:Z:NNNGNCGA	RG:Z:HiMom.7
+HiMom:7:2:1:370	516	*	0	0	*	*	0	0	..CTGG.AGC...T...CATA..AA.C...	##############################	BC:Z:NNNANCAT	RG:Z:HiMom.7
+HiMom:7:2:1:377	516	*	0	0	*	*	0	0	..AGAA.GTG...T...AAAT..AA.A...	##############################	BC:Z:NNNCNTCT	RG:Z:HiMom.7
+HiMom:7:2:1:414	516	*	0	0	*	*	0	0	..TAGA.AGC...A...TCAG..AC.G...	##############################	BC:Z:NNNGNTTA	RG:Z:HiMom.7
+HiMom:7:2:1:421	516	*	0	0	*	*	0	0	..GTTA.TTC...A...CGTG..AT.C...	##############################	BC:Z:NNNANCCT	RG:Z:HiMom.7
+HiMom:7:2:1:428	516	*	0	0	*	*	0	0	.ATGTGAATA.T.A..TAGTTGGGATTCA.	##############################	BC:Z:NNNATGTT	RG:Z:HiMom.7
+HiMom:7:2:1:44	516	*	0	0	*	*	0	0	.ACTACCTCA.G.A..AAGCAGGTTCTAA.	##############################	BC:Z:NNNAGCGA	RG:Z:HiMom.7
+HiMom:7:2:1:466	516	*	0	0	*	*	0	0	.ACACTCACA.C.A..TGTTTGGAATGA..	##############################	BC:Z:NNNTNACA	RG:Z:HiMom.7
+HiMom:7:2:1:555	516	*	0	0	*	*	0	0	..CAAT.TCT...G...TACA..CT.C...	##############################	BC:Z:NNNCNGAT	RG:Z:HiMom.7
+HiMom:7:2:1:558	516	*	0	0	*	*	0	0	.AAAATATCA.T.A..AATAAATAATCA..	##############################	BC:Z:NNNANCGA	RG:Z:HiMom.7
+HiMom:7:2:1:56	516	*	0	0	*	*	0	0	..GCCA.GGT...A...TCAC..GG.C...	##############################	BC:Z:NNNTNAGC	RG:Z:HiMom.7
+HiMom:7:2:1:569	516	*	0	0	*	*	0	0	..AGGC.AGT...G...GTCC..GT.A...	##############################	BC:Z:NNNANCTG	RG:Z:HiMom.7
+HiMom:7:2:1:604	516	*	0	0	*	*	0	0	.ATGATGAAACTCT.TCTCTACTAAAAATA	##############################	BC:Z:NNCAACTG	RG:Z:HiMom.7
+HiMom:7:2:1:628	516	*	0	0	*	*	0	0	.AGTATGCCC.C.C..ACCACTCCTATT..	##############################	BC:Z:NNNTAACA	RG:Z:HiMom.7
+HiMom:7:2:1:64	516	*	0	0	*	*	0	0	.ATTAATCTT...T..GCACAATTCATT..	##############################	BC:Z:NNNANGTT	RG:Z:HiMom.7
+HiMom:7:2:1:684	516	*	0	0	*	*	0	0	.AAAAATCAAATGA.CATAATTTTATAAAA	##############################	BC:Z:NNAAACGA	RG:Z:HiMom.7
+HiMom:7:2:1:699	516	*	0	0	*	*	0	0	..AATT.TTG...T...ATTT..GA.T...	##############################	BC:Z:NNNCNCGA	RG:Z:HiMom.7
+HiMom:7:2:1:714	516	*	0	0	*	*	0	0	.ATTAACTTA.A.T..ACCACAACCTAA..	%.:###########################	BC:Z:NNNAGCGA	RG:Z:HiMom.7
+HiMom:7:2:1:722	516	*	0	0	*	*	0	0	..CCTC.CTG...C...CTGT..TG.C...	##############################	BC:Z:NNNCNAGG	RG:Z:HiMom.7
+HiMom:7:2:1:749	516	*	0	0	*	*	0	0	..AGTG.TAC...T...CTTG..CT.T...	##############################	BC:Z:NNNTNGAC	RG:Z:HiMom.7
+HiMom:7:2:1:760	516	*	0	0	*	*	0	0	.GTCTGTTTTATGT.AAATATTTTGTTTAA	##############################	BC:Z:NNACAACA	RG:Z:HiMom.7
+HiMom:7:2:1:8	516	*	0	0	*	*	0	0	..TGCG.TGG...C...AGGC..TT.T...	##############################	BC:Z:NNNANNNN	RG:Z:HiMom.7
+HiMom:7:2:1:833	516	*	0	0	*	*	0	0	..GAGC.CCT...A...CTCC..GA.G...	##############################	BC:Z:NNNANCCT	RG:Z:HiMom.7
+HiMom:7:2:1:848	516	*	0	0	*	*	0	0	..TACT.AGT...G...TGTT..GC.T...	##############################	BC:Z:NNNANCGA	RG:Z:HiMom.7
+HiMom:7:2:1:893	516	*	0	0	*	*	0	0	.GAGACAGAGTCTC.CTCTGTTCCCTAGCC	##############################	BC:Z:NNCAATTC	RG:Z:HiMom.7
+HiMom:7:2:1:998	516	*	0	0	*	*	0	0	..ATGT.TGC...A...TATA..GG.A...	##############################	BC:Z:NNNANGTT	RG:Z:HiMom.7
+HiMom:7:2:2:0	516	*	0	0	*	*	0	0	.ATTCCTT.A....................	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:2:2:131	4	*	0	0	*	*	0	0	.ATATATTGACAGCAGTCATGTTGTTGAAG	%0<<<:<959874492:96999969:7784	BC:Z:CACAATCC	RG:Z:HiMom.7
+HiMom:7:2:2:1636	516	*	0	0	*	*	0	0	.GTGTAAAAGTAGGGAAATACTATAGCAAG	##############################	BC:Z:ATCAACCC	RG:Z:HiMom.7
+HiMom:7:2:2:1974	516	*	0	0	*	*	0	0	.ACGCCAATACAAAAATGTTGAAGCTAGCT	##############################	BC:Z:AGCAATCT	RG:Z:HiMom.7
+HiMom:7:2:2:351	516	*	0	0	*	*	0	0	.GGGGTTGAGGTGTAAATAGAACATTTGTA	##############################	BC:Z:TGATAGAA	RG:Z:HiMom.7
+HiMom:7:2:2:646	516	*	0	0	*	*	0	0	.GAATCTAAGAAGACACAAAACTAAGGAAA	##############################	BC:Z:ATCAATTA	RG:Z:HiMom.7
+HiMom:7:2:2:828	516	*	0	0	*	*	0	0	.TCAAGTCAATTTGGGACTTGAAACAGCTC	##############################	BC:Z:TATATCGA	RG:Z:HiMom.7
+HiMom:7:2:3:1529	516	*	0	0	*	*	0	0	.TTATATGAATAGATAAATAAATAATCAAT	##############################	BC:Z:TAGAACCT	RG:Z:HiMom.7
+HiMom:7:2:3:179	516	*	0	0	*	*	0	0	CATTATTGTTAGACTGATTTTTTATAATCT	B@)104..*0-A(@@(<A9A<(+9)-=6(B	BC:Z:GTTTATTA	RG:Z:HiMom.7
+HiMom:7:2:3:198	516	*	0	0	*	*	0	0	TGTCATTTTCTTTGCCTTAATTGTTCTTCT	5@CBB7-*<=####################	BC:Z:CAGGATCT	RG:Z:HiMom.7
+HiMom:7:2:3:2030	516	*	0	0	*	*	0	0	CGAGATAATTTTTTAAAAAAAGTCCAAAAA	((@;()@==*7<(5A@<C>###########	BC:Z:GATCAAGA	RG:Z:HiMom.7
+HiMom:7:2:3:247	516	*	0	0	*	*	0	0	TGTACATGACCAGGTAATTTGGTTATGTGA	<@596353;)>@A7=:,A0'6>########	BC:Z:CGGTAGCT	RG:Z:HiMom.7
+HiMom:7:2:3:4	516	*	0	0	*	*	0	0	AGAGGCAATAAGTTTTAA............	A>BA@9BAB3AA##################	BC:Z:NNNNNNNN	RG:Z:HiMom.7
+HiMom:7:2:3:862	516	*	0	0	*	*	0	0	.CTTTAAGAAATCATTCATTCTGCAAACAC	##############################	BC:Z:TAACAAGA	RG:Z:HiMom.7
