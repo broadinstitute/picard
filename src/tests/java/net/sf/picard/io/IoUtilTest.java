@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
 public class IoUtilTest {
 
     private static final String TEST_FILE_PREFIX = "foo";
-    private static final String TEST_FILE_EXTENSIONS[] = { ".txt", ".txt.gz" };
+    private static final String TEST_FILE_EXTENSIONS[] = { ".txt", ".txt.gz", ".txt.bz2" };
     private static final String TEST_STRING = "bar!";
 
     @Test
@@ -54,7 +54,8 @@ public class IoUtilTest {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line = reader.readLine();
             Assert.assertEquals(randomizedTestString, line);
-        }    }
+        }
+    }
 
     @Test(groups={"unix"})
     public void testGetCanonicalPath() throws IOException {
