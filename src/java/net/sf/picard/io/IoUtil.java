@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import org.apache.tools.bzip2.CBZip2InputStream;
+import org.apache.tools.bzip2.CBZip2OutputStream;
 
 /**
  * A class for utility methods that wrap or aggregate functionality in Java IO.
@@ -183,6 +185,9 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     public static InputStream openFileForReading(final File file) {
 
         try {
+            if(file.getName().endsWith(".bz2")) {
+                return openBzipFileForReading(file);
+            }
             if (file.getName().endsWith(".gz") ||
                 file.getName().endsWith(".bfq"))  {
                 return openGzipFileForReading(file);
@@ -205,14 +210,36 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * @return the input stream to read from
      */
     public static InputStream openGzipFileForReading(final File file) {
-
+        
         try {
             return new GZIPInputStream(new FileInputStream(file));
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file: " + file.getName(), ioe);
         }
-   }
+    }
+
+    /**
+     * Opens a GZIP-encoded file for reading, decompressing it if necessary
+     *
+     * @param file  The file to open
+     * @return the input stream to read from
+     */
+    public static InputStream openBzipFileForReading(final File file) {
+
+        try {
+            final FileInputStream fis = new FileInputStream(file);
+            if(fis.read() != 66 || fis.read() != 90) { //Read magic number 'BZ' or else CBZip2InputStream will complain about it
+                fis.close();
+                throw new PicardException(file.getAbsolutePath() + " is not a BZIP file.");
+            }
+
+            return new CBZip2InputStream(fis);
+        }
+        catch (IOException ioe) {
+            throw new PicardException("Error opening file: " + file.getName(), ioe);
+        }
+    }
 
     /**
      * Opens a file for writing, overwriting the file if it already exists
@@ -234,6 +261,9 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     public static OutputStream openFileForWriting(final File file, final boolean append) {
 
         try {
+            if (file.getName().endsWith(".bz2")) {
+                return openBzipFileForWriting(file, append);
+            }
             if (file.getName().endsWith(".gz") ||
                 file.getName().endsWith(".bfq")) {
                 return openGzipFileForWriting(file, append);
@@ -295,6 +325,27 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
 
         try {
             return new GZIPOutputStream(new FileOutputStream(file, append));
+        }
+        catch (IOException ioe) {
+            throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
+        }
+    }
+
+    /**
+     * Opens a BZIP encoded file for writing
+     *
+     * @param file  the file to write to
+     * @param append    whether to append to the file if it already exists (we overwrite it if false)
+     * @return the output stream to write to
+     */
+    public static OutputStream openBzipFileForWriting(final File file, final boolean append) {
+
+        try {
+
+            final FileOutputStream fos = new FileOutputStream(file, append);
+            fos.write(66); //write magic number 'BZ' because CBZip2OutputStream does not do it for you
+            fos.write(90);
+            return new CBZip2OutputStream(fos);
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
