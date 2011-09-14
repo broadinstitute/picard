@@ -34,8 +34,10 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.ReadConfiguration.InclusiveRange;
 import net.sf.picard.util.Log;
 import net.sf.samtools.util.BufferedLineReader;
+import net.sf.samtools.util.CoordMath;
 
 /**
  * Class for specifying options for parsing Illumina basecall output files for a lane, and then creating
@@ -57,6 +59,8 @@ public class IlluminaDataProviderFactory {
     // it must be set by the caller in the ctor.
     private final Integer barcodeCycle;
     private final Integer barcodeLength;
+
+    private Map<Integer, EndType> readToEndType = new HashMap<Integer,EndType>();
 
     // The kinds of data the caller is interested in.  In some cases, more data types
     // than requested are returned, because of the granularity of the data types in files.
@@ -230,30 +234,9 @@ public class IlluminaDataProviderFactory {
 
     private void makeQseqParsers(final List<IlluminaParser> parsers, final List<Integer> tiles) {
         if (isBarcodeAwareBaseCaller()) {
-            // Barcode is in a separate qseq file.
-            int firstEndFileNumber = 1;
-            int secondEndFileNumber = 2;
-            int barcodeFileNumber = -1;
-            if (readConfiguration.isBarcoded()) {
-                if (readConfiguration.getBarcodeStart() < readConfiguration.getFirstStart()) {
-                    barcodeFileNumber = 1;
-                    firstEndFileNumber = 2;
-                    secondEndFileNumber = 3;
-                } else if (!readConfiguration.isPairedEnd()) {
-                    barcodeFileNumber = 2;
-                } else if (readConfiguration.getBarcodeStart() < readConfiguration.getSecondStart()) {
-                    barcodeFileNumber = 2;
-                    secondEndFileNumber = 3;
-                } else {
-                    barcodeFileNumber = 3;
-                }
-            }
-            parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, EndType.FIRST, firstEndFileNumber, tiles));
-            if (readConfiguration.isPairedEnd()) {
-                parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, EndType.SECOND, secondEndFileNumber, tiles));
-            }
-            if (readConfiguration.isBarcoded()) {
-                parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, EndType.BARCODE, barcodeFileNumber, tiles));
+            for (final int read : this.readToEndType.keySet()) {
+                final EndType type = this.readToEndType.get(read);
+                parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, type, read, tiles));
             }
         } else {
             // Barcode is in one of the regular qseq files.
@@ -357,83 +340,69 @@ public class IlluminaDataProviderFactory {
 
 
     private void computeReadConfigurationFromBarcodeAwareQseq() {
-        final File[] qseqs = new File[3];
+        final int MAX_QSEQS_PER_TILE = 4;
+        final File[] qseqs = new File[MAX_QSEQS_PER_TILE];
+        final int[] readLengths = new int[MAX_QSEQS_PER_TILE];
 
+        int numQseqs = 1;
         qseqs[0] = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1)[0].file;
+        readLengths[0] = QseqParser.getReadLength(qseqs[0]);
 
-        for (int end = 2; end <= 3; ++end) {
+        for (int end = 2; end <= MAX_QSEQS_PER_TILE; ++end) {
             final TiledIlluminaFile[] files = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, end);
-            qseqs[end-1] = (files.length > 0? files[0].file: null);
+            if (files.length > 0) {
+                qseqs[end-1] = files[0].file;
+                readLengths[end-1] = QseqParser.getReadLength(qseqs[end-1]);
+                numQseqs++;
+            }
         }
 
-        readConfiguration.setBarcoded(barcodeCycle != null);
-        int numQseqs = readConfiguration.isBarcoded()? 2: 1;
+        final boolean barcoded = this.barcodeCycle != null;
+        readConfiguration.setBarcoded(barcoded);
 
-        // Determine if paired end
-        if (pairedEnd == null) {
-            pairedEnd = qseqs[numQseqs] != null;
+        // Walk through the various qseqs and figure out how things were laid out
+        final int barcodeStart = barcoded ? this.barcodeCycle : 0;
+        final int barcodeEnd   = barcoded ? barcodeStart + barcodeLength - 1 : 0;
+        final InclusiveRange first   = readConfiguration.getFirstRange();
+        final InclusiveRange second  = readConfiguration.getSecondRange();
+        final InclusiveRange barcode = readConfiguration.getBarcodeRange();
+
+
+        int start = 1;
+
+        for (int i=0; i<readLengths.length; ++i) {
+            final int len = readLengths[i];
+            if (len != 0) {
+                final int end = start + len - 1;
+                if (CoordMath.encloses(barcodeStart, barcodeEnd, start, end)) {
+                    if (barcode.getStart() == 0) barcode.setStart(start);
+                    barcode.setEnd(end);
+                    this.readToEndType.put(i+1, EndType.BARCODE);
+                    readConfiguration.setBarcodeReads(readConfiguration.getBarcodeReads() + 1);
+                }
+                else if (CoordMath.overlaps(barcodeStart, barcodeEnd, start, end)) {
+                    throw new PicardException("Read #" + (i+1) + " is part barcode read and part non-barcode read!");
+                }
+                else if (first.getStart() == 0) {
+                    first.setStart(start);
+                    first.setEnd(end);
+                    this.readToEndType.put(i+1, EndType.FIRST);
+                }
+                else if (second.getStart() == 0) {
+                    second.setStart(start);
+                    second.setEnd(end);
+                    this.readToEndType.put(i+1, EndType.SECOND);
+                }
+                else {
+                    throw new PicardException("Found more reads than we know what to do with!");
+                }
+
+                start += len;
+            }
         }
-        if (pairedEnd) {
-            ++numQseqs;
-        }
+        
+        if (pairedEnd == null) pairedEnd = second.getLength() != 0;
         readConfiguration.setPairedEnd(pairedEnd);
-
-        // Read lengths from all qseqs
-        final int[] qseqLengths = new int[numQseqs];
-        for (int i = 0; i < numQseqs; ++i) {
-            qseqLengths[i] = QseqParser.getReadLength(qseqs[i]);
-        }
-
-        // Determine order of barcode, first end & second end
-        // Which qseq file is the first end
-        int firstEndIndex = 0;
-        // Which qseq file is the second end.
-        int secondEndIndex = 1;
-        // Which qseq file contains the barcode
-        int barcodeIndex = -1;
-
-        if (readConfiguration.isBarcoded()) {
-            // Figure out which of up to 3 files contains the barcode.
-            int cyclesSoFar = 1;
-            for (barcodeIndex = 0; (barcodeCycle > cyclesSoFar) && (barcodeIndex < qseqLengths.length); ++barcodeIndex) {
-                cyclesSoFar += qseqLengths[barcodeIndex];
-            }
-            if (barcodeCycle != cyclesSoFar) {
-                throw new PicardException("Barcode cycle " + barcodeCycle + " does not fall on qseq boundary for barcode-aware qseqs.");
-            }
-            if (barcodeIndex <= secondEndIndex) {
-                ++secondEndIndex;
-            }
-            if (barcodeIndex == firstEndIndex) {
-                ++firstEndIndex;
-            }
-        }
-
-        // Get the InclusiveRange objects in the order they have been read in this run.
-        final ReadConfiguration.InclusiveRange[] ranges = new ReadConfiguration.InclusiveRange[numQseqs];
-        ranges[firstEndIndex] = readConfiguration.getFirstRange();
-        if (pairedEnd) {
-            ranges[secondEndIndex] = readConfiguration.getSecondRange();
-        }
-        if (readConfiguration.isBarcoded()) {
-            ranges[barcodeIndex] = readConfiguration.getBarcodeRange();
-        }
-
-        // Fill out the ranges according to where the barcode lies.
-        int cyclesSoFar = 0;
-        for (int i = 0; i < ranges.length; ++i) {
-            ++cyclesSoFar;
-            ranges[i].setStart(cyclesSoFar);
-            cyclesSoFar += (qseqLengths[i] - 1);
-            ranges[i].setEnd(cyclesSoFar);
-        }
-
-        if (readConfiguration.isBarcoded()) {
-            if (readConfiguration.getBarcodeLength() != barcodeLength) {
-                throw new PicardException("Barcode length from qseq file (" + readConfiguration.getBarcodeLength() +
-                        ") != barcode length from command line (" + barcodeLength +").");
-            }
-        }
     }
 
 

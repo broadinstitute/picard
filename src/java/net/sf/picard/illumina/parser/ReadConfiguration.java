@@ -39,6 +39,7 @@ public class ReadConfiguration {
     private boolean pairedEnd;
     private boolean barcoded;
     private EndType barcodeRead;
+    private int barcodeReads;
 
     private final InclusiveRange first =  new InclusiveRange("first");
     // These are not always used but it's easier to initialize them unconditionally.  There
@@ -126,11 +127,13 @@ public class ReadConfiguration {
         return barcoded;
     }
 
-
-
     public void setBarcoded(final boolean barcoded) {
         this.barcoded = barcoded;
     }
+
+    public int getBarcodeReads() { return barcodeReads; }
+
+    public void setBarcodeReads(final int barcodeReads) { this.barcodeReads = barcodeReads; }
 
     /**
      * Which end contains the barcode.
