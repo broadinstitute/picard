@@ -29,6 +29,7 @@ import net.sf.picard.util.IlluminaUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -99,7 +100,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
     public QseqParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
                       final EndType endType, final int fileNumber, final List<Integer> tiles) {
         super(readConfiguration, lane, directory);
-        if (fileNumber < 1 || fileNumber > 3) {
+        if (fileNumber < 1 || fileNumber > 4) {
             throw new IllegalArgumentException("Invalid fileNumber: " + fileNumber);
         }
         this.endType = endType;
@@ -150,7 +151,12 @@ public class QseqParser extends AbstractIlluminaTextParser {
             expectedLengthIncludingBarcode += getReadConfiguration().getBarcodeLength();
         }
         if (expectedLengthIncludingBarcode != baseString.length()) {
-            throw new PicardException("Length of bases does not match expected in " + getCurrentFilename());
+            if (isBarcodeQseq() && getReadConfiguration().getBarcodeReads() > 1) {
+                // That's ok then
+            }
+            else {
+                throw new PicardException("Length of bases does not match expected in " + getCurrentFilename());
+            }
         }
 
         data.setOrCheckLane(lane);
@@ -178,10 +184,25 @@ public class QseqParser extends AbstractIlluminaTextParser {
             data.getBarcodeRead().setQualities(barcodeQuals);
         } else {
             final byte[] bases = StringUtil.stringToBytes(baseString);
-            end.setBases(bases);
             final byte[] quals = IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(qualString);
-            end.setQualities(quals);
+
+            if (!isBarcodeQseq() || end.getBases() == null) {
+                end.setBases(bases);
+                end.setQualities(quals);
+            }
+            else {
+                end.setBases(concat(end.getBases(), bases));
+                end.setQualities(concat(end.getQualities(), quals));
+            }
         }
+    }
+
+    // Concatenate two arrays
+    private byte[] concat(final byte[] b1, final byte[] b2) {
+        final byte[] retval = new byte[b1.length + b2.length];
+        System.arraycopy(b1, 0, retval, 0, b1.length);
+        System.arraycopy(b2, 0, retval, b1.length, b2.length);
+        return retval;
     }
 
     /**
