@@ -297,6 +297,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         private final Histogram<Integer> readLengthHistogram = new Histogram<Integer>();
         private AlignmentSummaryMetrics metrics;
         private long chimeras;
+        private long chimerasDenominator;
         private long adapterReads;
         private long indels;
 
@@ -349,7 +350,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
                     metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
                     metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
-                    metrics.PCT_CHIMERAS = this.chimeras / (double) metrics.PF_HQ_ALIGNED_READS;
+                    metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
 
                     metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
@@ -386,15 +387,17 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                         if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
                             metrics.READS_ALIGNED_IN_PAIRS++;
 
-                            // With both reads mapped we can see if this pair is chimeric
-                            if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
-                                 !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
+                            // Check that both ends have mapq > minimum
+                            final Integer mateMq = record.getIntegerAttribute("MQ");
+                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD &&
+                                    record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                                ++this.chimerasDenominator;
 
-                                // Check that both ends have mapq > minimum
-                                final Integer mateMq = record.getIntegerAttribute("MQ");
-                                if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD &&
-                                        record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                                // With both reads mapped we can see if this pair is chimeric
+                                if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
+                                     !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
                                     ++this.chimeras;
+
                                 }
                             }
                         }
