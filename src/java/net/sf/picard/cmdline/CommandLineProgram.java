@@ -151,8 +151,8 @@ public abstract class CommandLineProgram {
             // Intentially not checking the return values, because it may be that the program does not
             // need a tmp_dir. If this fails, the problem will be discovered downstream.
             if (!f.exists()) f.mkdirs();
-            f.setReadable(true, true);
-            f.setWritable(true, true);
+            f.setReadable(true, false);
+            f.setWritable(true, false);
             System.setProperty("java.io.tmpdir", f.getAbsolutePath()); // in loop so that last one takes effect
         }
 
