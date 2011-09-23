@@ -33,7 +33,6 @@ public class IlluminaEndData {
     private byte[] qualities;
     private FourChannelIntensityData rawIntensities;
     private FourChannelIntensityData noise;
-    private FourChannelIntensityData processedIntensities;
 
     /**
      * @return ASCII byte representation of bases.
@@ -55,17 +54,6 @@ public class IlluminaEndData {
 
     public void setNoise(final FourChannelIntensityData noise) {
         this.noise = noise;
-    }
-
-    /**
-     * @return Processed intensity values as produced by Illumina software, converted to shorts.
-     */
-    public FourChannelIntensityData getProcessedIntensities() {
-        return processedIntensities;
-    }
-
-    public void setProcessedIntensities(final FourChannelIntensityData processedIntensities) {
-        this.processedIntensities = processedIntensities;
     }
 
     /**

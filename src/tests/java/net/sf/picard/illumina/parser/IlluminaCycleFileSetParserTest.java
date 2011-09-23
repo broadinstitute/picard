@@ -98,7 +98,7 @@ public class IlluminaCycleFileSetParserTest {
     }
 
     @Test
-    public void testSeekToTileAndCompareWithNse() {
+    public void testSeekCnf() {
         final ReadConfiguration readConfiguration = new ReadConfiguration();
         readConfiguration.setFirstStart(1);
         readConfiguration.setFirstEnd(4);
@@ -106,21 +106,76 @@ public class IlluminaCycleFileSetParserTest {
 
         final CnfParser cnfParser = new CnfParser(readConfiguration, TEST_DATA_DIR, LANE, null);
         cnfParser.seekToTile(2);
-        final NseParser nseParser = new NseParser(readConfiguration, TEST_DATA_DIR, 2, null);
-        nseParser.seekToTile(2);
         int numReads;
+        int noiseIndex = 0;
         for (numReads = 0; cnfParser.hasNext(); ++numReads) {
             final IlluminaReadData read = new IlluminaReadData();
             read.setFirstEnd(new IlluminaEndData());
             cnfParser.next(read);
-            final IlluminaReadData nseParserRead = new IlluminaReadData();
-            nseParserRead.setFirstEnd(new IlluminaEndData());
-            if (nseParser.hasNext()) {
-                // the nse file only has 100 reads in it.
-                nseParser.next(nseParserRead);
-                Assert.assertEquals(read.getFirstEnd().getNoise(), nseParserRead.getFirstEnd().getNoise());
+
+            if(noiseIndex != noiseData.length && noiseData[noiseIndex].index == numReads) {
+                final CnfTestReads testReads = noiseData[noiseIndex];
+                //The cycles are arranged in channels but the comparisons below are done on a per cycle basis
+                final FourChannelIntensityData fcid = read.getFirstEnd().getNoise();
+                short [] a = fcid.getA();
+                short [] c = fcid.getC();
+                short [] g = fcid.getG();
+                short [] t = fcid.getT();
+
+                for(int i = 0; i < a.length; i++) {
+                    Assert.assertEquals(testReads.acgtNoiseReads[i][0], a[i]);
+                    Assert.assertEquals(testReads.acgtNoiseReads[i][1], c[i]);
+                    Assert.assertEquals(testReads.acgtNoiseReads[i][2], g[i]);
+                    Assert.assertEquals(testReads.acgtNoiseReads[i][3], t[i]);
+                }
             }
         }
         Assert.assertEquals(numReads, TILE_2_READS);
     }
+
+    private static class CnfTestReads {
+        public CnfTestReads(int index, short [][] acgtNoiseReads) {
+            this.index = index;
+            this.acgtNoiseReads = acgtNoiseReads;
+        }
+        public int index;
+        public short[][] acgtNoiseReads;
+    }
+
+    public static CnfTestReads [] noiseData = new CnfTestReads[]{
+            new CnfTestReads(0,   new short[][]{ new short[]{0,  9, 0, 0},
+                                                 new short[]{0, 10, 0, 0},
+                                                 new short[]{0,  0, 0, 0},
+                                                 new short[]{0,  0, 0, 0}}),
+
+            new CnfTestReads(19,  new short[][]{ new short[]{0,  21, 0, 11},
+                                                 new short[]{0,  13, 0, 0},
+                                                 new short[]{0,  0,  0, 0},
+                                                 new short[]{0,  0,  0, 0}}),
+
+            new CnfTestReads(39,  new short[][]{ new short[]{10,  26, 0, 11},
+                                                 new short[]{0,   20, 0, 0},
+                                                 new short[]{0,   0,  0, 0},
+                                                 new short[]{0,   12, 0, 0}}),
+
+            new CnfTestReads(74,  new short[][]{ new short[]{9,    9, 0, 11},
+                                                 new short[]{0,   10, 0, 10},
+                                                 new short[]{0,   0,  0, 0},
+                                                 new short[]{0,   13, 0, 0}}),
+
+            new CnfTestReads(90,  new short[][]{ new short[]{8,   11, 0, 11},
+                                                 new short[]{0,   15, 0, 16},
+                                                 new short[]{0,   0,  0, 0},
+                                                 new short[]{0,   14, 0, 0}}),
+
+            new CnfTestReads(98,  new short[][]{ new short[]{6,   10, 0, 11},
+                                                 new short[]{0,   10, 0, 9},
+                                                 new short[]{0,   0,  0, 0},
+                                                 new short[]{0,   8, 0, 0}}),
+
+            new CnfTestReads(99,  new short[][]{ new short[]{9,   9, 0, 10},
+                                                 new short[]{0,   10, 0, 9},
+                                                 new short[]{0,   0,  0, 0},
+                                                 new short[]{0,   8, 0, 0}})
+    };
 }

@@ -48,7 +48,7 @@ import net.sf.samtools.util.CoordMath;
 public class IlluminaDataProviderFactory {
     private static final Log log = Log.getInstance(IlluminaDataProviderFactory.class);
 
-    public enum BaseCallerVersion { Bustard_1_1, Bustard_1_3, Bustard_1_4, rta, Bustard_1_5, Bustard_1_6 }
+    public enum BaseCallerVersion { Bustard_1_3, Bustard_1_4, rta, Bustard_1_5, Bustard_1_6 }
     public enum ImageAnalyzerVersion {Firecrest_1_1, Firecrest_1_3, Firecrest_1_4, rta}
 
     // The following properties must be specified by caller.
@@ -71,7 +71,6 @@ public class IlluminaDataProviderFactory {
     private File rawIntensityDirectory;
     private Boolean pairedEnd;
     private BaseCallerVersion baseCallerVersion;
-    private ImageAnalyzerVersion imageAnalyzerVersion;
 
     // Set to true after computeReadConfiguration() method is called
     private boolean prepared = false;
@@ -139,11 +138,8 @@ public class IlluminaDataProviderFactory {
             computeReadConfiguration();
         }
         final TiledIlluminaFile[] tiledFiles;
-        if (baseCallerVersion == BaseCallerVersion.Bustard_1_1) {
-            tiledFiles = IlluminaFileUtil.getNonEndedIlluminaBasecallFiles(basecallDirectory, "seq", lane);
-        } else {
-            tiledFiles = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1);
-        }
+        tiledFiles = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1);
+
         final List<Integer> ret = new ArrayList<Integer>(tiledFiles.length);
         for (final TiledIlluminaFile tiledFile : tiledFiles) {
             ret.add(tiledFile.tile);
@@ -185,45 +181,28 @@ public class IlluminaDataProviderFactory {
                     parsers.add(new BarcodeParser(readConfiguration, basecallDirectory, lane, tiles));
                     break;
                 case BaseCalls:
-                    if (baseCallerVersion == BaseCallerVersion.Bustard_1_1) {
-                        parsers.add(new SeqParser(readConfiguration, basecallDirectory, lane, tiles));
-                    } else if (!madeQseqParser) {
+                    if (!madeQseqParser) {
                         makeQseqParsers(parsers, tiles);
                         madeQseqParser = true;
                     }
                     break;
                 case Noise:
-                    if (imageAnalyzerVersion == ImageAnalyzerVersion.rta) {
-                        parsers.add(new CnfParser(readConfiguration, rawIntensityDirectory, lane, tiles));
-                    } else {
-                        parsers.add(new NseParser(readConfiguration, rawIntensityDirectory, lane, tiles));
-                    }
+                    parsers.add(new CnfParser(readConfiguration, rawIntensityDirectory, lane, tiles));
                     break;
                 case PF:
-                    if (baseCallerVersion == BaseCallerVersion.Bustard_1_1) {
-                        parsers.add(new QhgParser(readConfiguration, basecallDirectory, lane, tiles));
-                    } else if (!madeQseqParser) {
+                    if (!madeQseqParser) {
                         makeQseqParsers(parsers, tiles);
                         madeQseqParser = true;
                     }
                     break;
-                case ProcessedIntensities:
-                    parsers.add(new Sig2Parser(readConfiguration, basecallDirectory, lane, tiles));
-                    break;
                 case QualityScores:
-                    if (baseCallerVersion == BaseCallerVersion.Bustard_1_1) {
-                        parsers.add(new PrbParser(readConfiguration, basecallDirectory, lane, tiles));
-                    } else if (!madeQseqParser) {
+                    if (!madeQseqParser) {
                         makeQseqParsers(parsers, tiles);
                         madeQseqParser = true;
                     }
                     break;
                 case RawIntensities:
-                    if (imageAnalyzerVersion == ImageAnalyzerVersion.rta) {
-                        parsers.add(new CifParser(readConfiguration, rawIntensityDirectory, lane, tiles));
-                    } else {
-                        parsers.add(new IntParser(readConfiguration, rawIntensityDirectory, lane, tiles));
-                    }
+                    parsers.add(new CifParser(readConfiguration, rawIntensityDirectory, lane, tiles));
                     break;
             }
         }
@@ -259,12 +238,8 @@ public class IlluminaDataProviderFactory {
         if (!prepared) {
             computeReadConfiguration();
         }
-        if (imageAnalyzerVersion == ImageAnalyzerVersion.rta) {
-            return CifParser.cifExists(rawIntensityDirectory, lane, tile);
 
-        } else {
-            return IntParser.intExists(rawIntensityDirectory, lane, tile);
-        }
+        return CifParser.cifExists(rawIntensityDirectory, lane, tile);
     }
 
     /**
@@ -275,23 +250,12 @@ public class IlluminaDataProviderFactory {
         if (prepared) {
             throw new IllegalStateException("Already prepared");
         }
-        if (baseCallerVersion == null || imageAnalyzerVersion == null) {
+        if (baseCallerVersion == null) {
             detectPipelineVersion();
         }
 
         if (rawIntensityDirectory == null) {
-            switch (imageAnalyzerVersion) {
-                // Currently these are all the same
-                case Firecrest_1_1:
-                case Firecrest_1_3:
-                case Firecrest_1_4:
-                case rta:
-                    rawIntensityDirectory = basecallDirectory.getParentFile();
-                    break;
-                default:
-                    throw new IllegalStateException("Could not determine image analyzer version for " +
-                            basecallDirectory + "; lane " + lane);
-            }
+            rawIntensityDirectory = basecallDirectory.getParentFile();
         }
 
         boolean qseqIsBarcodeAware = false;
@@ -305,9 +269,6 @@ public class IlluminaDataProviderFactory {
             case Bustard_1_6:
                 computeReadConfigurationFromBarcodeAwareQseq();
                 qseqIsBarcodeAware = true;
-                break;
-            case Bustard_1_1:
-                computeReadConfiguationFrom_1_1();
                 break;
             default:
                 throw new IllegalStateException("Could not determine base caller version for " + basecallDirectory + "; lane " + lane);
@@ -405,62 +366,6 @@ public class IlluminaDataProviderFactory {
         readConfiguration.setPairedEnd(pairedEnd);
     }
 
-
-    private void computeReadConfiguationFrom_1_1() {
-        if (rawIntensityDirectory == null) {
-            rawIntensityDirectory = basecallDirectory.getParentFile();
-        }
-        // For Bustard 1.1 we can look for the existence of 1 or 2 matrices off under
-        // Matrix directory under the firecrest directory. The file names contain the cycle
-        // number of the second cycle in each read!
-        final Pattern pattern = Pattern.compile("s_" + lane + "_([0-9]+)_matrix.txt");
-        final File[] matrices = new File(this.rawIntensityDirectory, "Matrix").listFiles(new FilenameFilter() {
-            public boolean accept(final File parent, final String name) {
-                return pattern.matcher(name).matches();
-            }
-        });
-
-        if (pairedEnd == null) {
-            if (matrices.length == 1) {
-                this.pairedEnd = false;
-            }
-            else if (matrices.length == 2) {
-                this.pairedEnd = true;
-            }
-            else {
-                throw new IllegalStateException("Cannot determine if Bustard 1.1 output is PE or not.");
-            }
-        }
-
-        int firstReadLength = -1;
-        if (pairedEnd) {
-            Matcher matcher = pattern.matcher(matrices[0].getName());
-            if (!matcher.matches()) {
-                throw new PicardException("That's unpossible");
-            }
-            final int c1 = Integer.parseInt(matcher.group(1));
-            matcher = pattern.matcher(matrices[1].getName());
-            if (!matcher.matches()) {
-                throw new PicardException("That's unpossible");
-            }
-            final int c2 = Integer.parseInt(matcher.group(1));
-
-            firstReadLength = Math.max(c1,c2) - Math.min(c1,c2);
-        }
-        readConfiguration.setPairedEnd(pairedEnd);
-        final File seqFile = IlluminaFileUtil.getNonEndedIlluminaBasecallFiles(basecallDirectory, "seq", lane)[0].file;
-        final int totalReadLength = SeqParser.getReadLength(seqFile);
-        readConfiguration.setFirstStart(1);
-        if (this.pairedEnd) {
-            readConfiguration.setFirstEnd(firstReadLength);
-            readConfiguration.setSecondStart(firstReadLength + 1);
-            readConfiguration.setSecondEnd(totalReadLength);
-        } else {
-            readConfiguration.setFirstEnd(totalReadLength);
-        }
-    }
-
-
     private void updateReadConfigurationForBarcode() {
         if (barcodeCycle == null) {
             readConfiguration.setBarcoded(false);
@@ -534,19 +439,6 @@ public class IlluminaDataProviderFactory {
         return baseCallerVersion;
     }
 
-    public ImageAnalyzerVersion getImageAnalyzerVersion() {
-        return imageAnalyzerVersion;
-    }
-
-    /**
-     * In general it is not necessary to call this method, as the ImageAnalyzer version can be determined
-     * from examining the basecall directory.
-     * Must be called before computeReadConfiguration() is triggered, either directly or indirectly.
-     */
-    public void setImageAnalyzerVersion(final ImageAnalyzerVersion imageAnalyzerVersion) {
-        this.imageAnalyzerVersion = imageAnalyzerVersion;
-    }
-
     /**
      * In general it is not necessary to call this method, as the raw intensity directory can be determined
      * from examining the basecall directory.
@@ -578,6 +470,7 @@ public class IlluminaDataProviderFactory {
 
     private void detectPipelineVersion() {
         final File solexaBuildVersion = new File(basecallDirectory, ".solexaBuildVersion");
+
         if (solexaBuildVersion.exists()) {
             final BufferedLineReader reader;
             try {
@@ -588,24 +481,20 @@ public class IlluminaDataProviderFactory {
             final String version = reader.readLine();
             log.info("solexaBuildVersion: ", version);
             reader.close();
+
             if (version.startsWith("1.6")) {
                 baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_6);
-                imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.rta);
             }
             else if (version.startsWith("1.5")) {
                 baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_5);
-                imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.rta);
             }
             else if (version.startsWith("1.4")) {
                 baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_4);
-                imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.rta);
             }
             else if (version.startsWith("1.3")) {
                 baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_3);
-                imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.Firecrest_1_3);
             } else if (version.startsWith("1.1")) {
-                baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_1);
-                imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.Firecrest_1_1);
+                throw new PicardException("Solexa version 1.1 is no longer supported by Picard.");
             } else {
                 log.info("Unrecognized solexaBuildVersion, using fallback to detect version. ", version);
             }
@@ -622,21 +511,17 @@ public class IlluminaDataProviderFactory {
                 log.info("Did not find barcode qseq file.");
                 baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_4);
             }
-            imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.rta);
         } else if (IlluminaFileUtil.endedIlluminaBasecallFilesExist(basecallDirectory, "qseq", lane, 1)) {
             log.info("Found end-specific qseq file.");
             baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_3);
-            imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.Firecrest_1_3);
-        }
-        else if (IlluminaFileUtil.nonEndedIlluminaBasecallFilesExist(basecallDirectory, "seq", lane)) {
-            log.info("Found non-end-specific qseq file.");
-            baseCallerVersion = elvisOperator(baseCallerVersion, BaseCallerVersion.Bustard_1_1);
-            imageAnalyzerVersion = elvisOperator(imageAnalyzerVersion, ImageAnalyzerVersion.Firecrest_1_1);
         }
         else {
+            if (IlluminaFileUtil.nonEndedIlluminaBasecallFilesExist(basecallDirectory, "seq", lane)) {
+                log.info("Found non-end-specific qseq file.  Picard no longer supports Bustard_1_1!");
+            }
+
             throw new IllegalStateException("Cannot determine pipeline version for basecall directory: " + basecallDirectory);
         }
         log.info("BaseCallerVersion: " + baseCallerVersion);
-        log.info("ImageAnalyzerVersion: " + imageAnalyzerVersion);
     }
 }
