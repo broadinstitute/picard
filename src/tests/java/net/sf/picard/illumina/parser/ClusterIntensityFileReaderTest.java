@@ -37,62 +37,70 @@ public class ClusterIntensityFileReaderTest {
     private static final File INTENSITY_FILES_DIR = new File(TEST_DATA_DIR, "L001/C1.1");
 
     private static final int NUM_BASES = 2;
+    private static final int NUM_CLUSTERS = 153010;
+    private static enum DATA_FIELDS {CLUSTER_INDEX, A_CHANNEL, C_CHANNEL, G_CHANNEL, T_CHANNEL}
+
+    //Cluster#, Expected A,C,G,T
+    private static final int[][] CNF_DATA = new int[][]{
+                   //cluster    A   C       G   T
+        new int[]{0,         0,  9,      0,  0},
+        new int[]{1,         0,  15,     0,  0},
+        new int[]{2,         0,  15,     0,  11},
+        new int[]{51,        9,  23,     0,  9},
+        new int[]{10001,     8,  22,     7,  11},
+        new int[]{10002,     10, 9,      7,  9},
+        new int[]{80000,     13, 55,     12, 76},
+        new int[]{80001,     10, 54,     12, 73},
+        new int[]{100001,    12, 33,     9,  45},
+        new int[]{100010,    11, 52,     11, 70},
+        new int[]{153009,    0,  0,      0,  0}
+    };
+
+    //Cluster#, Expected A,C,G,T
+    private static final int[][] CIF_DATA = new int[][]{
+                   //cluster    A      C       G     T
+        new int[]{0,         0,     0,      0,    0},
+        new int[]{1,         0,     0,      0,    0},
+        new int[]{2,         0,     0,      0,    0},
+        new int[]{20001,     436,   333,    -164, -63},
+        new int[]{20002,     476,   354,    -31,  -61},
+        new int[]{90001,     59,    332,    -14,  -240},
+        new int[]{90002,     -91,   -29,    -330, 1090},
+        new int[]{153008,    0,     0,      0,    0},
+        new int[]{153009,    0,     0,      0,    0}
+    };
 
     @Test(dataProvider="data")
-    public void testBasic(final File cifFile, final String fileType) throws Exception {
+    public void testBasic(final File cifFile, final int [][] goldData) throws Exception {
         final ClusterIntensityFileReader cifr = new ClusterIntensityFileReader(cifFile);
         System.out.println("File: " + cifr.getFile() + "; First cycle: " + cifr.getFirstCycle() +
                 "; Num cycles: " + cifr.getNumCycles() + "; Num clusters: " + cifr.getNumClusters());
-        System.out.println("Text file type: " + fileType);
+
         final ReadConfiguration configuration = new ReadConfiguration();
         configuration.setFirstStart(1);
         configuration.setFirstEnd(NUM_BASES);
-        // This parser takes whatever file type you give it, but then stuff the values into the raw intensities slot.
-        final HackyIntParser intParser = new HackyIntParser(configuration, TEST_DATA_DIR, 1, fileType);
-        int cluster;
-        for (cluster = 0; intParser.hasNext(); ++cluster) {
-            final IlluminaReadData read = new IlluminaReadData();
-            read.setFirstEnd(new IlluminaEndData());
-            intParser.next(read);
-            final FourChannelIntensityData rawIntensities = read.getFirstEnd().getRawIntensities();
-            for (int cycle = cifr.getFirstCycle(); cycle < cifr.getFirstCycle() + cifr.getNumCycles(); ++cycle) {
-                final String msg = "Cycle: " + cycle + "; Cluster: " + cluster;
-                Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.A_CHANNEL, cycle),
-                        rawIntensities.getA()[cycle-1], msg);
-                Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.C_CHANNEL, cycle),
-                        rawIntensities.getC()[cycle-1], msg);
-                Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.G_CHANNEL, cycle),
-                        rawIntensities.getG()[cycle-1], msg);
-                Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.T_CHANNEL, cycle),
-                        rawIntensities.getT()[cycle-1], msg);
-            }
+
+        for (int [] goldRow : goldData) {
+            final int cluster = goldRow[DATA_FIELDS.CLUSTER_INDEX.ordinal()];
+            Assert.assertEquals(1, cifr.getNumCycles(), "Expected only 1 cycle, cluster: " + cluster);
+
+            final int cycle = cifr.getFirstCycle();
+            final String msg = "Cycle: " + cycle + "; Cluster: " + cluster;
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.A_CHANNEL, cycle), goldRow[DATA_FIELDS.A_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.C_CHANNEL, cycle), goldRow[DATA_FIELDS.C_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.G_CHANNEL, cycle), goldRow[DATA_FIELDS.G_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.T_CHANNEL, cycle), goldRow[DATA_FIELDS.T_CHANNEL.ordinal()], msg);
         }
-        Assert.assertEquals(cluster, cifr.getNumClusters());
+
+        Assert.assertEquals(NUM_CLUSTERS, cifr.getNumClusters());
     }
 
     @DataProvider(name = "data")
     private Object[][] getTestData()
     {
         return new Object[][]{
-                {new File(INTENSITY_FILES_DIR, "s_1_1.cnf"),
-                 "nse"},
-                {new File(INTENSITY_FILES_DIR, "s_1_1.cif"),
-                 "int"},
+                {new File(INTENSITY_FILES_DIR, "s_1_1.cnf"), CNF_DATA},
+                {new File(INTENSITY_FILES_DIR, "s_1_1.cif"), CIF_DATA},
         };
-    }
-
-    /**
-     * Little kludge to open either nse or int file, but have the values stuffed into rawIntensities slot.
-     */
-    public class HackyIntParser extends IntensitiesOrNoiseParser{
-        public HackyIntParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                              final String fileType) {
-            super(readConfiguration, directory, lane, fileType, null);
-        }
-
-        @Override
-        protected void setValues(final IlluminaEndData end, final FourChannelIntensityData values) {
-            end.setRawIntensities(values);
-        }
     }
 }

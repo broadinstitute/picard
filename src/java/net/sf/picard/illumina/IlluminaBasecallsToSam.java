@@ -81,7 +81,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public String READ_GROUP_ID;
     @Option(doc = "Use this option to override auto-detection of base caller version", optional = true)
     public IlluminaDataProviderFactory.BaseCallerVersion BASE_CALLER_VERSION;
-    @Option(doc = "Use this option to override auto-detection of image analyzer version", optional = true)
+    @Option(doc = "Deprecated option; This value is ignored, image analyzer version is RTA", optional = true)
     public IlluminaDataProviderFactory.ImageAnalyzerVersion IMAGE_ANALYZER_VERSION;
     @Option(doc="The name of the sequenced library",
             shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
@@ -200,7 +200,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             tiles = tiles.subList(0, TILE_LIMIT);
         }
         log.info("Base caller version: ", factory.getBaseCallerVersion());
-        log.info("Image analyzer version: ", factory.getImageAnalyzerVersion());
+        log.info("Image analyzer version: ", IlluminaDataProviderFactory.ImageAnalyzerVersion.rta);
 
         if (OUTPUT != null) {
             writersByBarcode.put(MOLECULAR_BARCODE_SEQUENCE, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, null));
@@ -327,9 +327,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private void addOptionalFactorySettings(final IlluminaDataProviderFactory factory) {
         if (BASE_CALLER_VERSION != null) {
             factory.setBaseCallerVersion(BASE_CALLER_VERSION);
-        }
-        if (IMAGE_ANALYZER_VERSION != null) {
-            factory.setImageAnalyzerVersion(IMAGE_ANALYZER_VERSION);
         }
     }
 
@@ -605,7 +602,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 }
             }
         }
-
 
         /**
          * Assign this instance to a new Thread and start it.
