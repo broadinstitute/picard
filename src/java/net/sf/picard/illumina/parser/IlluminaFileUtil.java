@@ -154,7 +154,7 @@ public class IlluminaFileUtil {
     /**
      * Check if a particular non-ended file type exists for the given lane.
      * @param directory where to look for files
-     * @param fileType e.g. "seq", "sig2", etc
+     * @param fileType e.g. "barcode.txt", "qseq", etc
      * @param lane
      * @return true if any files of the given type exist.
      */
@@ -165,7 +165,7 @@ public class IlluminaFileUtil {
     /**
      * Get list of basecall files of given type that are not distinguished by end
      * @param directory where to look for files
-     * @param fileType e.g. "seq", "sig2", etc
+     * @param fileType e.g. "barcode.txt", "qseq" etc
      * @param lane
      * @return list of files of the given type, sorted in ascending tile # (numeric, not lexical).
      */
@@ -178,7 +178,7 @@ public class IlluminaFileUtil {
      * Get list of basecall files of given type that are not distinguished by end.
      *
      * @param directory Where to look for files.
-     * @param fileType e.g. "seq", "sig2", etc.
+     * @param fileType e.g. "barcode.txt", "qseq" etc.
      * @param lane
      * @param tiles List of desired tiles.  A file must exist for each requested tile.
      * @return List of TiledIlluminaFiles, in the order of the tiles argument.  Each file may or may not have .gz extension.
@@ -226,43 +226,4 @@ public class IlluminaFileUtil {
             return MathUtil.compare(v1.tile, v2.tile);
         }
     }
-
-    /**
-     * Convert a list of intensities as decimal strings into a FourChannelIntensityData object.  Floating-point
-     * values are truncated.
-     *
-     * @param decimalIntensities array of intensity strings, in ACGT order.
-     * @param start index of first intensity to parse.
-     * @param end index of last intensity to parse (end-start)%4 must equal 0.
-     * @return representation of intensities as truncated shorts.
-     * @throws NumberFormatException if a value does not fit in a short.
-     */
-    public static FourChannelIntensityData parseSig2Intensities(final String[] decimalIntensities, final int start, final int end) {
-        if ((end - start) % 4 != 0) {
-            throw new IllegalArgumentException("Sig2 range should be a multiple of 4");
-        }
-        final int length = (end - start)/4;
-        final short[] a = new short[length], c = new short[length], g = new short[length], t = new short[length];
-        for (int i = 0; i < length; ++i) {
-            a[i] = decimalIntensityToShort(decimalIntensities[start + 4 * i]);
-            c[i] = decimalIntensityToShort(decimalIntensities[start + 4 * i + 1]);
-            g[i] = decimalIntensityToShort(decimalIntensities[start + 4 * i + 2]);
-            t[i] = decimalIntensityToShort(decimalIntensities[start + 4 * i + 3]);
-        }
-        final FourChannelIntensityData ret = new FourChannelIntensityData();
-        ret.setA(a);
-        ret.setC(c);
-        ret.setG(g);
-        ret.setT(t);
-        return ret;
-    }
-
-    private static short decimalIntensityToShort(String decimalIntensity) {
-        final int dotIndex = decimalIntensity.indexOf('.');
-        if (dotIndex != -1) {
-            decimalIntensity = decimalIntensity.substring(0, dotIndex);
-        }
-        return Short.parseShort(decimalIntensity);
-    }
-
 }
