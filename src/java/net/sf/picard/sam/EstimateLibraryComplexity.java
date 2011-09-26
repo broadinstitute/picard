@@ -81,7 +81,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
      */
     static class PairedReadSequence implements PhysicalLocation {
         static int size_in_bytes = 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
-        short readGroup;
+        short readGroup = -1;
         byte tile = -1;
         short x = -1, y = -1;
         boolean qualityOk = true;
