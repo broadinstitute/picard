@@ -27,8 +27,6 @@ for (i in 1:length(startFinder))
         } 
 }
 
-print(secondBlankLine)
-
 histogram <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
 
 # The histogram has a fr_count/rf_count/tandem_count for each metric "level"
