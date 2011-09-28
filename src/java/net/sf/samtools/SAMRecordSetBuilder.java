@@ -70,7 +70,8 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
 
     /**
      * Construct a new SAMRecordSetBuilder.
-     * @param sortForMe If true, keep the records created in sorted order.
+     * @para
+     * m sortForMe If true, keep the records created in sorted order.
      * @param sortOrder If sortForMe, defines the sort order.
      */
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder) {
@@ -218,6 +219,9 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         if (programRecord != null) {
             end1.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
         }
+        if (readGroup != null) {
+            end1.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId());
+        }
         fillInBasesAndQualities(end1);
 
         end2.setReadName(name);
@@ -237,6 +241,9 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setAttribute(SAMTag.RG.name(), READ_GROUP_ID);
         if (programRecord != null) {
             end2.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
+        }
+        if (readGroup != null) {
+            end2.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId());
         }
         fillInBasesAndQualities(end2);
 
