@@ -23,13 +23,13 @@
  */
 package net.sf.picard.analysis;
 
-import net.sf.picard.metrics.MetricBase;
+import net.sf.picard.metrics.MultilevelMetrics;
 
 /**
  * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
  * program and usually stored in a file with the extension ".rna_metrics".
  */
-public class RnaSeqMetrics extends MetricBase{
+public class RnaSeqMetrics extends MultilevelMetrics {
     /** The total number of PF bases including non-aligned reads. */
     public long PF_BASES;
 

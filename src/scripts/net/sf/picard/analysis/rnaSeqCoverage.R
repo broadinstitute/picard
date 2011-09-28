@@ -6,7 +6,7 @@
 args <- commandArgs(trailing=T)
 metricsFile  <- args[1]
 outputFile   <- args[2]
-datasetName  <- args[3]
+bamName  <- args[3]
 
 # Figure out where the metrics and the histogram are in the file and parse them out
 startFinder <- scan(metricsFile, what="character", sep="\n", quiet=TRUE, blank.lines.skip=FALSE)
@@ -27,20 +27,36 @@ for (i in 1:length(startFinder)) {
 data <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
 pdf(outputFile)
 
+# The histogram has a normalized_position and normalized_coverage column for each metric "level"
+# This code parses out the distinct levels so we can output one graph per level
+headers <- sapply(sub(".normalized_coverage","",names(data),fixed=TRUE), "[[" ,1)
+levels <- c()
+for (i in 2:length(headers)) {
+    if (!(headers[i] %in% levels)) {
+        levels[length(levels)+1] <- headers[i]
+    }
+}
+
 # Some constants that are used below
 COLORS = c("royalblue", "#FFAAAA", "palegreen3");
 
-# Do the main plot of the normalized coverage by GC
-plot(type="o", x=data$normalized_position, y=data$normalized_coverage,
-     xlab="Normalized Distance Along Transcript",
-     ylab="Normalized Coverage",
-     xlim=c(0,100),
-     ylim=c(0, max(data$normalized_coverage)),
-     col="royalblue",
-     main=paste("RNA-Seq Coverage vs. Transcript Position", "\n", datasetName)
-);
+# For each level, plot of the normalized coverage by GC
+for (i in 1:length(levels)) {
 
-# Add a horizontal line at coverage=1
-abline(h=1, col="lightgrey");
+    # Reconstitutes the histogram column header for this level
+    nc <- paste(levels[i], "normalized_coverage", sep=".")
+
+    plot(x=data$normalized_position, y=as.matrix(data[nc]),
+        type="o",
+        xlab="Normalized Distance Along Transcript",
+        ylab="Normalized Coverage",
+        xlim=c(0, 100),
+        ylim=range(0, max(data[nc])),
+        col="royalblue",
+        main=paste("RNA-Seq Coverage vs. Transcript Position", "\n", levels[i], "\nin file", bamName))
+
+    # Add a horizontal line at coverage=1
+    abline(h=1, col="lightgrey");
+}
 
 dev.off();
