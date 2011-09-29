@@ -83,43 +83,6 @@ public class IlluminaBasecallsToSamTest {
     }
 
     @Test
-    public void testSingleBarcode() throws Exception {
-        final File outputBam = File.createTempFile("singleBarcoded.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 7;
-        new IlluminaBasecallsToSam().instanceMain(new String[] {
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "BARCODE_CYCLE=31",
-                "BARCODE_LENGTH=8",
-                "BARCODE=CTACCAGG"
-        });
-        IoUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "singleBarcoded.sam"));
-    }
-
-    public void testNonMatchingBarcode() throws Exception {
-        final File outputBam = File.createTempFile("nonMatchingBarcoded.", ".sam");
-        outputBam.deleteOnExit();
-        final int lane = 7;
-        new IlluminaBasecallsToSam().instanceMain(new String[] {
-                "BASECALLS_DIR=" + BASECALLS_DIR,
-                "LANE=" + lane,
-                "OUTPUT=" + outputBam,
-                "RUN_BARCODE=HiMom",
-                "SAMPLE_ALIAS=HiDad",
-                "LIBRARY_NAME=Hello, World",
-                "BARCODE_CYCLE=31",
-                "BARCODE_LENGTH=8",
-                "BARCODE=CTACCAGG"
-        });
-        IoUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonMatchingBarcoded.sam"));
-    }
-
-    @Test
     public void testMultiplexed() throws Exception {
         final File outputDir = File.createTempFile("multiplexedBarcode.", ".dir");
         outputDir.delete();

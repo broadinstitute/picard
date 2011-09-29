@@ -37,7 +37,7 @@ public interface IlluminaParser {
      * Read the next read's set of data and set it into the provided data object.  The object must have
      * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
      */
-    void next(IlluminaReadData data);
+    void next(ClusterData data);
 
     boolean hasNext();
 }

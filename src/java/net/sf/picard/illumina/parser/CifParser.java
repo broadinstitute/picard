@@ -41,19 +41,19 @@ public class CifParser extends IlluminaCycleFileSetParser {
 
     /**
      * Tell abstract base class which slot is being parsed.
-     * @param end Object into which to stuff the FourChannelIntensityData.
+     * @param readData Object into which to stuff the FourChannelIntensityData.
      * @param fourChannelIntensityData thing to stuff into the right slot of end.
      */
-    protected void setFCID(final IlluminaEndData end, final FourChannelIntensityData fourChannelIntensityData) {
-        end.setRawIntensities(fourChannelIntensityData);
+    protected void setFCID(final ReadData readData, final FourChannelIntensityData fourChannelIntensityData) {
+        readData.setRawIntensities(fourChannelIntensityData);
     }
 
     /**
-     * @param end Object from which to get the FourChannelIntensityData.
+     * @param readData Object from which to get the FourChannelIntensityData.
      * @return FourChannelIntensityData from the slot being parsed by this concrete class.
      */
-    protected FourChannelIntensityData getFCID(final IlluminaEndData end) {
-        return end.getRawIntensities();
+    protected FourChannelIntensityData getFCID(final ReadData readData) {
+        return readData.getRawIntensities();
     }
 
     /**

@@ -29,7 +29,6 @@ import net.sf.picard.util.IlluminaUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -66,7 +65,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
     private static final int BASES_COLUMN = 8;
     private static final int QUALS_COLUMN = 9;
 
-    private final EndType endType;
+    private final ReadType readType;
 
     /**
      * Prepare to parse qseq files
@@ -74,16 +73,16 @@ public class QseqParser extends AbstractIlluminaTextParser {
      * it is.
      * @param directory Where to find qseq files.
      * @param lane
-     * @param endType Only FIRST and SECOND allowed.  For barcoded run with barcode-aware basecall files, use the
+     * @param readType Only FIRST and SECOND allowed.  For barcoded run with barcode-aware basecall files, use the
      * ctor where file number can be specified explicitly, because end # and file # do not necessarily correspond.
      * @param tiles List of tiles to be processed, in order, or null to process all tiles.
      */
     public QseqParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                      final EndType endType, final List<Integer> tiles) {
-        this(readConfiguration, directory, lane, endType, endType.getDefaultFileNumber(), tiles);
-        if (endType != EndType.FIRST && endType != EndType.SECOND) {
+                      final ReadType readType, final List<Integer> tiles) {
+        this(readConfiguration, directory, lane, readType, readType.getDefaultFileNumber(), tiles);
+        if (readType != ReadType.FIRST && readType != ReadType.SECOND) {
             // Don't use this ctor for barcode-aware basecall files.
-            throw new IllegalArgumentException("Invalid EndType: " + endType);
+            throw new IllegalArgumentException("Invalid EndType: " + readType);
         }
     }
 
@@ -93,23 +92,23 @@ public class QseqParser extends AbstractIlluminaTextParser {
      * it is.
      * @param directory Where to find qseq files.
      * @param lane
-     * @param endType Whether this is the parser for first end, second end or barcode end.
+     * @param readType Whether this is the parser for first end, second end or barcode end.
      * @param fileNumber number for this end, i.e. s__<lane>_<fileNumber>_<tile>_qseq.txt.
      * @param tiles List of tiles to be processed, in order, or null to process all tiles.
      */
     public QseqParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                      final EndType endType, final int fileNumber, final List<Integer> tiles) {
+                      final ReadType readType, final int fileNumber, final List<Integer> tiles) {
         super(readConfiguration, lane, directory);
         if (fileNumber < 1 || fileNumber > 4) {
             throw new IllegalArgumentException("Invalid fileNumber: " + fileNumber);
         }
-        this.endType = endType;
+        this.readType = readType;
         setFiles(IlluminaFileUtil.getEndedIlluminaBasecallFiles(directory, "qseq", lane, fileNumber, tiles));
         initializeParser(0);
     }
 
     /**
-     * Process a line of qseq input.  Set the PF value on the IlluminaReadData.  If barcoded, and this
+     * Process a line of qseq input.  Set the PF value on the ClusterData.  If barcoded, and this
      * is the end containing the barcode, split the bases and quals.  Stuff the bases and quals into the
      * appropriate end (as determined by the oneBasedEnd property), and into the barcode end if appropriate.
      *
@@ -118,7 +117,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
      * @param fields Input line, split on whitespace.
      */
     @Override
-    protected void processLine(final IlluminaReadData data, final String[] fields) {
+    protected void processLine(final ClusterData data, final String[] fields) {
         final int lane = getFormatter().parseInt(fields[LANE_COLUMN]);
         validateLane(lane);
         final int tile = getFormatter().parseInt(fields[TILE_COLUMN]);
@@ -136,16 +135,16 @@ public class QseqParser extends AbstractIlluminaTextParser {
             throw new PicardException("Length of bases and quals don't match in " + getCurrentFilename());
         }
         final int expectedLength;
-        if (endType == EndType.FIRST) {
+        if (readType == ReadType.FIRST) {
             expectedLength = getReadConfiguration().getFirstLength();
-        } else if (endType == EndType.SECOND) {
+        } else if (readType == ReadType.SECOND) {
             expectedLength = getReadConfiguration().getSecondLength();
         } else {
             expectedLength = getReadConfiguration().getBarcodeLength();
         }
         int expectedLengthIncludingBarcode = expectedLength;
         final boolean containsBarcode = getReadConfiguration().isBarcoded() &&
-                getReadConfiguration().getBarcodeRead() == endType && !isBarcodeQseq();
+                getReadConfiguration().getBarcodeRead() == readType && !isBarcodeQseq();
         if (containsBarcode) {
             // Barcode is on this end
             expectedLengthIncludingBarcode += getReadConfiguration().getBarcodeLength();
@@ -165,7 +164,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
         data.setOrCheckY(y);
         data.setOrCheckPf(pf);
 
-        final IlluminaEndData end = (isBarcodeQseq()? data.getBarcodeRead(): data.getEnd(endType));
+        final ReadData end = (isBarcodeQseq()? data.getBarcodeRead(): data.getEnd(readType));
 
         if (containsBarcode) {
             final int barcodeOffset = getReadConfiguration().getOffsetOfBarcodeInRead();
@@ -209,7 +208,7 @@ public class QseqParser extends AbstractIlluminaTextParser {
      * True if this is a qseq that contains only the barcode.
      */
     private boolean isBarcodeQseq() {
-        return endType == EndType.BARCODE;
+        return readType == ReadType.BARCODE;
     }
 
     public static int getReadLength(final File qseqFile) {

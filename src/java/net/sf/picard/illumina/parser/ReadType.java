@@ -23,23 +23,23 @@
  */
 package net.sf.picard.illumina.parser;
 
-import java.util.Iterator;
-
 /**
- * Interface for Illumina parsers, and for filters of Illumina parsers.
- *
- * @author alecw@broadinstitute.org
+     * For iterating over the "ends" of a read programatically.
  */
-public interface AbstractIlluminaDataProvider extends Iterator<IlluminaReadData> {
-    @Override
-    boolean hasNext();
+public enum ReadType {
+    FIRST(1), SECOND(2), BARCODE(3);
 
-    @Override
-    IlluminaReadData next();
+    private final int defaultFileNumber;
 
-    @Override
-    void remove();
+    ReadType(final int defaultFileNumber) {
+        this.defaultFileNumber = defaultFileNumber;
+    }
 
-    /** Jump so that the next record returned will be from the specified tile. */
-    void seekToTile(int oneBasedTileNumber);
+    /**
+     * Typically, the file number corresponding to this end.  For barcode-aware barcoded run, this may
+     * not be the real file number for the given end.
+     */
+    public int getDefaultFileNumber() {
+        return defaultFileNumber;
+    }
 }

@@ -96,11 +96,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public Date RUN_START_DATE;
     @Option(doc="The name of the sequencing technology that produced the read.", optional=true)
     public String PLATFORM = "illumina";
-    @Option(doc="For a barcoded-run, the desired barcode to select for.  Leave null to select all non-matching reads.",
-            optional = true,
-            shortName="BARCODE",
-            mutex = {"BARCODE_PARAMS"})
-    public String MOLECULAR_BARCODE_SEQUENCE;
     @Option(doc="1-based cycle number of the start of the barcode.  If BARCODE or BARCODE_LENGTH are specified, this must be specified.",
             optional = true, shortName = "BARCODE_POSITION")
     public Integer BARCODE_CYCLE;
@@ -109,7 +104,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public Integer BARCODE_LENGTH;
     @Option(doc="Tab-separated file for creating all output BAMs for barcoded run with single IlluminaBasecallsToSam invocation.  " +
             "Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
-            mutex = {"MOLECULAR_BARCODE_SEQUENCE", "OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
+            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
     public File BARCODE_PARAMS;
     @Option(doc="Whether to mark the position of the adapter in the read")
     public boolean MARK_ADAPTER = true;
@@ -143,8 +138,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if(BUSTARD_DIR != null) {
             BASECALLS_DIR = BUSTARD_DIR;
         }
-
-        log.info("BARCODE  IS " + MOLECULAR_BARCODE_SEQUENCE);
+        
         log.info("POSITION  IS " + BARCODE_CYCLE);
         
         if (OUTPUT != null) {
@@ -203,7 +197,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         log.info("Image analyzer version: ", IlluminaDataProviderFactory.ImageAnalyzerVersion.rta);
 
         if (OUTPUT != null) {
-            writersByBarcode.put(MOLECULAR_BARCODE_SEQUENCE, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, null));
+            writersByBarcode.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, null));
         } else {
             populateWritersByBarcode();
         }
@@ -382,17 +376,21 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
-        if (MOLECULAR_BARCODE_SEQUENCE != null || BARCODE_PARAMS != null) {
-            if (BARCODE_CYCLE == null || BARCODE_LENGTH == null) {
-                messages.add("BARCODE_CYCLE and BARCODE_LENGTH must be specified when MOLECULAR_BARCODE_SEQUENCE or BARCODE_PARAMS is set.");
+        if(BARCODE_CYCLE != null || BARCODE_LENGTH != null || BARCODE_PARAMS != null) {
+            if(BARCODE_CYCLE == null) {
+                messages.add("BARCODE_CYCLE is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+            } else {
+                if(BARCODE_CYCLE < 1)
+                    messages.add("BARCODE_CYCLE must be >= 1");
+            }
+            if(BARCODE_LENGTH == null) {
+                messages.add("BARCODE_LENGTH is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+            }
+            if(BARCODE_PARAMS == null) {
+                messages.add("BARCODE_PARAMS is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
             }
         }
-        else if ((BARCODE_CYCLE == null && BARCODE_LENGTH != null) || (BARCODE_CYCLE != null && BARCODE_LENGTH == null)) {
-            messages.add("Either both BARCODE_CYCLE and BARCODE_LENGTH must be specified or neither.");
-        }
-        if (BARCODE_CYCLE != null && BARCODE_CYCLE < 1) {
-            messages.add("BARCODE_CYCLE must be >= 1");
-        }
+        
         if (READ_GROUP_ID == null) {
             READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
         }
@@ -578,13 +576,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         public void run() {
             try {
-                AbstractIlluminaDataProvider parser;
+                IlluminaDataProvider parser;
                 final List<Integer> oneTile = Arrays.asList(tile);
                 parser = factory.makeDataProvider(oneTile);
-                if (isBarcoded() && BARCODE_PARAMS == null) {
-                    // Only emitting reads matching a single barcode, or only emitting reads that don't match a barcode.
-                    parser = new BarcodeFilter(MOLECULAR_BARCODE_SEQUENCE, parser, MOLECULAR_BARCODE_SEQUENCE == null);
-                }
                 processTile(parser);
             } catch (Throwable e) {
                 if (this.thread != null) {
@@ -615,7 +609,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          * Read all the reads and convert to SAMRecords.
          * @param parser
          */
-        private void processTile(final AbstractIlluminaDataProvider parser) {
+        private void processTile(final IlluminaDataProvider parser) {
             final StopWatch readWatch;
             final StopWatch sqCallWatch;
             if (PRINT_TIMING) {
@@ -627,19 +621,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             }
             while (parser.hasNext()) {
                 if (PRINT_TIMING) readWatch.start();
-                final IlluminaReadData ird = parser.next();
+                final ClusterData cluster = parser.next();
                 if (PRINT_TIMING) readWatch.stop();
-                final SamRecordSorter sorter = sorters.get(ird.getMatchedBarcode());
+                final SamRecordSorter sorter = sorters.get(cluster.getMatchedBarcode());
                 if (sorter == null) {
                     throw new PicardException("Barcode encountered in that was not specified in BARCODE_PARAMS: " +
-                    ird.getMatchedBarcode());
+                    cluster.getMatchedBarcode());
                 }
                 final SAMFileHeader header = sorter.getWriter().getFileHeader();
-                final SAMRecord sam = converter.createSamRecord(ird, true, header, null);
-                final SAMRecord sam2 = ird.isPairedEnd() ?  converter.createSamRecord(ird, false, header, sam.getReadName()) : null;
+                final SAMRecord sam = converter.createSamRecord(cluster, true, header, null);
+                final SAMRecord sam2 = cluster.isPairedEnd() ?  converter.createSamRecord(cluster, false, header, sam.getReadName()) : null;
 
                 if (MARK_ADAPTER) {
-                    if (ird.isPairedEnd()){
+                    if (cluster.isPairedEnd()){
                         assert (sam.getFirstOfPairFlag() && sam2.getSecondOfPairFlag());
                         String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(sam, sam2,
                             isBarcoded() ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
@@ -660,7 +654,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 sorter.addAlignment(sam);
                 incrementRecordsWritten();
 
-                if (ird.isPairedEnd()) {
+                if (cluster.isPairedEnd()) {
                     sorter.addAlignment(sam2);
                     incrementRecordsWritten();
                 }

@@ -95,13 +95,13 @@ public abstract class IlluminaCycleFileSetParser implements IlluminaParser {
      * in it.  It will work if that is not the case, but could be more efficiently coded.
      */
     @Override
-    public void next(final IlluminaReadData data) {
+    public void next(final ClusterData data) {
         // Create the appropriate FourChannelIntensityData objects to receive the data being parsed.
         initializeFCIDs(data);
         for (final ClusterIntensityFileReader reader : readers) {
             for (int cycle = reader.getFirstCycle(); cycle < reader.getFirstCycle() + reader.getNumCycles(); ++cycle) {
-                final IlluminaEndData illuminaEndData = data.getEnd(readConfiguration.getEndTypeForCycle(cycle));
-                final FourChannelIntensityData fcid = getFCID(illuminaEndData);
+                final ReadData readData = data.getEnd(readConfiguration.getEndTypeForCycle(cycle));
+                final FourChannelIntensityData fcid = getFCID(readData);
                 final int offset = readConfiguration.getOffsetForCycle(cycle);
                 for (final IntensityChannel channel : IntensityChannel.values()) {
                     fcid.getChannel(channel)[offset] = reader.getValue(cluster, channel, cycle);
@@ -138,7 +138,7 @@ public abstract class IlluminaCycleFileSetParser implements IlluminaParser {
      * Create FourChannelIntensityData objects as appropriate for paired-end or single-end, barcoded or not,
      * and stuff into the right slots according to the concrete class.
      */
-    private void initializeFCIDs(final IlluminaReadData data) {
+    private void initializeFCIDs(final ClusterData data) {
         setFCID(data.getFirstEnd(), new FourChannelIntensityData(readConfiguration.getFirstLength()));
         if (readConfiguration.isPairedEnd()) {
             setFCID(data.getSecondEnd(), new FourChannelIntensityData(readConfiguration.getSecondLength()));
@@ -152,17 +152,17 @@ public abstract class IlluminaCycleFileSetParser implements IlluminaParser {
 
     /**
      * Stuff the FourChannelIntensityData into the right slot for the concrete class.
-     * @param end Object into which to stuff the FourChannelIntensityData.
+     * @param readData Object into which to stuff the FourChannelIntensityData.
      * @param fourChannelIntensityData thing to stuff into the right slot of end.
      */
-    protected abstract void setFCID(IlluminaEndData end, FourChannelIntensityData fourChannelIntensityData);
+    protected abstract void setFCID(ReadData readData, FourChannelIntensityData fourChannelIntensityData);
 
     /**
      * Get the FourChannelIntensityData from the right slot for the concrete class.
-     * @param end Object from which to get the FourChannelIntensityData.
+     * @param readData Object from which to get the FourChannelIntensityData.
      * @return object from the appropriate slot for the concrete class.
      */
-    protected abstract FourChannelIntensityData getFCID(IlluminaEndData end);
+    protected abstract FourChannelIntensityData getFCID(ReadData readData);
 
     /**
      * Determine if files exist for the given lane and tile.

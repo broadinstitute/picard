@@ -54,13 +54,13 @@ public class IlluminaCycleFileSetParserTest {
 
         int numReads;
         for (numReads = 0; cnfParser.hasNext(); ++numReads) {
-            final IlluminaReadData read = new IlluminaReadData();
-            read.setFirstEnd(new IlluminaEndData());
-            cnfParser.next(read);
-            Assert.assertEquals(read.getFirstEnd().getNoise().getA().length, readConfiguration.getFirstLength());
-            Assert.assertEquals(read.getFirstEnd().getNoise().getC().length, readConfiguration.getFirstLength());
-            Assert.assertEquals(read.getFirstEnd().getNoise().getG().length, readConfiguration.getFirstLength());
-            Assert.assertEquals(read.getFirstEnd().getNoise().getT().length, readConfiguration.getFirstLength());
+            final ClusterData cluster = new ClusterData();
+            cluster.setFirstEnd(new ReadData());
+            cnfParser.next(cluster);
+            Assert.assertEquals(cluster.getFirstEnd().getNoise().getA().length, readConfiguration.getFirstLength());
+            Assert.assertEquals(cluster.getFirstEnd().getNoise().getC().length, readConfiguration.getFirstLength());
+            Assert.assertEquals(cluster.getFirstEnd().getNoise().getG().length, readConfiguration.getFirstLength());
+            Assert.assertEquals(cluster.getFirstEnd().getNoise().getT().length, readConfiguration.getFirstLength());
         }
         Assert.assertEquals(numReads, READS);
     }
@@ -85,14 +85,14 @@ public class IlluminaCycleFileSetParserTest {
 
         int numReads;
         for (numReads = 0; cifParser.hasNext(); ++numReads) {
-            final IlluminaReadData read = new IlluminaReadData();
-            read.setFirstEnd(new IlluminaEndData());
-            read.setSecondEnd(new IlluminaEndData());
-            read.setBarcodeRead(new IlluminaEndData());
-            cifParser.next(read);
-            Assert.assertEquals(read.getFirstEnd().getRawIntensities().getA().length, readConfiguration.getFirstLength());
-            Assert.assertEquals(read.getSecondEnd().getRawIntensities().getC().length, readConfiguration.getSecondLength());
-            Assert.assertEquals(read.getBarcodeRead().getRawIntensities().getG().length, readConfiguration.getBarcodeLength());
+            final ClusterData cluster = new ClusterData();
+            cluster.setFirstEnd(new ReadData());
+            cluster.setSecondEnd(new ReadData());
+            cluster.setBarcodeRead(new ReadData());
+            cifParser.next(cluster);
+            Assert.assertEquals(cluster.getFirstEnd().getRawIntensities().getA().length, readConfiguration.getFirstLength());
+            Assert.assertEquals(cluster.getSecondEnd().getRawIntensities().getC().length, readConfiguration.getSecondLength());
+            Assert.assertEquals(cluster.getBarcodeRead().getRawIntensities().getG().length, readConfiguration.getBarcodeLength());
         }
         Assert.assertEquals(numReads, READS);
     }
@@ -109,14 +109,14 @@ public class IlluminaCycleFileSetParserTest {
         int numReads;
         int noiseIndex = 0;
         for (numReads = 0; cnfParser.hasNext(); ++numReads) {
-            final IlluminaReadData read = new IlluminaReadData();
-            read.setFirstEnd(new IlluminaEndData());
-            cnfParser.next(read);
+            final ClusterData cluster = new ClusterData();
+            cluster.setFirstEnd(new ReadData());
+            cnfParser.next(cluster);
 
             if(noiseIndex != noiseData.length && noiseData[noiseIndex].index == numReads) {
                 final CnfTestReads testReads = noiseData[noiseIndex];
                 //The cycles are arranged in channels but the comparisons below are done on a per cycle basis
-                final FourChannelIntensityData fcid = read.getFirstEnd().getNoise();
+                final FourChannelIntensityData fcid = cluster.getFirstEnd().getNoise();
                 short [] a = fcid.getA();
                 short [] c = fcid.getC();
                 short [] g = fcid.getG();

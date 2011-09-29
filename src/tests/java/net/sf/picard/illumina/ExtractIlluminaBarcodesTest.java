@@ -180,11 +180,15 @@ public class ExtractIlluminaBarcodesTest {
                 metricACAGTG.BARCODE.length(), IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores,
                 IlluminaDataType.Barcodes);
         int numReads = 0;
-        final AbstractIlluminaDataProvider parser = new BarcodeFilter(metricACAGTG.BARCODE, factory.makeDataProvider());
+
+        final IlluminaDataProvider parser = factory.makeDataProvider();
         while (parser.hasNext()) {
-            final IlluminaReadData read = parser.next();
-            Assert.assertEquals(metricACAGTG.BARCODE, read.getMatchedBarcode());
-            ++numReads;
+            final ClusterData read = parser.next();
+
+            if(metricACAGTG.BARCODE.equals(read.getMatchedBarcode())) {
+                ++numReads;
+            }
+            
             Assert.assertEquals(read.getFirstEnd().getQualities().length, barcodePosition - 1);
             Assert.assertEquals(read.getFirstEnd().getBases().length, barcodePosition - 1);
         }

@@ -50,8 +50,8 @@ public class IlluminaDataProviderTest {
     @Test(dataProvider="data")
     public void testNonRtaIlluminaDataProvider(
             final String testName, final int lane, final int size, final boolean pe,
-            final IlluminaReadData firstRead,
-            final IlluminaReadData lastRead,
+            final ClusterData firstRead,
+            final ClusterData lastRead,
             final IlluminaDataType [] extraDataTypes,
             final int barcodeCycle, final int barcodeLength,
             final int seekAfterFirstRead)
@@ -71,8 +71,8 @@ public class IlluminaDataProviderTest {
     @Test(dataProvider="arbitraryBasecallsDirData")
     public void testIlluminaDataProvider(
             final String testName, final int lane, final int size, final boolean pe,
-            final IlluminaReadData firstRead,
-            final IlluminaReadData lastRead,
+            final ClusterData firstCluster,
+            final ClusterData lastCluster,
             final IlluminaDataProviderFactory.BaseCallerVersion expectedBaseCallerVersion,
             final IlluminaDataType [] extraDataTypes,
             final int barcodeCycle, final int barcodeLength,
@@ -91,46 +91,46 @@ public class IlluminaDataProviderTest {
             factory.addDataType(dt);
         }
 
-        final AbstractIlluminaDataProvider parser = factory.makeDataProvider();
+        final IlluminaDataProvider parser = factory.makeDataProvider();
         Assert.assertEquals(factory.getBaseCallerVersion(), expectedBaseCallerVersion);
 
         int count = 0;
         while (parser.hasNext()) {
-            final IlluminaReadData n = parser.next();
+            final ClusterData cluster = parser.next();
             if (count == 0) {
-                compareReadData(pe, n, firstRead, testName);
+                compareReadData(pe, cluster, firstCluster, testName);
                 if (seekAfterFirstRead != 0) {
                     parser.seekToTile(seekAfterFirstRead);
                 }
             }
             else if (count == (size-1)) {
-                compareReadData(pe, n, lastRead, testName);
+                compareReadData(pe, cluster, lastCluster, testName);
             }
             count++;
         }
         Assert.assertEquals(count, size, testName);
     }
 
-    private void compareBasesAndQuals(final IlluminaEndData ied1, final IlluminaEndData ied2, final String testName) {
-        Assert.assertEquals(ied1.getBases(),     ied2.getBases(),     testName);
-        Assert.assertEquals(ied1.getQualities(), ied2.getQualities(), testName);
+    private void compareBasesAndQuals(final ReadData rd1, final ReadData rd2, final String testName) {
+        Assert.assertEquals(rd1.getBases(),     rd2.getBases(),     testName);
+        Assert.assertEquals(rd1.getQualities(), rd2.getQualities(), testName);
     }
 
-    private void compareReadData(final boolean pe, final IlluminaReadData ird1, final IlluminaReadData ird2, final String testName) {
-        compareBasesAndQuals(ird1.getFirstEnd(), ird2.getFirstEnd(), testName);
+    private void compareReadData(final boolean pe, final ClusterData cd1, final ClusterData cd2, final String testName) {
+        compareBasesAndQuals(cd1.getFirstEnd(), cd2.getFirstEnd(), testName);
 
         if(pe) {
-            Assert.assertTrue(ird1.isPairedEnd());
-            Assert.assertTrue(ird2.isPairedEnd());
-            compareBasesAndQuals(ird1.getSecondEnd(), ird2.getSecondEnd(), testName);
+            Assert.assertTrue(cd1.isPairedEnd());
+            Assert.assertTrue(cd2.isPairedEnd());
+            compareBasesAndQuals(cd1.getSecondEnd(), cd2.getSecondEnd(), testName);
         }
 
-        Assert.assertEquals(ird1.getBarcodeRead() == null, ird2.getBarcodeRead() == null, testName);
-        if(ird1.getBarcodeRead() != null) {
-            compareBasesAndQuals(ird1.getBarcodeRead(), ird2.getBarcodeRead(), testName);
+        Assert.assertEquals(cd1.getBarcodeRead() == null, cd2.getBarcodeRead() == null, testName);
+        if(cd1.getBarcodeRead() != null) {
+            compareBasesAndQuals(cd1.getBarcodeRead(), cd2.getBarcodeRead(), testName);
         }
 
-        Assert.assertEquals(ird1.isPf().booleanValue(),    ird2.isPf().booleanValue(), testName);
+        Assert.assertEquals(cd1.isPf().booleanValue(),    cd2.isPf().booleanValue(), testName);
     }
 
     private byte[] solexaQualityCharsToPhredBinary(final byte[] qualBytes) {
@@ -148,112 +148,112 @@ public class IlluminaDataProviderTest {
     {
         return new Object[][]{
             {"PE Bustard Parsing Test", 1, 60, true,
-                makeReadData(false, //first read
-                    makeEndData(toBytes("G....................C.....................T.....................T.........."), //first end of first read
+                makeClusterData(false, //first read
+                        makeReadData(toBytes("G....................C.....................T.....................T.........."), //first end of first read
                                 toBytes("\\DDDDDDDDDDDDDDDDDDDD\\DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDD")),
-                    makeEndData(toBytes("C...A................A.....................C.....................T.........."),
+                        makeReadData(toBytes("C...A................A.....................C.....................T.........."),
                                 toBytes("^DDDIDDDDDDDDDDDDDDDDKDDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDDMDDDDDDDDDD")),
-                    null),
-                makeReadData(false,
-                    makeEndData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
+                        null),
+                makeClusterData(false,
+                        makeReadData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
                                 toBytes("^DU_WDDDDDDD^DD^_^_U```^^U[]]_UNV^`^^U][[W\\_QTQZ]_WS[X]TW_^VMLUZVWZ[SFXL[YUW")),
-                    makeEndData(toBytes("TCCATCCACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
+                        makeReadData(toBytes("TCCATCCACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
                                 toBytes("aaa[`aa_aaaaaa\\__`aa^aT_VVV\\ZZ`a`X`Za^\\][aa_U_``^a]aX]I]``X`TR^]GDWXGMX]Z[YG")),
-                    null),
+                        null),
                 new IlluminaDataType[]{},
                 0, 0, 0
             },
 
             {"PE with Barcode Bustard Parsing Test", 1, 60, true,
-                makeReadData(false, //first read
-                    makeEndData(toBytes("G....................C.....................T.....................T.........."),
+                makeClusterData(false, //first read
+                        makeReadData(toBytes("G....................C.....................T.....................T.........."),
                                 toBytes("\\DDDDDDDDDDDDDDDDDDDD\\DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDD")),
-                    makeEndData(toBytes("...............A.....................C.....................T.........."),
+                        makeReadData(toBytes("...............A.....................C.....................T.........."),
                                 toBytes("DDDDDDDDDDDDDDDKDDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDDMDDDDDDDDDD")),
-                    makeEndData(toBytes("C...A."),
+                        makeReadData(toBytes("C...A."),
                                 toBytes("^DDDID"))),
-                makeReadData(false,
-                    makeEndData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
+                makeClusterData(false,
+                        makeReadData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
                                 toBytes("^DU_WDDDDDDD^DD^_^_U```^^U[]]_UNV^`^^U][[W\\_QTQZ]_WS[X]TW_^VMLUZVWZ[SFXL[YUW")),
-                    makeEndData(toBytes("CACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
+                        makeReadData(toBytes("CACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
                                 toBytes("a_aaaaaa\\__`aa^aT_VVV\\ZZ`a`X`Za^\\][aa_U_``^a]aX]I]``X`TR^]GDWXGMX]Z[YG")),
-                    makeEndData(toBytes("TCCATC"),
+                        makeReadData(toBytes("TCCATC"),
                                 toBytes("aaa[`a"))),
                 new IlluminaDataType[]{},
                 77, 6, 0
             },
 
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20, true,
-                makeReadData(false, //first read
-                    makeEndData(toBytes("G..."), toBytes("\\DDD")),
-                    makeEndData(toBytes("C..."), toBytes("^DDD")),
-                    null),
-                makeReadData(false,
-                    makeEndData(toBytes("A..."), toBytes("GDDD")),
-                    makeEndData(toBytes("A..."), toBytes("RDDD")),
-                    null),
+                makeClusterData(false, //first read
+                        makeReadData(toBytes("G..."), toBytes("\\DDD")),
+                        makeReadData(toBytes("C..."), toBytes("^DDD")),
+                        null),
+                makeClusterData(false,
+                        makeReadData(toBytes("A..."), toBytes("GDDD")),
+                        makeReadData(toBytes("A..."), toBytes("RDDD")),
+                        null),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
                 0, 0, 0
             },
 
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20, true,
-                makeReadData(false, //first read
-                    makeEndData(toBytes("G..."), toBytes("\\DDD")),
-                    makeEndData(toBytes(".."),   toBytes("DD")),
-                    makeEndData(toBytes("C."),   toBytes("^D"))),
-                makeReadData(false,
-                    makeEndData(toBytes("A..."), toBytes("GDDD")),
-                    makeEndData(toBytes(".."),   toBytes("DD")),
-                    makeEndData(toBytes("A."),   toBytes("RD"))),
+                makeClusterData(false, //first read
+                        makeReadData(toBytes("G..."), toBytes("\\DDD")),
+                        makeReadData(toBytes(".."), toBytes("DD")),
+                        makeReadData(toBytes("C."), toBytes("^D"))),
+                makeClusterData(false,
+                        makeReadData(toBytes("A..."), toBytes("GDDD")),
+                        makeReadData(toBytes(".."), toBytes("DD")),
+                        makeReadData(toBytes("A."), toBytes("RD"))),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
                 5, 2, 0
             },
 
             {"PE, Barcode, seek Bustard Parsing Test", 1, 21, true,
-                makeReadData(false, //first read
-                    makeEndData(toBytes("G....................C.....................T.....................T.........."),
+                makeClusterData(false, //first read
+                        makeReadData(toBytes("G....................C.....................T.....................T.........."),
                                 toBytes("\\DDDDDDDDDDDDDDDDDDDD\\DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDD")),
-                    makeEndData(toBytes("...............A.....................C.....................T.........."),
+                        makeReadData(toBytes("...............A.....................C.....................T.........."),
                                 toBytes("DDDDDDDDDDDDDDDKDDDDDDDDDDDDDDDDDDDDD[DDDDDDDDDDDDDDDDDDDDDMDDDDDDDDDD")),
-                    makeEndData(toBytes("C...A."),
+                        makeReadData(toBytes("C...A."),
                                 toBytes("^DDDID"))),
-                makeReadData(false,
-                    makeEndData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
+                makeClusterData(false,
+                        makeReadData(toBytes("C.TAT.......C..CGGGTACCACAGTTGAGGACTGACATTCTGAACCCTGATGTTTCTAAAGAAACGACAGTAT"),
                                 toBytes("^DU_WDDDDDDD^DD^_^_U```^^U[]]_UNV^`^^U][[W\\_QTQZ]_WS[X]TW_^VMLUZVWZ[SFXL[YUW")),
-                    makeEndData(toBytes("CACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
+                        makeReadData(toBytes("CACTTCCCTGAGCCTCAGAAAAGGGCAAGGCATGGCTCACATACTCTCAGCCACGGCCTGGCCTGCTGCC"),
                                 toBytes("a_aaaaaa\\__`aa^aT_VVV\\ZZ`a`X`Za^\\][aa_U_``^a]aX]I]``X`TR^]GDWXGMX]Z[YG")),
-                    makeEndData(toBytes("TCCATC"),
+                        makeReadData(toBytes("TCCATC"),
                                 toBytes("aaa[`a"))),
                 new IlluminaDataType[]{},
                 77, 6, 3
             },
 
             {"Non-PE Bustard Parsing Test", 5, 20, false,
-                makeReadData(true,
-                    makeEndData(toBytes("GACTTTGGGAAGGGTCATTACTGCCCTTGTAGAAAGAACACCTCATGTTCCTTATCGAGAGCGGCCGCTGCTGATC"),
+                makeClusterData(true,
+                        makeReadData(toBytes("GACTTTGGGAAGGGTCATTACTGCCCTTGTAGAAAGAACACCTCATGTTCCTTATCGAGAGCGGCCGCTGCTGATC"),
                                 toBytes("W[`bbbb_baS\\`_\\bbabbaWR`bba``ab_bbbbbabbbaabb^^^\\aa_ab`a_`[`VaST[^SWTXWNYEHM")),
-                    null, null),
-                makeReadData(true,
-                    makeEndData(toBytes("CACACACACACACACACACACACCACCTTTTGGCTTATCTGCACGCGGCCGCGTGCCCTACCCTACCCCATGGGAT"),
+                        null, null),
+                makeClusterData(true,
+                        makeReadData(toBytes("CACACACACACACACACACACACCACCTTTTGGCTTATCTGCACGCGGCCGCGTGCCCTACCCTACCCCATGGGAT"),
                                 toBytes("a_aa^\\Ra\\`aaXa_aa_aaaaaaa[^X^``V[`_`a^aaO``^_SJUELTVMKVTPFOKJJMNKTRRJEEPFKTR")),
-                    null, null),
+                        null, null),
                 new IlluminaDataType[]{},
                 0, 0, 0
             },
 
 
             {"Non-PE Barcode Bustard Parsing Test", 5, 20, false,
-                makeReadData(true,
-                    makeEndData(toBytes("GACTTTGGGAAGGGTCATTACTGCCCTTGTAGAAAGAACACCTCATGTTCCTTATCGAGAGCGGCCGCTG"),
+                makeClusterData(true,
+                        makeReadData(toBytes("GACTTTGGGAAGGGTCATTACTGCCCTTGTAGAAAGAACACCTCATGTTCCTTATCGAGAGCGGCCGCTG"),
                                 toBytes("W[`bbbb_baS\\`_\\bbabbaWR`bba``ab_bbbbbabbbaabb^^^\\aa_ab`a_`[`VaST[^SWTX")),
-                    null,
-                    makeEndData(toBytes("CTGATC"),
+                        null,
+                        makeReadData(toBytes("CTGATC"),
                                 toBytes("WNYEHM"))),
-                makeReadData(true,
-                    makeEndData(toBytes("CACACACACACACACACACACACCACCTTTTGGCTTATCTGCACGCGGCCGCGTGCCCTACCCTACCCCA"),
+                makeClusterData(true,
+                        makeReadData(toBytes("CACACACACACACACACACACACCACCTTTTGGCTTATCTGCACGCGGCCGCGTGCCCTACCCTACCCCA"),
                                 toBytes("a_aa^\\Ra\\`aaXa_aa_aaaaaaa[^X^``V[`_`a^aaO``^_SJUELTVMKVTPFOKJJMNKTRRJE")),
-                    null,
-                    makeEndData(toBytes("TGGGAT"),
+                        null,
+                        makeReadData(toBytes("TGGGAT"),
                                 toBytes("EPFKTR"))),
                 new IlluminaDataType[]{},
                 71, 6, 0
@@ -266,19 +266,19 @@ public class IlluminaDataProviderTest {
     {
         return new Object[][]{
             {"Barcode-aware PE Bustard Parsing Test", 7, 10, true,
-                makeReadData(false,
-                    makeEndData(toBytes("TAGAGATGGC.CT.........T......C........G...TCCAGACCGCCCATTCTCTGCCTGCC"),
+                makeClusterData(false,
+                        makeReadData(toBytes("TAGAGATGGC.CT.........T......C........G...TCCAGACCGCCCATTCTCTGCCTGCC"),
                                 toBytes("^`^BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")),
-                    makeEndData(toBytes("CCTCTAATCCCAGCACTATCCGAGACCAAATCAGGCAAATCACTTGAAGTCAGGAGTTCGAGACCAGC"),
+                        makeReadData(toBytes("CCTCTAATCCCAGCACTATCCGAGACCAAATCAGGCAAATCACTTGAAGTCAGGAGTTCGAGACCAGC"),
                                 toBytes("]]VISQK_M\\`MHX\\ZFMaPWHXYUa]ZHJGaULGPXTRS\\W[`ZH_GMUa_[]M]PTUZX]VaZaU\\")),
-                    makeEndData(toBytes("CCACCCAC"),
+                        makeReadData(toBytes("CCACCCAC"),
                                 toBytes("_ZFZ^]BB"))),
-                makeReadData(false,
-                    makeEndData(toBytes("CAACTCTTGT.GT........GT......A........G...AATATATTCTGAAACTCAGCAATGTT"),
+                makeClusterData(false,
+                        makeReadData(toBytes("CAACTCTTGT.GT........GT......A........G...AATATATTCTGAAACTCAGCAATGTT"),
                                 toBytes("aaabaaBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")),
-                    makeEndData(toBytes("TAACTTTCAGAGGCCCTTCAGGAGGCCCTGGCCTGTCAAGTACCTTTACAGTGATGGGTATAGACTTT"),
+                        makeReadData(toBytes("TAACTTTCAGAGGCCCTTCAGGAGGCCCTGGCCTGTCAAGTACCTTTACAGTGATGGGTATAGACTTT"),
                                 toBytes("abbbabba_bbabb_]S]ab_ab__^abSORYX^RF[aa`_a_[XVa`[WUN`a^__a\\ZL\\BBBBBB")),
-                    makeEndData(toBytes("TCGGAATG"),
+                        makeReadData(toBytes("TCGGAATG"),
                                 toBytes("abY`bb_^"))),
                     IlluminaDataProviderFactory.BaseCallerVersion.Bustard_1_5,
                     new IlluminaDataType[]{},
@@ -292,10 +292,10 @@ public class IlluminaDataProviderTest {
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, 153, 6, IlluminaDataType.Barcodes);
         factory.computeReadConfiguration();
 
-        final AbstractIlluminaDataProvider parser = factory.makeDataProvider();
+        final IlluminaDataProvider parser = factory.makeDataProvider();
         for (int i = 0; parser.hasNext(); ++i) {
-            final IlluminaReadData read = parser.next();
-            final String matchedBarcode = read.getMatchedBarcode();
+            final ClusterData cluster = parser.next();
+            final String matchedBarcode = cluster.getMatchedBarcode();
             if (i % 2 == 0) {
                 // The barcode are not actual sequence in the test data, just 0-padded numbers
                 Assert.assertNotNull(matchedBarcode);
@@ -328,27 +328,27 @@ public class IlluminaDataProviderTest {
         return StringUtil.stringToBytes(str);
     }
 
-    private IlluminaEndData makeEndData(final byte [] bases, final byte [] qualities) {
-        final IlluminaEndData ied = new IlluminaEndData();
-        ied.setBases(bases);
-        ied.setQualities(solexaQualityCharsToPhredBinary(qualities));
-        return ied;
+    private ReadData makeReadData(final byte[] bases, final byte[] qualities) {
+        final ReadData readData = new ReadData();
+        readData.setBases(bases);
+        readData.setQualities(solexaQualityCharsToPhredBinary(qualities));
+        return readData;
     }
 
-    private IlluminaEndData makeEndData(final byte [] bases, final byte [] qualities, final FourChannelIntensityData rawIntensities, final FourChannelIntensityData noise) {
-        final IlluminaEndData ied = makeEndData(bases, qualities);
-        ied.setRawIntensities(rawIntensities);
-        ied.setNoise(noise);
-        return ied;
+    private ReadData makeReadData(final byte[] bases, final byte[] qualities, final FourChannelIntensityData rawIntensities, final FourChannelIntensityData noise) {
+        final ReadData readData = makeReadData(bases, qualities);
+        readData.setRawIntensities(rawIntensities);
+        readData.setNoise(noise);
+        return readData;
     }
 
-    private IlluminaReadData makeReadData(final boolean pf, final IlluminaEndData firstEnd, final IlluminaEndData secondEnd, final IlluminaEndData barcode) {
-        final IlluminaReadData ird = new IlluminaReadData();
-        ird.setPf(pf);
-        ird.setFirstEnd(firstEnd);
-        ird.setSecondEnd(secondEnd);
-        ird.setBarcodeRead(barcode);
+    private ClusterData makeClusterData(final boolean pf, final ReadData firstEnd, final ReadData secondEnd, final ReadData barcode) {
+        final ClusterData cluster = new ClusterData();
+        cluster.setPf(pf);
+        cluster.setFirstEnd(firstEnd);
+        cluster.setSecondEnd(secondEnd);
+        cluster.setBarcodeRead(barcode);
 
-        return ird;
+        return cluster;
     }
 }
