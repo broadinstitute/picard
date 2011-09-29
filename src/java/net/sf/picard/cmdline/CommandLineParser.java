@@ -607,6 +607,11 @@ public class CommandLineParser {
             sb.append(" Cannot be used in conjuction with option(s)");
             for (final String option : optionDefinition.mutuallyExclusive) {
                 final OptionDefinition mutextOptionDefinition = optionMap.get(option);
+
+                if(mutextOptionDefinition == null) {
+                    throw new PicardException("Invalid option definition in source code.  " + option + " doesn't match any known option.");
+                }
+
                 sb.append(" ").append(mutextOptionDefinition.name);
                 if (mutextOptionDefinition.shortName.length() > 0) {
                     sb.append(" (").append(mutextOptionDefinition.shortName).append(")");

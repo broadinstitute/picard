@@ -30,5 +30,5 @@ package net.sf.picard.illumina.parser;
  * the number of files read can be reduced.
  */
 public enum IlluminaDataType {
-    BaseCalls, QualityScores, RawIntensities, Noise, ProcessedIntensities, PF, Barcodes;
+    BaseCalls, QualityScores, RawIntensities, Noise, PF, Barcodes;
 }

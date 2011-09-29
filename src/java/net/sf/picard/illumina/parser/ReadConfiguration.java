@@ -38,7 +38,7 @@ import java.util.ArrayList;
 public class ReadConfiguration {
     private boolean pairedEnd;
     private boolean barcoded;
-    private EndType barcodeRead;
+    private ReadType barcodeRead;
     private int barcodeReads;
 
     private final InclusiveRange first =  new InclusiveRange("first");
@@ -138,14 +138,14 @@ public class ReadConfiguration {
     /**
      * Which end contains the barcode.
      */
-    public EndType getBarcodeRead() {
+    public ReadType getBarcodeRead() {
         return barcodeRead;
     }
 
     /**
      * Set the end that contains the barcode.
      */
-    public void setBarcodeRead(final EndType barcodeRead) {
+    public void setBarcodeRead(final ReadType barcodeRead) {
         this.barcodeRead = barcodeRead;
     }
 
@@ -266,7 +266,7 @@ public class ReadConfiguration {
         if (!barcoded) {
             throw new IllegalStateException();
         }
-        final InclusiveRange range = (barcodeRead == EndType.FIRST? first: second);
+        final InclusiveRange range = (barcodeRead == ReadType.FIRST? first: second);
         if (getBarcodeEnd() + 1 == range.getStart()) {
             // Barcode is at start of read
             return 0;
@@ -283,7 +283,7 @@ public class ReadConfiguration {
         if (!barcoded) {
             throw new IllegalStateException();
         }
-        final InclusiveRange range = (barcodeRead == EndType.FIRST? first: second);
+        final InclusiveRange range = (barcodeRead == ReadType.FIRST? first: second);
         if (getBarcodeEnd() + 1 == range.getStart()) {
             // Barcode is at start of read
             return getBarcodeLength();
@@ -298,15 +298,15 @@ public class ReadConfiguration {
      * @param cycle one-based cycle number.
      * @return Which end the cycle number corresponds to.
      */
-    public EndType getEndTypeForCycle(final int cycle) {
+    public ReadType getEndTypeForCycle(final int cycle) {
         if (cycle >= first.getStart() && cycle <= first.getEnd()) {
-            return EndType.FIRST;
+            return ReadType.FIRST;
         }
         if (cycle >= second.getStart() && cycle <= second.getEnd()) {
-            return EndType.SECOND;
+            return ReadType.SECOND;
         }
         if (cycle >= barcode.getStart() && cycle <= barcode.getEnd()) {
-            return EndType.BARCODE;
+            return ReadType.BARCODE;
         }
         throw new IllegalArgumentException("Invalid cycle number for read configuration: " + cycle);
     }

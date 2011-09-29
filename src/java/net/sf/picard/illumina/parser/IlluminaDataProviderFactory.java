@@ -26,12 +26,9 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.illumina.BarcodeUtil;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.ReadConfiguration.InclusiveRange;
@@ -60,7 +57,7 @@ public class IlluminaDataProviderFactory {
     private final Integer barcodeCycle;
     private final Integer barcodeLength;
 
-    private Map<Integer, EndType> readToEndType = new HashMap<Integer,EndType>();
+    private Map<Integer, ReadType> readToEndType = new HashMap<Integer,ReadType>();
 
     // The kinds of data the caller is interested in.  In some cases, more data types
     // than requested are returned, because of the granularity of the data types in files.
@@ -214,16 +211,16 @@ public class IlluminaDataProviderFactory {
     private void makeQseqParsers(final List<IlluminaParser> parsers, final List<Integer> tiles) {
         if (isBarcodeAwareBaseCaller()) {
             for (final int read : this.readToEndType.keySet()) {
-                final EndType type = this.readToEndType.get(read);
+                final ReadType type = this.readToEndType.get(read);
                 parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, type, read, tiles));
             }
         } else {
             // Barcode is in one of the regular qseq files.
-            parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, EndType.FIRST, tiles));
+            parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, ReadType.FIRST, tiles));
             // Handle case in which the barcode is the only thing in read 2, typically because the run was stopped
             // after reading the barcode but before read 2.
-            if (pairedEnd || (readConfiguration.isBarcoded() && readConfiguration.getBarcodeRead() == EndType.SECOND)) {
-                parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, EndType.SECOND, tiles));
+            if (pairedEnd || (readConfiguration.isBarcoded() && readConfiguration.getBarcodeRead() == ReadType.SECOND)) {
+                parsers.add(new QseqParser(readConfiguration, basecallDirectory, lane, ReadType.SECOND, tiles));
             }
         }
     }
@@ -274,7 +271,7 @@ public class IlluminaDataProviderFactory {
                 throw new IllegalStateException("Could not determine base caller version for " + basecallDirectory + "; lane " + lane);
         }
         if (!qseqIsBarcodeAware) {
-            updateReadConfigurationForBarcode();
+            updateReadConfigurationForBarcode();//TODO: Move this up?
         }
         readConfiguration.assertValid(allowZeroLengthFirstEnd);
         prepared = true;
@@ -288,11 +285,11 @@ public class IlluminaDataProviderFactory {
         readConfiguration.setPairedEnd(pairedEnd);
         if (readConfiguration.getFirstLength() == 0) {
             readConfiguration.setFirstStart(1);
-            final File firstEnd = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1)[0].file;
+            final File firstEnd = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1)[0].file;   //TODO: Do something about this?
             readConfiguration.setFirstEnd(QseqParser.getReadLength(firstEnd));
         }
         if (pairedEnd && readConfiguration.getSecondLength() == 0) {
-            final File secondEnd = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 2)[0].file;
+            final File secondEnd = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 2)[0].file;  //TODO: Do something about this?
             final int end2Length = QseqParser.getReadLength(secondEnd);
             readConfiguration.setSecondStart(readConfiguration.getFirstLength() + 1);
             readConfiguration.setSecondEnd(readConfiguration.getFirstLength() + end2Length);
@@ -305,7 +302,6 @@ public class IlluminaDataProviderFactory {
         final File[] qseqs = new File[MAX_QSEQS_PER_TILE];
         final int[] readLengths = new int[MAX_QSEQS_PER_TILE];
 
-        int numQseqs = 1;
         qseqs[0] = IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1)[0].file;
         readLengths[0] = QseqParser.getReadLength(qseqs[0]);
 
@@ -314,7 +310,6 @@ public class IlluminaDataProviderFactory {
             if (files.length > 0) {
                 qseqs[end-1] = files[0].file;
                 readLengths[end-1] = QseqParser.getReadLength(qseqs[end-1]);
-                numQseqs++;
             }
         }
 
@@ -338,7 +333,7 @@ public class IlluminaDataProviderFactory {
                 if (CoordMath.encloses(barcodeStart, barcodeEnd, start, end)) {
                     if (barcode.getStart() == 0) barcode.setStart(start);
                     barcode.setEnd(end);
-                    this.readToEndType.put(i+1, EndType.BARCODE);
+                    this.readToEndType.put(i+1, ReadType.BARCODE);
                     readConfiguration.setBarcodeReads(readConfiguration.getBarcodeReads() + 1);
                 }
                 else if (CoordMath.overlaps(barcodeStart, barcodeEnd, start, end)) {
@@ -347,12 +342,12 @@ public class IlluminaDataProviderFactory {
                 else if (first.getStart() == 0) {
                     first.setStart(start);
                     first.setEnd(end);
-                    this.readToEndType.put(i+1, EndType.FIRST);
+                    this.readToEndType.put(i+1, ReadType.FIRST);
                 }
                 else if (second.getStart() == 0) {
                     second.setStart(start);
                     second.setEnd(end);
-                    this.readToEndType.put(i+1, EndType.SECOND);
+                    this.readToEndType.put(i+1, ReadType.SECOND);
                 }
                 else {
                     throw new PicardException("Found more reads than we know what to do with!");
@@ -377,7 +372,7 @@ public class IlluminaDataProviderFactory {
         readConfiguration.setBarcoded(true);
         readConfiguration.setBarcodeStart(barcodeCycle);
         readConfiguration.setBarcodeEnd(barcodeCycle + barcodeLength - 1);
-        readConfiguration.setBarcodeRead(barcodePosition.barcodeIsInSecondRead ? EndType.SECOND: EndType.FIRST);
+        readConfiguration.setBarcodeRead(barcodePosition.barcodeIsInSecondRead ? ReadType.SECOND: ReadType.FIRST);
         if (barcodePosition.barcodeIsInSecondRead) {
             if (barcodeCycle == readConfiguration.getSecondStart()) {
                 // Barcode is at start of second read

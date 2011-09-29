@@ -51,7 +51,7 @@ public class BarcodeParser extends AbstractIlluminaTextParser {
      * @param fields Input line, split on whitespace.
      */
     @Override
-    protected void processLine(final IlluminaReadData data, final String[] fields) {
+    protected void processLine(final ClusterData data, final String[] fields) {
         if (fields[Y_OR_N_COLUMN].equals("Y")) {
             data.setMatchedBarcode(fields[BARCODE_COLUMN]);
         }

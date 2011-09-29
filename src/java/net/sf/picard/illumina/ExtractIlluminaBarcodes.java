@@ -23,6 +23,7 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.illumina.parser.IlluminaDataProvider;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -46,8 +47,7 @@ import java.text.NumberFormat;
 
 import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
 import net.sf.picard.illumina.parser.IlluminaDataType;
-import net.sf.picard.illumina.parser.AbstractIlluminaDataProvider;
-import net.sf.picard.illumina.parser.IlluminaReadData;
+import net.sf.picard.illumina.parser.ClusterData;
 
 /**
  * Determine the barcode for each read in an Illumina lane.
@@ -162,13 +162,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
         // This is possible for index-only run.
         factory.setAllowZeroLengthFirstEnd(true);
-        final AbstractIlluminaDataProvider parser = factory.makeDataProvider();
+        final IlluminaDataProvider parser = factory.makeDataProvider();
 
         // Process each tile qseq file.
         try {
             while (parser.hasNext()) {
-                final IlluminaReadData ird = parser.next();
-                extractBarcode(ird);
+                final ClusterData cluster = parser.next();
+                extractBarcode(cluster);
             }
             if (writer != null) {
                 writer.close();
@@ -268,13 +268,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     /**
      * Assign barcodes for a single tile's qseq file
      */
-    private void extractBarcode(final IlluminaReadData ird) throws IOException {
-        final String barcodeSubsequence = StringUtil.bytesToString(ird.getBarcodeRead().getBases());
-        final boolean passingFilter = ird.isPf();
+    private void extractBarcode(final ClusterData cluster) throws IOException {
+        final String barcodeSubsequence = StringUtil.bytesToString(cluster.getBarcodeRead().getBases());
+        final boolean passingFilter = cluster.isPf();
         final BarcodeMatch match = findBestBarcode(barcodeSubsequence, passingFilter);
 
         final String yOrN = (match.matched ? "Y" : "N");
-        ensureBarcodeFileOpen(ird.getTile());
+        ensureBarcodeFileOpen(cluster.getTile());
         writer.write(StringUtil.join("\t", barcodeSubsequence, yOrN, match.barcode,
                                      String.valueOf(match.mismatches),
                                      String.valueOf(match.mismatchesToSecondBest)));

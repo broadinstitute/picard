@@ -28,7 +28,7 @@ package net.sf.picard.illumina.parser;
  *
  * @author alecw@broadinstitute.org
  */
-public class IlluminaEndData {
+public class ReadData {
     private byte[] bases;
     private byte[] qualities;
     private FourChannelIntensityData rawIntensities;

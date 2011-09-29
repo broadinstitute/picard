@@ -23,7 +23,6 @@
  */
 package net.sf.picard.illumina;
 
-import net.sf.picard.illumina.parser.IlluminaFileUtil;
 import net.sf.picard.filter.AggregateFilter;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.filter.SolexaNoiseFilter;
@@ -33,12 +32,12 @@ import net.sf.samtools.*;
 
 import java.util.Arrays;
 
-import net.sf.picard.illumina.parser.IlluminaReadData;
-import net.sf.picard.illumina.parser.IlluminaEndData;
+import net.sf.picard.illumina.parser.ClusterData;
+import net.sf.picard.illumina.parser.ReadData;
 import net.sf.samtools.util.StringUtil;
 
 /**
- * Convert IlluminaReadData into SAMRecord.
+ * Convert ClusterData into SAMRecord.
  * 
  * @author alecw@broadinstitute.org
  */
@@ -66,32 +65,32 @@ public class IlluminaBasecallsToSamConverter {
             (SamRecordFilter)new SolexaNoiseFilter()
         ));
     }
-    private String createReadName(final IlluminaReadData ird) {
-        return IlluminaUtil.makeReadName(runBarcode, ird.getLane(), ird.getTile(), ird.getX(), ird.getY());
+    private String createReadName(final ClusterData cluster) {
+        return IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
     }
 
     /**
      * Creates a SAMRecord from Illumina Basecall data
      *
-     * @param ird           The IlluminaReadData to use in populating the SAMRecord
+     * @param cluster       The ClusterData to use in populating the SAMRecord
      * @param isFirstRead   whether this is the first read of a pair
      * @param readName      The read name to use, or null if it should be constructed here.  For paired-end runs
      *                      the same read name can be used for both ends.
      * @return SAMRecord    fully populated SAMRecord
      */
-    public SAMRecord createSamRecord(final IlluminaReadData ird, final boolean isFirstRead, final SAMFileHeader header, 
+    public SAMRecord createSamRecord(final ClusterData cluster, final boolean isFirstRead, final SAMFileHeader header,
                                      final String readName) {
         final SAMRecord sam = new SAMRecord(header);
-        sam.setReadName(readName != null? readName: createReadName(ird));
-        final IlluminaEndData end = (isFirstRead? ird.getFirstEnd(): ird.getSecondEnd());
-        sam.setReadBases(end.getBases());
-        sam.setBaseQualities(end.getQualities());
+        sam.setReadName(readName != null? readName: createReadName(cluster));
+        final ReadData readData = (isFirstRead? cluster.getFirstEnd(): cluster.getSecondEnd());
+        sam.setReadBases(readData.getBases());
+        sam.setBaseQualities(readData.getQualities());
 
         // Flag values
-        sam.setReadPairedFlag(ird.isPairedEnd());
+        sam.setReadPairedFlag(cluster.isPairedEnd());
         sam.setReadUnmappedFlag(true);
-        sam.setReadFailsVendorQualityCheckFlag(!ird.isPf());
-        if (ird.isPairedEnd()) {
+        sam.setReadFailsVendorQualityCheckFlag(!cluster.isPf());
+        if (cluster.isPairedEnd()) {
             sam.setMateUnmappedFlag(true);
             sam.setFirstOfPairFlag(isFirstRead);
             sam.setSecondOfPairFlag(!isFirstRead);
@@ -106,8 +105,8 @@ public class IlluminaBasecallsToSamConverter {
         }
 
         // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode read as an optional tag
-        if (ird.getMatchedBarcode() == null && ird.getBarcodeRead() != null) {
-            sam.setAttribute("BC", StringUtil.bytesToString(ird.getBarcodeRead().getBases()).replace('.', 'N'));
+        if (cluster.getMatchedBarcode() == null && cluster.getBarcodeRead() != null) {
+            sam.setAttribute("BC", StringUtil.bytesToString(cluster.getBarcodeRead().getBases()).replace('.', 'N'));
         }
 
         return sam;

@@ -32,11 +32,11 @@ import java.util.NoSuchElementException;
 
 /**
  * Parse various formats and versions of Illumina Basecall files, and use them the to populate
- * IlluminaReadData objects.  Use IlluminaDataProviderFactory to create one of these.
+ * ClusterData objects.  Use IlluminaDataProviderFactory to create one of these.
  *
  * @author alecw@broadinstitute.org
  */
-public class IlluminaDataProvider implements AbstractIlluminaDataProvider {
+public class IlluminaDataProvider {
 
     /**
      * Underlying parsers to use.
@@ -54,7 +54,7 @@ public class IlluminaDataProvider implements AbstractIlluminaDataProvider {
      *
      * @param barcoded True if this is a barcoded lane.
      * @param pairedEnd True if this is a paired-end lane.
-     * @param parsers List of parsers that will populate the IlluminaReadData streams.
+     * @param parsers List of parsers that will populate the ClusterData streams.
      * @param basecallDirectory For error reporting only.
      * @param lane For error reporting only.
      */
@@ -68,7 +68,6 @@ public class IlluminaDataProvider implements AbstractIlluminaDataProvider {
         this.parsers = parsers;
     }
 
-    @Override
     public boolean hasNext() {
         if (parsers.isEmpty()) {
             return false;
@@ -82,26 +81,24 @@ public class IlluminaDataProvider implements AbstractIlluminaDataProvider {
         return ret;
     }
 
-    @Override
-    public IlluminaReadData next() {
+    public ClusterData next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        final IlluminaReadData ret = new IlluminaReadData();
-        ret.setFirstEnd(new IlluminaEndData());
+        final ClusterData cluster = new ClusterData();
+        cluster.setFirstEnd(new ReadData());
         if (pairedEnd) {
-            ret.setSecondEnd(new IlluminaEndData());
+            cluster.setSecondEnd(new ReadData());
         }
         if (barcoded) {
-            ret.setBarcodeRead(new IlluminaEndData());
+            cluster.setBarcodeRead(new ReadData());
         }
         for (final IlluminaParser parser: parsers) {
-            parser.next(ret);
+            parser.next(cluster);
         }
-        return ret;
+        return cluster;
     }
 
-    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

@@ -103,7 +103,7 @@ abstract class AbstractIlluminaTextParser implements IlluminaParser {
      * @param data Has already been set up appropriately for paired or single end read, barcoded or not.
      */
     @Override
-    public void next(final IlluminaReadData data) {
+    public void next(final ClusterData data) {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -124,7 +124,7 @@ abstract class AbstractIlluminaTextParser implements IlluminaParser {
      * for paired or single end read, and for barcode or not.
      * @param fields Input line, split on whitespace.
      */
-    protected abstract void processLine(IlluminaReadData data, String[] fields);
+    protected abstract void processLine(ClusterData data, String[] fields);
 
     public boolean hasNext() {
         return parser.hasNext();

@@ -27,25 +27,25 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.PicardException;
 
 /**
- * Store the data read from Illumina files for a single read, separated into two ends, and barcode, if appropriate.
+ * Store the cluster information from Illumina files for a single cluster with up two three reads(first of pair, second, barcode).
  * Caller must call setFirstEnd, setSecondEnd, setBarcodeEnd as appropriate to initialize those properties.
  * 
  * @author alecw@broadinstitute.org
  */
-public class IlluminaReadData {
+public class ClusterData {
 
     private int lane = -1;
     private int tile = -1;
     private int x = -1;
     private int y = -1;
-    private IlluminaEndData firstEnd;
-    private IlluminaEndData secondEnd;
-    private IlluminaEndData barcodeRead;
+    private ReadData firstEnd;
+    private ReadData secondEnd;
+    private ReadData barcodeRead;
     private Boolean pf;
     private String matchedBarcode;
 
     public String toString() {
-        return "IlluminaReadData(lane: " + lane + "; tile: " + tile + "; x: " + x + "; y: " + y + "; pf: " + pf +
+        return "ClusterData(lane: " + lane + "; tile: " + tile + "; x: " + x + "; y: " + y + "; pf: " + pf +
                 "; matchedBarcode: " + matchedBarcode + ")";
     }
 
@@ -182,41 +182,41 @@ public class IlluminaReadData {
     /**
      * @return second end if oneBasedIndex == 2, else first end.
      */
-    public IlluminaEndData getEnd(final int oneBasedEndIndex) {
+    public ReadData getEnd(final int oneBasedEndIndex) {
         return (oneBasedEndIndex == 2? secondEnd: firstEnd);
     }
 
-    public void setEnd(final IlluminaEndData end, final int oneBasedEndIndex) {
+    public void setEnd(final ReadData readData, final int oneBasedEndIndex) {
         if (oneBasedEndIndex == 1) {
-            firstEnd = end;
+            firstEnd = readData;
         } else if (oneBasedEndIndex == 2) {
-            secondEnd = end;
+            secondEnd = readData;
         } else {
             throw new IllegalArgumentException();
         }
     }
 
-    public IlluminaEndData getFirstEnd() {
+    public ReadData getFirstEnd() {
         return firstEnd;
     }
 
-    public void setFirstEnd(final IlluminaEndData firstEnd) {
+    public void setFirstEnd(final ReadData firstEnd) {
         this.firstEnd = firstEnd;
     }
 
-    public IlluminaEndData getSecondEnd() {
+    public ReadData getSecondEnd() {
         return secondEnd;
     }
 
-    public void setSecondEnd(final IlluminaEndData secondEnd) {
+    public void setSecondEnd(final ReadData secondEnd) {
         this.secondEnd = secondEnd;
     }
 
-    public IlluminaEndData getBarcodeRead() {
+    public ReadData getBarcodeRead() {
         return barcodeRead;
     }
 
-    public void setBarcodeRead(final IlluminaEndData barcodeRead) {
+    public void setBarcodeRead(final ReadData barcodeRead) {
         this.barcodeRead = barcodeRead;
     }
 
@@ -232,7 +232,7 @@ public class IlluminaReadData {
         this.matchedBarcode = matchedBarcode;
     }
 
-    public IlluminaEndData getEnd(final EndType whichEndType) {
+    public ReadData getEnd(final ReadType whichEndType) {
         switch (whichEndType) {
             case BARCODE:
                 return barcodeRead;

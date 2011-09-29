@@ -51,7 +51,7 @@ import net.sf.samtools.util.IOUtil;
  * 2. If there is any custom command-line validation, override customCommandLineValidation().  When this method is
  * called, the command line has been parsed and set into the data members of the concrete class.
  *
- * 3. Implement a method doWork().  This is called after successful comand-line processing.  The value it returns is
+ * 3. Implement a method doWork().  This is called after successful command-line processing.  The value it returns is
  * the exit status of the program.  It is assumed that the concrete class emits any appropriate error message before
  * returning non-zero.  doWork() may throw unchecked exceptions, which are caught and reported appropriately.
  *
