@@ -350,8 +350,13 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
                     metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
                     metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
-                    metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
 
+                    if(this.chimerasDenominator != 0) {
+                        metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
+                    } else {
+                        metrics.PCT_CHIMERAS = 0;
+                    }
+                    
                     metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
                     metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
