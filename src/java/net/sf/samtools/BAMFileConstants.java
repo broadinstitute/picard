@@ -33,11 +33,6 @@ class BAMFileConstants {
     static final int FIXED_BLOCK_SIZE = 8 * 4;
 
     /**
-     * Sanity check -- we never expect BAMRecords to be as big as this.
-     */
-    static final int MAXIMUM_RECORD_LENGTH = 1024 * 1024;
-
-    /**
      * BAM file magic number.  This is what is present in the gunzipped version of the file,
      * which never exists on disk.
      */

@@ -162,8 +162,7 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
             return null;
         }
 
-        if (recordLength < BAMFileConstants.FIXED_BLOCK_SIZE ||
-                recordLength > BAMFileConstants.MAXIMUM_RECORD_LENGTH) {
+        if (recordLength < BAMFileConstants.FIXED_BLOCK_SIZE) {
             throw new SAMFormatException("Invalid record length: " + recordLength);
         }
         
