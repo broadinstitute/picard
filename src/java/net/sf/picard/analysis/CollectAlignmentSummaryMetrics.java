@@ -347,20 +347,15 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 }
 
                 if(doRefMetrics) {
-                    metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
-                    metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
-                    metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
+                    if (metrics.PF_READS > 0)         metrics.PCT_PF_READS_ALIGNED = (double) metrics.PF_READS_ALIGNED / (double) metrics.PF_READS;
+                    if (metrics.PF_READS_ALIGNED > 0) metrics.PCT_READS_ALIGNED_IN_PAIRS = (double) metrics.READS_ALIGNED_IN_PAIRS/ (double) metrics.PF_READS_ALIGNED;
+                    if (metrics.PF_READS_ALIGNED > 0) metrics.STRAND_BALANCE = numPositiveStrand / (double) metrics.PF_READS_ALIGNED;
+                    if (this.chimerasDenominator > 0) metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
 
-                    if(this.chimerasDenominator != 0) {
-                        metrics.PCT_CHIMERAS = this.chimeras / (double) this.chimerasDenominator;
-                    } else {
-                        metrics.PCT_CHIMERAS = 0;
-                    }
-                    
-                    metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
+                    if (nonBisulfiteAlignedBases > 0) metrics.PF_MISMATCH_RATE = mismatchHistogram.getSum() / (double) nonBisulfiteAlignedBases;
                     metrics.PF_HQ_MEDIAN_MISMATCHES = hqMismatchHistogram.getMedian();
-                    metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
-                    metrics.PF_INDEL_RATE = this.indels / (double) metrics.PF_ALIGNED_BASES;
+                    if (hqNonBisulfiteAlignedBases > 0) metrics.PF_HQ_ERROR_RATE = hqMismatchHistogram.getSum() / (double) hqNonBisulfiteAlignedBases;
+                    if (metrics.PF_ALIGNED_BASES > 0) metrics.PF_INDEL_RATE = this.indels / (double) metrics.PF_ALIGNED_BASES;
                 }
             }
         }
