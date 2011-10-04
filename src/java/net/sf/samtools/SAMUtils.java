@@ -38,8 +38,18 @@ public final class SAMUtils
     private static final byte COMPRESSED_EQUAL_LOW = 0;
     private static final byte COMPRESSED_A_LOW = 1;
     private static final byte COMPRESSED_C_LOW = 2;
+    private static final byte COMPRESSED_M_LOW = 3;
     private static final byte COMPRESSED_G_LOW = 4;
+    private static final byte COMPRESSED_R_LOW = 5;
+    private static final byte COMPRESSED_S_LOW = 6;
+    private static final byte COMPRESSED_V_LOW = 7;
     private static final byte COMPRESSED_T_LOW = 8;
+    private static final byte COMPRESSED_W_LOW = 9;
+    private static final byte COMPRESSED_Y_LOW = 10;
+    private static final byte COMPRESSED_H_LOW = 11;
+    private static final byte COMPRESSED_K_LOW = 12;
+    private static final byte COMPRESSED_D_LOW = 13;
+    private static final byte COMPRESSED_B_LOW = 14;
     private static final byte COMPRESSED_N_LOW = 15;
     private static final byte COMPRESSED_EQUAL_HIGH = COMPRESSED_EQUAL_LOW << 4;
     private static final byte COMPRESSED_A_HIGH = COMPRESSED_A_LOW << 4;
@@ -47,6 +57,19 @@ public final class SAMUtils
     private static final byte COMPRESSED_G_HIGH = COMPRESSED_G_LOW << 4;
     private static final byte COMPRESSED_T_HIGH = (byte)(COMPRESSED_T_LOW << 4);
     private static final byte COMPRESSED_N_HIGH = (byte)(COMPRESSED_N_LOW << 4);
+
+    private static final byte COMPRESSED_M_HIGH = (byte)(COMPRESSED_M_LOW << 4);
+    private static final byte COMPRESSED_R_HIGH = (byte)(COMPRESSED_R_LOW << 4);
+    private static final byte COMPRESSED_S_HIGH = (byte)(COMPRESSED_S_LOW << 4);
+    private static final byte COMPRESSED_V_HIGH = (byte)(COMPRESSED_V_LOW << 4);
+    private static final byte COMPRESSED_W_HIGH = (byte)(COMPRESSED_W_LOW << 4);
+    private static final byte COMPRESSED_Y_HIGH = (byte)(COMPRESSED_Y_LOW << 4);
+    private static final byte COMPRESSED_H_HIGH = (byte)(COMPRESSED_H_LOW << 4);
+    private static final byte COMPRESSED_K_HIGH = (byte)(COMPRESSED_K_LOW << 4);
+    private static final byte COMPRESSED_D_HIGH = (byte)(COMPRESSED_D_LOW << 4);
+    private static final byte COMPRESSED_B_HIGH = (byte)(COMPRESSED_B_LOW << 4);
+
+
     public static final int MAX_PHRED_SCORE = 93;
 
     /**
@@ -117,6 +140,38 @@ public final class SAMUtils
             case 'N':
             case '.':
                 return COMPRESSED_N_LOW;
+
+            // IUPAC ambiguity codes
+            case 'M':
+            case 'm':
+                return COMPRESSED_M_LOW;
+            case 'R':
+            case 'r':
+                return COMPRESSED_R_LOW;
+            case 'S':
+            case 's':
+                return COMPRESSED_S_LOW;
+            case 'V':
+            case 'v':
+                return COMPRESSED_V_LOW;
+            case 'W':
+            case 'w':
+                return COMPRESSED_W_LOW;
+            case 'Y':
+            case 'y':
+                return COMPRESSED_Y_LOW;
+            case 'H':
+            case 'h':
+                return COMPRESSED_H_LOW;
+            case 'K':
+            case 'k':
+                return COMPRESSED_K_LOW;
+            case 'D':
+            case 'd':
+                return COMPRESSED_D_LOW;
+            case 'B':
+            case 'b':
+                return COMPRESSED_B_LOW;
             default:
                 throw new IllegalArgumentException("Bad  byte passed to charToCompressedBase: " + base);
         }
@@ -147,6 +202,38 @@ public final class SAMUtils
             case 'N':
             case '.':
                 return COMPRESSED_N_HIGH;
+
+            // IUPAC ambiguity codes
+            case 'M':
+            case 'm':
+                return COMPRESSED_M_HIGH;
+            case 'R':
+            case 'r':
+                return COMPRESSED_R_HIGH;
+            case 'S':
+            case 's':
+                return COMPRESSED_S_HIGH;
+            case 'V':
+            case 'v':
+                return COMPRESSED_V_HIGH;
+            case 'W':
+            case 'w':
+                return COMPRESSED_W_HIGH;
+            case 'Y':
+            case 'y':
+                return COMPRESSED_Y_HIGH;
+            case 'H':
+            case 'h':
+                return COMPRESSED_H_HIGH;
+            case 'K':
+            case 'k':
+                return COMPRESSED_K_HIGH;
+            case 'D':
+            case 'd':
+                return COMPRESSED_D_HIGH;
+            case 'B':
+            case 'b':
+                return COMPRESSED_B_HIGH;
             default:
                 throw new IllegalArgumentException("Bad  byte passed to charToCompressedBase: " + base);
         }
@@ -171,6 +258,20 @@ public final class SAMUtils
                 return 'T';
             case COMPRESSED_N_LOW:
                 return 'N';
+
+            // IUPAC ambiguity codes
+            case COMPRESSED_M_LOW: return 'M';
+            case COMPRESSED_R_LOW: return 'R';
+            case COMPRESSED_S_LOW: return 'S';
+            case COMPRESSED_V_LOW: return 'V';
+            case COMPRESSED_W_LOW: return 'W';
+            case COMPRESSED_Y_LOW: return 'Y';
+            case COMPRESSED_H_LOW: return 'H';
+            case COMPRESSED_K_LOW: return 'K';
+            case COMPRESSED_D_LOW: return 'D';
+            case COMPRESSED_B_LOW: return 'B';
+
+
             default:
                 throw new IllegalArgumentException("Bad  byte passed to charToCompressedBase: " + base);
         }
@@ -195,6 +296,19 @@ public final class SAMUtils
                 return 'T';
             case COMPRESSED_N_HIGH:
                 return 'N';
+
+            // IUPAC ambiguity codes
+            case COMPRESSED_M_HIGH: return 'M';
+            case COMPRESSED_R_HIGH: return 'R';
+            case COMPRESSED_S_HIGH: return 'S';
+            case COMPRESSED_V_HIGH: return 'V';
+            case COMPRESSED_W_HIGH: return 'W';
+            case COMPRESSED_Y_HIGH: return 'Y';
+            case COMPRESSED_H_HIGH: return 'H';
+            case COMPRESSED_K_HIGH: return 'K';
+            case COMPRESSED_D_HIGH: return 'D';
+            case COMPRESSED_B_HIGH: return 'B';
+
             default:
                 throw new IllegalArgumentException("Bad  byte passed to charToCompressedBase: " + base);
         }
