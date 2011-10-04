@@ -54,7 +54,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
     private static final int NUM_REQUIRED_FIELDS = 11;
 
     // Read string must contain only these characters
-    private static final Pattern VALID_BASES = Pattern.compile("^[acgtnACGTN.=]+$");
+    private static final Pattern VALID_BASES = Pattern.compile("^[acmgrsvtwyhkdbnACMGRSVTWYHKDBN.=]+$");
 
     private BufferedLineReader mReader;
     private SAMFileHeader mFileHeader = null;
