@@ -206,6 +206,7 @@
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
+            <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
         </jar>
     </target>
 
