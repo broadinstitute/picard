@@ -169,7 +169,6 @@ public class ValidateSamFileTest {
         
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_FLAG_NOT_PRIM_ALIGNMENT.getHistogramString()).getValue(), 1.0);
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_MAPPING_QUALITY.getHistogramString()).getValue(), 1.0);
-        Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_CIGAR.getHistogramString()).getValue(), 1.0);
     }
 
     @Test

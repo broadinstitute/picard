@@ -1521,10 +1521,7 @@ public class SAMRecord implements Cloneable
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_MAPPING_QUALITY, "MAPQ should be 0 for unmapped read.", getReadName()));
             }
-            if (getCigarLength() != 0) {
-                if (ret == null) ret = new ArrayList<SAMValidationError>();
-                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR, "CIGAR should have zero elements for unmapped read.", getReadName()));
-            }
+            /* non-empty CIGAR on unmapped read is now allowed, because there are special reads when SAM is used to store assembly. */
 /*
             TODO: PIC-97 This validation should be enabled, but probably at this point there are too many
             BAM files that have the proper pair flag set when read or mate is unmapped.
