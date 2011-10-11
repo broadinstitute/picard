@@ -39,7 +39,7 @@ import java.util.*;
  */
 public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm {
     @Usage public final String USAGE =
-            "Attempts to estimate library complexity from sequence alone. Does so by sorting all reads " +
+            "Attempts to estimate library complexity from sequence of read pairs alone. Does so by sorting all reads " +
             "by the first N bases (5 by default) of each read and then comparing reads with the first " +
             "N bases identical to each other for duplicates.  Reads are considered to be duplicates if " +
             "they match each other with no gaps and an overall mismatch rate less than or equal to " +
@@ -47,6 +47,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
             "Reads of poor quality are filtered out so as to provide a more accurate estimate. The filtering " +
             "removes reads with any no-calls in the first N bases or with a mean base quality lower than " +
             "MIN_MEAN_QUALITY across either the first or second read.\n\n" +
+            "Unpaired reads are ignored in this computation.\n\n" +
             "The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes " +
             "these in the calculation of library size. Also, since there is no alignment to screen out technical " +
             "reads one further filter is applied on the data.  After examining all reads a histogram is built of " +
