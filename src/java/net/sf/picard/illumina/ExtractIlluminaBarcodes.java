@@ -24,6 +24,7 @@
 package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.IlluminaDataProvider;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -108,6 +109,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     @Option(doc="Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
     public int MAX_NO_CALLS = 2;
+
+    @Option(shortName="GZIP", doc="Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the filenames.")
+    public boolean COMPRESS_OUTPUTS = false;
+
+    private final Log log = Log.getInstance(ExtractIlluminaBarcodes.class);
 
     private int barcodeLength;
 
@@ -260,7 +266,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.tile = tile;
             barcodeFile = getBarcodeFile(tile);
             writer = IoUtil.openFileForBufferedWriting(barcodeFile);
-        } catch (IOException e) {
+            log.info("Extracting barcodes for tile " + tile);
+        }
+        catch (IOException e) {
             throw new PicardException("IOException " + barcodeFile, e);
         }
     }
@@ -378,7 +386,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      * Create a barcode filename corresponding to the given tile qseq file.
      */
     private File getBarcodeFile(final int tile) {
-        return new File(OUTPUT_DIR, "s_" + LANE + "_" + tileNumberFormatter.format(tile) + "_barcode.txt");
+        return new File(OUTPUT_DIR,
+                        "s_" + LANE + "_" + tileNumberFormatter.format(tile) + "_barcode.txt" + (COMPRESS_OUTPUTS ? ".gz" : ""));
     }
 
     /**
@@ -396,7 +405,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
         } else {
-            Set<String> barcodes = new HashSet<String>();
+            final Set<String> barcodes = new HashSet<String>();
             barcodeLength = BARCODE.get(0).length();
             for (final String barcode : BARCODE) {
                 if (barcode.length() != barcodeLength) {
@@ -406,7 +415,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     messages.add("Barcode " + barcode + " specified more than once.");
                 }
                 barcodes.add(barcode);
-                NamedBarcode namedBarcode = new NamedBarcode(barcode);
+                final NamedBarcode namedBarcode = new NamedBarcode(barcode);
                 namedBarcodes.add(namedBarcode);
             }
         }
@@ -427,17 +436,17 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private static final String BARCODE_NAME_COLUMN = "barcode_name";
     private static final String LIBRARY_NAME_COLUMN = "library_name";
 
-    private void parseBarcodeFile(ArrayList<String> messages) {
+    private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
         if (!barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)) {
             messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " column header");
             return;
         }
-        boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
-        boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
+        final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
+        final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
 
         barcodeLength = 0;
-        Set<String> barcodes = new HashSet<String>();
+        final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
             final String barcode = row.getField(BARCODE_SEQUENCE_COLUMN);
             if (barcodeLength == 0) barcodeLength = barcode.length();
@@ -450,7 +459,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             barcodes.add(barcode);
             final String barcodeName = (hasBarcodeName? row.getField(BARCODE_NAME_COLUMN): "");
             final String libraryName = (hasLibraryName? row.getField(LIBRARY_NAME_COLUMN): "");
-            NamedBarcode namedBarcode = new NamedBarcode(barcode, barcodeName, libraryName);
+            final NamedBarcode namedBarcode = new NamedBarcode(barcode, barcodeName, libraryName);
             namedBarcodes.add(namedBarcode);
         }
     }
@@ -460,13 +469,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         public final String barcodeName;
         public final String libraryName;
 
-        public NamedBarcode(String barcode, String barcodeName, String libraryName) {
+        public NamedBarcode(final String barcode, final String barcodeName, final String libraryName) {
             this.barcode = barcode;
             this.barcodeName = barcodeName;
             this.libraryName = libraryName;
         }
 
-        public NamedBarcode(String barcode) {
+        public NamedBarcode(final String barcode) {
             this.barcode = barcode;
             this.barcodeName = "";
             this.libraryName = "";
@@ -477,7 +486,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            NamedBarcode that = (NamedBarcode) o;
+            final NamedBarcode that = (NamedBarcode) o;
 
             if (barcode != null ? !barcode.equals(that.barcode) : that.barcode != null) return false;
 
