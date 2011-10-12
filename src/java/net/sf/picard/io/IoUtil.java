@@ -24,6 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.IOUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
@@ -282,11 +283,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
      */
     public static BufferedWriter openFileForBufferedWriting(final File file, final boolean append) {
-        try {
-            return new BufferedWriter(new FileWriter(file, append), STANDARD_BUFFER_SIZE);
-        } catch (IOException ioe) {
-            throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
-        }
+        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file, append)), STANDARD_BUFFER_SIZE);
     }
 
     /**
@@ -361,7 +358,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static void copyStream(final InputStream input, final OutputStream output) {
         try {
-            final byte[] buffer = new byte[1024];
+            final byte[] buffer = new byte[IOUtil.STANDARD_BUFFER_SIZE];
             int bytesRead = 0;
             while((bytesRead = input.read(buffer)) > 0) {
                 output.write(buffer, 0, bytesRead);
