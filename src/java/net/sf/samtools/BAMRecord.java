@@ -33,9 +33,7 @@ import java.nio.ByteOrder;
  * Wrapper class for binary BAM records.
  * Delays unpacking all data binary until requested.
  */
-class BAMRecord
-    extends SAMRecord
-{
+public class BAMRecord extends SAMRecord {
     /**
      * Offset of the read name in the variable length section of the disk representation of BAMRecord
      */
@@ -67,10 +65,19 @@ class BAMRecord
      */
     private boolean mBinaryDataStale;
 
-    BAMRecord(final SAMFileHeader header, final int referenceID, final int coordinate, final short readNameLength,
-              final short mappingQuality, final int indexingBin, final int cigarLen, final int flags,
-              final int readLen, final int mateReferenceID, final int mateCoordinate, final int insertSize,
-              final byte[] restOfData) {
+    protected BAMRecord(final SAMFileHeader header,
+                        final int referenceID,
+                        final int coordinate,
+                        final short readNameLength,
+                        final short mappingQuality,
+                        final int indexingBin,
+                        final int cigarLen,
+                        final int flags,
+                        final int readLen,
+                        final int mateReferenceID,
+                        final int mateCoordinate,
+                        final int insertSize,
+                        final byte[] restOfData) {
         super(header);
         setReferenceIndex(referenceID);
         setAlignmentStart(coordinate);

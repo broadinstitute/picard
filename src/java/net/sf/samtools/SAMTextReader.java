@@ -56,6 +56,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
     // Read string must contain only these characters
     private static final Pattern VALID_BASES = Pattern.compile("^[acmgrsvtwyhkdbnACMGRSVTWYHKDBN.=]+$");
 
+    private SAMRecordFactory samRecordFactory;
     private BufferedLineReader mReader;
     private SAMFileHeader mFileHeader = null;
     private String mCurrentLine = null;
@@ -73,9 +74,10 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
      * Prepare to read a SAM text file.
      * @param stream Need not be buffered, as this class provides buffered reading.
      */
-    SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency) {
+    SAMTextReader(final InputStream stream, final SAMFileReader.ValidationStringency validationStringency, final SAMRecordFactory factory) {
         mReader = new BufferedLineReader(stream);
         this.validationStringency = validationStringency;
+        this.samRecordFactory = factory;
         readHeader();
     }
 
@@ -84,8 +86,8 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
      * @param stream Need not be buffered, as this class provides buffered reading.
      * @param file For error reporting only.
      */
-    SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency) {
-        this(stream, validationStringency);
+    SAMTextReader(final InputStream stream, final File file, final SAMFileReader.ValidationStringency validationStringency, final SAMRecordFactory factory) {
+        this(stream, validationStringency, factory);
         mFile = file;
     }
 
@@ -107,6 +109,10 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
 
     void enableCrcChecking(final boolean enabled) {
         // Do nothing - this has no meaning for SAM reading
+    }
+
+    void setSAMRecordFactory(final SAMRecordFactory factory) {
+        this.samRecordFactory = factory;
     }
 
     boolean hasIndex() {
@@ -316,7 +322,7 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
                     reportErrorParsingLine("Empty field at position " + i + " (zero-based)");
                 }
             }
-            final SAMRecord samRecord = new SAMRecord(mFileHeader);
+            final SAMRecord samRecord = samRecordFactory.createSAMRecord(mFileHeader);
             samRecord.setValidationStringency(getValidationStringency());
             if(mParentReader != null)
                 samRecord.setFileSource(new SAMFileSource(mParentReader,null));
