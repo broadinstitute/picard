@@ -23,26 +23,37 @@
  */
 package net.sf.picard.util;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * Small utility methods for dealing with collection classes.
+ */
 public class CollectionUtil {
 
-    public static <T> List<T> makeList (T... list) {
-        List<T> result = new ArrayList<T>();
-        for (T item : list) {
+    public static <T> List<T> makeList (final T... list) {
+        final List<T> result = new ArrayList<T>();
+        for (final T item : list) {
             result.add(item);
         }
         return result;
     }
 
-    public static <T> Set<T> makeSet (T... list) {
-        Set<T> result = new HashSet<T>();
-        for (T item : list) {
+    public static <T> Set<T> makeSet (final T... list) {
+        final Set<T> result = new HashSet<T>();
+        for (final T item : list) {
             result.add(item);
         }
         return result;
+    }
+
+    /** Construct a string by toString()ing each item in the collection with inBetween between each item. */
+    public static String join(final Collection<?> items, final String inBetween) {
+        final StringBuilder builder = new StringBuilder();
+        for (final Object item : items) {
+            if (builder.length() > 0) builder.append(inBetween);
+            builder.append(item);
+        }
+
+        return builder.toString();
     }
 }
