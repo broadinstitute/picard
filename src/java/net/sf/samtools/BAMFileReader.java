@@ -39,20 +39,28 @@ import java.util.NoSuchElementException;
 class BAMFileReader extends SAMFileReader.ReaderImplementation {
     // True if reading from a File rather than an InputStream
     private boolean mIsSeekable = false;
+
     // For converting bytes into other primitive types
     private BinaryCodec mStream = null;
+
     // Underlying compressed data stream.
     private final BlockCompressedInputStream mCompressedInputStream;
     private SAMFileHeader mFileHeader = null;
+
     // Populated if the file is seekable and an index exists
     private File mIndexFile;
     private BAMIndex mIndex = null;
     private long mFirstRecordPointer = 0;
     private CloseableIterator<SAMRecord> mCurrentIterator = null;
+
     // If true, all SAMRecords are fully decoded as they are read.
     private final boolean eagerDecode;
+
     // For error-checking.
     private ValidationStringency mValidationStringency;
+
+    // For creating BAMRecords
+    private SAMRecordFactory samRecordFactory;
 
     /**
      * Use the caching index reader implementation rather than the disk-hit-per-file model.
@@ -75,7 +83,11 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
      * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final InputStream stream, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final InputStream stream,
+                  final File indexFile,
+                  final boolean eagerDecode,
+                  final ValidationStringency validationStringency,
+                  final SAMRecordFactory factory)
         throws IOException {
         mIndexFile = indexFile;
         mIsSeekable = false;
@@ -83,6 +95,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
         this.eagerDecode = eagerDecode;
         this.mValidationStringency = validationStringency;
+        this.samRecordFactory = factory;
         readHeader(null);
     }
 
@@ -92,22 +105,34 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * @param eagerDecode if true, decode all BAM fields as reading rather than lazily.
      * @param validationStringency Controls how to handle invalidate reads or header lines.
      */
-    BAMFileReader(final File file, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final File file,
+                  final File indexFile,
+                  final boolean eagerDecode,
+                  final ValidationStringency validationStringency,
+                  final SAMRecordFactory factory)
         throws IOException {
-        this(new BlockCompressedInputStream(file), indexFile!=null ? indexFile : findIndexFile(file), eagerDecode, file.getAbsolutePath(), validationStringency);
+        this(new BlockCompressedInputStream(file), indexFile!=null ? indexFile : findIndexFile(file), eagerDecode, file.getAbsolutePath(), validationStringency, factory);
         if (mIndexFile != null && mIndexFile.lastModified() < file.lastModified()) {
             System.err.println("WARNING: BAM index file " + mIndexFile.getAbsolutePath() +
                     " is older than BAM " + file.getAbsolutePath());
         }        
     }
 
-    BAMFileReader(final SeekableStream strm, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency)
+    BAMFileReader(final SeekableStream strm,
+                  final File indexFile,
+                  final boolean eagerDecode,
+                  final ValidationStringency validationStringency,
+                  final SAMRecordFactory factory)
         throws IOException {
-        this(new BlockCompressedInputStream(strm), indexFile, eagerDecode, strm.getSource(), validationStringency);
+        this(new BlockCompressedInputStream(strm), indexFile, eagerDecode, strm.getSource(), validationStringency, factory);
     }
 
-    private BAMFileReader(final BlockCompressedInputStream compressedInputStream, final File indexFile, final boolean eagerDecode,
-                          final String source, final ValidationStringency validationStringency)
+    private BAMFileReader(final BlockCompressedInputStream compressedInputStream,
+                          final File indexFile,
+                          final boolean eagerDecode,
+                          final String source,
+                          final ValidationStringency validationStringency,
+                          final SAMRecordFactory factory)
         throws IOException {
         mIndexFile = indexFile;
         mIsSeekable = true;
@@ -115,6 +140,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
         this.eagerDecode = eagerDecode;
         this.mValidationStringency = validationStringency;
+        this.samRecordFactory = factory;
         readHeader(source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }    
@@ -149,10 +175,11 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this.mEnableIndexMemoryMapping = enabled;
     }
 
-    @Override
-    void enableCrcChecking(boolean enabled) {
+    @Override void enableCrcChecking(final boolean enabled) {
         this.mCompressedInputStream.setCheckCrcs(enabled);
     }
+
+    @Override void setSAMRecordFactory(final SAMRecordFactory factory) { this.samRecordFactory = factory; }
 
     /**
      * @return true if ths is a BAM file, and has an index
@@ -416,7 +443,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      */
     private class BAMFileIterator implements CloseableIterator<SAMRecord> {
         private SAMRecord mNextRecord = null;
-        private final BAMRecordCodec bamRecordCodec = new BAMRecordCodec(getFileHeader());
+        private final BAMRecordCodec bamRecordCodec;
         private long samRecordIndex = 0; // Records at what position (counted in records) we are at in the file
 
         BAMFileIterator() {
@@ -427,6 +454,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
          * @param advance Trick to enable subclass to do more setup before advancing
          */
         BAMFileIterator(final boolean advance) {
+            this.bamRecordCodec = new BAMRecordCodec(getFileHeader(), samRecordFactory);
             this.bamRecordCodec.setInputStream(BAMFileReader.this.mStream.getInputStream());
 
             if (advance) {
@@ -515,15 +543,15 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
 
         // Hit the index to determine the chunk boundaries for the required data.
         final SAMFileHeader fileHeader = getFileHeader();
-        int referenceIndex = fileHeader.getSequenceIndex(sequence);
+        final int referenceIndex = fileHeader.getSequenceIndex(sequence);
         if (referenceIndex != -1) {
             final BAMIndex fileIndex = getIndex();
-            BAMFileSpan fileSpan = fileIndex.getSpanOverlapping(referenceIndex, start, end);
+            final BAMFileSpan fileSpan = fileIndex.getSpanOverlapping(referenceIndex, start, end);
             filePointers = fileSpan != null ? fileSpan.toCoordinateArray() : null;
         }
 
         // Create an iterator over the above chunk boundaries.
-        BAMFileIndexIterator iterator = new BAMFileIndexIterator(filePointers);
+        final BAMFileIndexIterator iterator = new BAMFileIndexIterator(filePointers);
 
         // Add some preprocessing filters for edge-case reads that don't fit into this
         // query type.
@@ -560,8 +588,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         }
     }    
 
-    private class BAMFileIndexIterator
-        extends BAMFileIterator {
+    private class BAMFileIndexIterator extends BAMFileIterator {
 
         private long[] mFilePointers = null;
         private int mFilePointerIndex = 0;

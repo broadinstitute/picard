@@ -39,15 +39,20 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
     private final SAMFileHeader header;
     private final BinaryCodec binaryCodec = new BinaryCodec();
     private final BinaryTagCodec binaryTagCodec = new BinaryTagCodec(binaryCodec);
+    private final SAMRecordFactory samRecordFactory;
 
     public BAMRecordCodec(final SAMFileHeader header) {
+        this(header, new DefaultSAMRecordFactory());
+    }
+
+    public BAMRecordCodec(final SAMFileHeader header, final SAMRecordFactory factory) {
         this.header = header;
+        this.samRecordFactory = factory;
     }
 
     public BAMRecordCodec clone() {
         // Do not clone the references to codecs, as they must be distinct for each instance.
-        BAMRecordCodec other = new BAMRecordCodec(this.header);
-        return other;
+        return new BAMRecordCodec(this.header, this.samRecordFactory);
     }
 
 
@@ -179,7 +184,8 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
         final int insertSize = this.binaryCodec.readInt();
         final byte[] restOfRecord = new byte[recordLength - BAMFileConstants.FIXED_BLOCK_SIZE];
         this.binaryCodec.readBytes(restOfRecord);
-        final BAMRecord ret = new BAMRecord(header, referenceID, coordinate, readNameLength, mappingQuality,
+        final BAMRecord ret = this.samRecordFactory.createBAMRecord(
+                header, referenceID, coordinate, readNameLength, mappingQuality,
                 bin, cigarLen, flags, readLen, mateReferenceID, mateCoordinate, insertSize, restOfRecord);
         ret.setHeader(header); 
         return ret;

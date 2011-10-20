@@ -23,8 +23,10 @@
  */
 package net.sf.samtools;
 
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
 
 import java.io.File;
 
@@ -48,6 +50,40 @@ public class SAMFileReaderTest {
                 { "compressed.bam"},
         };
         return scenarios;
+    }
+
+    // Tests for the SAMRecordFactory usage
+    class SAMRecordFactoryTester extends DefaultSAMRecordFactory {
+        int samRecordsCreated;
+        int bamRecordsCreated;
+
+        public SAMRecord createSAMRecord(final SAMFileHeader header) {
+            ++samRecordsCreated;
+            return super.createSAMRecord(header);
+        }
+
+        public BAMRecord createBAMRecord(final SAMFileHeader header, final int referenceSequenceIndex, final int alignmentStart, final short readNameLength, final short mappingQuality, final int indexingBin, final int cigarLen, final int flags, final int readLen, final int mateReferenceSequenceIndex, final int mateAlignmentStart, final int insertSize, final byte[] variableLengthBlock) {
+            ++bamRecordsCreated;
+            return super.createBAMRecord(header, referenceSequenceIndex, alignmentStart, readNameLength, mappingQuality, indexingBin, cigarLen, flags, readLen, mateReferenceSequenceIndex, mateAlignmentStart, insertSize, variableLengthBlock);
+        }
+    }
+
+    @Test(dataProvider = "variousFormatReaderTestCases")
+    public void samRecordFactoryTest(final String inputFile) {
+        final File input = new File(TEST_DATA_DIR, inputFile);
+        final SAMFileReader reader = new SAMFileReader(input);
+        final SAMRecordFactoryTester factory = new SAMRecordFactoryTester();
+        reader.setSAMRecordFactory(factory);
+
+        int i=0;
+        for (final SAMRecord rec: reader) {
+            ++i;
+        }
+        reader.close();
+
+        Assert.assertTrue(i > 0);
+        if (inputFile.endsWith(".sam") || inputFile.endsWith(".sam.gz")) Assert.assertEquals(factory.samRecordsCreated, i);
+        else if (inputFile.endsWith(".bam")) Assert.assertEquals(factory.bamRecordsCreated, i);
     }
 
 }

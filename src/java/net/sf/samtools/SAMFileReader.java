@@ -56,6 +56,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
 
     private boolean mIsBinary = false;
     private BAMIndex mIndex = null;
+    private SAMRecordFactory samRecordFactory = new DefaultSAMRecordFactory();
     private ReaderImplementation mReader = null;
 
     private File samFile = null;
@@ -89,6 +90,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         abstract void enableIndexCaching(final boolean enabled);
         abstract void enableIndexMemoryMapping(final boolean enabled);
         abstract void enableCrcChecking(final boolean enabled);
+        abstract void setSAMRecordFactory(final SAMRecordFactory factory);
         abstract boolean hasIndex();
         abstract BAMIndex getIndex();
         abstract SAMFileHeader getFileHeader();
@@ -234,6 +236,14 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      */
     public void enableCrcChecking(final boolean enabled) {
         this.mReader.enableCrcChecking(enabled);
+    }
+
+    /**
+     * Override the default SAMRecordFactory class used to instantiate instances of SAMRecord and BAMRecord.
+     */
+    public void setSAMRecordFactory(final SAMRecordFactory factory) {
+        this.samRecordFactory = factory;
+        this.mReader.setSAMRecordFactory(factory);
     }
 
     /**
@@ -474,7 +484,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             // Rely on file extension.
             if (strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam")) {
                 mIsBinary = true;
-                mReader = new BAMFileReader(strm, indexFile, eagerDecode, validationStringency);
+                mReader = new BAMFileReader(strm, indexFile, eagerDecode, validationStringency, this.samRecordFactory);
             } else {
                 throw new SAMFormatException("Unrecognized file format: " + strm);
             }
@@ -498,29 +508,31 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
                 mIsBinary = true;
                 if (file == null || !file.isFile()) {
                     // Handle case in which file is a named pipe, e.g. /dev/stdin or created by mkfifo
-                    mReader = new BAMFileReader(bufferedStream, indexFile, eagerDecode, validationStringency);
+                    mReader = new BAMFileReader(bufferedStream, indexFile, eagerDecode, validationStringency, this.samRecordFactory);
                 } else {
                     bufferedStream.close();
-                    mReader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency);
+                    mReader = new BAMFileReader(file, indexFile, eagerDecode, validationStringency, this.samRecordFactory);
                 }
             } else if (BlockCompressedInputStream.isValidFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(new BlockCompressedInputStream(bufferedStream), validationStringency);
+                mReader = new SAMTextReader(new BlockCompressedInputStream(bufferedStream), validationStringency, this.samRecordFactory);
             } else if (isGzippedSAMFile(bufferedStream)) {
                 mIsBinary = false;
-                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency);
+                mReader = new SAMTextReader(new GZIPInputStream(bufferedStream), validationStringency, this.samRecordFactory);
             } else if (isSAMFile(bufferedStream)) {
                 if (indexFile != null) {
                     bufferedStream.close();
                     throw new RuntimeException("Cannot use index file with textual SAM file");
                 }
                 mIsBinary = false;
-                mReader = new SAMTextReader(bufferedStream, file, validationStringency);
+                mReader = new SAMTextReader(bufferedStream, file, validationStringency, this.samRecordFactory);
             } else {
                 bufferedStream.close();
                 throw new SAMFormatException("Unrecognized file format");
             }
+
             setValidationStringency(validationStringency);
+            mReader.setSAMRecordFactory(this.samRecordFactory);
         }
         catch (IOException e) {
             throw new RuntimeIOException(e);
