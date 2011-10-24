@@ -25,6 +25,7 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.SAMException;
 import org.xerial.snappy.LoadSnappy;
+import org.xerial.snappy.SnappyError;
 import org.xerial.snappy.SnappyInputStream;
 
 import java.io.InputStream;
@@ -80,14 +81,21 @@ public class SnappyLoader {
 
         if (this.SnappyInputStreamCtor != null && this.SnappyOutputStreamCtor != null) {
             // Don't try to call any Snappy code until classes have been found via reflection above.
-            if (!LoadSnappy.load()) {
-                if (verbose) System.err.println("Snappy dll failed to load.");
-                SnappyAvailable = false;
+            boolean tmpSnappyAvailable;
+            try {
+                if (!LoadSnappy.load()) {
+                    if (verbose) System.err.println("Snappy dll failed to load.");
+                    tmpSnappyAvailable = false;
+                }
+                else {
+                    if (verbose) System.err.println("Snappy stream classes loaded.");
+                    tmpSnappyAvailable = true;
+                }
+            } catch (SnappyError e) {
+                if (verbose) System.err.println("Snappy dll failed to load: " + e.getMessage());
+                tmpSnappyAvailable = false;
             }
-            else {
-                if (verbose) System.err.println("Snappy stream classes loaded.");
-                SnappyAvailable = true;
-            }
+            SnappyAvailable = tmpSnappyAvailable;
         }
         else {
             if (verbose) System.err.println("Snappy stream classes not loaded.");
