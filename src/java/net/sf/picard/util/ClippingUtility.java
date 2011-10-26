@@ -84,7 +84,7 @@ public class ClippingUtility {
     public static void adapterTrimIlluminaSingleRead(final SAMRecord read, final AdapterPair adapter,
         final int minMatchBases, final double maxErrorRate) {
         final byte[] bases = read.getReadBases();
-        int indexOfAdapterSequence = findIndex(bases, read.getReadNegativeStrandFlag(),
+        final int indexOfAdapterSequence = findIndex(bases, read.getReadNegativeStrandFlag(),
                 adapter.get3PrimeAdapterBytes(), minMatchBases, maxErrorRate);
         if (indexOfAdapterSequence != NO_MATCH) {
             // Convert to a one-based index for storage on the record.
@@ -145,7 +145,7 @@ public class ClippingUtility {
             // one of them matched, but the other didn't.
             // Trim them both at the matching point (if that makes sense)
             // and if one side still matches at default/stricter settings
-            int stricterMinMatchBases = 2 * minMatchBases;
+            final int stricterMinMatchBases = 2 * minMatchBases;
             warnString = oneSidedMatch(read1, read2, bases1, bases2,
                 index1, index2, adapters, stricterMinMatchBases, maxErrorRate);
 
@@ -157,8 +157,8 @@ public class ClippingUtility {
         return warnString;
     }
 
-    private static int findIndex(byte[] bases, boolean isNegativeStrand,
-                                 byte[] adapterBytes, int minMatchBases, double maxErrorRate) {
+    private static int findIndex(final byte[] bases, final boolean isNegativeStrand,
+                                 final byte[] adapterBytes, final int minMatchBases, final double maxErrorRate) {
         byte[] copiedBases = null;
         if (isNegativeStrand){
             copiedBases = new byte[bases.length];
@@ -173,13 +173,16 @@ public class ClippingUtility {
 
     // If the adapter still matches using normal (stricter) thresholds, trims both at the same position
     // pre-condition - the adapter matches only one set of bases using the relaxed thresholds.
-    private static String oneSidedMatch(SAMRecord read1, SAMRecord read2,
-                                        byte[] bases1, byte[] bases2,
-                                        int index1, int index2,
-                                        AdapterPair adapters,
+    private static String oneSidedMatch(final SAMRecord read1,
+                                        final SAMRecord read2,
+                                        final byte[] bases1,
+                                        final byte[] bases2,
+                                        final int index1,
+                                        final int index2,
+                                        final AdapterPair adapters,
                                         final int stricterMinMatchBases,
                                         final double maxErrorRate) {
-        String warnString;
+        final String warnString;
         String willTrim = "won't"; // 'won't' implies nonsense lengths
         // check if still matches at normal/stricter thresholds
 
@@ -190,8 +193,8 @@ public class ClippingUtility {
         boolean stillMatches = false;
         if (MAX_ERROR_RATE == maxErrorRate){
             needsRematch = false;  // no need to rematch
-            int successIndex = index1 == NO_MATCH ? index2 : index1;
-            SAMRecord successfulRead = index1 == NO_MATCH ? read2 : read1;
+            final int successIndex = index1 == NO_MATCH ? index2 : index1;
+            final SAMRecord successfulRead = index1 == NO_MATCH ? read2 : read1;
             if (successfulRead.getReadLength() - successIndex >= stricterMinMatchBases){
                 stillMatches = true;
             }
@@ -202,7 +205,7 @@ public class ClippingUtility {
             willTrim = "will not"; // 'will not' implies rematch failed
         } else {
             // trim both sides
-            int trimIndex = index1 == NO_MATCH ? index2 : index1;
+            final int trimIndex = index1 == NO_MATCH ? index2 : index1;
             if (bases1.length > trimIndex) {
                 read1.setAttribute(ReservedTagConstants.XT, trimIndex + 1);
                 willTrim = "will only trim at position " + trimIndex;
@@ -224,10 +227,12 @@ public class ClippingUtility {
 
     // does the adapter still match even at normal thresholds
     // preCondition - the adapter matches only one set of bases at the relaxed thresholds
-    private static int indexOfStrictMatchingBase(int index1, byte[] bases1, byte[] bases2,
-                                                 AdapterPair adapters,
-                                                 int stricterMinMatchBases) {
-        byte[] basesToCheck, adapterToCheck;
+    private static int indexOfStrictMatchingBase(final int index1,
+                                                 final byte[] bases1,
+                                                 final byte[] bases2,
+                                                 final AdapterPair adapters,
+                                                 final int stricterMinMatchBases) {
+        final byte[] basesToCheck, adapterToCheck;
         if (index1 == NO_MATCH) {
             basesToCheck = bases2;
             adapterToCheck = adapters.get5PrimeAdapterBytesInReadOrder();
@@ -235,9 +240,8 @@ public class ClippingUtility {
             basesToCheck = bases1;
             adapterToCheck = adapters.get3PrimeAdapterBytesInReadOrder();
         }
-        int newIndex = findIndexOfClipSequence(basesToCheck, adapterToCheck,
-                stricterMinMatchBases, MAX_ERROR_RATE);
-        return newIndex;
+
+        return findIndexOfClipSequence(basesToCheck, adapterToCheck, stricterMinMatchBases, MAX_ERROR_RATE);
     }
 
     /**
