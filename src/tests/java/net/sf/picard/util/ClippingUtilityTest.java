@@ -37,25 +37,25 @@ import net.sf.samtools.util.StringUtil;
 public class ClippingUtilityTest {
 
    @Test(dataProvider="clipTestData")
-   public void testBasicClip(String testName, String read, String clip, int minMatch, double errRate, int expected) {
-       byte[] r = (read == null) ? null : StringUtil.stringToBytes(read);
-       byte[] c = (clip == null) ? null : StringUtil.stringToBytes(clip);
+   public void testBasicClip(final String testName, final String read, final String clip, final int minMatch, final double errRate, final int expected) {
+       final byte[] r = (read == null) ? null : StringUtil.stringToBytes(read);
+       final byte[] c = (clip == null) ? null : StringUtil.stringToBytes(clip);
 
-       int result = ClippingUtility.findIndexOfClipSequence(r, c, minMatch, errRate);
+       final int result = ClippingUtility.findIndexOfClipSequence(r, c, minMatch, errRate);
        Assert.assertEquals(result, expected, testName);
    }
 
    @Test(dataProvider="clipPairedTestData")
-   public void testPairedEndClip(String testName, String read1, String read2, String expected) {
+   public void testPairedEndClip(final String testName, final String read1, final String read2, final String expected) {
 
-       SAMRecord rec1 = new SAMRecord(new SAMFileHeader());
+       final SAMRecord rec1 = new SAMRecord(new SAMFileHeader());
        rec1.setReadString(read1);
        rec1.setFirstOfPairFlag(true);
-       SAMRecord rec2 = new SAMRecord(new SAMFileHeader());
+       final SAMRecord rec2 = new SAMRecord(new SAMFileHeader());
        rec2.setReadString(read2);
        rec2.setSecondOfPairFlag(true);
 
-       String result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2, IlluminaAdapterPair.PAIRED_END.adapterPair);
+       final String result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2, IlluminaAdapterPair.PAIRED_END.adapterPair);
        Assert.assertEquals(result, expected, testName);
    }
 
@@ -82,10 +82,8 @@ public class ClippingUtilityTest {
             new Object[] {"From Test 8-clipped", "TGGGGTGGTTATTGTTGATTTTTGTTTGTGTGTTAGGTTGTTTGTGTTAGTTTTTTATTTTATTTTCGAGATCGGA", FORWARD, 8, 0.14, 68},
             new Object[] {"50% can be bad", "AAAAACCCCCAGATCGGAAGAGCG", "AGATCGGAAGAGCG", 5, 0.5, 18},        // 18?
 
-            new Object[] {"From 30E54AAXX.5 should be 1", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 10, 0.14, 0},  // 0!? From KT test case
-            new Object[] {"From 30E54AAXX.5 should be 1", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTGA", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 10, 0.14, -1}, // adapter not at end
-            new Object[] {"2From 30E54AAXX.5 should be 1", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", SE_FORWARD, 10, 0.14, 0},  // 1?? From KT test case
-           new Object[] {"From 30E54AAXX.5", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTGAAACAAAAAAATTGAGTCGGTTCATNTTTTCTTTTCTTCCAT", SE_FORWARD, 10, 0.14, -1},  // 1?? From KT test case
+            new Object[] {"From 30E54AAXX.5.a", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 10, 0.14, 0},  // 0!? From KT test case
+            new Object[] {"From 30E54AAXX.5.b", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", SE_FORWARD, 10, 0.14, 0},  // 1?? From KT test case
         };
     }
 
