@@ -251,7 +251,7 @@ public class ClippingUtility {
    public static int findIndexOfClipSequence(final byte[] read, final byte[] toClip, final int minMatch, final double maxErrorRate) {
         // If the read's too short we can't possibly match it
         if (read == null || read.length < minMatch) return NO_MATCH;
-        final int minClipPosition = Math.max (0, read.length - toClip.length);
+        final int minClipPosition = 0;
 
         // Walk backwards down the read looking for the sequence
         READ_LOOP:
