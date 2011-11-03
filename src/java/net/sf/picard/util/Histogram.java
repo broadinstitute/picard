@@ -208,6 +208,24 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
     }
 
     /**
+     * Calculates the mean bin size
+     */
+    public double getMeanBinSize() {
+        return (getSumOfValues() / size());
+    }
+
+    /**
+     * Calculates the standard deviation of the bin size
+     */
+    public double getStandardDeviationBinSize(final double mean) {
+        double total = 0;
+        for(final Bin bin : values()) {
+            total += Math.pow(bin.getValue() - mean, 2);
+        }
+        return Math.sqrt(total / (Math.max(1,values().size()-1)));
+    }
+
+    /**
      * Gets the bin in which the given percentile falls.
      *
      * @param percentile a value between 0 and 1
@@ -392,6 +410,34 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
             if (((Number)it.next()).doubleValue() > width) {
                 it.remove();
             } else break;
+        }
+    }
+
+    /***
+     * Immutable method that divides the current Histogram by an input Histogram and generates a new one
+     * Throws an exception if the bins don't match up exactly
+     * @param divisorHistogram
+     * @return
+     * @throws IllegalArgumentException
+     */
+    public Histogram<K> divideByHistogram(final Histogram<K> divisorHistogram) throws IllegalArgumentException{
+        Histogram<K> output = new Histogram<K>();
+        if (!this.keySet().equals(divisorHistogram.keySet()))  throw new IllegalArgumentException("Attempting to divide Histograms with non-identical bins");
+        for (final K key : this.keySet()){
+            Bin dividend = this.get(key);
+            Bin divisor = divisorHistogram.get(key);
+            output.increment(key, dividend.getValue()/divisor.getValue());
+        }
+        return output;
+    }
+
+    /***
+     * Mutable method that allows the addition of a Histogram into the current one.
+     * @param addHistogram
+     */
+    public void addHistogram(final Histogram<K> addHistogram) {
+        for (final K key : addHistogram.keySet()){
+            this.increment(key, addHistogram.get(key).getValue());
         }
     }
 }

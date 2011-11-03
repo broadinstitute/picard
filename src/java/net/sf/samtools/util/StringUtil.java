@@ -24,6 +24,8 @@
 
 package net.sf.samtools.util;
 
+import java.util.Arrays;
+
 /**
  * Grab-bag of stateless String-oriented utilities.
  */
@@ -402,6 +404,18 @@ public class StringUtil {
             }
         }
         return true;
+    }
+
+     /* <p>Generates a string of one character to a specified length</p>
+     *
+     * @param c  the Character to repeat
+     * @param repeatNumber the number of times to repeat the character
+     * @return String with the character c repeated repeatNumber times
+     */
+    public static String repeatCharNTimes(char c, int repeatNumber) {
+        char[] output = new char[repeatNumber];
+        Arrays.fill(output, c);
+        return String.valueOf(output);
     }
 
 }
