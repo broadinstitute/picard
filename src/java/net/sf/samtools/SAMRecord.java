@@ -1576,25 +1576,28 @@ public class SAMRecord implements Cloneable
             ret.addAll(errors);
         }
         if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {
-            String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
-            String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
-            if (cq == null || cq.length() == 0 || cs == null || cs.length() == 0) {
-                if (ret == null) ret = new ArrayList<SAMValidationError>();
-                ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
-                        "Zero-length read without CS or CQ tag", getReadName()));
-            } else if (!getReadUnmappedFlag()) {
-                boolean hasIndel = false;
-                for (CigarElement cigarElement : getCigar().getCigarElements()) {
-                    if (cigarElement.getOperator() == CigarOperator.DELETION ||
-                            cigarElement.getOperator() == CigarOperator.INSERTION) {
-                        hasIndel = true;
-                        break;
-                    }
-                }
-                if (!hasIndel) {
+            Object fz = getAttribute(SAMTagUtil.getSingleton().FZ);
+            if (fz == null) {
+                String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
+                String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
+                if (cq == null || cq.length() == 0 || cs == null || cs.length() == 0) {
                     if (ret == null) ret = new ArrayList<SAMValidationError>();
                     ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
-                            "Colorspace read with zero-length bases but no indel", getReadName()));
+                            "Zero-length read without FZ, CS or CQ tag", getReadName()));
+                } else if (!getReadUnmappedFlag()) {
+                    boolean hasIndel = false;
+                    for (CigarElement cigarElement : getCigar().getCigarElements()) {
+                        if (cigarElement.getOperator() == CigarOperator.DELETION ||
+                                cigarElement.getOperator() == CigarOperator.INSERTION) {
+                            hasIndel = true;
+                            break;
+                        }
+                    }
+                    if (!hasIndel) {
+                        if (ret == null) ret = new ArrayList<SAMValidationError>();
+                        ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
+                                "Colorspace read with zero-length bases but no indel", getReadName()));
+                    }
                 }
             }
         }
