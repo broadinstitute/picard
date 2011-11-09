@@ -64,6 +64,18 @@ public class BAMIndexer {
     }
 
     /**
+     * Prepare to index a BAM.
+     * @param output Index will be written here.  output will be closed when finish() method is called.
+     * @param fileHeader header for the corresponding bam file.
+     */
+    public BAMIndexer(final OutputStream output, SAMFileHeader fileHeader) {
+
+        numReferences = fileHeader.getSequenceDictionary().size();
+        indexBuilder = new BAMIndexBuilder(fileHeader);
+        outputWriter = new BinaryBAMIndexWriter(numReferences, output);
+    }
+
+    /**
      * Record any index information for a given BAM record.
      * If this alignment starts a new reference, write out the old reference.
      * Requires a non-null value for rec.getFileSource().
