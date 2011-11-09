@@ -35,7 +35,6 @@ import java.util.List;
 class BinaryBAMIndexWriter implements BAMIndexWriter {
 
     protected final int nRef;
-    protected final File output;
     private final BinaryCodec codec;
     private int count = 0;
 
@@ -47,7 +46,6 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
      */
     public BinaryBAMIndexWriter(final int nRef, final File output) {
 
-        this.output = output;
         this.nRef = nRef;
 
         try {
@@ -55,6 +53,23 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
             writeHeader();
         } catch (Exception e) {
             throw new SAMException("Exception opening output file " + output, e);
+        }
+    }
+
+    /**
+     *
+     * @param nRef Number of reference sequences.
+     * @param output BAM index output stream.  This stream will be closed when BinaryBAMIndexWriter.close() is called.
+     */
+    public BinaryBAMIndexWriter(final int nRef, final OutputStream output) {
+
+        this.nRef = nRef;
+
+        try {
+            codec = new BinaryCodec(output);
+            writeHeader();
+        } catch (Exception e) {
+            throw new SAMException("Exception opening output stream", e);
         }
     }
 
