@@ -28,6 +28,7 @@ import net.sf.picard.cmdline.*;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.samtools.*;
+import net.sf.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.net.URL;
@@ -119,6 +120,7 @@ public class BuildBamIndex extends CommandLineProgram {
         createIndex(bam, OUTPUT);
 
         log.info("Successfully wrote bam index file " + OUTPUT);
+        CloserUtil.close(bam);
         return 0;
     }
 
