@@ -26,6 +26,7 @@ package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
 
+import java.io.File;
 import java.security.InvalidParameterException;
 import java.text.*;
 import java.util.Date;
@@ -162,6 +163,7 @@ public class FormatUtil {
         if (returnType == Boolean.class || returnType == Boolean.TYPE) return parseBoolean(value);
         if (returnType == Date.class)                                  return parseDate(value);
         if (returnType == Byte.class    || returnType == Byte.TYPE)    return parseInt(value);
+        if (returnType == File.class)                                  return new File(value);
         if (Enum.class.isAssignableFrom(returnType)) return parseEnum(value, (Class<? extends Enum>)returnType);
         if (returnType == String.class) return value;
 
