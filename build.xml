@@ -198,6 +198,10 @@
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
             <fileset dir="${classes}" includes ="net/sf/samtools/**/*.*"/>
+            <manifest>
+              <attribute name="Implementation-Version" value="${picard-version}"/>
+              <attribute name="Implementation-Vendor" value="Broad Institute"/>
+            </manifest>
         </jar>
     </target>
 
@@ -207,6 +211,10 @@
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
             <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
+                <manifest>
+                  <attribute name="Implementation-Version" value="${picard-version}"/>
+                  <attribute name="Implementation-Vendor" value="Broad Institute"/>
+                </manifest>
         </jar>
     </target>
 
@@ -322,6 +330,8 @@
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
                     <attribute name="Main-Class" value="@{main-class}"/>
+                    <attribute name="Implementation-Version" value="${picard-version}"/>
+                    <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 </manifest>
             </jar>
         </sequential>

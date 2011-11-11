@@ -158,17 +158,23 @@ public class CommandLineParser {
         return ret;
     }
 
+    public String getVersion()  {
+        return this.callerOptions.getClass().getPackage().getImplementationVersion();
+    }
+    
     /**
      * Print a usage message based on the options object passed to the ctor.
      * @param stream Where to write the usage message.
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
         stream.print(usagePreamble);
+        stream.println("\nVersion: " + getVersion());
         stream.println("\n\nOptions:\n");
 
         printOptionParamUsage(stream, "--help", "-h", null, "Displays options specific to this tool.");
         printOptionParamUsage(stream, "--stdhelp", "-H", null, "Displays options specific to this tool AND " +
                 "options common to all Picard command line tools.");
+        printOptionParamUsage(stream, "--version", null, null, "Displays program version.");
 
         if (!optionDefinitions.isEmpty()) {
             for (final OptionDefinition optionDefinition : optionDefinitions) {
@@ -249,6 +255,12 @@ public class CommandLineParser {
                 usage(messageStream, true);
                 return false;
             }
+
+            if (arg.equals("--version")) {
+                messageStream.println(getVersion());
+                return false;
+            }
+            
 
             final String[] pair = arg.split("=", 2);
             if (pair.length == 2 && pair[1].length() == 0) {
