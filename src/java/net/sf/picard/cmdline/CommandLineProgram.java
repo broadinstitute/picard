@@ -165,7 +165,8 @@ public abstract class CommandLineProgram {
                                        System.getProperty("user.name") + "@" + InetAddress.getLocalHost().getHostName() +
                                        " on " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
                                        " " + System.getProperty("os.arch") + "; " + System.getProperty("java.vm.name") +
-                                       " " + System.getProperty("java.runtime.version"));
+                                       " " + System.getProperty("java.runtime.version") +
+                    " Picard version: " + commandLineParser.getVersion());
             }
             catch (Exception e) { /* Unpossible! */ }
         }
