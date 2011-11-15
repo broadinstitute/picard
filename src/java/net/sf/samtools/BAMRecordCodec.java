@@ -68,7 +68,9 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
 
     /**
      * Write object to OutputStream.
-     * The SAMRecord must have a header set into it so reference indices can be resolved.
+     * Reference and mate reference indices must be resolvable, which either means that these have been set into the
+     * SAMRecord directly, or the SAMRecord must have a header assigned into it so that reference names can be
+     * resolved into indices.
      *
      * @param alignment Record to be written.
      */
