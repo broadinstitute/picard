@@ -166,11 +166,13 @@ public class MergeSamFiles extends CommandLineProgram {
                 public void run() {
                     try {
                         long i = 0;
-                        SAMRecord rec = null;
 
-                        while ((rec = queue.poll(15, TimeUnit.SECONDS)) != null) {
-                            out.addAlignment(rec);
-                            if (++i % PROGRESS_INTERVAL == 0) log.info(i + " records processed.");
+                        while (!producerSuccceeded.get()) {
+                            SAMRecord rec = queue.poll(15, TimeUnit.SECONDS);
+                            if (rec != null) {
+                                out.addAlignment(rec);
+                                if (++i % PROGRESS_INTERVAL == 0) log.info(i + " records processed.");
+                            }
                         }
                         consumerSuccceeded.set(true);
                     }
