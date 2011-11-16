@@ -499,4 +499,19 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
         result = 31 * result + metrics.hashCode();
         return result;
     }
+
+    /**
+     * Convenience method to read all the Metric beans from a metrics file.
+     * @param file to be read.
+     * @return list of beans from the file.
+     */
+    public static List<? extends MetricBase> readBeans(final File file) {
+        try {
+            final MetricsFile<MetricBase, Comparable<?>> metricsFile = new MetricsFile<MetricBase, Comparable<?>>();
+            metricsFile.read(new FileReader(file));
+            return metricsFile.getMetrics();
+        } catch (FileNotFoundException e) {
+            throw new PicardException(e.getMessage(), e);
+        }
+    }
 }
