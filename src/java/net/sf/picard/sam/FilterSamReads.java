@@ -56,7 +56,7 @@ import java.util.TreeSet;
  */
 public class FilterSamReads extends CommandLineProgram {
 
-private static final Log log = Log.getInstance(SamReadExcluder.class);
+private static final Log log = Log.getInstance(FilterSamReads.class);
 
 public enum ReadFilterType {INCLUDE, EXCLUDE}
 public enum ReadMappingType {MAPPED, UNMAPPED}
