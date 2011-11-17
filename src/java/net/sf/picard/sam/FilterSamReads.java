@@ -286,16 +286,16 @@ protected int doWork() {
 
         IoUtil.assertFileIsReadable(OUTPUT);
 
-    } catch (Exception e) {
+        return 0;
 
+    } catch (Exception e) {
         if (!OUTPUT.delete()) {
            log.warn("Failed to delete " + OUTPUT.getAbsolutePath());
         }
 
-        throw new PicardException(e.getMessage(), e);
+        log.error("Failed to add " + INPUT + " to BASS: " + e.getMessage(), e);
+        return 1;
     }
-
-    return 0;
 }
 
 /**
