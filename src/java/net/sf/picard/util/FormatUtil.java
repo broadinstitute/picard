@@ -25,6 +25,7 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.Iso8601Date;
 
 import java.io.File;
 import java.security.InvalidParameterException;
@@ -83,20 +84,24 @@ public class FormatUtil {
     /** Formats a date to a date string without time. */
     public String format(Date value) { return this.dateFormat.format(value); }
 
+    /** Formats date & time */
+    public String format(final Iso8601Date value) { return value.toString(); }
+
     /** Formats a boolean value to a String. */
     public String format(boolean value) { if (value) return "Y"; else return "N"; }
 
     /** Attempts to determine the type of value and format it appropriately. */
     public String format(Object value) {
         if (value == null) return "";
-        if (value instanceof Short)   return format( ((Short) value).shortValue() );
-        if (value instanceof Integer) return format( ((Integer) value).intValue() );
-        if (value instanceof Long)    return format( ((Long) value).longValue() );
-        if (value instanceof Float)   return format( ((Float) value).floatValue() );
-        if (value instanceof Double)  return format( ((Double) value).doubleValue() );
-        if (value instanceof Enum)    return format( ((Enum) value) );
-        if (value instanceof Date)    return format( ((Date) value) );
-        if (value instanceof Boolean) return format( ((Boolean) value).booleanValue() );
+        if (value instanceof Short)       return format( ((Short) value).shortValue() );
+        if (value instanceof Integer)     return format( ((Integer) value).intValue() );
+        if (value instanceof Long)        return format( ((Long) value).longValue() );
+        if (value instanceof Float)       return format( ((Float) value).floatValue() );
+        if (value instanceof Double)      return format( ((Double) value).doubleValue() );
+        if (value instanceof Enum)        return format( ((Enum) value) );
+        if (value instanceof Iso8601Date) return format((Iso8601Date)value);
+        if (value instanceof Date)        return format( ((Date) value) );
+        if (value instanceof Boolean)     return format( ((Boolean) value).booleanValue() );
         return value.toString();
     }
 
@@ -138,6 +143,9 @@ public class FormatUtil {
         }
     }
 
+    /** Parse a String into an Iso8601 Date */
+    public Iso8601Date parseIso8601Date(String value) { return new Iso8601Date(value); }
+
     /** Parses a String into a boolean. */
     public boolean parseBoolean(String value) {
         if (value == null || value.length() == 0) return false;
@@ -161,6 +169,7 @@ public class FormatUtil {
         if (returnType == Float.class   || returnType == Float.TYPE)   return parseFloat(value);
         if (returnType == Double.class  || returnType == Double.TYPE)  return parseDouble(value);
         if (returnType == Boolean.class || returnType == Boolean.TYPE) return parseBoolean(value);
+        if (returnType == Iso8601Date.class)                           return parseIso8601Date(value);
         if (returnType == Date.class)                                  return parseDate(value);
         if (returnType == Byte.class    || returnType == Byte.TYPE)    return parseInt(value);
         if (returnType == File.class)                                  return new File(value);
