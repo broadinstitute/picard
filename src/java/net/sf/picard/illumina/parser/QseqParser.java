@@ -23,19 +23,18 @@
  */
 package net.sf.picard.illumina.parser;
 
-import net.sf.picard.util.BasicInputParser;
+import net.sf.picard.util.*;
 import net.sf.picard.PicardException;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
+import static net.sf.picard.illumina.parser.IlluminaDataType.*;
 
 /**
- * Parser for files of the form s_<lane>_<end>_<tile>_qseq.txt(.gz)* produced by Illumina 1.3 and later.
- * Note that there is a separate file for each end, but for a barcoded run, the barcode data is pre or postpended
- * to one of the ends.  For Illumina 1.4 and later, the barcode will be in a separate qseq file.  In that case,
- * barcode could be in any of s_<lane>_[123]_<tile>_qseq.txt depending on when in the run the barcode is read.
+ * QSeqParser takes a List<IlluminaFileMaps>(1 for each "end" in order) and provides an iterator over all clusters in the
+ * for all tiles found in the maps.  "Clusters" in this sense refers to the chunks delineated by outputLengths.  Position, PF, Base, and Quality data
+ * is output in chunks specified by these lengths.
  *
  * Each line contains the following fields:
  *     lane
@@ -51,164 +50,231 @@ import java.util.List;
  * Bases, quals and PF are extracted from this file.
  *
  *
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
-public class QseqParser extends AbstractIlluminaTextParser {
 
-    private static final int LANE_COLUMN = 2;
-    private static final int TILE_COLUMN = 3;
-    private static final int X_COLUMN = 4;
-    private static final int Y_COLUMN = 5;
-    private static final int MACHINE_COLUMN = 0;
-    private static final int RUN__COLUMN = 1;
-    private static final int PF_COLUMN = 10;
-    private static final int BASES_COLUMN = 8;
-    private static final int QUALS_COLUMN = 9;
+class QseqParser implements IlluminaParser<QseqReadData> {
+    private final int [] outputLengths; //Expected lengths of the bases/qualities arrays in the output QSeqReadData
+    private final QseqReadParser[] parsers; //each parser parsers iterates over all tiles for 1 read
+    private final List<IlluminaFileMap> tileMapByReadNumber;
+    
+    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(Position, BaseCalls, QualityScores, PF));
 
-    private final ReadType readType;
+    public QseqParser(final int lane, final int [] outputLengths, final List<IlluminaFileMap> tileMapByReadNumber) {
+        this.outputLengths       = outputLengths;
+        this.tileMapByReadNumber = tileMapByReadNumber;
 
-    /**
-     * Prepare to parse qseq files
-     * @param readConfiguration Used to determine if the end being processed contains the barcode read, and where
-     * it is.
-     * @param directory Where to find qseq files.
-     * @param lane
-     * @param readType Only FIRST and SECOND allowed.  For barcoded run with barcode-aware basecall files, use the
-     * ctor where file number can be specified explicitly, because end # and file # do not necessarily correspond.
-     * @param tiles List of tiles to be processed, in order, or null to process all tiles.
-     */
-    public QseqParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                      final ReadType readType, final List<Integer> tiles) {
-        this(readConfiguration, directory, lane, readType, readType.getDefaultFileNumber(), tiles);
-        if (readType != ReadType.FIRST && readType != ReadType.SECOND) {
-            // Don't use this ctor for barcode-aware basecall files.
-            throw new IllegalArgumentException("Invalid EndType: " + readType);
+        int totalExpectedLength = 0;
+        for(int i = 0; i < outputLengths.length; i++) {
+            totalExpectedLength += outputLengths[i];
+        }
+
+        int parsersIndex = 0;
+        int writeOffset = 0;
+        parsers = new QseqReadParser[tileMapByReadNumber.size()];
+        for(final IlluminaFileMap tileMap : tileMapByReadNumber) {
+            final QseqReadParser parser = new QseqReadParser(lane, tileMap, writeOffset, outputLengths);
+            parsers[parsersIndex++] = parser;
+            writeOffset += parser.readLength;
+        }
+
+        if(parsers.length == 0) {
+            throw new PicardException("0 Qseq \"ends\" were found to parse!");
+        }
+
+        //This check is handled up front because we've already calculated the relevant values, verifyData will calculate a few other checks
+        //In general, each parser should try to keep as much verification in verifyData as possible in because (as with the last iteration of this code
+        //it tends to end up in code sprawl
+        if(totalExpectedLength != writeOffset) {
+            throw new PicardException("Requested read lengths(" + Arrays.toString(outputLengths) + ") span multiple clusters!  Specified read lengths do not land on Qseq cluster boundaries. " +
+                    "Total expected length(" + totalExpectedLength + ") and actual length(" + writeOffset + ")");
         }
     }
 
     /**
-     * Prepare to parse qseq files
-     * @param readConfiguration Used to determine if the end being processed contains the barcode read, and where
-     * it is.
-     * @param directory Where to find qseq files.
-     * @param lane
-     * @param readType Whether this is the parser for first end, second end or barcode end.
-     * @param fileNumber number for this end, i.e. s__<lane>_<fileNumber>_<tile>_qseq.txt.
-     * @param tiles List of tiles to be processed, in order, or null to process all tiles.
-     */
-    public QseqParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                      final ReadType readType, final int fileNumber, final List<Integer> tiles) {
-        super(readConfiguration, lane, directory);
-        if (fileNumber < 1 || fileNumber > 4) {
-            throw new IllegalArgumentException("Invalid fileNumber: " + fileNumber);
-        }
-        this.readType = readType;
-        setFiles(IlluminaFileUtil.getEndedIlluminaBasecallFiles(directory, "qseq", lane, fileNumber, tiles));
-        initializeParser(0);
-    }
-
-    /**
-     * Process a line of qseq input.  Set the PF value on the ClusterData.  If barcoded, and this
-     * is the end containing the barcode, split the bases and quals.  Stuff the bases and quals into the
-     * appropriate end (as determined by the oneBasedEnd property), and into the barcode end if appropriate.
+     * Assert that all ends have the same number of tiles and that the tiles for a given end have the same number of bases (checking only the first cluster
+     * per file).  In the binary formats it will be easier to check the number of clusters etc but for Qseqs any problems with number of clusters will be
+     * discovered when we iterate past the end of one of the reads.
      *
-     * @param data Parsed input is stored in this object, which has already been set up appropriately
-     * for paired or single end read, and for barcode or not.
-     * @param fields Input line, split on whitespace.
+     * @param runConfig Runconfig against which to verify this run
      */
     @Override
-    protected void processLine(final ClusterData data, final String[] fields) {
-        final int lane = getFormatter().parseInt(fields[LANE_COLUMN]);
-        validateLane(lane);
-        final int tile = getFormatter().parseInt(fields[TILE_COLUMN]);
-        final int x = getFormatter().parseInt(fields[X_COLUMN]);
-        final int y = getFormatter().parseInt(fields[Y_COLUMN]);
+    public void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles) { //in this case, runConfiguration related information was verified in construction
+        Integer numTiles = null;
+        int end = 1;
+        for(final IlluminaFileMap tilesToFiles : tileMapByReadNumber) {
+            if(tiles != null && !tilesToFiles.keySet().containsAll(tiles)) {     //now with properly util classes this shouldn't happen but since this is only done once up front, test it anyway
+                TreeSet<Integer> missingTiles = new TreeSet<Integer>(tiles);
+                missingTiles.removeAll(tilesToFiles.keySet());
+                
+                String missing = missingTiles.first().toString();
+                missingTiles.remove(missingTiles.first());
+                for(final Integer tile : missingTiles) {
+                    missing += ", " + tile;
+                }
+                throw new PicardException("IlluminaFileMap for \"end\" number " + end + " is missing tiles: " + missing);
+            }
+
+            if(numTiles == null) {  //make sure all ends have the same number of tiles
+                numTiles = tilesToFiles.size();
+            } else if(numTiles != tilesToFiles.size()) {
+                throw new PicardException("Qseq \"end\" files do not have the same number of tiles expected(" + numTiles + ") found(" + tilesToFiles.size() + ") on end (" + end + ")");
+            }
+
+            //make sure this end has files with the same read lengths
+            Integer numBases = null;
+            for(final Entry<Integer, File> tileNoToFile : tilesToFiles.entrySet()) {
+                final int readLength = QseqReadParser.getReadLength(tileNoToFile.getValue());
+                if(numBases == null) {
+                    numBases = readLength;
+                } else if(numBases != readLength) {
+                    throw new PicardException("Qseq \"end\" (" + end + ") has tiles with different numbers of bases per read.  Found on Tile(" + tileNoToFile.getKey() + ") File(" + tileNoToFile.getValue().getAbsolutePath() + ")");
+                }
+            }
+            ++end;
+        }
+    }
+
+
+
+    @Override
+    public void seekToTile(final int oneBasedTileNumber) {
+        for(final QseqReadParser parser : parsers) {
+            parser.seekToTile(oneBasedTileNumber);
+        }
+    }
+
+    @Override
+    public QseqReadData next() {
+        final QseqReadData qseqRd = new QseqReadData(outputLengths);
+        for(final QseqReadParser parser : parsers) {
+            parser.next(qseqRd);
+        }
+        return qseqRd;
+    }
+
+    public void remove() {
+        throw new UnsupportedOperationException("Remove is not supported by " + QseqParser.class.getName());
+    }
+
+    @Override
+    public boolean hasNext() {
+        return parsers[0].hasNext();
+    }
+
+    @Override
+    public Set<IlluminaDataType> supportedTypes() {
+        return SupportedTypes;
+    }
+}
+
+/**
+ * QSeqReadFilesParser parsers all tiles for 1 particular read (e.g. first of pair, second of pair, barcode).
+ */
+class QseqReadParser {
+    public static final int MACHINE_COLUMN = 0;
+    public static final int RUN__COLUMN = 1;
+    public static final int LANE_COLUMN = 2;
+    public static final int TILE_COLUMN = 3;
+    public static final int X_COLUMN = 4;
+    public static final int Y_COLUMN = 5;
+    public static final int PF_COLUMN = 10;
+    public static final int BASES_COLUMN = 8;
+    public static final int QUALS_COLUMN = 9;
+
+    private final IlluminaTextIterator textParser; //Parses multiple illumina tabbed delimited files
+    private final FormatUtil formatter;
+    private final Range[] sourceRanges;
+    private final CompositeIndex [] destRanges;
+    private final int [] copyLengths;
+    protected final int readLength;
+
+    public QseqReadParser(final int lane, final IlluminaFileMap tilesToReadFiles,  int writeOffset, final int [] outputLengths)
+    {
+        this.textParser = new IlluminaTextIterator(lane, tilesToReadFiles);
+        this.formatter = new FormatUtil();
+        this.readLength = QseqReadParser.getReadLength(tilesToReadFiles.firstEntry().getValue());
+
+        int bufferIndex = 0;
+        while(writeOffset >= outputLengths[bufferIndex]) {
+            writeOffset -= outputLengths[bufferIndex++];
+        }
+
+        int readOffset = 0;
+        int coveredLength = 0;
+        final List<Integer> lengthsList = new ArrayList<Integer>();
+        final List<Range> srcRangesList = new ArrayList<Range>();
+        final List<CompositeIndex> dstRangesList = new ArrayList<CompositeIndex>();
+        while(coveredLength < readLength) {
+            int length = Math.min(outputLengths[bufferIndex] - writeOffset, readLength - coveredLength);
+            lengthsList.add(length);
+            srcRangesList.add(new Range(readOffset, readOffset + length));
+            dstRangesList.add(new CompositeIndex(bufferIndex, writeOffset));
+            ++bufferIndex;          //The only way coveredLength < readLength is if the buffer - offset was to small to hold entire read length
+            writeOffset = 0;  //so increment bufferIndex and appropriate writeOffset
+            readOffset += length;
+            coveredLength += length;
+        }
+
+        copyLengths = new int[lengthsList.size()];
+        for(int i = 0; i < copyLengths.length; i++) {
+            copyLengths[i] = lengthsList.get(i);
+        }
+        sourceRanges = srcRangesList.toArray(new Range[srcRangesList.size()]);
+        destRanges   = dstRangesList.toArray(new CompositeIndex[dstRangesList.size()]);
+    }
+
+    public void seekToTile(int oneBasedTileNumber) {
+        textParser.seekToTile(oneBasedTileNumber);
+    }
+
+    public boolean hasNext() {
+        return textParser.hasNext();
+    }
+
+    public void next(final QseqReadData readData) {
+        final String [] fields = textParser.next();
+
+        final int lane = formatter.parseInt(fields[LANE_COLUMN]);
+        textParser.validateLane(lane);
+
+        final int tile = formatter.parseInt(fields[TILE_COLUMN]);
+        final int x = formatter.parseInt(fields[X_COLUMN]);
+        final int y = formatter.parseInt(fields[Y_COLUMN]);
 
         // Currently unused
         //final String machine = fields[MACHINE_COLUMN];
         //final int run = getFormatter().parseInt(fields[RUN__COLUMN]);
-        final boolean pf = getFormatter().parseInt(fields[PF_COLUMN]) == 1;
+        final boolean pf = formatter.parseInt(fields[PF_COLUMN]) == 1;
 
         final String baseString = fields[BASES_COLUMN];
         final String qualString = fields[QUALS_COLUMN];
         if (baseString.length() != qualString.length()) {
-            throw new PicardException("Length of bases and quals don't match in " + getCurrentFilename());
-        }
-        final int expectedLength;
-        if (readType == ReadType.FIRST) {
-            expectedLength = getReadConfiguration().getFirstLength();
-        } else if (readType == ReadType.SECOND) {
-            expectedLength = getReadConfiguration().getSecondLength();
-        } else {
-            expectedLength = getReadConfiguration().getBarcodeLength();
-        }
-        int expectedLengthIncludingBarcode = expectedLength;
-        final boolean containsBarcode = getReadConfiguration().isBarcoded() &&
-                getReadConfiguration().getBarcodeRead() == readType && !isBarcodeQseq();
-        if (containsBarcode) {
-            // Barcode is on this end
-            expectedLengthIncludingBarcode += getReadConfiguration().getBarcodeLength();
-        }
-        if (expectedLengthIncludingBarcode != baseString.length()) {
-            if (isBarcodeQseq() && getReadConfiguration().getBarcodeReads() > 1) {
-                // That's ok then
-            }
-            else {
-                throw new PicardException("Length of bases does not match expected in " + getCurrentFilename());
-            }
+            throw new PicardException("Length of bases and quals don't match in " + textParser.getCurrentFilename());
         }
 
-        data.setOrCheckLane(lane);
-        data.setOrCheckTile(tile);
-        data.setOrCheckX(x);
-        data.setOrCheckY(y);
-        data.setOrCheckPf(pf);
+        readData.setOrCheckLane(lane);
+        readData.setOrCheckTile(tile);
+        readData.setOrCheckXCoordinate(x);
+        readData.setOrCheckYCoordinate(y);
+        readData.setOrCheckPf(pf);
 
-        final ReadData end = (isBarcodeQseq()? data.getBarcodeRead(): data.getEnd(readType));
+        stringToBases(baseString, sourceRanges, destRanges, readData.getBases());
+        stringToQuals(qualString, sourceRanges, destRanges, copyLengths, readData.getQualities());
+    }
 
-        if (containsBarcode) {
-            final int barcodeOffset = getReadConfiguration().getOffsetOfBarcodeInRead();
-            final int readOffset = getReadConfiguration().getOffsetOfNonBarcodeInRead();
-            if (expectedLength > 0) {
-                // PFS-113 2nd end consists solely of barcode, so end == null
-                final byte[] readBases = StringUtil.stringToBytes(baseString, readOffset, expectedLength);
-                final byte[] readQuals = IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(qualString, readOffset, expectedLength);
-                end.setBases(readBases);
-                end.setQualities(readQuals);
-            }
-            final byte[] barcodeBases = StringUtil.stringToBytes(baseString, barcodeOffset, getReadConfiguration().getBarcodeLength());
-            final byte[] barcodeQuals = IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(qualString, barcodeOffset,
-                    getReadConfiguration().getBarcodeLength());
-            data.getBarcodeRead().setBases(barcodeBases);
-            data.getBarcodeRead().setQualities(barcodeQuals);
-        } else {
-            final byte[] bases = StringUtil.stringToBytes(baseString);
-            final byte[] quals = IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(qualString);
-
-            if (!isBarcodeQseq() || end.getBases() == null) {
-                end.setBases(bases);
-                end.setQualities(quals);
-            }
-            else {
-                end.setBases(concat(end.getBases(), bases));
-                end.setQualities(concat(end.getQualities(), quals));
-            }
+    private static void stringToBases(final String s, final Range[] sourceRanges, final CompositeIndex[] destRanges, byte [][] outputBuffers ) {
+        for(int i = 0; i < sourceRanges.length; i++) {
+            s.getBytes(sourceRanges[i].start, sourceRanges[i].end, outputBuffers[destRanges[i].arrayIndex], destRanges[i].elementIndex);
         }
     }
 
-    // Concatenate two arrays
-    private byte[] concat(final byte[] b1, final byte[] b2) {
-        final byte[] retval = new byte[b1.length + b2.length];
-        System.arraycopy(b1, 0, retval, 0, b1.length);
-        System.arraycopy(b2, 0, retval, b1.length, b2.length);
-        return retval;
-    }
+    private static void stringToQuals(final String s, final Range[] sourceRanges, final CompositeIndex[] destRanges, final int [] copyLengths, final byte [][] outputBuffers ) {
+        stringToBases(s, sourceRanges, destRanges, outputBuffers);
 
-    /**
-     * True if this is a qseq that contains only the barcode.
-     */
-    private boolean isBarcodeQseq() {
-        return readType == ReadType.BARCODE;
+        for(int i = 0; i < destRanges.length; i++) {
+            SolexaQualityConverter.getSingleton().convertSolexa_1_3_QualityCharsToPhredBinary(destRanges[i].elementIndex, copyLengths[i], outputBuffers[destRanges[i].arrayIndex]);
+        }
     }
 
     public static int getReadLength(final File qseqFile) {
@@ -218,5 +284,112 @@ public class QseqParser extends AbstractIlluminaTextParser {
         }
         final String[] fields = parser.next();
         return fields[BASES_COLUMN].length();
+    }
+}
+
+
+class QseqReadData implements PositionalData, BaseData, QualityData, PfData {
+    private final byte [][] bases;
+    private final byte [][] qualities;
+    private Boolean pf;
+    private Integer xCoord;
+    private Integer yCoord;
+    private Integer lane;
+    private Integer tile;
+
+    public QseqReadData(final int [] bufferSizes) {
+        bases = new byte[bufferSizes.length][];
+        qualities = new byte[bufferSizes.length][];
+        for(int i = 0; i < bufferSizes.length; i++) {
+            bases[i] = new byte[bufferSizes[i]];
+            qualities[i] = new byte[bufferSizes[i]];
+        }
+
+        pf = null;
+        xCoord = null;
+        yCoord = null;
+        lane = null;
+        tile = null;
+    }
+
+    @Override
+    public byte[][] getBases() {
+        return bases;
+    }
+
+    @Override
+    public byte[][] getQualities() {
+        return qualities;
+    }
+
+    public void setOrCheckPf(final boolean pf) {
+        if(this.pf == null) {
+            this.pf = pf;
+        } else {
+            assertEquals(this.pf, pf, "pf");
+        }
+    }
+
+    @Override
+    public boolean isPf() {
+        return pf;
+    }
+
+    @Override
+    public int getXCoordinate() {
+        return xCoord;
+    }
+
+    public void setOrCheckXCoordinate(final int xCoord) {
+        if(this.xCoord == null) {
+            this.xCoord = xCoord;
+        } else {
+            assertEquals(this.xCoord, xCoord, "xCoord");
+        }
+    }
+
+    @Override
+    public int getYCoordinate() {
+        return yCoord;
+    }
+
+    public void setOrCheckYCoordinate(final int yCoord) {
+        if(this.yCoord == null) {
+            this.yCoord = yCoord;
+        } else {
+            assertEquals(this.yCoord, yCoord, "yCoord");
+        }
+    }
+
+    @Override
+    public int getLane() {
+        return lane;
+    }
+
+    public void setOrCheckLane(final int lane) {
+        if(this.lane == null) {
+            this.lane = lane;
+        } else {
+            assertEquals(this.lane, lane, "lane");
+        }
+    }
+
+    @Override
+    public int getTile() {
+        return tile;
+    }
+
+    public void setOrCheckTile(final int tile) {
+        if(this.tile == null) {
+            this.tile = tile;
+        } else {
+            assertEquals(this.tile, tile, "tile");
+        }
+    }
+
+    public <T> void assertEquals(T current, T newValue, String valueName) {
+        if(!current.equals(newValue)) {
+            throw new PicardException(valueName + " values don't match: original(" + current + ") new(" + newValue + ")");
+        }
     }
 }

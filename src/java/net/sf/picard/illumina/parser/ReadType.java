@@ -21,25 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.sf.picard.illumina.parser;
 
 /**
-     * For iterating over the "ends" of a read programatically.
- */
+* A read type describes a stretch of cycles in an IlluminaRunConfiguration
+* (e.g. Assume we have a paired end/barcoded run with the 76 template cycles followed by 8 barcode cycles followed by
+* another 76 template reads, the run would be represented by the IlluminaRunConfiguration 76T8B76T)
+* Note: Currently SKIP is unused by IlluminaBasecallsToSam, ExtractIlluminaBarcodes, and IlluminaDataProvider
+**/
 public enum ReadType {
-    FIRST(1), SECOND(2), BARCODE(3);
+    T, B, S;
 
-    private final int defaultFileNumber;
-
-    ReadType(final int defaultFileNumber) {
-        this.defaultFileNumber = defaultFileNumber;
-    }
-
-    /**
-     * Typically, the file number corresponding to this end.  For barcode-aware barcoded run, this may
-     * not be the real file number for the given end.
-     */
-    public int getDefaultFileNumber() {
-        return defaultFileNumber;
-    }
+    public static final ReadType Template = T;
+    public static final ReadType Barcode  = B;
+    public static final ReadType Skip     = S;
 }

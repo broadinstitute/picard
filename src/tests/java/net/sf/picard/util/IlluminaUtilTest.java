@@ -37,4 +37,51 @@ public class IlluminaUtilTest {
                 new Object[] {"FOO:BAR_splat", null}
         };
     }
+
+    public static final byte [] iToB(int [] intVals) {
+        byte [] byteVals = new byte[intVals.length];
+        for(int i = 0; i < byteVals.length; i++) {
+            byteVals[i] = (byte) intVals[i];
+        }
+        return byteVals;
+    }
+
+    public byte[][] byteBuffersSizeCopy(byte [][] bytes) {
+        byte [][] outBytes = new byte[bytes.length][];
+        for(int i = 0; i < bytes.length; i++) {
+            outBytes[i] = new byte[bytes[i].length];
+        }
+
+        return outBytes;
+    }
+
+    @DataProvider(name = "solexaQualStrToPhreds")
+    public Object [][] solexaQualStrToPhredsToPhreds() {
+        return new Object[][] {
+            new Object[] {
+                "x@Axy" + ((char)156) + ((char) 157) + ((char) 0) + ((char) 1) + "?",
+                new byte[][] {
+                    new byte[]{}, iToB(new int[]{56}),  iToB(new int[]{0, 1, 56, 57, 92, 93}),
+                        iToB(new int[]{-64, -63, -1}), new byte[]{}
+                }
+            },
+            new Object[] {
+                "nNpZo" + ((char)250) + ((char) 255) + ((char) 1) + ((char) 1) + "CCaB",
+                new byte[][] {
+                    iToB(new int[]{46, 14}),  iToB(new int[]{48, 26, 47, -70, -65, -63, -63, 3, 3, 33}), iToB(new int[]{2})
+                }
+            }
+        };
+    }
+
+    /*
+    @Test(dataProvider = "solexaQualStrToPhreds")
+    public void makePhredBinaryFromSolexaQualityAscii_1_3_toArrays(final String solexaQualities, final int offset, final byte [][] expectedBuffers) {
+        byte [][] actualBuffers = byteBuffersSizeCopy(expectedBuffers);
+        IlluminaUtil.makePhredBinaryFromSolexaQualityAscii_1_3(solexaQualities, offset, actualBuffers);
+
+        for(int i = 0; i < expectedBuffers.length; i++) {
+            Assert.assertEquals(expectedBuffers[i], actualBuffers[i]);
+        }
+    }*/
 }

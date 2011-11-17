@@ -21,31 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package net.sf.picard.illumina.parser;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 /**
- * Interface for classes that parse information out of the Illumina Pipeline
+ * In multiple locations we use two dimensional arrays to avoid extra copying of ClusterData
+ * this is an index into the two dimensional array, the first index specifying the index of
+ * the array in the top level of the 2d array and the second index indicating the element
+ * in the array selected by arrayIndex.
  *
  * @author jburke@broadinstitute.org
  */
-interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_TYPE> {
-    /** Jump so that the next record returned will be from the specified tile. */
-    void seekToTile(int oneBasedTileNumber);
-
-    /**
-     * Read the next read's set of data and set it into the provided data object.  The object must have
-     * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
-     */
-    DATA_TYPE next();
-    boolean hasNext();
-
-    void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles);
-
-    Set<IlluminaDataType> supportedTypes();
-
+class CompositeIndex {
+    public final int arrayIndex;
+    public final int elementIndex;
+    public CompositeIndex(final int arrayIndex, final int elementIndex) {
+        this.arrayIndex = arrayIndex;
+        this.elementIndex = elementIndex;
+    }
 }

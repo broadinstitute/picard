@@ -33,7 +33,7 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 public class ClusterIntensityFileReaderTest {
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/IlluminaTests/rta");
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/IlluminaTests/");
     private static final File INTENSITY_FILES_DIR = new File(TEST_DATA_DIR, "L001/C1.1");
 
     private static final int NUM_BASES = 2;
@@ -76,20 +76,16 @@ public class ClusterIntensityFileReaderTest {
         System.out.println("File: " + cifr.getFile() + "; First cycle: " + cifr.getFirstCycle() +
                 "; Num cycles: " + cifr.getNumCycles() + "; Num clusters: " + cifr.getNumClusters());
 
-        final ReadConfiguration configuration = new ReadConfiguration();
-        configuration.setFirstStart(1);
-        configuration.setFirstEnd(NUM_BASES);
-
         for (int [] goldRow : goldData) {
             final int cluster = goldRow[DATA_FIELDS.CLUSTER_INDEX.ordinal()];
             Assert.assertEquals(1, cifr.getNumCycles(), "Expected only 1 cycle, cluster: " + cluster);
 
             final int cycle = cifr.getFirstCycle();
             final String msg = "Cycle: " + cycle + "; Cluster: " + cluster;
-            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.A_CHANNEL, cycle), goldRow[DATA_FIELDS.A_CHANNEL.ordinal()], msg);
-            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.C_CHANNEL, cycle), goldRow[DATA_FIELDS.C_CHANNEL.ordinal()], msg);
-            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.G_CHANNEL, cycle), goldRow[DATA_FIELDS.G_CHANNEL.ordinal()], msg);
-            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.T_CHANNEL, cycle), goldRow[DATA_FIELDS.T_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.A, cycle), goldRow[DATA_FIELDS.A_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.C, cycle), goldRow[DATA_FIELDS.C_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.G, cycle), goldRow[DATA_FIELDS.G_CHANNEL.ordinal()], msg);
+            Assert.assertEquals(cifr.getValue(cluster, IntensityChannel.T, cycle), goldRow[DATA_FIELDS.T_CHANNEL.ordinal()], msg);
         }
 
         Assert.assertEquals(NUM_CLUSTERS, cifr.getNumClusters());

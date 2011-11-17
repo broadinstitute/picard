@@ -23,37 +23,87 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.PicardException;
+import net.sf.picard.util.CollectionUtil;
+
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Parse barcode file and store the matched barcode (not the actual sequence from the read),
- * in IlluminaReadData.matchedBarcode.  If read does not match a barcode, this attribute is not set,
- * and should be null.
+ * Parse barcode file and return the matched barcode (not the actual sequence from the read).
+ * If read does not match the returned BarcodeData will return null when getBarcode() is called.
  * 
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
-public class BarcodeParser extends AbstractIlluminaTextParser {
+class BarcodeParser implements IlluminaParser<BarcodeData> {
     private static final int Y_OR_N_COLUMN = 1;
     private static final int BARCODE_COLUMN = 2;
+    private final IlluminaTextIterator textIterator;
+    private final IlluminaFileMap tilesToFiles;
+    
+    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.Barcodes));
 
-    public BarcodeParser(final ReadConfiguration readConfiguration, final File basecallDirectory, final int lane,
-                         final List<Integer> tiles) {
-        super(readConfiguration, lane, basecallDirectory, false);
-        setFiles(IlluminaFileUtil.getNonEndedIlluminaBasecallFiles(basecallDirectory, "barcode", lane, tiles));
-        initializeParser(0);
+    public BarcodeParser(final int lane, final IlluminaFileMap tilesToFiles) {
+        this.textIterator = new IlluminaTextIterator(lane, tilesToFiles, false);
+        this.tilesToFiles = tilesToFiles;
     }
 
-    /**
-     * Parse a line from the s_<lane>_barcode.txt file.
-     *
-     * @param data   Object on which matchedBarcode property will be set if this line has a barcode match.
-     * @param fields Input line, split on whitespace.
-     */
     @Override
-    protected void processLine(final ClusterData data, final String[] fields) {
+    public void seekToTile(int oneBasedTileNumber) {
+        textIterator.seekToTile(oneBasedTileNumber);
+    }
+
+    @Override
+    public BarcodeData next() {
+        final String [] fields = textIterator.next();
+        final String barcode;
         if (fields[Y_OR_N_COLUMN].equals("Y")) {
-            data.setMatchedBarcode(fields[BARCODE_COLUMN]);
+            barcode = fields[BARCODE_COLUMN];
+        } else {
+            barcode = null;
         }
+
+        return new BarcodeData() {
+            @Override
+            public String getBarcode() {
+                return barcode;
+            }
+        };
+    }
+
+    @Override
+    public boolean hasNext() {
+        return textIterator.hasNext();
+    }
+
+    @Override
+    public void verifyData(final IlluminaRunConfiguration runConfig, List<Integer> tiles) {
+        if(tiles == null) {
+            tiles = new ArrayList<Integer>();
+            tiles.addAll(tilesToFiles.keySet());
+        }
+        
+        for(final Integer tile : tiles) {
+            final File barcodeFile = tilesToFiles.get(tile);
+            if(barcodeFile == null) {
+                throw new PicardException("Missing barcode file for tile(" + tile + ")");
+            }
+
+            if(!barcodeFile.exists()) {
+                throw new PicardException("Barcode file (" + barcodeFile.getAbsolutePath() +" does not exist for tile(" + tile + ")");
+            }
+        }
+    }
+
+    @Override
+    public Set<IlluminaDataType> supportedTypes() {
+        return SupportedTypes;
+    }
+
+    public void remove() {
+        throw new UnsupportedOperationException("Remove is not supported by " + BarcodeParser.class.getName());
     }
 }

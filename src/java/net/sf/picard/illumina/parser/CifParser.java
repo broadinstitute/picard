@@ -23,48 +23,58 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.util.CollectionUtil;
+
 import java.io.File;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
- * Parser for Illumina RTA CIF raw intensity files.  These files are produced per cycle, with all the clusters
- * in a tile in a single file, so in order to get the values for a read, multiple files must be accessed.
- * 
- * @author alecw@broadinstitute.org
+ * CifParser takes a directory, lane, a map of tiles to Cycled file iterators, and a list of desired lengths for the
+ * output FourChannelIntensityData and allows iteration over the clusters of all the provided tiles in the given lane.
+ *
+ * Note: Files passed by CycledIlluminaFileMap are not checked for proper extension (e.g. cif or cnf) so a CifParser
+ * can read a map to cnf files and put it in a RawIntensityData, you've been warned!
+ *
+ * @author jburke@broadinstitute.org
  */
-public class CifParser extends IlluminaCycleFileSetParser {
-
-    public CifParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                     final List<Integer> tiles) {
-        super(readConfiguration, directory, lane, ClusterIntensityFileReader.FileType.cif, tiles);
+class CifParser extends IlluminaIntensityParser<RawIntensityData> {
+    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.RawIntensities));
+    /**
+     * @param directory BaseCallsDir or analogue directory containing folders like L001/C1.1/s_1_1.cif
+     * @param lane The lane being analyzed
+     * @param tilesToCycleFiles A map of tile -> CycledFilesIterator for each tile to consider
+     * @param outputLengths The desired lengths of each member of the FourChannelIntensityData objects returned in an array
+     * by RawIntensityData
+     */
+    public CifParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int[] outputLengths) {
+        super(directory, lane, tilesToCycleFiles, outputLengths);
     }
 
     /**
-     * Tell abstract base class which slot is being parsed.
-     * @param readData Object into which to stuff the FourChannelIntensityData.
-     * @param fourChannelIntensityData thing to stuff into the right slot of end.
+     * Populate the RawIntensityData from a short value and input indices for a cycle
+     * @param rawIntensityData RawIntensityData to populate
+     * @param index And index to the correct FCID and the correct index in that FCID
+     * @param channel A,C,G, or T channel to populate
+     * @param intensity
      */
-    protected void setFCID(final ReadData readData, final FourChannelIntensityData fourChannelIntensityData) {
-        readData.setRawIntensities(fourChannelIntensityData);
+    @Override
+    protected void addIntensityToIlluminaData(final RawIntensityData rawIntensityData, final CompositeIndex index, final IntensityChannel channel, final short intensity) {
+        rawIntensityData.getRawIntensities()[index.arrayIndex].getChannel(channel)[index.elementIndex] = intensity;
     }
 
-    /**
-     * @param readData Object from which to get the FourChannelIntensityData.
-     * @return FourChannelIntensityData from the slot being parsed by this concrete class.
-     */
-    protected FourChannelIntensityData getFCID(final ReadData readData) {
-        return readData.getRawIntensities();
+    @Override
+    protected RawIntensityData intensityToIlluminaData(final FourChannelIntensityData[] fcids) {
+        return new RawIntensityData() {
+            @Override
+            public FourChannelIntensityData[] getRawIntensities() {
+                return fcids;
+            }
+        };
     }
 
-    /**
-     * Determine if CIF files exist for the given lane and tile.
-     * @param directory
-     * @param lane
-     * @param tile
-     * @return True if CIF files exist for the given intensity directory, lane and tile.  It is not necessarily
-     * the case that all appropriats CIFs exist, rather that at least one exists.
-     */
-    public static boolean cifExists(final File directory, final int lane, final int tile) {
-        return filesExist(directory, lane, ClusterIntensityFileReader.FileType.cif, tile);
+    @Override
+    public Set<IlluminaDataType> supportedTypes() {
+        return SupportedTypes;
     }
 }

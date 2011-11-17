@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2011 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,45 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.util.CollectionUtil;
+
 import java.io.File;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
- * Parser for Illumina RTA CNF noise files.  These files are produced per cycle, with all the clusters
- * in a tile in a single file, so in order to get the values for a read, multiple files must be accessed.
+ * CnfParser takes a directory, lane, a map of tiles to Cycled file iterators, and a list of desired lengths for the
+ * output FourChannelIntensityData and allows iteration over the clusters of all the provided tiles in the given lane.
+ *
+ * Note: Files passed by CycledIlluminaFileMap are not checked for proper extension (e.g. cif or cnf) so a CnfParser
+ * can read a map to cif files and put it in the a NoiseData, you've been warned!
  * 
- * @author alecw@broadinstitute.org
+ * @author Jonathan Burke
  */
-public class CnfParser extends IlluminaCycleFileSetParser {
+class CnfParser extends IlluminaIntensityParser<NoiseData> {
+    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.Noise));
 
-    public CnfParser(final ReadConfiguration readConfiguration, final File directory, final int lane,
-                     final List<Integer> tiles) {
-        super(readConfiguration, directory, lane, ClusterIntensityFileReader.FileType.cnf, tiles);
+    public CnfParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, int[] outputLengths) {
+        super(directory, lane, tilesToCycleFiles, outputLengths);
     }
 
-    /**
-     * Tell abstract base class which slot is being parsed.
-     * @param readData Object into which to stuff the FourChannelIntensityData.
-     * @param fourChannelIntensityData thing to stuff into the right slot of end.
-     */
-    protected void setFCID(final ReadData readData, final FourChannelIntensityData fourChannelIntensityData) {
-        readData.setNoise(fourChannelIntensityData);
+    @Override
+    protected void addIntensityToIlluminaData(NoiseData illData, final CompositeIndex index, IntensityChannel channel, short intensity) {
+        illData.getNoise()[index.arrayIndex].getChannel(channel)[index.elementIndex ] = intensity;
     }
 
-    /**
-     * @param readData Object from which to get the FourChannelIntensityData.
-     * @return FourChannelIntensityData from the slot being parsed by this concrete class.
-     */
-    protected FourChannelIntensityData getFCID(final ReadData readData) {
-        return readData.getNoise();
+    @Override
+    protected NoiseData intensityToIlluminaData(final FourChannelIntensityData[] fcids) {
+        return new NoiseData() {
+            @Override
+            public FourChannelIntensityData[] getNoise() {
+                return fcids;
+            }
+        };
+    }
+
+    @Override
+    public Set<IlluminaDataType> supportedTypes() {
+        return SupportedTypes;
     }
 }

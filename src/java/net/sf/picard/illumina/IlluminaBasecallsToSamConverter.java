@@ -23,11 +23,16 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.filter.AggregateFilter;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.filter.SolexaNoiseFilter;
+import net.sf.picard.illumina.parser.IlluminaRunConfiguration;
+import net.sf.picard.illumina.parser.ReadType;
 import net.sf.picard.sam.ReservedTagConstants;
+import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.IlluminaUtil;
+import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 
 import java.util.Arrays;
@@ -39,13 +44,18 @@ import net.sf.samtools.util.StringUtil;
 /**
  * Convert ClusterData into SAMRecord.
  * 
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 public class IlluminaBasecallsToSamConverter {
 
     private final String runBarcode;
     private final String readGroupId;
+    private final IlluminaRunConfiguration runConfig;
     private AggregateFilter filters;
+    private int barcodeIndex;
+    private final boolean isPairedEnd;
+    private final boolean isBarcoded;
+    private static final Log log = Log.getInstance(IlluminaBasecallsToSamConverter.class);
 
     /**
      * Constructor
@@ -54,9 +64,28 @@ public class IlluminaBasecallsToSamConverter {
      * @param readGroupId       If non-null, set RG attribute on SAMRecord to this.
      */
     public IlluminaBasecallsToSamConverter(final String runBarcode,
-                                           final String readGroupId) {
-        this.runBarcode = runBarcode;
+                                           final String readGroupId,
+                                           final IlluminaRunConfiguration runConfig) {
+        this.runBarcode  = runBarcode;
         this.readGroupId = readGroupId;
+        this.runConfig   = runConfig;
+
+        if(runConfig.numTemplates > 3) {
+            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + runConfig.numTemplates);
+        }
+
+        if(runConfig.numBarcodes > 1) {
+            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 1 barcode read.  Number of template reads found in configuration: " + runConfig.numBarcodes);
+        }
+
+        this.isPairedEnd = runConfig.numTemplates == 2;
+        this.isBarcoded  = runConfig.numBarcodes > 0;
+
+        this.barcodeIndex = -1;
+        if(runConfig.barcodeIndices.length > 0) { //Should only be one for now
+            this.barcodeIndex = runConfig.barcodeIndices[0];
+        }
+
         initializeFilters();
     }
 
@@ -69,31 +98,27 @@ public class IlluminaBasecallsToSamConverter {
         return IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
     }
 
+    public int getNumRecordsPerCluster() {
+        return runConfig.numTemplates;
+    }
+
     /**
-     * Creates a SAMRecord from Illumina Basecall data
-     *
-     * @param cluster       The ClusterData to use in populating the SAMRecord
-     * @param isFirstRead   whether this is the first read of a pair
-     * @param readName      The read name to use, or null if it should be constructed here.  For paired-end runs
-     *                      the same read name can be used for both ends.
-     * @return SAMRecord    fully populated SAMRecord
-     */
-    public SAMRecord createSamRecord(final ClusterData cluster, final boolean isFirstRead, final SAMFileHeader header,
-                                     final String readName) {
+     * TODO: Document
+     * */
+    private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final ReadData unmatchedBarcodeRead) {
         final SAMRecord sam = new SAMRecord(header);
-        sam.setReadName(readName != null? readName: createReadName(cluster));
-        final ReadData readData = (isFirstRead? cluster.getFirstEnd(): cluster.getSecondEnd());
+        sam.setReadName(readName);
         sam.setReadBases(readData.getBases());
         sam.setBaseQualities(readData.getQualities());
 
         // Flag values
-        sam.setReadPairedFlag(cluster.isPairedEnd());
+        sam.setReadPairedFlag(isPairedEnd);
         sam.setReadUnmappedFlag(true);
-        sam.setReadFailsVendorQualityCheckFlag(!cluster.isPf());
-        if (cluster.isPairedEnd()) {
+        sam.setReadFailsVendorQualityCheckFlag(!isPf);
+        if (isPairedEnd) {
             sam.setMateUnmappedFlag(true);
-            sam.setFirstOfPairFlag(isFirstRead);
-            sam.setSecondOfPairFlag(!isFirstRead);
+            sam.setFirstOfPairFlag(firstOfPair);
+            sam.setSecondOfPairFlag(!firstOfPair);
         }
 
         if (filters.filterOut(sam)) {
@@ -105,10 +130,46 @@ public class IlluminaBasecallsToSamConverter {
         }
 
         // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode read as an optional tag
-        if (cluster.getMatchedBarcode() == null && cluster.getBarcodeRead() != null) {
-            sam.setAttribute("BC", StringUtil.bytesToString(cluster.getBarcodeRead().getBases()).replace('.', 'N'));
+        if (unmatchedBarcodeRead != null) {
+            sam.setAttribute("BC", StringUtil.bytesToString(unmatchedBarcodeRead.getBases()).replace('.', 'N'));
         }
 
         return sam;
     }
+
+    public void createSamRecords(final ClusterData cluster, final SAMFileHeader header, boolean markAdapter, final SAMRecord [] recordsOut) {
+        final String readName = createReadName(cluster);
+
+        SAMRecord firstOfPair  = createSamRecord(cluster.getRead(runConfig.templateIndices[0]), header, readName, cluster.isPf(), true,  (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+        recordsOut[0] = firstOfPair;
+
+        SAMRecord secondOfPair = null;
+
+        if(isPairedEnd) {
+            secondOfPair  = createSamRecord(cluster.getRead(runConfig.templateIndices[1]), header, readName, cluster.isPf(), false, (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+            recordsOut[1] = secondOfPair;
+        }
+
+        if (markAdapter) {
+            if (isPairedEnd){
+                assert (firstOfPair.getFirstOfPairFlag() && secondOfPair.getSecondOfPairFlag());
+                String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair,
+                        isBarcoded ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
+                                : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
+               if (warnString != null){
+                    log.debug("Adapter trimming " + warnString);
+                }
+            } else {
+                ClippingUtility.adapterTrimIlluminaSingleRead(firstOfPair,
+                    isBarcoded   ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
+                                 : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
+                // note if not barcoded, it could instead be SINGLE_END
+                // we're assuming one read of paired_end is more common
+                // Note, the single_end adapters have first 13-18 bases in common with paired_end
+                // We could, alternatively, try both and use the one that matched more adapter
+            }
+        }
+    }
+
+
 }

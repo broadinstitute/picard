@@ -27,76 +27,196 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.PicardException;
 
 import java.io.File;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * Parse various formats and versions of Illumina Basecall files, and use them the to populate
- * ClusterData objects.  Use IlluminaDataProviderFactory to create one of these.
+ * ClusterData objects.  Clients of this code should use IlluminaDataProviderFactory to create an IlluminaDataProvider.
+ * IlluminaDataProvider is immutable after construction.
  *
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
-public class IlluminaDataProvider {
+public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<ClusterData>{
+    /** runConfig describes how cluster data should be output by IlluminaDataProvider */
+    private final IlluminaRunConfiguration runConfig;
 
-    /**
-     * Underlying parsers to use.
-     */
-    private final List<IlluminaParser> parsers;
-    private final boolean pairedEnd;
-    private final boolean barcoded;
-
-    // These are here just to generate error messages
-    private final File basecallDirectory;
+    /** contains QSeqs, bcls, or other Illumina file types that will be parsed by this class */
+    private final File basecallDirectory; //These two are for error reporting only
     private final int lane;
 
+    /** A list of parsers (already initialized) that should output data in a format consistent with runConfig */
+    private final IlluminaParser [] parsers;
+
     /**
-     * Create an IlluminaDataProvider given a list of parsers for particular file formats
-     *
-     * @param barcoded True if this is a barcoded lane.
-     * @param pairedEnd True if this is a paired-end lane.
-     * @param parsers List of parsers that will populate the ClusterData streams.
+     * for each parser in this.parsers there is an array of IlluminaDataTypes that specifies what datatypes that parser is providing in
+     * this particular run.  A parser may be able to provide data types which may not be listed here because client code may not
+     * have specified these data types*/
+    private final IlluminaDataType [][] dataTypes;
+
+    /** Calculated once, outputReadTypes describes the type of read data for each ReadData that will be found in ouput ClusterData objects */
+    private final ReadType [] outputReadTypes;
+
+    /** Number of reads in each ClusterData */
+    private final int numReads;
+
+    /**
+     * Create an IlluminaDataProvider given a map of parsersToDataTypes for particular file formats.  Compute once the miscellaneous data for the
+     * run that will be passed to each ClusterData.
      * @param basecallDirectory For error reporting only.
      * @param lane For error reporting only.
      */
-    IlluminaDataProvider(final boolean barcoded, final boolean pairedEnd,
-                         final List<IlluminaParser> parsers,
+    IlluminaDataProvider(final IlluminaRunConfiguration runConfig,
+                         final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataTypes,
                          final File basecallDirectory, final int lane) {
-        this.barcoded = barcoded;
+        this.runConfig = runConfig;
         this.basecallDirectory = basecallDirectory;
         this.lane = lane;
-        this.pairedEnd = pairedEnd;
-        this.parsers = parsers;
+        numReads = runConfig.numDescriptors;
+
+        final int numParsers = parsersToDataTypes.size();
+        if(numParsers == 0) {
+            throw new PicardException("There were 0 parsers passed to IlluminaDataProvider!");
+        }
+
+        int i = 0;
+        parsers = new IlluminaParser[numParsers];
+        dataTypes = new IlluminaDataType[numParsers][];
+        for(final Map.Entry<IlluminaParser, Set<IlluminaDataType>> pToD : parsersToDataTypes.entrySet()) {
+            parsers[i] = pToD.getKey();
+            final Set<IlluminaDataType> dts = pToD.getValue();
+            dataTypes[i] = new IlluminaDataType[dts.size()];
+            dts.toArray(dataTypes[i++]);
+        }
+
+        this.outputReadTypes = new ReadType[numReads];
+        i = 0;
+        for(final ReadDescriptor rd : runConfig.descriptors) {
+            outputReadTypes[i++] = rd.type;
+        }
     }
 
+    /**
+     * Returns the IlluminaRunConfiguration for this IlluminaDataProvider.  This method is deprecated on arrival because
+     * in the next version client code will need to create/specify the IlluminaRunConfiguration itself and therefore
+     * will already have access to the IlluminaRunConfiguration.
+     * @return IlluminaRunConfiguration used by this IlluminaDataProvider
+     */
+    @Deprecated
+    public IlluminaRunConfiguration getRunConfig() {
+        return runConfig;
+    }
+
+    /**
+     * @return True if we have more clusters to read
+     */
     public boolean hasNext() {
-        if (parsers.isEmpty()) {
-            return false;
-        }
-        final boolean ret = parsers.get(0).hasNext();
-        for (int i = 1; i < parsers.size(); ++i) {
-            if (parsers.get(i).hasNext() != ret) {
-                throw new PicardException("Unequal length basecall files in " + basecallDirectory + ", lane " + lane);
+        final boolean more = parsers[0].hasNext();
+        if(!more) {
+            for(int i = 1; i < parsers.length; i++) {
+                if(parsers[i].hasNext()) {
+                    throw new PicardException("Unequal length Illumina files in " + basecallDirectory + ", lane " + lane + ". Failing parser: " + parsers.getClass().getName());
+                }
             }
         }
-        return ret;
+
+        return more;
     }
 
+    /**
+     * @return Current cluster data populated with only the data that matches one of the data types in dataTypes.
+     */
     public ClusterData next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        final ClusterData cluster = new ClusterData();
-        cluster.setFirstEnd(new ReadData());
-        if (pairedEnd) {
-            cluster.setSecondEnd(new ReadData());
+
+        final ClusterData cluster = new ClusterData(outputReadTypes);
+
+        for(int i = 0; i < parsers.length; i++) {
+            final IlluminaData ilData = parsers[i].next();
+            for(final IlluminaDataType ilDataType : dataTypes[i]) {
+                switch(ilDataType) {
+                    case Position:
+                        addData(cluster, (PositionalData) ilData);
+                        break;
+
+                    case PF:
+                        addData(cluster, (PfData) ilData);
+                        break;
+
+                    case Barcodes:
+                        addData(cluster, (BarcodeData) ilData);
+                        break;
+
+                    case BaseCalls:
+                        addReadData(cluster, numReads, (BaseData) ilData);
+                        break;
+
+                    case QualityScores:
+                        addReadData(cluster, numReads, (QualityData) ilData);
+                        break;
+
+                    case RawIntensities:
+                        addReadData(cluster, numReads, (RawIntensityData) ilData);
+                        break;
+
+                    case Noise:
+                        addReadData(cluster, numReads, (NoiseData) ilData);
+                        break;
+
+                    default:
+                        throw new PicardException("Unknown data type " + ilDataType + " requested by IlluminaDataProviderFactory");
+                }
+            }
         }
-        if (barcoded) {
-            cluster.setBarcodeRead(new ReadData());
-        }
-        for (final IlluminaParser parser: parsers) {
-            parser.next(cluster);
-        }
+
         return cluster;
+    }
+
+    /*
+     * Methods for that transfer data from the IlluminaData objects to the current cluster
+     */
+    private void addData(final ClusterData clusterData, final PositionalData posData) {
+        clusterData.setX(posData.getXCoordinate());
+        clusterData.setY(posData.getYCoordinate());
+        clusterData.setLane(posData.getLane());
+        clusterData.setTile(posData.getTile());
+    }
+
+    private void addData(final ClusterData clusterData,  final PfData pfData) {
+        clusterData.setPf(pfData.isPf());
+    }
+
+    private void addData(final ClusterData clusterData, final BarcodeData barcodeData) {
+        clusterData.setMatchedBarcode(barcodeData.getBarcode());
+    }
+
+    private void addReadData(final ClusterData clusterData, final int numReads, final BaseData baseData) {
+        final byte [][] bases = baseData.getBases();
+        for(int i = 0; i < numReads; i++) {
+            clusterData.getRead(i).setBases(bases[i]);
+        }
+    }
+
+    private void addReadData(final ClusterData clusterData, final int numReads, final QualityData qualityData) {
+        final byte [][] qualities = qualityData.getQualities();
+        for(int i = 0; i < numReads; i++) {
+            clusterData.getRead(i).setQualities(qualities[i]);
+        }
+    }
+
+    private void addReadData(final ClusterData clusterData, final int numReads, final RawIntensityData rawIntensityData) {
+        final FourChannelIntensityData[] fcids = rawIntensityData.getRawIntensities();
+        for(int i = 0; i < numReads; i++) {
+            clusterData.getRead(i).setRawIntensities(fcids[i]);
+        }
+    }
+
+    private void addReadData(final ClusterData clusterData, final int numReads, final NoiseData noiseData) {
+        final FourChannelIntensityData[] fcids = noiseData.getNoise();
+        for(int i = 0; i < numReads; i++) {
+            clusterData.getRead(i).setNoise(fcids[i]);
+        }
     }
 
     public void remove() {
@@ -110,4 +230,8 @@ public class IlluminaDataProvider {
         }
     }
 
+    @Override
+    public Iterator<ClusterData> iterator() {
+        return this;
+    }
 }

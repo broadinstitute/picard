@@ -26,13 +26,21 @@ package net.sf.picard.illumina.parser;
 /**
  * Data for a single end of a paired-end read, a barcode read, or for the entire read if not paired end.
  *
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 public class ReadData {
     private byte[] bases;
     private byte[] qualities;
     private FourChannelIntensityData rawIntensities;
     private FourChannelIntensityData noise;
+    private ReadType readType;
+
+    public ReadData() {
+    }
+
+    public ReadData(ReadType readType) {
+        this.readType = readType;
+    }
 
     /**
      * @return ASCII byte representation of bases.
@@ -78,4 +86,11 @@ public class ReadData {
         this.rawIntensities = rawIntensities;
     }
 
+    public ReadType getReadType() {
+        return readType;
+    }
+
+    public void setReadType(final ReadType readType) {
+        this.readType = readType;
+    }
 }

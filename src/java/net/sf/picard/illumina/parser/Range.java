@@ -21,31 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package net.sf.picard.illumina.parser;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 /**
- * Interface for classes that parse information out of the Illumina Pipeline
- *
- * @author jburke@broadinstitute.org
+ * While structurally identical to CompositeIndex, this class is maintained as it makes code more readable when the two are used together (see QSeqParser)
  */
-interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_TYPE> {
-    /** Jump so that the next record returned will be from the specified tile. */
-    void seekToTile(int oneBasedTileNumber);
-
-    /**
-     * Read the next read's set of data and set it into the provided data object.  The object must have
-     * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
-     */
-    DATA_TYPE next();
-    boolean hasNext();
-
-    void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles);
-
-    Set<IlluminaDataType> supportedTypes();
-
+class Range {
+    public final int start;
+    public final int end;
+    public Range(final int start, final int end) {
+        this.start = start;
+        this.end   = end;
+    }
 }

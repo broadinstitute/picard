@@ -27,9 +27,8 @@ import net.sf.samtools.util.CloserUtil;
 import net.sf.picard.PicardException;
 import net.sf.samtools.util.StringUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -43,12 +42,7 @@ import java.util.Arrays;
  *
  * @author alecw@broadinstitute.org
  */
-public class ClusterIntensityFileReader {
-
-    /**
-     * The two supporte file types.
-     */
-    public enum FileType {cif, cnf}
+class ClusterIntensityFileReader {
 
     private static final byte[] IDENTIFIER = StringUtil.stringToBytes("CIF");
     private static final byte FILE_VERSION = 1;
@@ -62,30 +56,28 @@ public class ClusterIntensityFileReader {
      * The entire file is mmapped
      */
     private final MappedByteBuffer buf;
-    private final int elementSize;
-    private final int firstCycle;
-    private final int numCycles;
-    private final int numClusters;
+    private final ClusterIntensityFileHeader header;
 
     // Precomputed for speed, I hope.
     private final int cycleSize;
     private final int channelSize;
 
+    public static class ClusterIntensityFileHeader {
+        public final int elementSize;
+        public final int firstCycle;
+        public final int numCycles;
+        public final int numClusters;
 
-    /**
-     * Prepare to parse a CIF or CNF file.
-     * @param file The file to be parsed.
-     */
-    public ClusterIntensityFileReader(final File file) {
-        try {
-            this.file = file;
-            final FileInputStream is = new FileInputStream(this.file);
-            final FileChannel channel = is.getChannel();
-            final long fileSize = channel.size();
-            buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize);
+        public ClusterIntensityFileHeader(final byte[] headerBytes, final File file) {
+            if(headerBytes.length < HEADER_SIZE) {
+                throw new PicardException("Bytes past to header constructor are too short excpected(" + HEADER_SIZE + ") received (" + headerBytes.length);
+            }
+
+            ByteBuffer buf = ByteBuffer.allocate(headerBytes.length); //for doing some byte conversions
             buf.order(ByteOrder.LITTLE_ENDIAN);
-            CloserUtil.close(channel);
-            CloserUtil.close(is);
+            buf.put(headerBytes);
+            buf.position(0);
+
             final byte[] identifierBuf = new byte[IDENTIFIER.length];
             buf.get(identifierBuf);
             if (!Arrays.equals(identifierBuf, IDENTIFIER)) {
@@ -111,11 +103,31 @@ public class ClusterIntensityFileReader {
                 // It is possible for there to be no clusters in a tile.
                 throw new PicardException("Cluster intensity file " + file + " has negative number of clusters: " +numClusters);
             }
+        }
+    }
+
+    /**
+     * Prepare to parse a CIF or CNF file.
+     * @param file The file to be parsed.
+     */
+    public ClusterIntensityFileReader(final File file) {
+        try {
+            this.file = file;
+            final FileInputStream is = new FileInputStream(this.file);
+            final FileChannel channel = is.getChannel();
+            final long fileSize = channel.size();
+            buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize);
+            buf.order(ByteOrder.LITTLE_ENDIAN);
+            CloserUtil.close(channel);
+            CloserUtil.close(is);
+            final byte [] headerBytes = new byte[HEADER_SIZE];
+            buf.get(headerBytes);
+            this.header = new ClusterIntensityFileHeader(headerBytes, this.file);
         } catch (IOException e) {
             throw new PicardException("IOException opening cluster intensity file " + file, e);
         }
-        cycleSize = NUM_CHANNELS * numClusters * elementSize;
-        channelSize = numClusters * elementSize;
+        cycleSize = NUM_CHANNELS * header.numClusters * header.elementSize;
+        channelSize = header.numClusters * header.elementSize;
     }
 
     /**
@@ -128,17 +140,17 @@ public class ClusterIntensityFileReader {
      * @return Intensity or noise (depending on whether this is a CIF or CNF file).
      */
     public short getValue(final int cluster, final IntensityChannel channel, final int cycle) {
-        if (cycle < firstCycle || cycle >= firstCycle + numCycles) {
+        if (cycle < header.firstCycle || cycle >= header.firstCycle + header.numCycles) {
             throw new IllegalArgumentException("Requested cycle (" + cycle + ") number out of range.  First cycle=" +
-                    firstCycle + "; numCycles=" + numCycles);
+                    header.firstCycle + "; numCycles=" + header.numCycles);
         }
-        if (cluster < 0 || cluster >= numClusters) {
-            throw new IllegalArgumentException("Requested cluster (" + cluster + ") number out of range. numClusters=" + numClusters);
+        if (cluster < 0 || cluster >= header.numClusters) {
+            throw new IllegalArgumentException("Requested cluster (" + cluster + ") number out of range. numClusters=" + header.numClusters);
         }
-        final int relativeCycle = cycle - firstCycle;
-        final int position = HEADER_SIZE + relativeCycle * cycleSize + channel.ordinal() * channelSize + cluster * elementSize;
+        final int relativeCycle = cycle - header.firstCycle;
+        final int position = HEADER_SIZE + relativeCycle * cycleSize + channel.ordinal() * channelSize + cluster * header.elementSize;
         buf.position(position);
-        if (elementSize == 1) {
+        if (header.elementSize == 1) {
             return buf.get();
         } else {
             return buf.getShort();
@@ -153,20 +165,48 @@ public class ClusterIntensityFileReader {
      * @return The first (one-based) cycle stored in this file.
      */
     public int getFirstCycle() {
-        return firstCycle;
+        return header.firstCycle;
     }
 
     /**
      * @return Number of clusters stored in this file.
      */
     public int getNumClusters() {
-        return numClusters;
+        return header.numClusters;
     }
 
     /**
      * @return Number of cycles stored in this file.
      */
     public int getNumCycles() {
-        return numCycles;
+        return header.numCycles;
+    }
+
+    /**
+     * @return the size of one intensity value for one channel in this file.
+     */
+    public int getElementSize() {
+        return header.elementSize;
+    }
+
+    public static ClusterIntensityFileHeader readHeaders(final File intensityFile) {
+        FileInputStream reader = null;
+        byte [] headerBytes = new byte[HEADER_SIZE];
+        int bytesRead = 0;
+        try {
+            reader = new FileInputStream(intensityFile);
+            bytesRead = reader.read(headerBytes);
+        } catch(FileNotFoundException fnfExc) {
+            throw new PicardException("Error opening intensity file (" + intensityFile.getAbsolutePath() +")", fnfExc);
+        } catch(IOException ioExc) {
+            throw new PicardException("Error reading values from header for intensity file (" + intensityFile.getAbsolutePath() + ")", ioExc);
+        } finally {
+            CloserUtil.close(reader);
+        }
+
+        if(bytesRead != HEADER_SIZE)
+            throw new PicardException("Error reading intensity file header, too few bytes read, expected( " + HEADER_SIZE + ") read(" + bytesRead + ")");
+
+        return new ClusterIntensityFileHeader(headerBytes, intensityFile);
     }
 }

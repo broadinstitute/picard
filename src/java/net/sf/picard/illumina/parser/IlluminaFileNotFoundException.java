@@ -30,7 +30,7 @@ import java.io.File;
 /**
  * @author alecw@broadinstitute.org
  */
-public class IlluminaFileNotFoundException extends PicardException{
+class IlluminaFileNotFoundException extends PicardException {
     public final File file;
     public IlluminaFileNotFoundException(final File file, final String message) {
         super(message);
