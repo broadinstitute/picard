@@ -283,7 +283,7 @@ public class BAMRecord extends SAMRecord {
     }
 
     @Override
-    protected Object getAttribute(final short tag) {
+    public Object getAttribute(final short tag) {
         if (!mAttributesDecoded) {
             decodeAttributes();
         }

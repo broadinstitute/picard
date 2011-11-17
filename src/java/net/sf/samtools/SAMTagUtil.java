@@ -33,7 +33,7 @@ import net.sf.samtools.util.StringUtil;
  *
  * @author alecw@broadinstitute.org
  */
-class SAMTagUtil {
+public class SAMTagUtil {
 
     // Standard tags pre-computed for convenience
     public final short RG = makeBinaryTag("RG");

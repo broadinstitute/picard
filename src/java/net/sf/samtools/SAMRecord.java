@@ -161,8 +161,8 @@ public class SAMRecord implements Cloneable
     private int mMateAlignmentStart = 0;
     private int mInferredInsertSize = 0;
     private SAMBinaryTagAndValue mAttributes = null;
-    private Integer mReferenceIndex = null;
-    private Integer mMateReferenceIndex = null;
+    protected Integer mReferenceIndex = null;
+    protected Integer mMateReferenceIndex = null;
     private Integer mIndexingBin = null;
 
     /**
@@ -1047,7 +1047,11 @@ public class SAMRecord implements Cloneable
         if (!isUnsignedArrayAttribute(tag))  throw new SAMException("Value for tag " + tag + " is not unsigned");
     }
 
-    protected Object getAttribute(final short tag) {
+    /**
+     * @see SAMRecord#getAttribute(java.lang.String)
+     * @param tag Binary representation of a 2-char String tag as created by SAMTagUtil.
+     */
+    public Object getAttribute(final short tag) {
         if (this.mAttributes == null) return null;
         else {
             final SAMBinaryTagAndValue tmp = this.mAttributes.find(tag);
@@ -1095,7 +1099,11 @@ public class SAMRecord implements Cloneable
         }
         setAttribute(SAMTagUtil.getSingleton().makeBinaryTag(tag), value, true);
     }
-    
+
+    /**
+     * @see net.sf.samtools.SAMRecord#setAttribute(java.lang.String, java.lang.Object)
+     * @param tag Binary representation of a 2-char String tag as created by SAMTagUtil.
+     */
     protected void setAttribute(final short tag, final Object value) {
         setAttribute(tag, value, false);
     }
