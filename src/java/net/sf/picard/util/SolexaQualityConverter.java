@@ -113,6 +113,11 @@ public class SolexaQualityConverter {
         for (int i=0; i<solexaQuals.length; ++i) {
             solexaQuals[i] -= SOLEXA_ADDEND;
         }
+    }
 
+    public void convertSolexa_1_3_QualityCharsToPhredBinary(int offset, int length, final byte[] solexaQuals) {
+        for (int i=offset; i < offset + length; ++i) {
+            solexaQuals[i] -= SOLEXA_ADDEND;
+        }
     }
 }

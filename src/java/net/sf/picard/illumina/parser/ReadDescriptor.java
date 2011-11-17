@@ -21,19 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 package net.sf.picard.illumina.parser;
 
-import java.io.File;
-
 /**
- * Store a filename, and the tile number parsed from that filename.
+ * Represents one set of cycles in an IlluminaRunConfiguration (e.g. if the IlluminaRunConfiguration is 36TB836T then
+ * 36T, 8B, and 36T are invidually represented internally as a ReadDescriptor).
  */
-class TiledIlluminaFile {
-    public final int tile;
-    public final File file;
+public class ReadDescriptor {
+    public final int length;
+    public final ReadType type;
 
-    public TiledIlluminaFile(final File file, final int tile) {
-        this.file = file;
-        this.tile = tile;
+    public ReadDescriptor(final int length, final ReadType type) {
+        this.length = length;
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return this.length + this.type.name();
     }
 }

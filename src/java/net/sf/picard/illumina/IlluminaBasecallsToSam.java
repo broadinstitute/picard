@@ -43,7 +43,7 @@ import java.io.File;
 import java.util.*;
 
 /**
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 public class IlluminaBasecallsToSam extends CommandLineProgram {
 
@@ -54,13 +54,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Usage
     public String USAGE =
         getStandardUsagePreamble() +  "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n";
-
-    @Option(doc="Deprecated.  This does nothing.")
-    public boolean GENERATE_SECONDARY_BASE_CALLS = false;
-    @Option(doc="Deprecated option; Use BASECALLS_DIR", mutex="BASECALLS_DIR")
-    public File BUSTARD_DIR;
     
-    @Option(doc="The basecalls output directory. ", shortName="B", mutex = "BUSTARD_DIR")
+    @Option(doc="The basecalls output directory. ", shortName="B")
     public File BASECALLS_DIR;
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
@@ -79,17 +74,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             "If not specified, READ_GROUP_ID = <first 5 chars of RUN_BARCODE>.<LANE> .",
         shortName = StandardOptionDefinitions.READ_GROUP_ID_SHORT_NAME, optional = true)
     public String READ_GROUP_ID;
-    @Option(doc = "Use this option to override auto-detection of base caller version", optional = true)
-    public IlluminaDataProviderFactory.BaseCallerVersion BASE_CALLER_VERSION;
-    @Option(doc = "Deprecated option; This value is ignored, image analyzer version is RTA", optional = true)
-    public IlluminaDataProviderFactory.ImageAnalyzerVersion IMAGE_ANALYZER_VERSION;
     @Option(doc="The name of the sequenced library",
             shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
             optional=true,
             mutex = {"BARCODE_PARAMS"})
     public String LIBRARY_NAME;
-    @Option(doc="This option no longer used.", optional=true)
-    public Integer FIRST_READ_LENGTH;
     @Option(doc="The name of the sequencing center that produced the reads to fill in the RG.CN tag.", optional=true)
     public String SEQUENCING_CENTER = "BI";
     @Option(doc="The start date of the run.", optional=true)
@@ -128,6 +117,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private int recordsWritten = 0;
     private IlluminaBasecallsToSamConverter converter;
     private IlluminaDataProviderFactory factory;
+    private IlluminaRunConfiguration runConfig;
 
     // key == barcode, value == corresponding SAMFileWriter
     // If not barcoded run, key == null.
@@ -135,9 +125,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Override
 	protected int doWork() {
-        if(BUSTARD_DIR != null) {
-            BASECALLS_DIR = BUSTARD_DIR;
-        }
         
         log.info("POSITION  IS " + BARCODE_CYCLE);
         
@@ -155,7 +142,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE_LENGTH,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
         }
-        addOptionalFactorySettings(factory);
+        runConfig = factory.getRunConfig();
+        
         List<Integer> tiles = factory.getTiles();
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
         // and the output is sorted by read name, process the tiles in this order.
@@ -193,8 +181,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (TILE_LIMIT != null && tiles.size() > TILE_LIMIT) {
             tiles = tiles.subList(0, TILE_LIMIT);
         }
-        log.info("Base caller version: ", factory.getBaseCallerVersion());
-        log.info("Image analyzer version: ", IlluminaDataProviderFactory.ImageAnalyzerVersion.rta);
 
         if (OUTPUT != null) {
             writersByBarcode.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, null));
@@ -202,7 +188,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             populateWritersByBarcode();
         }
 
-        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID);
+        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, runConfig);
 
         // Process each tile separately, so the order of tile processing is determined by the
         // order of tiles list.  The SAMRecords produced will be cached and sorted a tile
@@ -317,29 +303,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
     }
-
-    private void addOptionalFactorySettings(final IlluminaDataProviderFactory factory) {
-        if (BASE_CALLER_VERSION != null) {
-            factory.setBaseCallerVersion(BASE_CALLER_VERSION);
-        }
-    }
-
-    protected SAMReadGroupRecord buildReadGroup() {
-        final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
-        rg.setSample(SAMPLE_ALIAS);
-        rg.setAttribute("PU", RUN_BARCODE + "." + LANE);
-
-        if (LIBRARY_NAME != null) rg.setLibrary(LIBRARY_NAME);
-        if (SEQUENCING_CENTER != null) rg.setAttribute("CN", SEQUENCING_CENTER);
-        if (PLATFORM != null) rg.setAttribute("PL", PLATFORM);
-        if (RUN_START_DATE != null) {
-            final Iso8601Date date = new Iso8601Date(RUN_START_DATE);
-            rg.setAttribute("DT", date.toString());
-        }
-
-        return rg;
-    }
-
+    
     private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final String barcode) {
         IoUtil.assertFileIsWritable(output);
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
@@ -446,9 +410,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             if (PRINT_TIMING) {
                 writeWatch = new StopWatch();
                 writeWatch.start();
-            } else{
-                writeWatch = null;
             }
+
             records.doneAdding();
             final PeekIterator<SAMRecord> it = new PeekIterator<SAMRecord>(records.iterator());
             while (it.hasNext()) {
@@ -532,11 +495,14 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         // this and throws an exception so that the program aborts itself.
         private boolean threadFailed;
 
+        private SAMRecord [] records;
+
         private TileProcessor() {
             final int maxRecordsInRam = MAX_READS_IN_RAM_PER_TILE / writersByBarcode.size();
             for (final Map.Entry<String, SAMFileWriter> entry : writersByBarcode.entrySet()) {
                 sorters.put(entry.getKey(), new SamRecordSorter(maxRecordsInRam, entry.getValue(), TMP_DIR));
             }
+            records = new SAMRecord[converter.getNumRecordsPerCluster()];
         }
 
         // For constructing or recycling the instance.
@@ -576,10 +542,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         public void run() {
             try {
-                IlluminaDataProvider parser;
                 final List<Integer> oneTile = Arrays.asList(tile);
-                parser = factory.makeDataProvider(oneTile);
-                processTile(parser);
+                final IlluminaDataProvider dataProvider = factory.makeDataProvider(oneTile);
+                processTile(dataProvider);
             } catch (Throwable e) {
                 if (this.thread != null) {
                     // In multi-thread mode, log the error and set a flag so that the main thread also throws.
@@ -607,9 +572,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         /**
          * Read all the reads and convert to SAMRecords.
-         * @param parser
+         * @param dataProvider
          */
-        private void processTile(final IlluminaDataProvider parser) {
+        private void processTile(final IlluminaDataProvider dataProvider) {
             final StopWatch readWatch;
             final StopWatch sqCallWatch;
             if (PRINT_TIMING) {
@@ -619,43 +584,27 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 sqCallWatch = null;
                 readWatch = null;
             }
-            while (parser.hasNext()) {
+            while (dataProvider.hasNext()) {
                 if (PRINT_TIMING) readWatch.start();
-                final ClusterData cluster = parser.next();
+                final ClusterData cluster = dataProvider.next();
                 if (PRINT_TIMING) readWatch.stop();
+
                 final SamRecordSorter sorter = sorters.get(cluster.getMatchedBarcode());
                 if (sorter == null) {
                     throw new PicardException("Barcode encountered in that was not specified in BARCODE_PARAMS: " +
                     cluster.getMatchedBarcode());
                 }
-                final SAMFileHeader header = sorter.getWriter().getFileHeader();
-                final SAMRecord sam = converter.createSamRecord(cluster, true, header, null);
-                final SAMRecord sam2 = cluster.isPairedEnd() ?  converter.createSamRecord(cluster, false, header, sam.getReadName()) : null;
 
-                if (MARK_ADAPTER) {
-                    if (cluster.isPairedEnd()){
-                        assert (sam.getFirstOfPairFlag() && sam2.getSecondOfPairFlag());
-                        String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(sam, sam2,
-                            isBarcoded() ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
-                                         : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
-                       if (warnString != null){
-                            log.debug("Adapter trimming " + warnString);
-                        }
-                    } else {
-                        ClippingUtility.adapterTrimIlluminaSingleRead(sam,
-                            isBarcoded() ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
-                                         : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
-                        // note if not barcoded, it could instead be SINGLE_END
-                        // we're assuming one read of paired_end is more common
-                        // Note, the single_end adapters have first 13-18 bases in common with paired_end
-                        // We could, alternatively, try both and use the one that matched more adapter
-                    }
+                final IlluminaRunConfiguration runConfig = dataProvider.getRunConfig();
+                if(runConfig.numTemplates != 1 && runConfig.numTemplates != 2) {
+                    throw new PicardException("Number of templates(" + runConfig.numTemplates + ") specified by run configuration was greater than 2");
                 }
-                sorter.addAlignment(sam);
-                incrementRecordsWritten();
 
-                if (cluster.isPairedEnd()) {
-                    sorter.addAlignment(sam2);
+                final SAMFileHeader header = sorter.getWriter().getFileHeader();
+                converter.createSamRecords(cluster, header, MARK_ADAPTER, records);
+
+                for(final SAMRecord sam : records) {
+                    sorter.addAlignment(sam);
                     incrementRecordsWritten();
                 }
             }

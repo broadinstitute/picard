@@ -27,10 +27,9 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.PicardException;
 
 /**
- * Store the cluster information from Illumina files for a single cluster with up two three reads(first of pair, second, barcode).
- * Caller must call setFirstEnd, setSecondEnd, setBarcodeEnd as appropriate to initialize those properties.
+ * Store the information from Illumina files for a single cluster with one or more reads.
  * 
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 public class ClusterData {
 
@@ -38,11 +37,22 @@ public class ClusterData {
     private int tile = -1;
     private int x = -1;
     private int y = -1;
-    private ReadData firstEnd;
-    private ReadData secondEnd;
-    private ReadData barcodeRead;
+    private final ReadData [] reads;
     private Boolean pf;
     private String matchedBarcode;
+
+    /** Used for testing, reads is set directly with no copying to the input array */
+    public ClusterData(final ReadData ... reads) {
+        this.reads = reads;
+    }
+
+    /** Creates a ClusterData with one read for each type provided */
+    public ClusterData(final ReadType [] readTypes) {
+        reads = new ReadData[readTypes.length];
+        for(int i = 0; i < readTypes.length; i++) {
+            reads[i] = new ReadData(readTypes[i]);
+        }
+    }
 
     public String toString() {
         return "ClusterData(lane: " + lane + "; tile: " + tile + "; x: " + x + "; y: " + y + "; pf: " + pf +
@@ -59,6 +69,14 @@ public class ClusterData {
 
     public boolean tileIsSet() {
         return tile != -1;
+    }
+
+    public ReadData getRead(final int index) {
+        return reads[index];
+    }
+
+    public int getNumReads() {
+        return reads.length;
     }
 
     /**
@@ -168,58 +186,6 @@ public class ClusterData {
         }
     }
 
-    public boolean isPairedEnd() {
-        return secondEnd != null;
-    }
-
-    /**
-     * @return 2 if paired-end, else 1.
-     */
-    public int getNumEnds() {
-        return (isPairedEnd()? 2: 1);
-    }
-    
-    /**
-     * @return second end if oneBasedIndex == 2, else first end.
-     */
-    public ReadData getEnd(final int oneBasedEndIndex) {
-        return (oneBasedEndIndex == 2? secondEnd: firstEnd);
-    }
-
-    public void setEnd(final ReadData readData, final int oneBasedEndIndex) {
-        if (oneBasedEndIndex == 1) {
-            firstEnd = readData;
-        } else if (oneBasedEndIndex == 2) {
-            secondEnd = readData;
-        } else {
-            throw new IllegalArgumentException();
-        }
-    }
-
-    public ReadData getFirstEnd() {
-        return firstEnd;
-    }
-
-    public void setFirstEnd(final ReadData firstEnd) {
-        this.firstEnd = firstEnd;
-    }
-
-    public ReadData getSecondEnd() {
-        return secondEnd;
-    }
-
-    public void setSecondEnd(final ReadData secondEnd) {
-        this.secondEnd = secondEnd;
-    }
-
-    public ReadData getBarcodeRead() {
-        return barcodeRead;
-    }
-
-    public void setBarcodeRead(final ReadData barcodeRead) {
-        this.barcodeRead = barcodeRead;
-    }
-
     /**
      * @return The barcode matched (not the actual sequence from the read, which may not perfectly match
      * the barcode).
@@ -230,18 +196,5 @@ public class ClusterData {
 
     public void setMatchedBarcode(final String matchedBarcode) {
         this.matchedBarcode = matchedBarcode;
-    }
-
-    public ReadData getEnd(final ReadType whichEndType) {
-        switch (whichEndType) {
-            case BARCODE:
-                return barcodeRead;
-            case FIRST:
-                return firstEnd;
-            case SECOND:
-                return secondEnd;
-            default:
-                throw new IllegalArgumentException("Null or strange value passed to getEnd");
-        }
     }
 }

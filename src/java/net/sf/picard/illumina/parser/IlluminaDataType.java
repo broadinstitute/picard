@@ -26,9 +26,10 @@ package net.sf.picard.illumina.parser;
 
 /**
  * List of data types of interest when parsing Illumina data.  Because different Illumina versions
- * splatter these data across different files, by specifying only the data types of interest,
+ * splatter data of these types across different files, by specifying only the data types of interest,
  * the number of files read can be reduced.
+ * @author jburke@broadinstitute.org
  */
 public enum IlluminaDataType {
-    BaseCalls, QualityScores, RawIntensities, Noise, PF, Barcodes;
+    Position, BaseCalls, QualityScores, RawIntensities, Noise, PF, Barcodes;
 }

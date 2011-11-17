@@ -181,22 +181,32 @@ public class ExtractIlluminaBarcodesTest {
                 IlluminaDataType.Barcodes);
         int numReads = 0;
 
-        final IlluminaDataProvider parser = factory.makeDataProvider();
-        while (parser.hasNext()) {
-            final ClusterData read = parser.next();
+        final IlluminaDataProvider dataProvider = factory.makeDataProvider();
+        while (dataProvider.hasNext()) {
+            final ClusterData cluster = dataProvider.next();
 
-            if(metricACAGTG.BARCODE.equals(read.getMatchedBarcode())) {
+            if(metricACAGTG.BARCODE.equals(cluster.getMatchedBarcode())) {
                 ++numReads;
             }
             
-            Assert.assertEquals(read.getFirstEnd().getQualities().length, barcodePosition - 1);
-            Assert.assertEquals(read.getFirstEnd().getBases().length, barcodePosition - 1);
+            Assert.assertEquals(getFirstTemplate(cluster).getQualities().length, barcodePosition - 1);
+            Assert.assertEquals(getFirstTemplate(cluster).getBases().length, barcodePosition - 1);
         }
         Assert.assertEquals(numReads, metricACAGTG.READS);
     }
 
-    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer>
-    runIt(final int lane, final int position)
+    //TODO: When we extract out the IlluminaRunConfig this should be eliminated
+    private static ReadData getFirstTemplate(ClusterData cd) {
+        for(int i = 0; i < cd.getNumReads(); i++) {
+            final ReadData rd = cd.getRead(i);
+            if(rd.getReadType() == ReadType.Template)
+                return rd;
+        }
+
+        return null;
+    }
+
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final int position)
             throws Exception {
         final File metricsFile = File.createTempFile("eib.", ".metrics");
         metricsFile.deleteOnExit();
@@ -212,8 +222,7 @@ public class ExtractIlluminaBarcodesTest {
         // Generate _barcode.txt files and metrics file.
         Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
 
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> retval =
-                new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> retval =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
         retval.read(new FileReader(metricsFile));
         return retval;
     }

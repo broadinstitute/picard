@@ -21,31 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package net.sf.picard.illumina.parser;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import net.sf.picard.PicardException;
+
+import java.io.File;
+import java.util.*;
 
 /**
- * Interface for classes that parse information out of the Illumina Pipeline
- *
+ * For "non-cycle" files (e.g. qseqs and other files that have multiple cycles per file).  Maps a Tile -> File
  * @author jburke@broadinstitute.org
  */
-interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_TYPE> {
-    /** Jump so that the next record returned will be from the specified tile. */
-    void seekToTile(int oneBasedTileNumber);
+class IlluminaFileMap extends TreeMap<Integer, File> {
+    public IlluminaFileMap() {
+    }
+
+    //For testing purposes
+    public IlluminaFileMap(final List<Integer> tiles, final List<File> files) {
+        if(tiles.size() != files.size()) {
+            throw new PicardException("Tiles and Files were not of the same length: Tiles(" + tiles.size() + ") Files(" + files.size() + ") ");
+        }
+
+        for(int i = 0; i < tiles.size(); i++) {
+            put(tiles.get(i), files.get(i));
+        }
+    }
 
     /**
-     * Read the next read's set of data and set it into the provided data object.  The object must have
-     * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
+     * Return the List of Files in order starting at the given tile and containing all files with tile numbers greater than startingTile that
+     * are within this map
+     * @param startingTile The first File in the returned list will correspond to this tile
+     * @return A List of files for all tiles >= startingTile that are contained in this FileMap
      */
-    DATA_TYPE next();
-    boolean hasNext();
-
-    void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles);
-
-    Set<IlluminaDataType> supportedTypes();
-
+    public List<File> getFilesStartingAt(int startingTile) {
+        return new ArrayList<File>(this.tailMap(startingTile).values());
+    }
 }

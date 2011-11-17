@@ -23,7 +23,7 @@
  */
 package net.sf.picard.illumina;
 
-import net.sf.picard.illumina.parser.IlluminaDataProvider;
+import net.sf.picard.illumina.parser.*;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
@@ -46,10 +46,6 @@ import java.util.List;
 import java.util.Set;
 import java.text.NumberFormat;
 
-import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
-import net.sf.picard.illumina.parser.IlluminaDataType;
-import net.sf.picard.illumina.parser.ClusterData;
-
 /**
  * Determine the barcode for each read in an Illumina lane.
  * For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt.
@@ -59,7 +55,7 @@ import net.sf.picard.illumina.parser.ClusterData;
  * - Y or N indicating if there was a barcode match
  * - matched barcode sequence (empty if read did not match one of the barcodes).
  *
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
@@ -116,6 +112,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private final Log log = Log.getInstance(ExtractIlluminaBarcodes.class);
 
     private int barcodeLength;
+    private int barcodeIndex;
 
     private int tile = 0;
     private File barcodeFile = null;
@@ -166,8 +163,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE,
                 BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+
+        final IlluminaRunConfiguration runConfig = factory.getRunConfig();
+        barcodeIndex = runConfig.barcodeIndices[0];
+
+
         // This is possible for index-only run.
-        factory.setAllowZeroLengthFirstEnd(true);
+        //factory.setAllowZeroLengthFirstEnd(true);
         final IlluminaDataProvider parser = factory.makeDataProvider();
 
         // Process each tile qseq file.
@@ -277,7 +279,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      * Assign barcodes for a single tile's qseq file
      */
     private void extractBarcode(final ClusterData cluster) throws IOException {
-        final String barcodeSubsequence = StringUtil.bytesToString(cluster.getBarcodeRead().getBases());
+        final String barcodeSubsequence = StringUtil.bytesToString(cluster.getRead(barcodeIndex).getBases());
         final boolean passingFilter = cluster.isPf();
         final BarcodeMatch match = findBestBarcode(barcodeSubsequence, passingFilter);
 

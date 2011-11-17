@@ -32,7 +32,7 @@ package net.sf.picard.illumina.parser;
 */
 public enum IntensityChannel {
 
-    A_CHANNEL, C_CHANNEL, G_CHANNEL, T_CHANNEL;
+    A, C, G, T;
 
     public static final int NUM_CHANNELS = IntensityChannel.values().length;
 }

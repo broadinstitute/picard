@@ -21,31 +21,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package net.sf.picard.illumina.parser;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 /**
- * Interface for classes that parse information out of the Illumina Pipeline
+ * There is one IlluminaData sub-interface for each IlluminaDataType enum value.
+ * IlluminaParsers must return objects implementing at least one of the interfaces below.
+ * IlluminaDataProvider will take IlluminaData objects created by IlluminaParsers and cast them to the types they
+ * implement and these objects will then be used to populate the ClusterData object.
  *
  * @author jburke@broadinstitute.org
  */
-interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_TYPE> {
-    /** Jump so that the next record returned will be from the specified tile. */
-    void seekToTile(int oneBasedTileNumber);
-
-    /**
-     * Read the next read's set of data and set it into the provided data object.  The object must have
-     * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
-     */
-    DATA_TYPE next();
-    boolean hasNext();
-
-    void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles);
-
-    Set<IlluminaDataType> supportedTypes();
-
+interface IlluminaData {
 }
+
+interface PositionalData {
+    public int getXCoordinate();
+    public int getYCoordinate();
+    public int getLane();
+    public int getTile();
+}
+
+interface BaseData extends IlluminaData {
+    public byte [][] getBases();
+}
+
+interface QualityData extends IlluminaData {
+    public byte [][] getQualities();
+}
+
+interface NoiseData extends IlluminaData {
+    public FourChannelIntensityData [] getNoise();
+}
+
+interface RawIntensityData extends IlluminaData{
+    public FourChannelIntensityData [] getRawIntensities();
+}
+
+interface PfData extends IlluminaData {
+    public boolean isPf();
+}
+
+interface BarcodeData extends IlluminaData {
+    public String getBarcode();
+}
+
+
