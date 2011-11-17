@@ -303,7 +303,7 @@ protected int doWork() {
  * @param args main arguements
  */
 public static void main(final String[] args) {
-    System.exit(new SamReadExcluder().instanceMain(args));
+    System.exit(new FilterSamReads().instanceMain(args));
 }
 
 }
