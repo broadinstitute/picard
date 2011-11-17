@@ -68,8 +68,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "artifacts to make the mean and sd grossly misleading regarding the real distribution.")
     public double DEVIATIONS = 10;
 
-    @Option(shortName="W", doc="Explicitly sets the histogram width, overriding the TAIL_LIMIT option. Also, when calculating " +
-                               "mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
+    @Option(shortName="W", doc="Explicitly sets the histogram width, overriding automatic truncation of histogram tail. " +
+            "Also, when calculating mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
 
     @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
