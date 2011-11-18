@@ -94,6 +94,13 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
         IlluminaUtil.IlluminaAdapterPair.INDEXED.get3PrimeAdapter()
     );
 
+    @Option() public List<Category> PRINT_READ_CATEGORY = CollectionUtil.makeList(
+        Category.UNPAIRED,
+        Category.FIRST_OF_PAIR,
+        Category.SECOND_OF_PAIR,
+        Category.PAIR
+    );
+
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
@@ -276,15 +283,28 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 pairCollector.getMetrics().BAD_CYCLES = firstOfPairCollector.getMetrics().BAD_CYCLES +
                                                         secondOfPairCollector.getMetrics().BAD_CYCLES;
 
-                file.addMetric(firstOfPairCollector.getMetrics());
-                file.addMetric(secondOfPairCollector.getMetrics());
-                file.addMetric(pairCollector.getMetrics());
+                if (PRINT_READ_CATEGORY.contains(Category.FIRST_OF_PAIR)) {
+                    file.addMetric(firstOfPairCollector.getMetrics());
+                }
+
+                if (PRINT_READ_CATEGORY.contains(Category.SECOND_OF_PAIR)) {
+                    file.addMetric(secondOfPairCollector.getMetrics());
+                }
+
+                if (PRINT_READ_CATEGORY.contains(Category.PAIR)) {
+                    file.addMetric(pairCollector.getMetrics());
+                }
             }
 
-            //if there are no reads in any category then we will returned an unpaired alignment summary metric with all zero values
-            if (unpairedCollector.getMetrics().TOTAL_READS > 0 || firstOfPairCollector.getMetrics().TOTAL_READS == 0) {
-                file.addMetric(unpairedCollector.getMetrics());
+            if (PRINT_READ_CATEGORY.contains(Category.UNPAIRED)) {
+                //if there are no reads in any category then we will return
+                // an unpaired alignment summary metric with all zero values
+                if (unpairedCollector.getMetrics().TOTAL_READS > 0 ||
+                    firstOfPairCollector.getMetrics().TOTAL_READS == 0) {
+                    file.addMetric(unpairedCollector.getMetrics());
+                }
             }
+
         }
 
     }
