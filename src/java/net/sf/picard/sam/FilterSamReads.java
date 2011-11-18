@@ -293,7 +293,7 @@ protected int doWork() {
            log.warn("Failed to delete " + OUTPUT.getAbsolutePath());
         }
 
-        log.error("Failed to filter " + INPUT.getName() + " " + e.getMessage(), e);
+        log.error(e, "Failed to filter " + INPUT.getName());
         return 1;
     }
 }
