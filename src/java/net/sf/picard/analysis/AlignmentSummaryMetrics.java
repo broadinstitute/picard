@@ -126,12 +126,12 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double MEAN_READ_LENGTH;
 
     /**
-     * The number of aligned reads who's mate pair was also aligned to the reference.
+     * The number of aligned reads whose mate pair was also aligned to the reference.
      */
     public long READS_ALIGNED_IN_PAIRS;
 
     /**
-     * The percentage of reads who's mate pair was also aligned to the reference.
+     * The percentage of reads whose mate pair was also aligned to the reference.
      * READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED
      */
     public double PCT_READS_ALIGNED_IN_PAIRS;
