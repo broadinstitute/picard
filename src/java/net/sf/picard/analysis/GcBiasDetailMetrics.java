@@ -39,7 +39,7 @@ public class GcBiasDetailMetrics extends MetricBase {
     /** The number of windows on the reference genome that have this G+C content. */
     public int WINDOWS;
 
-    /** The number of reads who's start position is at the start of a window of this GC. */
+    /** The number of reads whose start position is at the start of a window of this GC. */
     public long READ_STARTS;
 
     /** The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC. */
