@@ -25,6 +25,7 @@ package net.sf.picard.illumina.parser;
 
 /**
  * While structurally identical to CompositeIndex, this class is maintained as it makes code more readable when the two are used together (see QSeqParser)
+ * @author jburke@broadinstitute.org
  */
 class Range {
     public final int start;

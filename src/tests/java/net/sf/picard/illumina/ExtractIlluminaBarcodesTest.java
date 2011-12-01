@@ -81,25 +81,25 @@ public class ExtractIlluminaBarcodesTest {
 
     @Test
     public void testSingleEndWithBarcodeAtStart() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, 1);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(1, 1, "6B36T");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testSingleEndWithBarcodeAtEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(2, 37);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(2, 37, "36T6B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testPairedEndWithBarcodeOnFirstEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(3, 37);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(3, 37, "36T6B36T");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testPairedEndWithBarcodeOnSecondEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(4, 73);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(4, 73, "36T36T6B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
@@ -115,7 +115,7 @@ public class ExtractIlluminaBarcodesTest {
     public void testBarcodeMatching() throws Exception {
         final int lane = 5;
         final int barcodePosition = 37;
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(lane, barcodePosition);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(lane, barcodePosition, "36T6B");
 
         ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG = null;
         ExtractIlluminaBarcodes.BarcodeMetric metricTGACCA = null;
@@ -176,40 +176,49 @@ public class ExtractIlluminaBarcodesTest {
         barcodeParser.close();
 
         // Tack on test of barcode-informed Illumina Basecall parsing
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, barcodePosition,
-                metricACAGTG.BARCODE.length(), IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores,
-                IlluminaDataType.Barcodes);
+        IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, barcodePosition,
+               metricACAGTG.BARCODE.length(), IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
+        testParsing(factory, metricACAGTG, barcodePosition);
+
+        factory = new IlluminaDataProviderFactory(basecallsDir, lane, new IlluminaRunConfiguration("36T6B"),
+                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
+        testParsing(factory, metricACAGTG, barcodePosition);
+    }
+
+    private void testParsing(final IlluminaDataProviderFactory factory, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {
+
         int numReads = 0;
 
         final IlluminaDataProvider dataProvider = factory.makeDataProvider();
+        final IlluminaRunConfiguration runConfig = dataProvider.getRunConfig();
         while (dataProvider.hasNext()) {
             final ClusterData cluster = dataProvider.next();
 
             if(metricACAGTG.BARCODE.equals(cluster.getMatchedBarcode())) {
                 ++numReads;
             }
-            
-            Assert.assertEquals(getFirstTemplate(cluster).getQualities().length, barcodePosition - 1);
-            Assert.assertEquals(getFirstTemplate(cluster).getBases().length, barcodePosition - 1);
+
+            Assert.assertEquals(cluster.getRead(runConfig.templateIndices[0]).getQualities().length, barcodePosition - 1);
+            Assert.assertEquals(cluster.getRead(runConfig.templateIndices[0]).getBases().length, barcodePosition - 1);
         }
         Assert.assertEquals(numReads, metricACAGTG.READS);
     }
 
-    //TODO: When we extract out the IlluminaRunConfig this should be eliminated
-    private static ReadData getFirstTemplate(ClusterData cd) {
-        for(int i = 0; i < cd.getNumReads(); i++) {
-            final ReadData rd = cd.getRead(i);
-            if(rd.getReadType() == ReadType.Template)
-                return rd;
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runBothAndTest(final int lane, final int position, final String readStructure) throws Exception {
+        MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricFromPosition  = runIt(lane, position);
+        MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricFromRunConfig = runIt(lane, readStructure);
+        if(!metricFromPosition.areMetricsEqual(metricFromRunConfig)) {
+            throw new RuntimeException("Output metrics differ between barcode position and read structure!");
         }
-
-        return null;
+        
+        return metricFromPosition;
     }
 
     private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final int position)
             throws Exception {
         final File metricsFile = File.createTempFile("eib.", ".metrics");
         metricsFile.deleteOnExit();
+        
         final List<String> args = new ArrayList<String>(Arrays.asList(
                 "BASECALLS_DIR=" + basecallsDir.getPath(),
                 "LANE=" + lane,
@@ -219,6 +228,28 @@ public class ExtractIlluminaBarcodesTest {
         for (final String barcode : BARCODES) {
             args.add("BARCODE=" + barcode);
         }
+        return runIt(args, metricsFile);
+    }
+
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final String readStructure)
+            throws Exception {
+        final File metricsFile = File.createTempFile("eib.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final List<String> args = new ArrayList<String>(Arrays.asList(
+                "BASECALLS_DIR=" + basecallsDir.getPath(),
+                "LANE=" + lane,
+                "READ_STRUCTURE=" + readStructure,
+                "METRICS_FILE=" + metricsFile.getPath()
+                ));
+        for (final String barcode : BARCODES) {
+            args.add("BARCODE=" + barcode);
+        }
+        return runIt(args, metricsFile);
+    }
+
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(List<String> args, final File metricsFile) throws Exception {
+
         // Generate _barcode.txt files and metrics file.
         Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
 

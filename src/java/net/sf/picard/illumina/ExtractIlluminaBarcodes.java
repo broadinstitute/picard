@@ -83,7 +83,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc="1-based cycle number of the start of the barcode.", shortName = "BARCODE_POSITION")
+    @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC, shortName="RS", mutex = "BARCODE_CYCLE")
+    public String READ_STRUCTURE;
+
+    @Option(doc="1-based cycle number of the start of the barcode.", mutex = "READ_STRUCTURE", shortName = "BARCODE_POSITION")
     public Integer BARCODE_CYCLE;
 
     @Option(doc="Barcode sequence.  These must be unique, and all the same length.", mutex = {"BARCODE_FILE"})
@@ -161,10 +164,24 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         noMatchBarcodeMetric = new BarcodeMetric(new NamedBarcode(noMatchBarcode.toString()));
 
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE,
-                BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+        final IlluminaDataProviderFactory factory;
+        final IlluminaRunConfiguration runConfig;
+        if(READ_STRUCTURE == null) {
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+            runConfig = factory.getRunConfig();
+        } else {
+            runConfig = new IlluminaRunConfiguration(READ_STRUCTURE);
+            //TODO: Remove first test when we support multi-barcoding
+            if(runConfig.numBarcodes != 1) {
+                throw new PicardException("Picard currently only supports 1 Barcode read! " + runConfig.numBarcodes + " number of barcode reads found!");
+            } else if(runConfig.descriptors.get(runConfig.barcodeIndices[0]).length != barcodeLength){
+                throw new PicardException("Run configuration has a barcode length of (" + runConfig.descriptors.get(runConfig.barcodeIndices[0]).length + ") but first barcode had a" +
+                        " length of (" + barcodeLength + ")");
+            }
 
-        final IlluminaRunConfiguration runConfig = factory.getRunConfig();
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, runConfig, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+        }
+
         barcodeIndex = runConfig.barcodeIndices[0];
 
 
@@ -401,7 +418,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
-        if (BARCODE_CYCLE < 1) {
+        if (READ_STRUCTURE == null && BARCODE_CYCLE < 1) {
             messages.add("Invalid BARCODE_POSITION=" + BARCODE_CYCLE + ".  Value must be positive.");
         }
         if (BARCODE_FILE != null) {

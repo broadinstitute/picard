@@ -82,9 +82,11 @@ public class IlluminaDataProviderFactory {
      * @param basecallDirectory Where the Illumina basecall output is.  Some files are found by looking relative to this
      *                          directory, at least by default.
      * @param lane              Which lane to iterate over.
+     * @param runConfig         If IlluminaRunConfiguration is specified then the IlluminaDataProvider produced by this factory will
+     *                          produce clusters conforming to runConfig, otherwise the runConfig is detected by the factory
      * @param dataTypes         Which data types to read.
      */
-    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane,
+    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final IlluminaRunConfiguration runConfig,
                                 final IlluminaDataType... dataTypes) {
         this.basecallDirectory     = basecallDirectory;
         this.rawIntensityDirectory = basecallDirectory.getParentFile();
@@ -93,7 +95,12 @@ public class IlluminaDataProviderFactory {
         this.barcodeCycle = null;
         this.barcodeLength = null;
         this.dataTypes = new HashSet<IlluminaDataType>(Arrays.asList(dataTypes));
-        this.runConfig = computeIlluminaRunConfiguration();
+
+        if(runConfig == null) {
+            this.runConfig = computeIlluminaRunConfiguration();
+        } else {
+            this.runConfig = runConfig;
+        }
     }
 
     /**
@@ -222,6 +229,9 @@ public class IlluminaDataProviderFactory {
             case PF:
             case BaseCalls:
             case Position:
+                if(numQSeq == 0) {
+                    numQSeq = IlluminaFileUtil.getNumberOfIlluminaEnds(basecallDirectory, "qseq", lane);
+                }
                 final List<IlluminaFileMap> readTileMap = new ArrayList<IlluminaFileMap>();
                 for(int i = 0; i < numQSeq; i++) {
                        readTileMap.add(IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, i+1, tiles));

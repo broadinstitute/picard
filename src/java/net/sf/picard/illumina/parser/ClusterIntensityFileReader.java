@@ -40,7 +40,7 @@ import java.util.Arrays;
  * A file can store its values in either a byte or a short per value, but the API treats them all as shorts.
  * This class does not distinguish btw CIF and CNF files.
  *
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 class ClusterIntensityFileReader {
 

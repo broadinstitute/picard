@@ -28,7 +28,7 @@ import net.sf.picard.PicardException;
 import java.io.File;
 
 /**
- * @author alecw@broadinstitute.org
+ * @author jburke@broadinstitute.org
  */
 class IlluminaFileNotFoundException extends PicardException {
     public final File file;
