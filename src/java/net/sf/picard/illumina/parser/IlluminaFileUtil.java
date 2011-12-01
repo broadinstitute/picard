@@ -242,7 +242,8 @@ public class IlluminaFileUtil {
      */
     public static CycleIlluminaFileMap getCyledIlluminaFiles(final File directory, final String fileExt, final int lane, final List<Integer> tiles, int expectedCycles) {
 
-        final File[] tempCycleDirs = IoUtil.getFilesMatchingRegexp(directory, CYCLE_SUBDIRECTORY_PATTERN);
+        final File laneDir = new File(directory, "L00" + lane);
+        final File[] tempCycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, CYCLE_SUBDIRECTORY_PATTERN);
 
         if (tempCycleDirs == null || tempCycleDirs.length == 0) {
             throw new IlluminaFileNotFoundException(directory, directory + " has no cycle subdirectories");
@@ -260,16 +261,16 @@ public class IlluminaFileUtil {
         final CycleIlluminaFileMap cycledMap = new CycleIlluminaFileMap();
         if (tiles == null) {
             final String regexp = "s_" + lane + "_(\\d+)." + fileExt;
-            final IlluminaFileMap tileMap = IlluminaFileUtil.getTiledIlluminaBasecallFiles(tempCycleDirs[0], regexp);
-            for(int i = 0; i < tileMap.lastKey(); i++) {
-                cycledMap.put(i, new CycleFilesIterator(directory, lane, i, fileExt));
+            final IlluminaFileMap tileMap = IlluminaFileUtil.getTiledIlluminaBasecallFiles(tempCycleDirs[0], regexp); //Something funky is going on
+            for(int i = 1; i <= tileMap.lastKey(); i++) {                                                              //here
+                cycledMap.put(i, new CycleFilesIterator(laneDir, lane, i, fileExt));
             }
-            cycledMap.assertValid(new ArrayList<Integer>(tileMap.keySet()), expectedCycles);
+            //cycledMap.assertValid(new ArrayList<Integer>(tileMap.keySet()), expectedCycles);
         } else {
             for(int i = 0; i < tiles.size(); i++) {
-                cycledMap.put(i, new CycleFilesIterator(directory, lane, i, fileExt));
+                cycledMap.put(i, new CycleFilesIterator(laneDir, lane, i, fileExt));
             }
-            cycledMap.assertValid(tiles, expectedCycles);
+            //cycledMap.assertValid(tiles, expectedCycles);
         }
 
         return cycledMap;

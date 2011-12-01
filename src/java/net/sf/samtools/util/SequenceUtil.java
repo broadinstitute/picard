@@ -146,7 +146,7 @@ public class SequenceUtil {
         try {
             assertSequenceDictionariesEqual(s1, s2);
         } catch (SequenceListsDifferException e) {
-            throw new SequenceListsDifferException("In files " + f1.getAbsolutePath() + " and " + f1.getAbsolutePath(), e);
+            throw new SequenceListsDifferException("In files " + f1.getAbsolutePath() + " and " + f2.getAbsolutePath(), e);
         }
     }
     /**

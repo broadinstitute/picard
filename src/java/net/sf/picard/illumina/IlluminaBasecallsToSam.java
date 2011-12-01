@@ -25,7 +25,6 @@
 package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.*;
-import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.FileChannelJDKBugWorkAround;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
@@ -34,7 +33,6 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 import net.sf.samtools.util.*;
@@ -50,6 +48,15 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
     private static final boolean PRINT_TIMING = false;
 
+    public static final String READ_STRUCTURE_DOC =
+            "A description of the logical configuration of an Illumina Run, i.e. a description of what structure IlluminaBasecallsToSam "      +
+            "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "  +
+            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "   +
+            "run configuration of \"36T8B8S30T\" then, before being converted to SAM records those bases will be split into 4 reads where "    +
+            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "      +
+            "skipped cycles and read four is another 30 cycle template read.  The read consisting of skipped cycles would NOT be included "    +
+            "in output SAM files.";
+
     // The following attributes define the command-line arguments
     @Usage
     public String USAGE =
@@ -63,6 +70,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             mutex = {"BARCODE_PARAMS"})
     public File OUTPUT;
+    
     @Option(doc = "Prefixed to read names.")
     public String RUN_BARCODE;
     @Option(doc="The name of the sequenced sample",
@@ -85,16 +93,22 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public Date RUN_START_DATE;
     @Option(doc="The name of the sequencing technology that produced the read.", optional=true)
     public String PLATFORM = "illumina";
-    @Option(doc="1-based cycle number of the start of the barcode.  If BARCODE or BARCODE_LENGTH are specified, this must be specified.",
-            optional = true, shortName = "BARCODE_POSITION")
+
+    @Option(doc=READ_STRUCTURE_DOC, //see above
+            optional = true, shortName="RS", mutex = {"BARCODE_CYCLE", "BARCODE_LENGTH"})
+    public String READ_STRUCTURE;
+
+    @Option(doc="Deprecated, use READ_STRUCTURE.  1-based cycle number of the start of the barcode.  If BARCODE or BARCODE_LENGTH are specified, this must be specified.",
+            optional = true, shortName = "BARCODE_POSITION", mutex={"READ_STRUCTURE"})
     public Integer BARCODE_CYCLE;
-    @Option(doc="Length of the barcode.  If BARCODE_CYCLE or BARCODE is specified, this must be specified.",
-            optional = true)
+    @Option(doc="Deprecated, use READ_STRUCTURE.  Length of the barcode.  If BARCODE_CYCLE or BARCODE is specified, this must be specified.",
+            optional = true, mutex={"READ_STRUCTURE"})
     public Integer BARCODE_LENGTH;
     @Option(doc="Tab-separated file for creating all output BAMs for barcoded run with single IlluminaBasecallsToSam invocation.  " +
             "Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
     public File BARCODE_PARAMS;
+
     @Option(doc="Whether to mark the position of the adapter in the read")
     public boolean MARK_ADAPTER = true;
     @Option(doc = "Run this many TileProcessors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
@@ -135,14 +149,27 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             IoUtil.assertFileIsReadable(BARCODE_PARAMS);
         }
 
-        if (! isBarcoded()) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE,
-                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
-        } else {
+        if (READ_STRUCTURE != null) { //Possibly barcoded, possibly not depending on configuration
+            final IlluminaRunConfiguration rc = new IlluminaRunConfiguration(READ_STRUCTURE); //TODO: Next round this all gets prettier
+            if(rc.numBarcodes > 0) {
+                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rc,
+                    IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
+            } else {
+                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rc,
+                    IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
+            }
+        } else if(BARCODE_CYCLE != null) { //Barcoded run whose configuration is determined (using the Barcode params and the qseqs)
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE_LENGTH,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
+        } else { //non-barcoded run whose configuration is determined (using available qseqs)
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, null,
+                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
         }
+
+        //In the next round of changes only the first constructor above will be used and this will be replaced by the construction
+        //of an IlluminaRunConfiguration object in the same manner as the first branch of the if else block above
         runConfig = factory.getRunConfig();
+        log.info("RUN CONFIGURATION IS " + runConfig.toString());
         
         List<Integer> tiles = factory.getTiles();
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
@@ -340,18 +367,23 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Override
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
-        if(BARCODE_CYCLE != null || BARCODE_LENGTH != null || BARCODE_PARAMS != null) {
-            if(BARCODE_CYCLE == null) {
-                messages.add("BARCODE_CYCLE is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
-            } else {
-                if(BARCODE_CYCLE < 1)
-                    messages.add("BARCODE_CYCLE must be >= 1");
-            }
-            if(BARCODE_LENGTH == null) {
-                messages.add("BARCODE_LENGTH is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
-            }
-            if(BARCODE_PARAMS == null) {
-                messages.add("BARCODE_PARAMS is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+
+        //TODO: Check this!
+        //Can have only a READ_STRUCTURE, a READ_STRUCTURE and a Barcode Params, or a BARCODE CYCLE, BARCODE LENGTH and BARCODE PARAMS
+        if(READ_STRUCTURE == null) {
+            if(BARCODE_CYCLE != null || BARCODE_LENGTH != null || BARCODE_PARAMS != null) {
+                if(BARCODE_CYCLE == null) {
+                    messages.add("BARCODE_CYCLE is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+                } else {
+                    if(BARCODE_CYCLE < 1)
+                        messages.add("BARCODE_CYCLE must be >= 1");
+                }
+                if(BARCODE_LENGTH == null) {
+                    messages.add("BARCODE_LENGTH is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+                }
+                if(BARCODE_PARAMS == null) {
+                    messages.add("BARCODE_PARAMS is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
+                }
             }
         }
         

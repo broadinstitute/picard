@@ -205,7 +205,7 @@ class QseqReadParser {
         final List<Integer> lengthsList = new ArrayList<Integer>();
         final List<Range> srcRangesList = new ArrayList<Range>();
         final List<CompositeIndex> dstRangesList = new ArrayList<CompositeIndex>();
-        while(coveredLength < readLength) {
+        while(coveredLength < readLength) { //TODO: Something is not being caught here if qseq length is actually > than runConfig length
             int length = Math.min(outputLengths[bufferIndex] - writeOffset, readLength - coveredLength);
             lengthsList.add(length);
             srcRangesList.add(new Range(readOffset, readOffset + length));

@@ -54,44 +54,66 @@ public class IlluminaDataProviderTest {
     };
 
     @Test(dataProvider="data")
-    public void testIlluminaDataProvider(
+    public void testIlluminaDataProviderOldMethod(
             final String testName, final int lane, final int size, final boolean pe,
             final Map<Integer, ClusterData> readNoToClusterData,
             final IlluminaDataType [] extraDataTypes,
+            final String illuminaConfigStr,
+            final int barcodeCycle, final int barcodeLength,
+            final int seekAfterFirstRead, final int seekTestDataReadOffset,
+            final File basecallsDirectory)
+            throws Exception {
+        final IlluminaDataType [] dts = getDataTypes(extraDataTypes);
+        final IlluminaDataProviderFactory factory;
+        if (barcodeLength == 0) {
+            factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, null, dts);
+        } else {
+            factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, barcodeCycle, barcodeLength, dts);
+        }
+        final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
+
+        runTest(testName, size, pe, illuminaConfigStr, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
+    }
+
+
+    @Test(dataProvider="data")
+    public void testIlluminaDataProviderNewMethod(
+            final String testName, final int lane, final int size, final boolean pe,
+            final Map<Integer, ClusterData> readNoToClusterData,
+            final IlluminaDataType [] extraDataTypes,
+            final String illuminaConfigStr,
             final int barcodeCycle, final int barcodeLength,
             final int seekAfterFirstRead, final int seekTestDataReadOffset,
             final File basecallsDirectory)
             throws Exception {
 
+        final IlluminaDataType [] dts = getDataTypes(extraDataTypes);
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new IlluminaRunConfiguration(illuminaConfigStr), dts);
+        final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
 
-        final IlluminaDataType [] dts;
+        runTest(testName, size, pe, illuminaConfigStr, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
+    }
 
-        if(extraDataTypes == null) {
-            dts = DEFAULT_DATA_TYPES;
-        } else {
-            dts = Arrays.copyOf(DEFAULT_DATA_TYPES, DEFAULT_DATA_TYPES.length + extraDataTypes.length);
-            System.arraycopy(extraDataTypes, 0, dts, DEFAULT_DATA_TYPES.length, extraDataTypes.length);
-        }
-        
-        final IlluminaDataProviderFactory factory;
-        if (barcodeLength == 0) {
-            factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, DEFAULT_DATA_TYPES);
-        } else {
-            factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, barcodeCycle, barcodeLength, DEFAULT_DATA_TYPES);
-        }
+    private void runTest(
+            final String testName,  final int size, final boolean pe,
+            final String illuminaConfigStr,
+            final Map<Integer, ClusterData> readNoToClusterData,
+            final int seekAfterFirstRead, final int seekTestDataReadOffset,
+            final IlluminaDataProvider dataProvider)
+            throws Exception {
 
-        final IlluminaDataProvider parser = factory.makeDataProvider();
+        Assert.assertEquals(new IlluminaRunConfiguration(illuminaConfigStr), dataProvider.getRunConfig());
 
         int count = 0;
         int readNum = 0;
-        while (parser.hasNext()) {
-            final ClusterData cluster = parser.next();
+        while (dataProvider.hasNext()) {
+            final ClusterData cluster = dataProvider.next();
             if (readNoToClusterData.containsKey(readNum)) {
                 compareReadData(pe, cluster, readNoToClusterData.get(readNum), testName);
             }
 
             if (seekAfterFirstRead != 0 && count == 0) {
-                parser.seekToTile(seekAfterFirstRead);
+                dataProvider.seekToTile(seekAfterFirstRead);
                 readNum += seekTestDataReadOffset;
             }
 
@@ -100,6 +122,19 @@ public class IlluminaDataProviderTest {
         }
         Assert.assertEquals(count, size, testName);
     }
+
+    private IlluminaDataType [] getDataTypes(IlluminaDataType [] extraDataTypes) {
+        final IlluminaDataType [] dts;
+
+        if(extraDataTypes == null) {
+            dts = DEFAULT_DATA_TYPES;
+        } else {
+            dts = Arrays.copyOf(DEFAULT_DATA_TYPES, DEFAULT_DATA_TYPES.length + extraDataTypes.length);
+            System.arraycopy(extraDataTypes, 0, dts, DEFAULT_DATA_TYPES.length, extraDataTypes.length);
+        }
+        return dts;
+    }
+
 
     private void compareBasesAndQuals(final ReadData rd1, final ReadData rd2, final String testName) {
         Assert.assertEquals(rd1.getBases(),     rd2.getBases(),     testName);
@@ -142,6 +177,7 @@ public class IlluminaDataProviderTest {
               "PE Bustard Parsing Test", 1, 60, true,
                 qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), null, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "76T76T",
                 0, 0,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -150,6 +186,7 @@ public class IlluminaDataProviderTest {
             {"PE with Barcode Bustard Parsing Test", 1, 60, true,
                 qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), 77, 6, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "76T6B70T",
                 77, 6,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -158,6 +195,7 @@ public class IlluminaDataProviderTest {
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20, true,
                 qseqDataToClusterMap(getReadData(s_8_1_0001), getReadData(s_8_2_0001), null, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
+                "4T4T",
                 0, 0,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -166,6 +204,7 @@ public class IlluminaDataProviderTest {
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20, true,
                 qseqDataToClusterMap(getReadData(s_8_1_0001), getReadData(s_8_2_0001), 5, 2, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
+                "4T2B2T",
                 5, 2,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -174,6 +213,7 @@ public class IlluminaDataProviderTest {
             {"PE, Barcode, seek Bustard Parsing Test", 1, 21, true,
                 qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), 77, 6, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "76T6B70T",
                 77, 6,
                 3, getFileSize(s_1_1_0001) + getFileSize(s_1_2_0001) - 1,
                 TEST_DATA_LOCATION
@@ -182,6 +222,7 @@ public class IlluminaDataProviderTest {
             {"Non-PE Bustard Parsing Test", 5, 20, false,
                 qseqDataToClusterMap(getReadData(s_5_1_0001), null, null, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "76T",
                 0, 0,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -190,6 +231,7 @@ public class IlluminaDataProviderTest {
             {"Non-PE Bustard Parsing Test", 5, 20, false,
                 qseqDataToClusterMap(getReadData(s_5_1_0001), null, 71, 6, DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "70T6B",
                 71, 6,
                 0, 0,
                 TEST_DATA_LOCATION
@@ -198,17 +240,15 @@ public class IlluminaDataProviderTest {
             {"Barcode-aware PE Bustard Parsing Test", 6, 10, true,
                 qseqDataToClusterMap(getReadData(s_6_1_0001), getReadData(s_6_3_0001),  getReadData(s_6_2_0001), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
+                "68T8B68T",
                 69, 8,
                 0, 0,
                 TEST_DATA_LOCATION
-            },
-
+            }
         };
     }
 
-    @Test
-    public void testBarcodeParsing() {
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, 153, 6, IlluminaDataType.Barcodes);
+    public void runBarcodeParsingTest(final IlluminaDataProviderFactory factory) {
 
         final IlluminaDataProvider dateProvider = factory.makeDataProvider();
         for (int i = 0; dateProvider.hasNext(); ++i) {
@@ -225,47 +265,14 @@ public class IlluminaDataProviderTest {
         }
     }
 
-    /* //Put this back in, so as not to change Public API, or maybe provide a static method that instead you provide, tile, lane, directory
-       //to keep the factory immutable and still be able to query for available data
     @Test
-    public void testIntensitiesAvailable() {
-        // Check for intensities that are present
-        IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(RTA_BASECALLS_DIR, 1,
-                    IlluminaDataType.RawIntensities);
-        factory.setBaseCallerVersion(IlluminaDataProviderFactory.BaseCallerVersion.Bustard_1_4);
-        factory.setPairedEnd(false);
-        Assert.assertTrue(factory.intensitiesAvailable(1));
-
-        // Check for intensities that are not present
-        factory = new IlluminaDataProviderFactory(RTA_BASECALLS_DIR, 2,
-                    IlluminaDataType.RawIntensities);
-        factory.setBaseCallerVersion(IlluminaDataProviderFactory.BaseCallerVersion.Bustard_1_4);
-        factory.setPairedEnd(false);
-        Assert.assertFalse(factory.intensitiesAvailable(1));
-    } */
-
-    private byte [] toBytes(final String str) {
-        return StringUtil.stringToBytes(str);
+    public void barcodeParsingTestNoConfig() {
+        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, 153, 6, IlluminaDataType.Barcodes));
     }
 
-    private ReadData makeReadData(final byte[] bases, final byte[] qualities) {
-        final ReadData readData = new ReadData();
-        readData.setBases(bases);
-        readData.setQualities(solexaQualityCharsToPhredBinary(qualities));
-        return readData;
+    @Test
+    public void barcodeParsingTestWConfig() {
+        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, new IlluminaRunConfiguration("76T76T6B"), IlluminaDataType.Barcodes));
     }
 
-    private ReadData makeReadData(final byte[] bases, final byte[] qualities, final FourChannelIntensityData rawIntensities, final FourChannelIntensityData noise) {
-        final ReadData readData = makeReadData(bases, qualities);
-        readData.setRawIntensities(rawIntensities);
-        readData.setNoise(noise);
-        return readData;
-    }
-
-    private ClusterData makeClusterData(final boolean pf, final ReadData firstEnd, final ReadData secondEnd, final ReadData barcode) {
-        final ClusterData cluster = new ClusterData(firstEnd, barcode, secondEnd);
-        cluster.setPf(pf);
-
-        return cluster;
-    }
 }

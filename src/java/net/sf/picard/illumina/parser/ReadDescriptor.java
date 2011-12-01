@@ -41,4 +41,17 @@ public class ReadDescriptor {
     public String toString() {
         return this.length + this.type.name();
     }
+
+    public boolean equals(final Object other) {
+        if(this == other) return true;
+        if(other.getClass() != this.getClass()) return false;
+
+        final ReadDescriptor that = (ReadDescriptor) other;
+        return this.length == that.length && this.type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * this.type.ordinal() + 379 * length;
+    }
 }

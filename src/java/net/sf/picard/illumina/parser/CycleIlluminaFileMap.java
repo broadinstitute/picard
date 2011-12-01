@@ -48,7 +48,7 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
         }
 
         for (final int tile : expectedTiles) {
-            final CycleFilesIterator cycleFiles = get(tile);
+            final CycleFilesIterator cycleFiles = new CycleFilesIterator(get(tile)); //so as not to expend the iterator
             int total;
             for(total = 0; cycleFiles.hasNext(); total++) {
                 final File curFile = cycleFiles.next();
@@ -85,6 +85,10 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
         this.fileExt = fileExt;
         this.nextCycle = 1;
         findNextFile();
+    }
+
+    CycleFilesIterator(final CycleFilesIterator template) {
+        this(template.parentDir, template.lane, template.tile, template.fileExt);
     }
 
     private void findNextFile() {

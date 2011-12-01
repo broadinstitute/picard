@@ -102,9 +102,6 @@ public class IlluminaBasecallsToSamConverter {
         return runConfig.numTemplates;
     }
 
-    /**
-     * TODO: Document
-     * */
     private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final ReadData unmatchedBarcodeRead) {
         final SAMRecord sam = new SAMRecord(header);
         sam.setReadName(readName);
@@ -155,7 +152,7 @@ public class IlluminaBasecallsToSamConverter {
                 assert (firstOfPair.getFirstOfPairFlag() && secondOfPair.getSecondOfPairFlag());
                 String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair,
                         isBarcoded ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
-                                : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
+                                   : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
                if (warnString != null){
                     log.debug("Adapter trimming " + warnString);
                 }

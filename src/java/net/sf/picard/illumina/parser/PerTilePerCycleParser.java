@@ -139,7 +139,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         cycleFileParsers.clear();
 
         int cycleIndex = 0;
-        while(filesIterator.hasNext()){
+        while(filesIterator.hasNext()) {
             cycleFileParsers.add(makeCycleFileParser(filesIterator.next(), ++cycleIndex));
         }
 
@@ -182,7 +182,10 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     }
 
     @Override
-    public void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles) {
+    public void verifyData(final IlluminaRunConfiguration runConfig, List<Integer> tiles) {
+        if(tiles == null) {
+            tiles = new ArrayList<Integer>(this.tilesToCycleFiles.keySet());
+        }
         this.tilesToCycleFiles.assertValid(tiles, runConfig.totalCycles);
     }
 

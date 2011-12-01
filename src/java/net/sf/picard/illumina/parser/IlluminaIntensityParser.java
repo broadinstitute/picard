@@ -11,6 +11,8 @@ import java.util.Map;
  * Common parent class to CnfParser and CifParser.  Creates the relevant CycleFileParser to read Intensity files and
  * partially implements the makeData used to create either the RawIntensityData or NoiseData object that will be
  * returned in IlluminaCycledFileSetParser.next().
+ *
+ * @author jburke@broadinstitute.org
  */
 abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePerCycleParser<T> {
     public IlluminaIntensityParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int [] readLengths) {
