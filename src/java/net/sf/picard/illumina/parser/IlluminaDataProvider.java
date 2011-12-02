@@ -37,14 +37,14 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<ClusterData>{
-    /** runConfig describes how cluster data should be output by IlluminaDataProvider */
-    private final IlluminaRunConfiguration runConfig;
+    /** readStructure describes how cluster data should be output by IlluminaDataProvider */
+    private final ReadStructure readStructure;
 
     /** contains QSeqs, bcls, or other Illumina file types that will be parsed by this class */
     private final File basecallDirectory; //These two are for error reporting only
     private final int lane;
 
-    /** A list of parsers (already initialized) that should output data in a format consistent with runConfig */
+    /** A list of parsers (already initialized) that should output data in a format consistent with readStructure */
     private final IlluminaParser [] parsers;
 
     /**
@@ -65,13 +65,13 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
      * @param basecallDirectory For error reporting only.
      * @param lane For error reporting only.
      */
-    IlluminaDataProvider(final IlluminaRunConfiguration runConfig,
+    IlluminaDataProvider(final ReadStructure readStructure,
                          final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataTypes,
                          final File basecallDirectory, final int lane) {
-        this.runConfig = runConfig;
+        this.readStructure = readStructure;
         this.basecallDirectory = basecallDirectory;
         this.lane = lane;
-        numReads = runConfig.numDescriptors;
+        numReads = readStructure.numDescriptors;
 
         final int numParsers = parsersToDataTypes.size();
         if(numParsers == 0) {
@@ -90,20 +90,20 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
 
         this.outputReadTypes = new ReadType[numReads];
         i = 0;
-        for(final ReadDescriptor rd : runConfig.descriptors) {
+        for(final ReadDescriptor rd : readStructure.descriptors) {
             outputReadTypes[i++] = rd.type;
         }
     }
 
     /**
-     * Returns the IlluminaRunConfiguration for this IlluminaDataProvider.  This method is deprecated on arrival because
-     * in the next version client code will need to create/specify the IlluminaRunConfiguration itself and therefore
-     * will already have access to the IlluminaRunConfiguration.
-     * @return IlluminaRunConfiguration used by this IlluminaDataProvider
+     * Returns the ReadStructure for this IlluminaDataProvider.  This method is deprecated on arrival because
+     * in the next version client code will need to create/specify the ReadStructure itself and therefore
+     * will already have access to the ReadStructure.
+     * @return ReadStructure used by this IlluminaDataProvider
      */
     @Deprecated
-    public IlluminaRunConfiguration getRunConfig() {
-        return runConfig;
+    public ReadStructure getReadStructure() {
+        return readStructure;
     }
 
     /**

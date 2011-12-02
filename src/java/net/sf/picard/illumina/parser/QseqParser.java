@@ -96,10 +96,10 @@ class QseqParser implements IlluminaParser<QseqReadData> {
      * per file).  In the binary formats it will be easier to check the number of clusters etc but for Qseqs any problems with number of clusters will be
      * discovered when we iterate past the end of one of the reads.
      *
-     * @param runConfig Runconfig against which to verify this run
+     * @param readStructure read structure against which to verify this run
      */
     @Override
-    public void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles) { //in this case, runConfiguration related information was verified in construction
+    public void verifyData(final ReadStructure readStructure, final List<Integer> tiles) { //in this case, runConfiguration related information was verified in construction
         Integer numTiles = null;
         int end = 1;
         for(final IlluminaFileMap tilesToFiles : tileMapByReadNumber) {

@@ -182,11 +182,11 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     }
 
     @Override
-    public void verifyData(final IlluminaRunConfiguration runConfig, List<Integer> tiles) {
+    public void verifyData(final ReadStructure readStructure, List<Integer> tiles) {
         if(tiles == null) {
             tiles = new ArrayList<Integer>(this.tilesToCycleFiles.keySet());
         }
-        this.tilesToCycleFiles.assertValid(tiles, runConfig.totalCycles);
+        this.tilesToCycleFiles.assertValid(tiles, readStructure.totalCycles);
     }
 
     public void remove() {

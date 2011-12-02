@@ -49,13 +49,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private static final boolean PRINT_TIMING = false;
 
     public static final String READ_STRUCTURE_DOC =
-            "A description of the logical configuration of an Illumina Run, i.e. a description of what structure IlluminaBasecallsToSam "      +
-            "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "  +
-            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "   +
-            "run configuration of \"36T8B8S30T\" then, before being converted to SAM records those bases will be split into 4 reads where "    +
-            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "      +
-            "skipped cycles and read four is another 30 cycle template read.  The read consisting of skipped cycles would NOT be included "    +
-            "in output SAM files.";
+            "A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam "   +
+            "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "       +
+            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "        +
+            "read structure of \"36T8B8S30T\" then, before being converted to SAM records those bases will be split into 4 reads where "            +
+            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "           +
+            "skipped cycles and read four is another 30 cycle template read.  The read consisting of skipped cycles would NOT be included "         +
+            "in output SAM/BAM file read groups.";
 
     // The following attributes define the command-line arguments
     @Usage
@@ -131,7 +131,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private int recordsWritten = 0;
     private IlluminaBasecallsToSamConverter converter;
     private IlluminaDataProviderFactory factory;
-    private IlluminaRunConfiguration runConfig;
+    private ReadStructure readStructure;
 
     // key == barcode, value == corresponding SAMFileWriter
     // If not barcoded run, key == null.
@@ -149,27 +149,27 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             IoUtil.assertFileIsReadable(BARCODE_PARAMS);
         }
 
-        if (READ_STRUCTURE != null) { //Possibly barcoded, possibly not depending on configuration
-            final IlluminaRunConfiguration rc = new IlluminaRunConfiguration(READ_STRUCTURE); //TODO: Next round this all gets prettier
-            if(rc.numBarcodes > 0) {
-                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rc,
+        if (READ_STRUCTURE != null) { //Possibly barcoded, possibly not depending on read structure
+            final ReadStructure rs = new ReadStructure(READ_STRUCTURE); //TODO: Next round this all gets prettier
+            if(rs.numBarcodes > 0) {
+                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rs,
                     IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
             } else {
-                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rc,
+                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rs,
                     IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
             }
-        } else if(BARCODE_CYCLE != null) { //Barcoded run whose configuration is determined (using the Barcode params and the qseqs)
+        } else if(BARCODE_CYCLE != null) { //Barcoded run whose read structure is determined (using the Barcode params and the qseqs)
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE_LENGTH,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
-        } else { //non-barcoded run whose configuration is determined (using available qseqs)
+        } else { //non-barcoded run whose read structure is determined (using available qseqs)
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, null,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
         }
 
         //In the next round of changes only the first constructor above will be used and this will be replaced by the construction
-        //of an IlluminaRunConfiguration object in the same manner as the first branch of the if else block above
-        runConfig = factory.getRunConfig();
-        log.info("RUN CONFIGURATION IS " + runConfig.toString());
+        //of an ReadStructure object in the same manner as the first branch of the if else block above
+        readStructure = factory.readStructure();
+        log.info("RUN CONFIGURATION IS " + readStructure.toString());
         
         List<Integer> tiles = factory.getTiles();
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
@@ -215,7 +215,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             populateWritersByBarcode();
         }
 
-        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, runConfig);
+        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, readStructure);
 
         // Process each tile separately, so the order of tile processing is determined by the
         // order of tiles list.  The SAMRecords produced will be cached and sorted a tile
@@ -627,9 +627,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     cluster.getMatchedBarcode());
                 }
 
-                final IlluminaRunConfiguration runConfig = dataProvider.getRunConfig();
-                if(runConfig.numTemplates != 1 && runConfig.numTemplates != 2) {
-                    throw new PicardException("Number of templates(" + runConfig.numTemplates + ") specified by run configuration was greater than 2");
+                final ReadStructure rs = dataProvider.getReadStructure();
+                if(rs.numTemplates != 1 && rs.numTemplates != 2) {
+                    throw new PicardException("Number of templates(" + rs.numTemplates + ") specified by read structure was greater than 2");
                 }
 
                 final SAMFileHeader header = sorter.getWriter().getFileHeader();

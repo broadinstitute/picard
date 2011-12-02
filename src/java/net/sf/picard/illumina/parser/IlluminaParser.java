@@ -44,7 +44,7 @@ interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_T
     DATA_TYPE next();
     boolean hasNext();
 
-    void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles);
+    void verifyData(final ReadStructure readStructure, final List<Integer> tiles);
 
     Set<IlluminaDataType> supportedTypes();
 
