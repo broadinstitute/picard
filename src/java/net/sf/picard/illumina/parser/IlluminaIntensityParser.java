@@ -63,9 +63,9 @@ abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePe
     }
 
     @Override
-    public void verifyData(final IlluminaRunConfiguration runConfig, final List<Integer> tiles) {
+    public void verifyData(final ReadStructure readStructure, final List<Integer> tiles) {
         //Verify we have the correct number of cycles and for each cycle we have the correct number of tiles
-        super.verifyData(runConfig, tiles);
+        super.verifyData(readStructure, tiles);
 
         Long fileSize;
         Integer numClusters;

@@ -54,8 +54,8 @@ public class IlluminaDataProviderFactory {
 
     /**
      * BarcodeCycle and length are not available in output QSeqs and must be passed by the user,
-     * these are used to determine the IlluminaRunConfiguration and will later be completely replaced by
-     * IlluminaRunConfiguration.
+     * these are used to determine the ReadStructure and will later be completely replaced by
+     * ReadStructure.
      * */
     private final Integer barcodeCycle;
     private final Integer barcodeLength;
@@ -68,13 +68,13 @@ public class IlluminaDataProviderFactory {
     private final Set<IlluminaDataType> dataTypes;
 
     /**
-     * Soon to be removed, currently used in auto-detecting IlluminaRunConfiguration
+     * Soon to be removed, currently used in auto-detecting ReadStructure
      * numQSeq is the number of QSeq "end" files for this lane
      */
     private int numQSeq;
 
-    /** runConfig is the computed configuration past to individual parsers */
-    private final IlluminaRunConfiguration runConfig;
+    /** readStructure is the computed readStructure past to individual parsers */
+    private final ReadStructure readStructure;
 
     /**
      * Prepare to iterate over non-barcoded Illumina Basecall output.
@@ -82,11 +82,11 @@ public class IlluminaDataProviderFactory {
      * @param basecallDirectory Where the Illumina basecall output is.  Some files are found by looking relative to this
      *                          directory, at least by default.
      * @param lane              Which lane to iterate over.
-     * @param runConfig         If IlluminaRunConfiguration is specified then the IlluminaDataProvider produced by this factory will
-     *                          produce clusters conforming to runConfig, otherwise the runConfig is detected by the factory
+     * @param readStructure     If ReadStructure is specified then the IlluminaDataProvider produced by this factory will
+     *                          produce clusters conforming to readStructure, otherwise the readStructure is detected by the factory
      * @param dataTypes         Which data types to read.
      */
-    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final IlluminaRunConfiguration runConfig,
+    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,
                                 final IlluminaDataType... dataTypes) {
         this.basecallDirectory     = basecallDirectory;
         this.rawIntensityDirectory = basecallDirectory.getParentFile();
@@ -96,10 +96,10 @@ public class IlluminaDataProviderFactory {
         this.barcodeLength = null;
         this.dataTypes = new HashSet<IlluminaDataType>(Arrays.asList(dataTypes));
 
-        if(runConfig == null) {
-            this.runConfig = computeIlluminaRunConfiguration();
+        if(readStructure == null) {
+            this.readStructure = computeReadStructure();
         } else {
-            this.runConfig = runConfig;
+            this.readStructure = readStructure;
         }
     }
 
@@ -129,7 +129,7 @@ public class IlluminaDataProviderFactory {
         this.barcodeCycle = barcodeCycle;
         this.barcodeLength = barcodeLength;
         this.dataTypes = new HashSet<IlluminaDataType>(Arrays.asList(dataTypes));
-        this.runConfig = computeIlluminaRunConfiguration();
+        this.readStructure = computeReadStructure();
     }
 
     /**
@@ -141,8 +141,8 @@ public class IlluminaDataProviderFactory {
         return new ArrayList<Integer>(IlluminaFileUtil.getEndedIlluminaBasecallFiles(basecallDirectory, "qseq", lane, 1).keySet());
     }
 
-    public IlluminaRunConfiguration getRunConfig() {
-        return runConfig;
+    public ReadStructure readStructure() {
+        return readStructure;
     }
 
     /**
@@ -165,12 +165,12 @@ public class IlluminaDataProviderFactory {
             ", lane " + lane);
         }
 
-        final int [] outputLengths = new int[runConfig.descriptors.size()];
+        final int [] outputLengths = new int[readStructure.descriptors.size()];
         for(int i = 0; i < outputLengths.length; i++) {
-            outputLengths[i] = runConfig.descriptors.get(i).length;
+            outputLengths[i] = readStructure.descriptors.get(i).length;
         }
 
-        final int totalCycles = runConfig.totalCycles;
+        final int totalCycles = readStructure.totalCycles;
         if(!dataTypes.contains(IlluminaDataType.Position)) {
             boolean addPosition = false;
             for(final IlluminaDataType dt : dataTypes) {
@@ -200,10 +200,10 @@ public class IlluminaDataProviderFactory {
         }
 
         for(final IlluminaParser parser : parsersToDataType.keySet()) {
-            parser.verifyData(runConfig, tiles);
+            parser.verifyData(readStructure, tiles);
         }
 
-        return new IlluminaDataProvider(runConfig, parsersToDataType, basecallDirectory, lane);
+        return new IlluminaDataProvider(readStructure, parsersToDataType, basecallDirectory, lane);
     }
 
     /**
@@ -249,11 +249,11 @@ public class IlluminaDataProviderFactory {
     }
 
     /**
-     * Based on the number of QSeqs in basecallDirectory and the barcode cycle/length provided, create the IlluminaRunConfiguration
+     * Based on the number of QSeqs in basecallDirectory and the barcode cycle/length provided, create the ReadStructure
      * that will be passed to each IlluminaDataProvider created by this factory.
-     * @return An IlluminaRunConfiguration that fits the parameters specified by this factory and the QSeqs in basecallDirectory
+     * @return An ReadStructure that fits the parameters specified by this factory and the QSeqs in basecallDirectory
      */
-    private IlluminaRunConfiguration computeIlluminaRunConfiguration() {
+    private ReadStructure computeReadStructure() {
        numQSeq = IlluminaFileUtil.getNumberOfIlluminaEnds(basecallDirectory, "qseq", lane);
         if(numQSeq == 0) {
             throw new PicardException("Zero Qseqs found for lane " + lane);
@@ -294,6 +294,6 @@ public class IlluminaDataProviderFactory {
             }
         }
 
-        return new IlluminaRunConfiguration(readDescriptors);
+        return new ReadStructure(readDescriptors);
     }
 }

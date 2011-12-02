@@ -165,24 +165,24 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         noMatchBarcodeMetric = new BarcodeMetric(new NamedBarcode(noMatchBarcode.toString()));
 
         final IlluminaDataProviderFactory factory;
-        final IlluminaRunConfiguration runConfig;
+        final ReadStructure readStructure;
         if(READ_STRUCTURE == null) {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
-            runConfig = factory.getRunConfig();
+            readStructure = factory.readStructure();
         } else {
-            runConfig = new IlluminaRunConfiguration(READ_STRUCTURE);
+            readStructure = new ReadStructure(READ_STRUCTURE);
             //TODO: Remove first test when we support multi-barcoding
-            if(runConfig.numBarcodes != 1) {
-                throw new PicardException("Picard currently only supports 1 Barcode read! " + runConfig.numBarcodes + " number of barcode reads found!");
-            } else if(runConfig.descriptors.get(runConfig.barcodeIndices[0]).length != barcodeLength){
-                throw new PicardException("Run configuration has a barcode length of (" + runConfig.descriptors.get(runConfig.barcodeIndices[0]).length + ") but first barcode had a" +
+            if(readStructure.numBarcodes != 1) {
+                throw new PicardException("Picard currently only supports 1 Barcode read! " + readStructure.numBarcodes + " number of barcode reads found!");
+            } else if(readStructure.descriptors.get(readStructure.barcodeIndices[0]).length != barcodeLength){
+                throw new PicardException("Run configuration has a barcode length of (" + readStructure.descriptors.get(readStructure.barcodeIndices[0]).length + ") but first barcode had a" +
                         " length of (" + barcodeLength + ")");
             }
 
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, runConfig, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
         }
 
-        barcodeIndex = runConfig.barcodeIndices[0];
+        barcodeIndex = readStructure.barcodeIndices[0];
 
 
         // This is possible for index-only run.

@@ -23,17 +23,13 @@
 */
 package net.sf.picard.illumina.parser;
 
-import net.sf.samtools.util.StringUtil;
 import net.sf.picard.util.SolexaQualityConverter;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.annotation.XmlElementRef;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import static net.sf.picard.illumina.parser.TestDataUtil.*;
 import static net.sf.picard.illumina.parser.TestDataUtil.getTiledReadData;
@@ -88,7 +84,7 @@ public class IlluminaDataProviderTest {
             throws Exception {
 
         final IlluminaDataType [] dts = getDataTypes(extraDataTypes);
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new IlluminaRunConfiguration(illuminaConfigStr), dts);
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), dts);
         final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
 
         runTest(testName, size, pe, illuminaConfigStr, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
@@ -102,7 +98,7 @@ public class IlluminaDataProviderTest {
             final IlluminaDataProvider dataProvider)
             throws Exception {
 
-        Assert.assertEquals(new IlluminaRunConfiguration(illuminaConfigStr), dataProvider.getRunConfig());
+        Assert.assertEquals(new ReadStructure(illuminaConfigStr), dataProvider.getReadStructure());
 
         int count = 0;
         int readNum = 0;
@@ -272,7 +268,7 @@ public class IlluminaDataProviderTest {
 
     @Test
     public void barcodeParsingTestWConfig() {
-        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, new IlluminaRunConfiguration("76T76T6B"), IlluminaDataType.Barcodes));
+        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, new ReadStructure("76T76T6B"), IlluminaDataType.Barcodes));
     }
 
 }

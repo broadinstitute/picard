@@ -1,6 +1,6 @@
 package net.sf.picard.illumina;
 
-import net.sf.picard.illumina.parser.IlluminaRunConfiguration;
+import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.illumina.parser.ReadDescriptor;
 import net.sf.picard.illumina.parser.ReadType;
 import org.testng.Assert;
@@ -12,16 +12,16 @@ import java.util.List;
 import static net.sf.picard.illumina.parser.ReadType.*;
 import static net.sf.picard.util.CollectionUtil.*;
 
-public class IlluminaRunConfigurationTest {
+public class ReadStructureTest {
 
     //to make construction of lists more intelligible
     public ReadDescriptor rd(final int length, final ReadType rt) {
         return new ReadDescriptor(length, rt);
     }
 
-    //Many of these configs would be non-sensical but check different test classes/combinations
-    @DataProvider(name="validRunConfigs")
-    public Object[][] validRunConfigData() {
+    //Many of these readStructures would be non-sensical but check different test classes/combinations
+    @DataProvider(name="validReadStructures")
+    public Object[][] validReadStructures() {
         return new Object[][] {
             {"2T",                    makeList(rd(2, T)),                 1, 0, 0},
             {"1234B",                 makeList(rd(1234, B)),              0, 1, 0},
@@ -52,8 +52,8 @@ public class IlluminaRunConfigurationTest {
         };
     }
 
-    @DataProvider(name="invalidRunConfigs")
-    public Object[][] invalidRunConfigData() {
+    @DataProvider(name="invalidReadStructures")
+    public Object[][] invalidReadStructures() {
         return new Object[][]{
                 {"",         new ArrayList<ReadDescriptor>()},
                 {"0T",       makeList(rd(0,  T))},
@@ -71,17 +71,17 @@ public class IlluminaRunConfigurationTest {
         };
     }
 
-    @DataProvider(name="invalidRunConfigsForList")
-    public Object[][] invalidRunConfigsForList() {
+    @DataProvider(name="invalidReadStructuresFromList")
+    public Object[][] invalidReadStructuresFromList() {
         int numTests = 0;
-        for(final Object [] args : invalidRunConfigData()) {
+        for(final Object [] args : invalidReadStructures()) {
             if(args[1] != null) ++numTests;
         }
 
         final Object [][] outObjs = new Object[numTests][2];
 
         numTests = 0;
-        for(final Object [] args : invalidRunConfigData()) {
+        for(final Object [] args : invalidReadStructures()) {
             if(args[1] != null) {
                 outObjs[numTests++] = args;
             }
@@ -90,20 +90,20 @@ public class IlluminaRunConfigurationTest {
         return outObjs;
     }
 
-    @Test(dataProvider = "validRunConfigs")
-    public void testValidConfigurationsFromString(final String configString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
-        final IlluminaRunConfiguration runConfig = new IlluminaRunConfiguration(configString);
-        testRunConfig(runConfig, configString, descriptors, numTemplates, numBarcodes, numSkips);
+    @Test(dataProvider = "validReadStructures")
+    public void testValidStructuresFromString(final String rsString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
+        final ReadStructure readStructure = new ReadStructure(rsString);
+        testReadStructrue(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
     }
     
-    @Test(dataProvider = "validRunConfigs")
-    public void testValidConfigurationsFromList(final String configString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
-        final IlluminaRunConfiguration runConfig = new IlluminaRunConfiguration(descriptors);
-        testRunConfig(runConfig, configString, descriptors, numTemplates, numBarcodes, numSkips);
+    @Test(dataProvider = "validReadStructures")
+    public void testValidStructuresFromList(final String rsString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
+        final ReadStructure readStructure = new ReadStructure(descriptors);
+        testReadStructrue(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
     }
 
-    private void testRunConfig(final IlluminaRunConfiguration runConfig, final String configString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
-        Assert.assertEquals(runConfig.toString(), configString);
+    private void testReadStructrue(final ReadStructure readStructure, final String structureString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
+        Assert.assertEquals(readStructure.toString(), structureString);
 
         int totalCycles = 0;
 
@@ -112,37 +112,37 @@ public class IlluminaRunConfigurationTest {
         int sIndex = 0;
 
         for(int i = 0; i < descriptors.size(); i++) {
-            Assert.assertEquals(runConfig.descriptors.get(i), descriptors.get(i));
-            switch(runConfig.descriptors.get(i).type) {
+            Assert.assertEquals(readStructure.descriptors.get(i), descriptors.get(i));
+            switch(readStructure.descriptors.get(i).type) {
                 case T:
-                    Assert.assertEquals(i, runConfig.templateIndices[tIndex++]);
+                    Assert.assertEquals(i, readStructure.templateIndices[tIndex++]);
                     break;
                 case B:
-                    Assert.assertEquals(i, runConfig.barcodeIndices[bIndex++]);
+                    Assert.assertEquals(i, readStructure.barcodeIndices[bIndex++]);
                     break;
                 case S:
-                    Assert.assertEquals(i, runConfig.skipIndices[sIndex++]);
+                    Assert.assertEquals(i, readStructure.skipIndices[sIndex++]);
                     break;
                 default:
-                    Assert.fail("Unrecognized read type: " + runConfig.descriptors.get(i).type);
+                    Assert.fail("Unrecognized read type: " + readStructure.descriptors.get(i).type);
             }
-            totalCycles += runConfig.descriptors.get(i).length;
+            totalCycles += readStructure.descriptors.get(i).length;
         }
 
-        Assert.assertEquals(runConfig.totalCycles,  totalCycles);
-        Assert.assertEquals(runConfig.numBarcodes,  numBarcodes);
-        Assert.assertEquals(runConfig.numTemplates, numTemplates);
-        Assert.assertEquals(runConfig.numSkips,     numSkips);
+        Assert.assertEquals(readStructure.totalCycles,  totalCycles);
+        Assert.assertEquals(readStructure.numBarcodes,  numBarcodes);
+        Assert.assertEquals(readStructure.numTemplates, numTemplates);
+        Assert.assertEquals(readStructure.numSkips,     numSkips);
 
     }
 
-    @Test(dataProvider = "invalidRunConfigs", expectedExceptions = IllegalArgumentException.class)
-    public void testinvalidConfigurationsFromString(final String configString, final List<ReadDescriptor> descriptors) {
-        final IlluminaRunConfiguration runConfig = new IlluminaRunConfiguration(configString);
+    @Test(dataProvider = "invalidReadStructures", expectedExceptions = IllegalArgumentException.class)
+    public void testInvalidReadStructureFromString(final String rsString, final List<ReadDescriptor> descriptors) {
+        final ReadStructure readStructure = new ReadStructure(rsString);
     }
 
-    @Test(dataProvider = "invalidRunConfigsForList", expectedExceptions = IllegalArgumentException.class)
-    public void testinvalidConfigurationsFromList(final String configString, final List<ReadDescriptor> descriptors) {
-        final IlluminaRunConfiguration runConfig = new IlluminaRunConfiguration(descriptors);
+    @Test(dataProvider = "invalidReadStructuresFromList", expectedExceptions = IllegalArgumentException.class)
+    public void testInvalidReadStructureFromList(final String rsString, final List<ReadDescriptor> descriptors) {
+        final ReadStructure readStructure = new ReadStructure(descriptors);
     }
 }

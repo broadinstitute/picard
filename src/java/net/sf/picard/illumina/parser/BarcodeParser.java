@@ -80,7 +80,7 @@ class BarcodeParser implements IlluminaParser<BarcodeData> {
     }
 
     @Override
-    public void verifyData(final IlluminaRunConfiguration runConfig, List<Integer> tiles) {
+    public void verifyData(final ReadStructure readStructure, List<Integer> tiles) {
         if(tiles == null) {
             tiles = new ArrayList<Integer>();
             tiles.addAll(tilesToFiles.keySet());

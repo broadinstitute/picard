@@ -25,7 +25,7 @@
 package net.sf.picard.illumina.parser;
 
 /**
- * Represents one set of cycles in an IlluminaRunConfiguration (e.g. if the IlluminaRunConfiguration is 36TB836T then
+ * Represents one set of cycles in an ReadStructure (e.g. if the ReadStructure is 36TB836T then
  * 36T, 8B, and 36T are invidually represented internally as a ReadDescriptor).
  */
 public class ReadDescriptor {

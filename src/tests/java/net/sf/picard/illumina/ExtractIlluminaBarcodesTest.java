@@ -180,7 +180,7 @@ public class ExtractIlluminaBarcodesTest {
                metricACAGTG.BARCODE.length(), IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
         testParsing(factory, metricACAGTG, barcodePosition);
 
-        factory = new IlluminaDataProviderFactory(basecallsDir, lane, new IlluminaRunConfiguration("36T6B"),
+        factory = new IlluminaDataProviderFactory(basecallsDir, lane, new ReadStructure("36T6B"),
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
         testParsing(factory, metricACAGTG, barcodePosition);
     }
@@ -190,7 +190,7 @@ public class ExtractIlluminaBarcodesTest {
         int numReads = 0;
 
         final IlluminaDataProvider dataProvider = factory.makeDataProvider();
-        final IlluminaRunConfiguration runConfig = dataProvider.getRunConfig();
+        final ReadStructure runConfig = dataProvider.getReadStructure();
         while (dataProvider.hasNext()) {
             final ClusterData cluster = dataProvider.next();
 
