@@ -37,25 +37,22 @@ import java.io.OutputStream;
  * Create a SAMFileWriter for writing SAM or BAM.
  */
 public class SAMFileWriterFactory {
-
-    private static boolean DefaultCreateIndexWhileWriting = false;
-    private boolean createIndex = DefaultCreateIndexWhileWriting ;
-    private static boolean defaultCreateMd5File = false;
+    private static boolean defaultCreateIndexWhileWriting = Defaults.CREATE_INDEX;
+    private boolean createIndex = defaultCreateIndexWhileWriting ;
+    private static boolean defaultCreateMd5File = Defaults.CREATE_MD5;
     private boolean createMd5File = defaultCreateMd5File;
+    private boolean useAsyncIo = Defaults.USE_ASYNC_IO;
+    private int asyncOutputBufferSize = AsyncSAMFileWriter.DEFAULT_QUEUE_SIZE;
 
 
     private Integer maxRecordsInRam;
 
-    /**
-     * Sets the default for whether to create md5Files for BAM files this factory.
-     */
+    /** Sets the default for whether to create md5Files for BAM files this factory. */
     public static void setDefaultCreateMd5File(final boolean createMd5File) {
         defaultCreateMd5File = createMd5File;
     }
 
-    /**
-     * Sets whether to create md5Files for BAMs from this factory.
-     */
+    /** Sets whether to create md5Files for BAMs from this factory. */
     public SAMFileWriterFactory setCreateMd5File(final boolean createMd5File) {
         this.createMd5File = createMd5File;
         return this;
@@ -70,7 +67,7 @@ public class SAMFileWriterFactory {
      * @param setting whether to attempt to create a BAM index while creating the BAM file
      */
     public static void setDefaultCreateIndexWhileWriting(final boolean setting) {
-        DefaultCreateIndexWhileWriting = setting;
+        defaultCreateIndexWhileWriting = setting;
     }
 
     /**
@@ -101,6 +98,22 @@ public class SAMFileWriterFactory {
     public SAMFileWriterFactory setMaxRecordsInRam(int maxRecordsInRam) {
         this.maxRecordsInRam = maxRecordsInRam;
         return this;
+    }
+
+    /**
+     * Turn on or off the use of asynchronous IO for writing output SAM and BAM files.  If true then
+     * each SAMFileWriter creates a dedicated thread which is used for compression and IO activities.
+     */
+    public void setUseAsyncIo(final boolean useAsyncIo) {
+        this.useAsyncIo = useAsyncIo;
+    }
+
+    /**
+     * If and only if using asynchronous IO then sets the maximum number of records that can be buffered per
+     * SAMFileWriter before producers will block when trying to write another SAMRecord.
+     */
+    public void setAsyncOutputBufferSize(final int asyncOutputBufferSize) {
+        this.asyncOutputBufferSize = asyncOutputBufferSize;
     }
 
     /**
@@ -137,14 +150,16 @@ public class SAMFileWriterFactory {
                 System.err.println("Cannot create index for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
             }
             initializeBAMWriter(ret, header, presorted, createIndex);
-            return ret;
+
+            if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
+            else return ret;
         }
         catch (IOException ioe) {
             throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
         }
     }
 
-    private void initializeBAMWriter(BAMFileWriter writer, SAMFileHeader header, boolean presorted, boolean createIndex) {
+    private void initializeBAMWriter(final BAMFileWriter writer, final SAMFileHeader header, final boolean presorted, final boolean createIndex) {
         writer.setSortOrder(header.getSortOrder(), presorted);
         writer.setHeader(header);
         if (createIndex && writer.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
@@ -172,7 +187,9 @@ public class SAMFileWriterFactory {
                 ret.setMaxRecordsInRam(maxRecordsInRam);
             }
             ret.setHeader(header);
-            return ret;
+
+            if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
+            else return ret;
         }
         catch (IOException ioe) {
             throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
@@ -194,7 +211,9 @@ public class SAMFileWriterFactory {
             ret.setMaxRecordsInRam(maxRecordsInRam);
         }
         ret.setHeader(header);
-        return ret;
+
+        if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
+        else return ret;
     }
 
 
