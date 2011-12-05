@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.Defaults;
+
 /**
  * Constants shared by BlockCompressed{Input,Output}Stream classes
  */
@@ -68,7 +70,7 @@ public class BlockCompressedStreamConstants {
     // The deflate compression, which is customarily used by gzip
     public static final byte GZIP_CM_DEFLATE = 8;
 
-    public static final int DEFAULT_COMPRESSION_LEVEL = 5;
+    public static final int DEFAULT_COMPRESSION_LEVEL = Defaults.COMPRESSION_LEVEL;
 
     // We don't care about OS because we're not doing line terminator translation
     public static final int GZIP_OS_UNKNOWN = 255;

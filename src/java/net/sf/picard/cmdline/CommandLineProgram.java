@@ -33,6 +33,7 @@ import net.sf.picard.metrics.MetricBase;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.metrics.StringHeader;
 import net.sf.picard.util.Log;
+import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMFileWriterImpl;
@@ -86,10 +87,10 @@ public abstract class CommandLineProgram {
     public Integer MAX_RECORDS_IN_RAM = SAMFileWriterImpl.getDefaultMaxRecordsInRam();
 
     @Option(doc = "Whether to create a BAM index when writing a coordinate-sorted BAM file.", common=true)
-    public Boolean CREATE_INDEX = false;
+    public Boolean CREATE_INDEX = Defaults.CREATE_INDEX;
 
     @Option(doc="Whether to create an MD5 digest for any BAM files created.  ", common=true)
-    public boolean CREATE_MD5_FILE = false;
+    public boolean CREATE_MD5_FILE = Defaults.CREATE_MD5;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
