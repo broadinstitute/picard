@@ -399,7 +399,7 @@ public class HsMetricsCalculator {
                 alignedBasesByGc[gc] += cov.getTotal();
 
                 if (out != null) {
-                    final double coverage = alignedBasesByGc[gc] / (double) targetBasesByGc[gc];
+                    final double coverage = cov.getTotal() / (double) interval.length();
 
                     out.println(interval.getSequence() + "\t" +
                                 interval.getStart() + "\t" +
