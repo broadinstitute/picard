@@ -35,6 +35,9 @@
     <property name="scripts" value="src/scripts"/>
     <property name="test.output" value="dist/test"/>
     <property name="javac.debug" value="true"/>
+    <!-- Get SVN revision, if available, otherwise leave it blank. -->
+    <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
+    <property name="repository.revision" value=""/>
     <property name="sam-version" value="1.57"/>
     <property name="picard-version" value="1.57"/>
     <property name="command_tmp" value=".command_tmp"/>
@@ -199,7 +202,7 @@
         <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
             <fileset dir="${classes}" includes ="net/sf/samtools/**/*.*"/>
             <manifest>
-              <attribute name="Implementation-Version" value="${picard-version}"/>
+              <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
               <attribute name="Implementation-Vendor" value="Broad Institute"/>
             </manifest>
         </jar>
@@ -212,7 +215,7 @@
             <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
             <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
                 <manifest>
-                  <attribute name="Implementation-Version" value="${picard-version}"/>
+                  <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                   <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 </manifest>
         </jar>
@@ -330,7 +333,7 @@
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
                     <attribute name="Main-Class" value="@{main-class}"/>
-                    <attribute name="Implementation-Version" value="${picard-version}"/>
+                    <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                     <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 </manifest>
             </jar>
