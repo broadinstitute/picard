@@ -128,7 +128,7 @@ public class FilterSamReads extends CommandLineProgram {
             header.setSortOrder(SORT_ORDER);
         }
 
-        log.info("SORT_ORDER of OUTPUT file will be " +
+        log.info("SORT_ORDER of OUTPUT=" + OUTPUT.getName() + " will be " +
             header.getSortOrder().name());
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
@@ -207,18 +207,76 @@ public class FilterSamReads extends CommandLineProgram {
         }
     }
 
-    private void filterByMappingType() {
-        final SAMFileReader reader = new SAMFileReader(INPUT);
-        final SAMFileHeader header = reader.getFileHeader();
-        if (SORT_ORDER != null) {
-            header.setSortOrder(SORT_ORDER);
+        /**
+     * If necessary produce a new bam file sorted by queryname
+     *
+     * @param fileToSort File requiring sorting
+     *
+     * @return the queryname sorted file
+     */
+    private File convertToSortedByQueryName(final File fileToSort) {
+
+        File outputFile = fileToSort;
+
+        if (outputFile != null) {
+            // sort INPUT file by queryname
+            final SAMFileReader reader = new SAMFileReader(fileToSort);
+            final SAMFileHeader header = reader.getFileHeader();
+
+            if (header.getSortOrder() == null || !header.getSortOrder()
+                .equals(SAMFileHeader.SortOrder.queryname)) {
+                // if not sorted by queryname then sort it by queryname
+                log.info("Sorting " + fileToSort.getName() + " by queryname");
+
+                outputFile = new File(OUTPUT.getParentFile(),
+                    IoUtil.basename(fileToSort) + ".queryname.sorted.bam");
+                IoUtil.assertFileIsWritable(outputFile);
+
+                header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+                final SAMFileWriter writer = new SAMFileWriterFactory()
+                    .makeBAMWriter(header, false, outputFile);
+
+                int count = 0;
+                for (final SAMRecord rec : reader) {
+                    writer.addAlignment(rec);
+
+                    if (++count % 1000000 == 0) {
+                        log.info(new DecimalFormat("#,###").format(count) +
+                            " SAMRecords written to " + fileToSort.getName());
+                    }
+                }
+
+                reader.close();
+                writer.close();
+                log.info(new DecimalFormat("#,###").format(count) +
+                    " SAMRecords written to " + outputFile.getName());
+            }
         }
 
+        return outputFile;
+    }
+
+    /**
+     * Filter reads by ReadMappingType
+     */
+    private void filterByReadMappingType() {
+
+        final SAMFileReader inputReader = new SAMFileReader(INPUT);
+        final SAMFileHeader outPutHeader = new SAMFileReader(INPUT).getFileHeader();
+        if (SORT_ORDER != null) {
+            outPutHeader.setSortOrder(SORT_ORDER);
+        }
+        inputReader.close();
+
+
+        final File inputQnSortedFile = convertToSortedByQueryName(INPUT);
+        final SAMFileReader reader = new SAMFileReader(inputQnSortedFile);
+
         log.info("SORT_ORDER of OUTPUT file will be " +
-            header.getSortOrder().name());
+            outPutHeader.getSortOrder().name());
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
-            .makeSAMOrBAMWriter(header, false, OUTPUT);
+            .makeSAMOrBAMWriter(outPutHeader, false, OUTPUT);
 
         int count = 0;
         final CloseableIterator<SAMRecord> it = reader.iterator();
@@ -227,6 +285,7 @@ public class FilterSamReads extends CommandLineProgram {
             boolean writeToOutput = false;
 
             if (r1.getReadPairedFlag()) {
+
                 final SAMRecord r2 = obtainAssertedMate(it, r1);
 
                 if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
@@ -282,7 +341,7 @@ public class FilterSamReads extends CommandLineProgram {
                 }
             }
 
-            if (count != 0 && count % 1000000 == 0) {
+            if (count != 0 && (count % 1000000 == 0)) {
                 log.info(new DecimalFormat("#,###").format(count) +
                     " SAMRecords written to " + OUTPUT.getName());
             }
@@ -291,7 +350,14 @@ public class FilterSamReads extends CommandLineProgram {
         reader.close();
         writer.close();
         log.info(new DecimalFormat("#,###").format(count) +
-                    " SAMRecords written to " + OUTPUT.getName());
+            " SAMRecords written to " + OUTPUT.getName());
+
+        if (!inputQnSortedFile.equals(INPUT)) {
+            log.debug("Removing temporary file " + inputQnSortedFile.getAbsolutePath());
+            if (!inputQnSortedFile.delete()) {
+                throw new PicardException("Failed to delete " + inputQnSortedFile.getAbsolutePath());
+            }
+        }
     }
 
     @Override
@@ -309,7 +375,7 @@ public class FilterSamReads extends CommandLineProgram {
             if (READNAME_LIST_FILE != null) {
                 filterByReadNameList();
             } else {
-                filterByMappingType();
+                filterByReadMappingType();
             }
 
             IoUtil.assertFileIsReadable(OUTPUT);
