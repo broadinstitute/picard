@@ -164,21 +164,36 @@ private void filterByReadNameList() {
     IoUtil.assertFileIsReadable(OUTPUT);
 }
 
-private void validatePair(final SAMRecord firstOfPair,
-                          final SAMRecord secondOfPair) {
-    // Validate that paired reads arrive as first of pair followed by second of pair
-    if (!firstOfPair.getReadName().equals(secondOfPair.getReadName()))
-        throw new PicardException(
-            "Second read from pair not found: " + firstOfPair.getReadName() +
-                ", " + secondOfPair.getReadName());
+private SAMRecord obtainAssertedMate(final CloseableIterator<SAMRecord> samRecordIterator,
+                                     final SAMRecord firstOfPair) {
 
-    if (!firstOfPair.getFirstOfPairFlag()) throw new PicardException(
-        "First record in unmapped bam is not first of pair: " +
-            firstOfPair.getReadName());
-    if (!secondOfPair.getReadPairedFlag()) throw new PicardException(
-        "Second record is not marked as paired: " + secondOfPair.getReadName());
-    if (!secondOfPair.getSecondOfPairFlag()) throw new PicardException(
-        "Second record is not second of pair: " + secondOfPair.getReadName());
+    if (samRecordIterator.hasNext()) {
+
+        final SAMRecord secondOfPair = samRecordIterator.next();
+
+        // Validate paired reads arrive as first of pair, then second of pair
+        if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
+            throw new PicardException("Second read from pair not found: " +
+                firstOfPair.getReadName() + ", " + secondOfPair.getReadName());
+        } else if (!firstOfPair.getFirstOfPairFlag()) {
+            throw new PicardException(
+                "First record in unmapped bam is not first of pair: " +
+                    firstOfPair.getReadName());
+        } else if (!secondOfPair.getReadPairedFlag()) {
+            throw new PicardException(
+                "Second record is not marked as paired: " +
+                    secondOfPair.getReadName());
+        } else if (!secondOfPair.getSecondOfPairFlag()) {
+            throw new PicardException("Second record is not second of pair: " +
+                secondOfPair.getReadName());
+        } else {
+            return secondOfPair;
+        }
+
+    } else {
+        throw new PicardException(
+            "A second record does not exist: " + firstOfPair.getReadName());
+    }
 }
 
 private void filterByMappingType() {
@@ -196,12 +211,11 @@ private void filterByMappingType() {
     int count = 0;
     final CloseableIterator<SAMRecord> it = reader.iterator();
     while (it.hasNext()) {
-        final SAMRecord rec = it.next();
+        final SAMRecord r1 = it.next();
         boolean writeToOutput = false;
 
-        if (rec.getReadPairedFlag()) {
-            final SAMRecord secondOfPair = it.next();
-            validatePair(rec, secondOfPair);
+        if (r1.getReadPairedFlag()) {
+            final SAMRecord r2 = obtainAssertedMate(it, r1);
 
             if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
                 READ_MAPPING_TYPE.equals(ReadMappingType.MAPPED)) ||
@@ -209,26 +223,26 @@ private void filterByMappingType() {
                     READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
 
                 // include mapped or exclude unmapped
-                if (!rec.getReadUnmappedFlag() &&
-                    !secondOfPair.getReadUnmappedFlag()) {
+                if (!r1.getReadUnmappedFlag() &&
+                    !r2.getReadUnmappedFlag()) {
                     writeToOutput = true;
                 }
             } else {
                 // include unmapped or exclude mapped
-                if (rec.getReadUnmappedFlag() &&
-                    secondOfPair.getReadUnmappedFlag()) {
+                if (r1.getReadUnmappedFlag() &&
+                    r2.getReadUnmappedFlag()) {
                     writeToOutput = true;
                 }
             }
 
             if (writeToOutput) {
-                writer.addAlignment(rec);
-                writer.addAlignment(secondOfPair);
+                writer.addAlignment(r1);
+                writer.addAlignment(r2);
+                count++;count++;
             } else {
                 log.debug(
                     "Skipping " + READ_FILTER_TYPE + " " + READ_MAPPING_TYPE +
-                        " " + rec.toString() + " and " +
-                        secondOfPair.toString());
+                        " " + r1.toString() + " and " + r2.toString());
             }
 
         } else {
@@ -238,26 +252,27 @@ private void filterByMappingType() {
                     READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
 
                 // include mapped or exclude unmapped
-                if (!rec.getReadUnmappedFlag()) {
+                if (!r1.getReadUnmappedFlag()) {
                     writeToOutput = true;
                 }
             } else {
                 // include unmapped or exclude mapped
-                if (rec.getReadUnmappedFlag()) {
+                if (r1.getReadUnmappedFlag()) {
                     writeToOutput = true;
                 }
             }
 
             if (writeToOutput) {
-                writer.addAlignment(rec);
+                writer.addAlignment(r1);
+                count++;
             } else {
                 log.info(
                     "Skipping " + READ_FILTER_TYPE + " " + READ_MAPPING_TYPE +
-                        " " + rec.toString());
+                        " " + r1.toString());
             }
         }
 
-        if (writeToOutput && ++count % 1000000 == 0) {
+        if (writeToOutput && count % 1000000 == 0) {
             log.info(new DecimalFormat("#,###").format(count) +
                 " SAMRecords written to " + OUTPUT.getName());
         }
