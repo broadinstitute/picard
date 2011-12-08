@@ -242,7 +242,7 @@ public class FilterSamReads extends CommandLineProgram {
 
                     if (++count % 1000000 == 0) {
                         log.info(new DecimalFormat("#,###").format(count) +
-                            " SAMRecords written to " + fileToSort.getName());
+                            " SAMRecords written to " + outputFile.getName());
                     }
                 }
 
