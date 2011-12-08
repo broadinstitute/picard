@@ -56,269 +56,283 @@ import java.util.TreeSet;
  */
 public class FilterSamReads extends CommandLineProgram {
 
-private static final Log log = Log.getInstance(FilterSamReads.class);
+    private static final Log log = Log.getInstance(FilterSamReads.class);
 
-public enum ReadFilterType {INCLUDE, EXCLUDE}
-public enum ReadMappingType {MAPPED, UNMAPPED}
+    public enum ReadFilterType {INCLUDE, EXCLUDE}
 
-@Usage
-public String USAGE =
-    "Produces a new SAM or BAM file by filtering (including or excluding) " +
-        "mapped or unmapped reads from a specified SAM or BAM file";
+    public enum ReadMappingType {MAPPED, UNMAPPED}
 
-@Option(doc = "The SAM or BAM file that will be read excluded",
-    optional = false,
-    shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
-public File INPUT;
+    @Usage
+    public String USAGE =
+        "Produces a new SAM or BAM file by filtering (including or excluding) " +
+            "mapped or unmapped reads from a specified SAM or BAM file";
 
-@Option(doc = "SAM or BAM file to write read excluded results to",
-    optional = false, shortName = "O")
-public File OUTPUT;
+    @Option(doc = "The SAM or BAM file that will be read excluded",
+        optional = false,
+        shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    public File INPUT;
 
-@Option(
-    doc = "Determines if reads should be included or excluded from OUTPUT SAM or BAM file",
-    optional = false, shortName = "RFT")
-public ReadFilterType READ_FILTER_TYPE;
+    @Option(doc = "SAM or BAM file to write read excluded results to",
+        optional = false, shortName = "O")
+    public File OUTPUT;
 
-@Option(doc = "A file of read names that will be excluded from the SAM or BAM",
-    mutex = { "READ_MAPPING_TYPE" }, optional = false, shortName = "RLF")
-public File READNAME_LIST_FILE;
+    @Option(
+        doc = "Determines if reads should be included or excluded from OUTPUT SAM or BAM file",
+        optional = false, shortName = "RFT")
+    public ReadFilterType READ_FILTER_TYPE;
 
-@Option(doc = "Exclude mapped or umapped reads from the SAM or BAM",
-    mutex = { "READNAME_LIST_FILE" }, optional = false, shortName = "RMT")
-public ReadMappingType READ_MAPPING_TYPE;
+    @Option(
+        doc = "A file of read names that will be included or excluded from the SAM or BAM",
+        mutex = { "READ_MAPPING_TYPE" }, optional = false, shortName = "RLF")
+    public File READNAME_LIST_FILE;
 
-@Option(doc = "SortOrder of the OUTPUT SAM or BAM file",
-    optional = true, shortName = "SO")
-public SAMFileHeader.SortOrder SORT_ORDER;
+    @Option(doc = "Exclude mapped or umapped reads from the SAM or BAM",
+        mutex = { "READNAME_LIST_FILE" }, optional = false, shortName = "RMT")
+    public ReadMappingType READ_MAPPING_TYPE;
 
-private void filterByReadNameList() {
+    @Option(doc = "SortOrder of the OUTPUT SAM or BAM file, " +
+        "otherwise use the SortOrder of the INPUT file.",
+        optional = true, shortName = "SO")
+    public SAMFileHeader.SortOrder SORT_ORDER;
 
-    // read RLF file into sorted Tree Set - this will remove dups
-    IoUtil.assertFileIsReadable(READNAME_LIST_FILE);
-    IoUtil.assertFileSizeNonZero(READNAME_LIST_FILE);
-    final BufferedReader is;
+    private void filterByReadNameList() {
 
-    try {
-        is = IoUtil.openFileForBufferedReading(READNAME_LIST_FILE);
-    } catch (IOException e) {
-        throw new PicardException(e.getMessage(), e);
-    }
+        // read RLF file into sorted Tree Set - this will remove dups
+        IoUtil.assertFileIsReadable(READNAME_LIST_FILE);
+        IoUtil.assertFileSizeNonZero(READNAME_LIST_FILE);
+        final BufferedReader is;
 
-    final Scanner scanner = new Scanner(is);
-    final Set<String> readNameFilterSet = new TreeSet<String>();
-
-    while (scanner.hasNext()) {
-        final String line = scanner.nextLine();
-
-        if (!line.trim().isEmpty()) {
-            readNameFilterSet.add(line.trim());
+        try {
+            is = IoUtil.openFileForBufferedReading(READNAME_LIST_FILE);
+        } catch (IOException e) {
+            throw new PicardException(e.getMessage(), e);
         }
-    }
 
-    scanner.close();
+        final Scanner scanner = new Scanner(is);
+        final Set<String> readNameFilterSet = new TreeSet<String>();
 
-    final SAMFileReader reader = new SAMFileReader(INPUT);
-    final SAMFileHeader header = reader.getFileHeader();
+        while (scanner.hasNext()) {
+            final String line = scanner.nextLine();
 
-    if (SORT_ORDER != null) {
-        header.setSortOrder(SORT_ORDER);
-    }
-
-    log.info("SORT_ORDER of OUTPUT file will be " + header.getSortOrder().name());
-
-    final SAMFileWriter writer =
-        new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
-
-    int count = 0;
-    for (final SAMRecord rec : reader) {
-
-        if (READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE)) {
-            if (readNameFilterSet.contains(rec.getReadName())) {
-                writer.addAlignment(rec);
-                readNameFilterSet.remove(rec.getReadName());
-            }
-        } else {
-            if (readNameFilterSet.contains(rec.getReadName())) {
-                readNameFilterSet.remove(rec.getReadName());
-            } else {
-                writer.addAlignment(rec);
+            if (!line.trim().isEmpty()) {
+                readNameFilterSet.add(line.trim());
             }
         }
 
-        if (++count % 1000000 == 0) {
-            log.info(new DecimalFormat("#,###").format(count) +
-                " SAMRecords written to " + OUTPUT.getName());
-        }
-    }
+        scanner.close();
 
-    reader.close();
-    writer.close();
+        final SAMFileReader reader = new SAMFileReader(INPUT);
+        final SAMFileHeader header = reader.getFileHeader();
 
-    if (!readNameFilterSet.isEmpty()) {
-        throw new PicardException(readNameFilterSet.size() +
-            " reads could not be found within INPUT=" + INPUT.getPath() + " [" +
-            CollectionUtil.join(readNameFilterSet, ",") + "]");
-    }
-
-    IoUtil.assertFileIsReadable(OUTPUT);
-}
-
-private SAMRecord obtainAssertedMate(final CloseableIterator<SAMRecord> samRecordIterator,
-                                     final SAMRecord firstOfPair) {
-
-    if (samRecordIterator.hasNext()) {
-
-        final SAMRecord secondOfPair = samRecordIterator.next();
-
-        // Validate paired reads arrive as first of pair, then second of pair
-        if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
-            throw new PicardException("Second read from pair not found: " +
-                firstOfPair.getReadName() + ", " + secondOfPair.getReadName());
-        } else if (!firstOfPair.getFirstOfPairFlag()) {
-            throw new PicardException(
-                "First record in unmapped bam is not first of pair: " +
-                    firstOfPair.getReadName());
-        } else if (!secondOfPair.getReadPairedFlag()) {
-            throw new PicardException(
-                "Second record is not marked as paired: " +
-                    secondOfPair.getReadName());
-        } else if (!secondOfPair.getSecondOfPairFlag()) {
-            throw new PicardException("Second record is not second of pair: " +
-                secondOfPair.getReadName());
-        } else {
-            return secondOfPair;
+        if (SORT_ORDER != null) {
+            header.setSortOrder(SORT_ORDER);
         }
 
-    } else {
-        throw new PicardException(
-            "A second record does not exist: " + firstOfPair.getReadName());
-    }
-}
+        log.info("SORT_ORDER of OUTPUT file will be " +
+            header.getSortOrder().name());
 
-private void filterByMappingType() {
-    final SAMFileReader reader = new SAMFileReader(INPUT);
-    final SAMFileHeader header = reader.getFileHeader();
-    if (SORT_ORDER != null) {
-        header.setSortOrder(SORT_ORDER);
-    }
+        final SAMFileWriter writer = new SAMFileWriterFactory()
+            .makeSAMOrBAMWriter(header, false, OUTPUT);
 
-    log.info("SORT_ORDER of OUTPUT file will be " + header.getSortOrder().name());
+        int count = 0;
+        for (final SAMRecord rec : reader) {
 
-    final SAMFileWriter writer =
-        new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
-
-    int count = 0;
-    final CloseableIterator<SAMRecord> it = reader.iterator();
-    while (it.hasNext()) {
-        final SAMRecord r1 = it.next();
-        boolean writeToOutput = false;
-
-        if (r1.getReadPairedFlag()) {
-            final SAMRecord r2 = obtainAssertedMate(it, r1);
-
-            if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
-                READ_MAPPING_TYPE.equals(ReadMappingType.MAPPED)) ||
-                (READ_FILTER_TYPE.equals(ReadFilterType.EXCLUDE) &&
-                    READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
-
-                // include mapped or exclude unmapped
-                if (!r1.getReadUnmappedFlag() &&
-                    !r2.getReadUnmappedFlag()) {
-                    writeToOutput = true;
+            if (READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE)) {
+                if (readNameFilterSet.contains(rec.getReadName())) {
+                    writer.addAlignment(rec);
+                    count++;
+                    readNameFilterSet.remove(rec.getReadName());
                 }
             } else {
-                // include unmapped or exclude mapped
-                if (r1.getReadUnmappedFlag() &&
-                    r2.getReadUnmappedFlag()) {
-                    writeToOutput = true;
+                if (readNameFilterSet.contains(rec.getReadName())) {
+                    readNameFilterSet.remove(rec.getReadName());
+                } else {
+                    writer.addAlignment(rec);
+                    count++;
                 }
             }
 
-            if (writeToOutput) {
-                writer.addAlignment(r1);
-                writer.addAlignment(r2);
-                count++;count++;
-            } else {
-                log.debug(
-                    "Skipping " + READ_FILTER_TYPE + " " + READ_MAPPING_TYPE +
-                        " " + r1.toString() + " and " + r2.toString());
-            }
-
-        } else {
-            if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
-                READ_MAPPING_TYPE.equals(ReadMappingType.MAPPED)) ||
-                (READ_FILTER_TYPE.equals(ReadFilterType.EXCLUDE) &&
-                    READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
-
-                // include mapped or exclude unmapped
-                if (!r1.getReadUnmappedFlag()) {
-                    writeToOutput = true;
-                }
-            } else {
-                // include unmapped or exclude mapped
-                if (r1.getReadUnmappedFlag()) {
-                    writeToOutput = true;
-                }
-            }
-
-            if (writeToOutput) {
-                writer.addAlignment(r1);
-                count++;
-            } else {
-                log.info(
-                    "Skipping " + READ_FILTER_TYPE + " " + READ_MAPPING_TYPE +
-                        " " + r1.toString());
+            if (count % 1000000 == 0) {
+                log.info(new DecimalFormat("#,###").format(count) +
+                    " SAMRecords written to " + OUTPUT.getName());
             }
         }
 
-        if (writeToOutput && count % 1000000 == 0) {
-            log.info(new DecimalFormat("#,###").format(count) +
-                " SAMRecords written to " + OUTPUT.getName());
-        }
-    }
+        reader.close();
+        writer.close();
+        log.info(new DecimalFormat("#,###").format(count) +
+                    " SAMRecords written to " + OUTPUT.getName());
 
-    reader.close();
-    writer.close();
-}
-
-@Override
-protected int doWork() {
-
-    if (INPUT.equals(OUTPUT)) {
-        throw new PicardException("INPUT file and OUTPUT file must differ!");
-    }
-
-    try {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
-
-        if (READNAME_LIST_FILE != null) {
-            filterByReadNameList();
-        } else {
-            filterByMappingType();
+        if (!readNameFilterSet.isEmpty()) {
+            throw new PicardException(readNameFilterSet.size() +
+                " reads could not be found within INPUT=" + INPUT.getPath() +
+                " [" + CollectionUtil.join(readNameFilterSet, ",") + "]");
         }
 
         IoUtil.assertFileIsReadable(OUTPUT);
+    }
 
-        return 0;
+    private SAMRecord obtainAssertedMate(
+        final CloseableIterator<SAMRecord> samRecordIterator,
+        final SAMRecord firstOfPair) {
 
-    } catch (Exception e) {
-        if (!OUTPUT.delete()) {
-           log.warn("Failed to delete " + OUTPUT.getAbsolutePath());
+        if (samRecordIterator.hasNext()) {
+
+            final SAMRecord secondOfPair = samRecordIterator.next();
+
+            // Validate paired reads arrive as first of pair, then second of pair
+            if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
+                throw new PicardException("Second read from pair not found: " +
+                    firstOfPair.getReadName() + ", " +
+                    secondOfPair.getReadName());
+            } else if (!firstOfPair.getFirstOfPairFlag()) {
+                throw new PicardException(
+                    "First record in unmapped bam is not first of pair: " +
+                        firstOfPair.getReadName());
+            } else if (!secondOfPair.getReadPairedFlag()) {
+                throw new PicardException(
+                    "Second record is not marked as paired: " +
+                        secondOfPair.getReadName());
+            } else if (!secondOfPair.getSecondOfPairFlag()) {
+                throw new PicardException(
+                    "Second record is not second of pair: " +
+                        secondOfPair.getReadName());
+            } else {
+                return secondOfPair;
+            }
+
+        } else {
+            throw new PicardException(
+                "A second record does not exist: " + firstOfPair.getReadName());
+        }
+    }
+
+    private void filterByMappingType() {
+        final SAMFileReader reader = new SAMFileReader(INPUT);
+        final SAMFileHeader header = reader.getFileHeader();
+        if (SORT_ORDER != null) {
+            header.setSortOrder(SORT_ORDER);
         }
 
-        log.error(e, "Failed to filter " + INPUT.getName());
-        return 1;
-    }
-}
+        log.info("SORT_ORDER of OUTPUT file will be " +
+            header.getSortOrder().name());
 
-/**
- * Stock main method.
- * @param args main arguements
- */
-public static void main(final String[] args) {
-    System.exit(new FilterSamReads().instanceMain(args));
-}
+        final SAMFileWriter writer = new SAMFileWriterFactory()
+            .makeSAMOrBAMWriter(header, false, OUTPUT);
+
+        int count = 0;
+        final CloseableIterator<SAMRecord> it = reader.iterator();
+        while (it.hasNext()) {
+            final SAMRecord r1 = it.next();
+            boolean writeToOutput = false;
+
+            if (r1.getReadPairedFlag()) {
+                final SAMRecord r2 = obtainAssertedMate(it, r1);
+
+                if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
+                    READ_MAPPING_TYPE.equals(ReadMappingType.MAPPED)) ||
+                    (READ_FILTER_TYPE.equals(ReadFilterType.EXCLUDE) &&
+                        READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
+
+                    // include mapped or exclude unmapped
+                    if (!r1.getReadUnmappedFlag() &&
+                        !r2.getReadUnmappedFlag()) {
+                        writeToOutput = true;
+                    }
+                } else {
+                    // include unmapped or exclude mapped
+                    if (r1.getReadUnmappedFlag() && r2.getReadUnmappedFlag()) {
+                        writeToOutput = true;
+                    }
+                }
+
+                if (writeToOutput) {
+                    writer.addAlignment(r1);
+                    writer.addAlignment(r2);
+                    count++;
+                } else {
+                    log.debug("Skipping " + READ_FILTER_TYPE + " " +
+                        READ_MAPPING_TYPE + " " + r1.toString() + " and " +
+                        r2.toString());
+                }
+
+            } else {
+                if ((READ_FILTER_TYPE.equals(ReadFilterType.INCLUDE) &&
+                    READ_MAPPING_TYPE.equals(ReadMappingType.MAPPED)) ||
+                    (READ_FILTER_TYPE.equals(ReadFilterType.EXCLUDE) &&
+                        READ_MAPPING_TYPE.equals(ReadMappingType.UNMAPPED))) {
+
+                    // include mapped or exclude unmapped
+                    if (!r1.getReadUnmappedFlag()) {
+                        writeToOutput = true;
+                    }
+                } else {
+                    // include unmapped or exclude mapped
+                    if (r1.getReadUnmappedFlag()) {
+                        writeToOutput = true;
+                    }
+                }
+
+                if (writeToOutput) {
+                    writer.addAlignment(r1);
+                    count++;
+                } else {
+                    log.info("Skipping " + READ_FILTER_TYPE + " " +
+                        READ_MAPPING_TYPE + " " + r1.toString());
+                }
+            }
+
+            if (count % 1000000 == 0) {
+                log.info(new DecimalFormat("#,###").format(count) +
+                    " SAMRecords written to " + OUTPUT.getName());
+            }
+        }
+
+        reader.close();
+        writer.close();
+        log.info(new DecimalFormat("#,###").format(count) +
+                    " SAMRecords written to " + OUTPUT.getName());
+    }
+
+    @Override
+    protected int doWork() {
+
+        if (INPUT.equals(OUTPUT)) {
+            throw new PicardException(
+                "INPUT file and OUTPUT file must differ!");
+        }
+
+        try {
+            IoUtil.assertFileIsReadable(INPUT);
+            IoUtil.assertFileIsWritable(OUTPUT);
+
+            if (READNAME_LIST_FILE != null) {
+                filterByReadNameList();
+            } else {
+                filterByMappingType();
+            }
+
+            IoUtil.assertFileIsReadable(OUTPUT);
+
+            return 0;
+
+        } catch (Exception e) {
+            if (!OUTPUT.delete()) {
+                log.warn("Failed to delete " + OUTPUT.getAbsolutePath());
+            }
+
+            log.error(e, "Failed to filter " + INPUT.getName());
+            return 1;
+        }
+    }
+
+    /**
+     * Stock main method.
+     *
+     * @param args main arguements
+     */
+    public static void main(final String[] args) {
+        System.exit(new FilterSamReads().instanceMain(args));
+    }
 
 }
