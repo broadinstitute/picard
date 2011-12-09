@@ -268,11 +268,10 @@ public class FilterSamReads extends CommandLineProgram {
         }
         inputReader.close();
 
-
         final File inputQnSortedFile = convertToSortedByQueryName(INPUT);
         final SAMFileReader reader = new SAMFileReader(inputQnSortedFile);
 
-        log.info("SORT_ORDER of OUTPUT file will be " +
+        log.info("SORT_ORDER of OUTPUT=" + OUTPUT.getName() + " will be " +
             outPutHeader.getSortOrder().name());
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
