@@ -452,13 +452,18 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     private static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";
+    private static final String BARCODE_SEQUENCE_1_COLUMN = "barcode_sequence_1";
     private static final String BARCODE_NAME_COLUMN = "barcode_name";
     private static final String LIBRARY_NAME_COLUMN = "library_name";
 
     private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
-        if (!barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)) {
-            messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " column header");
+        final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
+                ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
+                ? BARCODE_SEQUENCE_1_COLUMN : null;
+        if (sequenceColumn == null) {
+            messages.add(BARCODE_FILE + " does not have " + BARCODE_SEQUENCE_COLUMN + " or " +
+                    BARCODE_SEQUENCE_1_COLUMN + " column header");
             return;
         }
         final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
@@ -467,7 +472,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         barcodeLength = 0;
         final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
-            final String barcode = row.getField(BARCODE_SEQUENCE_COLUMN);
+            final String barcode = row.getField(sequenceColumn);
             if (barcodeLength == 0) barcodeLength = barcode.length();
             if (barcode.length() != barcodeLength) {
                 messages.add("Barcode " + barcode + " has different length from first barcode.");
