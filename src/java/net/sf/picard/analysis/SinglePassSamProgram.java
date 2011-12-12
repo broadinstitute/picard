@@ -42,7 +42,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     public boolean ASSUME_SORTED = true;
 
     @Option(doc="Stop after processing N reads, mainly for debugging.")
-    public int STOP_AFTER = 0;
+    public long STOP_AFTER = 0;
 
     private static final Log log = Log.getInstance(SinglePassSamProgram.class);
 
@@ -58,8 +58,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     protected static void makeItSo(final File input,
                                    final File referenceSequence,
                                    final boolean assumeSorted,
-                                   final int stopAfter,
-                                   Collection<SinglePassSamProgram> programs) {
+                                   final long stopAfter,
+                                   final Collection<SinglePassSamProgram> programs) {
 
         // Setup the standard inputs
         IoUtil.assertFileIsReadable(input);
@@ -104,7 +104,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
 
 
         final NumberFormat fmt = new DecimalFormat("#,###");
-        int i = 0;
+        long i = 0;
 
         for (final SAMRecord rec : in) {
             final ReferenceSequence ref;
