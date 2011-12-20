@@ -51,49 +51,48 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Filters out mapped or unmapped reads from an INPUT sam/bam file and writes
- * out the remaining reads to the specified OUTPUT sam/bam file.
+ * Produces a new SAM or BAM file by including or excluding mapped
+ * or unmapped reads or a list of specific reads names from a SAM or BAM file
  */
 public class FilterSamReads extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(FilterSamReads.class);
 
     public enum ReadFilterType {INCLUDE, EXCLUDE}
-
     public enum ReadMappingType {MAPPED, UNMAPPED}
 
     @Usage
     public String USAGE =
-        "Produces a new SAM or BAM file by filtering (including or excluding) " +
-            "mapped or unmapped reads from a specified SAM or BAM file";
+        "Produces a new SAM or BAM file by including or excluding mapped or " +
+            "unmapped reads or a list of specific reads names from a SAM or BAM file";
 
     @Option(doc = "The SAM or BAM file that will be read excluded",
         optional = false,
         shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc = "SAM or BAM file to write read excluded results to",
-        optional = false, shortName = "O")
-    public File OUTPUT;
-
     @Option(
         doc = "Determines if reads should be included or excluded from OUTPUT SAM or BAM file",
         optional = false, shortName = "RFT")
     public ReadFilterType READ_FILTER_TYPE;
+
+    @Option(doc = "Exclude mapped or umapped reads from the SAM or BAM",
+        mutex = { "READNAME_LIST_FILE" }, optional = false, shortName = "RMT")
+    public ReadMappingType READ_MAPPING_TYPE;
 
     @Option(
         doc = "A file of read names that will be included or excluded from the SAM or BAM",
         mutex = { "READ_MAPPING_TYPE" }, optional = false, shortName = "RLF")
     public File READNAME_LIST_FILE;
 
-    @Option(doc = "Exclude mapped or umapped reads from the SAM or BAM",
-        mutex = { "READNAME_LIST_FILE" }, optional = false, shortName = "RMT")
-    public ReadMappingType READ_MAPPING_TYPE;
-
     @Option(doc = "SortOrder of the OUTPUT SAM or BAM file, " +
         "otherwise use the SortOrder of the INPUT file.",
         optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
+
+    @Option(doc = "SAM or BAM file to write read excluded results to",
+        optional = false, shortName = "O")
+    public File OUTPUT;
 
     private void filterByReadNameList() {
 
