@@ -40,6 +40,8 @@ import net.sf.samtools.util.Iso8601Date;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Converts a fastq file to an unaligned BAM/SAM format.
@@ -89,6 +91,9 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(shortName = "PI", doc = "Predicted median insert size, to insert into the read group header", optional = true)
     public Integer PREDICTED_INSERT_SIZE;
+
+    @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
+    public List<String> COMMENT = new ArrayList<String>();
 
     @Option(shortName = "DS", doc = "Inserted into the read group header", optional = true)
     public String DESCRIPTION;
@@ -218,6 +223,11 @@ public class FastqToSam extends CommandLineProgram {
 
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
+
+        for (String comment : COMMENT) {
+            header.addComment(comment);
+        }
+
         header.setSortOrder(this.SORT_ORDER);
         return header ;
     }
