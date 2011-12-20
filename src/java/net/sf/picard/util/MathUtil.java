@@ -63,6 +63,21 @@ public class MathUtil {
         return (v1 < v2? -1: (v1 == v2? 0: 1));
     }
 
+    /**
+     * Convenience method for dividing two BigDecimals
+     *
+     * @param dividend value that will be divided (by the divisor)
+     * @param divisor  value by which the dividend is to be divided
+     *
+     * @return dividend divided by divisor in percentage form (a scale of 2
+     *         is used). Example 99.98(%)
+     */
+    public static double toPercentage(final BigDecimal dividend,
+                               final BigDecimal divisor) {
+        return round(dividend.divide(divisor, 10, BigDecimal.ROUND_HALF_UP)
+            .multiply(new BigDecimal(100.0)).doubleValue(), 2);
+    }
+
     /** 
      * Round off the value to the specified precision. 
      */
