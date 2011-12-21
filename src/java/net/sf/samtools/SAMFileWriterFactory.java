@@ -43,6 +43,7 @@ public class SAMFileWriterFactory {
     private boolean createMd5File = defaultCreateMd5File;
     private boolean useAsyncIo = Defaults.USE_ASYNC_IO;
     private int asyncOutputBufferSize = AsyncSAMFileWriter.DEFAULT_QUEUE_SIZE;
+    private File tmpDir;
 
 
     private Integer maxRecordsInRam;
@@ -115,6 +116,15 @@ public class SAMFileWriterFactory {
     public void setAsyncOutputBufferSize(final int asyncOutputBufferSize) {
         this.asyncOutputBufferSize = asyncOutputBufferSize;
     }
+    
+    /**
+     * Set the temporary directory to use when sort data.
+     * @param tmpDir Path to the temporary directory
+     */
+    public SAMFileWriterFactory setTempDirectory(final File tmpDir) {
+        this.tmpDir = tmpDir;
+        return this;
+    }
 
     /**
      * Create a BAMFileWriter that is ready to receive SAMRecords.  Uses default compression level.
@@ -149,6 +159,7 @@ public class SAMFileWriterFactory {
             if (this.createIndex && !createIndex) {
                 System.err.println("Cannot create index for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
             }
+            if (this.tmpDir!=null) ret.setTempDirectory(this.tmpDir);
             initializeBAMWriter(ret, header, presorted, createIndex);
 
             if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
