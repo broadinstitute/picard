@@ -25,6 +25,7 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.SortingCollection;
 
+import java.io.File;
 import java.io.StringWriter;
 
 /**
@@ -40,6 +41,7 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
     private SAMFileHeader.SortOrder sortOrder;
     private SAMFileHeader header;
     private SortingCollection<SAMRecord> alignmentSorter;
+    private File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
     // If true, records passed to addAlignment are already in the order specified by sortOrder
     private boolean presorted;
@@ -98,6 +100,17 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
         }
         this.maxRecordsInRam = maxRecordsInRam;
     }
+    
+    /**
+     * When writing records that are not presorted, specify the path of the temporary directory 
+     * for spilling to disk.  Must be called before setHeader().
+     * @param tmpDir path to the temporary directory
+     */
+    void setTempDirectory(final File tmpDir) {
+        if (tmpDir!=null) {
+            this.tmpDir = tmpDir;
+        }
+    }
 
     /**
      * Must be called before addAlignment.
@@ -123,7 +136,7 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
             }
         } else if (!sortOrder.equals(SAMFileHeader.SortOrder.unsorted)) {
             alignmentSorter = SortingCollection.newInstance(SAMRecord.class,
-                    new BAMRecordCodec(header), makeComparator(), maxRecordsInRam);
+                    new BAMRecordCodec(header), makeComparator(), maxRecordsInRam, tmpDir);
         }
     }
 
