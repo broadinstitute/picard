@@ -127,6 +127,11 @@ public class Interval implements Comparable<Interval>, Cloneable {
     /** Gets the length of this interval. */
     public int length() { return this.end - this.start + 1; }
 
+    /** Returns a new interval that is padded by the amount of bases specified on either side. */
+    public Interval pad(final int left, final int right) {
+        return new Interval(this.sequence, this.start-left, this.end+right, this.negativeStrand, this.name);
+    }
+
     /** Counts the total number of bases a collection of intervals. */
     public static long countBases(final Collection<Interval> intervals) {
         long total = 0;
