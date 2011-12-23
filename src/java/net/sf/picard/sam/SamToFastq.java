@@ -30,8 +30,8 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.fastq.FastqWriter;
+import net.sf.picard.fastq.FastqWriterFactory;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
@@ -137,10 +137,10 @@ public class SamToFastq extends CommandLineProgram {
                 }
                 else {
                     assertPairedMates(firstRecord, currentRecord);
-                    List<FastqWriter> fq = getWriters(currentRecord, writers);
+                    final List<FastqWriter> fq = getWriters(currentRecord, writers);
 
-                    SAMRecord read1 = currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
-                    SAMRecord read2 = currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
+                    final SAMRecord read1 = currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
+                    final SAMRecord read2 = currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
                     writeRecord(read1, 1, fq.get(0), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
                     writeRecord(read2, 2, fq.get(1), READ2_TRIM, READ2_MAX_BASES_TO_WRITE);
 
@@ -148,7 +148,7 @@ public class SamToFastq extends CommandLineProgram {
             }
             else
             {
-                writeRecord(currentRecord, null, getWriter(currentRecord, writers), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
+                writeRecord(currentRecord, null, getWriters(currentRecord, writers).get(0), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
             }
         }
 
@@ -158,8 +158,8 @@ public class SamToFastq extends CommandLineProgram {
             throw new PicardException("Found "+firstSeenMates.size()+" unpaired mates");
         }
 
-        for (List<FastqWriter> listOfWriters : writers.values()) {
-            for (FastqWriter w : listOfWriters) {
+        for (final List<FastqWriter> listOfWriters : writers.values()) {
+            for (final FastqWriter w : listOfWriters) {
                 w.close();
             }
         }
@@ -170,9 +170,9 @@ public class SamToFastq extends CommandLineProgram {
      * Gets the pair of writers for a given read group or, if we are not sorting by read group,
      * just returns the single pair of writers.
      */
-    private List<FastqWriter> getWriters(SAMRecord sam, Map<SAMReadGroupRecord, List<FastqWriter>> writers) {
-
-        SAMReadGroupRecord rg = sam.getReadGroup();
+    private List<FastqWriter> getWriters(final SAMRecord sam, final Map<SAMReadGroupRecord, List<FastqWriter>> writers) {
+        final SAMReadGroupRecord rg = sam.getReadGroup();
+        final FastqWriterFactory factory = new FastqWriterFactory();
 
         if (!OUTPUT_PER_RG) {
             // If we're not outputting by read group, there's only
@@ -180,10 +180,10 @@ public class SamToFastq extends CommandLineProgram {
             if (writers.isEmpty()) {
                 final List<FastqWriter> fqw = new ArrayList<FastqWriter>();
                 IoUtil.assertFileIsWritable(FASTQ);
-                fqw.add(new FastqWriter(FASTQ));
+                fqw.add(factory.newWriter(FASTQ));
                 if (SECOND_END_FASTQ != null) {
                     IoUtil.assertFileIsWritable(SECOND_END_FASTQ);
-                    fqw.add(new FastqWriter(SECOND_END_FASTQ));
+                    fqw.add(factory.newWriter(SECOND_END_FASTQ));
                 }
                 writers.put(rg, fqw);
             }
@@ -193,23 +193,15 @@ public class SamToFastq extends CommandLineProgram {
             List<FastqWriter> fqw = writers.get(rg);
             if (fqw == null) {
                 fqw = new ArrayList<FastqWriter>();
-                fqw.add(new FastqWriter(makeReadGroupFile(rg, "_1")));
+                fqw.add(factory.newWriter(makeReadGroupFile(rg, "_1")));
                 if (sam.getReadPairedFlag()) {
-                    fqw.add(new FastqWriter(makeReadGroupFile(rg, "_2")));
+                    fqw.add(factory.newWriter(makeReadGroupFile(rg, "_2")));
                 }
                 writers.put(rg, fqw);
             }
             return fqw;
         }
     }
-
-    /**
-     * Returns the writer for a non-paired read
-     */
-    private FastqWriter getWriter(SAMRecord sam, Map<SAMReadGroupRecord, List<FastqWriter>> writers) {
-        return getWriters(sam, writers).get(0);
-    }
-
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
         String fileName = readGroup.getPlatformUnit();
