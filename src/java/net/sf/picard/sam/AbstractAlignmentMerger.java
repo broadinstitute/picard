@@ -88,6 +88,8 @@ public abstract class AbstractAlignmentMerger {
     private final SortOrder sortOrder;
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
+    private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
+
     private SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(SAMRecord record) {
             return ignoreAlignment(record);
@@ -174,6 +176,11 @@ public abstract class AbstractAlignmentMerger {
         this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
              alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed, read2BasesTrimmed,
              expectedOrientations, SortOrder.coordinate);
+    }
+
+    /** Allows the caller to override the maximum records in RAM. */
+    public void setMaxRecordsInRam(final int maxRecordsInRam) {
+        this.maxRecordsInRam = maxRecordsInRam;
     }
 
     /**

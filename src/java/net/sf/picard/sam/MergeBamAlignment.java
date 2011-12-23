@@ -134,6 +134,7 @@ public class MergeBamAlignment extends CommandLineProgram {
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
             READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER);
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
+        merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.mergeAlignment();
         return 0;
     }
