@@ -2,6 +2,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
+import net.sf.samtools.util.StringUtil;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,11 +17,13 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgram {
+    private static final String DEFAULT_READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*".intern();
+
     @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
             "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
             "The regular expression should contain three capture groups for the three variables, in order.")
-    public String READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*";
+    public String READ_NAME_REGEX = DEFAULT_READ_NAME_REGEX;
     
     @Option(doc="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
             "should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the " +
@@ -53,21 +56,54 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
      * @param loc the object to add tile/x/y to
      * @return true if the read name contained the information in parsable form, false otherwise
      */
+    private final String[] tmpLocationFields = new String[10];
     boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
-        if (READ_NAME_PATTERN == null) {
-            if (READ_NAME_REGEX == null) return false;
-            READ_NAME_PATTERN = Pattern.compile(READ_NAME_REGEX);
-        }
-        final Matcher m = READ_NAME_PATTERN.matcher(readName);
-        if (m.matches()) {
-            loc.setTile((byte) Integer.parseInt(m.group(1)));
-            loc.setX((short) Integer.parseInt(m.group(2)));
-            loc.setY((short) Integer.parseInt(m.group(3)));
+        // Optimized version if using the default read name regex (== used on purpose):
+        if (READ_NAME_REGEX == DEFAULT_READ_NAME_REGEX) {
+            final int fields = StringUtil.split(readName, tmpLocationFields, ':');
+            if (fields < 5) return false;
+
+            loc.setTile((byte) rapidParseInt(tmpLocationFields[2]));
+            loc.setX((short) rapidParseInt(tmpLocationFields[3]));
+            loc.setY((short) rapidParseInt(tmpLocationFields[4]));
             return true;
         }
-        else {
+        else if (READ_NAME_REGEX == null) {
             return false;
         }
+        else {
+            // Standard version that will use the regex
+            if (READ_NAME_PATTERN == null) READ_NAME_PATTERN = Pattern.compile(READ_NAME_REGEX);
+
+            final Matcher m = READ_NAME_PATTERN.matcher(readName);
+            if (m.matches()) {
+                loc.setTile((byte) Integer.parseInt(m.group(1)));
+                loc.setX((short) Integer.parseInt(m.group(2)));
+                loc.setY((short) Integer.parseInt(m.group(3)));
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Very specialized method to rapidly parse a sequence of digits from a String up until the first
+     * non-digit character. Does not handle negative numbers.
+     */
+    private final int rapidParseInt(final String input) {
+        final int len = input.length();
+        int val = 0;
+
+        for (int i=0; i<len; ++i) {
+            final char ch = input.charAt(i);
+            if (Character.isDigit(ch)) {
+                val = (val*10) + (ch-48);
+            }
+        }
+
+        return val;
     }
 
     /**
