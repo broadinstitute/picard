@@ -25,13 +25,11 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.SAMException;
 import org.xerial.snappy.LoadSnappy;
-import org.xerial.snappy.SnappyError;
 import org.xerial.snappy.SnappyInputStream;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 
 /**
  * If Snappy is available, obtain single-arg ctors for SnappyInputStream and SnappyOutputStream.
@@ -61,6 +59,7 @@ public class SnappyLoader {
     public SnappyLoader(final boolean verbose) {
         Constructor<InputStream> inputStreamCtor = null;
         Constructor<OutputStream> outputStreamCtor = null;
+        Class<Error> snappyErrorClass = null;
 
         if (java.lang.Boolean.valueOf(System.getProperty("snappy.disable", "false"))) {
             System.err.println("Snappy is disabled via system property.");
@@ -69,6 +68,7 @@ public class SnappyLoader {
             try {
                 final Class<InputStream> snappyInputStreamClass = (Class<InputStream>)Class.forName("org.xerial.snappy.SnappyInputStream");
                 final Class<OutputStream> snappyOutputStreamClass = (Class<OutputStream>)Class.forName("org.xerial.snappy.SnappyOutputStream");
+                snappyErrorClass = (Class<Error>)Class.forName("org.xerial.snappy.SnappyError");
                 inputStreamCtor = snappyInputStreamClass.getConstructor(InputStream.class);
                 outputStreamCtor = snappyOutputStreamClass.getConstructor(OutputStream.class, Integer.TYPE);
             }
@@ -91,9 +91,13 @@ public class SnappyLoader {
                     if (verbose) System.err.println("Snappy stream classes loaded.");
                     tmpSnappyAvailable = true;
                 }
-            } catch (SnappyError e) {
-                if (verbose) System.err.println("Snappy dll failed to load: " + e.getMessage());
-                tmpSnappyAvailable = false;
+            } catch (Error e) {
+                if (e.getClass().equals(snappyErrorClass)) {
+                    if (verbose) System.err.println("Snappy dll failed to load: " + e.getMessage());
+                    tmpSnappyAvailable = false;
+                } else {
+                    throw e;
+                }
             }
             SnappyAvailable = tmpSnappyAvailable;
         }
