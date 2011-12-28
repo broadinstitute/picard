@@ -272,6 +272,7 @@ class BinaryTagCodec {
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
         SAMBinaryTagAndValue head = null;
+        SAMBinaryTagAndValue tail = null;
 
         while (byteBuffer.hasRemaining()) {
             final short tag = byteBuffer.getShort();
@@ -285,8 +286,20 @@ class BinaryTagCodec {
                 else tmp = new SAMBinaryTagAndValue(tag, valueAndFlag.value);
             }
 
-            if (head == null) head = tmp;
-            else head = head.insert(tmp);
+            // If samjdk wrote the BAM then the attributes will be in lowest->highest tag order, to inserting at the
+            // head each time will be very inefficient. To fix that we check here to see if the tag should go right on
+            // the tail and if so stick it there, else insert it through the head.
+            if (head == null) {
+                head = tmp;
+                tail = tmp;
+            }
+            else if (tmp.tag > tail.tag) {
+                tail.insert(tmp);
+                tail = tmp;
+            }
+            else {
+                head = head.insert(tmp);
+            }
         }
 
         return head;
