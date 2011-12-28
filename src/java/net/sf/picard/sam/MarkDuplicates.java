@@ -146,6 +146,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
 
+        long written = 0;
         for (final SAMRecord rec : in) {
             if (!rec.getNotPrimaryAlignmentFlag()) {
                 final String library = getLibraryName(header, rec);
@@ -198,6 +199,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
             else {
                 out.addAlignment(rec);
+                if (++written % 10000000 == 0) {
+                    log.info("Written " + written + " records.");
+                }
             }
         }
 
@@ -257,12 +261,14 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         this.pairSort = SortingCollection.newInstance(ReadEnds.class,
                                                       new ReadEndsCodec(),
                                                       new ReadEndsComparator(),
-                                                      maxInMemory);
+                                                      maxInMemory,
+                                                      TMP_DIR);
 
         this.fragSort = SortingCollection.newInstance(ReadEnds.class,
                                                       new ReadEndsCodec(),
                                                       new ReadEndsComparator(),
-                                                      maxInMemory);
+                                                      maxInMemory,
+                                                      TMP_DIR);
 
         final SAMFileReader sam = new SAMFileReader(INPUT);
         final SAMFileHeader header = sam.getFileHeader();
