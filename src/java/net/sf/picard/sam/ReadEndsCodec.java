@@ -67,8 +67,6 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
             this.out.writeByte(read.tile);
             this.out.writeShort(read.x);
             this.out.writeShort(read.y);
-
-            this.out.flush();
         }
         catch (IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
