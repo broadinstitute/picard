@@ -68,6 +68,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     @Option(shortName="M", doc="File to write duplication metrics to")
     public File METRICS_FILE;
 
+    @Option(doc="Comment(s) to include in the output file's header.", optional=true, shortName="CO")
+    public List<String> COMMENT = new ArrayList<String>();
+
     @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
 
@@ -126,8 +129,10 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SamHeaderAndIterator headerAndIterator = openInputs();
         final SAMFileHeader header = headerAndIterator.header;
+
         final SAMFileHeader outputHeader = header.clone();
         outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        for (final String comment : COMMENT) outputHeader.addComment(comment);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
                                                                                 true,
                                                                                 OUTPUT);
