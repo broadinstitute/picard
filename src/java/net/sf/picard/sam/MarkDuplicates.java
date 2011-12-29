@@ -33,6 +33,8 @@ import net.sf.picard.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SortingCollection;
 import net.sf.samtools.util.SortingLongCollection;
 
@@ -57,8 +59,8 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
             "All records are then written to the output file with the duplicate records flagged.";
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to analyze.  Must be coordinate sorted.")
-    public File INPUT;
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more input SAM or BAM files to analyze.  Must be coordinate sorted.")
+    public List<File> INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to right marked records to")
     public File OUTPUT;
@@ -108,7 +110,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
+        for (final File f : INPUT) IoUtil.assertFileIsReadable(f);
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(METRICS_FILE);
 
@@ -122,32 +124,32 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         log.info("Found " + ((long) this.opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters.");
 
         final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
-        final SAMFileReader in  = new SAMFileReader(INPUT);
-        final SAMFileHeader header = in.getFileHeader();
+        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SAMFileHeader header = headerAndIterator.header;
         final SAMFileHeader outputHeader = header.clone();
         outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
-                                                                          true,
-                                                                          OUTPUT);
+                                                                                true,
+                                                                                OUTPUT);
 
         // Now copy over the file while marking all the necessary indexes as duplicates
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next(): -1);
 
-        if(header != null) {
-            for(final SAMReadGroupRecord readGroup : header.getReadGroups()) {
-                final String library = readGroup.getLibrary();
-                DuplicationMetrics metrics = metricsByLibrary.get(library);
-                if (metrics == null) {
-                    metrics = new DuplicationMetrics();
-                    metrics.LIBRARY = library;
-                    metricsByLibrary.put(library, metrics);
-                }
+        for(final SAMReadGroupRecord readGroup : header.getReadGroups()) {
+            final String library = readGroup.getLibrary();
+            DuplicationMetrics metrics = metricsByLibrary.get(library);
+            if (metrics == null) {
+                metrics = new DuplicationMetrics();
+                metrics.LIBRARY = library;
+                metricsByLibrary.put(library, metrics);
             }
         }
 
         long written = 0;
-        for (final SAMRecord rec : in) {
+        final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
+        while (iterator.hasNext()) {
+            final SAMRecord rec = iterator.next();
             if (!rec.getNotPrimaryAlignmentFlag()) {
                 final String library = getLibraryName(header, rec);
                 DuplicationMetrics metrics = metricsByLibrary.get(library);
@@ -222,9 +224,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             metrics.READ_PAIR_DUPLICATES = metrics.READ_PAIR_DUPLICATES / 2;
 
             // Add the optical dupes to the metrics
-            Short libraryId = this.libraryIds.get(libraryName);
+            final Short libraryId = this.libraryIds.get(libraryName);
             if (libraryId != null) {
-                Histogram<Short>.Bin bin = this.opticalDupesByLibraryId.get(libraryId);
+                final Histogram<Short>.Bin bin = this.opticalDupesByLibraryId.get(libraryId);
                 if (bin != null) {
                     metrics.READ_PAIR_OPTICAL_DUPLICATES = (long) bin.getValue();
                 }
@@ -242,6 +244,48 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         return 0;
     }
 
+    /** Little class used to package up a header and an iterable/iterator. */
+    private static final class SamHeaderAndIterator {
+        final SAMFileHeader header;
+        final CloseableIterator<SAMRecord> iterator;
+
+        private SamHeaderAndIterator(final SAMFileHeader header, final CloseableIterator<SAMRecord> iterator) {
+            this.header = header;
+            this.iterator = iterator;
+        }
+    }
+
+    /**
+     * Since MarkDuplicates reads it's inputs more than once this method does all the opening
+     * and checking of the inputs.
+     */
+    private SamHeaderAndIterator openInputs() {
+        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(INPUT.size());
+        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>(INPUT.size());
+
+        for (final File f : INPUT) {
+            final SAMFileReader reader = new SAMFileReader(f);
+            final SAMFileHeader header = reader.getFileHeader();
+
+            if (!ASSUME_SORTED && header.getSortOrder() != SortOrder.coordinate) {
+                throw new PicardException("Input file " + f.getAbsolutePath() + " is not coordinate sorted.");
+            }
+
+            headers.add(header);
+            readers.add(reader);
+        }
+
+        if (headers.size() == 1) {
+            return new SamHeaderAndIterator(headers.get(0), readers.get(0).iterator());
+        }
+        else {
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SortOrder.coordinate, headers, false);
+            final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORTED);
+            return new SamHeaderAndIterator(headerMerger.getMergedHeader(), iterator);
+        }
+    }
+
+    /** Print out some quick JVM memory stats. */
     private void reportMemoryStats(final String stage) {
         System.gc();
         final Runtime runtime = Runtime.getRuntime();
@@ -270,20 +314,14 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
                                                       maxInMemory,
                                                       TMP_DIR);
 
-        final SAMFileReader sam = new SAMFileReader(INPUT);
-        final SAMFileHeader header = sam.getFileHeader();
-        if (header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            if (ASSUME_SORTED) {
-                log.info("Assuming input is coordinate sorted.");
-            } else {
-                throw new PicardException(INPUT + " is not coordinate sorted.");
-            }
-        }
+        final SamHeaderAndIterator headerAndIterator = openInputs();
+        final SAMFileHeader header = headerAndIterator.header;
         final ReadEndsMap tmp = new DiskReadEndsMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP);
-
         long index = 0;
+        final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
 
-        for (final SAMRecord rec : sam) {
+        while (iterator.hasNext()) {
+            final SAMRecord rec = iterator.next();
             if (rec.getReadUnmappedFlag()) {
                 if (rec.getReferenceIndex() == -1) {
                     // When we hit the unmapped reads with no coordinate, no reason to continue.
@@ -342,7 +380,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         }
 
         log.info("Read " + index + " records. " + tmp.size() + " pairs never matched.");
-        sam.close();
+        iterator.close();
 
         // Tell these collections to free up memory if possible.
         this.pairSort.doneAdding();
