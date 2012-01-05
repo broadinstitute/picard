@@ -420,16 +420,26 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
+        final ArrayList<String> messages = new ArrayList<String>();
+
         // Set this up here so we can use readStructure when parsing the barcode file
         if(READ_STRUCTURE == null) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE.get(0).length(), IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+            int barcodeLength = 0;
+            if(BARCODE == null || BARCODE.size() == 0) {
+                if (BARCODE_FILE != null) barcodeLength = getBarcodeLengthFromFile();
+            }
+            else {
+                barcodeLength = BARCODE.get(0).length();
+            }
+            if (barcodeLength == 0) messages.add("Cannot determine barcode length");
+            log.debug("barcodeLenth is " + barcodeLength);
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
             readStructure = factory.readStructure();
         } else {
             readStructure = new ReadStructure(READ_STRUCTURE);
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
         }
 
-        final ArrayList<String> messages = new ArrayList<String>();
         if (READ_STRUCTURE == null && BARCODE_CYCLE < 1) {
             messages.add("Invalid BARCODE_CYCLE=" + BARCODE_CYCLE + ".  Value must be positive.");
         }
@@ -464,6 +474,19 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private static final String BARCODE_NAME_COLUMN = "barcode_name";
     private static final String LIBRARY_NAME_COLUMN = "library_name";
 
+    private int getBarcodeLengthFromFile() {
+        final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
+        final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
+                ? BARCODE_SEQUENCE_COLUMN : barcodesParser.hasColumn(BARCODE_SEQUENCE_1_COLUMN)
+                ? BARCODE_SEQUENCE_1_COLUMN : null;
+        if (sequenceColumn == null) {
+            return 0;
+        }
+        int result = barcodesParser.iterator().next().getField(sequenceColumn).length();
+        barcodesParser.close();
+        return result;
+    }
+
     private void parseBarcodeFile(final ArrayList<String> messages) {
         final TabbedTextFileWithHeaderParser barcodesParser = new TabbedTextFileWithHeaderParser(BARCODE_FILE);
         final String sequenceColumn = barcodesParser.hasColumn(BARCODE_SEQUENCE_COLUMN)
@@ -497,6 +520,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
             barcodeMetrics.add(metric);
         }
+        barcodesParser.close();
     }
 
 
