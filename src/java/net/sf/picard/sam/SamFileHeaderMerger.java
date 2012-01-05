@@ -125,7 +125,7 @@ public class SamFileHeaderMerger {
      * all input sequence dictionaries be identical.
      */
     public SamFileHeaderMerger(final SAMFileHeader.SortOrder sortOrder, final Collection<SAMFileHeader> headers, final boolean mergeDictionaries) {
-        this.headers = headers;
+        this.headers = new LinkedHashSet<SAMFileHeader>(headers);
         this.mergedHeader = new SAMFileHeader();
 
         SAMSequenceDictionary sequenceDictionary;

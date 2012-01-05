@@ -44,7 +44,6 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     private final SAMRecordComparator comparator;
 
     private boolean initialized = false;
-    private boolean iterationStarted = false;
 
     /**
      * Constructs a new merging iterator with the same set of readers and sort order as
@@ -72,6 +71,8 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
         this.pq = new PriorityQueue<ComparableSamRecordIterator>(readers.size());
 
         for (final SAMFileReader reader : readers) {
+            if(!samHeaderMerger.getHeaders().contains(reader.getFileHeader()))
+                throw new PicardException("All iterators to be merged must be accounted for in the SAM header merger");
             if (!assumeSorted && this.sortOrder != SAMFileHeader.SortOrder.unsorted &&
                     reader.getFileHeader().getSortOrder() != this.sortOrder){
                 throw new PicardException("Files are not compatible with sort order");
@@ -80,27 +81,24 @@ public class MergingSamRecordIterator implements CloseableIterator<SAMRecord> {
     }
 
     /**
-     * Add a given SAM file iterator to the merging iterator.  Use this to restrict the merged iteration to a given genomic interval,
+     * Add a set of SAM file iterators to the merging iterator.  Use this to restrict the merged iteration to a given genomic interval,
      * rather than iterating over every read in the backing file or stream.
-     * @param reader Reader to add to the merging iterator.
-     * @param iterator Iterator traversing over reader contents.
+     * @param headerMerger The merged header and contents of readers.
+     * @param iterators Iterator traversing over reader contents.
      */
-    public void addIterator(final SAMFileReader reader, final CloseableIterator<SAMRecord> iterator) {
-        if(iterationStarted)
-            throw new PicardException("Cannot add another iterator; iteration has already begun");
-        if(!samHeaderMerger.getHeaders().contains(reader.getFileHeader()))
-            throw new PicardException("All iterators to be merged must be accounted for in the SAM header merger");
-        final ComparableSamRecordIterator comparableIterator = new ComparableSamRecordIterator(reader,iterator,comparator);
-        addIfNotEmpty(comparableIterator);
+    public MergingSamRecordIterator(final SamFileHeaderMerger headerMerger, final Map<SAMFileReader,CloseableIterator<SAMRecord>> iterators, final boolean assumeSorted) {
+        this(headerMerger,iterators.keySet(),assumeSorted);
+        for (final Map.Entry<SAMFileReader,CloseableIterator<SAMRecord>> mapping : iterators.entrySet())
+            addIfNotEmpty(new ComparableSamRecordIterator(mapping.getKey(),mapping.getValue(),comparator));
         initialized = true;
     }
 
     private void startIterationIfRequired() {
         if(initialized)
             return;
-        for(SAMFileReader reader: readers)
-            addIterator(reader,reader.iterator());
-        iterationStarted = true;
+        for(final SAMFileReader reader: readers)
+            addIfNotEmpty(new ComparableSamRecordIterator(reader,reader.iterator(),comparator));
+        initialized = true;
     }
 
     /**
