@@ -433,6 +433,25 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /**
+     *
+     * Copies a directory tree (all subdirectories and files) recursively to a destination
+     */
+    public static void copyDirectoryTree(final File fileOrDirectory, final File destination) {
+        if (fileOrDirectory.isDirectory()) {
+            destination.mkdir();
+            for(final File f : fileOrDirectory.listFiles()) {
+                File destinationFileOrDirectory =  new File(destination.getPath(),f.getName());
+                if (f.isDirectory()){
+                    copyDirectoryTree(f,destinationFileOrDirectory);
+                }
+                else {
+                    copyFile(f,destinationFileOrDirectory);
+                }
+            }
+        }
+    }
+
+    /**
      * Create a temporary subdirectory in the default temporary-file directory, using the given prefix and suffix to generate the name.
      * Note that this method is not completely safe, because it create a temporary file, deletes it, and then creates
      * a directory with the same name as the file.  Should be good enough.
