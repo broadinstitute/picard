@@ -26,6 +26,7 @@ package net.sf.picard.illumina;
 import net.sf.picard.util.BasicInputParser;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 
@@ -59,6 +60,7 @@ public class ExtractIlluminaBarcodesTest {
     };
 
     private File basecallsDir;
+    private File dual;
 
     @BeforeTest
     private void setUp() throws Exception {
@@ -72,11 +74,22 @@ public class ExtractIlluminaBarcodesTest {
             final File dest = new File(basecallsDir, source.getName());
             IoUtil.copyFile(source, dest);
         }
+        dual = File.createTempFile("eib_dual", ".tmp");
+        Assert.assertTrue(dual.delete());
+        Assert.assertTrue(dual.mkdir());
+        for (final File source : new File(TEST_DATA_DIR, "dual").listFiles()) {
+            if (!source.isFile()) {
+                continue;
+            }
+            final File dest = new File(dual, source.getName());
+            IoUtil.copyFile(source, dest);
+        }
     }
 
     @AfterTest
     private void tearDown() {
         IoUtil.deleteDirectoryTree(basecallsDir);
+        IoUtil.deleteDirectoryTree(dual);
     }
 
     @Test
@@ -183,6 +196,37 @@ public class ExtractIlluminaBarcodesTest {
         factory = new IlluminaDataProviderFactory(basecallsDir, lane, new ReadStructure("36T6B"),
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
         testParsing(factory, metricACAGTG, barcodePosition);
+    }
+
+    @Test(dataProvider = "dualBarcodeData")
+    public void testDualBarcodes(int lane, String readStructure, int perfectMatches, int oneMismatchMatches, String testName) throws Exception {
+        final File metricsFile = File.createTempFile("dual.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final List<String> args = new ArrayList<String>(Arrays.asList(
+                "BASECALLS_DIR=" + dual.getAbsolutePath(),
+                "LANE=" + lane,
+                "BARCODE_FILE=" + new File(dual, "barcodeData." + lane).getAbsolutePath(),
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "READ_STRUCTURE=" + readStructure
+                ));
+
+        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> result =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
+        result.read(new FileReader(metricsFile));
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatchMatches, "Got wrong number of perfect matches");
+    }
+
+    @DataProvider(name = "dualBarcodeData")
+    public Object[][] getDualBarcodeTestData() {
+        return new Object[][] {
+                {4, "10T8B6B10T", 3, 2, "Two barcodes in the middle, but one read is shorter than the barcode in the file"},
+                {5, "10T8B6B2S10T", 3, 2, "Two barcodes in the middle, but one is shorter than the read lengths"},
+                {6, "10T8B8B10T", 1, 2, "Two barcodes in the middle"},
+                {7, "8B10T10T8B", 1, 2, "Two barcodes on either end"},
+                {8, "4B10T4B4B10T4B", 1, 2, "Four crazy barcodes, one on either end and two in the middle"}
+        };
     }
 
     private void testParsing(final IlluminaDataProviderFactory factory, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {

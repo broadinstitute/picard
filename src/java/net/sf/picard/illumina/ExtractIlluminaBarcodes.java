@@ -40,10 +40,7 @@ import net.sf.samtools.util.StringUtil;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.text.NumberFormat;
 
 /**
@@ -71,10 +68,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 "    * matched barcode sequence\n" +
                 "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n";
 
-    @Option(doc="Deprecated option; use BASECALLS_DIR", mutex = "BASECALLS_DIR")
-    public File BUSTARD_DIR;
-
-    @Option(doc="The Illumina basecalls output directory. ", mutex = "BUSTARD_DIR", shortName="B")
+    @Option(doc="The Illumina basecalls output directory. ", shortName="B")
     public File BASECALLS_DIR;
 
     @Option(doc="Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.", optional = true)
@@ -86,13 +80,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC, shortName="RS", mutex = "BARCODE_CYCLE")
     public String READ_STRUCTURE;
 
-    @Option(doc="1-based cycle number of the start of the barcode.", mutex = "READ_STRUCTURE", shortName = "BARCODE_POSITION")
+    @Option(doc="1-based cycle number of the start of the barcode.  This cannot be used with reads that have more than one " +
+            "barcode; use READ_STRUCTURE in that case", mutex = "READ_STRUCTURE", shortName = "BARCODE_POSITION")
     public Integer BARCODE_CYCLE;
 
-    @Option(doc="Barcode sequence.  These must be unique, and all the same length.", mutex = {"BARCODE_FILE"})
+    @Option(doc="Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
+            "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
     public List<String> BARCODE = new ArrayList<String>();
 
-    @Option(doc="Tab-delimited file of barcode sequences, and optionally barcode name and library name.  " +
+    @Option(doc="Tab-delimited file of barcode sequences, barcode name and and optionally library name.  " +
             "Barcodes must be unique, and all the same length.  Column headers must be 'barcode_sequence', " +
             "'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
@@ -114,19 +110,20 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     private final Log log = Log.getInstance(ExtractIlluminaBarcodes.class);
 
-    private int barcodeLength;
-    private int barcodeIndex;
+    private ReadStructure readStructure;
+    private IlluminaDataProviderFactory factory;
 
     private int tile = 0;
     private File barcodeFile = null;
-    private BufferedWriter writer = null;
 
-    private final List<NamedBarcode> namedBarcodes = new ArrayList<NamedBarcode>();
+    // The writer writing the current s_[lane]_####_barcode.txt file
+    private BufferedWriter writer = null;
 
     private final List<BarcodeMetric> barcodeMetrics = new ArrayList<BarcodeMetric>();
     private BarcodeMetric noMatchBarcodeMetric;
 
     private final NumberFormat tileNumberFormatter = NumberFormat.getNumberInstance();
+    private final String barcodeDelimiter = "/";
 
     static class BarcodeMatch {
         boolean matched;
@@ -142,10 +139,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     @Override
 	protected int doWork() {
-        if(BUSTARD_DIR != null) {
-            BASECALLS_DIR = BUSTARD_DIR;
-        }
-        
+
         IoUtil.assertDirectoryIsWritable(BASECALLS_DIR);
         IoUtil.assertFileIsWritable(METRICS_FILE);
         if (OUTPUT_DIR == null) {
@@ -153,46 +147,25 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         IoUtil.assertDirectoryIsWritable(OUTPUT_DIR);
 
-        for (final NamedBarcode namedBarcode : namedBarcodes) {
-            barcodeMetrics.add(new BarcodeMetric(namedBarcode));
-        }
-
         // Create BarcodeMetric for counting reads that don't match any barcode
-        final StringBuilder noMatchBarcode = new StringBuilder(barcodeLength);
-        for (int i = 0; i < barcodeLength; ++i) {
-            noMatchBarcode.append('N');
-        }
-        noMatchBarcodeMetric = new BarcodeMetric(new NamedBarcode(noMatchBarcode.toString()));
-
-        final IlluminaDataProviderFactory factory;
-        final ReadStructure readStructure;
-        if(READ_STRUCTURE == null) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
-            readStructure = factory.readStructure();
-        } else {
-            readStructure = new ReadStructure(READ_STRUCTURE);
-            //TODO: Remove first test when we support multi-barcoding
-            if(readStructure.numBarcodes != 1) {
-                throw new PicardException("Picard currently only supports 1 Barcode read! " + readStructure.numBarcodes + " number of barcode reads found!");
-            } else if(readStructure.descriptors.get(readStructure.barcodeIndices[0]).length != barcodeLength){
-                throw new PicardException("Run configuration has a barcode length of (" + readStructure.descriptors.get(readStructure.barcodeIndices[0]).length + ") but first barcode had a" +
-                        " length of (" + barcodeLength + ")");
+        final String[] noMatchBarcode = new String[readStructure.barcodeIndices.length];
+        int index = 0;
+        for (final ReadDescriptor d : readStructure.descriptors) {
+            if (d.type == ReadType.Barcode) {
+                final StringBuilder bc = new StringBuilder();
+                for (int i = 0; i < d.length; i++) {
+                    bc.append('N');
+                }
+                noMatchBarcode[index++] = bc.toString();
             }
-
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
         }
+        noMatchBarcodeMetric = new BarcodeMetric(null, null, this.barcodeSeqsToString(noMatchBarcode, barcodeDelimiter), noMatchBarcode);
 
-        barcodeIndex = readStructure.barcodeIndices[0];
 
-
-        // This is possible for index-only run.
-        //factory.setAllowZeroLengthFirstEnd(true);
-        final IlluminaDataProvider parser = factory.makeDataProvider();
-
-        // Process each tile qseq file.
+        final IlluminaDataProvider dataProvider = factory.makeDataProvider();
         try {
-            while (parser.hasNext()) {
-                final ClusterData cluster = parser.next();
+            while (dataProvider.hasNext()) {
+                final ClusterData cluster = dataProvider.next();
                 extractBarcode(cluster);
             }
             if (writer != null) {
@@ -270,8 +243,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     /**
-     * Scan through qseqFile, and create a sibling barcode file with the barcode assignment lined up with the
-     * tile's qseq file.
+     * If we are switching to a new tile, close the previous file's writer and
+     * open a new one.
      */
     private void ensureBarcodeFileOpen(final int tile) {
         if (tile == this.tile) {
@@ -293,16 +266,23 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     /**
-     * Assign barcodes for a single tile's qseq file
+     * Extract the barcode from the cluster and write it to the file for the tile
      */
     private void extractBarcode(final ClusterData cluster) throws IOException {
-        final String barcodeSubsequence = StringUtil.bytesToString(cluster.getRead(barcodeIndex).getBases());
+        final byte barcodeSubsequences[][] = new byte[readStructure.barcodeIndices.length][];
+        for (int i = 0; i < readStructure.barcodeIndices.length; i++) {
+            final int bcLen = readStructure.descriptors.get(readStructure.barcodeIndices[i]).length;
+            barcodeSubsequences[i] = cluster.getRead(readStructure.barcodeIndices[i]).getBases();
+            assert (barcodeSubsequences[i].length == bcLen);
+        }
         final boolean passingFilter = cluster.isPf();
-        final BarcodeMatch match = findBestBarcode(barcodeSubsequence, passingFilter);
+        final BarcodeMatch match = findBestBarcode(barcodeSubsequences, passingFilter);
 
         final String yOrN = (match.matched ? "Y" : "N");
         ensureBarcodeFileOpen(cluster.getTile());
-        writer.write(StringUtil.join("\t", barcodeSubsequence, yOrN, match.barcode,
+        final StringBuilder sb = new StringBuilder();
+        for (final byte[] bc : barcodeSubsequences) { sb.append(StringUtil.bytesToString(bc)); }
+        writer.write(StringUtil.join("\t", sb.toString(), yOrN, match.barcode,
                                      String.valueOf(match.mismatches),
                                      String.valueOf(match.mismatchesToSecondBest)));
         writer.newLine();
@@ -310,24 +290,28 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     /**
      * Find the best barcode match for the given read sequence, and accumulate metrics
-     * @param readSubsequence portion of read containing barcode
+     * @param readSubsequences portion of read containing barcode
      * @param passingFilter PF flag for the current read
      * @return perfect barcode string, if there was a match within tolerance, or null if not.
      */
-    private BarcodeMatch findBestBarcode(final String readSubsequence, final boolean passingFilter) {
+    private BarcodeMatch findBestBarcode(final byte readSubsequences[][], final boolean passingFilter) {
         BarcodeMetric bestBarcodeMetric = null;
+        int totalBarcodeReadBases = 0;
+        int numNoCalls = 0; // NoCalls are calculated for all the barcodes combined
+
+        for (final byte[] bc : readSubsequences) {
+            totalBarcodeReadBases += bc.length;
+            for (final byte b : bc) if (SequenceUtil.isNoCall(b)) ++numNoCalls;
+        }
+
         // PIC-506 When forcing all reads to match a single barcode, allow a read to match even if every
         // base is a mismatch.
-        int numMismatchesInBestBarcode = readSubsequence.length() + 1;
-        int numMismatchesInSecondBestBarcode = readSubsequence.length() + 1;
-
-        final byte[] readBytes = net.sf.samtools.util.StringUtil.stringToBytes(readSubsequence);
-        int numNoCalls = 0;
-        for (final byte b : readBytes) if (SequenceUtil.isNoCall(b)) ++numNoCalls;
+        int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
+        int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
 
 
         for (final BarcodeMetric barcodeMetric : barcodeMetrics) {
-            final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readBytes);
+            final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences);
             if (numMismatches < numMismatchesInBestBarcode) {
                 if (bestBarcodeMetric != null) {
                     numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
@@ -346,14 +330,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         final BarcodeMatch match = new BarcodeMatch();
 
-        if (numNoCalls + numMismatchesInBestBarcode < readSubsequence.length()) {
+        // If we have something that's not a "match" but matches one barcode
+        // slightly, we output that matching barcode in lower case
+        if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases) {
             match.mismatches = numMismatchesInBestBarcode;
             match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
-            match.barcode = bestBarcodeMetric.BARCODE.toLowerCase();
+            match.barcode = bestBarcodeMetric.BARCODE.toLowerCase().replaceAll(barcodeDelimiter, "");
         }
         else {
-            match.mismatches = readSubsequence.length();
-            match.mismatches = readSubsequence.length();
+            match.mismatches = totalBarcodeReadBases;
             match.barcode = "";
         }
 
@@ -375,7 +360,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
 
             match.matched = true;
-            match.barcode = bestBarcodeMetric.BARCODE;
+            match.barcode = bestBarcodeMetric.BARCODE.replaceAll(barcodeDelimiter, "");
         }
         else {
             ++noMatchBarcodeMetric.READS;
@@ -388,14 +373,32 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     /**
+     * Concatenates all the barcode sequences with slashes
+     * @param barcodes
+     * @return A single string representation of all the barcodes
+     */
+    public static String barcodeSeqsToString(final String barcodes[], final String delim) {
+        final StringBuilder sb = new StringBuilder();
+        for (final String bc : barcodes) {
+            if (sb.length() > 0) sb.append(delim);
+            sb.append(bc);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Compare barcode sequence to bases from read
      * @return how many bases did not match
      */
-    private int countMismatches(final byte[] barcodeBytes, final byte[] readSubsequence) {
+    private int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence) {
         int numMismatches = 0;
-        for (int i = 0; i < barcodeBytes.length; ++i) {
-            if (!SequenceUtil.isNoCall(readSubsequence[i]) && !SequenceUtil.basesEqual(barcodeBytes[i], readSubsequence[i])) {
-                ++numMismatches;
+        // Read sequence and barcode length may not be equal, so we just use the shorter of the two
+        for (int j = 0; j < barcodeBytes.length; j++) {
+            final int basesToCheck = Math.min(barcodeBytes[j].length, readSubsequence[j].length);
+            for (int i = 0; i < basesToCheck; ++i) {
+                if (!SequenceUtil.isNoCall(readSubsequence[j][i]) && !SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) {
+                    ++numMismatches;
+                }
             }
         }
         return numMismatches;
@@ -417,28 +420,33 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
+        // Set this up here so we can use readStructure when parsing the barcode file
+        if(READ_STRUCTURE == null) {
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE.get(0).length(), IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+            readStructure = factory.readStructure();
+        } else {
+            readStructure = new ReadStructure(READ_STRUCTURE);
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+        }
+
         final ArrayList<String> messages = new ArrayList<String>();
         if (READ_STRUCTURE == null && BARCODE_CYCLE < 1) {
-            messages.add("Invalid BARCODE_POSITION=" + BARCODE_CYCLE + ".  Value must be positive.");
+            messages.add("Invalid BARCODE_CYCLE=" + BARCODE_CYCLE + ".  Value must be positive.");
         }
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
         } else {
             final Set<String> barcodes = new HashSet<String>();
-            barcodeLength = BARCODE.get(0).length();
             for (final String barcode : BARCODE) {
-                if (barcode.length() != barcodeLength) {
-                    messages.add("Barcode " + barcode + " has different length from first barcode.");
-                }
                 if (barcodes.contains(barcode)) {
                     messages.add("Barcode " + barcode + " specified more than once.");
                 }
                 barcodes.add(barcode);
-                final NamedBarcode namedBarcode = new NamedBarcode(barcode);
-                namedBarcodes.add(namedBarcode);
+                final BarcodeMetric metric = new BarcodeMetric(null, null, barcode, new String[]{barcode});
+                barcodeMetrics.add(metric);
             }
         }
-        if (namedBarcodes.size() == 0) {
+        if (barcodeMetrics.size() == 0) {
             messages.add("No barcodes have been specified.");
         }
         if (messages.size() == 0) {
@@ -468,60 +476,29 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
         final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
-
-        barcodeLength = 0;
+        final int numBarcodes = readStructure.barcodeIndices.length;
         final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
-            final String barcode = row.getField(sequenceColumn);
-            if (barcodeLength == 0) barcodeLength = barcode.length();
-            if (barcode.length() != barcodeLength) {
-                messages.add("Barcode " + barcode + " has different length from first barcode.");
+            final String bcStrings[] = new String[numBarcodes];
+            int barcodeNum = 1;
+            for (final ReadDescriptor rd : readStructure.descriptors) {
+                if (rd.type != ReadType.Barcode) continue;
+                final String header = barcodeNum == 1 ? sequenceColumn : "barcode_sequence_" + String.valueOf(barcodeNum);
+                bcStrings[barcodeNum-1] = row.getField(header);
+                barcodeNum++;
             }
-            if (barcodes.contains(barcode)) {
-                messages.add("Barcode " + barcode + " specified more than once in " + BARCODE_FILE);
+            final String bcStr = barcodeSeqsToString(bcStrings, barcodeDelimiter);
+            if (barcodes.contains(bcStr)) {
+                messages.add("Barcode " + bcStr + " specified more than once in " + BARCODE_FILE);
             }
-            barcodes.add(barcode);
+            barcodes.add(bcStr);
             final String barcodeName = (hasBarcodeName? row.getField(BARCODE_NAME_COLUMN): "");
             final String libraryName = (hasLibraryName? row.getField(LIBRARY_NAME_COLUMN): "");
-            final NamedBarcode namedBarcode = new NamedBarcode(barcode, barcodeName, libraryName);
-            namedBarcodes.add(namedBarcode);
+            final BarcodeMetric metric = new BarcodeMetric(barcodeName, libraryName, bcStr, bcStrings);
+            barcodeMetrics.add(metric);
         }
     }
 
-    private static class NamedBarcode {
-        public final String barcode;
-        public final String barcodeName;
-        public final String libraryName;
-
-        public NamedBarcode(final String barcode, final String barcodeName, final String libraryName) {
-            this.barcode = barcode;
-            this.barcodeName = barcodeName;
-            this.libraryName = libraryName;
-        }
-
-        public NamedBarcode(final String barcode) {
-            this.barcode = barcode;
-            this.barcodeName = "";
-            this.libraryName = "";
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            final NamedBarcode that = (NamedBarcode) o;
-
-            if (barcode != null ? !barcode.equals(that.barcode) : that.barcode != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return barcode != null ? barcode.hashCode() : 0;
-        }
-    }
 
     /**
      * Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
@@ -573,13 +550,18 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          */
         public double PF_NORMALIZED_MATCHES;
 
-        protected final byte[] barcodeBytes;
+        protected final byte[][] barcodeBytes;
 
-        public BarcodeMetric(final NamedBarcode namedBarcode) {
-            this.BARCODE = namedBarcode.barcode;
-            this.BARCODE_NAME = namedBarcode.barcodeName;
-            this.LIBRARY_NAME = namedBarcode.libraryName;
-            this.barcodeBytes = net.sf.samtools.util.StringUtil.stringToBytes(this.BARCODE);
+        public BarcodeMetric(final String barcodeName, final String libraryName,
+                             final String barcodeDisplay, final String[] barcodeSeqs) {
+
+            this.BARCODE = barcodeDisplay;
+            this.BARCODE_NAME = barcodeName;
+            this.LIBRARY_NAME = libraryName;
+            this.barcodeBytes = new byte[barcodeSeqs.length][];
+            for (int i = 0; i < barcodeSeqs.length; i++) {
+                barcodeBytes[i] = net.sf.samtools.util.StringUtil.stringToBytes(barcodeSeqs[i]);
+            }
         }
 
         /**
