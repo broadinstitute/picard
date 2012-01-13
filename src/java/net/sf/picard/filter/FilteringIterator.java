@@ -25,7 +25,9 @@ package net.sf.picard.filter;
 
 import net.sf.picard.sam.SamPairUtil;
 import net.sf.picard.util.PeekableIterator;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMRecordIterator;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 
@@ -56,6 +58,10 @@ public class FilteringIterator implements CloseableIterator<SAMRecord> {
      */
     public FilteringIterator(final Iterator<SAMRecord> iterator, final SamRecordFilter filter,
                              final boolean filterByPair) {
+
+        if (filterByPair && iterator instanceof SAMRecordIterator) {
+            ((SAMRecordIterator)iterator).assertSorted(SAMFileHeader.SortOrder.queryname);
+        }
 
         this.iterator = new PeekableIterator<SAMRecord>(iterator);
         this.filter = filter;
