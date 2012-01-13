@@ -27,14 +27,27 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * API for filtering SAMRecords
+ *
+ * $Id$
  */
 public interface SamRecordFilter {
 
     /**
      * Determines whether a SAMRecord matches this filter
      *
-     * @param record    the SAMRecord to evaluate
-     * @return  true if the SAMRecord matches the filter, otherwise false
+     * @param record the SAMRecord to evaluate
+     *
+     * @return true if the SAMRecord matches the filter, otherwise false
      */
     public boolean filterOut(SAMRecord record);
+
+    /**
+     * Determines whether a pair of SAMRecords matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the pair of records matches filter, otherwise false
+     */
+    public boolean filterOut(SAMRecord first, SAMRecord second);
 }

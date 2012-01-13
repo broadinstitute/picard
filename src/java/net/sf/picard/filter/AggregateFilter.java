@@ -30,6 +30,8 @@ import net.sf.samtools.SAMRecord;
 /**
  * Aggregates multiple filters and provides a method for applying them all to a given record with
  * one method call.
+ *
+ * $Id$
  */
 public class AggregateFilter implements SamRecordFilter {
 
@@ -52,6 +54,23 @@ public class AggregateFilter implements SamRecordFilter {
     public boolean filterOut(final SAMRecord record) {
         for (final SamRecordFilter filter : filters) {
             if (filter.filterOut(record)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determines whether a pair of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+         for (final SamRecordFilter filter : filters) {
+            if (filter.filterOut(first, second)) {
                 return true;
             }
         }

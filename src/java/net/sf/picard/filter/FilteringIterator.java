@@ -23,34 +23,54 @@
  */
 package net.sf.picard.filter;
 
+import net.sf.picard.sam.SamPairUtil;
+import net.sf.picard.util.PeekableIterator;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.CloseableIterator;
-
 /**
- * Filtering Iterator which takes a filter and an iterator and iterates
- * through only those records which are not rejected by the filter.
+ * Filtering Iterator which takes a filter and an iterator and iterates through only those records
+ * which are not rejected by the filter.
+ * <p/>
+ * $Id$
  *
  * @author Kathleen Tibbetts
  */
 public class FilteringIterator implements CloseableIterator<SAMRecord> {
 
-    private final Iterator<SAMRecord> iterator;
+    private final PeekableIterator<SAMRecord> iterator;
     private final SamRecordFilter filter;
+    private boolean filterReadPairs = false;
     private SAMRecord next = null;
 
     /**
      * Constructor
      *
-     * @param iterator  the backing iterator
-     * @param filter    the filter (which may be a FilterAggregator)
+     * @param iterator     the backing iterator
+     * @param filter       the filter (which may be a FilterAggregator)
+     * @param filterByPair if true, filter reads in pairs
      */
-    public FilteringIterator(Iterator<SAMRecord> iterator, SamRecordFilter filter) {
-        this.iterator = iterator;
+    public FilteringIterator(final Iterator<SAMRecord> iterator, final SamRecordFilter filter,
+                             final boolean filterByPair) {
+
+        this.iterator = new PeekableIterator<SAMRecord>(iterator);
+        this.filter = filter;
+        this.filterReadPairs = filterByPair;
+        next = getNextRecord();
+    }
+
+    /**
+     * Constructor
+     *
+     * @param iterator the backing iterator
+     * @param filter   the filter (which may be a FilterAggregator)
+     */
+    public FilteringIterator(final Iterator<SAMRecord> iterator, final SamRecordFilter filter) {
+        this.iterator = new PeekableIterator<SAMRecord>(iterator);
         this.filter = filter;
         next = getNextRecord();
     }
@@ -58,7 +78,7 @@ public class FilteringIterator implements CloseableIterator<SAMRecord> {
     /**
      * Returns true if the iteration has more elements.
      *
-     * @return  true if the iteration has more elements.  Otherwise returns false.
+     * @return true if the iteration has more elements.  Otherwise returns false.
      */
     public boolean hasNext() {
         return next != null;
@@ -67,8 +87,9 @@ public class FilteringIterator implements CloseableIterator<SAMRecord> {
     /**
      * Returns the next element in the iteration.
      *
-     * @return  the next element in the iteration
+     * @return the next element in the iteration
      * @throws java.util.NoSuchElementException
+     *
      */
     public SAMRecord next() {
         if (next == null) {
@@ -98,12 +119,30 @@ public class FilteringIterator implements CloseableIterator<SAMRecord> {
      * @return SAMRecord    the next filter-passing record
      */
     private SAMRecord getNextRecord() {
+
         while (iterator.hasNext()) {
-            SAMRecord record = iterator.next();
-            if (!filter.filterOut(record)) {
+            final SAMRecord record = iterator.next();
+
+            if (filterReadPairs && record.getReadPairedFlag() && record.getFirstOfPairFlag() &&
+                iterator.hasNext()) {
+
+                SamPairUtil.assertMate(record, iterator.peek());
+
+                if (filter.filterOut(record, iterator.peek())) {
+                    // skip second read
+                    iterator.next();
+                } else {
+                    return record;
+                }
+            } else if (filterReadPairs && record.getReadPairedFlag() &&
+                record.getSecondOfPairFlag()) {
+                // assume that we did a filterOut(first, second) and it passed the filter
+                return record;
+            } else if (!filter.filterOut(record)) {
                 return record;
             }
         }
+
         return null;
     }
 }

@@ -23,31 +23,40 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.SAMRecord;
 
 /**
- * Filter to determine whether a read is "noisy" due to a poly-A run that is a sequencing artifact.
- * Currently we filter out only reads that are composed entirely of As.
+ * Filter to either include or exclude aligned reads
  *
  * $Id$
  */
-public class SolexaNoiseFilter implements SamRecordFilter {
+public class AlignedFilter implements SamRecordFilter {
+
+    private boolean includeAligned = false;
+
+    public AlignedFilter(final boolean includeAligned) {
+        this.includeAligned = includeAligned;
+    }
 
     /**
      * Determines whether a SAMRecord matches this filter
      *
-     * @param record    the SAMRecord to evaluate
-     * @return  true if the SAMRecord matches the filter, otherwise false
+     * @param record the SAMRecord to evaluate
+     *
+     * @return true if the SAMRecord matches the filter, otherwise false
      */
     public boolean filterOut(final SAMRecord record) {
-        final byte[] sequence = record.getReadBases();
-        for (final byte base : sequence) {
-            if (base != 'A' && base != 'a' &&
-                !SequenceUtil.isNoCall(base)) {
+        if (includeAligned) {
+            if (!record.getReadUnmappedFlag()) {
+                return false;
+            }
+        } else {
+            // exclude aligned
+            if (record.getReadUnmappedFlag()) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -60,7 +69,19 @@ public class SolexaNoiseFilter implements SamRecordFilter {
      * @return true if the SAMRecords matches the filter, otherwise false
      */
     public boolean filterOut(final SAMRecord first, final SAMRecord second) {
-        // only filter out the pair if both first and second reads have all As
-        return (filterOut(first) && filterOut(second));
+
+        if (includeAligned) {
+            // both first and second must be mapped for it to not be filtered out
+            if (!first.getReadUnmappedFlag() && !second.getReadUnmappedFlag()) {
+                return false;
+            }
+        } else {
+            // exclude aligned - if either first or second is unmapped don't filter it out
+            if (first.getReadUnmappedFlag() || second.getReadUnmappedFlag()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
