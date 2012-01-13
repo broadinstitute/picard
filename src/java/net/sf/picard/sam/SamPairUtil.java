@@ -114,22 +114,29 @@ public class SamPairUtil {
 
     public static void assertMate(final SAMRecord firstOfPair, final SAMRecord secondOfPair) {
         // Validate paired reads arrive as first of pair, then second of pair
-        if (secondOfPair == null) {
+
+        if (firstOfPair == null) {
             throw new PicardException(
-                "A second record does not exist: " + firstOfPair.getReadName());
-        } else if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
+                "First record does not exist - cannot perform mate assertion!");
+        } else if (secondOfPair == null) {
             throw new PicardException(
-                "Second read from pair not found: " + firstOfPair.getReadName() + ", " +
-                    secondOfPair.getReadName());
-        } else if (!firstOfPair.getFirstOfPairFlag()) {
+                firstOfPair.toString() + " is missing its mate");
+        } else if (!firstOfPair.getReadPairedFlag()) {
             throw new PicardException(
-                "First record in unmapped bam is not first of pair: " + firstOfPair.getReadName());
+                "First record is not marked as paired: " + firstOfPair.toString());
         } else if (!secondOfPair.getReadPairedFlag()) {
             throw new PicardException(
-                "Second record is not marked as paired: " + secondOfPair.getReadName());
+                "Second record is not marked as paired: " + secondOfPair.toString());
+        } else if (!firstOfPair.getFirstOfPairFlag()) {
+            throw new PicardException(
+                "First record is not marked as first of pair: " + firstOfPair.toString());
         } else if (!secondOfPair.getSecondOfPairFlag()) {
             throw new PicardException(
-                "Second record is not second of pair: " + secondOfPair.getReadName());
+                "Second record is not marked as second of pair: " + secondOfPair.toString());
+        } else if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
+            throw new PicardException(
+                "First [" + firstOfPair.getReadName() + "] and Second [" +
+                    secondOfPair.getReadName() + "] readnames do not match!");
         }
     }
 
@@ -150,7 +157,7 @@ public class SamPairUtil {
             return secondOfPair;
         } else {
             throw new PicardException(
-                "A second record does not exist: " + firstOfPair.getReadName());
+                "Second record does not exist: " + firstOfPair.getReadName());
         }
     }
 
