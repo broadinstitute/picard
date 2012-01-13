@@ -151,7 +151,7 @@ public class FilterSamReads extends CommandLineProgram {
                     new AlignedFilter(true), true));
             } else if (EXCLUDE_ALIGNED) {
                 filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
-                    new AlignedFilter(true), false));
+                    new AlignedFilter(false), true));
             }
 
             IoUtil.assertFileIsReadable(OUTPUT);
