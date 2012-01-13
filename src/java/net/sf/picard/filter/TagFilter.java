@@ -30,6 +30,8 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * Filter class for matching tag attributes in SAMRecords
+ *
+ * $Id$
  */
 public class TagFilter implements SamRecordFilter {
 
@@ -67,4 +69,17 @@ public class TagFilter implements SamRecordFilter {
     public boolean filterOut(SAMRecord record) {
         return values.contains(record.getAttribute(tag));
     }
- }
+
+    /**
+     * Determines whether a paired of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+        // both first and second must have the tag in order for it to be filtered out
+         return values.contains(first.getAttribute(tag)) && values.contains(second.getAttribute(tag));
+    }
+}

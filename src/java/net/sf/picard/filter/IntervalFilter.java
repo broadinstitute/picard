@@ -35,6 +35,8 @@ import java.util.List;
  * Filter SAMRecords so that only those that overlap the given list of intervals.
  * It is required that the SAMRecords are passed in coordinate order
  *
+ * $Id$
+ *
  * @author alecw@broadinstitute.org
  */
 public class IntervalFilter implements SamRecordFilter {
@@ -81,5 +83,17 @@ public class IntervalFilter implements SamRecordFilter {
         } else {
             currentInterval = null;
         }
+    }
+
+    /**
+     * Determines whether a pair of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+        throw new UnsupportedOperationException("Paired IntervalFilter filter not implemented!");
     }
 }

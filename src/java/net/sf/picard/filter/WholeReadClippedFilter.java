@@ -30,6 +30,8 @@ import net.sf.samtools.SAMRecord;
  * Filter SAMRecords so that only those that have at least one un-clipped base are
  * returned.
  *
+ * $Id$
+ *
  * @author ktibbett@broadinstitute.org
  */
 public class WholeReadClippedFilter implements SamRecordFilter {
@@ -47,4 +49,16 @@ public class WholeReadClippedFilter implements SamRecordFilter {
                 && (Integer)record.getAttribute(ReservedTagConstants.XT) == 1;
     }
 
+     /**
+     * Determines whether a paired of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+        // if either fails, exclude them both
+        return (filterOut(first) || filterOut(second));
+    }
 }

@@ -94,6 +94,9 @@ public abstract class AbstractAlignmentMerger {
         public boolean filterOut(SAMRecord record) {
             return ignoreAlignment(record);
         }
+        public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+            throw new UnsupportedOperationException("Paired SamRecordFilter not implemented!");
+        }
     };
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();

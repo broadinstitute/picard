@@ -64,6 +64,9 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
                     public boolean filterOut(SAMRecord record) {
                         return record.getReadUnmappedFlag();
                     }
+                    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+                        return (first.getReadUnmappedFlag() && second.getReadUnmappedFlag());
+                    }
                 }));
     }
 

@@ -27,6 +27,8 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * Filter for filtering out reads that do not pass the quality filter
+ *
+ * $Id$
  */
 public class FailsVendorReadQualityFilter implements SamRecordFilter {
 
@@ -36,7 +38,20 @@ public class FailsVendorReadQualityFilter implements SamRecordFilter {
      * @param record    the SAMRecord to evaluate
      * @return  true if the SAMRecord matches the filter, otherwise false
      */
-    public boolean filterOut(SAMRecord record) {
+    public boolean filterOut(final SAMRecord record) {
         return record.getReadFailsVendorQualityCheckFlag();
+    }
+
+    /**
+     * Determines whether a pair of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+        // if either fails, exclude them both
+        return (first.getReadFailsVendorQualityCheckFlag() || second.getReadFailsVendorQualityCheckFlag());
     }
 }

@@ -27,6 +27,8 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * Filter out SAMRecords with NotPrimaryAlignment flag set
+ *
+ * $Id$
  */
 public class NotPrimaryAlignmentFilter implements SamRecordFilter {
     /**
@@ -35,5 +37,18 @@ public class NotPrimaryAlignmentFilter implements SamRecordFilter {
      */
     public boolean filterOut(final SAMRecord record) {
         return record.getNotPrimaryAlignmentFlag();
+    }
+
+    /**
+     * Determines whether a pair of SAMRecord matches this filter
+     *
+     * @param first  the first SAMRecord to evaluate
+     * @param second the second SAMRecord to evaluate
+     *
+     * @return true if the SAMRecords matches the filter, otherwise false
+     */
+    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
+        // if either fails, exclude them both
+        return (first.getNotPrimaryAlignmentFlag() || second.getNotPrimaryAlignmentFlag());
     }
 }
