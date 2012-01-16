@@ -98,7 +98,7 @@ public class FilterSamReads extends CommandLineProgram {
     @Option(
         doc = "Create .reads files (for debugging purposes)",
         optional = true)
-    public boolean WRITE_READS_FILE = true;
+    public boolean WRITE_READS_FILES = true;
 
     @Option(doc = "SAM or BAM file to write read excluded results to",
         optional = false, shortName = "O")
@@ -137,10 +137,17 @@ public class FilterSamReads extends CommandLineProgram {
             OUTPUT.getName());
     }
 
-    private void writeReadsFile() {
+    /**
+     * Write out a file of read names for debugging purposes.
+     *
+     * @param samOrBamFile The SAM or BAM file for which we are going to write out a file of its
+     *                     containing read names
+     */
+    private void writeReadsFile(final File samOrBamFile) {
         try {
-            final SAMFileReader reader = new SAMFileReader(OUTPUT);
-            final File readsFile = new File(OUTPUT.getParentFile(), IoUtil.basename(OUTPUT) + ".reads");
+            final SAMFileReader reader = new SAMFileReader(samOrBamFile);
+            final File readsFile =
+                new File(OUTPUT.getParentFile(), IoUtil.basename(samOrBamFile) + ".reads");
             IoUtil.assertFileIsWritable(readsFile);
             final BufferedWriter bw = IoUtil.openFileForBufferedWriting(readsFile, false);
 
@@ -166,6 +173,7 @@ public class FilterSamReads extends CommandLineProgram {
         try {
             IoUtil.assertFileIsReadable(INPUT);
             IoUtil.assertFileIsWritable(OUTPUT);
+            if (WRITE_READS_FILES) writeReadsFile(INPUT);
 
             if (INCLUDE_READS != null) {
                 filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
@@ -182,7 +190,7 @@ public class FilterSamReads extends CommandLineProgram {
             }
 
             IoUtil.assertFileIsReadable(OUTPUT);
-            if (WRITE_READS_FILE) writeReadsFile();
+            if (WRITE_READS_FILES) writeReadsFile(OUTPUT);
             return 0;
 
         } catch (Exception e) {
