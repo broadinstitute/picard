@@ -41,8 +41,11 @@ import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
+import net.sf.samtools.SAMRecord;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 
 /**
@@ -92,6 +95,11 @@ public class FilterSamReads extends CommandLineProgram {
         optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
+    @Option(
+        doc = "Create .reads files (for debugging purposes)",
+        optional = true)
+    public boolean WRITE_READS_FILE = true;
+
     @Option(doc = "SAM or BAM file to write read excluded results to",
         optional = false, shortName = "O")
     public File OUTPUT;
@@ -129,6 +137,25 @@ public class FilterSamReads extends CommandLineProgram {
             OUTPUT.getName());
     }
 
+    private void writeReadsFile() {
+        try {
+            final SAMFileReader reader = new SAMFileReader(OUTPUT);
+            final File readsFile = new File(OUTPUT.getParentFile(), IoUtil.basename(OUTPUT) + ".reads");
+            IoUtil.assertFileIsWritable(readsFile);
+            final BufferedWriter bw = IoUtil.openFileForBufferedWriting(readsFile, false);
+
+            for (final SAMRecord rec : reader) {
+                bw.write(rec.toString() + "\n");
+            }
+
+            bw.close();
+            reader.close();
+            IoUtil.assertFileIsReadable(readsFile);
+        } catch (IOException e) {
+            log.error(e);
+        }
+    }
+
     @Override
     protected int doWork() {
 
@@ -155,6 +182,7 @@ public class FilterSamReads extends CommandLineProgram {
             }
 
             IoUtil.assertFileIsReadable(OUTPUT);
+            if (WRITE_READS_FILE) writeReadsFile();
             return 0;
 
         } catch (Exception e) {
