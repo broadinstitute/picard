@@ -69,7 +69,7 @@ fi
 
 RELEASE_ID=$1
 
-PREV_RELEASE_ID=`svn ls $SVNROOT/tags | tail -1 | sed 's/\/$//'`
+PREV_RELEASE_ID=`svn --username $USERNAME ls $SVNROOT/tags | tail -1 | sed 's/\/$//'`
 
 if branch_exists $SVNROOT/branches/$RELEASE_ID
 then echo "ERROR: $SVNROOT/branches/$RELEASE_ID already exists.">&2
@@ -86,25 +86,25 @@ then echo "$TMPDIR/Picard-public already exists.  Please remove or specify a dif
         exit 1
 fi
 
-svn copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/branches/$RELEASE_ID
-svn copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/tags/$RELEASE_ID
+svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/branches/$RELEASE_ID
+svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/tags/$RELEASE_ID
 
 cd $TMPDIR
 
 mkdir Picard-public
 cd Picard-public
-svn co $SVNROOT/tags/$RELEASE_ID .
+svn --username $USERNAME co $SVNROOT/tags/$RELEASE_ID .
 
 ant -lib lib/ant test
 
 ant -lib lib/ant clean all javadoc
 
-REVISION=`svn info $SVNROOT/tags/$RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
-PREV_REVISION=`svn info $SVNROOT/tags/$PREV_RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
+REVISION=`svn --username $USERNAME info $SVNROOT/tags/$RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
+PREV_REVISION=`svn --username $USERNAME info $SVNROOT/tags/$PREV_RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
 
 mkdir -p deploy/picard-tools/$RELEASE_ID
 
-svn log -r $PREV_REVISION:$REVISION -v > deploy/picard-tools/$RELEASE_ID/README.txt
+svn --username $USERNAME log -r $PREV_REVISION:$REVISION -v > deploy/picard-tools/$RELEASE_ID/README.txt
 
 echo 'Edit release notes and exit editor when finished.'
 
