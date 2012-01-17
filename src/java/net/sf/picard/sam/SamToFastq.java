@@ -32,6 +32,7 @@ import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.fastq.FastqWriter;
 import net.sf.picard.fastq.FastqWriterFactory;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
@@ -40,6 +41,7 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,6 +114,8 @@ public class SamToFastq extends CommandLineProgram {
     "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS=false;
 
+    private final Log log = Log.getInstance(SamToFastq.class);
+    
     public static void main(final String[] argv) {
         System.exit(new SamToFastq().instanceMain(argv));
     }
@@ -122,6 +126,7 @@ public class SamToFastq extends CommandLineProgram {
         final Map<String,SAMRecord> firstSeenMates = new HashMap<String,SAMRecord>();
         final Map<SAMReadGroupRecord, List<FastqWriter>> writers = new HashMap<SAMReadGroupRecord, List<FastqWriter>>();
 
+        long count = 0;
         for (final SAMRecord currentRecord : reader ) {
             if (currentRecord.getNotPrimaryAlignmentFlag() && !INCLUDE_NON_PRIMARY_ALIGNMENTS) continue;
 
@@ -149,6 +154,10 @@ public class SamToFastq extends CommandLineProgram {
             else
             {
                 writeRecord(currentRecord, null, getWriters(currentRecord, writers).get(0), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
+            }
+            
+            if (++count % 10000000 == 0) {
+                log.info("Processed " + count + " records.");
             }
         }
 
