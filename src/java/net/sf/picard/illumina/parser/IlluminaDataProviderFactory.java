@@ -95,6 +95,7 @@ public class IlluminaDataProviderFactory {
         this.barcodeCycle = null;
         this.barcodeLength = null;
         this.dataTypes = new HashSet<IlluminaDataType>(Arrays.asList(dataTypes));
+        addPositionDataType();
 
         if(readStructure == null) {
             this.readStructure = computeReadStructure();
@@ -129,6 +130,7 @@ public class IlluminaDataProviderFactory {
         this.barcodeCycle = barcodeCycle;
         this.barcodeLength = barcodeLength;
         this.dataTypes = new HashSet<IlluminaDataType>(Arrays.asList(dataTypes));
+        addPositionDataType();
         this.readStructure = computeReadStructure();
     }
 
@@ -171,6 +173,28 @@ public class IlluminaDataProviderFactory {
         }
 
         final int totalCycles = readStructure.totalCycles;
+
+        final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<IlluminaParser, Set<IlluminaDataType>>();
+        final SortedSet<IlluminaDataType> toSupport = new TreeSet<IlluminaDataType>(dataTypes);
+        while(!toSupport.isEmpty()) {
+            final IlluminaParser parser = getPreferredParser(toSupport.first(), tiles, totalCycles, outputLengths);
+            final Set<IlluminaDataType> providedTypes = new HashSet<IlluminaDataType>(parser.supportedTypes());
+            providedTypes.retainAll(toSupport); //provide only those we want
+            toSupport.removeAll(providedTypes); //remove the ones we want from the set still needing support
+            parsersToDataType.put(parser, providedTypes);
+        }
+
+        for(final IlluminaParser parser : parsersToDataType.keySet()) {
+            parser.verifyData(readStructure, tiles);
+        }
+
+        return new IlluminaDataProvider(readStructure, parsersToDataType, basecallDirectory, lane);
+    }
+
+    /**
+     * Ensure that position data type is present even if not specified, if one of the files containing position is being read.
+     */
+    private void addPositionDataType() {
         if(!dataTypes.contains(IlluminaDataType.Position)) {
             boolean addPosition = false;
             for(final IlluminaDataType dt : dataTypes) {
@@ -188,22 +212,6 @@ public class IlluminaDataProviderFactory {
                 dataTypes.add(IlluminaDataType.Position);
             }
         }
-
-        final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<IlluminaParser, Set<IlluminaDataType>>();
-        final SortedSet<IlluminaDataType> toSupport = new TreeSet<IlluminaDataType>(dataTypes);
-        while(!toSupport.isEmpty()) {
-            final IlluminaParser parser = getPreferredParser(toSupport.first(), tiles, totalCycles, outputLengths);
-            final Set<IlluminaDataType> providedTypes = new HashSet<IlluminaDataType>(parser.supportedTypes());
-            providedTypes.retainAll(toSupport); //provide only those we want
-            toSupport.removeAll(providedTypes); //remove the ones we want from the set still needing support
-            parsersToDataType.put(parser, providedTypes);
-        }
-
-        for(final IlluminaParser parser : parsersToDataType.keySet()) {
-            parser.verifyData(readStructure, tiles);
-        }
-
-        return new IlluminaDataProvider(readStructure, parsersToDataType, basecallDirectory, lane);
     }
 
     /**
