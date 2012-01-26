@@ -64,18 +64,17 @@ public class MathUtil {
     }
 
     /**
-     * Convenience method for dividing two BigDecimals
-     *
-     * @param dividend value that will be divided (by the divisor)
-     * @param divisor  value by which the dividend is to be divided
-     *
-     * @return dividend divided by divisor in percentage form (a scale of 2
-     *         is used). Example 99.98(%)
+     * Obtains percentage of two Longs
+     * @param numerator dividend
+     * @param denominator divisor
+     * @return numerator/(double)denominator if both are non-null and denominator != 0, else returns null.
      */
-    public static double toPercentage(final BigDecimal dividend,
-                               final BigDecimal divisor) {
-        return round(dividend.divide(divisor, 10, BigDecimal.ROUND_HALF_UP)
-            .multiply(new BigDecimal(100.0)).doubleValue(), 2);
+    public static Double percentageOrNull(final Long numerator, final Long denominator) {
+        if (numerator != null && denominator != null && denominator != 0) {
+            return numerator.doubleValue()/denominator.doubleValue();
+        } else {
+            return null;
+        }
     }
 
     /** 
