@@ -30,7 +30,7 @@ import net.sf.samtools.SAMException;
  *
  * @author Kathleen Tibbetts
  */
-public class PicardException extends SAMException
+public class PicardException extends RuntimeException
 {
     public PicardException(final String message) {
         super(message);
