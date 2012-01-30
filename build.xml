@@ -38,8 +38,8 @@
     <!-- Get SVN revision, if available, otherwise leave it blank. -->
     <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
     <property name="repository.revision" value=""/>
-    <property name="sam-version" value="1.60"/>
-    <property name="picard-version" value="1.60"/>
+    <property name="sam-version" value="1.61"/>
+    <property name="picard-version" value="1.61"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
