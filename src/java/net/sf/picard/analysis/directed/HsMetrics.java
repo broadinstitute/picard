@@ -130,21 +130,21 @@ public class HsMetrics extends MultilevelMetrics {
     /**
      * The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
      * should be interpreted as: if I have a design with 10 megabases of target, and want to get
-     * 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^6 * 10 * HS_PENALTY_10X.
+     * 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.
      */
     public double HS_PENALTY_10X;
 
     /**
      * The "hybrid selection penalty" incurred to get 80% of target bases to 20X. This metric
      * should be interpreted as: if I have a design with 10 megabases of target, and want to get
-     * 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^6 * 20 * HS_PENALTY_20X.
+     * 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.
      */
     public double HS_PENALTY_20X;
 
     /**
      * The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
      * should be interpreted as: if I have a design with 10 megabases of target, and want to get
-     * 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^6 * 30 * HS_PENALTY_30X.
+     * 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.
      */
     public double HS_PENALTY_30X;
 
