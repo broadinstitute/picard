@@ -65,6 +65,8 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
     // Split on any whitespace
     private static Pattern SEQUENCE_NAME_SPLITTER = Pattern.compile("\\s");
+    // These are the chars matched by \\s.
+    private static char[] WHITESPACE_CHARS = {' ', '\t', '\n', '\013', '\f', '\r'}; // \013 is vertical tab
 
     /**
      * @deprecated Use SAMSequenceRecord(final String name, final int sequenceLength) instead.
@@ -183,10 +185,21 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     }
 
     /**
-     * Truncate sequence name at first space, @ or =.
+     * Truncate sequence name at first whitespace.
      */
     public static String truncateSequenceName(final String sequenceName) {
+        /*
+         * Instead of using regex split, do it manually for better performance.
         return SEQUENCE_NAME_SPLITTER.split(sequenceName, 2)[0];
+        */
+        int truncateAt = sequenceName.length();
+        for (final char c : WHITESPACE_CHARS) {
+            int index = sequenceName.indexOf(c);
+            if (index != -1 && index < truncateAt) {
+                truncateAt = index;
+            }
+        }
+        return sequenceName.substring(0, truncateAt);
     }
 
     /**
