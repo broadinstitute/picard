@@ -73,7 +73,7 @@ public abstract class AbstractAlignmentMerger {
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final File unmappedBamFile;
     private final File targetBamFile;
-    private SAMSequenceDictionary sequenceDictionary = null;
+    private final SAMSequenceDictionary sequenceDictionary;
     private ReferenceSequenceFileWalker refSeq = null;
     private final boolean clipAdapters;
     private final boolean bisulfiteSequence;
@@ -144,6 +144,10 @@ public abstract class AbstractAlignmentMerger {
 
         this.refSeq = new ReferenceSequenceFileWalker(referenceFasta);
         this.sequenceDictionary = refSeq.getSequenceDictionary();
+        if (this.sequenceDictionary == null) {
+            throw new PicardException("No sequence dictionary found for " + referenceFasta.getAbsolutePath() +
+                    ".  Use CreateSequenceDictionary.jar to create a sequence dictionary.");
+        }
 
         this.clipAdapters = clipAdapters;
         this.bisulfiteSequence = bisulfiteSequence;
