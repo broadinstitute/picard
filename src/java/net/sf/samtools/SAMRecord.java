@@ -317,6 +317,19 @@ public class SAMRecord implements Cloneable
     }
 
     public void setReferenceName(final String value) {
+        /* String.intern() is surprisingly expensive, so avoid it by looking up in sequence dictionary if possible */
+        if (NO_ALIGNMENT_REFERENCE_NAME.equals(value)) {
+            mReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
+            mReferenceIndex = NO_ALIGNMENT_REFERENCE_INDEX;
+            return;
+        } else if (mHeader != null) {
+            int referenceIndex = mHeader.getSequenceIndex(value);
+            if (referenceIndex != -1) {
+                setReferenceIndex(referenceIndex);
+                return;
+            }
+        }
+        // Drop through from above if nothing done.
         mReferenceName = value.intern();
         mReferenceIndex = null;
     }
@@ -363,6 +376,19 @@ public class SAMRecord implements Cloneable
     }
 
     public void setMateReferenceName(final String mateReferenceName) {
+        /* String.intern() is surprisingly expensive, so avoid it by looking up in sequence dictionary if possible */
+        if (NO_ALIGNMENT_REFERENCE_NAME.equals(mateReferenceName)) {
+            mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
+            mMateReferenceIndex = NO_ALIGNMENT_REFERENCE_INDEX;
+            return;
+        } else if (mHeader != null) {
+            int referenceIndex = mHeader.getSequenceIndex(mateReferenceName);
+            if (referenceIndex != -1) {
+                setMateReferenceIndex(referenceIndex);
+                return;
+            }
+        }
+        // Drop through from above if nothing done.
         this.mMateReferenceName = mateReferenceName.intern();
         mMateReferenceIndex = null;
     }
