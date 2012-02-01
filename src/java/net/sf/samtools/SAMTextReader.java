@@ -438,8 +438,57 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
         }
 
         private void validateReadBases(final String bases) {
+/*
+ * Using regex is slow, so check for invalid characters via isValidReadBase(), which hopefully the JIT will optimize.
             if (!VALID_BASES.matcher(bases).matches()) {
                 reportErrorParsingLine("Invalid character in read bases");
+            }
+*/
+            for (int i = 0; i < bases.length(); ++i) {
+                if (!isValidReadBase(bases.charAt(i))) {
+                    reportErrorParsingLine("Invalid character in read bases");
+                    return;
+                }
+            }
+        }
+        
+        private boolean isValidReadBase(final char base) {
+            switch (base) {
+                case 'a':
+                case 'c':
+                case 'm':
+                case 'g':
+                case 'r':
+                case 's':
+                case 'v':
+                case 't':
+                case 'w':
+                case 'y':
+                case 'h':
+                case 'k':
+                case 'd':
+                case 'b':
+                case 'n':
+                case 'A':
+                case 'C':
+                case 'M':
+                case 'G':
+                case 'R':
+                case 'S':
+                case 'V':
+                case 'T':
+                case 'W':
+                case 'Y':
+                case 'H':
+                case 'K':
+                case 'D':
+                case 'B':
+                case 'N':
+                case '.':
+                case '=':
+                    return true;
+                default:
+                    return false;
             }
         }
 
