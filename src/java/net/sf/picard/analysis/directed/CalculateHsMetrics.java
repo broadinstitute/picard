@@ -65,6 +65,9 @@ public class CalculateHsMetrics extends CommandLineProgram {
 
     @Option(shortName="TI", doc="An interval list file that contains the locations of the targets.")
     public File TARGET_INTERVALS;
+    
+    @Option(shortName="N", doc="Bait set name. If not provided it is inferred from the filename of the bait intervals.")
+    public String BAIT_SET_NAME;
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="An aligned SAM or BAM file.")
     public File INPUT;
@@ -108,10 +111,10 @@ public class CalculateHsMetrics extends CommandLineProgram {
             throw new IllegalArgumentException("Must supply REFERENCE_SEQUENCE when supplying PER_TARGET_COVERAGE");
         }
 
-        boolean calculateAll = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS);
-        boolean calculateSample = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.SAMPLE);
-        boolean calculateLibrary = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.LIBRARY);
-        boolean calculateReadGroup = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.READ_GROUP);
+        final boolean calculateAll = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.ALL_READS);
+        final boolean calculateSample = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.SAMPLE);
+        final boolean calculateLibrary = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.LIBRARY);
+        final boolean calculateReadGroup = METRIC_ACCUMULATION_LEVEL.contains(MetricAccumulationLevel.READ_GROUP);
 
         // Validate that the targets and baits have the same references as the reads file
         SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(),
@@ -140,7 +143,7 @@ public class CalculateHsMetrics extends CommandLineProgram {
         final Map<String,HsMetricsCalculator> libraryCalculators   = new HashMap<String,HsMetricsCalculator>();
         final Map<String,HsMetricsCalculator> readGroupCalculators = new HashMap<String,HsMetricsCalculator>();
 
-        for (SAMReadGroupRecord rg : samReader.getFileHeader().getReadGroups()) {
+        for (final SAMReadGroupRecord rg : samReader.getFileHeader().getReadGroups()) {
             if (calculateSample) {
                 if (!sampleCalculators.containsKey(rg.getSample())) {
                     sampleCalculators.put(rg.getSample(), createCalculator(rg.getSample(), null, null, ref));
@@ -218,6 +221,7 @@ public class CalculateHsMetrics extends CommandLineProgram {
                                                  final ReferenceSequenceFile ref) {
         if (baseCalculator == null) {
             baseCalculator = new HsMetricsCalculator(BAIT_INTERVALS, TARGET_INTERVALS, ref, sample, library, readGroup);
+            if (this.BAIT_SET_NAME != null) baseCalculator.setBaitSetName(BAIT_SET_NAME);
             return baseCalculator;
         }
         else {

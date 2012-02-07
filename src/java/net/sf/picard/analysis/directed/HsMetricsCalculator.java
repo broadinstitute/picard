@@ -172,6 +172,11 @@ public class HsMetricsCalculator {
         this.perTargetOutput = perTargetOutput;
     }
 
+    /** Sets the name of the bait set explicitly instead of inferring it from the bait file. */
+    public void setBaitSetName(final String name) {
+        this.metrics.BAIT_SET = name;
+    }
+
     /** Iterates over all records in the file and collects metrics. */
     public void analyze(final Iterator<SAMRecord> records) {
         int i = 0;
