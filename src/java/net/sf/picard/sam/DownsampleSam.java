@@ -22,9 +22,9 @@ import java.util.Random;
  */
 public class DownsampleSam extends CommandLineProgram {
     @Usage public final String USAGE = getStandardUsagePreamble() + " Randomly down-sample a SAM or BAM file to retain " +
-            "a random subset of the reads. Mate-pairs are either both kept or both discarded. Each read is given a " +
-            "probability P of being retained - results with the exact same input in the same order and with the same " +
-            "value for RANDOM_SEED will produce the same results.";
+            "a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary " +
+            "alignments are all discarded. Each read is given a probability P of being retained - results with the exact " +
+            "same input in the same order and with the same value for RANDOM_SEED will produce the same results.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to downsample.")
     public File INPUT;
@@ -59,6 +59,8 @@ public class DownsampleSam extends CommandLineProgram {
 
 
         for (final SAMRecord rec : in) {
+            if (rec.getNotPrimaryAlignmentFlag()) continue;
+
             if (++total % 10000000 == 0) {
                 log.info("Read " + total + " reads, kept " + kept);
             }
