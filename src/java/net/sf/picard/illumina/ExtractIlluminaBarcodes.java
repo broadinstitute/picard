@@ -162,13 +162,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         final IlluminaDataProvider dataProvider = factory.makeDataProvider();
         try {
-            int clusterNum = 0;
             while (dataProvider.hasNext()) {
-                if(clusterNum % 1000000 == 0) {
-                    System.out.println("Considering cluster: " + clusterNum);
-                    System.out.flush();
-                    clusterNum += 1;
-                }
                 final ClusterData cluster = dataProvider.next();
                 extractBarcode(cluster);
             }
