@@ -66,7 +66,7 @@ public class CalculateHsMetrics extends CommandLineProgram {
     @Option(shortName="TI", doc="An interval list file that contains the locations of the targets.")
     public File TARGET_INTERVALS;
     
-    @Option(shortName="N", doc="Bait set name. If not provided it is inferred from the filename of the bait intervals.")
+    @Option(shortName="N", doc="Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional=true)
     public String BAIT_SET_NAME;
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="An aligned SAM or BAM file.")
