@@ -110,10 +110,7 @@ public class BasicInputParser extends AbstractInputParser
                 return line.getBytes();
             }
             if (inputs.size() > 0) {
-                currentFileName = fileNames.size() > 0 ? fileNames.remove(0) : null;
-                nextLineNumber = 0;
-                nextLine = null;
-                reader = new BufferedLineReader(inputs.remove(0));
+                advanceFile();
                 return readNextLine();
             }
             return null;
@@ -121,6 +118,13 @@ public class BasicInputParser extends AbstractInputParser
         catch(RuntimeIOException ioe) {
             throw new PicardException("Error reading from file " + currentFileName, ioe);
         }
+    }
+
+    protected void advanceFile() {
+        currentFileName = fileNames.size() > 0 ? fileNames.remove(0) : null;
+        nextLineNumber = 0;
+        nextLine = null;
+        reader = new BufferedLineReader(inputs.remove(0));
     }
 
     /**

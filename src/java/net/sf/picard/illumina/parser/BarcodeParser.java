@@ -35,7 +35,13 @@ import java.util.Set;
 /**
  * Parse barcode file and return the matched barcode (not the actual sequence from the read).
  * If read does not match the returned BarcodeData will return null when getBarcode() is called.
- * 
+ *
+ * Barcode.txt file Format (consists of tab delimited columns, 1 record per row)
+ * sequence_read    Matched(Y/N)    BarcodeSequenceMatched
+ *
+ * sequence read          - the actual bases at barcode position
+ * Matched(y/n)           - Y or N indicating if there was a barcode match
+ * BarcodeSequenceMatched - matched barcode sequence (empty if read did not match one of the barcodes).
  * @author jburke@broadinstitute.org
  */
 class BarcodeParser implements IlluminaParser<BarcodeData> {

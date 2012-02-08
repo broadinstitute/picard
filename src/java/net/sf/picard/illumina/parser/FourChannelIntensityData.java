@@ -93,7 +93,7 @@ public class FourChannelIntensityData {
 
     @Override
     public int hashCode() {
-        int ret = 0; //TODO: Check this
+        int ret = 0;
         ret = ret * 31 + Arrays.hashCode(a);
         ret += ret * 31 + Arrays.hashCode(c);
         ret += ret * 31 + Arrays.hashCode(g);

@@ -34,7 +34,10 @@ package net.sf.picard.illumina.parser;
 interface IlluminaData {
 }
 
-interface PositionalData {
+// Note: PositionalData was spun out this round but since every parser has means of retrieving lane/tile from the
+// file name, we are going to move lane/tile to be queryable from parsers in future revisions and therefore if you
+// want lane/tile info you will NOT have to parse one of the Positional Data formats (pos, locs, clocs, qseqs)
+interface PositionalData extends IlluminaData {
     public int getXCoordinate();
     public int getYCoordinate();
     public int getLane();

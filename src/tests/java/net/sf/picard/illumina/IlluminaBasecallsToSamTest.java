@@ -74,6 +74,7 @@ public class IlluminaBasecallsToSamTest {
         new IlluminaBasecallsToSam().instanceMain(new String[] {
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
+                "READ_STRUCTURE=76T76T",
                 "OUTPUT=" + outputBam,
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
@@ -114,8 +115,7 @@ public class IlluminaBasecallsToSamTest {
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
-                "BARCODE_CYCLE=31",
-                "BARCODE_LENGTH=8",
+                "READ_STRUCTURE=30T8B",
                 "BARCODE_PARAMS=" + barcodeParams
         });
 

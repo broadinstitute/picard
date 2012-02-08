@@ -40,14 +40,14 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina");
     //private static final File SEQUENCE_DICTIONARY = new File(TEST_DATA_DIR, "Homo_sapiens_assembly18.seqdict.sam");
     private static final String ALIAS = "myalias";
-    private static final String RUN_BARCODE = "305PJAAXX080716";   // todo - not sure if this is right
+    private static final String RUN_BARCODE = "305PJAAXX080716";
     private static final String READ_GROUP_NAME = "0";
 
     /**
      * Run IlluminaBasecallsToSam on a few test cases, and verify that results agree with hand-checked expectation.
      */
     @Test(dataProvider="data")
-    public void testBasic(String LANE) throws Exception {
+    public void testBasic(String LANE, String readStructure) throws Exception {
         // Create the SAM file from Gerald output
         final File samFile = File.createTempFile("." + LANE + ".illuminaBasecallsToSam", ".sam");
         samFile.deleteOnExit();
@@ -55,6 +55,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
                 "BASECALLS_DIR=" + TEST_DATA_DIR + "/IlluminaTests/BasecallsDir",
                 "LANE=" + LANE,
                 "RUN_BARCODE=" + RUN_BARCODE,
+                "READ_STRUCTURE=" + readStructure,
                 "OUTPUT=" + samFile,
                 "ALIAS=" + ALIAS,
         };
@@ -88,11 +89,11 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
 
     @DataProvider(name="data")
     private Object[][] getIlluminaBasecallsToSamTestData(){
-        return new Object[][] {
-                {"1"},
-                {"2"},
-                {"4"},
-                {"5"},
+        return new Object[][] { //TODO: ADD BARCODED TESTS?
+                {"1", "76T76T"},
+                {"2", "76T"},
+                {"4", "76T76T"},
+                {"5", "76T"},
         };
     }
 

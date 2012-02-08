@@ -94,25 +94,25 @@ public class ExtractIlluminaBarcodesTest {
 
     @Test
     public void testSingleEndWithBarcodeAtStart() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(1, 1, "6B36T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "6B36T");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testSingleEndWithBarcodeAtEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(2, 37, "36T6B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(2, "36T6B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testPairedEndWithBarcodeOnFirstEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(3, 37, "36T6B36T");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(3, "36T6B36T");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
     @Test
     public void testPairedEndWithBarcodeOnSecondEnd() throws Exception {
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(4, 73, "36T36T6B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(4, "36T36T6B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
@@ -128,7 +128,7 @@ public class ExtractIlluminaBarcodesTest {
     public void testBarcodeMatching() throws Exception {
         final int lane = 5;
         final int barcodePosition = 37;
-        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runBothAndTest(lane, barcodePosition, "36T6B");
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(lane, "36T6B");
 
         ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG = null;
         ExtractIlluminaBarcodes.BarcodeMetric metricTGACCA = null;
@@ -189,13 +189,10 @@ public class ExtractIlluminaBarcodesTest {
         barcodeParser.close();
 
         // Tack on test of barcode-informed Illumina Basecall parsing
-        IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, barcodePosition,
-               metricACAGTG.BARCODE.length(), IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
-        testParsing(factory, metricACAGTG, barcodePosition);
-
-        factory = new IlluminaDataProviderFactory(basecallsDir, lane, new ReadStructure("36T6B"),
+        final ReadStructure rs = new ReadStructure("36T6B");
+        IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
-        testParsing(factory, metricACAGTG, barcodePosition);
+        testParsing(factory, rs, metricACAGTG, barcodePosition);
     }
 
     @Test(dataProvider = "dualBarcodeData")
@@ -229,12 +226,11 @@ public class ExtractIlluminaBarcodesTest {
         };
     }
 
-    private void testParsing(final IlluminaDataProviderFactory factory, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {
+    private void testParsing(final IlluminaDataProviderFactory factory, final ReadStructure readStructure, final ExtractIlluminaBarcodes.BarcodeMetric metricACAGTG, final int barcodePosition) {
 
         int numReads = 0;
 
         final IlluminaDataProvider dataProvider = factory.makeDataProvider();
-        final ReadStructure runConfig = dataProvider.getReadStructure();
         while (dataProvider.hasNext()) {
             final ClusterData cluster = dataProvider.next();
 
@@ -242,37 +238,10 @@ public class ExtractIlluminaBarcodesTest {
                 ++numReads;
             }
 
-            Assert.assertEquals(cluster.getRead(runConfig.templateIndices[0]).getQualities().length, barcodePosition - 1);
-            Assert.assertEquals(cluster.getRead(runConfig.templateIndices[0]).getBases().length, barcodePosition - 1);
+            Assert.assertEquals(cluster.getRead(readStructure.templateIndices[0]).getQualities().length, barcodePosition - 1);
+            Assert.assertEquals(cluster.getRead(readStructure.templateIndices[0]).getBases().length, barcodePosition - 1);
         }
         Assert.assertEquals(numReads, metricACAGTG.READS);
-    }
-
-    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runBothAndTest(final int lane, final int position, final String readStructure) throws Exception {
-        MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricFromPosition  = runIt(lane, position);
-        MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricFromRunConfig = runIt(lane, readStructure);
-        if(!metricFromPosition.areMetricsEqual(metricFromRunConfig)) {
-            throw new RuntimeException("Output metrics differ between barcode position and read structure!");
-        }
-        
-        return metricFromPosition;
-    }
-
-    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final int position)
-            throws Exception {
-        final File metricsFile = File.createTempFile("eib.", ".metrics");
-        metricsFile.deleteOnExit();
-        
-        final List<String> args = new ArrayList<String>(Arrays.asList(
-                "BASECALLS_DIR=" + basecallsDir.getPath(),
-                "LANE=" + lane,
-                "BARCODE_POSITION=" + position,
-                "METRICS_FILE=" + metricsFile.getPath()
-                ));
-        for (final String barcode : BARCODES) {
-            args.add("BARCODE=" + barcode);
-        }
-        return runIt(args, metricsFile);
     }
 
     private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final int lane, final String readStructure)

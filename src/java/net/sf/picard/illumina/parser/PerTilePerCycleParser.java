@@ -58,7 +58,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     private final int totalCycles;
 
     /** The current tile number */
-    private int tileNumber  = 0;
+    protected int tileNumber  = 0;
 
     /** Map of tiles -> CycledFilesIterator */
     protected final CycleIlluminaFileMap tilesToCycleFiles;
@@ -71,7 +71,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         this.outputLengths = outputLengths;
 
         int cycles = 0;
-        for(int i = 0; i < outputLengths.length; i++) { //TODO: Put this into as util
+        for(int i = 0; i < outputLengths.length; i++) {
             cycles += outputLengths[i];
         }
         totalCycles = cycles;
@@ -89,6 +89,8 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
             cycleToIndex[i+1] = new CompositeIndex(arrIndex, elementIndex);
             ++elementIndex;
         }
+
+        seekToTile(tilesToCycleFiles.firstKey());
     }
 
     /**
@@ -102,7 +104,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
      * For a given cycle, return a CycleFileParser.
      * @param file The file to parse
      * @param cycle The cycle that file represents
-     * @return A CycleFileParser that will populate the correct position in the IlluminaData object with that cycles data.
+     * @return A CycleFileParser that will populate the correct position in the IlluminaData object with that cycle's data.
      */
     protected abstract CycleFileParser<ILLUMINA_DATA> makeCycleFileParser(final File file, final int cycle);
 
@@ -111,8 +113,8 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
      * value.
      * @param <ILLUMINA_DATA>
      */
-    protected interface CycleFileParser<ILLUMINA_DATA>  { //Alternatively since we seem to be using MemoryMappedByteBuffers and these files have a numClusters
-        public void close();                              //we could just have CycleFileParser only have 1 method addData(ild, cluster)
+    protected interface CycleFileParser<ILLUMINA_DATA>  {
+        public void close();
         public void next(final ILLUMINA_DATA ild);
         public boolean hasNext();
     }
@@ -134,6 +136,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     public void seekToTile(final int oneBasedTileNumber) {
         tileNumber = oneBasedTileNumber;
         final CycleFilesIterator filesIterator = tilesToCycleFiles.get(tileNumber);
+        filesIterator.reset();
 
         CloserUtil.close(cycleFileParsers);
         cycleFileParsers.clear();
@@ -161,7 +164,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         }
 
         if(!cycleFileParsers.get(0).hasNext()) {
-            seekToTile(tileNumber+1);
+            seekToTile(tilesToCycleFiles.higherKey(tileNumber));
         }
 
         final ILLUMINA_DATA data = makeData(outputLengths);

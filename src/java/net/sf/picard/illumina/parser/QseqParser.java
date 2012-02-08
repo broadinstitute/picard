@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2012 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
     private final QseqReadParser[] parsers; //each parser parsers iterates over all tiles for 1 read
     private final List<IlluminaFileMap> tileMapByReadNumber;
     
-    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(Position, BaseCalls, QualityScores, PF));
+    public static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(CollectionUtil.makeSet(Position, BaseCalls, QualityScores, PF));
 
     public QseqParser(final int lane, final int [] outputLengths, final List<IlluminaFileMap> tileMapByReadNumber) {
         this.outputLengths       = outputLengths;
@@ -164,7 +164,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
 
     @Override
     public Set<IlluminaDataType> supportedTypes() {
-        return SupportedTypes;
+        return SUPPORTED_TYPES;
     }
 }
 
@@ -188,6 +188,7 @@ class QseqReadParser {
     private final CompositeIndex [] destRanges;
     private final int [] copyLengths;
     protected final int readLength;
+    private static final SolexaQualityConverter qualConverter = SolexaQualityConverter.getSingleton();
 
     public QseqReadParser(final int lane, final IlluminaFileMap tilesToReadFiles,  int writeOffset, final int [] outputLengths)
     {
@@ -205,7 +206,7 @@ class QseqReadParser {
         final List<Integer> lengthsList = new ArrayList<Integer>();
         final List<Range> srcRangesList = new ArrayList<Range>();
         final List<CompositeIndex> dstRangesList = new ArrayList<CompositeIndex>();
-        while(coveredLength < readLength) { //TODO: Something is not being caught here if qseq length is actually > than runConfig length
+        while(coveredLength < readLength) {
             int length = Math.min(outputLengths[bufferIndex] - writeOffset, readLength - coveredLength);
             lengthsList.add(length);
             srcRangesList.add(new Range(readOffset, readOffset + length));
@@ -273,7 +274,7 @@ class QseqReadParser {
         stringToBases(s, sourceRanges, destRanges, outputBuffers);
 
         for(int i = 0; i < destRanges.length; i++) {
-            SolexaQualityConverter.getSingleton().convertSolexa_1_3_QualityCharsToPhredBinary(destRanges[i].elementIndex, copyLengths[i], outputBuffers[destRanges[i].arrayIndex]);
+            qualConverter.convertSolexa_1_3_QualityCharsToPhredBinary(destRanges[i].elementIndex, copyLengths[i], outputBuffers[destRanges[i].arrayIndex]);
         }
     }
 

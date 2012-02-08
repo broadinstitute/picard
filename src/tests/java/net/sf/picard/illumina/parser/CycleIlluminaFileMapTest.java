@@ -58,28 +58,28 @@ public class CycleIlluminaFileMapTest {
     public Object [][] iteratorTestData() {
         return new Object[][] {
             new Object[] {
-                TEST_DATA_DIR, 1, 1, "cif",
+                TEST_DATA_DIR, 1, 1, ".cif",
                     makeList(new File(TEST_DATA_DIR + "/C1.1", "s_1_1.cif"),
                              new File(TEST_DATA_DIR + "/C2.1", "s_1_1.cif"),
                              new File(TEST_DATA_DIR + "/C3.1", "s_1_1.cif"),
                              new File(TEST_DATA_DIR + "/C4.1", "s_1_1.cif"))
             },
             new Object[] {
-                TEST_DATA_DIR, 1, 2, "cnf",
+                TEST_DATA_DIR, 1, 2, ".cnf",
                     makeList(new File(TEST_DATA_DIR + "/C1.1", "s_1_2.cnf"),
                              new File(TEST_DATA_DIR + "/C2.1", "s_1_2.cnf"),
                              new File(TEST_DATA_DIR + "/C3.1", "s_1_2.cnf"),
                              new File(TEST_DATA_DIR + "/C4.1", "s_1_2.cnf"))
             },
             new Object[] {
-                ZERO_LENGTH_TEST_DATA_DIR, 1, 1, "cif", new ArrayList<File>()
+                ZERO_LENGTH_TEST_DATA_DIR, 1, 1, ".cif", new ArrayList<File>()
             },
             new Object[] {
-                TEST_DATA_DIR, 1, 3, "cnf", new ArrayList<File>()
+                TEST_DATA_DIR, 1, 3, ".cnf", new ArrayList<File>()
             },
 
             new Object[] {
-                TEST_DATA_DIR, 2, 1, "cnf", new ArrayList<File>()
+                TEST_DATA_DIR, 2, 1, ".cnf", new ArrayList<File>()
             },
         };
     }
@@ -100,24 +100,24 @@ public class CycleIlluminaFileMapTest {
     @Test
     public void passingAssertCycledIlluminaFileMapTest() {
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cif"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
         fileMap.assertValid(makeList(1,2), 4);
     }
 
     @Test(expectedExceptions = PicardException.class)
     public void tileFailingAssertCycledIlluminaFileMapTest() {
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cif"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
         fileMap.assertValid(makeList(1,2,3), 4);
     }
 
     @Test(expectedExceptions = PicardException.class)
     public void cycleFailingAssertCycledIlluminaFileMapTest() {
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cif"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
         fileMap.assertValid(makeList(1,2), 5);
     }
 
