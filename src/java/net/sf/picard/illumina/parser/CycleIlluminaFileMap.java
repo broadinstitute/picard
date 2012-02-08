@@ -36,6 +36,19 @@ import java.util.TreeMap;
  * @author jburke@broadinstitute.org
  */
 class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
+
+    /** Return a CycleIlluminaFileMap with only the tiles listed , throws an exception if it does not contain any of the tiles listed */
+    public CycleIlluminaFileMap keep(final List<Integer> tilesToKeep) {
+        final CycleIlluminaFileMap ciMap = new CycleIlluminaFileMap();
+        for(final Integer tile : tilesToKeep) {
+            final CycleFilesIterator template = this.get(tile);
+            if(template != null) {
+                ciMap.put(tile, new CycleFilesIterator(this.get(tile)));
+            }
+        }
+        return ciMap;
+    }
+
     /**
      * Assert that this map has an iterator for all of the expectedTiles and each iterator has expectedCycles number
      * of files.
@@ -93,7 +106,12 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
 
     private void findNextFile() {
         final File cycleDir = new File(parentDir, "C" + nextCycle + ".1");
-        nextFile = new File(cycleDir, "s_" + lane + "_" + tile + "." + fileExt);
+        nextFile = new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
+    }
+
+    public void reset() {
+        this.nextCycle = 1;
+        findNextFile();
     }
 
     @Override
@@ -104,7 +122,9 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
     @Override
     public File next() {
         if (!hasNext()) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException( " Parent dir (" + parentDir.getAbsolutePath() + ")" +
+                                              " Lane (" + lane + ") Tile (" + tile + ") FileExt(" + fileExt + ")" +
+                                              " Cycle (" + nextCycle + ")");
         }
         final File curFile = nextFile;
         nextCycle++;

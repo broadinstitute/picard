@@ -50,6 +50,7 @@ public class ReadStructure {
     public final int numTemplates;
     public final int numSkips;
     public final int numDescriptors;
+    public final int [] readLengths;
 
     /** index into descriptors of templates */
     public final int [] templateIndices;
@@ -106,6 +107,7 @@ public class ReadStructure {
         final List<Integer> barcodeIndicesList  = new ArrayList<Integer>();
         final List<Integer> templateIndicesList = new ArrayList<Integer>();
         final List<Integer> skipIndicesList     = new ArrayList<Integer>();
+        readLengths = new int[collection.size()];
 
         int descIndex = 0;
         for(final ReadDescriptor desc : descriptors) {
@@ -113,6 +115,7 @@ public class ReadStructure {
                 throw new IllegalArgumentException("ReadStructure only supports ReadDescriptor lengths > 0, found(" + desc.length + ")");
             }
 
+            readLengths[descIndex] = desc.length;
             cycles += desc.length;
             switch(desc.type) {
                 case B:

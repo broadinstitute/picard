@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2012 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.util.UnsignedTypeUtil;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.picard.PicardException;
 import net.sf.samtools.util.StringUtil;
@@ -93,8 +94,8 @@ class ClusterIntensityFileReader {
                 throw new PicardException("Cluster intensity file " + file + " contains unexpected element size: " + elementSize);
             }
             // convert these to unsigned
-            firstCycle = buf.getShort() & 0xffff;
-            numCycles = buf.getShort() & 0xffff;
+            firstCycle = UnsignedTypeUtil.uShortToInt(buf.getShort());
+            numCycles = UnsignedTypeUtil.uShortToInt(buf.getShort());
             if (numCycles == 0) {
                 throw new PicardException("Cluster intensity file " + file + " has zero cycles.");
             }

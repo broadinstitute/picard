@@ -50,7 +50,9 @@ import java.text.NumberFormat;
  * The output file contains the following tab-separated columns:
  * - read subsequence at barcode position
  * - Y or N indicating if there was a barcode match
- * - matched barcode sequence (empty if read did not match one of the barcodes).
+ * - matched barcode sequence (empty if read did not match one of the barcodes).  If there is no match
+ *   but we're close to the threshold of calling it a match we output the barcode that would have been
+ *   matched but in lower case
  *
  * @author jburke@broadinstitute.org
  */
@@ -77,12 +79,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC, shortName="RS", mutex = "BARCODE_CYCLE")
+    @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC, shortName="RS")
     public String READ_STRUCTURE;
-
-    @Option(doc="1-based cycle number of the start of the barcode.  This cannot be used with reads that have more than one " +
-            "barcode; use READ_STRUCTURE in that case", mutex = "READ_STRUCTURE", shortName = "BARCODE_POSITION")
-    public Integer BARCODE_CYCLE;
 
     @Option(doc="Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
             "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
@@ -164,7 +162,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         final IlluminaDataProvider dataProvider = factory.makeDataProvider();
         try {
+            int clusterNum = 0;
             while (dataProvider.hasNext()) {
+                if(clusterNum % 1000000 == 0) {
+                    System.out.println("Considering cluster: " + clusterNum);
+                    System.out.flush();
+                    clusterNum += 1;
+                }
                 final ClusterData cluster = dataProvider.next();
                 extractBarcode(cluster);
             }
@@ -275,6 +279,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             barcodeSubsequences[i] = cluster.getRead(readStructure.barcodeIndices[i]).getBases();
             assert (barcodeSubsequences[i].length == bcLen);
         }
+        
         final boolean passingFilter = cluster.isPf();
         final BarcodeMatch match = findBestBarcode(barcodeSubsequences, passingFilter);
 
@@ -422,27 +427,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
 
-        // Set this up here so we can use readStructure when parsing the barcode file
-        if(READ_STRUCTURE == null) {
-            int barcodeLength = 0;
-            if(BARCODE == null || BARCODE.size() == 0) {
-                if (BARCODE_FILE != null) barcodeLength = getBarcodeLengthFromFile();
-            }
-            else {
-                barcodeLength = BARCODE.get(0).length();
-            }
-            if (barcodeLength == 0) messages.add("Cannot determine barcode length");
-            log.debug("barcodeLenth is " + barcodeLength);
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, barcodeLength, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
-            readStructure = factory.readStructure();
-        } else {
-            readStructure = new ReadStructure(READ_STRUCTURE);
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
-        }
+        readStructure = new ReadStructure(READ_STRUCTURE);
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.Position, IlluminaDataType.PF);
 
-        if (READ_STRUCTURE == null && BARCODE_CYCLE < 1) {
-            messages.add("Invalid BARCODE_CYCLE=" + BARCODE_CYCLE + ".  Value must be positive.");
-        }
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
         } else {

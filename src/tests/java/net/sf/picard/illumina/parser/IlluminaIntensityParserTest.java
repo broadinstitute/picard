@@ -18,8 +18,8 @@ public class IlluminaIntensityParserTest {
     @Test
     public void testSingleEnd() {
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cif"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
 
         final CifParser cifParser = new CifParser(TEST_DATA_DIR, LANE, fileMap, new int[]{4});
 
@@ -41,8 +41,8 @@ public class IlluminaIntensityParserTest {
     public void testPairedEndWithBarcode() {
 
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cif"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
 
         final int [] outputLengths = new int[]{1, 2, 1};
         final CifParser cifParser = new CifParser(TEST_DATA_DIR, LANE, fileMap, outputLengths);
@@ -64,8 +64,8 @@ public class IlluminaIntensityParserTest {
     public void testSeekCnf() {
 
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, "cnf"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, "cnf"));
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cnf"));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cnf"));
 
         final CnfParser cnfParser = new CnfParser(TEST_DATA_DIR, LANE, fileMap, new int[]{4});
         cnfParser.seekToTile(2);

@@ -37,8 +37,6 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<ClusterData>{
-    /** readStructure describes how cluster data should be output by IlluminaDataProvider */
-    private final ReadStructure readStructure;
 
     /** contains QSeqs, bcls, or other Illumina file types that will be parsed by this class */
     private final File basecallDirectory; //These two are for error reporting only
@@ -68,7 +66,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
     IlluminaDataProvider(final ReadStructure readStructure,
                          final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataTypes,
                          final File basecallDirectory, final int lane) {
-        this.readStructure = readStructure;
         this.basecallDirectory = basecallDirectory;
         this.lane = lane;
         numReads = readStructure.numDescriptors;
@@ -93,17 +90,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
         for(final ReadDescriptor rd : readStructure.descriptors) {
             outputReadTypes[i++] = rd.type;
         }
-    }
-
-    /**
-     * Returns the ReadStructure for this IlluminaDataProvider.  This method is deprecated on arrival because
-     * in the next version client code will need to create/specify the ReadStructure itself and therefore
-     * will already have access to the ReadStructure.
-     * @return ReadStructure used by this IlluminaDataProvider
-     */
-    @Deprecated
-    public ReadStructure getReadStructure() {
-        return readStructure;
     }
 
     /**

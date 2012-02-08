@@ -17,7 +17,6 @@ import java.util.Map;
 abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePerCycleParser<T> {
     public IlluminaIntensityParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int [] readLengths) {
         super(directory, lane, tilesToCycleFiles, readLengths);
-        seekToTile(tilesToCycleFiles.firstKey());
     }
 
     /**

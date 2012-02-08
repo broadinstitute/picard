@@ -93,16 +93,16 @@ public class ReadStructureTest {
     @Test(dataProvider = "validReadStructures")
     public void testValidStructuresFromString(final String rsString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
         final ReadStructure readStructure = new ReadStructure(rsString);
-        testReadStructrue(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
+        testReadStructure(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
     }
     
     @Test(dataProvider = "validReadStructures")
     public void testValidStructuresFromList(final String rsString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
         final ReadStructure readStructure = new ReadStructure(descriptors);
-        testReadStructrue(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
+        testReadStructure(readStructure, rsString, descriptors, numTemplates, numBarcodes, numSkips);
     }
 
-    private void testReadStructrue(final ReadStructure readStructure, final String structureString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
+    private void testReadStructure(final ReadStructure readStructure, final String structureString, final List<ReadDescriptor> descriptors, final int numTemplates, final int numBarcodes, final int numSkips) {
         Assert.assertEquals(readStructure.toString(), structureString);
 
         int totalCycles = 0;

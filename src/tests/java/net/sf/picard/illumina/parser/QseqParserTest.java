@@ -7,7 +7,7 @@ import org.testng.annotations.DataProvider;
 import java.util.*;
 
 import static net.sf.picard.util.CollectionUtil.makeList;
-import static net.sf.picard.illumina.parser.TestDataUtil.*;
+import static net.sf.picard.illumina.parser.QSeqTdUtil.*;
 
 public class QseqParserTest {
 
@@ -110,7 +110,7 @@ public class QseqParserTest {
             new Object[] {1, new int[]{152}, makeList(new IlluminaFileMap(makeList(1), getQseqs(s_1_1_0001)), new IlluminaFileMap(makeList(1), getQseqs(s_1_2_0001))),
                 combineReads(getReadData(s_1_1_0001), getReadData(s_1_2_0001))},
 
-            //In this example tile 3 is tile 1 reused and therefore the resultant QSeqReadData will not read tile 3 but tile 1 TODO: Perhaps actually check the lane/tile number in the QSeqFileParser which would not allow us to do this
+            //In this example tile 3 is tile 1 reused and therefore the resultant QSeqReadData will not read tile 3 but tile 1
             //2 ends 3 tiles
             new Object[] {1, new int[]{76,76},
                 makeList(new IlluminaFileMap(makeList(1,2,3), getQseqs(s_1_1_0001,s_1_1_0002, s_1_1_0003)), new IlluminaFileMap(makeList(1,2,3), getQseqs(s_1_2_0001, s_1_2_0002, s_1_2_0003))),

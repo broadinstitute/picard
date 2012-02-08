@@ -94,16 +94,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc="The name of the sequencing technology that produced the read.", optional=true)
     public String PLATFORM = "illumina";
 
-    @Option(doc=READ_STRUCTURE_DOC, //see above
-            optional = true, shortName="RS", mutex = {"BARCODE_CYCLE", "BARCODE_LENGTH"})
+    @Option(doc=READ_STRUCTURE_DOC, shortName="RS")
     public String READ_STRUCTURE;
 
-    @Option(doc="Deprecated, use READ_STRUCTURE.  1-based cycle number of the start of the barcode.  If BARCODE or BARCODE_LENGTH are specified, this must be specified.",
-            optional = true, shortName = "BARCODE_POSITION", mutex={"READ_STRUCTURE"})
-    public Integer BARCODE_CYCLE;
-    @Option(doc="Deprecated, use READ_STRUCTURE.  Length of the barcode.  If BARCODE_CYCLE or BARCODE is specified, this must be specified.",
-            optional = true, mutex={"READ_STRUCTURE"})
-    public Integer BARCODE_LENGTH;
     @Option(doc="Tab-separated file for creating all output BAMs for barcoded run with single IlluminaBasecallsToSam invocation.  " +
             "Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
@@ -137,10 +130,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     // If not barcoded run, key == null.
     private final Map<String, SAMFileWriter> writersByBarcode = new HashMap<String, SAMFileWriter>();
 
+    private static final IlluminaDataType [] DataTypesNoBarcode = {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
+    private static final IlluminaDataType [] DataTypesWithBarcode = Arrays.copyOf(DataTypesNoBarcode, DataTypesNoBarcode.length + 1);
+    static { DataTypesWithBarcode[DataTypesWithBarcode.length -1] = IlluminaDataType.Barcodes; }
+
     @Override
 	protected int doWork() {
-        
-        log.info("POSITION  IS " + BARCODE_CYCLE);
         
         if (OUTPUT != null) {
             IoUtil.assertFileIsWritable(OUTPUT);
@@ -149,29 +144,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             IoUtil.assertFileIsReadable(BARCODE_PARAMS);
         }
 
-        if (READ_STRUCTURE != null) { //Possibly barcoded, possibly not depending on read structure
-            final ReadStructure rs = new ReadStructure(READ_STRUCTURE); //TODO: Next round this all gets prettier
-            if(rs.numBarcodes > 0) {
-                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rs,
-                    IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
-            } else {
-                factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, rs,
-                    IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
-            }
-        } else if(BARCODE_CYCLE != null) { //Barcoded run whose read structure is determined (using the Barcode params and the qseqs)
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, BARCODE_CYCLE, BARCODE_LENGTH,
-                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF, IlluminaDataType.Barcodes);
-        } else { //non-barcoded run whose read structure is determined (using available qseqs)
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, null,
-                IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF);
+        readStructure = new ReadStructure(READ_STRUCTURE);
+        if(readStructure.numBarcodes > 0) {
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesWithBarcode);
+        } else {
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesNoBarcode);
         }
 
-        //In the next round of changes only the first constructor above will be used and this will be replaced by the construction
-        //of an ReadStructure object in the same manner as the first branch of the if else block above
-        readStructure = factory.readStructure();
         log.info("RUN CONFIGURATION IS " + readStructure.toString());
         
-        List<Integer> tiles = factory.getTiles();
+        List<Integer> tiles = new ArrayList<Integer>(factory.getAvailableTiles());
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
         // and the output is sorted by read name, process the tiles in this order.
         Collections.sort(tiles, new Comparator<Integer>() {
@@ -368,22 +350,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
 
-        //TODO: Check this!
-        //Can have only a READ_STRUCTURE, a READ_STRUCTURE and a Barcode Params, or a BARCODE CYCLE, BARCODE LENGTH and BARCODE PARAMS
-        if(READ_STRUCTURE == null) {
-            if(BARCODE_CYCLE != null || BARCODE_LENGTH != null || BARCODE_PARAMS != null) {
-                if(BARCODE_CYCLE == null) {
-                    messages.add("BARCODE_CYCLE is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
-                } else {
-                    if(BARCODE_CYCLE < 1)
-                        messages.add("BARCODE_CYCLE must be >= 1");
-                }
-                if(BARCODE_LENGTH == null) {
-                    messages.add("BARCODE_LENGTH is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
-                }
-                if(BARCODE_PARAMS == null) {
-                    messages.add("BARCODE_PARAMS is missing.  Either each parameter BARCODE_CYCLE, BARCODE_LENGTH, and BARCODE_PARAMS or none must be specified.");
-                }
+        final ReadStructure rs = new ReadStructure(READ_STRUCTURE);
+        if(rs.numBarcodes > 0) {
+            if(BARCODE_PARAMS == null) {
+                messages.add("BARCODE_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode) then BARCODE_PARAMS must be provided!");
             }
         }
         
@@ -394,10 +364,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             return null;
         }
         return messages.toArray(new String[messages.size()]);
-    }
-
-    private boolean isBarcoded() {
-        return BARCODE_CYCLE != null;
     }
 
     /**
@@ -627,9 +593,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     cluster.getMatchedBarcode());
                 }
 
-                final ReadStructure rs = dataProvider.getReadStructure();
-                if(rs.numTemplates != 1 && rs.numTemplates != 2) {
-                    throw new PicardException("Number of templates(" + rs.numTemplates + ") specified by read structure was greater than 2");
+                if(readStructure.numTemplates != 1 && readStructure.numTemplates != 2) {
+                    throw new PicardException("Number of templates(" + readStructure.numTemplates + ") specified by read structure was greater than 2");
                 }
 
                 final SAMFileHeader header = sorter.getWriter().getFileHeader();

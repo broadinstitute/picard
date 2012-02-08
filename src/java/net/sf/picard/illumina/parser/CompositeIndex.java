@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2012 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.PicardException;
+
 /**
  * In multiple locations we use two dimensional arrays to avoid extra copying of ClusterData
  * this is an index into the two dimensional array, the first index specifying the index of
@@ -37,5 +39,10 @@ class CompositeIndex {
     public CompositeIndex(final int arrayIndex, final int elementIndex) {
         this.arrayIndex = arrayIndex;
         this.elementIndex = elementIndex;
+    }
+
+    @Override
+    public String toString() {
+        return "CompositeIndex(arrayIndex == " + arrayIndex + ", elementIndex == " + elementIndex + ")";
     }
 }

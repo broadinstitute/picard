@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 The Broad Institute
+ * Copyright (c) 2012 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,6 +45,18 @@ class IlluminaFileMap extends TreeMap<Integer, File> {
         for(int i = 0; i < tiles.size(); i++) {
             put(tiles.get(i), files.get(i));
         }
+    }
+
+    /** Return a file map that includes only the tiles listed */
+    public IlluminaFileMap keep(final List<Integer> toInclude) {
+        final IlluminaFileMap fm = new IlluminaFileMap();
+        for(final Integer tile : toInclude) {
+            final File file = this.get(tile);
+            if(file != null) {
+                fm.put(tile, file);
+            }
+        }
+        return fm;
     }
 
     /**
