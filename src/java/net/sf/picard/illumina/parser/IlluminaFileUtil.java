@@ -381,9 +381,13 @@ class IlluminaFileUtil {
                 return cycledMap;
             }
 
+            File cycle1Dir = null;
             final Integer [] cycles = new Integer[tempCycleDirs.length];
             for (int i = 0; i < tempCycleDirs.length; ++i) {
                 cycles[i] = getCycleFromDir(tempCycleDirs[i]);
+                if(cycles[i] == 1) {
+                    cycle1Dir = tempCycleDirs[i];
+                }
             }
 
             Arrays.sort(cycles);
@@ -399,7 +403,7 @@ class IlluminaFileUtil {
             }
 
             numCycles = tempCycleDirs.length;
-            final List<Integer> tiles = getTilesInCycleDir(tempCycleDirs[0]);
+            final List<Integer> tiles = getTilesInCycleDir(cycle1Dir);
             for(final int tile : tiles) {
                 cycledMap.put(tile, new CycleFilesIterator(laneDir, lane, tile, extension)); //Gonna have a problem here if we ever get a (.txt.gz for these types of files)
             }
