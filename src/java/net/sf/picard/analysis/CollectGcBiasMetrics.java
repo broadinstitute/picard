@@ -24,6 +24,7 @@
 
 package net.sf.picard.analysis;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -33,6 +34,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.samtools.SAMRecord;
@@ -63,7 +65,8 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="The reference sequence fasta file.")
     public File REFERENCE_SEQUENCE;
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The BAM or SAM file containing aligned reads.")
+    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The BAM or SAM file containing aligned reads.  " +
+            "Must be coordinate-sorted.")
     public File INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The text file to write the metrics table to.")
@@ -80,6 +83,10 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
     @Option(doc="For summary metrics, exclude GC windows that include less than this fraction of the genome.")
     public double MINIMUM_GENOME_FRACTION = 0.00001;
+
+    @Option(doc="If true, assume that the input file is coordinate sorted, even if the header says otherwise.",
+            shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+    public boolean ASSUME_SORTED = false;
 
     private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
 
@@ -107,6 +114,9 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         final long[] errorsByGc = new long[101];
 
         final SAMFileReader sam = new SAMFileReader(INPUT);
+        if (!ASSUME_SORTED && sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException("Input file " + INPUT.getAbsolutePath() + " is not coordinate sorted.");
+        }
         final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sam.iterator());
         final ReferenceSequenceFile referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
