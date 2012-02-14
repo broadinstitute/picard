@@ -28,6 +28,7 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMTag;
+import net.sf.samtools.util.CoordMath;
 
 import java.util.Iterator;
 import java.util.List;
@@ -176,7 +177,7 @@ public class SamPairUtil {
         }
         int firstEnd5PrimePosition = firstEnd.getReadNegativeStrandFlag()? firstEnd.getAlignmentEnd(): firstEnd.getAlignmentStart();
         int secondEnd5PrimePosition = secondEnd.getReadNegativeStrandFlag()? secondEnd.getAlignmentEnd(): secondEnd.getAlignmentStart();
-        return secondEnd5PrimePosition - firstEnd5PrimePosition;
+        return CoordMath.getLength(firstEnd5PrimePosition, secondEnd5PrimePosition);
     }
 
     /**
