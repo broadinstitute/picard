@@ -85,30 +85,38 @@ public class SequenceUtil {
     }
 
     /**
-     * Throws an exception if both parameters are not null sequenceListsEqual returns false
+     * Throws an exception only if both parameters are not null
      * @param s1 a list of sequence headers
      * @param s2 a second list of sequence headers
      */
     public static void assertSequenceListsEqual(final List<SAMSequenceRecord> s1, final List<SAMSequenceRecord> s2) {
-        if (s1 == null || s2 == null) return;
-        
-        if (s1.size() != s2.size()) {
-            throw new SequenceListsDifferException("Sequence dictionaries are not the same size (" +
-                    s1.size() + ", " + s2.size() + ")");
-        }
-        for (int i = 0; i < s1.size(); ++i) {
-            if (!s1.get(i).isSameSequence(s2.get(i))) {
-                String s1Attrs = "";
-                for (final java.util.Map.Entry<String, String> entry : s1.get(i).getAttributes()) {
-                    s1Attrs += "/" + entry.getKey() + "=" + entry.getValue();
+        if (s1 != null && s2 != null) {
+
+            if (s1.size() != s2.size()) {
+                throw new SequenceListsDifferException(
+                    "Sequence dictionaries are not the same size (" + s1.size() + ", " + s2.size() +
+                        ")");
+            }
+
+            for (int i = 0; i < s1.size(); ++i) {
+                if (!s1.get(i).isSameSequence(s2.get(i))) {
+                    String s1Attrs = "";
+                    for (final java.util.Map.Entry<String, String> entry : s1.get(i)
+                        .getAttributes()) {
+                        s1Attrs += "/" + entry.getKey() + "=" + entry.getValue();
+                    }
+                    String s2Attrs = "";
+                    for (final java.util.Map.Entry<String, String> entry : s2.get(i)
+                        .getAttributes()) {
+                        s2Attrs += "/" + entry.getKey() + "=" + entry.getValue();
+                    }
+                    throw new SequenceListsDifferException(
+                        "Sequences at index " + i + " don't match: " +
+                            s1.get(i).getSequenceIndex() + "/" + s1.get(i).getSequenceLength() +
+                            "/" + s1.get(i).getSequenceName() + s1Attrs + " " +
+                            s2.get(i).getSequenceIndex() + "/" + s2.get(i).getSequenceLength() +
+                            "/" + s2.get(i).getSequenceName() + s2Attrs);
                 }
-                String s2Attrs = "";
-                for (final java.util.Map.Entry<String, String> entry : s2.get(i).getAttributes()) {
-                    s2Attrs += "/" + entry.getKey() + "=" + entry.getValue();
-                }
-                throw new SequenceListsDifferException("Sequences at index " + i + " don't match: " +
-                    s1.get(i).getSequenceIndex() + "/" + s1.get(i).getSequenceLength() + "/" + s1.get(i).getSequenceName() + s1Attrs +
-                    " " + s2.get(i).getSequenceIndex() + "/" + s2.get(i).getSequenceLength() + "/" + s2.get(i).getSequenceName() + s2Attrs);
             }
         }
     }
@@ -131,10 +139,24 @@ public class SequenceUtil {
     }
 
     /**
+     * Returns true if both parameters are null or equal, otherwise returns false
+     */
+    public static boolean areSequenceDictionariesEqual(final SAMSequenceDictionary s1, final SAMSequenceDictionary s2) {
+        if (s1 == null && s2 == null) return true;
+        if (s1 == null || s2 == null) return false;
+
+        try {
+            assertSequenceListsEqual(s1.getSequences(), s2.getSequences());
+            return true;
+        } catch (SequenceListsDifferException e) {
+            return false;
+        }
+    }
+
+    /**
      * Throws an exception if both parameters are non-null and unequal.
      */
     public static void assertSequenceDictionariesEqual(final SAMSequenceDictionary s1, final SAMSequenceDictionary s2) {
-        if (s1 == null || s2 == null) return;
         assertSequenceListsEqual(s1.getSequences(), s2.getSequences());
     }
 
