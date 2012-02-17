@@ -157,6 +157,7 @@ public class SequenceUtil {
      * Throws an exception if both parameters are non-null and unequal.
      */
     public static void assertSequenceDictionariesEqual(final SAMSequenceDictionary s1, final SAMSequenceDictionary s2) {
+        if (s1 == null || s2 == null) return;
         assertSequenceListsEqual(s1.getSequences(), s2.getSequences());
     }
 
