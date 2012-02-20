@@ -24,7 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.util.IOUtil;
+import net.sf.samtools.Defaults;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
@@ -283,7 +283,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
      */
     public static BufferedWriter openFileForBufferedWriting(final File file, final boolean append) {
-        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file, append)), STANDARD_BUFFER_SIZE);
+        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file, append)), Defaults.BUFFER_SIZE);
     }
 
     /**
@@ -298,7 +298,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static BufferedWriter openFileForBufferedUtf8Writing(final File file) {
         return new BufferedWriter(new OutputStreamWriter(
-            openFileForWriting(file), Charset.forName("UTF-8")), STANDARD_BUFFER_SIZE);
+            openFileForWriting(file), Charset.forName("UTF-8")), Defaults.BUFFER_SIZE);
     }
 
     /**
@@ -321,7 +321,9 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     public static OutputStream openGzipFileForWriting(final File file, final boolean append) {
 
         try {
-            return new GZIPOutputStream(new FileOutputStream(file, append));
+            return new CustomGzipOutputStream(new FileOutputStream(file, append),
+                                              Defaults.BUFFER_SIZE,
+                                              Defaults.COMPRESSION_LEVEL);
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
@@ -342,7 +344,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
             final FileOutputStream fos = new FileOutputStream(file, append);
             fos.write(66); //write magic number 'BZ' because CBZip2OutputStream does not do it for you
             fos.write(90);
-            return new CBZip2OutputStream(fos);
+            return new BufferedOutputStream(new CBZip2OutputStream(fos), Defaults.BUFFER_SIZE);
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
@@ -358,7 +360,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static void copyStream(final InputStream input, final OutputStream output) {
         try {
-            final byte[] buffer = new byte[IOUtil.STANDARD_BUFFER_SIZE];
+            final byte[] buffer = new byte[Defaults.BUFFER_SIZE];
             int bytesRead = 0;
             while((bytesRead = input.read(buffer)) > 0) {
                 output.write(buffer, 0, bytesRead);
@@ -440,7 +442,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         if (fileOrDirectory.isDirectory()) {
             destination.mkdir();
             for(final File f : fileOrDirectory.listFiles()) {
-                File destinationFileOrDirectory =  new File(destination.getPath(),f.getName());
+                final File destinationFileOrDirectory =  new File(destination.getPath(),f.getName());
                 if (f.isDirectory()){
                     copyDirectoryTree(f,destinationFileOrDirectory);
                 }
@@ -477,11 +479,11 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
 
     /** Checks that a file exists and is readable, and then returns a buffered reader for it. */
     public static BufferedReader openFileForBufferedReading(final File file) throws IOException {
-        return new BufferedReader(new InputStreamReader(openFileForReading(file)), STANDARD_BUFFER_SIZE);
+        return new BufferedReader(new InputStreamReader(openFileForReading(file)), Defaults.BUFFER_SIZE);
 	}
 
     /** Takes a string and replaces any characters that are not safe for filenames with an underscore */
-    public static String makeFileNameSafe(String str) {
+    public static String makeFileNameSafe(final String str) {
         return str.trim().replaceAll("[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]", "_");
     }
 
@@ -509,7 +511,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /** Returns the full path to the file with all symbolic links resolved **/
-    public static String getFullCanonicalPath(File file) {
+    public static String getFullCanonicalPath(final File file) {
         try {
             File f = file.getCanonicalFile();
             String canonicalPath = "";
@@ -530,8 +532,8 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static String readFully(final InputStream in) {
         try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(in), STANDARD_BUFFER_SIZE);
-            StringBuilder builder = new StringBuilder(512);
+            final BufferedReader r = new BufferedReader(new InputStreamReader(in), Defaults.BUFFER_SIZE);
+            final StringBuilder builder = new StringBuilder(512);
             String line = null;
 
             while ((line = r.readLine()) != null) {
@@ -547,4 +549,16 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 }
 
+/**
+ * Hacky little class used to allow us to set the compression level on a GZIP output stream which, for some
+ * bizarre reason, is not exposed in the standard API.
+ *
+ * @author Tim Fennell
+ */
+class CustomGzipOutputStream extends GZIPOutputStream {
+    CustomGzipOutputStream(final OutputStream outputStream, final int bufferSize, final int compressionLevel) throws IOException {
+        super(outputStream, bufferSize);
+        this.def.setLevel(compressionLevel);
+    }
+}
 

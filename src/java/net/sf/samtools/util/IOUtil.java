@@ -24,6 +24,8 @@
 package net.sf.samtools.util;
 
 
+import net.sf.samtools.Defaults;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,8 +35,10 @@ import java.io.File;
  * Miscellaneous stateless static IO-oriented methods.
  */
 public class IOUtil {
-    // Purposely not final to give folks a back door to change it!
-    public static int STANDARD_BUFFER_SIZE = 1024 * 128; // == 128k
+    /**
+     * @deprecated Use Defaults.BUFFER_SIZE instead.
+     */
+    @Deprecated public static final int STANDARD_BUFFER_SIZE = Defaults.BUFFER_SIZE;
 
     public static final long ONE_GB   = 1024 * 1024 * 1024;
     public static final long TWO_GBS  = 2 * ONE_GB;
