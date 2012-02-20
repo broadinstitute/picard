@@ -19,11 +19,15 @@ public class Defaults {
     /** Compresion level to be used for writing BAM and other block-compressed outputs.  Default = 5. */
     public static final int COMPRESSION_LEVEL;
 
+    /** Buffer size, in bytes, used whenever reading/writing files or streams.  Default = 128k. */
+    public static final int BUFFER_SIZE;
+
     static {
         CREATE_INDEX      = getBooleanProperty("create_index", false);
         CREATE_MD5        = getBooleanProperty("create_md5", false);
         USE_ASYNC_IO      = getBooleanProperty("use_async_io", false);
         COMPRESSION_LEVEL = getIntProperty("compression_level", 5);
+        BUFFER_SIZE       = getIntProperty("buffer_size", 1024 * 128);
     }
 
     /** Gets a string system property, prefixed with "samjdk." using the default if the property does not exist.*/
