@@ -70,7 +70,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private static final int ADAPTER_MATCH_LENGTH = 16;
     private static final int MAX_ADAPTER_ERRORS = 1;
-    private byte[][] ADAPTER_SEQUENCES;
+    private byte[][] ADAPTER_KMERS;
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     final GroupAlignmentSummaryMetricsCollector allReadsCollector  = new GroupAlignmentSummaryMetricsCollector(null, null, null);
@@ -188,15 +188,28 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     }
 
     /** Converts the supplied adapter sequences to byte arrays in both fwd and rc. */
-    protected void prepareAdapterSequences() {
-        final int count = ADAPTER_SEQUENCE.size();
-        ADAPTER_SEQUENCES = new byte[count * 2][];
+    private void prepareAdapterSequences() {
+        final Set<String> kmers = new HashSet<String>();
 
-        for (int i=0; i<count; ++i) {
-            final String adapter = ADAPTER_SEQUENCE.get(i).toUpperCase();
-            ADAPTER_SEQUENCES[i] = StringUtil.stringToBytes(adapter);
-            ADAPTER_SEQUENCES[i + count] = StringUtil.stringToBytes(SequenceUtil.reverseComplement(adapter));
+        // Make a set of all kmers of ADAPTER_MATCH_LENGTH 
+        for (final String seq : ADAPTER_SEQUENCE) {
+            for (int i=0; i<=seq.length() - ADAPTER_MATCH_LENGTH; ++i) {
+                final String kmer = seq.substring(i, i+ADAPTER_MATCH_LENGTH).toUpperCase();
 
+                int ns = 0;
+                for (final char ch : kmer.toCharArray()) if (ch == 'N') ++ns;
+                if (ns <= MAX_ADAPTER_ERRORS) {
+                    kmers.add(kmer);
+                    kmers.add(SequenceUtil.reverseComplement(kmer));
+                }
+            }
+        }
+        
+        // Make an array of byte[] for the kmers
+        ADAPTER_KMERS = new byte[kmers.size()][];
+        int i=0;        
+        for (final String kmer : kmers) {
+            ADAPTER_KMERS[i++] = StringUtil.stringToBytes(kmer);
         }
     }
 
@@ -207,24 +220,19 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
      * @param read the basecalls for the read in the order and orientation the machine read them
      * @return true if the read matches an adapter and false otherwise 
      */
-    protected boolean isAdapterSequence(final byte[] read) {
+    private boolean isAdapterSequence(final byte[] read) {
         if (read.length < ADAPTER_MATCH_LENGTH) return false;
-        StringUtil.toUpperCase(read);
-        
-        for (final byte[] adapter : ADAPTER_SEQUENCES) {
-            final int lastKmerStart = adapter.length - ADAPTER_MATCH_LENGTH;
 
-            for (int adapterStart=0; adapterStart<lastKmerStart; ++adapterStart) {
-                int errors = 0;
+        for (final byte[] adapter : ADAPTER_KMERS) {
+            int errors = 0;
 
-                for (int i=0; i<ADAPTER_MATCH_LENGTH && errors <= MAX_ADAPTER_ERRORS; ++i) {
-                    if (read[i] != adapter[i + adapterStart]) {
-                        if (++errors > MAX_ADAPTER_ERRORS) break;
-                    }
+            for (int i=0; i<adapter.length; ++i) {
+                if (read[i] != adapter[i]) {
+                    if (++errors > MAX_ADAPTER_ERRORS) break;
                 }
-
-                if (errors <= MAX_ADAPTER_ERRORS) return true;
             }
+
+            if (errors <= MAX_ADAPTER_ERRORS) return true;
         }
 
         return false;
@@ -374,7 +382,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 }
                 else if (record.getReadUnmappedFlag()) {
                     // If the read is unmapped see if it's adapter sequence
-                    if (isAdapterSequence(record.getReadBases())) {
+                    final byte[] readBases = record.getReadBases();
+                    if (!(record instanceof BAMRecord)) StringUtil.toUpperCase(readBases);
+                    
+                    if (isAdapterSequence(readBases)) {
                         this.adapterReads++;
                     }
                 }
