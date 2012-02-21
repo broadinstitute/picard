@@ -218,7 +218,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                 int errors = 0;
 
                 for (int i=0; i<ADAPTER_MATCH_LENGTH && errors <= MAX_ADAPTER_ERRORS; ++i) {
-                    if (read[i] != adapter[i + adapterStart]) ++errors;
+                    if (read[i] != adapter[i + adapterStart]) {
+                        if (++errors > MAX_ADAPTER_ERRORS) break;
+                    }
                 }
 
                 if (errors <= MAX_ADAPTER_ERRORS) return true;
