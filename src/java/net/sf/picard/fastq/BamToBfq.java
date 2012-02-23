@@ -47,8 +47,9 @@ public class BamToBfq extends CommandLineProgram {
 
     @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;
-    @Option(doc="Flowcell barcode (e.g. 30PYMAAXX).  ", shortName="F") public String FLOWCELL_BARCODE;
-    @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, optional=true) public Integer LANE;
+    @Option(doc="Flowcell barcode (e.g. 30PYMAAXX).  ", shortName="F", mutex="OUTPUT_FILE_PREFIX") public String FLOWCELL_BARCODE;
+    @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, optional=true,mutex="OUTPUT_FILE_PREFIX") public Integer LANE;
+    @Option(doc="Prefix for all output files", mutex={"FLOWCELL_BARCODE","LANE"}) public String OUTPUT_FILE_PREFIX;
     @Option(doc="Number of reads to align (null = all).", shortName="NUM", optional=true) public Integer READS_TO_ALIGN;
     @Option(doc="Number of reads to break into individual groups for alignment", shortName="CHUNK") public Integer READ_CHUNK_SIZE = 2000000;
     @Option(doc="Whether this is a paired-end run. ", shortName="PE") public Boolean PAIRED_RUN;
@@ -65,10 +66,10 @@ public class BamToBfq extends CommandLineProgram {
         if (!outputPrefix.endsWith("/")) {
             outputPrefix += "/";
         }
-        outputPrefix += FLOWCELL_BARCODE + "." + LANE + ".";
+        outputPrefix += OUTPUT_FILE_PREFIX + ".";
 
         BamToBfqWriter writer = new BamToBfqWriter(INPUT, outputPrefix, READS_TO_ALIGN,
-                READ_CHUNK_SIZE, PAIRED_RUN, RUN_BARCODE != null ? RUN_BARCODE + ":" : READ_NAME_PREFIX,
+                READ_CHUNK_SIZE, PAIRED_RUN, READ_NAME_PREFIX,
                 INCLUDE_NON_PF_READS, CLIP_ADAPTERS, BASES_TO_WRITE);
         writer.writeBfqFiles();
         return 0;
@@ -76,6 +77,17 @@ public class BamToBfq extends CommandLineProgram {
 
     public static void main(String[] argv) {
         System.exit(new BamToBfq().instanceMain(argv));
+    }
+
+    protected String[] customCommandLineValidation() {
+
+        if (OUTPUT_FILE_PREFIX == null) {
+            OUTPUT_FILE_PREFIX = FLOWCELL_BARCODE + "." + LANE;
+        }
+        if (READ_NAME_PREFIX == null) {
+            READ_NAME_PREFIX = RUN_BARCODE + ":";
+        }
+        return null;
     }
 
 }
