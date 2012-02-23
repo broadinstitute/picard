@@ -175,9 +175,12 @@ public class SamPairUtil {
         if (!firstEnd.getReferenceName().equals(secondEnd.getReferenceName())) {
             return 0;
         }
-        int firstEnd5PrimePosition = firstEnd.getReadNegativeStrandFlag()? firstEnd.getAlignmentEnd(): firstEnd.getAlignmentStart();
-        int secondEnd5PrimePosition = secondEnd.getReadNegativeStrandFlag()? secondEnd.getAlignmentEnd(): secondEnd.getAlignmentStart();
-        return CoordMath.getLength(firstEnd5PrimePosition, secondEnd5PrimePosition);
+        
+        final int firstEnd5PrimePosition = firstEnd.getReadNegativeStrandFlag()? firstEnd.getAlignmentEnd(): firstEnd.getAlignmentStart();
+        final int secondEnd5PrimePosition = secondEnd.getReadNegativeStrandFlag()? secondEnd.getAlignmentEnd(): secondEnd.getAlignmentStart();
+        
+        final int adjustment = (secondEnd5PrimePosition >= firstEnd5PrimePosition) ? +1 : -1;
+        return secondEnd5PrimePosition - firstEnd5PrimePosition + adjustment;
     }
 
     /**
