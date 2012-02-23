@@ -32,6 +32,9 @@ import net.sf.samtools.util.StringUtil;
  * @author jburke@broadinstitute.org
  */
 public class IlluminaUtil {
+
+    public static final String BARCODE_DELIMITER = "/";
+
     /**
      * Standard Broad algorithm for creating a read name
      * @return read name in standard Broad format, without end suffix.
@@ -162,6 +165,20 @@ public class IlluminaUtil {
         public byte[] get5PrimeAdapterBytes() { return adapterPair.get5PrimeAdapterBytes(); }
         public byte[] get3PrimeAdapterBytesInReadOrder() { return adapterPair.get3PrimeAdapterBytesInReadOrder(); }
         public byte[] get5PrimeAdapterBytesInReadOrder()  { return adapterPair.get5PrimeAdapterBytesInReadOrder(); }
+    }
+
+    /**
+     * Concatenates all the barcode sequences with slashes
+     * @param barcodes
+     * @return A single string representation of all the barcodes
+     */
+    public static String barcodeSeqsToString(final String barcodes[]) {
+        final StringBuilder sb = new StringBuilder();
+        for (final String bc : barcodes) {
+            if (sb.length() > 0) sb.append(BARCODE_DELIMITER);
+            sb.append(bc);
+        }
+        return sb.toString();
     }
 
 }
