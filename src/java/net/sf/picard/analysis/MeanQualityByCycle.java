@@ -25,6 +25,7 @@
 package net.sf.picard.analysis;
 
 import net.sf.picard.reference.ReferenceSequence;
+import net.sf.picard.util.Log;
 import net.sf.picard.util.RExecutor;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -60,6 +61,8 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     private HistogramGenerator q  = new HistogramGenerator(false);
     private HistogramGenerator oq = new HistogramGenerator(true);
+
+    private final Log log = Log.getInstance(MeanQualityByCycle.class);
 
     /** Required main method. */
     public static void main(String[] args) {
@@ -165,15 +168,20 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         if (!oq.isEmpty()) metrics.addHistogram(oq.getMeanQualityHistogram());
         metrics.write(OUTPUT);
 
-        // Now run R to generate a chart
-        final int rResult = RExecutor.executeFromClasspath(
-                "net/sf/picard/analysis/meanQualityByCycle.R",
-                OUTPUT.getAbsolutePath(),
-                CHART_OUTPUT.getAbsolutePath(),
-                INPUT.getName());
+        if (q.isEmpty() && oq.isEmpty()) {
+            log.warn("No valid bases found in input file. No plot will be produced.");
+        }
+        else {
+            // Now run R to generate a chart
+            final int rResult = RExecutor.executeFromClasspath(
+                    "net/sf/picard/analysis/meanQualityByCycle.R",
+                    OUTPUT.getAbsolutePath(),
+                    CHART_OUTPUT.getAbsolutePath(),
+                    INPUT.getName());
 
-        if (rResult != 0) {
-            throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
+            if (rResult != 0) {
+                throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
+            }
         }
     }
 }
