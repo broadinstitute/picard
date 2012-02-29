@@ -33,7 +33,7 @@ import net.sf.samtools.util.StringUtil;
  */
 public class IlluminaUtil {
 
-    public static final String BARCODE_DELIMITER = "/";
+    public static final String BARCODE_DELIMITER = "-";
 
     /**
      * Standard Broad algorithm for creating a read name
