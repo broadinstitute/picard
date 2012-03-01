@@ -66,6 +66,8 @@ public class CommandLineParser {
 
     private static final Boolean[] TRUE_FALSE_VALUES = {Boolean.TRUE, Boolean.FALSE};
 
+    private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"net.sf.picard"};
+
     // Use these if no @Usage annotation
     private static final String defaultUsagePreamble = "Usage: program [options...]\n";
     private static final String defaultUsagePreambleWithPositionalArguments =
@@ -83,7 +85,32 @@ public class CommandLineParser {
      * public String USAGE = CommandLineParser.getStandardUsagePreamble(getClass()) + "Frobnicates the freebozzle."
      */
     public static String getStandardUsagePreamble(final Class mainClass) {
-        return "USAGE: " + mainClass.getSimpleName() + " [options]\n\n";
+        return "USAGE: " + mainClass.getSimpleName() + " [options]\n\n" +
+                (hasWebDocumentation(mainClass) ?
+                        "Documentation: http://picard.sourceforge.net/command-line-overview.shtml#" + mainClass.getSimpleName() + "\n\n"
+                        : "");
+    }
+
+    /***
+     * Determines if a class has web documentation based on its package name
+     * @param clazz
+     * @return
+     */
+    public static boolean hasWebDocumentation(final Class clazz) {
+        for(String pkg : PACKAGES_WITH_WEB_DOCUMENTATION) {
+            if (clazz.getPackage().getName().startsWith(pkg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /***
+     * Returns the link to a FAQ
+     * @return
+     */
+    public static String getFaqLink() {
+        return "FAQ:  http://sourceforge.net/apps/mediawiki/picard/index.php?title=Main_Page";
     }
 
     // This is the object that the caller has provided that contains annotations,

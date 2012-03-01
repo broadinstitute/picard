@@ -171,8 +171,8 @@ public abstract class CommandLineProgram {
             }
             catch (Exception e) { /* Unpossible! */ }
         }
-        final int ret;
 
+        int ret = -1;
         try {
             ret = doWork();
         } finally {
@@ -185,6 +185,7 @@ public abstract class CommandLineProgram {
                     final String elapsedString  = new DecimalFormat("#,##0.00").format(elapsedMinutes);
                     System.err.println("[" + endDate + "] " + getClass().getName() + " done. Elapsed time: " + elapsedString + " minutes.");
                     System.err.println("Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+                    if (ret != 0 && CommandLineParser.hasWebDocumentation(this.getClass())) System.err.println(CommandLineParser.getFaqLink());
                 }
             }
             catch (Throwable e) {
