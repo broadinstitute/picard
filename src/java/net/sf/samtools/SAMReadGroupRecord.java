@@ -75,7 +75,11 @@ public class SAMReadGroupRecord extends AbstractSAMHeaderRecord
     public String getPlatform() { return getAttribute(PLATFORM_TAG); }
     public void setPlatform(final String platform) { setAttribute(PLATFORM_TAG, platform); }
 
-    public Date getRunDate() { return new Iso8601Date(getAttribute(DATE_RUN_PRODUCED_TAG)); }
+    public Date getRunDate() {
+        final String dt = getAttribute(DATE_RUN_PRODUCED_TAG);
+        if (dt == null) return null;
+        else return new Iso8601Date(dt);
+    }
 
     public String getFlowOrder() { return getAttribute(FLOW_ORDER_TAG); }
     public void setFlowOrder(final String flowOrder) { setAttribute(FLOW_ORDER_TAG, flowOrder); }
