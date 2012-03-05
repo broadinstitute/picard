@@ -376,11 +376,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
             if (!record.getReadFailsVendorQualityCheckFlag()) {
                 metrics.PF_READS++;
+                if (isNoiseRead(record)) metrics.PF_NOISE_READS++;
 
-                if (isNoiseRead(record)) {
-                    metrics.PF_NOISE_READS++;
-                }
-                else if (record.getReadUnmappedFlag()) {
+                if (record.getReadUnmappedFlag()) {
                     // If the read is unmapped see if it's adapter sequence
                     final byte[] readBases = record.getReadBases();
                     if (!(record instanceof BAMRecord)) StringUtil.toUpperCase(readBases);
@@ -389,29 +387,22 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                         this.adapterReads++;
                     }
                 }
-                else {
-                    if(doRefMetrics) {
-                        metrics.PF_READS_ALIGNED++;
+                else if(doRefMetrics) {
+                    metrics.PF_READS_ALIGNED++;
+                    if (!record.getReadNegativeStrandFlag()) numPositiveStrand++;
 
-                        if (!record.getReadNegativeStrandFlag()) {
-                            numPositiveStrand++;
-                        }
+                    if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
+                        metrics.READS_ALIGNED_IN_PAIRS++;
 
-                        if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
-                            metrics.READS_ALIGNED_IN_PAIRS++;
+                        // Check that both ends have mapq > minimum
+                        final Integer mateMq = record.getIntegerAttribute("MQ");
+                        if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD && record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
+                            ++this.chimerasDenominator;
 
-                            // Check that both ends have mapq > minimum
-                            final Integer mateMq = record.getIntegerAttribute("MQ");
-                            if (mateMq == null || mateMq >= MAPPING_QUALITY_THRESHOLD &&
-                                    record.getMappingQuality() >= MAPPING_QUALITY_THRESHOLD) {
-                                ++this.chimerasDenominator;
-
-                                // With both reads mapped we can see if this pair is chimeric
-                                if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
-                                     !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
-                                    ++this.chimeras;
-
-                                }
+                            // With both reads mapped we can see if this pair is chimeric
+                            if (Math.abs(record.getInferredInsertSize()) > MAX_INSERT_SIZE ||
+                                 !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
+                                ++this.chimeras;
                             }
                         }
                     }
@@ -419,9 +410,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             }
         }
 
-        private void collectQualityData(final SAMRecord record, final ReferenceSequence reference)
-        {
-            if (record.getReadUnmappedFlag() || !doRefMetrics) {
+        private void collectQualityData(final SAMRecord record, final ReferenceSequence reference) {
+            // If the read isnt an aligned PF read then look at the read for no-calls
+            if (record.getReadUnmappedFlag() || record.getReadFailsVendorQualityCheckFlag() || !doRefMetrics) {
                 final byte[] readBases = record.getReadBases();
                 for (int i = 0; i < readBases.length; i++) {
                     if (SequenceUtil.isNoCall(readBases[i])) {
@@ -429,7 +420,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     }
                 }
             }
-            else {
+            else if (!record.getReadFailsVendorQualityCheckFlag()) {
                 final boolean highQualityMapping = isHighQualityMapping(record);
                 if (highQualityMapping) metrics.PF_HQ_ALIGNED_READS++;
 
@@ -465,22 +456,15 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                         if(mismatch) mismatchCount++;
 
                         metrics.PF_ALIGNED_BASES++;
-                        if(!bisulfiteBase) {
-                            nonBisulfiteAlignedBases++;
-                        }
-                        
+                        if(!bisulfiteBase) nonBisulfiteAlignedBases++;
+
                         if (highQualityMapping) {
                             metrics.PF_HQ_ALIGNED_BASES++;
-                            if (!bisulfiteBase) {
-                                hqNonBisulfiteAlignedBases++;
-                            }
-                            if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) {
-                                metrics.PF_HQ_ALIGNED_Q20_BASES++;
-                            }
-                            if (mismatch) {
-                                hqMismatchCount++;
-                            }
+                            if (!bisulfiteBase) hqNonBisulfiteAlignedBases++;
+                            if (qualities[readBaseIndex] >= BASE_QUALITY_THRESHOLD) metrics.PF_HQ_ALIGNED_Q20_BASES++;
+                            if (mismatch) hqMismatchCount++;
                         }
+
                         if (mismatch || SequenceUtil.isNoCall(readBases[readBaseIndex])) {
                             badCycleHistogram.increment(CoordMath.getCycle(record.getReadNegativeStrandFlag(), readBases.length, i));
                         }
