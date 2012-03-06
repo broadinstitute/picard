@@ -145,10 +145,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if(readStructure.numBarcodes > 0) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesWithBarcode);
-        } else {
+        if(readStructure.barcodes.isEmpty()) {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesNoBarcode);
+        } else {
+            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesWithBarcode);
         }
 
         log.info("RUN CONFIGURATION IS " + readStructure.toString());
@@ -351,7 +351,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<String>();
 
         final ReadStructure rs = new ReadStructure(READ_STRUCTURE);
-        if(rs.numBarcodes > 0) {
+        if(!rs.barcodes.isEmpty()) {
             if(BARCODE_PARAMS == null) {
                 messages.add("BARCODE_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode) then BARCODE_PARAMS must be provided!");
             }
@@ -593,8 +593,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     cluster.getMatchedBarcode());
                 }
 
-                if(readStructure.numTemplates != 1 && readStructure.numTemplates != 2) {
-                    throw new PicardException("Number of templates(" + readStructure.numTemplates + ") specified by read structure was greater than 2");
+                if(readStructure.templates.length() != 1 && readStructure.templates.length() != 2) {
+                    throw new PicardException("Number of templates(" + readStructure.templates.length() + ") specified by read structure was greater than 2");
                 }
 
                 final SAMFileHeader header = sorter.getWriter().getFileHeader();

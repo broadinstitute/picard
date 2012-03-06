@@ -18,12 +18,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IlluminaFileUtilTest {
-
     private static final int DEFAULT_LANE            = 7;
     private static final List<Integer> DEFAULT_TILES            = makeList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
     private static final List<Integer> DEFAULT_TILE_TEST_SUBSET = makeList(1, 4, 5, 6, 9, 10);
-    private static final int DEFAULT_ENDS            = 4;
-    private static final int DEFAULT_CYCLES          = 20;
+    private static final int DEFAULT_NUM_ENDS    = 4;
+    private static final int [] DEFAULT_ENDS     = {1,2,3,4};
+    private static final int [] DEFAULT_CYCLES   = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
+    private static final int DEFAULT_LAST_CYCLE  = 20;
 
     private File intensityDir;
     private File basecallDir;
@@ -134,8 +135,13 @@ public class IlluminaFileUtilTest {
         Assert.assertEquals(fileUtil.qseq(),    fileUtil.getUtil(SupportedIlluminaFormat.Qseq));
         Assert.assertEquals(fileUtil.qseq().getTiles(),   DEFAULT_TILES);
 
-        Assert.assertEquals(fileUtil.qseq().numberOfEnds(), DEFAULT_ENDS);
-        Assert.assertEquals(fileUtil.bcl().getNumCycles(),  DEFAULT_CYCLES);
+        Assert.assertEquals(fileUtil.qseq().numberOfEnds(),      DEFAULT_NUM_ENDS);
+
+        final int [] detectedCycles = fileUtil.bcl().getDetectedCycles();
+        Assert.assertEquals(detectedCycles.length, DEFAULT_CYCLES.length);
+        for(int i = 0; i < DEFAULT_CYCLES.length; i++) {
+            Assert.assertEquals(detectedCycles[i],  DEFAULT_CYCLES[i], "Elements differ at index " + i);
+        }
 
         Assert.assertEquals(fileUtil.getTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
     }
@@ -143,9 +149,9 @@ public class IlluminaFileUtilTest {
     @Test
     public void passNewUtilTest() {
         for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
-            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS);
-            makeFiles(format, DEFAULT_LANE+1, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, ".gz");
-            makeFiles(format, DEFAULT_LANE+2, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, ".bz2");
+            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES,   DEFAULT_NUM_ENDS);
+            makeFiles(format, DEFAULT_LANE+1, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".gz");
+            makeFiles(format, DEFAULT_LANE+2, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".bz2");
         }
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE);
@@ -212,7 +218,7 @@ public class IlluminaFileUtilTest {
                                 final List<String> relativeFilesToDelete,
                                 final String compression) {
         for(final SupportedIlluminaFormat format : formats) {
-            makeFiles(format, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, compression);
+            makeFiles(format, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
         }
 
         for(final String relativeFile : relativeFilesToDelete) {
@@ -285,7 +291,7 @@ public class IlluminaFileUtilTest {
 
     @Test(dataProvider="perTileFileFormats")
     public void perTileFileUtilsTest(final SupportedIlluminaFormat format, final String compression, final boolean longFormat, final String parentDir) {
-        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, compression);
+        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
         final IlluminaFileUtil.PerTileFileUtil ptfu = (IlluminaFileUtil.PerTileFileUtil)fileUtil.getUtil(format);
@@ -304,63 +310,128 @@ public class IlluminaFileUtilTest {
         return new File(parentDir, "C" + cycle + ".1/s_" + lane + "_" + tile + extension);
     }
 
-    public void testDefaultPerTilePerCycleUtil(final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu, final File parentDir) {
-        final CycleIlluminaFileMap cfm       = pcfu.getFiles();
-        final CycleIlluminaFileMap cfmWTiles = pcfu.getFiles(DEFAULT_TILES);
+    public void testDefaultPerTilePerCycleUtil(final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu, final File parentDir, final int [] cycles) {
+        final CycleIlluminaFileMap cfm         = pcfu.getFiles(cycles);
+        final CycleIlluminaFileMap cfmWTiles   = pcfu.getFiles(DEFAULT_TILES, cycles);
+        final CycleIlluminaFileMap cfmNoCycles;
+        if(Arrays.equals(cycles, DEFAULT_CYCLES)) {
+            cfmNoCycles = pcfu.getFiles();
+        } else {
+            cfmNoCycles = null;
+        }
 
         Assert.assertEquals(cfm.size(), DEFAULT_TILES.size());
 
         for(final Integer tile : DEFAULT_TILES) {
             final CycleFilesIterator tFileIter  = cfm.get(tile);
             final CycleFilesIterator tFileIter2 = cfmWTiles.get(tile);
+            final CycleFilesIterator tFileIter3;
+            if(cfmNoCycles != null) {
+                tFileIter3 = cfmNoCycles.get(tile);
+            } else {
+                tFileIter3 = null;
+            }
 
-            for(int cycle = 1; cycle <= DEFAULT_CYCLES; cycle++) {
+            for(final int cycle : cycles) {
                 final File tcFile = tFileIter.next();
                 final File tcFile2 = tFileIter2.next();
 
                 Assert.assertEquals(tcFile.getAbsolutePath(), tcFile2.getAbsolutePath());
+                if(tFileIter3 != null) {
+                    final File tfFile3 = tFileIter3.next();
+                    Assert.assertEquals(tcFile.getAbsolutePath(), tfFile3.getAbsolutePath());
+                }
+
                 Assert.assertEquals(tcFile, makePerTilePerCycleFilePath(parentDir, DEFAULT_LANE, tile, cycle, pcfu.extension));
                 Assert.assertTrue(tcFile.exists());
                 Assert.assertTrue(tcFile.length() > 0);
             }
         }
+    }
 
+
+    public void testSubsetDefaultPerTilePerCycleUtil(final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu, final File parentDir, int [] cycles) {
         final List<Integer> tiles = new ArrayList<Integer>(DEFAULT_TILE_TEST_SUBSET);
-        final CycleIlluminaFileMap subsetMap = pcfu.getFiles(DEFAULT_TILE_TEST_SUBSET);
+        final CycleIlluminaFileMap subsetMap = pcfu.getFiles(DEFAULT_TILE_TEST_SUBSET, cycles);
+        final CycleIlluminaFileMap cfmNoCycles;
+        if(Arrays.equals(cycles, DEFAULT_CYCLES)) {
+            cfmNoCycles = pcfu.getFiles(DEFAULT_TILE_TEST_SUBSET);
+        } else {
+            cfmNoCycles = null;
+        }
+
         for(final Integer tile : subsetMap.keySet()) {
             tiles.remove(tile);
             Assert.assertTrue(DEFAULT_TILE_TEST_SUBSET.contains(tile));
             final CycleFilesIterator tFileIter  = subsetMap.get(tile);
+            final CycleFilesIterator tFileIter2;
+            if(cfmNoCycles != null) {
+                tFileIter2 = cfmNoCycles.get(tile);
+            } else {
+                tFileIter2 = null;
+            }
 
-            for(int cycle = 1; cycle <= DEFAULT_CYCLES; cycle++) {
+
+            for(final int cycle : cycles) {
                 final File tcFile = tFileIter.next();
+                if(tFileIter2 != null) {
+                    Assert.assertEquals(tcFile, tFileIter2.next());
+                }
                 Assert.assertEquals(tcFile, makePerTilePerCycleFilePath(parentDir, DEFAULT_LANE, tile, cycle, pcfu.extension));
                 Assert.assertTrue(tcFile.exists());
                 Assert.assertTrue(tcFile.length() > 0);
             }
+
+            Assert.assertFalse(tFileIter.hasNext());
         }
 
         Assert.assertTrue(tiles.isEmpty());
     }
 
+    public static int [] cycleRange(final int start, final int end) {
+        final int [] cycles = new int[end - start + 1];
+        for(int i = 0; i < cycles.length; i++) {
+            cycles[i] = start + i;
+        }
+
+        return cycles;
+    }
+
+    public static int [] cycleRange(final int end) {
+        return cycleRange(1, end);
+    }
+
     @DataProvider(name="perTilePerCycleFileFormats")
     public Object[][] perTilePerCycleFileFormats() {
         return new Object[][]{
-            {SupportedIlluminaFormat.Bcl,    "BaseCalls/" + laneDir(DEFAULT_LANE) },
-            {SupportedIlluminaFormat.Cif,    laneDir(DEFAULT_LANE)                },
-            {SupportedIlluminaFormat.Cnf,    laneDir(DEFAULT_LANE)                }
+            {SupportedIlluminaFormat.Bcl,    "BaseCalls/" + laneDir(DEFAULT_LANE),  DEFAULT_CYCLES,     false, false },
+            {SupportedIlluminaFormat.Bcl,    "BaseCalls/" + laneDir(DEFAULT_LANE),  cycleRange(4),      true,  true  },
+            {SupportedIlluminaFormat.Cif,    laneDir(DEFAULT_LANE)               ,  DEFAULT_CYCLES,     false, false },
+            {SupportedIlluminaFormat.Cif,    laneDir(DEFAULT_LANE)               ,  cycleRange(8,12),   true,  false },
+            {SupportedIlluminaFormat.Cif,    laneDir(DEFAULT_LANE)               ,  cycleRange(8,12),   false, false },
+            {SupportedIlluminaFormat.Cnf,    laneDir(DEFAULT_LANE)               ,  DEFAULT_CYCLES,     false, false },
+            {SupportedIlluminaFormat.Cnf,    laneDir(DEFAULT_LANE)               ,  cycleRange(15,DEFAULT_LAST_CYCLE), false, false }
         };
     }
 
     @Test(dataProvider="perTilePerCycleFileFormats")
-    public void perTilePerCycleFileUtilsTest(final SupportedIlluminaFormat format, final String parentDir) {
-        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, null);
+    public void perTilePerCycleFileUtilsTest(final SupportedIlluminaFormat format, final String parentDir, final int [] cycles, boolean createEarlySkippedCycles, boolean createLateSkippedCycles) {
+        if(createEarlySkippedCycles) {
+            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(1, cycles[0]), DEFAULT_NUM_ENDS, null);
+        }
+
+        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycles, DEFAULT_NUM_ENDS, null);
+
+        if(createLateSkippedCycles) {
+            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(cycles[cycles.length-1] + 1, DEFAULT_LAST_CYCLE), DEFAULT_NUM_ENDS, null);
+        }
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
         final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu = (IlluminaFileUtil.PerTilePerCycleFileUtil)fileUtil.getUtil(format);
 
         Assert.assertTrue(pcfu.filesAvailable());
-        testDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir));
+        testDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycles);
+        testSubsetDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycles);
 
         final IlluminaFileUtil noFilesFu = new IlluminaFileUtil(basecallDir, DEFAULT_LANE+20);
         final IlluminaFileUtil.PerTilePerCycleFileUtil noFilesPcfu = (IlluminaFileUtil.PerTilePerCycleFileUtil)noFilesFu.getUtil(format);
@@ -368,6 +439,20 @@ public class IlluminaFileUtilTest {
         Assert.assertFalse(noFilesPcfu.filesAvailable());
         Assert.assertTrue(noFilesPcfu.getFiles().isEmpty());
         Assert.assertTrue(noFilesPcfu.getFiles(DEFAULT_TILES).isEmpty());
+    }
+
+    @Test(expectedExceptions = PicardException.class)
+    public void perTilePerCycleFileUtilsMissingCycleTest() {
+        final SupportedIlluminaFormat format = SupportedIlluminaFormat.Bcl;
+        final String parentDir = "BaseCalls/" + laneDir(DEFAULT_LANE);
+        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(10, 15), DEFAULT_NUM_ENDS, null);
+
+        final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
+        final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu = (IlluminaFileUtil.PerTilePerCycleFileUtil)fileUtil.getUtil(format);
+
+        Assert.assertTrue(pcfu.filesAvailable());
+        testDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycleRange(9,16));
+        testSubsetDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycleRange(9,16));
     }
 
     @DataProvider(name="qseqTestData")
@@ -382,18 +467,18 @@ public class IlluminaFileUtilTest {
 
     @Test(dataProvider="qseqTestData")
     public void qseqFileUtilTest(final int lane, final String compression) {
-        makeFiles(SupportedIlluminaFormat.Qseq, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_ENDS, compression);
+        makeFiles(SupportedIlluminaFormat.Qseq, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, lane);
         final IlluminaFileUtil.QSeqIlluminaFileUtil qseq = fileUtil.qseq();
 
         Assert.assertTrue(qseq.filesAvailable());
-        Assert.assertEquals(qseq.numberOfEnds(), DEFAULT_ENDS);
+        Assert.assertEquals(qseq.numberOfEnds(), DEFAULT_NUM_ENDS);
         testQseqUtil(qseq, lane, compression);
 
         final IlluminaFileUtil noFilesFu = new IlluminaFileUtil(basecallDir, DEFAULT_LANE+20);
         Assert.assertFalse(noFilesFu.qseq().filesAvailable());
-        Assert.assertEquals(qseq.numberOfEnds(), DEFAULT_ENDS);
+        Assert.assertEquals(qseq.numberOfEnds(), DEFAULT_NUM_ENDS);
         Assert.assertTrue(noFilesFu.qseq().getFiles().isEmpty());
         Assert.assertTrue(noFilesFu.qseq().getFiles(DEFAULT_TILES).isEmpty());
     }
@@ -402,9 +487,9 @@ public class IlluminaFileUtilTest {
         final List<IlluminaFileMap> listOfFm       = qseq.getFiles();
         final List<IlluminaFileMap> listOfFmWTiles = qseq.getFiles(DEFAULT_TILES);
 
-        Assert.assertEquals(listOfFm.size(), DEFAULT_ENDS);
+        Assert.assertEquals(listOfFm.size(), DEFAULT_NUM_ENDS);
 
-        for(int i = 0; i < DEFAULT_ENDS; i++) {
+        for(int i = 0; i < DEFAULT_NUM_ENDS; i++) {
             final int currentEnd = i+1;
             final IlluminaFileMap fm = listOfFm.get(i);
             final IlluminaFileMap fmWTiles = listOfFmWTiles.get(i);
@@ -421,7 +506,7 @@ public class IlluminaFileUtilTest {
 
         final List<IlluminaFileMap> listOfsubsetMap = qseq.getFiles(DEFAULT_TILE_TEST_SUBSET);
 
-        for(int i = 0; i < DEFAULT_ENDS; i++) {
+        for(int i = 0; i < DEFAULT_NUM_ENDS; i++) {
             final int currentEnd = i+1;
             final IlluminaFileMap subsetMap = listOfsubsetMap.get(i);
 
@@ -442,10 +527,10 @@ public class IlluminaFileUtilTest {
         return new File(basecallDir, "s_" + lane +"_" + end + "_" + longTile(tile,true) + "_qseq.txt" + (compression != null ? compression : ""));
     }
 
-    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int cycles, final int ends) {
+    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int [] cycles, final int ends) {
         makeFiles(format, lane, tiles, cycles, ends, null);
     }
-    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int cycles, final int ends, final String compression) {
+    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int [] cycles, final int ends, final String compression) {
         String laneDir = String.valueOf(lane);
         while(laneDir.length() < 3) {
             laneDir = "0" + laneDir;
@@ -481,15 +566,15 @@ public class IlluminaFileUtilTest {
 
             //per tile per cycle formats
             case Bcl:
-                makePerTilePerCycleFiles(basecallLaneDir,      lane, tiles, cycles, ".bcl");
+                makePerTilePerCycleFiles(basecallLaneDir,  lane, tiles, cycles, ".bcl");
                 break;
 
             case Cif:
-                makePerTilePerCycleFiles(intensityLaneDir, lane, tiles, cycles, ".cif");
+                makePerTilePerCycleFiles(intensityLaneDir, lane, tiles, cycles,  ".cif");
                 break;
 
             case Cnf:
-                makePerTilePerCycleFiles(intensityLaneDir, lane, tiles, cycles, ".cnf");
+                makePerTilePerCycleFiles(intensityLaneDir, lane, tiles, cycles,  ".cnf");
                 break;
 
             //Qseq is based on lane, tile, and end
@@ -525,14 +610,14 @@ public class IlluminaFileUtilTest {
         }
     }
 
-    private static void makePerTilePerCycleFiles(final File parentDir, final int lane, final List<Integer> tiles, final int numCycles, final String ext) {
+    private static void makePerTilePerCycleFiles(final File parentDir, final int lane, final List<Integer> tiles, final int [] cycles, final String ext) {
         if(!parentDir.exists()) {
             if(!parentDir.mkdir()) {
                 throw new RuntimeException("Couldn't create directory " + parentDir.getAbsolutePath());
             }
         }
 
-        for(int cycle = 1; cycle <= numCycles; cycle++) {
+        for(final int cycle : cycles) {
             final File cycleDir = new File(parentDir, "C" + cycle + ".1");
             if(!cycleDir.exists()) {
                 if(!cycleDir.mkdir()) {
@@ -546,15 +631,15 @@ public class IlluminaFileUtilTest {
         }
     }
 
-    private static List<String> makeCycleFileList(final File dir, final String ext, final int lane, final int numCycles, final int ... tiles) {
-        return makeCycleFileList(dir, ext, lane, numCycles, false, tiles);
+    private static List<String> makeCycleFileList(final File dir, final String ext, final int lane, final int [] cycles, final int ... tiles) {
+        return makeCycleFileList(dir, ext, lane, cycles, false, tiles);
     }
 
-    private static List<String> makeCycleFileList(final File dir, final String ext, final int lane, final int numCycles, final boolean longFmt, final int ... tiles) {
+    private static List<String> makeCycleFileList(final File dir, final String ext, final int lane, final int [] cycles, final boolean longFmt, final int ... tiles) {
         final List<String> files = new ArrayList<String>();
         final File laneDir = new File(dir, laneDir(lane));
 
-        for(int cycle = 1; cycle <= numCycles; cycle++) {
+        for(final int cycle : cycles) {
             final File cycleDir = new File(laneDir, "C" + cycle + ".1");
             for(final Integer tile : tiles) {
                 files.add(cycleDir + "/s_" + lane + "_" + longTile(tile, longFmt) + ext);

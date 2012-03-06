@@ -153,17 +153,17 @@ public class PerTileParserTest {
     @Test(expectedExceptions = PicardException.class)
     public void failVerifyTestTooManyTiles() {
         final PerTileParser<DummyDt> ddts = new MockPerTileParser(FILE_MAP);
-        ddts.verifyData(null, makeList(1,2,3,4,5,6));
+        ddts.verifyData(makeList(1,2,3,4,5,6), null);
     }
     @Test(expectedExceptions = PicardException.class)
     public void failVerifyTestMissingTile() {
         final PerTileParser<DummyDt> ddts = new MockPerTileParser(FILE_MAP);
-        ddts.verifyData(null, makeList(1,2,4,5));
+        ddts.verifyData(makeList(1,2,4,5), null);
     }
 
     @Test
     public void passVerifyTest() {
         final PerTileParser<DummyDt> ddts = new MockPerTileParser(FILE_MAP);
-        ddts.verifyData(null, makeList(1,2,3,4,5));
+        ddts.verifyData(makeList(1,2,3,4,5), null);
     }
 }

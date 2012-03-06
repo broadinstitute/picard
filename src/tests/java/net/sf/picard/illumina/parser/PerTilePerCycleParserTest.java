@@ -11,8 +11,10 @@ import java.util.*;
 public class PerTilePerCycleParserTest {
     public static final List<Integer> DEFAULT_TILES = makeList(1, 2, 3, 4);
     public static final int [] DEFAULT_OUTPUT_LENGTHS = new int[]{10,5,5};
+    public static final int [] CYCLES = new int[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
     public static final int MAX_CYCLE = 20;
     public static final int NUM_CLUSTERS = 20;
+    public static final OutputMapping OUTPUT_MAPPING = new OutputMapping(new ReadStructure("20T"));
 
     private class MockCycledIlluminaData implements IlluminaData {
         private List<String> values;
@@ -32,9 +34,9 @@ public class PerTilePerCycleParserTest {
     class MockPerTilePerCycleParser extends PerTilePerCycleParser<MockCycledIlluminaData> {
         private int [] expectedOutputLengths;
 
-        public MockPerTilePerCycleParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int[] outputLengths) {
-            super(directory, lane, tilesToCycleFiles, outputLengths);
-            expectedOutputLengths = outputLengths;
+        public MockPerTilePerCycleParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+            super(directory, lane, tilesToCycleFiles, outputMapping);
+            expectedOutputLengths = outputMapping.getOutputReadLengths();
         }
 
         @Override
@@ -80,8 +82,8 @@ public class PerTilePerCycleParserTest {
         private Iterator<String> iterator;
         private final List<String> fileNames;
 
-        public MontonicCycleFilesIterator(final List<String> fileNames) {
-            super(null, 0, 0, null);
+        public MontonicCycleFilesIterator(final List<String> fileNames, int [] cycles) {
+            super(null, 0, 0, cycles, null);
             this.iterator = fileNames.iterator();
             this.fileNames = fileNames;
         }
@@ -89,10 +91,12 @@ public class PerTilePerCycleParserTest {
         @Override
         public void reset() {
             this.iterator = fileNames.iterator();
+            this.nextCycleIndex = 0;
         }
 
         @Override
         public File next() {
+            ++nextCycleIndex;
             return new File(iterator.next());
         }
 
@@ -121,15 +125,15 @@ public class PerTilePerCycleParserTest {
         return fileNames;
     }
 
-    public List<CycleFilesIterator> getCycleFileIterators(final List<Integer> tiles) {
+    public List<CycleFilesIterator> getCycleFileIterators(final List<Integer> tiles, int [] cycles) {
         final List<CycleFilesIterator> iterators = new ArrayList<CycleFilesIterator>();
         for(final Integer tile : tiles) {
             final List<String> fileNames = new ArrayList<String>();
-            for(int i = 1; i <= MAX_CYCLE; i++) {
-                fileNames.add(str_del(tile,i));
+            for(int i = 0; i < cycles.length; i++) {
+                fileNames.add(str_del(tile,cycles[i]));
             }
 
-            iterators.add(new MontonicCycleFilesIterator(fileNames));
+            iterators.add(new MontonicCycleFilesIterator(fileNames, cycles));
         }
 
         return iterators;
@@ -169,11 +173,12 @@ public class PerTilePerCycleParserTest {
 
     public PerTilePerCycleParser<MockCycledIlluminaData> makeParser() {
         CycleIlluminaFileMap fm = new CycleIlluminaFileMap();
-        final List<CycleFilesIterator> iterators = getCycleFileIterators(DEFAULT_TILES);
+        final List<CycleFilesIterator> iterators = getCycleFileIterators(DEFAULT_TILES, CYCLES);
         for(int i = 0; i < iterators.size(); i++) {
             fm.put(DEFAULT_TILES.get(i), iterators.get(i));
         }
-        final PerTilePerCycleParser<MockCycledIlluminaData> parser = new MockPerTilePerCycleParser(new File("FakeFile"), 1, fm, DEFAULT_OUTPUT_LENGTHS);
+
+        final PerTilePerCycleParser<MockCycledIlluminaData> parser = new MockPerTilePerCycleParser(new File("FakeFile"), 1, fm, OUTPUT_MAPPING);
         return parser;
     }
 

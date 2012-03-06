@@ -24,12 +24,10 @@
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * A sorted map of tiles to Iterators, where each iterator traverses the cycle files for the given lane/tile.
@@ -38,12 +36,16 @@ import java.util.TreeMap;
 class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
 
     /** Return a CycleIlluminaFileMap with only the tiles listed , throws an exception if it does not contain any of the tiles listed */
-    public CycleIlluminaFileMap keep(final List<Integer> tilesToKeep) {
+    public CycleIlluminaFileMap keep(List<Integer> tilesToKeep, final int [] cycles) {
+        if(tilesToKeep == null) {
+            tilesToKeep = new ArrayList<Integer>(this.keySet());
+        }
+
         final CycleIlluminaFileMap ciMap = new CycleIlluminaFileMap();
         for(final Integer tile : tilesToKeep) {
             final CycleFilesIterator template = this.get(tile);
             if(template != null) {
-                ciMap.put(tile, new CycleFilesIterator(this.get(tile)));
+                ciMap.put(tile, new CycleFilesIterator(this.get(tile), cycles));
             }
         }
         return ciMap;
@@ -55,24 +57,64 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
      * @param expectedTiles A list of tiles that should be in this map
      * @param expectedCycles The total number of files(cycles) that should be in each CycledFilesIterator
      */
-    public void assertValid(final List<Integer> expectedTiles, final int expectedCycles) {
+    public void assertValid(final List<Integer> expectedTiles, final int [] expectedCycles) {
         if(size() != expectedTiles.size()) {
             throw new PicardException("Expected CycledIlluminaFileMap to contain " + expectedTiles + " tiles but only " + size() + " were found!");
         }
 
+        File curFile = null;
+
         for (final int tile : expectedTiles) {
-            final CycleFilesIterator cycleFiles = new CycleFilesIterator(get(tile)); //so as not to expend the iterator
+            final CycleFilesIterator cycleFiles = new CycleFilesIterator(get(tile), null); //so as not to expend the iterator
             int total;
             for(total = 0; cycleFiles.hasNext(); total++) {
-                final File curFile = cycleFiles.next();
+                if(cycleFiles.getNextCycle() != expectedCycles[total]) {
+                    cycleFiles.reset();
+                    throw new PicardException("Cycles in iterator(" + remainingCyclesToString(cycleFiles) +
+                                              ") do not match those expected (" + StringUtil.intValuesToString(expectedCycles) +
+                                              ") Last file checked (" + curFile.getAbsolutePath() + ")");
+                }
+                curFile = cycleFiles.next();
                 if(!curFile.exists()) {
                     throw new PicardException("Missing cycle file " + curFile.getName() + " in CycledIlluminaFileMap");
                 }
             }
-            if(total != expectedCycles) {
-                throw new PicardException("Expected tile " + tile + " of CycledIlluminaFileMap to contain " + expectedCycles + " cycles but " + total + " were found!");
+            if(total != expectedCycles.length) {
+                String message = "Expected tile " + tile + " of CycledIlluminaFileMap to contain " + expectedCycles + " cycles but " + total + " were found!";
+
+                if(curFile != null) {
+                    message += "Check to see if the following bcl exists: " + incrementCycleCount(curFile).getAbsolutePath();
+                }
+                throw new PicardException(message);
             }
         }
+    }
+
+    /**
+     * All files in a CycleFileMap should have a cycle directory (at this point in time). Return the filePath with the cycle
+     * in the cycle directory incremented by 1.
+     * @param cycleFile The cycleFile for a given tile/cycle
+     * @return A cycleFile with the same name but a cycleDir one greater than cycleFile
+     */
+    public static File incrementCycleCount(final File cycleFile) {
+        final File cycleDir = cycleFile.getParentFile();
+        final int cycle = Integer.parseInt(cycleDir.getName().substring(1, cycleDir.getName().lastIndexOf(".")));
+        return new File(cycleDir.getParentFile(), "C" + cycle + ".1" + File.separator + cycleFile.getName());
+    }
+
+    public static String remainingCyclesToString(final CycleFilesIterator cfi) {
+        String cycles = "";
+        if(cfi.hasNext()) {
+            cycles += cfi.getNextCycle();
+            cfi.next();
+        }
+
+        while(cfi.hasNext()) {
+            cycles += ", " + cfi.getNextCycle();
+            cfi.next();
+        }
+
+        return cycles;
     }
 }
 
@@ -87,49 +129,64 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
     private final int lane;
     private final int tile;
     private final String fileExt;
+    protected final int [] cycles;
+    protected int nextCycleIndex;
 
-    private File nextFile;
-    private int nextCycle;
-
-    public CycleFilesIterator(final File laneDir, final int lane, final int tile, final String fileExt) {
+    public CycleFilesIterator(final File laneDir, final int lane, final int tile, final int [] cycles, final String fileExt) {
         this.parentDir = laneDir;
         this.lane = lane;
         this.tile = tile;
         this.fileExt = fileExt;
-        this.nextCycle = 1;
-        findNextFile();
+        this.cycles  = cycles;
+        this.nextCycleIndex = 0;
     }
 
-    CycleFilesIterator(final CycleFilesIterator template) {
-        this(template.parentDir, template.lane, template.tile, template.fileExt);
-    }
-
-    private void findNextFile() {
-        final File cycleDir = new File(parentDir, "C" + nextCycle + ".1");
-        nextFile = new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
+    CycleFilesIterator(final CycleFilesIterator template, final int [] cycles) {
+        this(template.parentDir, template.lane, template.tile, (cycles != null) ? cycles : template.cycles, template.fileExt);
     }
 
     public void reset() {
-        this.nextCycle = 1;
-        findNextFile();
+        this.nextCycleIndex = 0;
     }
 
     @Override
     public boolean hasNext() {
-        return nextFile.exists();
+        return nextCycleIndex < cycles.length;
     }
 
     @Override
     public File next() {
         if (!hasNext()) {
-            throw new NoSuchElementException( " Parent dir (" + parentDir.getAbsolutePath() + ")" +
-                                              " Lane (" + lane + ") Tile (" + tile + ") FileExt(" + fileExt + ")" +
-                                              " Cycle (" + nextCycle + ")");
+            throw new NoSuchElementException(summarizeIterator());
         }
-        final File curFile = nextFile;
-        nextCycle++;
-        findNextFile();
+
+        final File cycleDir = new File(parentDir, "C" + cycles[nextCycleIndex] + ".1");
+        final File curFile  = new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
+
+        if(!curFile.exists()) {
+            throw new PicardException(" Missing cycle file for CycleFilesIterator!" + summarizeIterator());
+        }
+
+        nextCycleIndex++;
         return curFile;
+    }
+
+    public int getNextCycle() {
+        return cycles[nextCycleIndex];
+    }
+
+    private String summarizeIterator() {
+        String cyclesSummary = "";
+        if(cycles.length > 0) {
+            cyclesSummary = String.valueOf(cycles[0]);
+            for(int i = 1; i < cycles.length; i++) {
+                cyclesSummary += ", " + String.valueOf(cycles[i]);
+            }
+        }
+
+        return " Parent dir (" + parentDir.getAbsolutePath() + ")" +
+                " Lane (" + lane + ") Tile (" + tile + ") FileExt(" + fileExt + ")" +
+                " CycleIndex (" + nextCycleIndex + ")" + "Cycles(" + cyclesSummary + ")";
     }
 
     @Override

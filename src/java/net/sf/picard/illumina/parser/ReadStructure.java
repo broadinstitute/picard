@@ -46,20 +46,14 @@ import java.util.regex.Pattern;
 public class ReadStructure {
     public final List<ReadDescriptor> descriptors;
     public final int totalCycles;
-    public final int numBarcodes;
-    public final int numTemplates;
-    public final int numSkips;
-    public final int numDescriptors;
     public final int [] readLengths;
 
-    /** index into descriptors of templates */
-    public final int [] templateIndices;
+    public final Substructure barcodes;
+    public final Substructure templates;
+    public final Substructure skips;
 
-    /** index into descriptors of all barcodes */
-    public final int [] barcodeIndices;
-
-    /** index into descriptors of all skips */
-    public final int [] skipIndices;
+    //nonSkips include barcode and template indices in the order they appear in the descriptors list
+    public final Substructure nonSkips;
 
     /** Characters representing valid ReadTypes */
     private static final String ValidTypeChars;
@@ -104,6 +98,7 @@ public class ReadStructure {
         this.descriptors = Collections.unmodifiableList(collection);
         int cycles = 0;
 
+        final List<Integer> nonSkipIndicesList  = new ArrayList<Integer>();
         final List<Integer> barcodeIndicesList  = new ArrayList<Integer>();
         final List<Integer> templateIndicesList = new ArrayList<Integer>();
         final List<Integer> skipIndicesList     = new ArrayList<Integer>();
@@ -119,9 +114,11 @@ public class ReadStructure {
             cycles += desc.length;
             switch(desc.type) {
                 case B:
+                    nonSkipIndicesList.add(descIndex);
                     barcodeIndicesList.add(descIndex);
                     break;
                 case T:
+                    nonSkipIndicesList.add(descIndex);
                     templateIndicesList.add(descIndex);
                     break;
                 case S:
@@ -135,25 +132,10 @@ public class ReadStructure {
         }
 
         this.totalCycles    = cycles;
-        this.numBarcodes    = barcodeIndicesList.size();
-        this.numTemplates   = templateIndicesList.size();
-        this.numSkips       = skipIndicesList.size();
-        this.numDescriptors = descriptors.size();
-
-        this.barcodeIndices = new int[numBarcodes];
-        for(int i = 0; i < numBarcodes; i++) {
-            this.barcodeIndices[i] = barcodeIndicesList.get(i);
-        }
-
-        this.templateIndices = new int[numTemplates];
-        for(int i = 0; i < numTemplates; i++) {
-            this.templateIndices[i] = templateIndicesList.get(i);
-        }
-
-        this.skipIndices = new int[numSkips];
-        for(int i = 0; i < numSkips; i++) {
-            this.skipIndices[i] = skipIndicesList.get(i);
-        }
+        this.barcodes       = new Substructure(barcodeIndicesList);
+        this.templates      = new Substructure(templateIndicesList);
+        this.skips          = new Substructure(skipIndicesList);
+        this.nonSkips       = new Substructure(nonSkipIndicesList);
     }
 
     /**
@@ -163,6 +145,10 @@ public class ReadStructure {
      */
     public ReadStructure(final String readStructureString) {
         this(readStructureStringToDescriptors(readStructureString));
+    }
+
+    public int getNumDescriptors() {
+        return descriptors.size();
     }
 
     /**
@@ -229,5 +215,120 @@ public class ReadStructure {
         }
 
         return res;
+    }
+
+    /** Represents a subset of ReadDescriptors in the containing ReadStructure, they ARE NOT necessarily contiguous
+     *  in the containing ReadStrucure but they ARE in the order they appear in the containing ReadStructure */
+    public class Substructure implements Iterable<ReadDescriptor> {
+        /** Total number of descriptors == readTypeIndices.length */
+        private final int   numDescriptors;
+
+        /** The indices into the ReadStructure for this Substructure */
+        private final int   [] descriptorIndices;
+
+        /** The length of each individual ReadDescriptor in this substructure */
+        private final int   [] descriptorLengths;
+
+        /** Ranges of cycle indexes (cycle # - 1) covered by each descriptor */
+        private final Range [] cycleIndexRanges;
+
+        /** The total number of cycles covered by this Substructure */
+        private final int   totalCycles;
+
+        /**
+         * Indices into the ReadStructure.descriptors for this specific substructure, indices
+         * must be in the order they appear in the descriptors list (but the indices do NOT have to be continuous)
+         * @param descriptorIndices  A list of indices into ReadStructure.descriptors of the enclosing ReadStructure
+         */
+        public Substructure(final List<Integer> descriptorIndices) {
+            this.numDescriptors    = descriptorIndices.size();
+
+            this.descriptorIndices = new int[numDescriptors];
+            this.descriptorLengths = new int[numDescriptors];
+            for(int i = 0; i < descriptorIndices.size(); i++) {
+                this.descriptorIndices[i] = descriptorIndices.get(i);
+                this.descriptorLengths[i] = descriptors.get(this.descriptorIndices[i]).length;
+            }
+
+            this.cycleIndexRanges  = new Range[numDescriptors];
+
+            int totalLength = 0;
+            for(final int length : descriptorLengths) {
+                totalLength += length;
+            }
+            totalCycles      = totalLength;
+
+            int currentCycle = 0;   // Current cycle in the entire read structure
+            int oIndex = 0;         // index into orderedIndices
+
+            for(int descriptorIndex = 0; descriptorIndex < descriptors.size() && oIndex < this.descriptorIndices.length; descriptorIndex++) {
+                final ReadDescriptor rd = descriptors.get(descriptorIndex);
+                if(this.descriptorIndices[oIndex] == descriptorIndex) { //if it is an index in the indices list then add it's cycles to cycles
+                    cycleIndexRanges[oIndex] = new Range(currentCycle, currentCycle + rd.length - 1);
+                    ++oIndex;
+                }
+                currentCycle += rd.length;
+            }
+        }
+
+        public boolean isEmpty() {
+            return numDescriptors == 0;
+        }
+
+        public int length() {
+            return numDescriptors;
+        }
+
+        public int getTotalCycles() {
+            return totalCycles;
+        }
+
+        public int [] getIndices() {
+            return descriptorIndices;
+        }
+
+        public int [] getDescriptorLengths() {
+            return descriptorLengths;
+        }
+
+        public Range [] getCycleIndexRanges() {
+            return cycleIndexRanges;
+        }
+        public Iterator<ReadDescriptor> iterator() {
+            return new IndexedIterator(descriptorIndices);
+        }
+
+        public int [] getCycles() {
+            int [] cycles = new int[totalCycles];
+            int cycleIndex = 0;
+            for(final Range range : cycleIndexRanges) {
+                for(int i = range.start; i <= range.end; i++) {
+                    cycles[cycleIndex++] = i+1;
+                }
+            }
+            return cycles;
+        }
+    }
+
+    /** An iterator over a Substructure's ReadDescriptors */
+    private class IndexedIterator implements Iterator<ReadDescriptor> {
+        private int index;
+        private int [] indices;
+        public IndexedIterator(final int [] indices) {
+            this.indices = indices;
+            this.index = 0;
+        }
+
+        public boolean hasNext() {
+            return index < indices.length;
+        }
+
+        public ReadDescriptor next() {
+            return descriptors.get(indices[index++]);
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

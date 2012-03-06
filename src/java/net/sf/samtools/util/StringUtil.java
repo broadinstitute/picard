@@ -236,6 +236,20 @@ public class StringUtil {
         return sb.toString();
     }
 
+
+    public static String intValuesToString(final int[] intVals) {
+        final StringBuilder sb = new StringBuilder(intVals.length);
+        if(intVals.length > 0) {
+            sb.append(String.valueOf(intVals[0]));
+            for(int i = 1; i < intVals.length; i++) {
+                sb.append(", ");
+                sb.append(String.valueOf(intVals[i]));
+            }
+        }
+
+        return sb.toString();
+    }
+
     ////////////////////////////////////////////////////////////////////
     // The following methods all convert btw bytes and Strings, without
     // using the Java character set mechanism.

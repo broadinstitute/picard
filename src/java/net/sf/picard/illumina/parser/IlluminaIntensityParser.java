@@ -15,8 +15,8 @@ import java.util.Map;
  * @author jburke@broadinstitute.org
  */
 abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePerCycleParser<T> {
-    public IlluminaIntensityParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int [] readLengths) {
-        super(directory, lane, tilesToCycleFiles, readLengths);
+    public IlluminaIntensityParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+        super(directory, lane, tilesToCycleFiles, outputMapping);
     }
 
     /**
@@ -26,7 +26,7 @@ abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePe
      * @param channel A,C,G, or T
      * @param intensity The value read by the CycleFileParser for this cycle
      */
-    protected abstract void addIntensityToIlluminaData(final T illData, final CompositeIndex index, final IntensityChannel channel, final short intensity);
+    protected abstract void addIntensityToIlluminaData(final T illData, final OutputMapping.TwoDIndex index, final IntensityChannel channel, final short intensity);
 
     /**
      * Both CnfParser and CifParser produces an array of FCIDs, implement this method to convert them into the relevant IlluminaData subclass(RawIntensityData or NoiseData)
@@ -62,9 +62,9 @@ abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePe
     }
 
     @Override
-    public void verifyData(final ReadStructure readStructure, final List<Integer> tiles) {
+    public void verifyData(final List<Integer> tiles, final int [] cycles) {
         //Verify we have the correct number of cycles and for each cycle we have the correct number of tiles
-        super.verifyData(readStructure, tiles);
+        super.verifyData(tiles, cycles);
 
         Long fileSize;
         Integer numClusters;
@@ -105,12 +105,12 @@ abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePe
         private final ClusterIntensityFileReader reader;
         private final int cycle;
         private int cluster;
-        private final CompositeIndex index;
+        private final OutputMapping.TwoDIndex index;
 
         public IntensityFileParser(final File file, final int cycle) {
             reader = new ClusterIntensityFileReader(file);
             cluster = 0;
-            index = getIndex(cycle);
+            index = outputMapping.getOutputIndexForCycle(cycle);
             this.cycle = cycle;
         }
 

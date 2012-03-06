@@ -42,10 +42,24 @@ interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_T
      * the appropriate IlluminaEndData objects set into it for first end, second end, barcode.
      */
     DATA_TYPE next();
+
+    /**
+     * Is there a DATA_TYPE object for another cluster remaining.
+     * @return TRUE if there is a DATA_TYPE object for the next cluster that can be provided by
+     * next
+     */
     boolean hasNext();
 
-    void verifyData(final ReadStructure readStructure, final List<Integer> tiles);
+    /**
+     * Given the expected tiles and cycles for this run, make sure this parser can provide data for
+     * all tiles/cycles or throw's an exception if it's missing any required data or data structures
+     * it relies on do not disagree with the provided tiles/cycles
+     * @param tiles The number of tiles in the current run
+     * @param cycles The number of cycles in the current run
+     */
+    void verifyData(final List<Integer> tiles, final int [] cycles);
 
+    /** The DataTypes that this parser can provide */
     Set<IlluminaDataType> supportedTypes();
 
 }

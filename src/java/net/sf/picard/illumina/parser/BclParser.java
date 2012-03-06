@@ -45,8 +45,8 @@ class BclParser extends PerTilePerCycleParser<BclData>{
 
     private static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(makeSet(IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores));
 
-    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, int[] outputLengths) {
-        super(directory, lane, tilesToCycleFiles, outputLengths);
+    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+        super(directory, lane, tilesToCycleFiles, outputMapping);
     }
 
     /** Create the BclData object segmented by the given outputLengths */
@@ -64,7 +64,7 @@ class BclParser extends PerTilePerCycleParser<BclData>{
     @Override
     protected CycleFileParser<BclData> makeCycleFileParser(final File file, final int cycle) {
         return new CycleFileParser<BclData>(){
-            final CompositeIndex index = getIndex(cycle);
+            final OutputMapping.TwoDIndex cycleOutputIndex = outputMapping.getOutputIndexForCycle(cycle);
             BclReader reader = new BclReader(file);
 
             @Override
@@ -79,8 +79,8 @@ class BclParser extends PerTilePerCycleParser<BclData>{
                 }
 
                 final BclReader.BclValue value = reader.next();
-                ild.getBases()[index.arrayIndex][index.elementIndex] = value.base;
-                ild.getQualities()[index.arrayIndex][index.elementIndex] = value.quality;
+                ild.getBases()    [cycleOutputIndex.majorIndex][cycleOutputIndex.minorIndex] = value.base;
+                ild.getQualities()[cycleOutputIndex.majorIndex][cycleOutputIndex.minorIndex] = value.quality;
             }
 
             @Override

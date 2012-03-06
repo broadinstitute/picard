@@ -44,11 +44,10 @@ class CifParser extends IlluminaIntensityParser<RawIntensityData> {
      * @param directory BaseCallsDir or analogue directory containing folders like L001/C1.1/s_1_1.cif
      * @param lane The lane being analyzed
      * @param tilesToCycleFiles A map of tile -> CycledFilesIterator for each tile to consider
-     * @param outputLengths The desired lengths of each member of the FourChannelIntensityData objects returned in an array
      * by RawIntensityData
      */
-    public CifParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final int[] outputLengths) {
-        super(directory, lane, tilesToCycleFiles, outputLengths);
+    public CifParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+        super(directory, lane, tilesToCycleFiles, outputMapping);
     }
 
     /**
@@ -59,8 +58,8 @@ class CifParser extends IlluminaIntensityParser<RawIntensityData> {
      * @param intensity
      */
     @Override
-    protected void addIntensityToIlluminaData(final RawIntensityData rawIntensityData, final CompositeIndex index, final IntensityChannel channel, final short intensity) {
-        rawIntensityData.getRawIntensities()[index.arrayIndex].getChannel(channel)[index.elementIndex] = intensity;
+    protected void addIntensityToIlluminaData(final RawIntensityData rawIntensityData, final OutputMapping.TwoDIndex index, final IntensityChannel channel, final short intensity) {
+        rawIntensityData.getRawIntensities()[index.majorIndex].getChannel(channel)[index.minorIndex] = intensity;
     }
 
     @Override

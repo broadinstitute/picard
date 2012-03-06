@@ -89,7 +89,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
 
     @DataProvider(name="data")
     private Object[][] getIlluminaBasecallsToSamTestData(){
-        return new Object[][] { //TODO: ADD BARCODED TESTS?
+        return new Object[][] {
                 {"1", "76T76T"},
                 {"2", "76T"},
                 {"4", "76T76T"},

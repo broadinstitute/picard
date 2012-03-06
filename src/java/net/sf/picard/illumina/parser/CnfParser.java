@@ -41,13 +41,13 @@ import java.util.Set;
 class CnfParser extends IlluminaIntensityParser<NoiseData> {
     private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.Noise));
 
-    public CnfParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, int[] outputLengths) {
-        super(directory, lane, tilesToCycleFiles, outputLengths);
+    public CnfParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+        super(directory, lane, tilesToCycleFiles, outputMapping);
     }
 
     @Override
-    protected void addIntensityToIlluminaData(NoiseData illData, final CompositeIndex index, IntensityChannel channel, short intensity) {
-        illData.getNoise()[index.arrayIndex].getChannel(channel)[index.elementIndex ] = intensity;
+    protected void addIntensityToIlluminaData(NoiseData illData, final OutputMapping.TwoDIndex index, IntensityChannel channel, short intensity) {
+        illData.getNoise()[index.majorIndex].getChannel(channel)[index.minorIndex] = intensity;
     }
 
     @Override

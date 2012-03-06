@@ -320,8 +320,9 @@ class IlluminaFileUtil {
      */
     class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         private final CycleIlluminaFileMap cycleFileMap;
-        private int numCycles;
         private List<Integer> tiles;
+        private int [] detectedCycles;
+
         public PerTilePerCycleFileUtil(final String fileNameEndPattern, final File base) {
             super(makeLTRegex(fileNameEndPattern), makeLTRegex(fileNameEndPattern, lane), fileNameEndPattern, base);
             this.cycleFileMap = getPerTilePerCycleFiles(); //sideEffect, assigned to numCycles
@@ -375,52 +376,55 @@ class IlluminaFileUtil {
             final CycleIlluminaFileMap cycledMap = new CycleIlluminaFileMap();
 
             final File laneDir = base;
-            final File[] tempCycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, CYCLE_SUBDIRECTORY_PATTERN);
-
+            final File[] tempCycleDirs;
+            File firstCycleDir = null;
+            tempCycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, CYCLE_SUBDIRECTORY_PATTERN);
             if (tempCycleDirs == null || tempCycleDirs.length == 0) {
                 return cycledMap;
             }
 
-            File cycle1Dir = null;
-            final Integer [] cycles = new Integer[tempCycleDirs.length];
+            int lowestCycle         = Integer.MAX_VALUE;
+            int lowestCycleDirIndex = 0;
+            final int [] cycles = new int[tempCycleDirs.length];
             for (int i = 0; i < tempCycleDirs.length; ++i) {
                 cycles[i] = getCycleFromDir(tempCycleDirs[i]);
-                if(cycles[i] == 1) {
-                    cycle1Dir = tempCycleDirs[i];
+                if(cycles[i] < lowestCycle) {
+                    lowestCycle = cycles[i];
+                    lowestCycleDirIndex = i;
                 }
             }
+
+            firstCycleDir = tempCycleDirs[lowestCycleDirIndex];
 
             Arrays.sort(cycles);
-            for (int i = 0; i < tempCycleDirs.length; ++i) {
-                if(cycles[i] != i + 1) {
-                    StringBuilder presentCycles = new StringBuilder(tempCycleDirs.length);
-                    for(int j = 0; j < tempCycleDirs.length; j++) {
-                        presentCycles.append(cycles[j]);
-                        presentCycles.append(",");
-                    }
-                    throw new PicardException("Missing cycle dir " + (i+1) + presentCycles.toString());
-                }
-            }
+            detectedCycles = cycles;
 
-            numCycles = tempCycleDirs.length;
-            final List<Integer> tiles = getTilesInCycleDir(cycle1Dir);
+            final List<Integer> tiles = getTilesInCycleDir(firstCycleDir);
             for(final int tile : tiles) {
-                cycledMap.put(tile, new CycleFilesIterator(laneDir, lane, tile, extension)); //Gonna have a problem here if we ever get a (.txt.gz for these types of files)
+                cycledMap.put(tile, new CycleFilesIterator(laneDir, lane, tile, cycles, extension)); //Gonna have a problem here if we ever get a (.txt.gz for these types of files)
             }
 
             return cycledMap;
-        }
-
-        public int getNumCycles() {
-            return numCycles;
         }
 
         public CycleIlluminaFileMap getFiles() {
             return cycleFileMap;
         }
 
-        public CycleIlluminaFileMap getFiles(final List<Integer> tiles) {
-            return cycleFileMap.keep(tiles);
+        public CycleIlluminaFileMap getFiles(List<Integer> tiles) {
+            return cycleFileMap.keep(tiles, null);
+        }
+
+        public CycleIlluminaFileMap getFiles(final int [] cycles) {
+            return cycleFileMap.keep(null, cycles);
+        }
+
+        public CycleIlluminaFileMap getFiles(final List<Integer> tiles, final int [] cycles) {
+            return cycleFileMap.keep(tiles, cycles);
+        }
+
+        public int [] getDetectedCycles() {
+            return detectedCycles;
         }
 
         /**
@@ -441,13 +445,13 @@ class IlluminaFileUtil {
      * are structured the same. */
     class QSeqIlluminaFileUtil extends ParameterizedFileUtil {
         private final List<Integer> tiles;
-        private final List<IlluminaFileMap> fileMaps;
+        private final List<IlluminaFileMap> readFileMaps;
         public QSeqIlluminaFileUtil() {
             super(UNPARAMETERIZED_QSEQ_PATTERN, makeParameterizedQseqRegex(lane), "_qseq.txt", basecallDir);
-            fileMaps = getFiles();
+            readFileMaps = getFiles();
 
-            if(fileMaps.size() > 0) {
-                tiles = Collections.unmodifiableList(new ArrayList<Integer>(fileMaps.get(0).keySet()));
+            if(readFileMaps.size() > 0) {
+                tiles = Collections.unmodifiableList(new ArrayList<Integer>(readFileMaps.get(0).keySet()));
             } else {
                 tiles = new ArrayList<Integer>();
             }
@@ -463,7 +467,7 @@ class IlluminaFileUtil {
          * @return The highest end number found among the files in the basecallDir
          */
         public int numberOfEnds() {
-            return fileMaps.size();
+            return readFileMaps.size();
         }
 
         /**
@@ -512,7 +516,8 @@ class IlluminaFileUtil {
 
         public List<IlluminaFileMap> getFiles(final List<Integer> tiles) {
             final List<IlluminaFileMap> filteredMaps = new ArrayList<IlluminaFileMap>();
-            for(final IlluminaFileMap fm : fileMaps) {
+
+            for(final IlluminaFileMap fm : readFileMaps) {
                 filteredMaps.add(fm.keep(tiles));
             }
 

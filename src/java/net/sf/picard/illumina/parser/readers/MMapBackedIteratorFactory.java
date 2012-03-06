@@ -80,11 +80,11 @@ public class MMapBackedIteratorFactory {
         IoUtil.assertFileIsReadable(binaryFile);
 
         if(headerSize < 0) {
-            throw new PicardException("Header size cannot be negative.  HeaderSize(" + headerSize + ")");
+            throw new PicardException("Header size cannot be negative.  HeaderSize(" + headerSize + ") for file " + binaryFile.getAbsolutePath());
         }
 
         if(headerSize > binaryFile.length()) {
-            throw new PicardException("Header size(" + headerSize + ") is greater than file size(" + binaryFile.length() + ")");
+            throw new PicardException("Header size(" + headerSize + ") is greater than file size(" + binaryFile.length() + ") for file " + binaryFile.getAbsolutePath());
         }
     }
 
@@ -125,6 +125,10 @@ public class MMapBackedIteratorFactory {
 
         public boolean hasNext() {
             return buffer.limit() - buffer.position() >= elementSize;
+        }
+
+        public void skipElements(final int numElements) {
+            buffer.position(buffer.position() + (numElements * elementSize));
         }
 
         /** The method that actually retrieves the data from the enclosing buffer */
@@ -219,7 +223,6 @@ abstract class BinaryFileIterator<TYPE> implements Iterator<TYPE>, Iterable<TYPE
         return file;
     }
 
-
     public TYPE next() {
         if(!hasNext()) {
             throw new NoSuchElementException();
@@ -238,6 +241,7 @@ abstract class BinaryFileIterator<TYPE> implements Iterator<TYPE>, Iterable<TYPE
 
     /** The method that actually retrieves the data from the enclosing buffer */
     protected abstract TYPE getElement();
+    public abstract void skipElements(final int numElementsToSkip);
     public abstract boolean hasNext();
 }
 

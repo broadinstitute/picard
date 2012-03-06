@@ -6,7 +6,8 @@ import static net.sf.picard.illumina.parser.BinTdUtil.G;
 import static net.sf.picard.illumina.parser.BinTdUtil.T;
 import static net.sf.picard.illumina.parser.BinTdUtil.P;
 
-import net.sf.picard.illumina.parser.readers.BclReader;
+import net.sf.picard.PicardException;
+import net.sf.picard.io.IoUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -17,18 +18,21 @@ import java.util.Map;
 
 public class BclParserTest {
     public static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/CompleteIlluminaDir/Intensities/BaseCalls/L003");
-    public static final String READ_STRUCTURE = "25T8B25T";
+    public static final String READ_STRUCTURE        = "25T8B25T";
+    public static final String READ_STRUCTURE_WSKIPS = "25S8B25S";
+    public static final String READ_STRUCTURE_WSKIPS_PARTIAL = "10T5S10T8B5T20S";
+    public static final String READ_STRUCTURE_WSKIPS_BAD     = "10T5S10T2B4S2B5T20S";
     public static final int [] READ_LENGTHS = new int[]{25,8,25};
     public static final int LANE = 3;
     public static final IlluminaDataType DATA_TYPES [] = {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores};
     public static final int TILE_SIZES = 20;
 
 
-    public static CycleIlluminaFileMap makeCycleIlluminaFileMap(final int [] tiles) {
+    public static CycleIlluminaFileMap makeCycleIlluminaFileMap(final File tdDir, final int [] tiles, final int [] outputCycles) {
         final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
 
         for(final Integer tile : tiles) {
-            fileMap.put(tile, new CycleFilesIterator(TEST_DATA_DIR, LANE, tile, ".bcl"));
+            fileMap.put(tile, new CycleFilesIterator(tdDir, LANE, tile, outputCycles, ".bcl"));
         }
 
         return fileMap;
@@ -75,10 +79,12 @@ public class BclParserTest {
         }
     }
 
-    @Test(dataProvider = "tileMaps")
-    public void fullBclParserTest(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
-        final BclParser bclParser = new BclParser(TEST_DATA_DIR, 3, makeCycleIlluminaFileMap(tiles), READ_LENGTHS);
-        final Map<Integer, ClusterData> testData = BinTdUtil.clusterData(LANE, Arrays.asList(boxArr(tiles)), READ_STRUCTURE, DATA_TYPES);
+    public void fullBclParserTestImpl(final File dir, final String readStructure, final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        final ReadStructure rs = new ReadStructure(readStructure);
+        final OutputMapping outputMapping = new OutputMapping(rs);
+
+        final BclParser bclParser = new BclParser(dir, 3, makeCycleIlluminaFileMap(dir, tiles, outputMapping.getOutputCycles()), outputMapping);
+        final Map<Integer, ClusterData> testData = BinTdUtil.clusterData(LANE, Arrays.asList(boxArr(tiles)), readStructure, DATA_TYPES);
 
         int count = 0;
         int readNum = 0;
@@ -98,6 +104,104 @@ public class BclParserTest {
         }
         Assert.assertEquals(count, size);
     }
+
+    public static void deleteBclFiles(final File laneDirectory, final String readStructure) {
+        final ReadStructure rs = new ReadStructure(readStructure);
+        int index = 1;
+        for(final ReadDescriptor rd : rs.descriptors) {
+            if(rd.type == ReadType.S) {
+                for(int i = index; i < index + rd.length; i++) {
+                    final File cycleDir = new File(laneDirectory, "C" + i + ".1");
+                    final File [] cycleFiles = cycleDir.listFiles();
+                    for(final File toDelete : cycleFiles) {
+                        if(!toDelete.delete()) {
+                            throw new RuntimeException("Couldn't delete file " + toDelete.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+
+            index += rd.length;
+        }
+    }
+
+    @Test(dataProvider = "tileMaps")
+    public void fullBclParserTest(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        fullBclParserTestImpl(TEST_DATA_DIR, READ_STRUCTURE, tiles, size, seekAfter, newTileIndex, orderedTileIndex);
+    }
+
+
+    @Test(dataProvider = "tileMaps")
+    public void fullBclParserTestWSkips(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        fullBclParserTestImpl(TEST_DATA_DIR, READ_STRUCTURE_WSKIPS, tiles, size, seekAfter, newTileIndex, orderedTileIndex);
+    }
+
+    @Test(dataProvider = "tileMaps")
+    public void fullBclParserTestWDeletedSkips(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        fullBclParserTestWDeletedSkipsImpl(tiles, size, seekAfter, newTileIndex, orderedTileIndex, READ_STRUCTURE_WSKIPS);
+    }
+
+    @Test(dataProvider = "tileMaps")
+    public void fullBclParserTestWPartiallyDeletedSkips(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        fullBclParserTestWDeletedSkipsImpl(tiles, size, seekAfter, newTileIndex, orderedTileIndex, READ_STRUCTURE_WSKIPS_PARTIAL);
+    }
+
+    @Test(dataProvider = "tileMaps", expectedExceptions = RuntimeException.class)
+    public void fullBclParserTestWBadDeletedSkips(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex) {
+        fullBclParserTestWDeletedSkipsImpl(tiles, size, seekAfter, newTileIndex, orderedTileIndex, READ_STRUCTURE_WSKIPS_BAD);
+    }
+
+    public void fullBclParserTestWDeletedSkipsImpl(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex, final String readStructure) {
+        final File basecallDir = IoUtil.createTempDir("bclParserTest", "BaseCalls");
+
+        Exception exc = null;
+        try {
+            final File l003 = new File(basecallDir, "L003");
+            if(!l003.mkdir()) {
+                throw new RuntimeException("Couldn't make lane dir " + l003.getAbsolutePath());
+            }
+
+            copyBcls(TEST_DATA_DIR, l003);
+            deleteBclFiles(l003, readStructure);
+            fullBclParserTestImpl(l003, READ_STRUCTURE_WSKIPS, tiles, size, seekAfter, newTileIndex, orderedTileIndex);
+        } catch(Exception thrExc) {
+            exc = thrExc;
+        } finally {
+            IoUtil.deleteDirectoryTree(basecallDir);
+        }
+        if(exc != null) {
+            if(exc.getClass() == PicardException.class) {
+                throw new PicardException(exc.getMessage());
+            }
+            throw new RuntimeException(exc);
+        }
+    }
+
+    //Custom copy function to avoid copying .svn files etc...
+    public static void copyBcls(final File srcLaneDir, final File dstDir) {
+        final File [] listFiles = srcLaneDir.listFiles();
+
+        for(final File dir : listFiles) {
+            if(dir.isDirectory()) {
+                File cycleDir = null;
+
+                for(final File file : dir.listFiles()) {
+                    if(file.getName().endsWith(".bcl")) {
+                        if(cycleDir == null) {
+                            cycleDir = new File(dstDir, dir.getName());
+                            if(!cycleDir.mkdir()) {
+                                throw new RuntimeException("Couldn't make directory (" + cycleDir.getAbsolutePath() + ")");
+                            }
+                        }
+
+                        IoUtil.copyFile(file, new File(cycleDir, file.getName()));
+                    }
+                }
+            }
+        }
+    }
+
+
 
     //Helper byte [] tuple for EAMSS testing
     class BasesAndQuals {
@@ -297,6 +401,6 @@ public class BclParserTest {
 
 class TestBclParser extends BclParser{
     public TestBclParser() {
-        super(null, 1, null, null);
+        super(null, 1, null, new OutputMapping(new ReadStructure("1T")));
     }
 }
