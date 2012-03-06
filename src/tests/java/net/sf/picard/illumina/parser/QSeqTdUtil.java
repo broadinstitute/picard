@@ -416,85 +416,6 @@ public class QSeqTdUtil {
         return outData;
     }
 
-    private static int totalLength(byte [][] arrs) {
-        int total = 0;
-        for(int i = 0; i < arrs.length; i++) {
-            for(byte[] arr : arrs) {
-                total += arr.length;
-            }
-        }
-
-        return total;
-    }
-
-    private static void flattenWLimit(byte [][] src, byte [] dest, int srcStart) {
-        int srcArrIndex = 0;
-        while(srcStart >= src[srcArrIndex].length) {
-            srcStart -= src[srcArrIndex++].length;
-        }
-
-        int written = 0;
-
-
-        while(written < dest.length) {
-
-            final int toWrite = Math.min(dest.length, src[srcArrIndex].length);
-            System.arraycopy(src[srcArrIndex], srcStart, dest, 0, toWrite);
-            written += toWrite;
-
-            ++srcArrIndex; //if there is another iteration it is because src[srcArrIndex] was too short
-            srcStart = 0;
-        }
-    }
-
-
-    private static QseqReadData [] splitQSeq(final QseqReadData qseqReadData, int splitStart, int splitLength) {
-        int availableLength = totalLength(qseqReadData.getBases());
-        int totalQseqReads = 1;
-        if(splitStart > 0) {
-            ++totalQseqReads;
-        }
-
-        int lastStart = splitStart + splitLength;
-        if(lastStart < availableLength) {
-            ++totalQseqReads;
-        }
-
-        QseqReadData [] outData = new QseqReadData[totalQseqReads];
-
-        QseqReadData qrd;
-        int outIndex = 0;
-        if(splitStart > 0) {
-            qrd = new QseqReadData(new int[]{splitStart});
-            flattenWLimit(qseqReadData.getBases(), qrd.getBases()[0], 0);
-            flattenWLimit(qseqReadData.getQualities(), qrd.getQualities()[0], 0);
-            outData[outIndex++] = qrd;
-        }
-
-
-        qrd = new QseqReadData(new int[]{splitLength});
-        flattenWLimit(qseqReadData.getBases(), qrd.getBases()[0], splitStart);
-        flattenWLimit(qseqReadData.getQualities(), qrd.getQualities()[0],splitStart);
-        outData[outIndex++] = qrd;
-
-        if(splitStart + splitLength < availableLength) {
-            qrd = new QseqReadData(new int[]{availableLength - lastStart});
-            flattenWLimit(qseqReadData.getBases(), qrd.getBases()[0], lastStart);
-            flattenWLimit(qseqReadData.getQualities(), qrd.getQualities()[0], lastStart);
-            outData[outIndex++] = qrd;
-        }
-
-        for(int i = 0; i < outData.length; i++) {
-            outData[i].setOrCheckPf(qseqReadData.isPf());
-            outData[i].setOrCheckXCoordinate(qseqReadData.getXCoordinate());
-            outData[i].setOrCheckYCoordinate(qseqReadData.getYCoordinate());
-            outData[i].setOrCheckLane(qseqReadData.getLane());
-            outData[i].setOrCheckTile(qseqReadData.getTile());
-        }
-
-        return outData;
-    }
-
     private static int flatten(byte [][] bytes, byte [] out, int index) {
         int outIndex = index;
         for(int i = 0; i < bytes.length; i++) {
@@ -537,7 +458,7 @@ public class QSeqTdUtil {
         return outQrd;
     }
 
-    private static Map<Integer, QseqReadData> combineReads(Map<Integer, QseqReadData> map1, Map<Integer, QseqReadData> map2) {
+    private static Map<Integer, QseqReadData> combineAllReads(Map<Integer, QseqReadData> map1, Map<Integer, QseqReadData> map2) {
         final Map<Integer, QseqReadData> outMap = new HashMap<Integer, QseqReadData>();
         if(map1.size() != map2.size()) {
             throw new PicardException("Map1 and Map2 are not of the same size!");
@@ -580,7 +501,6 @@ public class QSeqTdUtil {
     }
     
     public static Map<Integer, QseqReadData> getReadData(int lane, int end, int tile) {
-        final Map<Integer, QseqReadData> qMap = new HashMap<Integer, QseqReadData>();
         return toMap(getReadNos(lane, 1), fnPrefixToQSeqReadData.get(makeFnPrefix(lane, end, tile)));
     }
 
@@ -620,7 +540,6 @@ public class QSeqTdUtil {
         return splitReadIntoLengths(totalReadLength, outputLengths, getTiledReadData(fileNames), offset);
     }
 
-
     //Note: we want to use this like getReadNos(1,1,1) if we had 3 tiles for lane 1
     public static List<Integer> getReadNos(int lane, int files) {
         final List<Integer> readNos = new ArrayList<Integer>();
@@ -650,7 +569,7 @@ public class QSeqTdUtil {
         Map<Integer, QseqReadData> outList = new HashMap<Integer, QseqReadData>();
         outList.putAll(ends[0]);
         for(int i = 1; i < ends.length; i++) {
-            outList = combineReads(outList, ends[i]);
+            outList = combineAllReads(outList, ends[i]);
         }
 
         return outList;
@@ -669,107 +588,58 @@ public class QSeqTdUtil {
         return files;
     }
 
-    public static Map<Integer, ClusterData> qseqDataToClusterMap(final Map<Integer, QseqReadData> read1, Map<Integer, QseqReadData> read2, final int barcodeCycle, final int barcodeLength, final IlluminaDataType ... dataTypes) {
-        if(barcodeCycle < 1 || barcodeLength <= 0) {
-            throw new PicardException("This testdata method is to be used only with valid barcode data (i.e. barcodeCycle > 0 and barcodeLength > 0");
+    public static Map<Integer, ClusterData> qseqDataToClusterMap(final List<Map<Integer, QseqReadData>> qseqDataPerRead, final OutputMapping om, final IlluminaDataType ... dataTypes) {
+        //For each read data, combine the bases/quals in each read into 1 long read per readNo
+        Map<Integer, QseqReadData> combinedRead = qseqDataPerRead.get(0);
+        for(int i = 1; i < qseqDataPerRead.size(); i++) {
+            combinedRead = combineAllReads(combinedRead, qseqDataPerRead.get(i));
         }
 
-        final Map<Integer, QseqReadData> combinedReads;
-
-        if(read2 != null) {
-            combinedReads = combineReads(read1, read2);
-        } else {
-            combinedReads = read1;
+        final Map<Integer, ClusterData> clusterData = new HashMap<Integer, ClusterData>();
+        for(final Map.Entry<Integer, QseqReadData> noToRead : combinedRead.entrySet()) {
+            clusterData.put(noToRead.getKey(), flatQseqReadToClusterData(noToRead.getValue(), om, dataTypes));
         }
 
-        final Map<Integer, ClusterData> readNoToClusterData = new HashMap<Integer, ClusterData>();
-        for(final Integer key : combinedReads.keySet()) {
-            final QseqReadData [] qrds = splitQSeq(combinedReads.get(key), barcodeCycle - 1, barcodeLength);
-
-            QseqReadData curRead1 = null;
-            QseqReadData curRead2 = null;
-            QseqReadData curBarcode;
-            if(barcodeCycle > 1) {
-                curRead1 = qrds[0];
-                curBarcode = qrds[1];
-                if(qrds.length > 2) {
-                    curRead2 = qrds[2];
-                }
-            } else {
-                curBarcode = qrds[0];
-                if(qrds.length > 1) {
-                    curRead2 = qrds[1];
-                }
-            }
-
-            readNoToClusterData.put(key, qseqDataToClusterData(
-                (curRead1   == null) ? null : curRead1,
-                (curRead2   == null) ? null : curRead2,
-                curBarcode,
-                dataTypes)
-            );
-        }
-
-        return readNoToClusterData;
+        return clusterData;
     }
 
-    public static Map<Integer, ClusterData> qseqDataToClusterMap(final Map<Integer, QseqReadData> read1, Map<Integer, QseqReadData> read2, Map<Integer, QseqReadData> barcode, final IlluminaDataType ... dataTypes) {
-        final Set<Integer> keySet;
-        if(read1 != null) {
-            keySet = read1.keySet();
-        } else if(read2 != null) {
-            keySet = read2.keySet();
-        } else if(barcode != null) {
-            keySet = barcode.keySet();
-        } else {
-            throw new PicardException("Read to QseqReadData maps are all null!");
+    //QSeqRead should have ONLY 1 base and quality array in it's bases/qualities field
+    private static ClusterData flatQseqReadToClusterData(QseqReadData value, OutputMapping om, IlluminaDataType[] dataTypes) {
+        if(value.getBases().length != 1 || value.getQualities().length != 1) {
+            throw new RuntimeException("QseqReadData must be flat! number of bases arrays(" + value.getBases().length + ") number of qual arrays(" + value.getQualities().length + ")");
         }
 
-        final Map<Integer, ClusterData> readNoToClusterData = new HashMap<Integer, ClusterData>();
-        for(final Integer key : keySet) {
-            readNoToClusterData.put(key, qseqDataToClusterData(
-                (read1   == null) ? null : read1.get(key),
-                (read2   == null) ? null : read2.get(key),
-                (barcode == null) ? null : barcode.get(key),
-                dataTypes)
-            );
-        }
+        final Range    [] ranges = om.getCycleIndexRanges();
+        final ReadData [] reads  = new ReadData[ranges.length];
 
-        return readNoToClusterData;
-    }
+        int index = 0;
+        for(final ReadDescriptor rd : om.getOutputDescriptors()) {
+            reads[index] = new ReadData(rd.type);
+            final Range cycleIndexRange = ranges[index];
 
-    public static ClusterData qseqDataToClusterData(final QseqReadData read1, final QseqReadData read2, final QseqReadData barcode,  final IlluminaDataType ... dataTypes) {
-        int arrSize = ((read1 != null)   ? 1 : 0) +
-                      ((read2 != null)   ? 1 : 0) +
-                      ((barcode != null) ? 1 : 0);
-        int readIndex = 0;
-        ReadData [] reads = new ReadData[arrSize];
+            final byte [] bases = new byte[cycleIndexRange.length];
+            final byte [] quals = new byte[cycleIndexRange.length];
 
-        ReadData rd1 = makeRead(ReadType.Template, read1,   dataTypes);
-        if(rd1 != null) {
-            reads[readIndex++] = rd1;
-        }
-        ReadData rdBarcode = makeRead(ReadType.Barcode,  barcode, dataTypes);
-        if(rdBarcode != null) {
-            reads[readIndex++] = rdBarcode;
-        }
-        ReadData rd2 = makeRead(ReadType.Template, read2,   dataTypes);
-        if(rd2 != null) {
-            reads[readIndex++] = rd2;
+            System.arraycopy(value.getBases()[0],     cycleIndexRange.start, bases, 0, bases.length);
+            System.arraycopy(value.getQualities()[0], cycleIndexRange.start, quals, 0, quals.length);
+
+            reads[index].setBases(bases);
+            reads[index].setQualities(quals);
+            ++index;
         }
 
         final ClusterData cd = new ClusterData(reads);
         for(IlluminaDataType idt : dataTypes) {
             switch(idt) {
                 case Position:
-                    cd.setTile(read1.getTile());
-                    cd.setLane(read1.getLane());
-                    cd.setX(read1.getXCoordinate());
-                    cd.setY(read1.getYCoordinate());
+                    cd.setTile(value.getTile());
+                    cd.setLane(value.getLane());
+                    cd.setX(value.getXCoordinate());
+                    cd.setY(value.getYCoordinate());
                     break;
 
                 case PF:
-                    cd.setPf(read1.isPf());
+                    cd.setPf(value.isPf());
                     break;
             }
         }
@@ -777,25 +647,61 @@ public class QSeqTdUtil {
         return cd;
     }
 
-    public static ReadData makeRead(final ReadType rt, final QseqReadData read, final IlluminaDataType ... dataTypes) {
-        if(read != null) {
-            ReadData rd = new ReadData(rt);
+    public static final QseqReadData filterSkips(final OutputMapping om, final QseqReadData read) {
+        final QseqReadData outRead = new QseqReadData(om.getOutputReadLengths());
+        final Range [] ranges      = om.getCycleIndexRanges();  //cycle ranges are indexes into the outputCycles array
+                                                                //and therefore start at 0
+        final byte [][] bases = read.getBases();
+        final byte [][] quals = read.getQualities();
 
-            for(IlluminaDataType idt : dataTypes) {
-                switch(idt) {
-                    case BaseCalls:
-                        rd.setBases(read.getBases()[0]);
-                        break;
+        //there should be a one to relationship between ranges and output reads
+        final byte [][] outBases = outRead.getBases();
+        final byte [][] outQuals = outRead.getQualities();
 
-                    case QualityScores:
-                        rd.setQualities(read.getQualities()[0]);
-                        break;
-                }
+        int arrayIndex   = 0;
+        int elementIndex = 0;
+        int inputCycle   = 0;
+
+        for(int i = 0; i < ranges.length; i++) {
+            final Range range = ranges[i];
+            while(range.start > inputCycle + bases[arrayIndex].length) {
+                inputCycle += bases[arrayIndex].length;
+                ++arrayIndex;
             }
 
-            return rd;
+            int rangeCovered = 0;
+            while(rangeCovered < range.length) {
+                final int length = Math.min(range.length - rangeCovered, bases[arrayIndex].length - elementIndex);
+                System.arraycopy(bases[arrayIndex], elementIndex, outBases[i], rangeCovered, length);
+                System.arraycopy(quals[arrayIndex], elementIndex, outQuals[i], rangeCovered, length);
+
+                rangeCovered += length;
+
+                if(elementIndex + length == bases[arrayIndex].length) {
+                    elementIndex = 0;
+                    ++arrayIndex;
+                } else {
+                    elementIndex += length;
+                }
+            }
+            inputCycle += rangeCovered;
         }
 
-        return null;
+        outRead.setOrCheckLane(read.getLane());
+        outRead.setOrCheckPf(read.isPf());
+        outRead.setOrCheckTile(read.getTile());
+        outRead.setOrCheckXCoordinate(read.getXCoordinate());
+        outRead.setOrCheckYCoordinate(read.getYCoordinate());
+
+        return outRead;
+    }
+
+    public static final Map<Integer, QseqReadData> filterAllSkips(final Map<Integer, QseqReadData> testData, final OutputMapping om) {
+        final Map<Integer, QseqReadData> filteredMap = new HashMap<Integer, QseqReadData>();
+        for( final Map.Entry<Integer, QseqReadData> qrd : testData.entrySet() ) {
+           filteredMap.put(qrd.getKey(), filterSkips(om, qrd.getValue()));
+        }
+
+        return filteredMap;
     }
 }

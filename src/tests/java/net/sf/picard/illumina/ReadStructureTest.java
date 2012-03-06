@@ -115,13 +115,13 @@ public class ReadStructureTest {
             Assert.assertEquals(readStructure.descriptors.get(i), descriptors.get(i));
             switch(readStructure.descriptors.get(i).type) {
                 case T:
-                    Assert.assertEquals(i, readStructure.templateIndices[tIndex++]);
+                    Assert.assertEquals(i, readStructure.templates.getIndices()[tIndex++]);
                     break;
                 case B:
-                    Assert.assertEquals(i, readStructure.barcodeIndices[bIndex++]);
+                    Assert.assertEquals(i, readStructure.barcodes.getIndices()[bIndex++]);
                     break;
                 case S:
-                    Assert.assertEquals(i, readStructure.skipIndices[sIndex++]);
+                    Assert.assertEquals(i, readStructure.skips.getIndices()[sIndex++]);
                     break;
                 default:
                     Assert.fail("Unrecognized read type: " + readStructure.descriptors.get(i).type);
@@ -130,9 +130,9 @@ public class ReadStructureTest {
         }
 
         Assert.assertEquals(readStructure.totalCycles,  totalCycles);
-        Assert.assertEquals(readStructure.numBarcodes,  numBarcodes);
-        Assert.assertEquals(readStructure.numTemplates, numTemplates);
-        Assert.assertEquals(readStructure.numSkips,     numSkips);
+        Assert.assertEquals(readStructure.barcodes.length(),  numBarcodes);
+        Assert.assertEquals(readStructure.templates.length(), numTemplates);
+        Assert.assertEquals(readStructure.skips.length(), numSkips);
 
     }
 

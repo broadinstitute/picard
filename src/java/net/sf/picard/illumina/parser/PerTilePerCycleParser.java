@@ -45,50 +45,29 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     /** A set of parsers for the current tile ordered by cycle */
     private final List<CycleFileParser<ILLUMINA_DATA>> cycleFileParsers;
 
-    /**
-     * Computed on construction, since the output data spans multiple arrays this provides an index to the
-     * correct array/element for each cycle
-     */
-    private final CompositeIndex [] cycleToIndex;
-
-    /** The expected lengths of the outputs */
-    private final int [] outputLengths;
-
-    /** A sum of the output lengths == totalCycles */
-    private final int totalCycles;
+    protected final OutputMapping outputMapping;
 
     /** The current tile number */
     protected int tileNumber  = 0;
 
-    /** Map of tiles -> CycledFilesIterator */
+    /** Map of tiles -> CycledFilesIterator, the CycleFileIterators of this map should contain ONLY cycles to be output */
     protected final CycleIlluminaFileMap tilesToCycleFiles;
 
-    public PerTilePerCycleParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, int[] outputLengths) {
+    /**
+     * Construct a per tile parser
+     * @param directory The directory containing the lane we are analyzing (i.e. the parent of the L00<lane> directory)
+     * @param lane The lane that is being iterated over
+     * @param tilesToCycleFiles A map of tile to CycleFilesIterators whose iterators contain only the cycles we want to output
+     * @param outputMapping Data structure containing information on how we should output data
+     */
+    public PerTilePerCycleParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
         this.lane = lane;
         this.laneDirectory = new File(directory, "L00" + this.lane);
         this.tilesToCycleFiles = tilesToCycleFiles;
-        tileNumber = tilesToCycleFiles.firstKey();
-        this.outputLengths = outputLengths;
+        this.tileNumber = tilesToCycleFiles.firstKey();
+        this.outputMapping = outputMapping;
 
-        int cycles = 0;
-        for(int i = 0; i < outputLengths.length; i++) {
-            cycles += outputLengths[i];
-        }
-        totalCycles = cycles;
-        cycleFileParsers = new ArrayList<CycleFileParser<ILLUMINA_DATA>>(totalCycles);
-
-        cycleToIndex = new CompositeIndex[cycles+1];
-        cycleToIndex[0] = null;
-        int arrIndex = 0;
-        int elementIndex = 0;
-        for(int i = 0; i < totalCycles; i++) {
-            if(elementIndex >= outputLengths[arrIndex]) {
-                elementIndex = 0;
-                ++arrIndex;
-            }
-            cycleToIndex[i+1] = new CompositeIndex(arrIndex, elementIndex);
-            ++elementIndex;
-        }
+        cycleFileParsers = new ArrayList<CycleFileParser<ILLUMINA_DATA>>(outputMapping.getTotalOutputCycles());
 
         seekToTile(tilesToCycleFiles.firstKey());
     }
@@ -120,15 +99,6 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     }
 
     /**
-     * Return the precomputed output array and element indices of the given cycle
-     * @param cycle requested cycle
-     * @return A composite index with the correct array/element that will locate that cycle in output data arrays/multi-element objects
-     */
-    protected CompositeIndex getIndex(final int cycle) {
-        return cycleToIndex[cycle];
-    }
-
-    /**
      * Clear the current set of cycleFileParsers and replace them with the ones for the tile indicated by oneBasedTileNumber
      * @param oneBasedTileNumber requested tile with indices beginning at 1
      */
@@ -141,13 +111,15 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         CloserUtil.close(cycleFileParsers);
         cycleFileParsers.clear();
 
-        int cycleIndex = 0;
+        int totalCycles = 0;
         while(filesIterator.hasNext()) {
-            cycleFileParsers.add(makeCycleFileParser(filesIterator.next(), ++cycleIndex));
+            final int nextCycle = filesIterator.getNextCycle();
+            cycleFileParsers.add(makeCycleFileParser(filesIterator.next(), nextCycle));
+            ++totalCycles;
         }
 
-        if(cycleIndex != totalCycles) {
-            throw new PicardException("Number of cycle files found (" + cycleIndex + ") does not equal the number expected (" + totalCycles +")");
+        if(totalCycles != outputMapping.getTotalOutputCycles()) {
+            throw new PicardException("Number of cycle OUTPUT files found (" + totalCycles + ") does not equal the number expected (" + outputMapping.getTotalOutputCycles() +")");
         }
     }
 
@@ -167,8 +139,8 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
             seekToTile(tilesToCycleFiles.higherKey(tileNumber));
         }
 
-        final ILLUMINA_DATA data = makeData(outputLengths);
-        for(int i = 0; i < totalCycles; i++) {
+        final ILLUMINA_DATA data = makeData(outputMapping.getOutputReadLengths());
+        for(int i = 0; i < outputMapping.getTotalOutputCycles(); i++) {
             cycleFileParsers.get(i).next(data);
         }
 
@@ -185,11 +157,11 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     }
 
     @Override
-    public void verifyData(final ReadStructure readStructure, List<Integer> tiles) {
+    public void verifyData(List<Integer> tiles, final int [] cycles) {
         if(tiles == null) {
             tiles = new ArrayList<Integer>(this.tilesToCycleFiles.keySet());
         }
-        this.tilesToCycleFiles.assertValid(tiles, readStructure.totalCycles);
+        this.tilesToCycleFiles.assertValid(tiles, cycles);
     }
 
     public void remove() {

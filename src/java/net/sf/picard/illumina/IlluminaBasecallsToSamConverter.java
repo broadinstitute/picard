@@ -54,6 +54,7 @@ public class IlluminaBasecallsToSamConverter {
     private int barcodeIndex;
     private final boolean isPairedEnd;
     private final boolean isBarcoded;
+    private final int [] templateIndices;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSamConverter.class);
 
     /**
@@ -69,21 +70,23 @@ public class IlluminaBasecallsToSamConverter {
         this.readGroupId = readGroupId;
         this.readStructure = readStructure;
 
-        if(readStructure.numTemplates > 3) {
-            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + readStructure.numTemplates);
+        if(readStructure.templates.length() > 2) {
+            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + readStructure.templates.length());
         }
 
-        if(readStructure.numBarcodes > 1) {
-            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 1 barcode read.  Number of template reads found in configuration: " + readStructure.numBarcodes);
+        if(readStructure.barcodes.length() > 1) {
+            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 1 barcode read.  Number of template reads found in configuration: " + readStructure.templates.length());
         }
 
-        this.isPairedEnd = readStructure.numTemplates == 2;
-        this.isBarcoded  = readStructure.numBarcodes > 0;
+        this.isPairedEnd = readStructure.templates.length() == 2;
+        this.isBarcoded  = !readStructure.barcodes.isEmpty();
 
         this.barcodeIndex = -1;
-        if(readStructure.barcodeIndices.length > 0) { //Should only be one for now
-            this.barcodeIndex = readStructure.barcodeIndices[0];
+        if(!readStructure.barcodes.isEmpty()) { //Should only be one for now
+            this.barcodeIndex = readStructure.barcodes.getIndices()[0];
         }
+
+        this.templateIndices = readStructure.templates.getIndices();
 
         initializeFilters();
     }
@@ -98,7 +101,7 @@ public class IlluminaBasecallsToSamConverter {
     }
 
     public int getNumRecordsPerCluster() {
-        return readStructure.numTemplates;
+        return readStructure.templates.length();
     }
 
     private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final ReadData unmatchedBarcodeRead) {
@@ -136,13 +139,13 @@ public class IlluminaBasecallsToSamConverter {
     public void createSamRecords(final ClusterData cluster, final SAMFileHeader header, boolean markAdapter, final SAMRecord [] recordsOut) {
         final String readName = createReadName(cluster);
 
-        SAMRecord firstOfPair  = createSamRecord(cluster.getRead(readStructure.templateIndices[0]), header, readName, cluster.isPf(), true,  (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+        SAMRecord firstOfPair  = createSamRecord(cluster.getRead(templateIndices[0]), header, readName, cluster.isPf(), true,  (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
         recordsOut[0] = firstOfPair;
 
         SAMRecord secondOfPair = null;
 
         if(isPairedEnd) {
-            secondOfPair  = createSamRecord(cluster.getRead(readStructure.templateIndices[1]), header, readName, cluster.isPf(), false, (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+            secondOfPair  = createSamRecord(cluster.getRead(templateIndices[1]), header, readName, cluster.isPf(), false, (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
             recordsOut[1] = secondOfPair;
         }
 

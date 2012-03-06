@@ -11,17 +11,27 @@ public class IlluminaIntensityParserTest {
     private static final int TILE_1_READS = 153010;
     private static final int TILE_2_READS = 149900;
     private static final int READS = TILE_1_READS + TILE_2_READS;
+    private static final int [] CYCLES = new int[]{1,2,3,4};
+    private static final int [] OUTPUT_LENGTHS = new int[]{4};
+
+    private static CycleIlluminaFileMap makeFileMap(final String extension) {
+        final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
+        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, CYCLES, extension));
+        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, CYCLES, extension));
+        return fileMap;
+    }
+
+    private static CifParser makeCifParser(final String readStructure) {
+        final OutputMapping outMap = new OutputMapping(new ReadStructure(readStructure));
+        return new CifParser(TEST_DATA_DIR, LANE, makeFileMap(".cif"), outMap);
+    }
 
     /**
      * Read noise files, configured as single-end, non-barcoded run with length=4.
      */
     @Test
     public void testSingleEnd() {
-        final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
-
-        final CifParser cifParser = new CifParser(TEST_DATA_DIR, LANE, fileMap, new int[]{4});
+        final CifParser cifParser = makeCifParser("4T");
 
         int numReads;
         for (numReads = 0; cifParser.hasNext(); ++numReads) {
@@ -40,12 +50,8 @@ public class IlluminaIntensityParserTest {
     @Test
     public void testPairedEndWithBarcode() {
 
-        final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cif"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cif"));
-
         final int [] outputLengths = new int[]{1, 2, 1};
-        final CifParser cifParser = new CifParser(TEST_DATA_DIR, LANE, fileMap, outputLengths);
+        final CifParser cifParser = makeCifParser("1T2B1T");
 
         int numReads;
         for (numReads = 0; cifParser.hasNext(); ++numReads) {
@@ -63,11 +69,9 @@ public class IlluminaIntensityParserTest {
     @Test
     public void testSeekCnf() {
 
-        final CycleIlluminaFileMap fileMap = new CycleIlluminaFileMap();
-        fileMap.put(1, new CycleFilesIterator(TEST_DATA_DIR, 1, 1, ".cnf"));
-        fileMap.put(2, new CycleFilesIterator(TEST_DATA_DIR, 1, 2, ".cnf"));
-
-        final CnfParser cnfParser = new CnfParser(TEST_DATA_DIR, LANE, fileMap, new int[]{4});
+        final CycleIlluminaFileMap fileMap = makeFileMap(".cnf");
+        final OutputMapping outMap = new OutputMapping(new ReadStructure("4T"));
+        final CnfParser cnfParser = new CnfParser(TEST_DATA_DIR, LANE, fileMap, outMap);
         cnfParser.seekToTile(2);
         int numReads;
         int noiseIndex = 0;

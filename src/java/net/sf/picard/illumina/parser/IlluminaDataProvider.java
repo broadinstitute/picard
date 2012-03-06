@@ -63,12 +63,12 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
      * @param basecallDirectory For error reporting only.
      * @param lane For error reporting only.
      */
-    IlluminaDataProvider(final ReadStructure readStructure,
+    IlluminaDataProvider(final OutputMapping outputMapping,
                          final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataTypes,
                          final File basecallDirectory, final int lane) {
         this.basecallDirectory = basecallDirectory;
         this.lane = lane;
-        numReads = readStructure.numDescriptors;
+        numReads = outputMapping.numOutputReads();
 
         final int numParsers = parsersToDataTypes.size();
         if(numParsers == 0) {
@@ -87,7 +87,7 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
 
         this.outputReadTypes = new ReadType[numReads];
         i = 0;
-        for(final ReadDescriptor rd : readStructure.descriptors) {
+        for(final ReadDescriptor rd : outputMapping.getOutputDescriptors()) {
             outputReadTypes[i++] = rd.type;
         }
     }

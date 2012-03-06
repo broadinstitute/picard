@@ -238,8 +238,8 @@ public class ExtractIlluminaBarcodesTest {
                 ++numReads;
             }
 
-            Assert.assertEquals(cluster.getRead(readStructure.templateIndices[0]).getQualities().length, barcodePosition - 1);
-            Assert.assertEquals(cluster.getRead(readStructure.templateIndices[0]).getBases().length, barcodePosition - 1);
+            Assert.assertEquals(cluster.getRead(readStructure.templates.getIndices()[0]).getQualities().length, barcodePosition - 1);
+            Assert.assertEquals(cluster.getRead(readStructure.templates.getIndices()[0]).getBases().length, barcodePosition - 1);
         }
         Assert.assertEquals(numReads, metricACAGTG.READS);
     }

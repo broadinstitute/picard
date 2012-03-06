@@ -127,14 +127,8 @@ public class IlluminaDataProviderTest {
             compareBasesAndQuals(cd1.getRead(i), cd2.getRead(i), testName);
         }
 
-        Assert.assertEquals(cd1.getMatchedBarcode(), cd2.getMatchedBarcode(), testName);
+        Assert.assertEquals(cd1.getMatchedBarcode(),      cd2.getMatchedBarcode(), testName);
         Assert.assertEquals(cd1.isPf().booleanValue(),    cd2.isPf().booleanValue(), testName);
-    }
-
-    private byte[] solexaQualityCharsToPhredBinary(final byte[] qualBytes) {
-        final byte[] outQualBytes = Arrays.copyOf(qualBytes, qualBytes.length);
-        SolexaQualityConverter.getSingleton().convertSolexa_1_3_QualityCharsToPhredBinary(outQualBytes);
-        return outQualBytes;
     }
 
     /**
@@ -147,7 +141,7 @@ public class IlluminaDataProviderTest {
         return new Object[][]{
             {
               "PE Bustard Parsing Test", 1, 60,
-                qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), null, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3))), makeOutputMapping("76T76T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "76T76T",
                 0, 0,
@@ -155,7 +149,7 @@ public class IlluminaDataProviderTest {
             },
 
             {"PE with Barcode Bustard Parsing Test", 1, 60,
-                qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), 77, 6, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3))), makeOutputMapping("76T6B70T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "76T6B70T",
                 0, 0,
@@ -163,7 +157,7 @@ public class IlluminaDataProviderTest {
             },
 
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20,
-                qseqDataToClusterMap(getReadData(s_8_1_0001), getReadData(s_8_2_0001), null, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getReadData(s_8_1_0001), getReadData(s_8_2_0001)), makeOutputMapping("4T4T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
                 "4T4T",
                 0, 0,
@@ -171,7 +165,7 @@ public class IlluminaDataProviderTest {
             },
 
             {"PE Bustard Parsing Test with Noise/Intensity", 8, 20,
-                qseqDataToClusterMap(getReadData(s_8_1_0001), getReadData(s_8_2_0001), 5, 2, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getReadData(s_8_1_0001), getReadData(s_8_2_0001)), makeOutputMapping("4T2B2T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{IlluminaDataType.RawIntensities, IlluminaDataType.Noise},
                 "4T2B2T",
                 0, 0,
@@ -179,15 +173,23 @@ public class IlluminaDataProviderTest {
             },
 
             {"PE, Barcode, seek Bustard Parsing Test", 1, 21,
-                qseqDataToClusterMap(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3)), 77, 6, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3))), makeOutputMapping("76T6B70T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "76T6B70T",
                 3, getFileSize(s_1_1_0001) + getFileSize(s_1_2_0001) - 1,
                 TEST_DATA_LOCATION
             },
 
+            {"PE, Barcode, end with skip test", 1, 21,
+                qseqDataToClusterMap(makeList(getTiledReadData(s_1_1, makeList(1, 2, 3)), getTiledReadData(s_1_2, makeList(1,2,3))), makeOutputMapping("76T6B1S"), DEFAULT_DATA_TYPES),
+                new IlluminaDataType[]{},
+                "76T6B1S",
+                3, getFileSize(s_1_1_0001) + getFileSize(s_1_2_0001) - 1,
+                TEST_DATA_LOCATION
+            },
+
             {"Non-PE Bustard Parsing Test", 5, 20,
-                qseqDataToClusterMap(getReadData(s_5_1_0001), null, null, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getReadData(s_5_1_0001)), makeOutputMapping("76T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "76T",
                 0, 0,
@@ -195,7 +197,7 @@ public class IlluminaDataProviderTest {
             },
 
             {"Non-PE Bustard Parsing Test", 5, 20,
-                qseqDataToClusterMap(getReadData(s_5_1_0001), null, 71, 6, DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getReadData(s_5_1_0001)), makeOutputMapping("70T6B"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "70T6B",
                 0, 0,
@@ -203,13 +205,17 @@ public class IlluminaDataProviderTest {
             },
 
             {"Barcode-aware PE Bustard Parsing Test", 6, 10,
-                qseqDataToClusterMap(getReadData(s_6_1_0001), getReadData(s_6_3_0001),  getReadData(s_6_2_0001), DEFAULT_DATA_TYPES),
+                qseqDataToClusterMap(makeList(getReadData(s_6_1_0001), getReadData(s_6_2_0001), getReadData(s_6_3_0001)), makeOutputMapping("68T8B68T"), DEFAULT_DATA_TYPES),
                 new IlluminaDataType[]{},
                 "68T8B68T",
                 0, 0,
                 TEST_DATA_LOCATION
             }
         };
+    }
+
+    private static OutputMapping makeOutputMapping(String readStructure) {
+        return new OutputMapping(new ReadStructure(readStructure));
     }
 
     public void runBarcodeParsingTest(final IlluminaDataProviderFactory factory) {
@@ -240,7 +246,7 @@ public class IlluminaDataProviderTest {
             {
                 "Bustard Parsing Test(25T8B25T) w/Clocs", 1, 60,
                 makeList(1101, 1201, 2101),
-                new IlluminaDataType[]{IlluminaDataType.Barcodes}, //ADD TESTING FOR BARCODES
+                new IlluminaDataType[]{IlluminaDataType.Barcodes},
                 "25T8B25T",
                 0, 0,
                 BINARY_TD_LOCATION
@@ -248,15 +254,23 @@ public class IlluminaDataProviderTest {
             {
                 "Bustard Parsing Test(25T8S25T) w/Clocs", 1, 60,
                 makeList(1101, 1201, 2101),
-                new IlluminaDataType[]{IlluminaDataType.Barcodes}, //ADD TESTING FOR BARCODES
+                new IlluminaDataType[]{IlluminaDataType.Barcodes},
                 "25T8S25T",
+                0, 0,
+                BINARY_TD_LOCATION
+            },
+            {
+                "Bustard Parsing Test(25T8S25T) w/Clocs with ending skip", 1, 60,
+                makeList(1101, 1201, 2101),
+                new IlluminaDataType[]{IlluminaDataType.Barcodes},
+                "25T8B1S",
                 0, 0,
                 BINARY_TD_LOCATION
             },
             {
                 "Bustard Parsing Test(25S8S25T) w/Clocs", 1, 60,
                 makeList(1101, 1201, 2101),
-                new IlluminaDataType[]{IlluminaDataType.Barcodes}, //ADD TESTING FOR BARCODES
+                new IlluminaDataType[]{IlluminaDataType.Barcodes},
                 "25S8S25T",
                 0, 0,
                 BINARY_TD_LOCATION

@@ -38,10 +38,8 @@ public class FilterParserTest {
 
     public static final Boolean [] allTilesToValues(Integer [] tiles) {
         Boolean [][] values = new Boolean[tiles.length][];
-        int totalSize = 0;
         for(int i = 0; i < tiles.length; i++) {
             values[i] = tileToValue(tiles[i]);
-            totalSize += values[i].length;
         }
 
         return arrayFlatten(values);
@@ -90,7 +88,7 @@ public class FilterParserTest {
         final List<Integer> tileList = arrayToList(tiles);
 
         final FilterParser fp = new FilterParser(fUtil.filter().getFiles(tileList));
-        fp.verifyData(null, tileList); //ignores read structure
+        fp.verifyData(tileList, null); //filter parser doesn't care about cycle
 
         for(final boolean expectedValue : values) {
             Assert.assertTrue(fp.hasNext());
@@ -163,6 +161,6 @@ public class FilterParserTest {
         final List<Integer> verifyTileList = arrayToList(verifyTiles);
 
         final FilterParser fp = new FilterParser(fUtil.filter().getFiles(initTileList));
-        fp.verifyData(null, verifyTileList); //ignores read structure
+        fp.verifyData(verifyTileList, null); //filter parser doesn't care about cycle values
    }
 }

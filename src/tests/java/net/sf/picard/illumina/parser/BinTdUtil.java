@@ -351,34 +351,38 @@ public class BinTdUtil {
             return null;
 
         final ReadData rdToCopy = toCopy.getRead(0); //Only gonna be one read in this
-        final ReadData [] rds = new ReadData[rs.descriptors.size()];
+        final ReadData [] rds = new ReadData[rs.nonSkips.length()];
 
         int index = 0;
         int baseIndex = 0;
-        for(final ReadDescriptor readDesc : rs.descriptors) {
-            final ReadData curRead = new ReadData(readDesc.type);
-            if(doBases) {
-                final byte [] bases = Arrays.copyOfRange(rdToCopy.getBases(), baseIndex, baseIndex + readDesc.length);
-                curRead.setBases(bases);
-            }
+        for(int i = 0; i < rs.descriptors.size(); i++) {
+            final ReadDescriptor readDesc = rs.descriptors.get(i);
 
-            if(doQuals) {
-                final byte [] quals = Arrays.copyOfRange(rdToCopy.getQualities(), baseIndex, baseIndex + readDesc.length);
-                curRead.setQualities(quals);
-            }
+            if(readDesc.type != ReadType.S) {
+                final ReadData curRead = new ReadData(readDesc.type);
+                if(doBases) {
+                    final byte [] bases = Arrays.copyOfRange(rdToCopy.getBases(), baseIndex, baseIndex + readDesc.length);
+                    curRead.setBases(bases);
+                }
 
-            if(doInts) {
-                final FourChannelIntensityData fcid = copyIntensities(rdToCopy.getRawIntensities(), baseIndex, readDesc.length);
-                curRead.setRawIntensities(fcid);
-            }
+                if(doQuals) {
+                    final byte [] quals = Arrays.copyOfRange(rdToCopy.getQualities(), baseIndex, baseIndex + readDesc.length);
+                    curRead.setQualities(quals);
+                }
 
-            if(doNoise) {
-                final FourChannelIntensityData fcid = copyIntensities(rdToCopy.getNoise(), baseIndex, readDesc.length);
-                curRead.setNoise(fcid);
+                if(doInts) {
+                    final FourChannelIntensityData fcid = copyIntensities(rdToCopy.getRawIntensities(), baseIndex, readDesc.length);
+                    curRead.setRawIntensities(fcid);
+                }
+
+                if(doNoise) {
+                    final FourChannelIntensityData fcid = copyIntensities(rdToCopy.getNoise(), baseIndex, readDesc.length);
+                    curRead.setNoise(fcid);
+                }
+                rds[index++] = curRead;
             }
 
             baseIndex += readDesc.length;
-            rds[index++] = curRead;
         }
 
         return rds;

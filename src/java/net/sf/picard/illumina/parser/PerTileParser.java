@@ -129,7 +129,7 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
         }
     }
 
-    public void verifyData(ReadStructure readStructure, List<Integer> tiles) {
+    public void verifyData(List<Integer> tiles, final int [] cycles) {
         final List<Integer> mapTiles = new ArrayList<Integer>(this.tileToFiles.keySet());
         if(!mapTiles.containsAll(tiles)) {
             throw new PicardException("Missing tiles in PerTileParser expected(" + tilesToString(tiles) + ") but found (" + tilesToString(mapTiles) + ")");

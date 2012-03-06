@@ -141,7 +141,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         IoUtil.assertDirectoryIsWritable(OUTPUT_DIR);
 
         // Create BarcodeMetric for counting reads that don't match any barcode
-        final String[] noMatchBarcode = new String[readStructure.barcodeIndices.length];
+        final String[] noMatchBarcode = new String[readStructure.barcodes.length()];
         int index = 0;
         for (final ReadDescriptor d : readStructure.descriptors) {
             if (d.type == ReadType.Barcode) {
@@ -331,7 +331,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
         final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
-        final int numBarcodes = readStructure.barcodeIndices.length;
+        final int numBarcodes = readStructure.barcodes.length();
         final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
             final String bcStrings[] = new String[numBarcodes];
@@ -507,14 +507,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          */
         synchronized public void run() {
             log.info("Extracting barcodes for tile " + tile);
+            final int [] barcodeIndices = readStructure.barcodes.getIndices();
             final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
             try {
-                final byte barcodeSubsequences[][] = new byte[readStructure.barcodeIndices.length][];
+                final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
                 while (provider.hasNext()) {
                     // Extract the barcode from the cluster and write it to the file for the tile
                     final ClusterData cluster = provider.next();
-                    for (int i = 0; i < readStructure.barcodeIndices.length; i++) {
-                        barcodeSubsequences[i] = cluster.getRead(readStructure.barcodeIndices[i]).getBases();
+                    for (int i = 0; i < barcodeIndices.length; i++) {
+                        barcodeSubsequences[i] = cluster.getRead(barcodeIndices[i]).getBases();
                     }
                     final boolean passingFilter = cluster.isPf();
                     final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, passingFilter, metrics, noMatchMetric);

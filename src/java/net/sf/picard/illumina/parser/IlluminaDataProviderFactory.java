@@ -87,14 +87,14 @@ public class IlluminaDataProviderFactory {
      */
     protected final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> formatToDataTypes;
 
-    /** readStructure is the computed readStructure passed to individual parsers */
-    private final ReadStructure readStructure;
-
     /** Basecall Directory/lane parameterized util for finding IlluminaFiles */
     private final IlluminaFileUtil fileUtil;
 
 
     private final List<Integer> availableTiles;
+
+    private final OutputMapping outputMapping;
+
 
     /**
      * Create factory with the specified options, one that favors using QSeqs over all other files
@@ -120,18 +120,13 @@ public class IlluminaDataProviderFactory {
 
         this.fileUtil = new IlluminaFileUtil(basecallDirectory, lane);
 
-
-        if(readStructure == null) {
-            throw new PicardException("Read structure cannot be null!");
-        } else {
-            this.readStructure = readStructure;
-        }
-
         formatToDataTypes = determineFormats();
         availableTiles = fileUtil.getTiles(new ArrayList<SupportedIlluminaFormat>(formatToDataTypes.keySet()));
         if(availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
+
+        outputMapping  = new OutputMapping(readStructure);
     }
 
     /**
@@ -165,30 +160,22 @@ public class IlluminaDataProviderFactory {
             }
         }
 
-        final int [] outputLengths = readStructure.readLengths;
-        final int totalCycles = readStructure.totalCycles;
-
         final Map<IlluminaParser, Set<IlluminaDataType>> parsersToDataType = new HashMap<IlluminaParser, Set<IlluminaDataType>>();
         for(final Map.Entry<SupportedIlluminaFormat, Set<IlluminaDataType>> fmToDt : formatToDataTypes.entrySet()) {
-            parsersToDataType.put(makeParser(fmToDt.getKey(), requestedTiles, totalCycles, outputLengths), fmToDt.getValue());
-        }
-
-        //Use parser to validate data
-        for(final IlluminaParser ip : parsersToDataType.keySet()) {
-            ip.verifyData(readStructure, requestedTiles);
+            parsersToDataType.put(makeParser(fmToDt.getKey(), requestedTiles), fmToDt.getValue());
         }
 
         final StringBuilder sb = new StringBuilder(400);
         sb.append("The following parsers will be used by IlluminaDataProvier: ");
         for(final IlluminaParser parser : parsersToDataType.keySet()) {
-            parser.verifyData(readStructure, requestedTiles);
+            parser.verifyData(requestedTiles, outputMapping.getOutputCycles());
             sb.append(parser.toString());
             sb.append(",");
         }
 
         log.debug(sb.toString());
 
-        return new IlluminaDataProvider(readStructure, parsersToDataType, basecallDirectory, lane);
+        return new IlluminaDataProvider(outputMapping, parsersToDataType, basecallDirectory, lane);
     }
 
     private Map<SupportedIlluminaFormat, Set<IlluminaDataType>> determineFormats() {
@@ -241,7 +228,7 @@ public class IlluminaDataProviderFactory {
     }
 
     private SupportedIlluminaFormat findMostPreferredAvailableFormat(final IlluminaDataType dt) {
-        List<SupportedIlluminaFormat> preferredFormats = DATA_TYPE_TO_PREFERRED_FORMATS.get(dt);
+        final List<SupportedIlluminaFormat> preferredFormats = DATA_TYPE_TO_PREFERRED_FORMATS.get(dt);
         SupportedIlluminaFormat format = null;
         for(int i = 0; i < preferredFormats.size() && format == null; i++) {
             if(fileUtil.getUtil(preferredFormats.get(i)).filesAvailable()) {
@@ -257,33 +244,31 @@ public class IlluminaDataProviderFactory {
      * the given data type with the information available and return it.
      * @param format The type of data we want to parse
      * @param requestedTiles The requestedTiles over which we will be parsing data
-     * @param totalCycles The total number of cycles per requestedTiles
-     * @param outputLengths The expected arrangement of output data
      * @return A parser that will parse dataType data over the given requestedTiles and cycles and output it in groupings of the sizes specified in outputLengths
      */
-    private IlluminaParser makeParser(final SupportedIlluminaFormat format, final List<Integer> requestedTiles, final int totalCycles, final int [] outputLengths) {
-        IlluminaParser parser;
+    private IlluminaParser makeParser(final SupportedIlluminaFormat format, final List<Integer> requestedTiles) {
+        final IlluminaParser parser;
         switch (format) {
             case Barcode:
                 parser = new BarcodeParser(lane, fileUtil.barcode().getFiles(requestedTiles));
                 break;
 
             case Bcl:
-                assertCycles(totalCycles, fileUtil.bcl());
-                final CycleIlluminaFileMap bclFileMap = fileUtil.bcl().getFiles(requestedTiles);
-                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputLengths);
+                final CycleIlluminaFileMap bclFileMap = fileUtil.bcl().getFiles(requestedTiles, outputMapping.getOutputCycles());
+                bclFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
+                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping);
                 break;
 
             case Cif:
-                assertCycles(totalCycles, fileUtil.cif());
-                final CycleIlluminaFileMap cifFileMap = fileUtil.cif().getFiles(requestedTiles);
-                parser = new CifParser(intensitiesDirectory, lane, cifFileMap, outputLengths);
+                final CycleIlluminaFileMap cifFileMap = fileUtil.cif().getFiles(requestedTiles, outputMapping.getOutputCycles());
+                cifFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
+                parser = new CifParser(intensitiesDirectory, lane, cifFileMap, outputMapping);
                 break;
 
             case Cnf:
-                assertCycles(totalCycles, fileUtil.cnf());
-                final CycleIlluminaFileMap cnfFileMap = fileUtil.cnf().getFiles(requestedTiles);
-                parser = new CnfParser(intensitiesDirectory, lane, cnfFileMap, outputLengths);
+                final CycleIlluminaFileMap cnfFileMap = fileUtil.cnf().getFiles(requestedTiles, outputMapping.getOutputCycles());
+                cnfFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
+                parser = new CnfParser(intensitiesDirectory, lane, cnfFileMap, outputMapping);
                 break;
 
             case Filter:
@@ -300,7 +285,7 @@ public class IlluminaDataProviderFactory {
 
             case Qseq:
                 final List<IlluminaFileMap> readTileMap = fileUtil.qseq().getFiles(requestedTiles);
-                parser = new QseqParser(lane, outputLengths, readTileMap);
+                parser = new QseqParser(lane, readTileMap, outputMapping);
                 break;
 
             default:
@@ -308,12 +293,5 @@ public class IlluminaDataProviderFactory {
         }
 
         return parser;
-    }
-
-    public void assertCycles(final int expectedCycles, final IlluminaFileUtil.PerTilePerCycleFileUtil fileUtil) {
-        if(expectedCycles != fileUtil.getNumCycles()) {
-            throw new PicardException("Expected number of cycles(" + expectedCycles + ") does not equal detected " +
-                    "number of cycles(" + fileUtil.getNumCycles() + ") for files with extension(" + fileUtil.extension + ")");
-        }
     }
 }
