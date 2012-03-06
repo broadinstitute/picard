@@ -117,6 +117,12 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
         }
 
         final ClusterData cluster = new ClusterData(outputReadTypes);
+        cluster.setLane(lane);
+
+        //IMPORTANT NOTE: This assignment to tile MUST happen BEFORE the loop below because getTileOfNextCluster
+        //returns the tile for the next cluster and if we call this after the loop then whenever we pass a tile
+        //boundary the last cluster in the previous tile will have the wrong tile number
+        cluster.setTile(parsers[0].getTileOfNextCluster());
 
         for(int i = 0; i < parsers.length; i++) {
             final IlluminaData ilData = parsers[i].next();
@@ -165,8 +171,6 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
     private void addData(final ClusterData clusterData, final PositionalData posData) {
         clusterData.setX(posData.getXCoordinate());
         clusterData.setY(posData.getYCoordinate());
-        clusterData.setLane(posData.getLane());
-        clusterData.setTile(posData.getTile());
     }
 
     private void addData(final ClusterData clusterData,  final PfData pfData) {

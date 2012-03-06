@@ -48,7 +48,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
     protected final OutputMapping outputMapping;
 
     /** The current tile number */
-    protected int tileNumber  = 0;
+    private int tileNumber;
 
     /** Map of tiles -> CycledFilesIterator, the CycleFileIterators of this map should contain ONLY cycles to be output */
     protected final CycleIlluminaFileMap tilesToCycleFiles;
@@ -154,6 +154,26 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         }
 
         return tileNumber < tilesToCycleFiles.lastKey();
+    }
+
+    /**
+     * Returns the tile of the next cluster that will be returned by PerTilePerCycleParser and therefore should be called before
+     * next() if you want to know the tile for the data returned by next()
+     * @return The tile number of the next ILLUMINA_DATA object to be returned
+     */
+    public int getTileOfNextCluster() {
+        //if the current parser still has more clusters, return the current tile number
+        if(cycleFileParsers.get(0).hasNext()) {
+            return tileNumber;
+        }
+
+        //if the current parser is EMPTY, return the next tile number
+        if(tileNumber < tilesToCycleFiles.lastKey()) {
+            return tilesToCycleFiles.higherKey(tileNumber);
+        }
+
+        //If we are at the end of clusters then this method should not be called, throw an exception
+        throw new NoSuchElementException();
     }
 
     @Override

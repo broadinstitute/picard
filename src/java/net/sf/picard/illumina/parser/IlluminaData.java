@@ -40,8 +40,6 @@ interface IlluminaData {
 interface PositionalData extends IlluminaData {
     public int getXCoordinate();
     public int getYCoordinate();
-    public int getLane();
-    public int getTile();
 }
 
 interface BaseData extends IlluminaData {

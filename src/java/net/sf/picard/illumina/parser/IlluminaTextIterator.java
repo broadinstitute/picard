@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
 import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloserUtil;
 
+
 /**
  * Abstract class for parsing text-based whitespace-delimited Illumina output files, organized
  * by tile.  Concrete implementations must call setFiles() in order to provide the list of files
@@ -41,6 +42,7 @@ import net.sf.samtools.util.CloserUtil;
  * @author jburke@broadinstitute.org
  */
 class IlluminaTextIterator implements Iterator<String[]> {
+
     // Location of illumina output files to be parsed
     private final int lane;
     private int currentTile = 0;
@@ -59,8 +61,7 @@ class IlluminaTextIterator implements Iterator<String[]> {
 
     public IlluminaTextIterator(final int lane, final IlluminaFileMap files,
                                 final boolean treatGroupedDelimitersAsOne) {
-        this.lane = lane;
-        this.files = files;
+        this(lane, files);
         this.treatGroupedDelimitersAsOne = treatGroupedDelimitersAsOne;
         currentTile = files.firstKey();
     }

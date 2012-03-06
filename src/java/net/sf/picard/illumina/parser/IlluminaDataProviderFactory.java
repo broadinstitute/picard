@@ -250,7 +250,7 @@ public class IlluminaDataProviderFactory {
         final IlluminaParser parser;
         switch (format) {
             case Barcode:
-                parser = new BarcodeParser(lane, fileUtil.barcode().getFiles(requestedTiles));
+                parser = new BarcodeParser(fileUtil.barcode().getFiles(requestedTiles));
                 break;
 
             case Bcl:
