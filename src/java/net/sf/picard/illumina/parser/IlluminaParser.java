@@ -50,6 +50,10 @@ interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_T
      */
     boolean hasNext();
 
+    /** Get the tile for the NEXT DATA_TYPE object that will be returned by this parser.  This should
+     * be called BEFORE next if you want the tile for the value returned by next */
+    public int getTileOfNextCluster();
+
     /**
      * Given the expected tiles and cycles for this run, make sure this parser can provide data for
      * all tiles/cycles or throw's an exception if it's missing any required data or data structures

@@ -286,7 +286,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<String>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.Position, IlluminaDataType.PF);
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
 
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);

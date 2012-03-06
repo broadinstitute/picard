@@ -183,6 +183,7 @@ class IlluminaFileUtil {
 
     public static String UNPARAMETERIZED_PER_TILE_PATTERN = "s_(\\d+)_(\\d{1,4})";
     public static String UNPARAMETERIZED_QSEQ_PATTERN     = "s_(\\d+)_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
+    private static String LANE_TILE_QSEQ_PATTERN          = "s_(\\d+)_\\d_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
     private static final Pattern CYCLE_SUBDIRECTORY_PATTERN = Pattern.compile("^C(\\d+)\\.1$");
 
     public static String makeParameterizedLaneAndTileRegex(final int lane) {
@@ -551,8 +552,16 @@ class IlluminaFileUtil {
     }
 
     /** Return a regex string for finding Lane and Tile given a file extension pattern */
-    private static String makeLTRegex(final String fileNameEndPattern) {
+    public static String makeLTRegex(final String fileNameEndPattern) {
         return "^" + UNPARAMETERIZED_PER_TILE_PATTERN + fileNameEndPattern + "$";
+    }
+
+    public static String makeLTRegexWCompression(final String fileNameEndPattern) {
+        return makeLTRegex(fileNameEndPattern + "(\\.gz|\\.bz2)?");
+    }
+
+    public static String makeQseqLTRegex() {
+        return LANE_TILE_QSEQ_PATTERN;
     }
 
     /** Return a regex string for finding Lane and Tile given a file extension pattern */

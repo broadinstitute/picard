@@ -23,93 +23,62 @@
  */
 package net.sf.picard.illumina.parser;
 
-import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.readers.BarcodeFileReader;
 import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
- * Parse barcode file and return the matched barcode (not the actual sequence from the read).
- * If read does not match the returned BarcodeData will return null when getBarcode() is called.
- *
- * Barcode.txt file Format (consists of tab delimited columns, 1 record per row)
- * sequence_read    Matched(Y/N)    BarcodeSequenceMatched
- *
- * sequence read          - the actual bases at barcode position
- * Matched(y/n)           - Y or N indicating if there was a barcode match
- * BarcodeSequenceMatched - matched barcode sequence (empty if read did not match one of the barcodes).
  * @author jburke@broadinstitute.org
  */
-class BarcodeParser implements IlluminaParser<BarcodeData> {
-    private static final int Y_OR_N_COLUMN = 1;
-    private static final int BARCODE_COLUMN = 2;
-    private final IlluminaTextIterator textIterator;
-    private final IlluminaFileMap tilesToFiles;
-    
-    private static final Set<IlluminaDataType> SupportedTypes = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.Barcodes));
+class BarcodeParser extends PerTileParser<BarcodeData> {
 
-    public BarcodeParser(final int lane, final IlluminaFileMap tilesToFiles) {
-        this.textIterator = new IlluminaTextIterator(lane, tilesToFiles, false);
-        this.tilesToFiles = tilesToFiles;
+    private static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(CollectionUtil.makeSet(IlluminaDataType.Barcodes));
+
+    public BarcodeParser(final IlluminaFileMap tilesToFiles) {
+        super(tilesToFiles);
+    }
+
+    public BarcodeParser(final IlluminaFileMap tilesToFiles, final int nextTile) {
+        super(tilesToFiles, nextTile);
     }
 
     @Override
-    public void seekToTile(int oneBasedTileNumber) {
-        textIterator.seekToTile(oneBasedTileNumber);
+    protected CloseableIterator<BarcodeData> makeTileIterator(File nextTileFile) {
+        return new BarcodeDataIterator(nextTileFile);
     }
 
-    @Override
-    public BarcodeData next() {
-        final String [] fields = textIterator.next();
-        final String barcode;
-        if (fields[Y_OR_N_COLUMN].equals("Y")) {
-            barcode = fields[BARCODE_COLUMN];
-        } else {
-            barcode = null;
-        }
-
-        return new BarcodeData() {
-            @Override
-            public String getBarcode() {
-                return barcode;
-            }
-        };
-    }
-
-    @Override
-    public boolean hasNext() {
-        return textIterator.hasNext();
-    }
-
-    @Override
-    public void verifyData(List<Integer> tiles, final int [] cycles) {
-        if(tiles == null) {
-            tiles = new ArrayList<Integer>();
-            tiles.addAll(tilesToFiles.keySet());
-        }
-        
-        for(final Integer tile : tiles) {
-            final File barcodeFile = tilesToFiles.get(tile);
-            if(barcodeFile == null) {
-                throw new PicardException("Missing barcode file for tile(" + tile + ")");
-            }
-
-            if(!barcodeFile.exists()) {
-                throw new PicardException("Barcode file (" + barcodeFile.getAbsolutePath() +" does not exist for tile(" + tile + ")");
-            }
-        }
-    }
-
-    @Override
     public Set<IlluminaDataType> supportedTypes() {
-        return SupportedTypes;
+        return SUPPORTED_TYPES;
     }
 
-    public void remove() {
-        throw new UnsupportedOperationException("Remove is not supported by " + BarcodeParser.class.getName());
+    private static class BarcodeDataIterator implements CloseableIterator<BarcodeData>{
+        private BarcodeFileReader bfr;
+        public BarcodeDataIterator(final File file) {
+            bfr = new BarcodeFileReader(file);
+        }
+
+        public void close() {
+            bfr.close();
+        }
+
+        public boolean hasNext() {
+            return bfr.hasNext();
+        }
+
+        public BarcodeData next() {
+            return new BarcodeData() {
+                public String getBarcode() {
+                    return bfr.next();
+                }
+            };
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

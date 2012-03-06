@@ -126,8 +126,6 @@ public class PosParserTest {
     }
 
     public static void compareResults(final TestResult tr, final PositionalData pd, final int index) {
-        Assert.assertEquals(tr.lane, pd.getLane(), " At index " + index);
-        Assert.assertEquals(tr.tile, pd.getTile(), " At index " + index);
         Assert.assertEquals(tr.xQSeqCoord, pd.getXCoordinate(), " At index " + index);
         Assert.assertEquals(tr.yQSeqCoord, pd.getYCoordinate(), " At index " + index);
     }

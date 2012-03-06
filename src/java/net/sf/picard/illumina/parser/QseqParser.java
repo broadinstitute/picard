@@ -25,6 +25,7 @@ package net.sf.picard.illumina.parser;
 
 import net.sf.picard.util.*;
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.*;
@@ -57,6 +58,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
     private final int [] outputLengths; //Expected lengths of the bases/qualities arrays in the output QSeqReadData
     private final QseqReadParser[] parsers; //each parser parsers iterates over all tiles for 1 read
     private final List<IlluminaFileMap> tileMapByReadNumber;
+    private QseqReadData nextData;
     
     public static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(CollectionUtil.makeSet(Position, BaseCalls, QualityScores, PF));
 
@@ -65,6 +67,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
         this.tileMapByReadNumber = tileMapByReadNumber;
         List<QseqReadParser> parsersList = makeReadParserList(lane, outputMapping);
         parsers = parsersList.toArray(new QseqReadParser[parsersList.size()]);
+        retrieveNext();
     }
 
     /**
@@ -223,7 +226,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
      * @param outputMapping Information on what cycles should be output and how they should be arranged
      * @return An ordered list with one element per read where each element is a list of starting points
      * to copy input ranges to
-     */ //TODO: Add tests
+     */
     public static List<List<OutputMapping.TwoDIndex>> outputRangesTo2DTargetsPerRead(final List<Integer> rangesPerRead, final List<Range> splitOutputRanges, OutputMapping outputMapping) {
         List<List<OutputMapping.TwoDIndex>> outputTargets = new ArrayList<List<OutputMapping.TwoDIndex>>(rangesPerRead.size());
         for(int i = 0; i < rangesPerRead.size(); i++) {
@@ -301,13 +304,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
             if(tiles != null && !tilesToFiles.keySet().containsAll(tiles)) {     //now with properly util classes this shouldn't happen but since this is only done once up front, test it anyway
                 TreeSet<Integer> missingTiles = new TreeSet<Integer>(tiles);
                 missingTiles.removeAll(tilesToFiles.keySet());
-                
-                String missing = missingTiles.first().toString();
-                missingTiles.remove(missingTiles.first());
-                for(final Integer tile : missingTiles) {
-                    missing += ", " + tile;
-                }
-                throw new PicardException("IlluminaFileMap for \"end\" number " + end + " is missing tiles: " + missing);
+                throw new PicardException("IlluminaFileMap for \"end\" number " + end + " is missing tiles: " + StringUtil.join(",", new ArrayList<Integer>(missingTiles)));
             }
 
             if(numTiles == null) {  //make sure all ends have the same number of tiles
@@ -330,23 +327,42 @@ class QseqParser implements IlluminaParser<QseqReadData> {
         }
     }
 
-
-
     @Override
     public void seekToTile(final int oneBasedTileNumber) {
         for(final QseqReadParser parser : parsers) {
             parser.seekToTile(oneBasedTileNumber);
         }
+
+        retrieveNext();
     }
 
     @Override
     public QseqReadData next() {
-        final QseqReadData qseqRd = new QseqReadData(outputLengths);
-        for(final QseqReadParser parser : parsers) {
-            parser.next(qseqRd);
+        if(!hasNext()) {
+            throw new NoSuchElementException();
         }
-        return qseqRd;
+
+        final QseqReadData currentData = nextData;
+        retrieveNext();
+
+        return currentData;
     }
+
+    private void retrieveNext() {
+        if(parsers[0].hasNext()) {
+            nextData = new QseqReadData(outputLengths);
+            for(final QseqReadParser parser : parsers) {
+                parser.next(nextData);
+            }
+        } else {
+            nextData = null;
+        }
+    }
+
+    public int getTileOfNextCluster(){
+        return nextData.getTile();
+    }
+
 
     public void remove() {
         throw new UnsupportedOperationException("Remove is not supported by " + QseqParser.class.getName());
@@ -354,7 +370,7 @@ class QseqParser implements IlluminaParser<QseqReadData> {
 
     @Override
     public boolean hasNext() {
-        return parsers[0].hasNext();
+        return nextData != null;
     }
 
     @Override
@@ -537,7 +553,6 @@ class QseqReadData implements PositionalData, BaseData, QualityData, PfData {
         }
     }
 
-    @Override
     public int getLane() {
         return lane;
     }
@@ -550,7 +565,6 @@ class QseqReadData implements PositionalData, BaseData, QualityData, PfData {
         }
     }
 
-    @Override
     public int getTile() {
         return tile;
     }

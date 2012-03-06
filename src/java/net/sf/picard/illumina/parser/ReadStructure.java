@@ -23,6 +23,8 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.samtools.util.CoordMath;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,6 +97,7 @@ public class ReadStructure {
             throw new IllegalArgumentException("ReadStructure does not support 0 length clusters!");
         }
 
+        final List<Range> allRanges = new ArrayList<Range>(collection.size());
         this.descriptors = Collections.unmodifiableList(collection);
         int cycles = 0;
 
@@ -104,14 +107,19 @@ public class ReadStructure {
         final List<Integer> skipIndicesList     = new ArrayList<Integer>();
         readLengths = new int[collection.size()];
 
+        int currentCycleIndex = 0;   // Current cycle in the entire read structure
         int descIndex = 0;
         for(final ReadDescriptor desc : descriptors) {
             if(desc.length == 0 || desc.length < 0) {
                 throw new IllegalArgumentException("ReadStructure only supports ReadDescriptor lengths > 0, found(" + desc.length + ")");
             }
 
+            final int endIndexOfRange = CoordMath.getEnd(currentCycleIndex, desc.length);
+            allRanges.add(new Range(currentCycleIndex, endIndexOfRange));
+            currentCycleIndex      = endIndexOfRange + 1;
+
             readLengths[descIndex] = desc.length;
-            cycles += desc.length;
+            cycles                += desc.length;
             switch(desc.type) {
                 case B:
                     nonSkipIndicesList.add(descIndex);
@@ -132,10 +140,10 @@ public class ReadStructure {
         }
 
         this.totalCycles    = cycles;
-        this.barcodes       = new Substructure(barcodeIndicesList);
-        this.templates      = new Substructure(templateIndicesList);
-        this.skips          = new Substructure(skipIndicesList);
-        this.nonSkips       = new Substructure(nonSkipIndicesList);
+        this.barcodes       = new Substructure(barcodeIndicesList,  allRanges);
+        this.templates      = new Substructure(templateIndicesList, allRanges);
+        this.skips          = new Substructure(skipIndicesList,     allRanges);
+        this.nonSkips       = new Substructure(nonSkipIndicesList,  allRanges);
     }
 
     /**
@@ -239,8 +247,9 @@ public class ReadStructure {
          * Indices into the ReadStructure.descriptors for this specific substructure, indices
          * must be in the order they appear in the descriptors list (but the indices do NOT have to be continuous)
          * @param descriptorIndices  A list of indices into ReadStructure.descriptors of the enclosing ReadStructure
+         * @param allRanges A list of ranges for all reads (not just those in this substructure) in the same order as ReadStructure.descriptors
          */
-        public Substructure(final List<Integer> descriptorIndices) {
+        public Substructure(final List<Integer> descriptorIndices, final List<Range> allRanges) {
             this.numDescriptors    = descriptorIndices.size();
 
             this.descriptorIndices = new int[numDescriptors];
@@ -251,24 +260,15 @@ public class ReadStructure {
             }
 
             this.cycleIndexRanges  = new Range[numDescriptors];
+            for(int i = 0; i < numDescriptors; i++) {
+                this.cycleIndexRanges[i] = allRanges.get(this.descriptorIndices[i]);
+            }
 
             int totalLength = 0;
             for(final int length : descriptorLengths) {
                 totalLength += length;
             }
             totalCycles      = totalLength;
-
-            int currentCycle = 0;   // Current cycle in the entire read structure
-            int oIndex = 0;         // index into orderedIndices
-
-            for(int descriptorIndex = 0; descriptorIndex < descriptors.size() && oIndex < this.descriptorIndices.length; descriptorIndex++) {
-                final ReadDescriptor rd = descriptors.get(descriptorIndex);
-                if(this.descriptorIndices[oIndex] == descriptorIndex) { //if it is an index in the indices list then add it's cycles to cycles
-                    cycleIndexRanges[oIndex] = new Range(currentCycle, currentCycle + rd.length - 1);
-                    ++oIndex;
-                }
-                currentCycle += rd.length;
-            }
         }
 
         public boolean isEmpty() {

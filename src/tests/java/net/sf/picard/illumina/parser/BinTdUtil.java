@@ -402,12 +402,12 @@ public class BinTdUtil {
         final ReadStructure rs = new ReadStructure(readStructure);
         final ReadData [] rd = copyReadData(rs, dataTypes, toCopy);
         final ClusterData cd = new ClusterData(rd);
+        cd.setTile(toCopy.getTile());
+        cd.setLane(toCopy.getLane());
 
         for(final IlluminaDataType idt : dataTypes) {
             switch(idt) {
                 case Position:
-                    cd.setTile(toCopy.getTile());
-                    cd.setLane(toCopy.getLane());
                     cd.setX(toCopy.getX());
                     cd.setY(toCopy.getY());
                     break;

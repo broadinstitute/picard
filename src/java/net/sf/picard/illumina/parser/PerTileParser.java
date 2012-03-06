@@ -25,6 +25,7 @@ package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,35 +35,37 @@ import java.util.NoSuchElementException;
 /** Abstract base class for Parsers that open a single tile file at a time and iterate through them. */
 public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implements IlluminaParser<ILLUMINA_DATA>  {
     private final IlluminaFileMap tileToFiles;
-    private Integer nextTile;
-
     private CloseableIterator<ILLUMINA_DATA> currentIterator;
+    private Integer nextTile;
+    private Integer currentTile;
 
     /** Factory method for the iterator of each tile */
-    protected abstract CloseableIterator<ILLUMINA_DATA> makeTileIterator(final File iterator);
+    protected abstract CloseableIterator<ILLUMINA_DATA> makeTileIterator(final File nextTileFile);
 
     public PerTileParser(final IlluminaFileMap tilesToFiles) {
         this.tileToFiles = tilesToFiles;
         this.nextTile = tilesToFiles.firstKey();
+        this.currentTile = null;
     }
 
     public PerTileParser(final IlluminaFileMap tilesToFiles, final int nextTile) {
         this.tileToFiles = tilesToFiles;
+        this.currentTile = null;
         this.nextTile = nextTile;
 
         if(!tilesToFiles.containsKey(nextTile)) {
-            String tilesStr = "";
-            boolean first = true;
-            for(final Integer tile : tilesToFiles.keySet()) {
-                if(!first) {
-                    tilesStr += ", ";
-                }
-
-                tilesStr += tile;
-            }
-
-            throw new IllegalArgumentException("NextTile (" + nextTile + ") is not contained by tilesToFiles (" + tilesStr + ")");
+            throw new IllegalArgumentException("NextTile (" + nextTile + ") is not contained by tilesToFiles (" + StringUtil.join(",", new ArrayList<Integer>(tilesToFiles.keySet())));
         }
+    }
+
+    /**
+     * Return the tile of the NEXT ILLUMINA_DATA object to be returned by the method next.  This might force us to advance to the
+     * next file (as it will contains the data for the next) tile/ILLUMINA_DATA object.
+     * @return tile number for the next ILLUMINA_DATA object to be returned
+     */
+    public int getTileOfNextCluster() {
+        maybeAdvance();
+        return currentTile;
     }
 
     private void advanceTile() {
@@ -75,6 +78,7 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
         }
 
         currentIterator = makeTileIterator(tileToFiles.get(nextTile));
+        currentTile = nextTile;
         nextTile = tileToFiles.higherKey(nextTile);
     }
 
@@ -82,19 +86,7 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
         nextTile = oneBasedTileNumber;
 
         if(!tileToFiles.containsKey(oneBasedTileNumber)) {
-            String keys = "";
-            int curKey = 0;
-            if(tileToFiles.size() > 0) {
-                curKey = tileToFiles.firstKey();
-                keys += curKey;
-            }
-
-            for(int i = 1; i < tileToFiles.size(); i++) {
-                curKey = tileToFiles.higherKey(curKey);
-                keys += ", " + curKey;
-            }
-
-            throw new PicardException("PerTileParser does not contain key(" + oneBasedTileNumber +") keys available (" + keys + ")");
+            throw new PicardException("PerTileParser does not contain key(" + oneBasedTileNumber +") keys available (" + StringUtil.join(",", new ArrayList<Integer>(tileToFiles.keySet())) + ")");
         }
 
         if(currentIterator != null) {
@@ -103,7 +95,7 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
         currentIterator = null;
     }
 
-    public ILLUMINA_DATA next() {
+    public void maybeAdvance() {
         if(!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -111,6 +103,10 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
         if(currentIterator == null || !currentIterator.hasNext()) {
             advanceTile();
         }
+    }
+
+    public ILLUMINA_DATA next() {
+        maybeAdvance();
 
         return currentIterator.next();
     }
@@ -132,24 +128,11 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
     public void verifyData(List<Integer> tiles, final int [] cycles) {
         final List<Integer> mapTiles = new ArrayList<Integer>(this.tileToFiles.keySet());
         if(!mapTiles.containsAll(tiles)) {
-            throw new PicardException("Missing tiles in PerTileParser expected(" + tilesToString(tiles) + ") but found (" + tilesToString(mapTiles) + ")");
+            throw new PicardException("Missing tiles in PerTileParser expected(" + StringUtil.join(",", tiles) + ") but found (" + StringUtil.join(",", mapTiles) + ")");
         }
 
         if(!tiles.containsAll(mapTiles)) {
-            throw new PicardException("Extra tiles where found in PerTileParser  expected(" + tilesToString(tiles) + ") but found (" + tilesToString(mapTiles) + ")");
+            throw new PicardException("Extra tiles where found in PerTileParser  expected(" + StringUtil.join(",", tiles) + ") but found (" + StringUtil.join(",", mapTiles) + ")");
         }
-    }
-
-    private static String tilesToString(final List<Integer> tiles) {
-        String result = "";
-        if(tiles.size() > 0) {
-            result += tiles.get(0);
-        }
-
-        for(int i = 1; i < tiles.size(); i++) {
-            result += ", " + tiles.get(i);
-        }
-
-        return result;
     }
 }
