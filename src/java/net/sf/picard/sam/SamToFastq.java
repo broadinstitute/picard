@@ -23,6 +23,7 @@
  */
 package net.sf.picard.sam;
 
+import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
@@ -41,10 +42,7 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * $Id$
@@ -174,9 +172,14 @@ public class SamToFastq extends CommandLineProgram {
             throw new PicardException("Found " + firstSeenMates.size() + " unpaired mates");
         }
 
+        // Close all the fastq writers being careful to close each one only once!
+        final IdentityHashMap<FastqWriter,FastqWriter> seen = new IdentityHashMap<FastqWriter, FastqWriter>();
         for (final List<FastqWriter> listOfWriters : writers.values()) {
             for (final FastqWriter w : listOfWriters) {
-                w.close();
+                if (!seen.containsKey(w)) {
+                    w.close();
+                    seen.put(w,w);
+                }
             }
         }
 
@@ -190,11 +193,9 @@ public class SamToFastq extends CommandLineProgram {
     private Map<SAMReadGroupRecord, List<FastqWriter>> getWriters(final List<SAMReadGroupRecord> samReadGroupRecords,
                                                                   final FastqWriterFactory factory) {
 
-        final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap =
-            new HashMap<SAMReadGroupRecord, List<FastqWriter>>(0);
+        final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<SAMReadGroupRecord, List<FastqWriter>>();
 
         for (final SAMReadGroupRecord rg : samReadGroupRecords) {
-
             final List<FastqWriter> fqw = new ArrayList<FastqWriter>();
 
             if (!OUTPUT_PER_RG) {
