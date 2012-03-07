@@ -23,7 +23,6 @@
  */
 package net.sf.picard.sam;
 
-import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
