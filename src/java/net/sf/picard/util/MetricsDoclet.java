@@ -52,10 +52,10 @@ public class MetricsDoclet {
      * @param root the root of the javadoc object hierarchy
      * @return true if completed successfully, false otherwise
      */
-    public static boolean start(RootDoc root) {
+    public static boolean start(final RootDoc root) {
         // Build a set of metrics classes sorted by name
-        SortedMap<String,ClassDoc> metricsClasses = new TreeMap<String,ClassDoc>();
-        for (ClassDoc doc : root.classes()) {
+        final SortedMap<String,ClassDoc> metricsClasses = new TreeMap<String,ClassDoc>();
+        for (final ClassDoc doc : root.classes()) {
             if (isMetricsClass(doc)) {
                 System.out.println("Processing " + doc.qualifiedTypeName());
                 metricsClasses.put(doc.typeName(), doc);
@@ -63,7 +63,7 @@ public class MetricsDoclet {
         }
 
         // Get a print stream to write to
-        PrintStream out = getOutput(root);
+        final PrintStream out = getOutput(root);
         if (out == null) return false;
 
         // Write the headings
@@ -82,20 +82,20 @@ public class MetricsDoclet {
         // Write out the TOC
         out.println("<h2>Table Of Contents</h2>");
         out.println("<ol>");
-        for (ClassDoc doc : metricsClasses.values()) {
+        for (final ClassDoc doc : metricsClasses.values()) {
             out.println("<li><a href=\"#" + doc.name() + "\">" + doc.name() + "</a>: " +
                         firstSentence(doc) + "</li>");
         }
         out.println("</ol>");
 
         // Now print out each class
-        for (ClassDoc doc : metricsClasses.values()) {
+        for (final ClassDoc doc : metricsClasses.values()) {
             out.println("<a name=\"" + doc.name() + "\"");
             out.println("<h2>" + doc.name() + "</h2>");
             out.println("<p class=\"class_description\">" + doc.commentText() + "</p>");
             out.println("<h3>Column Definitions</h3>");
 
-            for (FieldDoc field : doc.fields()) {
+            for (final FieldDoc field : doc.fields()) {
                 if (field.isPublic() && !field.isStatic()) {
                     out.append("<div class=\"metric_column_def\"><span>" + field.name() + ": </span>");
                     out.append(field.commentText());
@@ -118,6 +118,7 @@ public class MetricsDoclet {
     protected static boolean isMetricsClass(ClassDoc doc) {
         final String metricBaseFqn = MetricBase.class.getName();
         if (!doc.isClass()) return false;
+        if (doc.qualifiedTypeName().contains("personal")) return false;
 
         do {
             doc = doc.superclass();
@@ -132,8 +133,8 @@ public class MetricsDoclet {
      * Gets the file output parameter from the RootDoc and then opens an
      * PrintStream to write to the file.
      */
-    protected static PrintStream getOutput(RootDoc root) {
-        for (String[] arg : root.options()) {
+    protected static PrintStream getOutput(final RootDoc root) {
+        for (final String[] arg : root.options()) {
             if (arg[0].equals("-f") && arg.length == 2) {
                 try {
                     return new PrintStream(new File(arg[1]));
@@ -154,7 +155,7 @@ public class MetricsDoclet {
      * Required method by the javadoc caller that returns the expected number of elements
      * for doclet specific command line arguments.
      */
-    public static int optionLength(String option) {
+    public static int optionLength(final String option) {
         if(option.equals("-f")) {
 	        return 2;
         }
@@ -165,10 +166,10 @@ public class MetricsDoclet {
      * Takes a Doc object and uses the firstSentenceTags() to recreate the first sentence
      * text.
      */
-    protected static String firstSentence(Doc doc) {
-        Tag[] tags = doc.firstSentenceTags();
-        StringBuilder builder = new StringBuilder(128);
-        for (Tag tag : tags) {
+    protected static String firstSentence(final Doc doc) {
+        final Tag[] tags = doc.firstSentenceTags();
+        final StringBuilder builder = new StringBuilder(128);
+        for (final Tag tag : tags) {
             builder.append(tag.text());
         }
 
