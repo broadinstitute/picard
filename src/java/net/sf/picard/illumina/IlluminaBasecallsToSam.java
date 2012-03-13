@@ -26,6 +26,7 @@ package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.*;
 import net.sf.picard.util.FileChannelJDKBugWorkAround;
+import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -102,11 +103,13 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
     public File BARCODE_PARAMS;
 
-    @Option(doc="Whether to mark the position of the adapter in the read")
-    public boolean MARK_ADAPTER = true;
+    @Option(doc="Which adapters to look for in the read.")
+    public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = Arrays.asList(IlluminaAdapterPair.INDEXED,
+            IlluminaAdapterPair.DUAL_INDEXED, IlluminaAdapterPair.NEXTERA_V2);
+
     @Option(doc = "Run this many TileProcessors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
-            "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
-            "the number available on the machine less NUM_PROCESSORS.")
+                "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
+                "the number available on the machine less NUM_PROCESSORS.")
     public Integer NUM_PROCESSORS = 0;
     @Option(doc="If set, this is the first tile to be processed (for debugging).  Note that tiles are not processed in numerical order.",
     optional = true)
@@ -151,7 +154,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesWithBarcode);
         }
 
-        log.info("RUN CONFIGURATION IS " + readStructure.toString());
+        log.info("READ STRUCTURE IS " + readStructure.toString());
         
         List<Integer> tiles = new ArrayList<Integer>(factory.getAvailableTiles());
         // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
@@ -197,7 +200,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             populateWritersByBarcode();
         }
 
-        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, readStructure);
+        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, readStructure, ADAPTERS_TO_CHECK);
 
         // Process each tile separately, so the order of tile processing is determined by the
         // order of tiles list.  The SAMRecords produced will be cached and sorted a tile
@@ -598,7 +601,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 }
 
                 final SAMFileHeader header = sorter.getWriter().getFileHeader();
-                converter.createSamRecords(cluster, header, MARK_ADAPTER, records);
+                converter.createSamRecords(cluster, header, records);
 
                 for(final SAMRecord sam : records) {
                     sorter.addAlignment(sam);

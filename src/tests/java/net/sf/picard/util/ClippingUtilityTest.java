@@ -46,7 +46,7 @@ public class ClippingUtilityTest {
    }
 
    @Test(dataProvider="clipPairedTestData")
-   public void testPairedEndClip(final String testName, final String read1, final String read2, final String expected) {
+   public void testPairedEndClip(final String testName, final String read1, final String read2, final AdapterPair expected) {
 
        final SAMRecord rec1 = new SAMRecord(new SAMFileHeader());
        rec1.setReadString(read1);
@@ -55,8 +55,14 @@ public class ClippingUtilityTest {
        rec2.setReadString(read2);
        rec2.setSecondOfPairFlag(true);
 
-       final String result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2, IlluminaAdapterPair.PAIRED_END.adapterPair);
-       Assert.assertEquals(result, expected, testName);
+       final AdapterPair result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2,
+               new AdapterPair[] { IlluminaAdapterPair.INDEXED, IlluminaAdapterPair.PAIRED_END });
+       if (result != null) {
+           Assert.assertEquals(result.getName(), expected.getName(), testName);
+       }
+       else {
+           Assert.assertEquals(result, expected, testName);
+       }
    }
 
     @DataProvider(name="clipTestData")
@@ -90,13 +96,13 @@ public class ClippingUtilityTest {
     @DataProvider(name="clipPairedTestData")
     public Object[][] getClipPairedTestData() {
         return new Object[][] {
-                // todo - test a one-sided match.  test a mismatched-pair.
-                // todo distinguish no-match return and matched retur
-         //   new Object[] {"Paired test 1", "CTACTGGCGCTGAAACTGAGCAGCCAAGCAGATCGG", "GCTTGGCTGCTCAGTTTCAGCGCCAGTAGAGATCGGA",
-         //           "Adapters mismatch at position 29 CTACTGGCGCTGAAACTGAGCAGCCAAGCAGATCGG and reverse 30 GCTTGGCTGCTCAGTTTCAGCGCCAGTAGAGATCGGA"},
-         new Object[] {"Paired test match", "CTACTGGCGCTGAAACTGAGCAGCCAAGCAGATCGG", "GCTTGGCTGCTCAGTTTCAGCGCCAGTAGAGATCGG", null},
-        // new Object[] {"Paired test - one-sided", "C.CCG.......G.GGTGCATGGGCTCCAACGTGGTGTCCTGTGGAGCTGTTGGGCCTGGGCAGGCGGCACAGATC", "TGCCAGTAGTTTTGGGTCAAGCCCTCACCTGATTCCACGCTTCATAGCTTCAGCCGTTCCCATCATACTACTAGCT",
-        //         "No adapter match will not trim in paired read of length 76 and length 76  reverse null 76b aligned read. CNCCGNNNNNNNGNGGTGCATGGGCTCCAACGTGGTGTCCTGTGGAGCTGTTGGGCCTGGGCAGGCGGCACAGATC after strict check using minMaxBases=10"},
+            new Object[] {"Basic positive paired test matching",    "CTACTGGCGCTGAAACTGAGCAGCCAAGCAGATCGG", "GCTTGGCTGCTCAGTTTCAGCGCCAGTAGAGATCGG", IlluminaAdapterPair.INDEXED},
+            // Tbis matches on one side and matches at higher stringency on that one side
+            new Object[] {"Basic positive one-sided test matching", "CTACTGGCGCTGAAAAGATCGGAAGAGCGGTTCAGC", "AAAAAATTTTTTCCCCCCGGGGGGAAAAAATTTTTT", IlluminaAdapterPair.PAIRED_END},
+            // Tbis matches on one side and does not match at higher stringency on that one side
+            new Object[] {"Basic negative one-sided test matching", "GGCGCTGAAACTACTGGCGCTGAAAAGATCGGAAGA", "AAAAAATTTTTTCCCCCCGGGGGGAAAAAATTTTTT", null},
+            // These match but at different positions.  No clip should be done.
+            new Object[] {"Mis-match paired test matching",    "CTACTGGCGCTGAAACTGAGCAGCCAAGCAGATCGG", "AGCTTGGCTGCTCAGTTTCAGCGCCAGTAGAGATCG", null},
         };
     }
 }
