@@ -29,82 +29,78 @@ import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.filter.SolexaNoiseFilter;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.sam.ReservedTagConstants;
+import net.sf.picard.util.AdapterPair;
 import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.IlluminaUtil;
-import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 
-import java.util.Arrays;
+import java.util.*;
 
 import net.sf.picard.illumina.parser.ClusterData;
 import net.sf.picard.illumina.parser.ReadData;
-import net.sf.samtools.util.StringUtil;
 
 /**
- * Convert ClusterData into SAMRecord.
+ * Takes ClusterData provided by an IlluminaDataProvider into one or two SAMRecords,
+ * as appropriate, and optionally marking adapter sequence.  There is one converter per
+ * IlluminaBasecallsToSam run, and all the TileProcessors use the same converter.
  * 
  * @author jburke@broadinstitute.org
  */
 public class IlluminaBasecallsToSamConverter {
 
+
     private final String runBarcode;
     private final String readGroupId;
     private final ReadStructure readStructure;
-    private AggregateFilter filters;
-    private int barcodeIndex;
+    private final SamRecordFilter filters = new SolexaNoiseFilter();
     private final boolean isPairedEnd;
     private final boolean isBarcoded;
     private final int [] templateIndices;
-    private static final Log log = Log.getInstance(IlluminaBasecallsToSamConverter.class);
+    private final int [] barcodeIndices;
+    private final AdapterPair[] adaptersToCheck;
 
     /**
      * Constructor
      *
      * @param runBarcode        Used to construct read names.
      * @param readGroupId       If non-null, set RG attribute on SAMRecord to this.
+     * @param readStructure     The expected structure (number of reads and indexes,
+     *                          and their length) in the read.
+     * @param adapters          The list of adapters to check for in the read
      */
     public IlluminaBasecallsToSamConverter(final String runBarcode,
                                            final String readGroupId,
-                                           final ReadStructure readStructure) {
+                                           final ReadStructure readStructure,
+                                           final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
         this.runBarcode  = runBarcode;
         this.readGroupId = readGroupId;
         this.readStructure = readStructure;
 
-        if(readStructure.templates.length() > 2) {
-            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + readStructure.templates.length());
-        }
-
-        if(readStructure.barcodes.length() > 1) {
-            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 1 barcode read.  Number of template reads found in configuration: " + readStructure.templates.length());
+        if(readStructure.templates.length()  > 2) {
+            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + readStructure.templates.length() );
         }
 
         this.isPairedEnd = readStructure.templates.length() == 2;
         this.isBarcoded  = !readStructure.barcodes.isEmpty();
 
-        this.barcodeIndex = -1;
-        if(!readStructure.barcodes.isEmpty()) { //Should only be one for now
-            this.barcodeIndex = readStructure.barcodes.getIndices()[0];
-        }
+        this.adaptersToCheck = new AdapterPair[adapters.size()];
+        for (int i = 0; i < adapters.size(); i++) adaptersToCheck[i] = adapters.get(i);
 
         this.templateIndices = readStructure.templates.getIndices();
-
-        initializeFilters();
+        this.barcodeIndices = readStructure.barcodes.getIndices();
     }
 
-    private void initializeFilters() {
-        filters = new AggregateFilter(Arrays.asList(
-            (SamRecordFilter)new SolexaNoiseFilter()
-        ));
-    }
-    private String createReadName(final ClusterData cluster) {
-        return IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
-    }
-
+    /**
+     * Gets the number of non-index reads per cluster
+     */
     public int getNumRecordsPerCluster() {
         return readStructure.templates.length();
     }
 
-    private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final ReadData unmatchedBarcodeRead) {
+    /**
+     * Creates a new SAM record from the basecall data
+     */
+    private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final String unmatchedBarcode) {
         final SAMRecord sam = new SAMRecord(header);
         sam.setReadName(readName);
         sam.setReadBases(readData.getBases());
@@ -128,44 +124,51 @@ public class IlluminaBasecallsToSamConverter {
             sam.setAttribute("RG", readGroupId);
         }
 
-        // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode read as an optional tag
-        if (unmatchedBarcodeRead != null) {
-            sam.setAttribute("BC", StringUtil.bytesToString(unmatchedBarcodeRead.getBases()).replace('.', 'N'));
+        // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode
+        // that was read as an optional tag
+        if (unmatchedBarcode != null) {
+            sam.setAttribute("BC", unmatchedBarcode);
         }
 
         return sam;
     }
 
-    public void createSamRecords(final ClusterData cluster, final SAMFileHeader header, boolean markAdapter, final SAMRecord [] recordsOut) {
-        final String readName = createReadName(cluster);
+    /**
+     * Creates the SAMRecord for each read in the cluster
+     */
+    public void createSamRecords(final ClusterData cluster, final SAMFileHeader header, final SAMRecord [] recordsOut) {
 
-        SAMRecord firstOfPair  = createSamRecord(cluster.getRead(templateIndices[0]), header, readName, cluster.isPf(), true,  (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+        final String readName = IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
+
+        // Get and transform the unmatched barcode, if any, to store with the reads
+        String unmatchedBarcode = null;
+        if (isBarcoded && cluster.getMatchedBarcode() == null) {
+            final byte barcode[][] = new byte[barcodeIndices.length][];
+            for (int i = 0; i < barcodeIndices.length; i++) {
+                barcode[i] = cluster.getRead(barcodeIndices[i]).getBases();
+            }
+            unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N');
+        }
+
+        final SAMRecord firstOfPair  = createSamRecord(
+            cluster.getRead(templateIndices[0]), header, readName, cluster.isPf(), true,unmatchedBarcode);
         recordsOut[0] = firstOfPair;
 
         SAMRecord secondOfPair = null;
 
         if(isPairedEnd) {
-            secondOfPair  = createSamRecord(cluster.getRead(templateIndices[1]), header, readName, cluster.isPf(), false, (cluster.getMatchedBarcode() == null && isBarcoded) ? cluster.getRead(barcodeIndex) : null);
+            secondOfPair  = createSamRecord(
+                cluster.getRead(templateIndices[1]), header, readName, cluster.isPf(), false, unmatchedBarcode);
             recordsOut[1] = secondOfPair;
         }
 
-        if (markAdapter) {
-            if (isPairedEnd){
-                assert (firstOfPair.getFirstOfPairFlag() && secondOfPair.getSecondOfPairFlag());
-                String warnString = ClippingUtility.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair,
-                        isBarcoded ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
-                                   : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
-               if (warnString != null){
-                    log.debug("Adapter trimming " + warnString);
-                }
-            } else {
-                ClippingUtility.adapterTrimIlluminaSingleRead(firstOfPair,
-                    isBarcoded   ? IlluminaUtil.IlluminaAdapterPair.INDEXED.adapterPair
-                                 : IlluminaUtil.IlluminaAdapterPair.PAIRED_END.adapterPair);
-                // note if not barcoded, it could instead be SINGLE_END
-                // we're assuming one read of paired_end is more common
-                // Note, the single_end adapters have first 13-18 bases in common with paired_end
-                // We could, alternatively, try both and use the one that matched more adapter
+        if (adaptersToCheck.length > 0) {
+            // Clip the read
+            if (isPairedEnd) {
+                ClippingUtility.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair, adaptersToCheck);
+            }
+            else {
+                ClippingUtility.adapterTrimIlluminaSingleRead(firstOfPair, adaptersToCheck);
             }
         }
     }

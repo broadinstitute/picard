@@ -24,7 +24,10 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
+
+import java.io.Closeable;
 
 /**
  * Misc utilities for working with Illuina specific files and data
@@ -130,7 +133,7 @@ public class IlluminaUtil {
     }
 
     /** Describes adapters used on each pair of strands */
-    public static enum IlluminaAdapterPair {
+    public static enum IlluminaAdapterPair implements AdapterPair {
 
         PAIRED_END("AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT",  //58 bases)
                    "AGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG"), // 61 bases
@@ -153,25 +156,33 @@ public class IlluminaUtil {
         DUAL_INDEXED("AATGATACGGCGACCACCGAGATCTNNNNNNNNACACTCTTTCCCTACACGACGCTCTTCCGATCT",
                      "AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG");
 
-        public final ClippingUtility.AdapterPair adapterPair;
+        final String fivePrime, threePrime, fivePrimeReadOrder;
+        final byte[]  fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
 
 
         private IlluminaAdapterPair(final String fivePrime, final String threePrime) {
-            adapterPair = new ClippingUtility.AdapterPair(fivePrime, threePrime);
+            this.threePrime = threePrime;
+            this.threePrimeBytes = StringUtil.stringToBytes(threePrime);
+
+            this.fivePrime = fivePrime;
+            this.fivePrimeReadOrder = SequenceUtil.reverseComplement(fivePrime);
+            this.fivePrimeBytes = StringUtil.stringToBytes(fivePrime);
+            this.fivePrimeReadOrderBytes = StringUtil.stringToBytes(fivePrimeReadOrder);
         }
 
-        public String get3PrimeAdapter(){ return adapterPair.get3PrimeAdapter(); }
-        public String get5PrimeAdapter(){ return adapterPair.get5PrimeAdapter(); }
-        public String get3PrimeAdapterInReadOrder(){ return adapterPair.get3PrimeAdapterInReadOrder(); }
-        public String get5PrimeAdapterInReadOrder() { return adapterPair.get5PrimeAdapterInReadOrder(); }
-        public byte[] get3PrimeAdapterBytes() { return adapterPair.get3PrimeAdapterBytes(); }
-        public byte[] get5PrimeAdapterBytes() { return adapterPair.get5PrimeAdapterBytes(); }
-        public byte[] get3PrimeAdapterBytesInReadOrder() { return adapterPair.get3PrimeAdapterBytesInReadOrder(); }
-        public byte[] get5PrimeAdapterBytesInReadOrder()  { return adapterPair.get5PrimeAdapterBytesInReadOrder(); }
+        public String get3PrimeAdapter(){ return threePrime; }
+        public String get5PrimeAdapter(){ return fivePrime; }
+        public String get3PrimeAdapterInReadOrder(){ return threePrime; }
+        public String get5PrimeAdapterInReadOrder() { return fivePrimeReadOrder; }
+        public byte[] get3PrimeAdapterBytes() { return threePrimeBytes; }
+        public byte[] get5PrimeAdapterBytes() { return fivePrimeBytes; }
+        public byte[] get3PrimeAdapterBytesInReadOrder() { return threePrimeBytes; }
+        public byte[] get5PrimeAdapterBytesInReadOrder()  { return fivePrimeReadOrderBytes; }
+        public String getName() { return this.name(); }
     }
 
     /**
-     * Concatenates all the barcode sequences with slashes
+     * Concatenates all the barcode sequences with BARCODE_DELIMITER
      * @param barcodes
      * @return A single string representation of all the barcodes
      */
@@ -184,4 +195,16 @@ public class IlluminaUtil {
         return sb.toString();
     }
 
+    /**
+     * Concatenates all the barcode sequences with BARCODE_DELIMITER
+     * @param barcodes
+     * @return A single string representation of all the barcodes
+     */
+    public static String barcodeSeqsToString(final byte barcodes[][]) {
+        final String bcs[] = new String[barcodes.length];
+        for (int i = 0; i < barcodes.length; i++) {
+            bcs[i] = StringUtil.bytesToString(barcodes[i]);
+        }
+        return barcodeSeqsToString(bcs);
+    }
 }
