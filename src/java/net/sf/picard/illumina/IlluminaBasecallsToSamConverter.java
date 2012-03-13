@@ -76,10 +76,6 @@ public class IlluminaBasecallsToSamConverter {
         this.readGroupId = readGroupId;
         this.readStructure = readStructure;
 
-        if(readStructure.templates.length()  > 2) {
-            throw new PicardException("IlluminaBasecallsToSamConverter does not support more than 2 template reads.  Number of template reads found in configuration: " + readStructure.templates.length() );
-        }
-
         this.isPairedEnd = readStructure.templates.length() == 2;
         this.isBarcoded  = !readStructure.barcodes.isEmpty();
 
