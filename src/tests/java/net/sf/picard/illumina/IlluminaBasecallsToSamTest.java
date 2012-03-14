@@ -23,6 +23,7 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.util.IlluminaUtil;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
@@ -30,6 +31,7 @@ import org.testng.annotations.AfterTest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -85,15 +87,46 @@ public class IlluminaBasecallsToSamTest {
 
     @Test
     public void testMultiplexed() throws Exception {
-        final File outputDir = File.createTempFile("multiplexedBarcode.", ".dir");
+        runStandardTest("multiplexedBarcode.", "barcode.params", 1,"30T8B");
+    }
+
+    @Test
+    public void testSingleBarcodedWithAlternateBarcodeName() throws Exception {
+        runStandardTest("singleBarcodeAltName.", "barcode_single.params", 1,"30T8B");
+    }
+
+    /*** The actual read data doesn't support these tests yet.
+    @Test
+    public void testDualBarcodes() throws Exception {
+         runStandardTest("dualBarcode.", "barcode_double.params", 2, "30T8B8B") ;
+    }
+
+    @Test
+    public void testTripleBarcodes() throws Exception {
+        runStandardTest("tripleBarcode.", "barcode_triple.params", 3, "30T8B8B8B") ;
+    }
+    ***/
+
+
+    /***
+     * This test utility takes a barcodeFileName and generates output sam files through IlluminaBasecallsToSam to compare against
+     * preloaded test data
+     * @param jobName
+     * @param barcodeFileName
+     * @param concatNColumnFields
+     * @param readStructure
+     * @throws Exception
+     */
+    private void runStandardTest(final String jobName, final String barcodeFileName, final int concatNColumnFields, final String readStructure) throws Exception {
+        final File outputDir = File.createTempFile(jobName, ".dir");
         outputDir.delete();
         outputDir.mkdir();
         outputDir.deleteOnExit();
         // Create barcode.params with output files in the temp directory
-        final File barcodeParams = new File(outputDir, "barcode.params");
+        final File barcodeParams = new File(outputDir, barcodeFileName);
         barcodeParams.deleteOnExit();
         final List<File> samFiles = new ArrayList<File>();
-        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, "barcode.params")));
+        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, barcodeFileName)));
         final PrintWriter writer = new PrintWriter(barcodeParams);
         final String header = reader.readLine();
         writer.println(header + "\tOUTPUT");
@@ -102,8 +135,8 @@ public class IlluminaBasecallsToSamTest {
             if (line == null) {
                 break;
             }
-            final String[] fields = line.split("\t", 2);
-            final File outputSam = new File(outputDir, fields[0] + ".sam");
+            final String[] fields = line.split("\t");
+            final File outputSam = new File(outputDir, IlluminaUtil.barcodeSeqsToString(Arrays.copyOfRange(fields,0,concatNColumnFields)) +   ".sam");
             outputSam.deleteOnExit();
             samFiles.add(outputSam);
             writer.println(line + "\t" + outputSam);
@@ -115,7 +148,7 @@ public class IlluminaBasecallsToSamTest {
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
-                "READ_STRUCTURE=30T8B",
+                "READ_STRUCTURE=" + readStructure,
                 "BARCODE_PARAMS=" + barcodeParams
         });
 
