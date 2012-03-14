@@ -26,6 +26,7 @@ package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.*;
 import net.sf.picard.util.FileChannelJDKBugWorkAround;
+import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
@@ -273,21 +274,56 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     private void populateWritersByBarcode() {
         final TabbedTextFileWithHeaderParser barcodeParamsParser = new TabbedTextFileWithHeaderParser(BARCODE_PARAMS);
-        for (final String columnLabel : new String[]{"BARCODE", "OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"}) {
+
+        //Ensure all expected non-barcode column labels are found
+        final String[] columnLabels = new String[]{"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"};
+        for (final String columnLabel : columnLabels) {
             if (!barcodeParamsParser.hasColumn(columnLabel)) {
                 throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column " +
                         columnLabel + ".");
             }
         }
+
+        //Ensure all barcode labels are found
+        final List<String> barcodeColumnLabels = new ArrayList<String>();
+        //For the single barcode read case, the barcode label name can either by BARCODE or BARCODE_1
+        if (readStructure.barcodes.length()  == 1) {
+            if (barcodeParamsParser.hasColumn("BARCODE")) {
+                barcodeColumnLabels.add("BARCODE");
+            }
+            else if (barcodeParamsParser.hasColumn("BARCODE_1")) {
+                barcodeColumnLabels.add("BARCODE_1");
+            }
+            else {
+                throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column BARCODE or BARCODE_1.");
+            }
+        }
+        else {
+            //Generate a list of barcodes from 1 to n for the number of expected barcodes in the ReadStructure
+            for (int i = 1; i <= readStructure.barcodes.length(); i++) {
+                final String barcodeLabel = "BARCODE_" + i;
+                if (!barcodeParamsParser.hasColumn(barcodeLabel)) {
+                    throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column " +
+                        barcodeLabel + ".");
+                }
+                barcodeColumnLabels.add(barcodeLabel);
+            }
+        }
+
         for (final TabbedTextFileWithHeaderParser.Row row : barcodeParamsParser) {
-            final String barcode = row.getField("BARCODE");
-            final String key = barcode.equals("N")? null: barcode;
+            final List<String> barcodeValues = new ArrayList<String>();
+            for(final String barcodeLabel : barcodeColumnLabels) {
+                barcodeValues.add(row.getField(barcodeLabel));
+            }
+            final String[] barcodeValuesArray = barcodeValues.toArray(new String[]{});
+            final String key = (barcodeValues.contains("N") ? null : IlluminaUtil.barcodeSeqsToString(barcodeValuesArray));
+
             if (writersByBarcode.containsKey(key)) {
-                throw new PicardException("Row for barcode " + barcode + " appears more than once in BARCODE_PARAMS file " +
+                throw new PicardException("Row for barcode " + key + " appears more than once in BARCODE_PARAMS file " +
                         BARCODE_PARAMS);
             }
             final SAMFileWriter writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
-                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), barcode);
+                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), barcodeValuesArray);
             writersByBarcode.put(key, writer);
         }
         if (writersByBarcode.isEmpty()) {
@@ -316,12 +352,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     }
     
-    private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final String barcode) {
+    private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final String[] barcodes) {
         IoUtil.assertFileIsWritable(output);
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
         rg.setSample(sampleAlias);
         String platformUnit = RUN_BARCODE + "." + LANE;
-        if (barcode != null) platformUnit += ("." + barcode);
+        if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
         rg.setAttribute("PU", platformUnit);
 
         if (libraryName != null) rg.setLibrary(libraryName);
@@ -353,8 +389,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
 
-        final ReadStructure rs = new ReadStructure(READ_STRUCTURE);
-        if(!rs.barcodes.isEmpty()) {
+        readStructure = new ReadStructure(READ_STRUCTURE);
+        if(!readStructure.barcodes.isEmpty()) {
             if(BARCODE_PARAMS == null) {
                 messages.add("BARCODE_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode) then BARCODE_PARAMS must be provided!");
             }
