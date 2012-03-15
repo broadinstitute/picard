@@ -196,10 +196,16 @@ public class Cigar {
                     }
                 }
             } else if (isPaddingOperator(op)) {
-                if (i == 0 || i == cigarElements.size() - 1) {
+                if (i == 0) {
+                    /*
+                     * Removed restriction that padding not be the first operator because if a read starts in the middle of a pad
+                     * in a padded reference, it is necessary to precede the read with padding so that alignment start refers to a
+                     * position on the unpadded reference.
+                    */
+                } else if (i == cigarElements.size() - 1) {
                     if (ret == null) ret = new ArrayList<SAMValidationError>();
                     ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
-                            "Padding operator not valid at start or end of CIGAR", readName, recordNumber));
+                            "Padding operator not valid at end of CIGAR", readName, recordNumber));
                 } else if (!isRealOperator(cigarElements.get(i-1).getOperator()) ||
                         !isRealOperator(cigarElements.get(i+1).getOperator())) {
                     if (ret == null) ret = new ArrayList<SAMValidationError>();
