@@ -23,22 +23,17 @@
  */
 package net.sf.picard.sam;
 
+import net.sf.picard.cmdline.CommandLineProgram;
+import net.sf.picard.cmdline.Option;
+import net.sf.picard.cmdline.StandardOptionDefinitions;
+import net.sf.picard.cmdline.Usage;
+import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
+import net.sf.samtools.*;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.PicardException;
-import net.sf.samtools.*;
 
 /**
  * Reads a SAM or BAM file and combines the output to one file
@@ -68,8 +63,7 @@ public class MergeSamFiles extends CommandLineProgram {
     @Option(shortName="MSD", doc="Merge the seqeunce dictionaries", optional=true)
     public boolean MERGE_SEQUENCE_DICTIONARIES = false;
 
-    @Option(doc="Option to enable a simple two-thread producer consumer version of the merge algorithm that " +
-            "uses one thread to read and merge the records from the input files and another thread to encode, " +
+    @Option(doc="Option to create a background thread to encode, " +
             "compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases " +
             "runtime by ~20% when writing out a compressed BAM file.")
     public boolean USE_THREADING = false;
@@ -137,80 +131,25 @@ public class MergeSamFiles extends CommandLineProgram {
         final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headerMergerSortOrder, headers, MERGE_SEQUENCE_DICTIONARIES);
         final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, mergingSamRecordIteratorAssumeSorted);
         final SAMFileHeader header = headerMerger.getMergedHeader();
-        for (String comment : COMMENT) {
+        for (final String comment : COMMENT) {
             header.addComment(comment);
         }
         header.setSortOrder(SORT_ORDER);
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, OUTPUT);
+        final SAMFileWriterFactory samFileWriterFactory = new SAMFileWriterFactory();
+        if (USE_THREADING) {
+            samFileWriterFactory.setUseAsyncIo(true);
+        }
+        final SAMFileWriter out = samFileWriterFactory.makeSAMOrBAMWriter(header, presorted, OUTPUT);
 
         // Lastly loop through and write out the records
-        if (USE_THREADING) {
-            final BlockingQueue<SAMRecord> queue = new ArrayBlockingQueue<SAMRecord>(10000);
-            final AtomicBoolean producerSuccceeded = new AtomicBoolean(false);
-            final AtomicBoolean consumerSuccceeded = new AtomicBoolean(false);
-            Runnable producer = new Runnable() {
-                public void run() {
-                    try {
-                        while (iterator.hasNext()) {
-                            queue.put(iterator.next());
-                        }
-                        producerSuccceeded.set(true);
-                    }
-                    catch (InterruptedException ie) {
-                        throw new PicardException("Interrupted reading SAMRecord to merge.", ie);
-                    }
-                }
-            };
-
-            Runnable consumer = new Runnable() {
-                public void run() {
-                    try {
-                        long i = 0;
-
-                        while (!producerSuccceeded.get()) {
-                            SAMRecord rec = queue.poll(15, TimeUnit.SECONDS);
-                            if (rec != null) {
-                                out.addAlignment(rec);
-                                if (++i % PROGRESS_INTERVAL == 0) log.info(i + " records processed.");
-                            }
-                        }
-                        consumerSuccceeded.set(true);
-                    }
-                    catch (InterruptedException ie) {
-                        throw new PicardException("Interrupted writing SAMRecord to output file.", ie);
-                    }
-                }
-            };
-
-            Thread producerThread = new Thread(producer);
-            Thread consumerThread = new Thread(consumer);
-            producerThread.start();
-            consumerThread.start();
-
-            try {
-                consumerThread.join();
-                producerThread.join();
-            }
-            catch (InterruptedException ie) {
-                throw new PicardException("Interrupted while waiting for threads to finished writing.", ie);
-            }
-            if (!producerSuccceeded.get()) {
-                throw new PicardException("Error reading or merging inputs.");
-            }
-            if (!consumerSuccceeded.get()) {
-                throw new PicardException("Error writing output");
+        for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
+            final SAMRecord record = iterator.next();
+            out.addAlignment(record);
+            if (numRecords % PROGRESS_INTERVAL == 0) {
+                log.info(numRecords + " records read.");
             }
         }
-        else {
-            for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
-                final SAMRecord record = iterator.next();
-                out.addAlignment(record);
-                if (numRecords % PROGRESS_INTERVAL == 0) {
-                    log.info(numRecords + " records read.");
-                }
-            }
 
-        }
 
         log.info("Finished reading inputs.");
         out.close();
