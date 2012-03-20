@@ -61,9 +61,21 @@ public class BAMRecordCodec implements SortingCollection.Codec<SAMRecord> {
         this.binaryCodec.setOutputStream(os);
     }
 
+    /** Sets the output stream that records will be written to. */
+    public void setOutputStream(final OutputStream os, final String filename) {
+        this.binaryCodec.setOutputStream(os);
+        this.binaryCodec.setOutputFileName(filename);
+    }
+
     /** Sets the input stream that records will be read from. */
     public void setInputStream(final InputStream is) {
         this.binaryCodec.setInputStream(is);
+    }
+
+    /** Sets the input stream that records will be read from. */
+    public void setInputStream(final InputStream is, final String filename) {
+        this.binaryCodec.setInputStream(is);
+        this.binaryCodec.setInputFileName(filename);
     }
 
     /**

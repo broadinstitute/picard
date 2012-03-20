@@ -457,7 +457,8 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
          */
         BAMFileIterator(final boolean advance) {
             this.bamRecordCodec = new BAMRecordCodec(getFileHeader(), samRecordFactory);
-            this.bamRecordCodec.setInputStream(BAMFileReader.this.mStream.getInputStream());
+            this.bamRecordCodec.setInputStream(BAMFileReader.this.mStream.getInputStream(),
+                    BAMFileReader.this.mStream.getInputFileName());
 
             if (advance) {
                 advance();
