@@ -115,7 +115,9 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if (mIndexFile != null && mIndexFile.lastModified() < file.lastModified()) {
             System.err.println("WARNING: BAM index file " + mIndexFile.getAbsolutePath() +
                     " is older than BAM " + file.getAbsolutePath());
-        }        
+        }
+        // Provide better error message when there is an error reading.
+        mStream.setInputFileName(file.getAbsolutePath());
     }
 
     BAMFileReader(final SeekableStream strm,
