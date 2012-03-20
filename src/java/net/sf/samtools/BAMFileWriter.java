@@ -67,7 +67,7 @@ public class BAMFileWriter extends SAMFileWriterImpl {
     private void prepareToWriteAlignments() {
         if (bamRecordCodec == null) {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
-            bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream());
+            bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream(), outputBinaryCodec.getOutputFileName());
         }
     }
 
