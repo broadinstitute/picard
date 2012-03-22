@@ -131,7 +131,7 @@ public class ValidateSamFileTest {
     }
 
     @Test(dataProvider = "missingMateTestCases")
-    public void testMissingMate(SAMFileHeader.SortOrder sortOrder) throws IOException {
+    public void testMissingMate(final SAMFileHeader.SortOrder sortOrder) throws IOException {
         final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder(true, sortOrder);
 
         samBuilder.addPair(String.valueOf(1), 1, 1, 101);
@@ -313,11 +313,11 @@ public class ValidateSamFileTest {
 
     @Test
     public void testHeaderValidation() throws Exception {
-        SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
         try {
             final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "buggyHeader.sam"));
-            Histogram<String> results = executeValidation(samReader, null);
+            final Histogram<String> results = executeValidation(samReader, null);
             Assert.assertEquals(results.get(SAMValidationError.Type.UNRECOGNIZED_HEADER_TYPE.getHistogramString()).getValue(), 3.0);
             Assert.assertEquals(results.get(SAMValidationError.Type.HEADER_TAG_MULTIPLY_DEFINED.getHistogramString()).getValue(), 1.0);
         } finally {
@@ -327,12 +327,12 @@ public class ValidateSamFileTest {
 
     @Test
     public void testIndexFileValidation() throws Exception {
-        SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
         try {
             final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "bad_index.bam"));
             samReader.enableIndexCaching(true);
-            Histogram<String> results = executeValidation(samReader, null);
+            final Histogram<String> results = executeValidation(samReader, null);
             Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_INDEX_FILE_POINTER.getHistogramString()).getValue(), 1.0);
         } finally {
             SAMFileReader.setDefaultValidationStringency(saveStringency);
@@ -343,7 +343,7 @@ public class ValidateSamFileTest {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
         new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference);
-        LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
+        final LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
         if (reader.readLine().equals("No errors found")) {
             return new Histogram<String>();
         }
@@ -354,7 +354,7 @@ public class ValidateSamFileTest {
     }
 
     @Test(dataProvider = "headerVersions")
-    public void testHeaderVersion(final String version, boolean expectValid) throws Exception {
+    public void testHeaderVersion(final String version, final boolean expectValid) throws Exception {
         final File samFile = File.createTempFile("validateHeader.", ".sam");
         samFile.deleteOnExit();
         final PrintWriter pw = new PrintWriter(samFile);
@@ -374,7 +374,8 @@ public class ValidateSamFileTest {
         return new Object[][] {
                 {"1.0", true},
                 {"1.3", true},
-                {"1.4", false},
+                {"1.4", true},
+                {"1.5", false},
         };
     }
 
