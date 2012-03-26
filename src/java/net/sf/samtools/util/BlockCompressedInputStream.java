@@ -140,7 +140,7 @@ public class BlockCompressedInputStream extends InputStream {
      */
     public int read()
         throws IOException {
-        return (available() > 0) ? mCurrentBlock[mCurrentOffset++] : -1;
+        return (available() > 0) ? (mCurrentBlock[mCurrentOffset++] & 0xFF) : -1;
     }
 
     /**
