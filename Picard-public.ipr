@@ -267,20 +267,6 @@
         <entry key="$PROJECT_DIR$">
           <value>
             <SvnBranchConfiguration>
-              <option name="branchMap">
-                <map>
-                  <entry key="https://picard.svn.sourceforge.net/svnroot/picard/branches">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                  <entry key="https://picard.svn.sourceforge.net/svnroot/picard/tags">
-                    <value>
-                      <list />
-                    </value>
-                  </entry>
-                </map>
-              </option>
               <option name="branchUrls">
                 <list>
                   <option value="https://picard.svn.sourceforge.net/svnroot/picard/branches" />
