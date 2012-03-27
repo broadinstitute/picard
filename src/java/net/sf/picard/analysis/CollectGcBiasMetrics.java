@@ -115,7 +115,8 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
         final SAMFileReader sam = new SAMFileReader(INPUT);
         if (!ASSUME_SORTED && sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new PicardException("Input file " + INPUT.getAbsolutePath() + " is not coordinate sorted.");
+            throw new PicardException("Header of input file " + INPUT.getAbsolutePath() + " indicates that it is not coordinate sorted.  " +
+            "If you believe the records are in coordinate order, pass option ASSUME_SORTED=true.  If not, sort the file with SortSam.");
         }
         final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sam.iterator());
         final ReferenceSequenceFile referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
