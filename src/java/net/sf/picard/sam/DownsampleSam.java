@@ -33,7 +33,7 @@ public class DownsampleSam extends CommandLineProgram {
     public File OUTPUT;
 
     @Option(shortName="R", doc="Random seed to use if reproducibilty is desired.")
-    public long RANDOM_SEED = 1L;
+    public Long RANDOM_SEED = 1L;
 
     @Option(shortName="P", doc="The probability of keeping any individual read, between 0 and 1.")
     public double PROBABILITY = 1;
@@ -49,7 +49,7 @@ public class DownsampleSam extends CommandLineProgram {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-        final Random r = new Random(RANDOM_SEED);
+        final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
         final SAMFileReader in = new SAMFileReader(INPUT);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         final Map<String,Boolean> decisions = new HashMap<String,Boolean>();
