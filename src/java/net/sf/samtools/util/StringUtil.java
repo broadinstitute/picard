@@ -136,6 +136,17 @@ public class StringUtil {
 
     /**
      * @param b ASCII character
+     * @return lowercase version of arg if it was uppercase, otherwise returns arg
+     */
+    public static byte toLowerCase(final byte b) {
+        if (b < 'A' || b > 'Z') {
+            return b;
+        }
+        return (byte)(b - UPPER_CASE_OFFSET);
+    }
+
+    /**
+     * @param b ASCII character
      * @return uppercase version of arg if it was lowercase, otherwise returns arg
      */
     public static byte toUpperCase(final byte b) {
