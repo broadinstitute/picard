@@ -33,7 +33,7 @@ import net.sf.samtools.util.StringUtil;
  *
  * @author jburke@broadinstitute.org
  */
-class OutputMapping {
+public class OutputMapping {
     /**
      * This class represents the mapping from Raw Cycles to TwoDIndices into output data structures and ClusterData.  This class
      * also contains ReadStructure.Substructure that describes which reads/cycles should be output.

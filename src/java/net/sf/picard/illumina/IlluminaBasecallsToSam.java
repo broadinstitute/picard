@@ -134,9 +134,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     // If not barcoded run, key == null.
     private final Map<String, SAMFileWriter> writersByBarcode = new HashMap<String, SAMFileWriter>();
 
-    private static final IlluminaDataType [] DataTypesNoBarcode = {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
-    private static final IlluminaDataType [] DataTypesWithBarcode = Arrays.copyOf(DataTypesNoBarcode, DataTypesNoBarcode.length + 1);
-    static { DataTypesWithBarcode[DataTypesWithBarcode.length -1] = IlluminaDataType.Barcodes; }
+    public static final IlluminaDataType [] DATA_TYPES_NO_BARCODE = {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
+    public static final IlluminaDataType [] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
+    static { DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length -1] = IlluminaDataType.Barcodes; }
 
     @Override
 	protected int doWork() {
@@ -149,11 +149,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if(readStructure.barcodes.isEmpty()) {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesNoBarcode);
-        } else {
-            factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, DataTypesWithBarcode);
-        }
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, getDataTypesFromReadStructure(readStructure));
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
         
@@ -403,6 +399,14 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             return null;
         }
         return messages.toArray(new String[messages.size()]);
+    }
+
+    public static IlluminaDataType [] getDataTypesFromReadStructure(final ReadStructure readStructure) {
+        if(readStructure.barcodes.isEmpty()) {
+            return DATA_TYPES_NO_BARCODE;
+        } else {
+            return DATA_TYPES_WITH_BARCODE;
+        }
     }
 
     /**

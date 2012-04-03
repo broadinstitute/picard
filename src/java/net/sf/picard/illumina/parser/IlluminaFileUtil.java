@@ -24,7 +24,9 @@
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
 import net.sf.picard.io.IoUtil;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.*;
@@ -41,7 +43,7 @@ import java.util.regex.Pattern;
  *
  * @author jburke@broadinstitute.org
  */
-class IlluminaFileUtil {
+public class IlluminaFileUtil {
 
     public enum SupportedIlluminaFormat {
         Qseq,
@@ -55,11 +57,13 @@ class IlluminaFileUtil {
         Barcode
     }
 
-    public final File intensityDir;
-    public final File intensityLaneDir;
-    public final File basecallDir;
-    public final File basecallLaneDir;
-    public final int lane;
+    private final File dataDir;
+    private final File intensityDir;
+    private final File intensityLaneDir;
+    private final File basecallDir;
+    private final File basecallLaneDir;
+    private final File interopDir;
+    private final int lane;
 
 
     /** A regex string matching only qseq files */
@@ -73,15 +77,18 @@ class IlluminaFileUtil {
     private final PerTileFileUtil clocs;
     private final PerTileFileUtil filter;
     private final PerTileFileUtil barcode;
+    private final File tileMetricsOut;
     private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils;
 
     public IlluminaFileUtil(final File basecallDir, final int lane) {
         this.basecallDir  = basecallDir;
         this.intensityDir = basecallDir.getParentFile();
+        this.dataDir      = intensityDir.getParentFile();
         this.lane = lane;
 
-        this.basecallLaneDir = new File(basecallDir, longLaneStr(lane));
+        this.basecallLaneDir  = new File(basecallDir, longLaneStr(lane));
         this.intensityLaneDir = new File(intensityDir, longLaneStr(lane));
+        this.interopDir       = new File(dataDir.getParentFile(), "InterOp");
 
         utils = new HashMap<SupportedIlluminaFormat, ParameterizedFileUtil>();
 
@@ -111,6 +118,8 @@ class IlluminaFileUtil {
 
         barcode = new PerTileFileUtil("_barcode.txt", true, basecallDir);
         utils.put(SupportedIlluminaFormat.Barcode, barcode);
+
+        tileMetricsOut = new File(interopDir, "TileMetricsOut.bin");
     }
 
     /** Return the lane we're inspecting */
@@ -123,15 +132,35 @@ class IlluminaFileUtil {
         return utils.get(format);
     }
 
+    /** Return the list of tiles we would expect for this lane based on the metrics found in InterOp/TileMetricsOut.bin */
+    public List<Integer> getExpectedTiles() {
+        IoUtil.assertFileIsReadable(tileMetricsOut);
+        //Used just to ensure predictable ordering
+        final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
+
+        final Iterator<TileMetricsOutReader.IlluminaTileMetrics> tileMetrics = new TileMetricsOutReader(tileMetricsOut);
+        while(tileMetrics.hasNext()) {
+            final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
+
+            if(tileMetric.getLaneNumber() == lane) {
+                if(!expectedTiles.contains(tileMetric.getTileNumber())) {
+                    expectedTiles.add(tileMetric.getTileNumber());
+                }
+            }
+        }
+
+        return new ArrayList<Integer>(expectedTiles);
+    }
+
     /** Get the available tiles for the given formats, if the formats have tile lists that differ then
      * throw an exception, if any of the format
      */
-    public List<Integer> getTiles(final List<SupportedIlluminaFormat> formats) {
+    public List<Integer> getActualTiles(final List<SupportedIlluminaFormat> formats) {
         if(formats == null) {
             throw new PicardException("Format list provided to getTiles was null!");
         }
 
-        if(formats.size() < 0) {
+        if(formats.size() == 0) {
             throw new PicardException("0 Formats were specified.  You need to specify at least SupportedIlluminaFormat to use getTiles");
         }
 
@@ -181,6 +210,10 @@ class IlluminaFileUtil {
         return barcode;
     }
 
+    public File tileMetricsOut() {
+        return tileMetricsOut;
+    }
+
     public static String UNPARAMETERIZED_PER_TILE_PATTERN = "s_(\\d+)_(\\d{1,4})";
     public static String UNPARAMETERIZED_QSEQ_PATTERN     = "s_(\\d+)_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
     private static String LANE_TILE_QSEQ_PATTERN          = "s_(\\d+)_\\d_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
@@ -200,12 +233,11 @@ class IlluminaFileUtil {
         return "s_" + lane + "_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
     }
 
-
     /** An object providing utilities for locating Illumina files of specific types */
-    abstract class ParameterizedFileUtil {
+    public abstract class ParameterizedFileUtil {
         /** The file extension for this class, file extension does not have the standard meaning
          * in this instance.  It means, all the characters that come after the identifying portion of
-         * the file (after lane, tile, and end that is).  So _qseq.txt and .filter are both file extensions.
+         * the file (after lane, tile, and end that is).  So _qseq.txt and .filter are both file extensions
          */
         public final String extension;
 
@@ -263,6 +295,16 @@ class IlluminaFileUtil {
          * @return A List of tile integers
          */
         public abstract List<Integer> getTiles();
+
+
+        /**
+         * Given the expected tiles/expected cycles for this file type, return a list of error messages describing any
+         * missing/or malformed files
+         * @param expectedTiles An ordered list of tile numbers
+         * @param expectedCycles An ordered list of cycle numbers that may contain gaps
+         * @return A list of error messages for this format
+         */
+        public abstract List<String> verify(List<Integer> expectedTiles, int [] expectedCycles);
     }
 
     /** Represents file types that have one file per tile */
@@ -314,6 +356,25 @@ class IlluminaFileUtil {
         public List<Integer> getTiles() {
             return tiles;
         }
+
+        @Override
+        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+            final List<String> failures = new LinkedList<String>();
+
+            if(!base.exists()) {
+                failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
+            } else {
+                for(final Integer tile : expectedTiles) {
+                    if(!tiles.contains(tile)) {
+                        failures.add("Missing tile " + tile + " for file type " + extension + ".");
+                    } else if( fileMap.get(tile).length() == 0 ) {
+                        failures.add("Tile " + tile + " is empty for file type " + extension + ".");
+                    }
+                }
+            }
+
+            return failures;
+        }
     }
 
     /**
@@ -323,6 +384,7 @@ class IlluminaFileUtil {
         private final CycleIlluminaFileMap cycleFileMap;
         private List<Integer> tiles;
         private int [] detectedCycles;
+        private Set<Integer> lazyDetectedCyclesSet;
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern, final File base) {
             super(makeLTRegex(fileNameEndPattern), makeLTRegex(fileNameEndPattern, lane), fileNameEndPattern, base);
@@ -333,6 +395,7 @@ class IlluminaFileUtil {
             } else {
                 this.tiles = new ArrayList<Integer>();
             }
+            lazyDetectedCyclesSet = null;
         }
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern) {
@@ -416,12 +479,53 @@ class IlluminaFileUtil {
             return cycleFileMap.keep(tiles, null);
         }
 
+        /**
+         * Returns a cycleIlluminaFileMap with all available tiles but limited to the cycles passed in.  Any cycles that are missing
+         * cycle files or directories will be removed from the cycle list that is kept.
+         * @param cycles Cycles that should be present in the output CycleIlluminaFileMap
+         * @return A CycleIlluminaFileMap with all available tiles but at most the cycles passed in by the cycles parameter
+         */
         public CycleIlluminaFileMap getFiles(final int [] cycles) {
-            return cycleFileMap.keep(null, cycles);
+            //Remove any cycles that were discovered to be NON-EXISTANT when this util was instantiated
+            int [] filteredCycles = removeNonexistantCycles(cycles);
+            return cycleFileMap.keep(null, filteredCycles);
         }
 
+        /**
+         * Returns a cycleIlluminaFileMap that contains only the tiles and cycles specified (and fewer if the orginal CycleIlluminaFileMap, created
+         * on util instantiation, doesn't contain any of these tiles/cycles).
+         * @param cycles Cycles that should be present in the output CycleIlluminaFileMap
+         * @return A CycleIlluminaFileMap with at most the tiles/cycles listed in the parameters
+         */
         public CycleIlluminaFileMap getFiles(final List<Integer> tiles, final int [] cycles) {
-            return cycleFileMap.keep(tiles, cycles);
+            //Remove any cycles that were discovered to be NON-EXISTANT when this util was instantiated
+            int [] filteredCycles = removeNonexistantCycles(cycles);
+            return cycleFileMap.keep(tiles, filteredCycles);
+        }
+
+        private int [] removeNonexistantCycles(final int[] cycles) {
+            if(lazyDetectedCyclesSet == null) {
+                lazyDetectedCyclesSet = new TreeSet<Integer>();
+                for(final Integer cycle : detectedCycles) {
+                    lazyDetectedCyclesSet.add(cycle);
+                }
+            }
+
+            final TreeSet<Integer> inputCyclesSet = new TreeSet<Integer>();
+            for(final Integer inputCycle : cycles) {
+                inputCyclesSet.add(inputCycle);
+            }
+
+            //This also sorts outputCycles
+            final int [] outputCycles;
+            inputCyclesSet.retainAll(lazyDetectedCyclesSet);
+            outputCycles = new int[inputCyclesSet.size()];
+            int i = 0;
+            for(final Integer element : inputCyclesSet) {
+                outputCycles[i++] = element;
+            }
+
+            return outputCycles;
         }
 
         public int [] getDetectedCycles() {
@@ -439,6 +543,72 @@ class IlluminaFileUtil {
 
         public boolean filesAvailable() {
             return !cycleFileMap.isEmpty();
+        }
+
+        @Override
+        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+            final List<String> failures = new LinkedList<String>();
+
+            if(!base.exists()) {
+                failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
+            } else {
+                final CycleIlluminaFileMap cfm = getFiles(expectedTiles, expectedCycles);
+
+                final Set<Integer> detectedCycleSet = new HashSet<Integer>();
+                for(final Integer cycle : detectedCycles) detectedCycleSet.add(cycle);
+
+                final Set<Integer> missingCycleSet = new TreeSet<Integer>();
+                for(final Integer cycle : expectedCycles) missingCycleSet.add(cycle);
+
+                missingCycleSet.removeAll(detectedCycleSet);
+
+                for(final Integer tile : expectedTiles) {
+                    final CycleFilesIterator cfIterator = cfm.get(tile);
+                    if( cfIterator == null ) {
+                        failures.add("File type " + extension + " is missing tile " + tile);
+                    } else if( !cfIterator.hasNext()) {
+                        failures.add("File type " + extension + " has 0 cycle files for tile " + tile);
+                    } else {
+                        int expectedCycleIndex = 0;
+                        Long cycleSize = null;
+
+                        while(cfIterator.hasNext() && expectedCycleIndex < expectedCycles.length) {
+                            final int currentCycle = expectedCycles[expectedCycleIndex];
+
+                            if(cfIterator.getNextCycle() == currentCycle) {
+                                final File cycleFile = cfIterator.next();
+
+                                if(!missingCycleSet.contains(currentCycle)) {
+                                    if(!cycleFile.exists()) {
+                                        failures.add("Missing file(" + cycleFile.getAbsolutePath() + ")");
+                                    } else if(cycleFile.length() == 0) {
+                                        failures.add("0 Length tile file(" + cycleFile.getAbsolutePath() + ")");
+                                    } else if(cycleSize == null) {
+                                        cycleSize = cycleFile.length();
+                                    } else if(cycleSize != cycleFile.length()) {
+                                        failures.add("File type " + extension + " has cycles files of different length.  Current cycle (" + currentCycle + ") " +
+                                                     "Length of first non-empty file (" + cycleSize + ") length of current cycle (" + cycleFile.length() + ")"  + " File(" + cycleFile.getAbsolutePath() + ")");
+                                    }
+                                } else {
+                                    cfIterator.reset();
+                                    throw new PicardException("Malformed CycleIlluminaFileMap! CycleIlluminaFileMap has cycle " + currentCycle + " even though the directory does not exist!  CycleFileIterator(" + CycleIlluminaFileMap.remainingCyclesToString(cfIterator) + ")");
+                                }
+                            } else if(!missingCycleSet.contains(currentCycle)) {
+                                cfIterator.reset();
+                                throw new PicardException("Malformed CycleIlluminaFileMap! Tile " + tile + "CycleFileIterator(" + CycleIlluminaFileMap.remainingCyclesToString(cfIterator)+ ")");
+                            }
+
+                            expectedCycleIndex += 1;
+                        }
+                    }
+                }
+
+                for(final Integer cycle : missingCycleSet) {
+                    failures.add("Missing cycle directory " + cycle +  " in directory " + base.getAbsolutePath() + " for file type " + extension);
+                }
+            }
+
+            return failures;
         }
     }
 
@@ -529,6 +699,45 @@ class IlluminaFileUtil {
             return tiles;
         }
 
+        @Override
+        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+            final List<String> failures = new LinkedList<String>();
+
+            if(!this.base.exists()) {
+                failures.add("Base directory( " + this.base.getAbsolutePath() + ") does not exist!");
+            } else {
+                final List<IlluminaFileMap> fileMapPerRead = getFiles(expectedTiles);
+                int [] qseqReadLengths = new int[numberOfEnds()];
+                int lastCycle = 0;
+                for(int i = 0; i < qseqReadLengths.length; i++) {
+                    final File currentReadForTile = fileMapPerRead.get(i).get(expectedTiles.get(0));
+                    qseqReadLengths[i] = QseqReadParser.getReadLength(currentReadForTile);
+                    lastCycle += qseqReadLengths[i];
+                }
+
+                final Range cycleRange = new Range(1,lastCycle);
+                for(final int expectedCycle : expectedCycles) {
+                    if(expectedCycle < cycleRange.start || expectedCycle > cycleRange.end) {
+                        failures.add("Expected cycle(" + expectedCycle + ") is not within the range provided by available qseqs.  " +
+                                "Min Available Cycle(" + cycleRange.start + ") Max Available Cycle(" + cycleRange.end + ") Length of Qseqs( " + StringUtil.join(", ", qseqReadLengths));
+                    }
+                }
+
+                //ensure that those same ends exist for each expectedTile
+                for(int i = 1; i < expectedTiles.size(); i++) {
+                    final Integer tile = expectedTiles.get(i);
+                    for(int j = 0; j < qseqReadLengths.length; j++) {
+                        final File currentReadForTile = fileMapPerRead.get(j).get(tile);
+                        if(currentReadForTile == null || !currentReadForTile.exists()) {
+                            failures.add("Missing file " + "s_" + lane + "_" + (j+1) + "_" + longTileStr(tile) + "_qseq.txt");
+                        }
+                    }
+                }
+            }
+
+            return failures;
+        }
+
         public boolean filesAvailable() {
             return !tiles.isEmpty();
         }
@@ -554,14 +763,6 @@ class IlluminaFileUtil {
     /** Return a regex string for finding Lane and Tile given a file extension pattern */
     public static String makeLTRegex(final String fileNameEndPattern) {
         return "^" + UNPARAMETERIZED_PER_TILE_PATTERN + fileNameEndPattern + "$";
-    }
-
-    public static String makeLTRegexWCompression(final String fileNameEndPattern) {
-        return makeLTRegex(fileNameEndPattern + "(\\.gz|\\.bz2)?");
-    }
-
-    public static String makeQseqLTRegex() {
-        return LANE_TILE_QSEQ_PATTERN;
     }
 
     /** Return a regex string for finding Lane and Tile given a file extension pattern */
@@ -616,6 +817,21 @@ class IlluminaFileUtil {
             lstr = "0" + lstr;
         }
         return "L" + lstr;
+    }
+
+    /**
+     * Return a string representing the Lane in the format "000<tile>"
+     * @param tile The tile to transform
+     * @return A long string representation of the name
+     */
+    private static String longTileStr(final int tile) {
+        String tstr = String.valueOf(tile);
+        final int zerosToAdd = 4 - tstr.length();
+
+        for(int i = 0; i < zerosToAdd; i++) {
+            tstr = "0" + tstr;
+        }
+        return tstr;
     }
 
     /** Return all files that match pattern of the given file type in the given base directory */

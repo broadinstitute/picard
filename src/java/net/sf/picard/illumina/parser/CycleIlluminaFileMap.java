@@ -34,8 +34,9 @@ import java.util.*;
  * @author jburke@broadinstitute.org
  */
 class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
-
-    /** Return a CycleIlluminaFileMap with only the tiles listed , throws an exception if it does not contain any of the tiles listed */
+    /** Return a CycleIlluminaFileMap with only the tiles listed and all of the cycles provided, throws an exception if it does not contain any of the tiles listed
+     * Important NOTE: this DOES NOT eliminate cycles from the cycles parameter passed in that are missing in the cyclesFileIterator of any given lane in the CycleIlluminaFileMap
+     * */
     public CycleIlluminaFileMap keep(List<Integer> tilesToKeep, final int [] cycles) {
         if(tilesToKeep == null) {
             tilesToKeep = new ArrayList<Integer>(this.keySet());
@@ -53,7 +54,7 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
 
     /**
      * Assert that this map has an iterator for all of the expectedTiles and each iterator has expectedCycles number
-     * of files.
+     * of files.  Also, assert that each cycle file for a given tile is the same size
      * @param expectedTiles A list of tiles that should be in this map
      * @param expectedCycles The total number of files(cycles) that should be in each CycledFilesIterator
      */
@@ -69,6 +70,9 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
             int total;
             for(total = 0; cycleFiles.hasNext(); total++) {
                 if(cycleFiles.getNextCycle() != expectedCycles[total]) {
+                    if(curFile == null) {
+                        curFile = cycleFiles.next();
+                    }
                     cycleFiles.reset();
                     throw new PicardException("Cycles in iterator(" + remainingCyclesToString(cycleFiles) +
                                               ") do not match those expected (" + StringUtil.intValuesToString(expectedCycles) +
@@ -162,10 +166,6 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
 
         final File cycleDir = new File(parentDir, "C" + cycles[nextCycleIndex] + ".1");
         final File curFile  = new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
-
-        if(!curFile.exists()) {
-            throw new PicardException(" Missing cycle file for CycleFilesIterator!" + summarizeIterator());
-        }
 
         nextCycleIndex++;
         return curFile;
