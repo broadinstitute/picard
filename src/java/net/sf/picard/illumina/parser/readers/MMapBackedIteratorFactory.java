@@ -76,6 +76,14 @@ public class MMapBackedIteratorFactory {
         return new FloatMMapIterator(header, binaryFile, buf);
     }
 
+    public static BinaryFileIterator<ByteBuffer> getByteBufferIterator(final int headerSize, final int elementSize, final File binaryFile) {
+        checkFactoryVars(headerSize, binaryFile);
+        final ByteBuffer buf = getBuffer(binaryFile);
+        final byte [] header = getHeader(buf, headerSize);
+
+        return new ByteBufferMMapIterator(header, binaryFile, elementSize, buf);
+    }
+
     private static void checkFactoryVars(final int headerSize, final File binaryFile) {
         IoUtil.assertFileIsReadable(binaryFile);
 
@@ -169,6 +177,27 @@ public class MMapBackedIteratorFactory {
         @Override
         protected Float getElement() {
             return buffer.getFloat();
+        }
+    }
+
+    //TODO: Add test
+    //TODO: Make a note that if you want to multithread over this then you have to copy the contents
+    private static class ByteBufferMMapIterator extends MMapBackedIterator<ByteBuffer> {
+        private byte [] localBacking;
+        private ByteBuffer localBuffer;
+        public ByteBufferMMapIterator(final byte[] header, final File file, final int elementBufferSize, final ByteBuffer buf) {
+            super(header, file, elementBufferSize, buf);
+            this.localBacking = new byte[elementBufferSize];
+            this.localBuffer = ByteBuffer.wrap(localBacking);
+            this.localBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        @Override
+        protected ByteBuffer getElement() {
+            localBuffer.position(0);
+            buffer.get(this.localBacking);
+            localBuffer.position(0);
+            return localBuffer;
         }
     }
 }

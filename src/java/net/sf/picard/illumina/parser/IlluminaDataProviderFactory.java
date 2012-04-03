@@ -30,6 +30,8 @@ import java.util.*;
 import net.sf.picard.PicardException;
 import net.sf.picard.util.Log;
 import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
+import net.sf.samtools.util.StringUtil;
+
 import static net.sf.picard.util.CollectionUtil.makeList;
 import static net.sf.picard.util.CollectionUtil.makeSet;
 
@@ -50,7 +52,10 @@ import static net.sf.picard.util.CollectionUtil.makeSet;
 public class IlluminaDataProviderFactory {
     private static final Log log = Log.getInstance(IlluminaDataProviderFactory.class);
 
-    /** A map of data types to a list of file formats in the order in which we prefer those file types (E.g. we would rather parse Bcls before QSeqs, Locs files before Clocs files ...) */
+    /** A map of data types to a list of file formats in the order in which we prefer those file types (E.g. we would rather parse Bcls before QSeqs, Locs files before Clocs files ...)
+     * We try to prefer data types that will be the fastest to parse/smallest in memory
+     * NOTE: In the code below, if Qseq is chosen to provide for ANY data type then it is used for ALL its data types (since we'll have to parse the entire line for each Qseq anyways)
+     * */
     private static final Map<IlluminaDataType, List<SupportedIlluminaFormat>> DATA_TYPE_TO_PREFERRED_FORMATS = new HashMap<IlluminaDataType, List<SupportedIlluminaFormat>>();
     static {
         /** For types found in Qseq, we prefer the NON-Qseq file formats first.  However, if we end up using Qseqs then we use Qseqs for EVERY type it provides,
@@ -120,8 +125,21 @@ public class IlluminaDataProviderFactory {
 
         this.fileUtil = new IlluminaFileUtil(basecallDirectory, lane);
 
-        formatToDataTypes = determineFormats();
-        availableTiles = fileUtil.getTiles(new ArrayList<SupportedIlluminaFormat>(formatToDataTypes.keySet()));
+        //find what request IlluminaDataTypes we have files for and select the most preferred file format available for that type
+        formatToDataTypes = determineFormats(this.dataTypes, fileUtil);
+
+        //find if we have any IlluminaDataType with NO available file formats and, if any exist, throw an exception
+        final Set<IlluminaDataType> unmatchedDataTypes = findUnmatchedTypes(this.dataTypes, formatToDataTypes);
+        if(unmatchedDataTypes.size() > 0) {
+            throw new PicardException("Could not find a format with available files for the following data types: " + StringUtil.join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
+        }
+
+        final StringBuilder sb = new StringBuilder(400);
+        sb.append("The following file formats will be used by IlluminaDataProvier: ");
+        sb.append(StringUtil.join("," + formatToDataTypes.keySet()));
+        log.debug(sb.toString());
+
+        availableTiles = fileUtil.getActualTiles(new ArrayList<SupportedIlluminaFormat>(formatToDataTypes.keySet()));
         if(availableTiles.isEmpty()) {
             throw new PicardException("No available tiles were found, make sure that " + basecallDirectory.getAbsolutePath() + " has a lane " + lane);
         }
@@ -167,31 +185,47 @@ public class IlluminaDataProviderFactory {
 
         final StringBuilder sb = new StringBuilder(400);
         sb.append("The following parsers will be used by IlluminaDataProvier: ");
-        for(final IlluminaParser parser : parsersToDataType.keySet()) {
-            parser.verifyData(requestedTiles, outputMapping.getOutputCycles());
-            sb.append(parser.toString());
-            sb.append(",");
-        }
-
+        sb.append(StringUtil.join("," + parsersToDataType.keySet()));
         log.debug(sb.toString());
 
         return new IlluminaDataProvider(outputMapping, parsersToDataType, basecallDirectory, lane);
     }
 
-    private Map<SupportedIlluminaFormat, Set<IlluminaDataType>> determineFormats() {
-        //For predictable ordering and uniqueness only, put the dataTypes into a treeSet
-        final SortedSet<IlluminaDataType> toSupport = new TreeSet<IlluminaDataType>(dataTypes);
+    /**
+     * Given a set of formats to data types they provide, find any requested data types that do not have a format associated with them and return them
+     * @param requestedDataTypes Data types that need to be provided
+     * @param formatToMatchedTypes A map of file formats to data types that will support them
+     * @return The data types that go unsupported by the formats found in formatToMatchedTypes
+     */
+    public static Set<IlluminaDataType> findUnmatchedTypes(final Set<IlluminaDataType> requestedDataTypes, final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> formatToMatchedTypes) {
+        final Set<IlluminaDataType> copiedTypes = new HashSet<IlluminaDataType>(requestedDataTypes);
+        for(final Set<IlluminaDataType> matchedTypes : formatToMatchedTypes.values()) {
+            copiedTypes.removeAll(matchedTypes);
+        }
+
+        return copiedTypes;
+    }
+
+    /**
+     * For all requestedDataTypes return a map of file format to set of provided data types that covers as many requestedDataTypes as possible and
+     * chooses the most preferred available formats possible
+     * @param requestedDataTypes Data types to be provided
+     * @param fileUtil A file util for the lane/directory we wish to provide data for
+     * @return  A Map<Supported file format, Set of data types file format provides>
+     */
+    public static Map<SupportedIlluminaFormat, Set<IlluminaDataType>> determineFormats(final Set<IlluminaDataType> requestedDataTypes, final IlluminaFileUtil fileUtil) {
+        //For predictable ordering and uniqueness only, put the requestedDataTypes into a treeSet
+        final SortedSet<IlluminaDataType> toSupport = new TreeSet<IlluminaDataType>(requestedDataTypes);
         final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> fileTypeToDataTypes = new HashMap<SupportedIlluminaFormat, Set<IlluminaDataType>>();
         final Map<IlluminaDataType, SupportedIlluminaFormat> dataTypeToFormat = new HashMap<IlluminaDataType, SupportedIlluminaFormat>();
 
         boolean useQSeq = false;
         for(final IlluminaDataType ts : toSupport) {
-            final SupportedIlluminaFormat preferredFormat = findMostPreferredAvailableFormat(ts);
-            if(preferredFormat == null) {
-                throw new PicardException("No file type available to provide " + ts.name() + " data!");
+            final SupportedIlluminaFormat preferredFormat = findPreferredAvailableFormat(ts, fileUtil);
+            if(preferredFormat != null) {
+                useQSeq |= preferredFormat == SupportedIlluminaFormat.Qseq;
+                dataTypeToFormat.put(ts, preferredFormat);
             }
-            useQSeq |= preferredFormat == SupportedIlluminaFormat.Qseq;
-            dataTypeToFormat.put(ts, preferredFormat);
         }
 
         //If no NON-qseq files exist for a file type put it in requiringQSeqs
@@ -208,26 +242,26 @@ public class IlluminaDataProviderFactory {
         //If there are any types not covered by QSeqs (or QSeqs aren't required/available) then find parsers for all remaining data types
         for(final IlluminaDataType dt : toSupport) {
             final SupportedIlluminaFormat format = dataTypeToFormat.get(dt);
-            if(fileTypeToDataTypes.containsKey(format)) {
-                fileTypeToDataTypes.get(format).add(dt);
-            } else {
-                fileTypeToDataTypes.put(dataTypeToFormat.get(dt), makeSet(dt));
+
+            if(format != null) {
+                if(fileTypeToDataTypes.containsKey(format)) {
+                    fileTypeToDataTypes.get(format).add(dt);
+                } else {
+                    fileTypeToDataTypes.put(dataTypeToFormat.get(dt), makeSet(dt));
+                }
             }
         }
-
-        final StringBuilder sb = new StringBuilder(400);
-        sb.append("The following file formats will be used by IlluminaDataProvier: ");
-        for(final SupportedIlluminaFormat format : fileTypeToDataTypes.keySet()) {
-            sb.append(format.name());
-            sb.append(",");
-        }
-
-        log.debug(sb.toString());
 
         return fileTypeToDataTypes;
     }
 
-    private SupportedIlluminaFormat findMostPreferredAvailableFormat(final IlluminaDataType dt) {
+    /**
+     * Given a data type find the most preferred file format that also has files available
+     * @param dt Type of desired data
+     * @param fileUtil Util for the lane/directory in which we will find data
+     * @return The file format that is "most preferred" (i.e. fastest to parse/smallest in memory)
+     */
+    public static SupportedIlluminaFormat findPreferredAvailableFormat(final IlluminaDataType dt, final IlluminaFileUtil fileUtil) {
         final List<SupportedIlluminaFormat> preferredFormats = DATA_TYPE_TO_PREFERRED_FORMATS.get(dt);
         SupportedIlluminaFormat format = null;
         for(int i = 0; i < preferredFormats.size() && format == null; i++) {

@@ -143,27 +143,120 @@ public class IlluminaFileUtilTest {
             Assert.assertEquals(detectedCycles[i],  DEFAULT_CYCLES[i], "Elements differ at index " + i);
         }
 
-        Assert.assertEquals(fileUtil.getTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
+        Assert.assertEquals(fileUtil.getActualTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
     }
 
     @Test
     public void passNewUtilTest() {
         for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
-            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES,   DEFAULT_NUM_ENDS);
-            makeFiles(format, DEFAULT_LANE+1, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".gz");
-            makeFiles(format, DEFAULT_LANE+2, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".bz2");
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES,   DEFAULT_NUM_ENDS);
+            makeFiles(format, intensityDir, DEFAULT_LANE+1, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".gz");
+            makeFiles(format, intensityDir, DEFAULT_LANE+2, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".bz2");
         }
 
+        for(int i = 0; i < 3; i++) {
+            final IlluminaFileUtil fileUtil = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE + i);
+            Assert.assertEquals(fileUtil.getActualTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
+            assertDefaults(fileUtil, DEFAULT_LANE+i);
+        }
+    }
+
+    @Test
+    public void passingVerifyTest_noQseq() {
+        for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES,   DEFAULT_NUM_ENDS);
+            makeFiles(format, intensityDir, DEFAULT_LANE+1, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".gz");
+            makeFiles(format, intensityDir, DEFAULT_LANE+2, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, ".bz2");
+        }
+
+        for(int i = 0; i < 3; i++) {
+            final IlluminaFileUtil fileUtil = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE + i);
+
+
+            for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
+                if(format != SupportedIlluminaFormat.Qseq) {
+                    Assert.assertEquals(new ArrayList<String>(), fileUtil.getUtil(format).verify(DEFAULT_TILES, DEFAULT_CYCLES));
+                }
+            }
+        }
+    }
+
+    @DataProvider(name="passingQseqVerifyTestData")
+    public Object[][] passingQseqVerifyTestData() {
+        return new Object[][] {
+            {4, makeList(1,2,3), cycleRange(1,   152)},
+            {6, makeList(1),     cycleRange(1,   144)},
+            {6, makeList(1),     cycleRange(100, 110)},
+        };
+    }
+
+    @Test(dataProvider="passingQseqVerifyTestData")
+    public void passingVerifyTest_qseq(final int lane, List<Integer> tiles, final int [] cycles) {
+        final IlluminaFileUtil fileUtil = new IlluminaFileUtil(new File("testdata/net/sf/picard/illumina/IlluminaTests/", "BasecallsDir"), lane);
+        Assert.assertEquals(new ArrayList<String>(), fileUtil.qseq().verify(tiles, cycles));
+    }
+
+    //Need one where the cycle range asked for is greater than that available
+    //Need one where the various reads are missing
+
+    @DataProvider(name="failingQseqVerifyTestData")
+    public Object[][] failingQseqVerifyTestData() {
+        return new Object[][] {
+             {4, makeList(1,2,3), cycleRange(1,   153), new ArrayList<String>(),                   1},
+             {4, makeList(1,2,3), cycleRange(1,   152), makeList("BaseCalls/s_4_2_0002_qseq.txt"), 1},
+             {4, makeList(1,2,3), cycleRange(1,   10),  makeList("BaseCalls/s_4_1_0002_qseq.txt"), 1},
+             {4, makeList(1,2,3), cycleRange(1,   10),  makeList("BaseCalls/s_4_2_0002_qseq.txt"), 1},
+             {6, makeList(1),     cycleRange(1,   146), makeList("BaseCalls/s_6_2_0001_qseq.txt"), 78},
+             {6, makeList(1),     cycleRange(100, 110), makeList("BaseCalls/s_6_3_0001_qseq.txt"), 11},
+        };
+    }
+    @Test(dataProvider="failingQseqVerifyTestData")
+    public void failingVerifyTest_qseq(final int lane, List<Integer> tiles, final int [] cycles, final List<String> toDelete, int numErrors) {
+        IoUtil.copyDirectoryTree(new File("testdata/net/sf/picard/illumina/IlluminaTests/BasecallsDir"), basecallDir);
+
+        deleteRelativeFiles(toDelete);
+
+        final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, lane);
+        Assert.assertEquals(numErrors, fileUtil.qseq().verify(tiles, cycles).size());
+    }
+
+    @DataProvider(name="failingVerifyNoQSeq")
+    public Object[][] failingVerify_noQseq() {
+        return new Object[][] {
+            { makeList("BaseCalls/L007/C4.1/s_7_9.bcl"),                                 1},
+            { makeList("BaseCalls/L007/C20.1/s_7_11.bcl", "BaseCalls/L007/C20.1/s_7_12.bcl"), 2},
+            { makeList("BaseCalls/L007/C10.1/"), 1},
+            { makeList("L007/C1.1/s_7_1.cif", "L007/C20.1/s_7_12.cnf"), 2},
+
+            { makeList("L007/s_7_2.locs", "L007/s_7_3.locs", "L007/s_7_4.locs"),                                 3},
+            { makeList("BaseCalls/L007/C20.1/s_7_11.bcl", "BaseCalls/L007/C20.1/s_7_12.bcl", "L007/s_7_4.locs"), 3},
+            { makeList("BaseCalls/L007/s_7_0005.filter", "BaseCalls/L007/s_7_0011.filter", "BaseCalls/s_7_0002_barcode.txt"), 3},
+        };
+    }
+
+    @Test(dataProvider="failingVerifyNoQSeq")
+    public void failingVerifyTest_noQseq(final List<String> filesToDelete, final int expectedNumDifferences) {
+        for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES,   DEFAULT_NUM_ENDS);
+        }
+
+        deleteRelativeFiles(filesToDelete);
+
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE);
-        assertDefaults(fileUtil, null);
 
-        final IlluminaFileUtil fileUtil2 = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE+1);
-        Assert.assertEquals(fileUtil.getTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
-        assertDefaults(fileUtil2, DEFAULT_LANE+1);
+        int totalDifferences = 0;
+        List<String> differences = new ArrayList<String>();
+        for(final SupportedIlluminaFormat format : SupportedIlluminaFormat.values()) {
+            if(format != SupportedIlluminaFormat.Qseq) {
+                final List<String> curDiffs = fileUtil.getUtil(format).verify(DEFAULT_TILES, DEFAULT_CYCLES);
+                differences.addAll(curDiffs);
 
-        final IlluminaFileUtil fileUtil3 = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), DEFAULT_LANE+2);
-        Assert.assertEquals(fileUtil.getTiles(Arrays.asList(SupportedIlluminaFormat.values())), DEFAULT_TILES);
-        assertDefaults(fileUtil3, DEFAULT_LANE+2);
+                totalDifferences += curDiffs.size();
+            }
+        }
+
+        Assert.assertEquals(expectedNumDifferences, totalDifferences);
+
     }
 
     @DataProvider(name="missingTileFormats")
@@ -211,6 +304,60 @@ public class IlluminaFileUtilTest {
         };
     }
 
+    public static final void emptyRelativeFiles(final File baseFile, final List<String> relativeFilesToDelete) {
+        for(final String relativeFile : relativeFilesToDelete) {
+            final File actualFile = new File(baseFile, relativeFile);
+
+
+            if(!actualFile.exists()) {
+                throw new RuntimeException("Trying to empty a non-existent file" + actualFile.getAbsolutePath());
+            }
+
+            if(actualFile.isDirectory()) {
+                throw new RuntimeException("Trying to empty a directory(" + actualFile.getAbsolutePath() +")");
+            } else {
+                if(!actualFile.delete()) {
+                    throw new RuntimeException("Couldn't remove previous file when emptying(" + actualFile.getAbsolutePath() + ")");
+                } else {
+                    try {
+                        if(!actualFile.createNewFile()) {
+                            throw new RuntimeException("Couldn't create empty file: " + actualFile.getAbsolutePath() + ")");
+                        }
+                    } catch(IOException ioe) {
+                        throw new RuntimeException(ioe);
+                    }
+                }
+            }
+            if(!actualFile.exists()) {
+                throw new PicardException("File should exist: " + actualFile);
+            }
+        }
+    }
+
+    public static final void deleteRelativeFiles(final File baseFile, final List<String> relativeFilesToDelete) {
+        for(final String relativeFile : relativeFilesToDelete) {
+            final File actualFile = new File(baseFile, relativeFile);
+
+
+            if(!actualFile.exists()) {
+                throw new RuntimeException("Trying to delete a non-existent file" + actualFile.getAbsolutePath());
+            }
+
+            if(actualFile.isDirectory()) {
+                IoUtil.deleteDirectoryTree(actualFile);
+            } else {
+                actualFile.delete();
+            }
+            if(actualFile.exists()) {
+                throw new RuntimeException("File still exists after calling delete: " + actualFile);
+            }
+        }
+    }
+
+    public final void deleteRelativeFiles(final List<String> relativeFilesToDelete) {
+        deleteRelativeFiles(intensityDir, relativeFilesToDelete);
+    }
+
     @Test(dataProvider="missingTileFormats")
     public void missingTileTest(final int lane,
                                 final List<SupportedIlluminaFormat> formats,
@@ -218,24 +365,15 @@ public class IlluminaFileUtilTest {
                                 final List<String> relativeFilesToDelete,
                                 final String compression) {
         for(final SupportedIlluminaFormat format : formats) {
-            makeFiles(format, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
+            makeFiles(format, intensityDir, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
         }
 
-        for(final String relativeFile : relativeFilesToDelete) {
-            final File actualFile = new File(intensityDir, relativeFile);
-            if(!actualFile.exists()) {
-                throw new PicardException("Trying to delete a non-existent file" + actualFile.getAbsolutePath());
-            }
-            actualFile.delete();
-            if(actualFile.exists()) {
-                throw new PicardException("File still exists after calling delete: " + actualFile);
-            }
-        }
+        deleteRelativeFiles(relativeFilesToDelete);
 
         PicardException pExc = null;
         try{
             final IlluminaFileUtil fUtil = new IlluminaFileUtil(new File(intensityDir, "BaseCalls"), lane);
-            fUtil.getTiles(formatsToGetTiles);
+            fUtil.getActualTiles(formatsToGetTiles);
         } catch(final PicardException exception) {
             pExc = exception;
         }
@@ -291,7 +429,7 @@ public class IlluminaFileUtilTest {
 
     @Test(dataProvider="perTileFileFormats")
     public void perTileFileUtilsTest(final SupportedIlluminaFormat format, final String compression, final boolean longFormat, final String parentDir) {
-        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
+        makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
         final IlluminaFileUtil.PerTileFileUtil ptfu = (IlluminaFileUtil.PerTileFileUtil)fileUtil.getUtil(format);
@@ -388,6 +526,10 @@ public class IlluminaFileUtilTest {
         Assert.assertTrue(tiles.isEmpty());
     }
 
+    public static int [] cycleRange(final Range range) {
+        return cycleRange(range.start, range.end);
+    }
+
     public static int [] cycleRange(final int start, final int end) {
         final int [] cycles = new int[end - start + 1];
         for(int i = 0; i < cycles.length; i++) {
@@ -417,13 +559,13 @@ public class IlluminaFileUtilTest {
     @Test(dataProvider="perTilePerCycleFileFormats")
     public void perTilePerCycleFileUtilsTest(final SupportedIlluminaFormat format, final String parentDir, final int [] cycles, boolean createEarlySkippedCycles, boolean createLateSkippedCycles) {
         if(createEarlySkippedCycles) {
-            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(1, cycles[0]), DEFAULT_NUM_ENDS, null);
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, cycleRange(1, cycles[0]), DEFAULT_NUM_ENDS, null);
         }
 
-        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycles, DEFAULT_NUM_ENDS, null);
+        makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, cycles, DEFAULT_NUM_ENDS, null);
 
         if(createLateSkippedCycles) {
-            makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(cycles[cycles.length-1] + 1, DEFAULT_LAST_CYCLE), DEFAULT_NUM_ENDS, null);
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, cycleRange(cycles[cycles.length-1] + 1, DEFAULT_LAST_CYCLE), DEFAULT_NUM_ENDS, null);
         }
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
@@ -441,18 +583,30 @@ public class IlluminaFileUtilTest {
         Assert.assertTrue(noFilesPcfu.getFiles(DEFAULT_TILES).isEmpty());
     }
 
-    @Test(expectedExceptions = PicardException.class)
-    public void perTilePerCycleFileUtilsMissingCycleTest() {
+    @DataProvider(name="missingCycleDataRanges")
+    public Object[][] missingCycleDataRanges() {
+        return new Object[][] {
+            {makeList(new Range(10,15))},
+            {makeList(new Range(9,12), new Range(14,15))}
+        };
+    }
+
+    @Test(expectedExceptions = PicardException.class, dataProvider="missingCycleDataRanges")
+    public void perTilePerCycleFileUtilsMissingCycleTest(final List<Range> cycleRangesToMake) {
         final SupportedIlluminaFormat format = SupportedIlluminaFormat.Bcl;
         final String parentDir = "BaseCalls/" + laneDir(DEFAULT_LANE);
-        makeFiles(format, DEFAULT_LANE, DEFAULT_TILES, cycleRange(10, 15), DEFAULT_NUM_ENDS, null);
+
+        for(final Range range : cycleRangesToMake) {
+            makeFiles(format, intensityDir, DEFAULT_LANE, DEFAULT_TILES, cycleRange(range), DEFAULT_NUM_ENDS, null);
+        }
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, DEFAULT_LANE);
         final IlluminaFileUtil.PerTilePerCycleFileUtil pcfu = (IlluminaFileUtil.PerTilePerCycleFileUtil)fileUtil.getUtil(format);
 
         Assert.assertTrue(pcfu.filesAvailable());
-        testDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycleRange(9,16));
-        testSubsetDefaultPerTilePerCycleUtil(pcfu, (parentDir == null) ? intensityDir : new File(intensityDir, parentDir), cycleRange(9,16));
+        int [] cycles = cycleRange(9,16);
+        CycleIlluminaFileMap cfm = pcfu.getFiles(cycles);
+        cfm.assertValid(DEFAULT_TILES, cycles);
     }
 
     @DataProvider(name="qseqTestData")
@@ -467,7 +621,7 @@ public class IlluminaFileUtilTest {
 
     @Test(dataProvider="qseqTestData")
     public void qseqFileUtilTest(final int lane, final String compression) {
-        makeFiles(SupportedIlluminaFormat.Qseq, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
+        makeFiles(SupportedIlluminaFormat.Qseq, intensityDir, lane, DEFAULT_TILES, DEFAULT_CYCLES, DEFAULT_NUM_ENDS, compression);
 
         final IlluminaFileUtil fileUtil = new IlluminaFileUtil(basecallDir, lane);
         final IlluminaFileUtil.QSeqIlluminaFileUtil qseq = fileUtil.qseq();
@@ -527,10 +681,10 @@ public class IlluminaFileUtilTest {
         return new File(basecallDir, "s_" + lane +"_" + end + "_" + longTile(tile,true) + "_qseq.txt" + (compression != null ? compression : ""));
     }
 
-    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int [] cycles, final int ends) {
-        makeFiles(format, lane, tiles, cycles, ends, null);
+    public static void makeFiles(final SupportedIlluminaFormat format, final File intensityDir, int lane, List<Integer> tiles, final int [] cycles, final int ends) {
+        makeFiles(format, intensityDir, lane, tiles, cycles, ends, null);
     }
-    private void makeFiles(final SupportedIlluminaFormat format, int lane, List<Integer> tiles, final int [] cycles, final int ends, final String compression) {
+    public static void makeFiles(final SupportedIlluminaFormat format, final File intensityDir, int lane, List<Integer> tiles, final int [] cycles, final int ends, final String compression) {
         String laneDir = String.valueOf(lane);
         while(laneDir.length() < 3) {
             laneDir = "0" + laneDir;

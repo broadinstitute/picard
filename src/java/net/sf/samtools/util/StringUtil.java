@@ -50,23 +50,11 @@ public class StringUtil {
         return ret.toString();
     }
 
-    /**
-     *
-     * @param separator String to interject between each string in strings arg
-     * @param strings List of strings to be joined.
-     * @return String that concatenates each item of strings arg, with separator btw each of them.
-     */
-    public static String join(final String separator, final String... strings) {
-        if (strings.length == 0) {
-            return "";
-        }
-        final StringBuilder ret = new StringBuilder(strings[0]);
-        for (int i = 1; i < strings.length; ++i) {
-            ret.append(separator);
-            ret.append(strings[i]);
-        }
-        return ret.toString();
+    public static <T> String join(final String separator, final T... objs) {
+        final List<T> values = Arrays.asList(objs);
+        return join(separator, values);
     }
+
 
     /**
      * Split the string into tokens separated by the given delimiter.  Profiling has
@@ -148,18 +136,7 @@ public class StringUtil {
 
     /**
      * @param b ASCII character
-     * @return lowercase version of arg if it was uppercase, otherwise returns arg 
-     */
-    public static byte toLowerCase(final byte b) {
-        if (b < 'A' || b > 'Z') {
-            return b;
-        }
-        return (byte)(b - UPPER_CASE_OFFSET);
-    }
-
-    /**
-     * @param b ASCII character
-     * @return uppercase version of arg if it was lowercase, otherwise returns arg 
+     * @return uppercase version of arg if it was lowercase, otherwise returns arg
      */
     public static byte toUpperCase(final byte b) {
         if (b < 'a' || b > 'z') {
