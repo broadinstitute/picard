@@ -384,7 +384,7 @@ public class IlluminaFileUtil {
         private final CycleIlluminaFileMap cycleFileMap;
         private List<Integer> tiles;
         private int [] detectedCycles;
-        private Set<Integer> lazyDetectedCyclesSet;
+       // private Set<Integer> detectedCyclesSet;
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern, final File base) {
             super(makeLTRegex(fileNameEndPattern), makeLTRegex(fileNameEndPattern, lane), fileNameEndPattern, base);
@@ -395,7 +395,12 @@ public class IlluminaFileUtil {
             } else {
                 this.tiles = new ArrayList<Integer>();
             }
-            lazyDetectedCyclesSet = null;
+
+            /*
+            detectedCyclesSet = new TreeSet<Integer>();
+            for(final Integer cycle : detectedCycles) {
+                detectedCyclesSet.add(cycle);
+            }*/
         }
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern) {
@@ -504,11 +509,9 @@ public class IlluminaFileUtil {
         }
 
         private int [] removeNonexistantCycles(final int[] cycles) {
-            if(lazyDetectedCyclesSet == null) {
-                lazyDetectedCyclesSet = new TreeSet<Integer>();
-                for(final Integer cycle : detectedCycles) {
-                    lazyDetectedCyclesSet.add(cycle);
-                }
+            final TreeSet<Integer> detectedCyclesSet = new TreeSet<Integer>();
+            for(final Integer cycle : detectedCycles) {
+                detectedCyclesSet.add(cycle);
             }
 
             final TreeSet<Integer> inputCyclesSet = new TreeSet<Integer>();
@@ -518,7 +521,7 @@ public class IlluminaFileUtil {
 
             //This also sorts outputCycles
             final int [] outputCycles;
-            inputCyclesSet.retainAll(lazyDetectedCyclesSet);
+            inputCyclesSet.retainAll(detectedCyclesSet);
             outputCycles = new int[inputCyclesSet.size()];
             int i = 0;
             for(final Integer element : inputCyclesSet) {
