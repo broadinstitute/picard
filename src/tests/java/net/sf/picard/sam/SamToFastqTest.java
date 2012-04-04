@@ -50,9 +50,10 @@ public class SamToFastqTest {
     @DataProvider(name = "okFiles")
     public Object[][] okFiles() {
         return new Object[][] {
-            {"ok/sorted-pair.sam"}, // 5 sorted pairs (10 records) - mate1, mate2
-            {"ok/last-pair-mates-flipped.sam" }, // 4 pairs, :05 mate2, mate1
-            {"ok/first-mate-bof-last-mate-eof.sam"}, // :01 mate1, 4 pairs, :01 mate2
+                {"ok/sorted-pair.sam"}, // 5 sorted pairs (10 records) - mate1, mate2
+                {"ok/sorted-pair-no-rg.sam"}, // 5 sorted pairs (10 records) - mate1, mate2, no read group
+                {"ok/last-pair-mates-flipped.sam" }, // 4 pairs, :05 mate2, mate1
+                {"ok/first-mate-bof-last-mate-eof.sam"}, // :01 mate1, 4 pairs, :01 mate2
         };
     }
 
