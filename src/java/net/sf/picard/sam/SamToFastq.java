@@ -194,37 +194,37 @@ public class SamToFastq extends CommandLineProgram {
 
         final Map<SAMReadGroupRecord, List<FastqWriter>> writerMap = new HashMap<SAMReadGroupRecord, List<FastqWriter>>();
 
-        for (final SAMReadGroupRecord rg : samReadGroupRecords) {
+        if (!OUTPUT_PER_RG) {
+            // If we're not outputting by read group, there's only
+            // one writer for each end.
             final List<FastqWriter> fqw = new ArrayList<FastqWriter>();
 
-            if (!OUTPUT_PER_RG) {
-                // If we're not outputting by read group, there's only
-                // one writer for each read.
+            IoUtil.assertFileIsWritable(FASTQ);
+            IoUtil.openFileForWriting(FASTQ);
+            fqw.add(factory.newWriter(FASTQ));
 
-                if (writerMap.isEmpty()) {
-                    IoUtil.assertFileIsWritable(FASTQ);
-                    IoUtil.openFileForWriting(FASTQ);
-                    fqw.add(factory.newWriter(FASTQ));
+            if (SECOND_END_FASTQ != null) {
+                IoUtil.assertFileIsWritable(SECOND_END_FASTQ);
+                IoUtil.openFileForWriting(SECOND_END_FASTQ);
+                fqw.add(factory.newWriter(SECOND_END_FASTQ));
+            }
+            // Store in map with null key, in case there are reads without read group.
+            writerMap.put(null, fqw);
+            // Also store for every read group in header.
+            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
+                writerMap.put(rg, fqw);
+            }
+        } else {
+            for (final SAMReadGroupRecord rg : samReadGroupRecords) {
+                final List<FastqWriter> fqw = new ArrayList<FastqWriter>();
 
-                    if (SECOND_END_FASTQ != null) {
-                        IoUtil.assertFileIsWritable(SECOND_END_FASTQ);
-                        IoUtil.openFileForWriting(SECOND_END_FASTQ);
-                        fqw.add(factory.newWriter(SECOND_END_FASTQ));
-                    }
-
-                    writerMap.put(rg, fqw);
-                } else {
-                    writerMap.put(rg, writerMap.values().iterator().next());
-                }
-
-            } else {
                 fqw.add(factory.newWriter(makeReadGroupFile(rg, "_1")));
                 writerMap.put(rg, fqw);
             }
         }
-
         return writerMap;
     }
+
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
         String fileName = readGroup.getPlatformUnit();
