@@ -33,11 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
@@ -65,6 +61,7 @@ import org.testng.annotations.Test;
  * Tests the ability of the SamFileHeaderMerger class to merge sequence dictionaries.
  */
 public class SamFileHeaderMergerTest {
+
     private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
 
     /** tests that if we've set the merging to false, we get a PicardException for bam's with different dictionaries. */
@@ -174,6 +171,7 @@ public class SamFileHeaderMergerTest {
             headers.add(in.getFileHeader());
         }
         final MergingSamRecordIterator iterator;
+
         final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers,true);
         iterator = new MergingSamRecordIterator(headerMerger, readers, false);
 
@@ -211,10 +209,11 @@ public class SamFileHeaderMergerTest {
 
         return new Object[][] {
             {
-                new File[] {
-                        new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file1.sam"),
-                        new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file2.sam") },
-                new File(TEST_DATA_DIR, "MergeSamFiles/case1/expected_output.sam")
+
+            new File[] {
+                    new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file1.sam"),
+                    new File(TEST_DATA_DIR, "MergeSamFiles/case1/chr11sub_file2.sam") },
+            new File(TEST_DATA_DIR, "MergeSamFiles/case1/expected_output.sam")
             }, {
                 new File[] {
                         new File(TEST_DATA_DIR, "MergeSamFiles/case2/chr11sub_file1.sam"),
@@ -235,5 +234,23 @@ public class SamFileHeaderMergerTest {
         SAMFileReader reader2 = new SAMFileReader(new ByteArrayInputStream(StringUtil.stringToBytes(sd2)));
         final List<SAMFileHeader> inputHeaders = Arrays.asList(reader1.getFileHeader(), reader2.getFileHeader());
         new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, inputHeaders, true);
+    }
+
+    @DataProvider(name="fourDigitBase36StrPositiveData")
+    public Object[][] positiveFourDigitBase36StrData() {
+        return new Object[][] {
+            {0, "0"},
+            {15, "F"},
+            {36, "10"},
+            {1200000, "PPXC"},
+            {36*36*36*36 - 2, "ZZZY"},
+            {36*36*36*36 - 1, "ZZZZ"},
+        };
+    }
+
+    @Test(dataProvider = "fourDigitBase36StrPositiveData")
+    public void fourDigitBase36StrPositiveTest(final int toConvert, final String expectedValue) {
+        final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, new ArrayList<SAMFileHeader>(),true);
+        Assert.assertEquals(expectedValue, headerMerger.positiveFourDigitBase36Str(toConvert));
     }
 }

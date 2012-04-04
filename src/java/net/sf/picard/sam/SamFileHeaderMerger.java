@@ -41,10 +41,31 @@ import net.sf.samtools.util.SequenceUtil;
  * clash across input headers.
  */
 public class SamFileHeaderMerger {
+
+    /**
+     * A 4-digit base 36 number is going to be attached to colliding SAMFileHeaderRecords,
+     * To do this we first create an array of values to convert integer remainders into
+     * base 36 values, we use base 36 because we have 10 digits and 26 numbers
+     */
+    private static final char [] INT_TO_BASE36 = new char[36];
+    static {
+        int aVal    = (int) 'A';
+        int zeroVal = (int) '0';
+
+        for(int i = 0; i < 10; i++) {
+            INT_TO_BASE36[i] = (char)(zeroVal + i);
+        }
+
+        for(int i = 0; i < 26; i++) {
+            INT_TO_BASE36[i + 10] = (char)(aVal + i);
+        }
+    }
+
     //Super Header to construct
     private final SAMFileHeader mergedHeader;
     private Collection<SAMFileReader> readers;
     private final Collection<SAMFileHeader> headers;
+    private int recordCounter;
 
     //Translation of old group ids to new group ids
     private final Map<SAMFileHeader, Map<String, String>> samReadGroupIdTranslation =
@@ -199,6 +220,7 @@ public class SamFileHeaderMerger {
 
         final List<SAMReadGroupRecord> result = new LinkedList<SAMReadGroupRecord>();
 
+        recordCounter = 0;
         hasReadGroupCollisions = mergeHeaderRecords(readGroupsToProcess, READ_GROUP_RECORD_FACTORY, idsThatAreAlreadyTaken, samReadGroupIdTranslation, result);
 
         //sort the result list by record id
@@ -234,6 +256,8 @@ public class SamFileHeaderMerger {
             }
             idsThatAreAlreadyTaken.clear();
         }
+
+        recordCounter = 0;
 
         //A program group header (lets say ID=2 PN=B PP=1) may have a PP (previous program) attribute which chains it to
         //another program group header (lets say ID=1 PN=A) to indicate that the given file was
@@ -394,7 +418,7 @@ public class SamFileHeaderMerger {
         //header records which have both identical ids and identical attributes. The List of
         //SAMFileHeaders keeps track of which readers these header record(s) came from.
         final Map<String, Map<RecordType, List<SAMFileHeader>>> idToRecord =
-            new HashMap<String, Map<RecordType, List<SAMFileHeader>>>();
+            new LinkedHashMap<String, Map<RecordType, List<SAMFileHeader>>>();
 
         //Populate the idToRecord and seenIds data structures
         for (final HeaderRecordAndFileHeader<RecordType> pair : headerRecords) {
@@ -434,14 +458,15 @@ public class SamFileHeaderMerger {
                     //with this id, they will be remapped in the 'else'.
                     newId = recordId;
                     idsThatAreAlreadyTaken.add(recordId);
+                    ++recordCounter;
                 } else {
                     //there is more than one record with this id.
                     hasCollisions = true;
 
-                    //find a unique newId for this record
-                    int idx=1;
-                    while(idsThatAreAlreadyTaken.contains(newId = recordId + "." + Integer.toString(idx++)))
-                        ;
+                    //Below we tack on one of roughly 1.7 million possible 4 digit base36 at random we do this because
+                    //our old process of just counting from 0 upward and adding that to the previous id led to 1000s of hits on
+                    //idsThatAreAlreadyTaken.contains just to resolve 1 collision when merging 1000s of similarly processed bams
+                    while(idsThatAreAlreadyTaken.contains(newId = recordId + "." + positiveFourDigitBase36Str(recordCounter++)));
 
                     idsThatAreAlreadyTaken.add( newId );
                 }
@@ -460,6 +485,27 @@ public class SamFileHeaderMerger {
         }
 
         return hasCollisions;
+    }
+
+    /**
+     * Convert an integer to base36, protected solely for testing
+     * @param leftOver Both the initial value and the running quotient
+     * @return A four digit string composed of base 36 symbols
+     */
+    public static String positiveFourDigitBase36Str(int leftOver) {
+        if(leftOver == 0) {
+            return "0";
+        }
+
+        final StringBuilder builder = new StringBuilder(10);
+
+        while(leftOver > 0) {
+            final int valueIndex = leftOver % 36;
+            builder.append(INT_TO_BASE36[valueIndex]);
+            leftOver /= 36;
+        }
+
+        return builder.reverse().toString();
     }
 
 
