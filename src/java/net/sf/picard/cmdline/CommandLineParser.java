@@ -75,6 +75,15 @@ public class CommandLineParser {
     private static final String OPTIONS_FILE = "OPTIONS_FILE";
 
     private static final String PRECEDENCE_SYMBOL = "++";
+
+    /** name, shortName, description for options built in to framework */
+    private static final String[][] FRAMEWORK_OPTION_DOC = {
+            {"--help", "-h", "Displays options specific to this tool."},
+            {"--stdhelp", "-H", "Displays options specific to this tool AND " +
+                    "options common to all Picard command line tools."},
+            {"--version", null, "Displays program version."}
+    };
+
     private final Set<String> optionsThatCannotBeOverridden = new HashSet<String>();
 
     /**
@@ -97,7 +106,7 @@ public class CommandLineParser {
      * @return
      */
     public static boolean hasWebDocumentation(final Class clazz) {
-        for(String pkg : PACKAGES_WITH_WEB_DOCUMENTATION) {
+        for(final String pkg : PACKAGES_WITH_WEB_DOCUMENTATION) {
             if (clazz.getPackage().getName().startsWith(pkg)) {
                 return true;
             }
@@ -198,10 +207,9 @@ public class CommandLineParser {
         stream.println("\nVersion: " + getVersion());
         stream.println("\n\nOptions:\n");
 
-        printOptionParamUsage(stream, "--help", "-h", null, "Displays options specific to this tool.");
-        printOptionParamUsage(stream, "--stdhelp", "-H", null, "Displays options specific to this tool AND " +
-                "options common to all Picard command line tools.");
-        printOptionParamUsage(stream, "--version", null, null, "Displays program version.");
+        for (final String[] optionDoc : FRAMEWORK_OPTION_DOC) {
+            printOptionParamUsage(stream, optionDoc[0], optionDoc[1], null, optionDoc[2]);
+        }
 
         if (!optionDefinitions.isEmpty()) {
             for (final OptionDefinition optionDefinition : optionDefinitions) {
@@ -226,7 +234,7 @@ public class CommandLineParser {
         }
     }
 
-    public void htmlUsage(final PrintStream stream, final String programName, boolean printCommon) {
+    public void htmlUsage(final PrintStream stream, final String programName, final boolean printCommon) {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a name=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
@@ -244,9 +252,16 @@ public class CommandLineParser {
         stream.println("<br/>");
     }
 
-    public void htmlPrintOptions(PrintStream stream, boolean printCommon) {
+    public void htmlPrintOptions(final PrintStream stream, final boolean printCommon) {
         stream.println("<table>");
         stream.println("<tr><th>Option</th><th>Description</th></tr>");
+        if (printCommon) {
+            for (final String[] optionDoc : FRAMEWORK_OPTION_DOC) {
+                stream.println("<tr><td>" + optionDoc[0] + "</td><td>" +
+                        htmlEscape(optionDoc[2]) + "</td></tr>");
+
+            }
+        }
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!optionDefinition.isCommon || printCommon) {
                 printHtmlOptionUsage(stream, optionDefinition);
@@ -374,7 +389,7 @@ public class CommandLineParser {
                             " positional arguments must be specified.");
                     return false;
                 }
-                for( Object posArg : c ) {
+                for( final Object posArg : c ) {
                     commandLineString.append(" " + posArg.toString());
                 }
             }
@@ -551,7 +566,7 @@ public class CommandLineParser {
 
     private void printHtmlOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
         final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
-        String optionLabel = optionDefinition.name + "=" + type;
+        final String optionLabel = optionDefinition.name + "=" + type;
         stream.println("<tr><td>" + optionLabel + "</td><td>" +
                 htmlEscape(makeOptionDescription(optionDefinition)) + "</td></tr>");
     }
@@ -785,7 +800,7 @@ public class CommandLineParser {
         }
     }
 
-    private void createCollection(final Field field, final Object callerOptions, String annotationType) throws IllegalAccessException {
+    private void createCollection(final Field field, final Object callerOptions, final String annotationType) throws IllegalAccessException {
         try {
             field.set(callerOptions, field.getType().newInstance());
         } catch (Exception ex) {
