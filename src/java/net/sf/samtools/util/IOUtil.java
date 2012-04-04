@@ -106,6 +106,13 @@ public class IOUtil {
         return f;
     }
 
+    /** Creates a new tmp file on one of the potential filesystems that has at least 5GB free. */
+    public static File newTempFile(final String prefix, final String suffix,
+                                   final File[] tmpDirs) throws IOException {
+        return newTempFile(prefix, suffix, tmpDirs, FIVE_GBS);
+    }
+
+
     /** Returns a default tmp directory. */
     public static File getDefaultTmpDir() {
         final String user = System.getProperty("user.name");
