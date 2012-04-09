@@ -447,6 +447,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         private SAMRecord mNextRecord = null;
         private final BAMRecordCodec bamRecordCodec;
         private long samRecordIndex = 0; // Records at what position (counted in records) we are at in the file
+        private boolean isClosed = false;
 
         BAMFileIterator() {
             this(true);
@@ -466,17 +467,22 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         }
 
         public void close() {
-            if (mCurrentIterator != null && this != mCurrentIterator) {
-                throw new IllegalStateException("Attempt to close non-current iterator");
+            if (!isClosed) {
+                if (mCurrentIterator != null && this != mCurrentIterator) {
+                    throw new IllegalStateException("Attempt to close non-current iterator");
+                }
+                mCurrentIterator = null;
+                isClosed = true;
             }
-            mCurrentIterator = null;
         }
 
         public boolean hasNext() {
+            if (isClosed) throw new IllegalStateException("Iterator has been closed");
             return (mNextRecord != null);
         }
 
         public SAMRecord next() {
+            if (isClosed) throw new IllegalStateException("Iterator has been closed");
             final SAMRecord result = mNextRecord;
             advance();
             return result;
@@ -644,6 +650,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         private final int mRegionStart;
         private final int mRegionEnd;
         private final QueryType mQueryType;
+        private boolean isClosed = false;
 
         public BAMQueryFilteringIterator(final CloseableIterator<SAMRecord> iterator,final String sequence, final int start, final int end, final QueryType queryType) {
             this.wrappedIterator = iterator;
@@ -663,6 +670,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
          * Returns true if a next element exists; false otherwise.
          */
         public boolean hasNext() {
+            if (isClosed) throw new IllegalStateException("Iterator has been closed");
             return mNextRecord != null;
         }
 
@@ -682,10 +690,13 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
          * Closes down the existing iterator.
          */
         public void close() {
+            if (!isClosed) {
             if (this != mCurrentIterator) {
                 throw new IllegalStateException("Attempt to close non-current iterator");
             }
-            mCurrentIterator = null;
+                mCurrentIterator = null;
+                isClosed = true;
+            }
         }
 
         /**
