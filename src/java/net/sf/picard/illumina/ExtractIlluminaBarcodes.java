@@ -117,7 +117,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     private final Log log = Log.getInstance(ExtractIlluminaBarcodes.class);
 
+    /** The read structure of the actual Illumina Run, i.e. the readStructure of the input data */
     private ReadStructure readStructure;
+
+    /** The read structure of the output cluster data, this may be different from the input readStructure if there are SKIPs in the input readStructure */
+    private ReadStructure outputReadStructure;
+
     private IlluminaDataProviderFactory factory;
 
     private final Map<String,BarcodeMetric> barcodeToMetrics = new LinkedHashMap<String,BarcodeMetric>();
@@ -167,8 +172,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<PerTileBarcodeExtractor>(factory.getAvailableTiles().size());
         for (final int tile : factory.getAvailableTiles()) {
 
-            final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(
-                tile, factory.makeDataProvider(Arrays.asList(tile)), getBarcodeFile(tile));
+            final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(tile, getBarcodeFile(tile));
             pool.submit(extractor);
             extractors.add(extractor);
         }
@@ -285,8 +289,14 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
 
-        readStructure = new ReadStructure(READ_STRUCTURE);
+        /**
+         * In extract illumina barcodes we NEVER want to look at the template reads, therefore replace them with skips because
+         * IlluminaDataProvider and its factory will not open these nor produce ClusterData with the template reads in them, thus reducing
+         * the file IO and value copying done by the data provider
+         */
+        readStructure = new ReadStructure(READ_STRUCTURE.replaceAll("T", "S"));
         factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+        outputReadStructure = factory.getOutputReadStructure();
 
         if (BARCODE_FILE != null) {
             parseBarcodeFile(messages);
@@ -462,7 +472,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             implements Runnable {
 
         private final int tile;
-        private final IlluminaDataProvider provider;
         private final File barcodeFile;
         private final Map<String,BarcodeMetric> metrics;
         private final BarcodeMetric noMatch;
@@ -482,12 +491,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         /**
          * Constructor
          * @param tile              The number of the tile being processed; used for logging only.
-         * @param provider          The IlluminaDataProvider for the tile.
          * @param barcodeFile       The file to write the barcodes to
          */
-        public PerTileBarcodeExtractor(final int tile, final IlluminaDataProvider provider, final File barcodeFile) {
+        public PerTileBarcodeExtractor(final int tile, final File barcodeFile) {
             this.tile = tile;
-            this.provider = provider;
             this.barcodeFile = barcodeFile;
             this.metrics = new LinkedHashMap<String,BarcodeMetric>(barcodeToMetrics.size());
             for (final String key : barcodeToMetrics.keySet()) {
@@ -507,7 +514,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          */
         synchronized public void run() {
             log.info("Extracting barcodes for tile " + tile);
-            final int [] barcodeIndices = readStructure.barcodes.getIndices();
+
+            //Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
+            //is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
+            //so they are not all waiting for each others file operations
+            final IlluminaDataProvider provider = factory.makeDataProvider(Arrays.asList(tile));
+
+            //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
+            //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
+            final int [] barcodeIndices = outputReadStructure.barcodes.getIndices();
             final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
             try {
                 final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];

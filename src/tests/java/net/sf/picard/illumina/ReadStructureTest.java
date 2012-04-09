@@ -1,8 +1,11 @@
 package net.sf.picard.illumina;
 
+import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.Range;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.illumina.parser.ReadDescriptor;
 import net.sf.picard.illumina.parser.ReadType;
+import net.sf.samtools.util.CoordMath;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -144,5 +147,35 @@ public class ReadStructureTest {
     @Test(dataProvider = "invalidReadStructuresFromList", expectedExceptions = IllegalArgumentException.class)
     public void testInvalidReadStructureFromList(final String rsString, final List<ReadDescriptor> descriptors) {
         final ReadStructure readStructure = new ReadStructure(descriptors);
+    }
+
+    @DataProvider(name="substructuresToReadStructureData")
+    public Object [][] substructureToReadStructureData() {
+        return new Object[][] {
+            {new ReadStructure("10T10T").templates,      "10T10T"  },
+            {new ReadStructure("10T8B10T").nonSkips,     "10T8B10T"},
+            {new ReadStructure("8S10T8B8S10T").nonSkips, "10T8B10T"},
+            {new ReadStructure("10T8S8S10T").skips,      "8S8S"    },
+            {new ReadStructure("8B").barcodes,           "8B"      }
+        };
+    }
+
+    @Test(dataProvider = "substructuresToReadStructureData")
+    public void testSubstructureToReadStructure(final ReadStructure.Substructure substructure, final String outputRs) {
+        Assert.assertEquals(substructure.toReadStructure().toString(), outputRs);
+    }
+
+    @DataProvider(name="substructureToReadStructureNegativeData")
+    public Object[][] substructureToReadStructureNegativeData() {
+        return new Object[][] {
+            {new ReadStructure("10T").barcodes   },
+            {new ReadStructure("10S").nonSkips   },
+            {new ReadStructure("10S8B").templates},
+        };
+    }
+
+    @Test(dataProvider = "substructureToReadStructureNegativeData", expectedExceptions = IllegalArgumentException.class)
+    public void testSubstructureToReadStructure(final ReadStructure.Substructure substructure) {
+        substructure.toReadStructure().toString();
     }
 }
