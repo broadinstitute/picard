@@ -197,7 +197,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             populateWritersByBarcode();
         }
 
-        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, readStructure, ADAPTERS_TO_CHECK);
+        /**
+         * Be sure to pass the outputReadStructure to IlluminaBasecallsToSamConverter, which reflects the structure of the output cluster
+         * data which may be different from the input read structure (specifically if there are skips).
+         */
+        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, factory.getOutputReadStructure(), ADAPTERS_TO_CHECK);
 
         // Process each tile separately, so the order of tile processing is determined by the
         // order of tiles list.  The SAMRecords produced will be cached and sorted a tile

@@ -147,6 +147,14 @@ public class IlluminaDataProviderFactory {
         outputMapping  = new OutputMapping(readStructure);
     }
 
+    /** Sometimes (in the case of skipped reads) the logical read structure of the output cluster data is different from the input
+     * readStructure
+     * @return The ReadStructure describing the output cluster data
+     */
+    public ReadStructure getOutputReadStructure() {
+        return outputMapping.getOutputReadStructure();
+    }
+
     /**
      * Return the list of tiles available for this flowcell and lane.  These are in ascending numerical order.
      *

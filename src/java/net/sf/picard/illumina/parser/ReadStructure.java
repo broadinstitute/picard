@@ -308,6 +308,18 @@ public class ReadStructure {
             }
             return cycles;
         }
+
+        /** Create a ReadStructure from this substructure composed of only the descriptors contained in this substructure, Any
+         * ReadDescriptors not in this substructure are treated as if they don't exist (e.g. if you have a readStructure
+         * (36T8S8B36T) and this substructure consists of all the non-skipped reads than toReadStructure would return
+         * (36T8B36T) in ReadStructure form*/
+        public ReadStructure toReadStructure() {
+            final List<ReadDescriptor> descriptors = new ArrayList<ReadDescriptor>(numDescriptors);
+            for(final ReadDescriptor rd : this) {
+                descriptors.add(rd);
+            }
+            return new ReadStructure(descriptors);
+        }
     }
 
     /** An iterator over a Substructure's ReadDescriptors */

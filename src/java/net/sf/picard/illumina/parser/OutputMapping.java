@@ -50,6 +50,9 @@ public class OutputMapping {
      * cycles that IlluminaDataProvider should output in a ClusterData object */
     private final ReadStructure.Substructure outputSubstructure;
 
+    /** The original read structure without any skips */
+    private final ReadStructure outputReadStructure;
+
     /**
      * Create an OutputMapping from a readStructure, currently the outputSubstructure just references the readStructure.nonSkips
      * Substructure
@@ -58,6 +61,7 @@ public class OutputMapping {
     public OutputMapping(final ReadStructure readStructure) {
         this.outputSubstructure = readStructure.nonSkips;
         this.cycleToOutputIndex = makeCycleToOutputIndexArray(readStructure);
+        this.outputReadStructure = outputSubstructure.toReadStructure();
     }
 
     /** @return The number of reads that should be found in the output clusterData */
@@ -90,6 +94,10 @@ public class OutputMapping {
     /** @return An iterator over the read descriptors that describe the reads to be output*/
     public Iterable<ReadDescriptor> getOutputDescriptors() {
         return outputSubstructure;
+    }
+
+    public ReadStructure getOutputReadStructure() {
+        return outputReadStructure;
     }
 
     /**

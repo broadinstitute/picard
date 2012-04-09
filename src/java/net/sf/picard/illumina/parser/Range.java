@@ -29,7 +29,7 @@ import net.sf.picard.PicardException;
  * While structurally identical to CompositeIndex, this class is maintained as it makes code more readable when the two are used together (see QSeqParser)
  * @author jburke@broadinstitute.org
  */
-class Range {
+public class Range {
     public final int start;
     public final int end;
     public final int length;
