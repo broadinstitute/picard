@@ -271,6 +271,10 @@ public class ReadStructure {
             totalCycles      = totalLength;
         }
 
+        public ReadDescriptor get(final int index) {
+            return descriptors.get(descriptorIndices[index]);
+        }
+
         public boolean isEmpty() {
             return numDescriptors == 0;
         }
