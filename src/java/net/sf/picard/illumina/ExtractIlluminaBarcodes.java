@@ -106,6 +106,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     @Option(doc="Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
     public int MAX_NO_CALLS = 2;
+    
+    @Option(shortName="Q", doc="Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match!")
+    public int MINIMUM_BASE_QUALITY = 0;
 
     @Option(shortName="GZIP", doc="Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the filenames.")
     public boolean COMPRESS_OUTPUTS = false;
@@ -295,7 +298,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * the file IO and value copying done by the data provider
          */
         readStructure = new ReadStructure(READ_STRUCTURE.replaceAll("T", "S"));
-        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, IlluminaDataType.BaseCalls, IlluminaDataType.PF);
+        final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ? 
+                                             new IlluminaDataType[] {IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores}:
+                                             new IlluminaDataType[] {IlluminaDataType.BaseCalls, IlluminaDataType.PF};
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, datatypes);
         outputReadStructure = factory.getOutputReadStructure();
 
         if (BARCODE_FILE != null) {
@@ -468,25 +474,21 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     /**
      * Extracts barcodes and accumulates metrics for an entire tile.
      */
-    private class PerTileBarcodeExtractor
-            implements Runnable {
-
+    private class PerTileBarcodeExtractor implements Runnable {
         private final int tile;
         private final File barcodeFile;
         private final Map<String,BarcodeMetric> metrics;
         private final BarcodeMetric noMatch;
         private Exception exception = null;
+        private final boolean usingQualityScores= MINIMUM_BASE_QUALITY > 0;
 
-        /**
-         * Utility class to hang onto data about the best match for a given barcode
-         */
+        /** Utility class to hang onto data about the best match for a given barcode */
         class BarcodeMatch {
             boolean matched;
             String barcode;
             int mismatches;
             int mismatchesToSecondBest;
         }
-
 
         /**
          * Constructor
@@ -526,14 +528,16 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
             try {
                 final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
+                final byte qualityScores[][] = usingQualityScores ? new byte[barcodeIndices.length][] : null;
                 while (provider.hasNext()) {
                     // Extract the barcode from the cluster and write it to the file for the tile
                     final ClusterData cluster = provider.next();
                     for (int i = 0; i < barcodeIndices.length; i++) {
                         barcodeSubsequences[i] = cluster.getRead(barcodeIndices[i]).getBases();
+                        if (usingQualityScores) qualityScores[i] = cluster.getRead(barcodeIndices[i]).getQualities();
                     }
                     final boolean passingFilter = cluster.isPf();
-                    final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, passingFilter, metrics, noMatchMetric);
+                    final BarcodeMatch match = findBestBarcodeAndUpdateMetrics(barcodeSubsequences, qualityScores, passingFilter, metrics, noMatchMetric);
 
                     final String yOrN = (match.matched ? "Y" : "N");
 
@@ -547,7 +551,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 writer.close();
             }
             catch (Exception e) {
-                log.error("Error processing tile " + this.tile, e);
+                log.error(e, "Error processing tile ", this.tile);
                 this.exception = e;
             }
         }
@@ -558,7 +562,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * @param passingFilter PF flag for the current read
          * @return perfect barcode string, if there was a match within tolerance, or null if not.
          */
-        private BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte readSubsequences[][],
+        private BarcodeMatch findBestBarcodeAndUpdateMetrics(final byte[][] readSubsequences,
+                                                             final byte[][] qualityScores,
                                                              final boolean passingFilter,
                                                              final Map<String, BarcodeMetric> metrics,
                                                              final BarcodeMetric noMatchBarcodeMetric) {
@@ -578,7 +583,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
-                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences);
+                final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores);
                 if (numMismatches < numMismatchesInBestBarcode) {
                     if (bestBarcodeMetric != null) {
                         numMismatchesInSecondBestBarcode = numMismatchesInBestBarcode;
@@ -643,21 +648,19 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * Compare barcode sequence to bases from read
          * @return how many bases did not match
          */
-        private int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence) {
+        private int countMismatches(final byte[][] barcodeBytes, final byte[][] readSubsequence, final byte[][] qualities) {
             int numMismatches = 0;
             // Read sequence and barcode length may not be equal, so we just use the shorter of the two
             for (int j = 0; j < barcodeBytes.length; j++) {
                 final int basesToCheck = Math.min(barcodeBytes[j].length, readSubsequence[j].length);
                 for (int i = 0; i < basesToCheck; ++i) {
-                    if (!SequenceUtil.isNoCall(readSubsequence[j][i]) && !SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) {
-                        ++numMismatches;
+                    if (!SequenceUtil.isNoCall(readSubsequence[j][i])) {
+                        if (!SequenceUtil.basesEqual(barcodeBytes[j][i], readSubsequence[j][i])) ++numMismatches;
+                        else if (qualities != null && qualities[j][i] < MINIMUM_BASE_QUALITY)    ++numMismatches;
                     }
                 }
             }
             return numMismatches;
         }
-
-
     }
-
 }
