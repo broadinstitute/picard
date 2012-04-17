@@ -1511,7 +1511,7 @@ public class SAMRecord implements Cloneable
             }
             if (getSecondOfPairFlagUnchecked()) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
-                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_SECOND_OF_PAIR, "First of pair flag should not be set for unpaired read.", getReadName()));
+                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_SECOND_OF_PAIR, "Second of pair flag should not be set for unpaired read.", getReadName()));
             }
             if (getMateReferenceIndex() != NO_ALIGNMENT_REFERENCE_INDEX) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
