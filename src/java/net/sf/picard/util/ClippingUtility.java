@@ -129,7 +129,7 @@ public class ClippingUtility {
     public static String adapterTrimIlluminaPairedReads(final SAMRecord read1, final SAMRecord read2,
         final AdapterPair adapters, final int minMatchBases, final double maxErrorRate) {
 
-        adapterTrimIlluminaPairedReads(read1, read2, MIN_MATCH_PE_BASES, MAX_PE_ERROR_RATE, adapters);
+        adapterTrimIlluminaPairedReads(read1, read2, minMatchBases, maxErrorRate, adapters);
         return null;
     }
 
