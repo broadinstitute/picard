@@ -119,20 +119,26 @@ class QseqParser implements IlluminaParser<QseqReadData> {
     public List<QseqReadParser> makeReadParserList(final int lane, final OutputMapping outputMapping) {
         //Since there is not a one-to-one relationship with ReadDescriptors in the ReadStructure and QSeq reads,
         //we have to inspect all reads for there sizes and exclude those we don't need in the parser itself
-        final int [] readLengths = new int[tileMapByReadNumber.size()];
-        for(int i = 0; i < readLengths.length; i++) {
-            readLengths[i] = QseqReadParser.getReadLength(tileMapByReadNumber.get(i).firstEntry().getValue());
+        final int [] actualReadLengths = new int[tileMapByReadNumber.size()];
+        int availableCycles = 0;
+        for(int i = 0; i < actualReadLengths.length; i++) {
+            actualReadLengths[i] = QseqReadParser.getReadLength(tileMapByReadNumber.get(i).firstEntry().getValue());
+            availableCycles += actualReadLengths[i];
+        }
+
+        if(availableCycles < outputMapping.getTotalOutputCycles()) {
+            throw new PicardException("Expected output cycles (" + outputMapping.getTotalOutputCycles() + ") is greater than the number of cycles in Qseq files (" + availableCycles + ")");
         }
 
         //Parsers required to fill the output cycles specified by OutputMapping
-        final List<QseqReadParser> parsersList = new ArrayList<QseqReadParser>(readLengths.length);
+        final List<QseqReadParser> parsersList = new ArrayList<QseqReadParser>(actualReadLengths.length);
 
         //split expected output ranges so that no one output range spans multiple Qseq files but all cycles in outputMapping
         //are still in at least one range
-        final List<Range> splitOutputRanges         = splitOutputRangesOnQseqBoundaries(readLengths, outputMapping);
+        final List<Range> splitOutputRanges         = splitOutputRangesOnQseqBoundaries(actualReadLengths, outputMapping);
 
         //create a list of ranges(1 per read) of input indexes into the base/qual section of the qseq for each outputRages
-        final List<List<Range>> inputRangesPerRead  = outputRangesToInputRanges(readLengths, splitOutputRanges);
+        final List<List<Range>> inputRangesPerRead  = outputRangesToInputRanges(actualReadLengths, splitOutputRanges);
 
         //just a list of the number of input/output range pairs there are for each read
         final List<Integer> outputRangesPerRead = new ArrayList<Integer>(inputRangesPerRead.size());
