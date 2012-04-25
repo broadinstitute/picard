@@ -28,6 +28,7 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.Closeable;
+import java.util.List;
 
 /**
  * Misc utilities for working with Illuina specific files and data
@@ -179,6 +180,15 @@ public class IlluminaUtil {
         public byte[] get3PrimeAdapterBytesInReadOrder() { return threePrimeBytes; }
         public byte[] get5PrimeAdapterBytesInReadOrder()  { return fivePrimeReadOrderBytes; }
         public String getName() { return this.name(); }
+    }
+
+    /**
+     * Concatenates all the barcode sequences with BARCODE_DELIMITER
+     * @param barcodes
+     * @return A single string representation of all the barcodes
+     */
+    public static String barcodeSeqsToString(final List<String> barcodes) {
+        return barcodeSeqsToString(barcodes.toArray(new String[barcodes.size()]));
     }
 
     /**

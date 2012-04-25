@@ -24,6 +24,7 @@
 
 package net.sf.samtools.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Arrays;
 
@@ -36,16 +37,22 @@ public class StringUtil {
     /**
      * @param separator String to interject between each string in strings arg
      * @param objs List of objs to be joined
-     * @return String that concatenates the result of each item's to String method for all items in objs, with separator btw each of them.
+     * @return String that concatenates the result of each item's to String method for all items in objs, with separator between each of them.
      */
-    public static <T> String join(final String separator, final List<T> objs) {
+    public static <T> String join(final String separator, final Collection<T> objs) {
         if (objs.size() == 0) {
             return "";
         }
-        final StringBuilder ret = new StringBuilder(objs.get(0).toString());
-        for (int i = 1; i < objs.size(); ++i) {
-            ret.append(separator);
-            ret.append(objs.get(i));
+
+        boolean notFirst = false;
+
+        final StringBuilder ret = new StringBuilder();
+        for (final Object obj : objs) {
+            if(notFirst) {
+                ret.append(separator);
+            }
+            ret.append(obj.toString());
+            notFirst = true;
         }
         return ret.toString();
     }
