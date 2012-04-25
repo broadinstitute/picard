@@ -542,9 +542,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     final String yOrN = (match.matched ? "Y" : "N");
 
                     for (final byte[] bc : barcodeSubsequences) {
-                        writer.write(StringUtil.bytesToString(bc) + "\t");
+                        writer.write(StringUtil.bytesToString(bc));
                     }
-                    writer.write(yOrN + "\t" + match.barcode + "\t" + String.valueOf(match.mismatches) +
+                    writer.write("\t" + yOrN + "\t" + match.barcode + "\t" + String.valueOf(match.mismatches) +
                                  "\t" + String.valueOf(match.mismatchesToSecondBest));
                     writer.newLine();
                 }
