@@ -45,8 +45,9 @@ public class ReservedTagConstants {
      * The name of an attribute which stores the 1-based index of the start of
      * sequence within a read (in original orientation) that should be clipped
      * or trimmed before alignment and downstream use.
+     * The region to be clipped extends from this position to the end of the read.
      */
-     public static final String XT = "XT";
+    public static final String XT = "XT";
 
     /** The original sequence before 454 cafie and homopolymer correction */
     public static final String XS = "XS";
