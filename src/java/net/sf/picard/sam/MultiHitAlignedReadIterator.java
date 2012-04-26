@@ -58,10 +58,10 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
     // multiple alignments with equal mapping quality.
     private final Random random = new Random(1);
 
-    MultiHitAlignedReadIterator(CloseableIterator<SAMRecord> querynameOrderIterator) {
+    MultiHitAlignedReadIterator(final CloseableIterator<SAMRecord> querynameOrderIterator) {
         peekIterator = new PeekableIterator<SAMRecord>(new FilteringIterator(querynameOrderIterator,
                 new SamRecordFilter() {
-                    public boolean filterOut(SAMRecord record) {
+                    public boolean filterOut(final SAMRecord record) {
                         return record.getReadUnmappedFlag();
                     }
                     public boolean filterOut(final SAMRecord first, final SAMRecord second) {
@@ -127,8 +127,8 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
                 }
             }
         }
-        int firstEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.firstOfPairOrFragment);
-        int secondEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.secondOfPair);
+        final int firstEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.firstOfPairOrFragment);
+        final int secondEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.secondOfPair);
         if (firstEndPrimaryAlignmentIndex == -1 && secondEndPrimaryAlignmentIndex == -1) {
            hits.pickPrimaryAlignment();
         } else if (firstEndPrimaryAlignmentIndex != -1 && secondEndPrimaryAlignmentIndex != -1 &&
@@ -186,7 +186,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
         /**
          * @return Returns the ith hit for the first end, or null if the first end is not aligned.
          */
-        public SAMRecord getFirstOfPair(int i) {
+        public SAMRecord getFirstOfPair(final int i) {
             if (firstOfPairOrFragment.isEmpty()) {
                 return null;
             } else {
@@ -198,7 +198,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
          * @return The ith hit for a un-paired read.  Never returns null.
          * Do not call if paired read.
          */
-        public SAMRecord getFragment(int i) {
+        public SAMRecord getFragment(final int i) {
             final SAMRecord samRecord = firstOfPairOrFragment.get(i);
             if (samRecord.getReadPairedFlag()) throw new UnsupportedOperationException("getFragment called for paired read");
             return samRecord;
@@ -207,7 +207,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
         /**
          * @return Returns the ith hit for the second end, or null if the second end is not aligned.
          */
-        public SAMRecord getSecondOfPair(int i) {
+        public SAMRecord getSecondOfPair(final int i) {
             if (secondOfPair.isEmpty()) {
                 return null;
             } else {
@@ -270,8 +270,8 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             }
 
             // See if the primary alignment has been squeezed out.
-            int firstEndPrimaryAlignmentIndex = findPrimaryAlignment(firstOfPairOrFragment);
-            int secondEndPrimaryAlignmentIndex = findPrimaryAlignment(secondOfPair);
+            final int firstEndPrimaryAlignmentIndex = findPrimaryAlignment(firstOfPairOrFragment);
+            final int secondEndPrimaryAlignmentIndex = findPrimaryAlignment(secondOfPair);
 
             // Sanity check
             if (firstEndPrimaryAlignmentIndex != -1) {
@@ -297,7 +297,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             // Primary alignment was filtered out.  Need to select a new one.
 
             // Find all the hits with the best MAPQ.
-            List<Integer> primaryAlignmentIndices = new ArrayList<Integer>(numHits());
+            final List<Integer> primaryAlignmentIndices = new ArrayList<Integer>(numHits());
             int bestMapQ = -1;
             for (int i = 0; i < numHits(); ++i) {
                 int thisMapQ = 0;
@@ -328,7 +328,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             }
         }
 
-        private void filterReads(final SamRecordFilter filter, List<SAMRecord> records) {
+        private void filterReads(final SamRecordFilter filter, final List<SAMRecord> records) {
             for (int i = 0; i < records.size(); ++i) {
                 if (filter.filterOut(records.get(i))) {
                     records.set(i, null);
@@ -336,20 +336,20 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             }
         }
 
-        private void squeezeList(List<SAMRecord> records) {
+        private void squeezeList(final List<SAMRecord> records) {
             for (int i = records.size() - 1; i >= 0; --i) {
                 if (records.get(i) == null) records.remove(i);
             }
         }
 
-        private boolean areAllElementsNull(List<SAMRecord> records) {
+        private boolean areAllElementsNull(final List<SAMRecord> records) {
             for (final SAMRecord rec: records) {
                 if (rec != null) return false;
             }
             return true;
         }
 
-        private int findPrimaryAlignment(List<SAMRecord> records) {
+        private int findPrimaryAlignment(final List<SAMRecord> records) {
             int indexOfPrimaryAlignment = -1;
             for (int i = 0; i < records.size(); ++i) {
                 if (records.get(i) != null && !records.get(i).getNotPrimaryAlignmentFlag()) {
@@ -364,7 +364,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
     }
 
     private static class HitIndexComparator implements Comparator<SAMRecord> {
-        public int compare(SAMRecord rec1, SAMRecord rec2) {
+        public int compare(final SAMRecord rec1, final SAMRecord rec2) {
             final Integer hi1 = rec1.getIntegerAttribute(SAMTag.HI.name());
             final Integer hi2 = rec2.getIntegerAttribute(SAMTag.HI.name());
             if (hi1 == null || hi2 == null) throw new PicardException("HI tag missing for multi-hit paired alignments for read: " +
