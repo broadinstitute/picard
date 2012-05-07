@@ -91,8 +91,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     public List<String> BARCODE = new ArrayList<String>();
 
     @Option(doc="Tab-delimited file of barcode sequences, barcode name and and optionally library name.  " +
-            "Barcodes must be unique, and all the same length.  Column headers must be 'barcode_sequence1', " +
-            "'barcode_sequence2' (optional), 'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
+            "Barcodes must be unique, and all the same length.  Column headers must be 'barcode_sequence_1', " +
+            "'barcode_sequence_2' (optional), 'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
     @Option(doc="Per-barcode and per-lane metrics written to this file.", shortName = StandardOptionDefinitions.METRICS_FILE_SHORT_NAME)
