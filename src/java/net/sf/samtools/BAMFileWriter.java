@@ -43,32 +43,37 @@ public class BAMFileWriter extends SAMFileWriterImpl {
     public BAMFileWriter(final File path) {
         blockCompressedOutputStream = new BlockCompressedOutputStream(path);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
-        outputBinaryCodec.setOutputFileName(path.toString());
+        outputBinaryCodec.setOutputFileName(path.getAbsolutePath());
     }
 
     public BAMFileWriter(final File path, final int compressionLevel) {
         blockCompressedOutputStream = new BlockCompressedOutputStream(path, compressionLevel);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
-        outputBinaryCodec.setOutputFileName(path.toString());
+        outputBinaryCodec.setOutputFileName(path.getAbsolutePath());
     }
 
     public BAMFileWriter(final OutputStream os, final File file) {
         blockCompressedOutputStream = new BlockCompressedOutputStream(os, file);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
-        outputBinaryCodec.setOutputFileName(file.getAbsolutePath());
+        outputBinaryCodec.setOutputFileName(getPathString(file));
     }
 
     public BAMFileWriter(final OutputStream os, final File file, final int compressionLevel) {
         blockCompressedOutputStream = new BlockCompressedOutputStream(os, file, compressionLevel);
         outputBinaryCodec = new BinaryCodec(new DataOutputStream(blockCompressedOutputStream));
-        outputBinaryCodec.setOutputFileName(file.getAbsolutePath());
+        outputBinaryCodec.setOutputFileName(getPathString(file));
     }
 
     private void prepareToWriteAlignments() {
         if (bamRecordCodec == null) {
             bamRecordCodec = new BAMRecordCodec(getFileHeader());
-            bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream(), outputBinaryCodec.getOutputFileName());
+            bamRecordCodec.setOutputStream(outputBinaryCodec.getOutputStream(), getFilename());
         }
+    }
+
+    /** @return absolute path, or null if arg is null.  */
+    private String getPathString(File path){
+        return (path != null) ? path.getAbsolutePath() : null;
     }
 
    // Allow enabling the bam index construction
@@ -77,7 +82,10 @@ public class BAMFileWriter extends SAMFileWriterImpl {
         if (!getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
            throw new SAMException("Not creating BAM index since not sorted by coordinates: " + getSortOrder());
         }
-        bamIndexer = createBamIndex(outputBinaryCodec.getOutputFileName());
+        if(getFilename() == null){
+            throw new SAMException("Not creating BAM index since we don't have an output file name");
+        }
+        bamIndexer = createBamIndex(getFilename());
     }
 
     private BAMIndexer createBamIndex(String path) {
@@ -141,6 +149,7 @@ public class BAMFileWriter extends SAMFileWriterImpl {
             }
     }
 
+    /** @return absolute path, or null if this writer does not correspond to a file.  */
     protected String getFilename() {
         return outputBinaryCodec.getOutputFileName();
     }
