@@ -167,10 +167,6 @@ public class SamToFastq extends CommandLineProgram {
 
         reader.close();
 
-        if (firstSeenMates.size() > 0) {
-            throw new PicardException("Found " + firstSeenMates.size() + " unpaired mates");
-        }
-
         // Close all the fastq writers being careful to close each one only once!
         final IdentityHashMap<FastqWriter,FastqWriter> seen = new IdentityHashMap<FastqWriter, FastqWriter>();
         for (final List<FastqWriter> listOfWriters : writers.values()) {
@@ -180,6 +176,10 @@ public class SamToFastq extends CommandLineProgram {
                     seen.put(w,w);
                 }
             }
+        }
+
+        if (firstSeenMates.size() > 0) {
+            throw new PicardException("Found " + firstSeenMates.size() + " unpaired mates");
         }
 
         return 0;
