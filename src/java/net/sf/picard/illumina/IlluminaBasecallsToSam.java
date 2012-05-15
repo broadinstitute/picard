@@ -316,7 +316,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 barcodeValues.add(row.getField(barcodeLabel));
             }
             final String[] barcodeValuesArray = barcodeValues.toArray(new String[]{});
-            final String key = (barcodeValues.contains("N") ? null : IlluminaUtil.barcodeSeqsToString(barcodeValuesArray));
+            final String key = (barcodeValues.contains("N") ? null : StringUtil.join("", barcodeValuesArray));
 
             if (writersByBarcode.containsKey(key)) {
                 throw new PicardException("Row for barcode " + key + " appears more than once in BARCODE_PARAMS file " +
