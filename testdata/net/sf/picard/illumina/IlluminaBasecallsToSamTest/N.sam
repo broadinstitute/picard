@@ -1,5 +1,5 @@
 @HD	VN:1.0	SO:queryname
-@RG	ID:HiMom.7	PL:illumina	PU:HiMom.7.N	LB:LN_N	SM:SA_N	CN:BI
+@RG	ID:HiMom.7	PL:illumina	PU:HiMom.7.N	LB:LN_N	PI:10025	DS:DESC25	SM:SA_N	CN:BI
 HiMom:7:1:0:1038	516	*	0	0	*	*	0	0	.....C..CA...C...C.CC...C.....	##############################	BC:Z:NNNNNGTN	RG:Z:HiMom.7
 HiMom:7:1:0:1093	516	*	0	0	*	*	0	0	.....C..GT...A...G.AA...A.....	##############################	BC:Z:NNNNNTGN	RG:Z:HiMom.7
 HiMom:7:1:0:113	516	*	0	0	*	*	0	0	........G...........A.........	##############################	BC:Z:NNNNNNNN	RG:Z:HiMom.7

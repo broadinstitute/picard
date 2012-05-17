@@ -25,17 +25,14 @@
 package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.*;
-import net.sf.picard.util.FileChannelJDKBugWorkAround;
-import net.sf.picard.util.IlluminaUtil;
+import net.sf.picard.util.*;
 import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 import net.sf.samtools.util.*;
 
@@ -43,21 +40,14 @@ import java.io.File;
 import java.util.*;
 
 /**
+ * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs etc ...) into
+ * SAM or BAM file format.
  * @author jburke@broadinstitute.org
  */
 public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
     private static final boolean PRINT_TIMING = false;
-
-    public static final String READ_STRUCTURE_DOC =
-            "A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam "   +
-            "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "       +
-            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "        +
-            "read structure of \"36T8B8S30T\" then, before being converted to SAM records those bases will be split into 4 reads where "            +
-            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "           +
-            "skipped cycles and read four is another 30 cycle template read.  The read consisting of skipped cycles would NOT be included "         +
-            "in output SAM/BAM file read groups.";
 
     // The following attributes define the command-line arguments
     @Usage
@@ -68,26 +58,26 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public File BASECALLS_DIR;
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
-    @Option(doc="The output SAM or BAM file. Format is determined by extension.",
+    @Option(doc="Deprecated (use LIBRARY_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
             shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public File OUTPUT;
     
     @Option(doc = "Prefixed to read names.")
     public String RUN_BARCODE;
-    @Option(doc="The name of the sequenced sample",
+    @Option(doc="Deprecated (use LIBRARY_PARAMS).  The name of the sequenced sample",
             shortName=StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String SAMPLE_ALIAS;
     @Option(doc="ID used to link RG header record with RG tag in SAM record.  " +
             "If these are unique in SAM files that get merged, merge performance is better.  " +
             "If not specified, READ_GROUP_ID = <first 5 chars of RUN_BARCODE>.<LANE> .",
         shortName = StandardOptionDefinitions.READ_GROUP_ID_SHORT_NAME, optional = true)
     public String READ_GROUP_ID;
-    @Option(doc="The name of the sequenced library",
+    @Option(doc="Deprecated (use LIBRARY_PARAMS).  The name of the sequenced library",
             shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
             optional=true,
-            mutex = {"BARCODE_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String LIBRARY_NAME;
     @Option(doc="The name of the sequencing center that produced the reads to fill in the RG.CN tag.", optional=true)
     public String SEQUENCING_CENTER = "BI";
@@ -96,13 +86,20 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc="The name of the sequencing technology that produced the read.", optional=true)
     public String PLATFORM = "illumina";
 
-    @Option(doc=READ_STRUCTURE_DOC, shortName="RS")
+    @Option(doc= ReadStructure.PARAMETER_DOC, shortName="RS")
     public String READ_STRUCTURE;
 
-    @Option(doc="Tab-separated file for creating all output BAMs for barcoded run with single IlluminaBasecallsToSam invocation.  " +
+    @Option(doc="Deprecated (use LIBRARY_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run with single IlluminaBasecallsToSam invocation.  " +
             "Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
-            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"})
+            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "LIBRARY_PARAMS"})
     public File BARCODE_PARAMS;
+
+    @Option(doc="Tab-separated file for creating all output BAMs for a run with single IlluminaBasecallsToSam invocation.  The" +
+            "Columns are OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME, BARCODE_1, BARCODE_2 ... BARCODE_X where X = number of barcodes per cluster (optional).  " +
+            "Row with BARCODE_1=N is used to specify a file for no barcode match.  You may also provide any 2 letter RG header attributes (excluding PU, CN, PL, and DT)  " +
+            "as columns in this file and the values for those columns will be inserted into the RG tag for the BAM file created for a given row.",
+            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "BARCODE_PARAMS"})
+    public File LIBRARY_PARAMS;
 
     @Option(doc="Which adapters to look for in the read.")
     public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<IlluminaAdapterPair>(Arrays.asList(IlluminaAdapterPair.INDEXED,
@@ -144,8 +141,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (OUTPUT != null) {
             IoUtil.assertFileIsWritable(OUTPUT);
         }
-        if (BARCODE_PARAMS != null) {
-            IoUtil.assertFileIsReadable(BARCODE_PARAMS);
+
+        if (LIBRARY_PARAMS != null) {
+            IoUtil.assertFileIsReadable(LIBRARY_PARAMS);
         }
 
         readStructure = new ReadStructure(READ_STRUCTURE);
@@ -192,9 +190,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         if (OUTPUT != null) {
-            writersByBarcode.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, null));
+            writersByBarcode.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null)));
         } else {
-            populateWritersByBarcode();
+            populateWritersFromLibraryParams();
         }
 
         /**
@@ -272,62 +270,102 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return 0;
     }
 
-    private void populateWritersByBarcode() {
-        final TabbedTextFileWithHeaderParser barcodeParamsParser = new TabbedTextFileWithHeaderParser(BARCODE_PARAMS);
+    /**
+     * Assert that expectedColumns are present and return actualColumns - expectedColumns
+     * @param actualColumns The columns present in the LIBRARY_PARAMS file
+     * @param expectedColumns The columns that are REQUIRED
+     * @return actualColumns - expectedColumns
+     */
+    private Set<String> findAndFilterExpectedColumns(final Set<String> actualColumns, final Set<String> expectedColumns) {
+        final Set<String> missingColumns = new HashSet<String>(expectedColumns);
+        missingColumns.removeAll(actualColumns);
 
-        //Ensure all expected non-barcode column labels are found
-        final String[] columnLabels = new String[]{"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME"};
-        for (final String columnLabel : columnLabels) {
-            if (!barcodeParamsParser.hasColumn(columnLabel)) {
-                throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column " +
-                        columnLabel + ".");
-            }
+        if(missingColumns.size() > 0) {
+            throw new PicardException("LIBRARY_PARAMS file " + LIBRARY_PARAMS.getAbsolutePath() + " is missing the following columns: " + StringUtil.join(", " + missingColumns));
         }
 
-        //Ensure all barcode labels are found
+        final Set<String> remainingColumns = new HashSet<String>(actualColumns);
+        remainingColumns.removeAll(expectedColumns);
+        return remainingColumns;
+    }
+
+    /**
+     * Given a set of columns assert that all columns conform to the format of an RG header attribute (i.e. 2 letters) the attribute is NOT
+     * a member of the rgHeaderTags that are built by default in buildSamHeaderParameters
+     * @param rgTagColumns A set of columns that should conform to the rg header attribute format
+     */
+    private void checkRgTagColumns(final Set<String> rgTagColumns) {
+        final Set<String> forbiddenHeaders = buildSamHeaderParameters(null).keySet();
+        forbiddenHeaders.retainAll(rgTagColumns);
+
+        if(forbiddenHeaders.size() > 0) {
+            throw new PicardException("Illegal ReadGroup tags in library params(barcode params) file(" + LIBRARY_PARAMS.getAbsolutePath() + ") Offending headers = " + StringUtil.join(", ", forbiddenHeaders));
+        }
+
+        for(final String column : rgTagColumns) {
+            if(column.length() > 2) {
+                throw new PicardException("Column label (" + column + ") unrecognized.  Library params(barcode params) can only contain the columns " +
+                        "(OUTPUT, LIBRARY_NAME, SAMPLE_ALIAS, BARCODE, BARCODE_<X> where X is a positive integer) OR two letter RG tags!");
+            }
+        }
+    }
+
+    /**
+     * For each line in the LIBRARY_PARAMS file create a SamFileWriter and put it in the writersByBarcode map, where the key to the map
+     * is the concatenation of all barcodes in order for the given line
+     */
+    private void populateWritersFromLibraryParams() {
+        final TabbedTextFileWithHeaderParser libraryParamsParser = new TabbedTextFileWithHeaderParser(LIBRARY_PARAMS);
+
+        final Set<String> expectedColumnLabels = CollectionUtil.makeSet("OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME");
         final List<String> barcodeColumnLabels = new ArrayList<String>();
-        //For the single barcode read case, the barcode label name can either by BARCODE or BARCODE_1
-        if (readStructure.barcodes.length()  == 1) {
-            if (barcodeParamsParser.hasColumn("BARCODE")) {
+        if(readStructure.barcodes.length() == 1) {
+            //For the single barcode read case, the barcode label name can either by BARCODE or BARCODE_1
+            if (libraryParamsParser.hasColumn("BARCODE")) {
                 barcodeColumnLabels.add("BARCODE");
-            }
-            else if (barcodeParamsParser.hasColumn("BARCODE_1")) {
+            } else if (libraryParamsParser.hasColumn("BARCODE_1")) {
                 barcodeColumnLabels.add("BARCODE_1");
+            } else {
+                throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
             }
-            else {
-                throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column BARCODE or BARCODE_1.");
+        } else {
+            for(int i = 1; i <= readStructure.barcodes.length(); i++) {
+                barcodeColumnLabels.add("BARCODE_" + i);
             }
         }
-        else {
-            //Generate a list of barcodes from 1 to n for the number of expected barcodes in the ReadStructure
-            for (int i = 1; i <= readStructure.barcodes.length(); i++) {
-                final String barcodeLabel = "BARCODE_" + i;
-                if (!barcodeParamsParser.hasColumn(barcodeLabel)) {
-                    throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does not have column " +
-                        barcodeLabel + ".");
+
+        expectedColumnLabels.addAll(barcodeColumnLabels);
+        final Set<String> rgTagColumns = findAndFilterExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
+        checkRgTagColumns(rgTagColumns);
+
+        for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
+            List<String> barcodeValues = null;
+
+            if(barcodeColumnLabels.size() > 0) {
+                barcodeValues = new ArrayList<String>();
+                for(final String barcodeLabel : barcodeColumnLabels) {
+                    barcodeValues.add(row.getField(barcodeLabel));
                 }
-                barcodeColumnLabels.add(barcodeLabel);
             }
-        }
 
-        for (final TabbedTextFileWithHeaderParser.Row row : barcodeParamsParser) {
-            final List<String> barcodeValues = new ArrayList<String>();
-            for(final String barcodeLabel : barcodeColumnLabels) {
-                barcodeValues.add(row.getField(barcodeLabel));
+            final String key = (barcodeValues == null || barcodeValues.contains("N")) ? null : StringUtil.join("", barcodeValues);
+            if (writersByBarcode.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded LIBRARY_PARAMS file
+                throw new PicardException("Row for barcode " + key + " appears more than once in LIBRARY_PARAMS or BARCODE_PARAMS file " +
+                        LIBRARY_PARAMS);
             }
-            final String[] barcodeValuesArray = barcodeValues.toArray(new String[]{});
-            final String key = (barcodeValues.contains("N") ? null : StringUtil.join("", barcodeValuesArray));
 
-            if (writersByBarcode.containsKey(key)) {
-                throw new PicardException("Row for barcode " + key + " appears more than once in BARCODE_PARAMS file " +
-                        BARCODE_PARAMS);
+            final Map<String, String> samHeaderParams = buildSamHeaderParameters(barcodeValues);
+
+            for(final String tagName : rgTagColumns) {
+                samHeaderParams.put(tagName, row.getField(tagName));
             }
+
             final SAMFileWriter writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
-                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), barcodeValuesArray);
+                    row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams);
             writersByBarcode.put(key, writer);
         }
         if (writersByBarcode.isEmpty()) {
-            throw new PicardException("BARCODE_PARAMS file " + BARCODE_PARAMS + " does have any data rows.");
+            throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
         }
     }
 
@@ -351,22 +389,53 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
     }
-    
-    private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final String[] barcodes) {
+
+    /**
+     * Create the list of headers that will be added to the SAMFileHeader for a library with the given barcodes (or
+     * the entire run if barcodes == NULL).  Note that any value that is null will NOT be added via buildSamFileWriter
+     * but is placed in the map in order to be able to query the tags that we automatically add.
+     * @param barcodes The list of barcodes that uniquely identify the read group we are building parameters for
+     * @return A Map of ReadGroupHeaderTags -> Values
+     */
+    private Map<String, String> buildSamHeaderParameters(final List<String> barcodes) {
+        final Map<String, String> params = new HashMap<String, String>();
+
+        String platformUnit = RUN_BARCODE + "." + LANE;
+        if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
+        params.put("PU", platformUnit);
+
+        params.put("CN", SEQUENCING_CENTER);
+        params.put("PL", PLATFORM);
+        if (RUN_START_DATE != null) {
+            final Iso8601Date date = new Iso8601Date(RUN_START_DATE);
+            params.put("DT", date.toString());
+        } else {
+            params.put("DT", null);
+        }
+
+        return params;
+    }
+
+    /**
+     * Build a SamFileWriter that will output it's contents to output.
+     * @param output The file to which to write
+     * @param sampleAlias The sample alias set in the read group header
+     * @param libraryName The name of the library to which this read group belongs
+     * @param headerParameters Header parameters that will be added to the RG header for this SamFile
+     * @return A SAMFileWriter
+     */
+    private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final Map<String, String> headerParameters) {
         IoUtil.assertFileIsWritable(output);
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
         rg.setSample(sampleAlias);
-        String platformUnit = RUN_BARCODE + "." + LANE;
-        if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
-        rg.setAttribute("PU", platformUnit);
 
         if (libraryName != null) rg.setLibrary(libraryName);
-        if (SEQUENCING_CENTER != null) rg.setAttribute("CN", SEQUENCING_CENTER);
-        if (PLATFORM != null) rg.setAttribute("PL", PLATFORM);
-        if (RUN_START_DATE != null) {
-            final Iso8601Date date = new Iso8601Date(RUN_START_DATE);
-            rg.setAttribute("DT", date.toString());
+        for(final Map.Entry<String,String> tagNameToValue : headerParameters.entrySet()) {
+            if(tagNameToValue.getValue() != null) {
+                rg.setAttribute(tagNameToValue.getKey(), tagNameToValue.getValue());
+            }
         }
+
         final SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
         header.addReadGroup(rg);
@@ -387,12 +456,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      */
     @Override
     protected String[] customCommandLineValidation() {
+        if (BARCODE_PARAMS != null) {
+            LIBRARY_PARAMS = BARCODE_PARAMS;
+        }
+
         final ArrayList<String> messages = new ArrayList<String>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
         if(!readStructure.barcodes.isEmpty()) {
-            if(BARCODE_PARAMS == null) {
-                messages.add("BARCODE_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode) then BARCODE_PARAMS must be provided!");
+            if(LIBRARY_PARAMS == null) {
+                messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode) then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
             }
         }
         
@@ -405,6 +478,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return messages.toArray(new String[messages.size()]);
     }
 
+    /** Given a read structure return the data types that need to be parsed for this run */
     public static IlluminaDataType [] getDataTypesFromReadStructure(final ReadStructure readStructure) {
         if(readStructure.barcodes.isEmpty()) {
             return DATA_TYPES_NO_BARCODE;
@@ -636,7 +710,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
                 final SamRecordSorter sorter = sorters.get(cluster.getMatchedBarcode());
                 if (sorter == null) {
-                    throw new PicardException("Barcode encountered in that was not specified in BARCODE_PARAMS: " +
+                    throw new PicardException("Barcode encountered that was not specified in BARCODE_PARAMS: " +
                     cluster.getMatchedBarcode());
                 }
 

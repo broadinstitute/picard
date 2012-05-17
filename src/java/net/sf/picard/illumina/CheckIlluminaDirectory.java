@@ -38,7 +38,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional=true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
 
-    @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes " +
+    @Option(doc= ReadStructure.PARAMETER_DOC + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes " +
             "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.", shortName="RS")
     public String READ_STRUCTURE;
 
