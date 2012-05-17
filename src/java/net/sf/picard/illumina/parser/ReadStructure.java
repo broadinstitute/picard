@@ -46,6 +46,14 @@ import java.util.regex.Pattern;
  *  @author jburke@broadinstitute.org
  */
 public class ReadStructure {
+    public static final String PARAMETER_DOC =
+            "A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam "   +
+            "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "       +
+            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "        +
+            "read structure of \"36T8B8S28T\" then, before being converted to SAM records those bases will be split into 4 reads where "            +
+            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "           +
+            "skipped cycles and read four is another 28 cycle template read.  The read consisting of skipped cycles would NOT be included "         +
+            "in output SAM/BAM file read groups.";
     public final List<ReadDescriptor> descriptors;
     public final int totalCycles;
     public final int [] readLengths;

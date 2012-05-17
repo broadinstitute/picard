@@ -24,6 +24,7 @@
 package net.sf.picard.illumina;
 
 import net.sf.picard.util.IlluminaUtil;
+import net.sf.samtools.util.StringUtil;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
@@ -87,47 +88,40 @@ public class IlluminaBasecallsToSamTest {
 
     @Test
     public void testMultiplexed() throws Exception {
-        runStandardTest("multiplexedBarcode.", "barcode.params", 1,"30T8B");
+        runStandardTest(7, "multiplexedBarcode.", "barcode.params", 1,"30T8B");
     }
 
+    //Same as testMultiplexed except we use BARCODE_1 instead of BARCODE
     @Test
-    public void testSingleBarcodedWithAlternateBarcodeName() throws Exception {
-        runStandardTest("singleBarcodeAltName.", "barcode_single.params", 1,"30T8B");
+    public void testMultiplexedWithAlternateBarcodeName() throws Exception {
+        runStandardTest(7, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1,"30T8B");
     }
 
-    /*** The actual read data doesn't support these tests yet.
     @Test
     public void testDualBarcodes() throws Exception {
-         runStandardTest("dualBarcode.", "barcode_double.params", 2, "30T8B8B") ;
+         runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B") ;
     }
-
-    @Test
-    public void testTripleBarcodes() throws Exception {
-        runStandardTest("tripleBarcode.", "barcode_triple.params", 3, "30T8B8B8B") ;
-    }
-    ***/
-
 
     /***
-     * This test utility takes a barcodeFileName and generates output sam files through IlluminaBasecallsToSam to compare against
+     * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
      * @param jobName
-     * @param barcodeFileName
+     * @param libraryParamsFile
      * @param concatNColumnFields
      * @param readStructure
      * @throws Exception
      */
-    private void runStandardTest(final String jobName, final String barcodeFileName, final int concatNColumnFields, final String readStructure) throws Exception {
+    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile, final int concatNColumnFields, final String readStructure) throws Exception {
         final File outputDir = File.createTempFile(jobName, ".dir");
         outputDir.delete();
         outputDir.mkdir();
         outputDir.deleteOnExit();
         // Create barcode.params with output files in the temp directory
-        final File barcodeParams = new File(outputDir, barcodeFileName);
-        barcodeParams.deleteOnExit();
+        final File libraryParams = new File(outputDir, libraryParamsFile);
+        libraryParams.deleteOnExit();
         final List<File> samFiles = new ArrayList<File>();
-        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, barcodeFileName)));
-        final PrintWriter writer = new PrintWriter(barcodeParams);
+        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, libraryParamsFile)));
+        final PrintWriter writer = new PrintWriter(libraryParams);
         final String header = reader.readLine();
         writer.println(header + "\tOUTPUT");
         while (true) {
@@ -136,20 +130,19 @@ public class IlluminaBasecallsToSamTest {
                 break;
             }
             final String[] fields = line.split("\t");
-            final File outputSam = new File(outputDir, IlluminaUtil.barcodeSeqsToString(Arrays.copyOfRange(fields,0,concatNColumnFields)) +   ".sam");
+            final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) +   ".sam");
             outputSam.deleteOnExit();
             samFiles.add(outputSam);
             writer.println(line + "\t" + outputSam);
         }
         writer.close();
 
-        final int lane = 7;
         new IlluminaBasecallsToSam().instanceMain(new String[] {
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
                 "READ_STRUCTURE=" + readStructure,
-                "BARCODE_PARAMS=" + barcodeParams
+                "LIBRARY_PARAMS=" + libraryParams
         });
 
         for (final File outputSam : samFiles) {

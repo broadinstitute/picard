@@ -143,7 +143,7 @@ public class IlluminaBasecallsToSamConverter {
             for (int i = 0; i < barcodeIndices.length; i++) {
                 barcode[i] = cluster.getRead(barcodeIndices[i]).getBases();
             }
-            unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N');
+            unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N'); //TODO: This has a separator, where as in other places we do not use a separator
         }
 
         final SAMRecord firstOfPair  = createSamRecord(

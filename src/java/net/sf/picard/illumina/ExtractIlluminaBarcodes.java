@@ -27,7 +27,6 @@ import net.sf.picard.illumina.parser.*;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
-import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -40,7 +39,6 @@ import net.sf.samtools.util.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.text.NumberFormat;
 import java.util.concurrent.ExecutorService;
@@ -83,7 +81,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc=IlluminaBasecallsToSam.READ_STRUCTURE_DOC, shortName="RS")
+    @Option(doc= ReadStructure.PARAMETER_DOC, shortName="RS")
     public String READ_STRUCTURE;
 
     @Option(doc="Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that " +
