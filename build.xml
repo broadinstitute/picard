@@ -38,7 +38,7 @@
     <!-- Get SVN revision, if available, otherwise leave it blank. -->
     <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
     <property name="repository.revision" value=""/>
-    <property name="sam-version" value="1.68"/>
+    <property name="sam-version" value="1.69"/>
     <property name="picard-version" value="${sam-version}"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
