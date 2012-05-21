@@ -53,12 +53,21 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
     private final PeekableIterator<SAMRecord> peekIterator;
     private final HitIndexComparator comparator = new HitIndexComparator();
     private final SAMRecordQueryNameComparator queryNameComparator = new SAMRecordQueryNameComparator();
+    private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
 
     // Give random number generator a seed so results are repeatable.  Used to pick a primary alignment from
     // multiple alignments with equal mapping quality.
     private final Random random = new Random(1);
 
-    MultiHitAlignedReadIterator(final CloseableIterator<SAMRecord> querynameOrderIterator) {
+    /**
+     *
+     * @param querynameOrderIterator
+     * @param primaryAlignmentSelectionStrategy Algorithm for selecting primary alignment when it is not clear from
+     *                                          the input what should be primary.
+     */
+    MultiHitAlignedReadIterator(final CloseableIterator<SAMRecord> querynameOrderIterator,
+                                final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
+        this.primaryAlignmentSelectionStrategy = primaryAlignmentSelectionStrategy;
         peekIterator = new PeekableIterator<SAMRecord>(new FilteringIterator(querynameOrderIterator,
                 new SamRecordFilter() {
                     public boolean filterOut(final SAMRecord record) {
@@ -127,13 +136,23 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
                 }
             }
         }
-        final int firstEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.firstOfPairOrFragment);
-        final int secondEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.secondOfPair);
-        if (firstEndPrimaryAlignmentIndex == -1 && secondEndPrimaryAlignmentIndex == -1) {
-           hits.pickPrimaryAlignment();
-        } else if (firstEndPrimaryAlignmentIndex != -1 && secondEndPrimaryAlignmentIndex != -1 &&
-                firstEndPrimaryAlignmentIndex != secondEndPrimaryAlignmentIndex) {
-            throw new PicardException("Mismatched primary alignments for paired read " + hits.getReadName());
+        // See if primary alignment is not already unambiguously determined.
+        final NumPrimaryAlignmentState firstEndAlignmentState = hits.tallyPrimaryAlignments(hits.firstOfPairOrFragment);
+        final NumPrimaryAlignmentState secondEndAlignmentState = hits.tallyPrimaryAlignments(hits.secondOfPair);
+        if ((firstEndAlignmentState == NumPrimaryAlignmentState.NONE && secondEndAlignmentState == NumPrimaryAlignmentState.NONE) ||
+                firstEndAlignmentState == NumPrimaryAlignmentState.MORE_THAN_ONE ||
+                secondEndAlignmentState == NumPrimaryAlignmentState.MORE_THAN_ONE) {
+            // Need to use selected strategy for picking primary.
+            primaryAlignmentSelectionStrategy.pickPrimaryAlignment(hits);
+        } else {
+            // Primary is already determined.  Just check that it makes sense, i.e. if specified for both ends,
+            // that the specification is the same for both ends.
+            final int firstEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.firstOfPairOrFragment);
+            final int secondEndPrimaryAlignmentIndex = hits.findPrimaryAlignment(hits.secondOfPair);
+            if (firstEndPrimaryAlignmentIndex != -1 && secondEndPrimaryAlignmentIndex != -1 &&
+                    firstEndPrimaryAlignmentIndex != secondEndPrimaryAlignmentIndex) {
+                throw new PicardException("Mismatched primary alignments for paired read " + hits.getReadName());
+            }
         }
         return hits;
     }
@@ -166,7 +185,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             return getRepresentativeRead().getReadPairedFlag();
         }
 
-        private SAMRecord getRepresentativeRead() {
+        public SAMRecord getRepresentativeRead() {
             for (final SAMRecord rec : firstOfPairOrFragment) {
                 if (rec != null) return rec;
             }
@@ -215,14 +234,36 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             }
         }
 
+        /**
+         * Set all alignments to not primary, except for the one specified by the argument.  If paired, and set the
+         * alignment for both ends if there is an alignment for both ends, otherwise just for the end for which
+         * there is an alignment at the given index.
+         * @param primaryAlignmentIndex
+         */
+        public void setPrimaryAlignment(final int primaryAlignmentIndex) {
+            if (primaryAlignmentIndex < 0 || primaryAlignmentIndex >= this.numHits()) {
+                throw new IllegalArgumentException("primaryAlignmentIndex(" + primaryAlignmentIndex +
+                        ") out of range for numHits(" + numHits() + ")");
+            }
+            // Set all alignment to be not primary except the selected one.
+            for (int i = 0; i < this.numHits(); ++i) {
+                final boolean notPrimary = (i != primaryAlignmentIndex);
+                if (this.getFirstOfPair(i) != null) {
+                    this.getFirstOfPair(i).setNotPrimaryAlignmentFlag(notPrimary);
+                }
+                if (this.getSecondOfPair(i) != null) {
+                    this.getSecondOfPair(i).setNotPrimaryAlignmentFlag(notPrimary);
+                }
+            }
 
+        }
         /**
          * Remove reads that filter rejects, then squeeze down lists.  If the primary alignment is filtered out,
          * another alignment will be selected as primary, by looking at best MAPQ.
          * Note that after filtering, numHits may == 0.
          * Hit indices may be revised if alignments get filtered out.
          */
-        public void filterReads(final SamRecordFilter filter) {
+        public void filterReads(final SamRecordFilter filter, final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
             // Set to null all reads that filter rejects.
             filterReads(filter, firstOfPairOrFragment);
             filterReads(filter, secondOfPair);
@@ -288,45 +329,10 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
                 }
             }
             if (firstEndPrimaryAlignmentIndex == -1 && secondEndPrimaryAlignmentIndex == -1) {
-                pickPrimaryAlignment();
+                primaryAlignmentSelectionStrategy.pickPrimaryAlignment(this);
             }
         }
 
-        private void pickPrimaryAlignment() {
-            log.info("Primary alignment was filtered out.  Selecting new primary alignment for read ", getReadName());
-            // Primary alignment was filtered out.  Need to select a new one.
-
-            // Find all the hits with the best MAPQ.
-            final List<Integer> primaryAlignmentIndices = new ArrayList<Integer>(numHits());
-            int bestMapQ = -1;
-            for (int i = 0; i < numHits(); ++i) {
-                int thisMapQ = 0;
-                if (getFirstOfPair(i) != null) {
-                    thisMapQ += getFirstOfPair(i).getMappingQuality();
-                }
-                if (getSecondOfPair(i) != null) {
-                    thisMapQ += getSecondOfPair(i).getMappingQuality();
-                }
-                if (thisMapQ > bestMapQ) {
-                    bestMapQ = thisMapQ;
-                    primaryAlignmentIndices.clear();
-                }
-                if (thisMapQ == bestMapQ) primaryAlignmentIndices.add(i);
-            }
-
-            // Of all the hits with the best MAPQ, randomly select one to be primary.
-            final int primaryAlignmentIndex;
-            if (primaryAlignmentIndices.size() == 1) primaryAlignmentIndex = primaryAlignmentIndices.get(0);
-            else if (primaryAlignmentIndices.size() > 1) primaryAlignmentIndex= random.nextInt(primaryAlignmentIndices.size());
-            else throw new IllegalStateException("Never found a best MAPQ -- should never happen");
-
-            if (getFirstOfPair(primaryAlignmentIndex) != null) {
-                getFirstOfPair(primaryAlignmentIndex).setNotPrimaryAlignmentFlag(false);
-            }
-            if (getSecondOfPair(primaryAlignmentIndex) != null) {
-                getSecondOfPair(primaryAlignmentIndex).setNotPrimaryAlignmentFlag(false);
-            }
-        }
 
         private void filterReads(final SamRecordFilter filter, final List<SAMRecord> records) {
             for (int i = 0; i < records.size(); ++i) {
@@ -349,6 +355,23 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             return true;
         }
 
+        /**
+         * Determine if there is a single primary alignment in a list of alignments.
+         * @param records
+         * @return NONE, ONE or MORE_THAN_ONE.
+         */
+        private NumPrimaryAlignmentState tallyPrimaryAlignments(final List<SAMRecord> records) {
+            boolean seenPrimary = false;
+            for (int i = 0; i < records.size(); ++i) {
+                if (records.get(i) != null && !records.get(i).getNotPrimaryAlignmentFlag()) {
+                    if (seenPrimary) return NumPrimaryAlignmentState.MORE_THAN_ONE;
+                    else seenPrimary = true;
+                }
+            }
+            if (seenPrimary) return NumPrimaryAlignmentState.ONE;
+            else return NumPrimaryAlignmentState.NONE;
+        }
+
         private int findPrimaryAlignment(final List<SAMRecord> records) {
             int indexOfPrimaryAlignment = -1;
             for (int i = 0; i < records.size(); ++i) {
@@ -361,6 +384,10 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
             }
             return indexOfPrimaryAlignment;
         }
+    }
+
+    private enum NumPrimaryAlignmentState {
+        NONE, ONE, MORE_THAN_ONE;
     }
 
     private static class HitIndexComparator implements Comparator<SAMRecord> {
