@@ -68,6 +68,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *                          aligned pairs.  Used to determine the properPair flag.
      * @param sortOrder           The order in which the merged records should be output.  If null,
      *                            output will be coordinate-sorted
+     * @param primaryAlignmentSelectionStrategy How to handle multiple alignments for a fragment or read pair,
+     *                                          in which none are primary, or more than one is marked primary
+     *                                          by the aligner.
      */
     public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                  final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -76,11 +79,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                  final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                  final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
                  final List<SamPairUtil.PairOrientation> expectedOrientations,
-                 final SortOrder sortOrder) {
+                 final SortOrder sortOrder,
+                 final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
               alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
-              read2BasesTrimmed, expectedOrientations, sortOrder);
+              read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&
             (read1AlignedSamFile == null || read1AlignedSamFile.size() == 0 ||
@@ -90,15 +94,15 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         }
 
         if (alignedSamFile != null) {
-            for (File f : alignedSamFile) {
+            for (final File f : alignedSamFile) {
                 IoUtil.assertFileIsReadable(f);
             }
         }
         else {
-            for (File f : read1AlignedSamFile) {
+            for (final File f : read1AlignedSamFile) {
                 IoUtil.assertFileIsReadable(f);
             }
-            for (File f : read2AlignedSamFile) {
+            for (final File f : read2AlignedSamFile) {
                 IoUtil.assertFileIsReadable(f);
             }
         }
@@ -109,10 +113,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.pairedRun = pairedRun;
         this.maxGaps = maxGaps;
         if (programRecord == null) {
-            File tmpFile = this.alignedSamFile != null && this.alignedSamFile.size() > 0
+            final File tmpFile = this.alignedSamFile != null && this.alignedSamFile.size() > 0
                     ? this.alignedSamFile.get(0)
                     : this.read1AlignedSamFile.get(0);
-            SAMFileReader tmpReader = new SAMFileReader(tmpFile);
+            final SAMFileReader tmpReader = new SAMFileReader(tmpFile);
             tmpReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
             if (tmpReader.getFileHeader().getProgramRecords().size() == 1) {
                 setProgramRecord(tmpReader.getFileHeader().getProgramRecords().get(0));
@@ -122,9 +126,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         // If not null, the program record was already added in the superclass.  DO NOT RE-ADD!
 
         if (getProgramRecord() != null) {
-            SAMFileReader tmp = new SAMFileReader(unmappedBamFile);
+            final SAMFileReader tmp = new SAMFileReader(unmappedBamFile);
             try {
-                for (SAMProgramRecord pg : tmp.getFileHeader().getProgramRecords()) {
+                for (final SAMProgramRecord pg : tmp.getFileHeader().getProgramRecords()) {
                     if (pg.getId().equals(getProgramRecord().getId())) {
                         throw new PicardException("Program Record ID already in use in unmapped BAM file.");
                     }
@@ -137,23 +141,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
 
-    /**
-     * Constructor retained for backwards compatibility
-     *
-     * @deprecated  Use construct that specifies sortOrder
-     */
-    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
-                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
-                 final boolean pairedRun, final boolean alignedReadsOnly,
-                 final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
-                 final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                 final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
-                 final List<SamPairUtil.PairOrientation> expectedOrientations) {
-
-        this(unmappedBamFile, targetBamFile, referenceFasta, programRecord, clipAdapters, bisulfiteSequence,
-             pairedRun, alignedReadsOnly, alignedSamFile, maxGaps, attributesToRetain, read1BasesTrimmed, read2BasesTrimmed,
-             read1AlignedSamFile, read2AlignedSamFile, expectedOrientations, SortOrder.coordinate);
-    }
 
 
     /**
@@ -178,20 +165,20 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      */
     protected CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords() {
 
-        CloseableIterator<SAMRecord> mergingIterator;
-        SAMFileHeader header;
+        final CloseableIterator<SAMRecord> mergingIterator;
+        final SAMFileHeader header;
 
         // When the alignment records, including both ends of a pair, are in SAM files
         if (alignedSamFile != null && alignedSamFile.size() > 0) {
-            List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(alignedSamFile.size());
-            List<SAMFileReader> readers = new ArrayList<SAMFileReader>(alignedSamFile.size());
-            for (File f : this.alignedSamFile) {
-                SAMFileReader r = new SAMFileReader(f);
+            final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(alignedSamFile.size());
+            final List<SAMFileReader> readers = new ArrayList<SAMFileReader>(alignedSamFile.size());
+            for (final File f : this.alignedSamFile) {
+                final SAMFileReader r = new SAMFileReader(f);
                 headers.add(r.getFileHeader());
                 readers.add(r);
             }
 
-            SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
 
             mergingIterator = new MergingSamRecordIterator(headerMerger, readers, true);
             header = headerMerger.getMergedHeader();
@@ -239,17 +226,17 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         private final PeekableIterator<SAMRecord> read2Iterator;
         private final SAMFileHeader header;
 
-        public SeparateEndAlignmentIterator(List<File> read1Alignments, List<File> read2Alignments) {
+        public SeparateEndAlignmentIterator(final List<File> read1Alignments, final List<File> read2Alignments) {
             final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
             final List<SAMFileReader> read1 = new ArrayList<SAMFileReader>(read1Alignments.size());
             final List<SAMFileReader> read2 = new ArrayList<SAMFileReader>(read2Alignments.size());
-            for (File f : read1Alignments) {
-                SAMFileReader r = new SAMFileReader(f);
+            for (final File f : read1Alignments) {
+                final SAMFileReader r = new SAMFileReader(f);
                 headers.add(r.getFileHeader());
                 read1.add(r);
             }
-            for (File f : read2Alignments) {
-                SAMFileReader r = new SAMFileReader(f);
+            for (final File f : read2Alignments) {
+                final SAMFileReader r = new SAMFileReader(f);
                 headers.add(r.getFileHeader());
                 read2.add(r);
             }
@@ -292,7 +279,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
         public SAMFileHeader getHeader() { return this.header; }
 
-        private SAMRecord setPairFlags(SAMRecord sam, boolean firstOfPair) {
+        private SAMRecord setPairFlags(final SAMRecord sam, final boolean firstOfPair) {
             sam.setReadPairedFlag(true);
             sam.setFirstOfPairFlag(firstOfPair);
             sam.setSecondOfPairFlag(!firstOfPair);
@@ -304,10 +291,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * For now, we only ignore those alignments that have more than <code>maxGaps</code> insertions
      * or deletions.
      */
-    protected boolean ignoreAlignment(SAMRecord sam) {
+    protected boolean ignoreAlignment(final SAMRecord sam) {
         if (maxGaps == -1) return false;
         int gaps = 0;
-        for (CigarElement el : sam.getCigar().getCigarElements()) {
+        for (final CigarElement el : sam.getCigar().getCigarElements()) {
             if (el.getOperator() == CigarOperator.I || el.getOperator() == CigarOperator.D ) {
                 gaps++;
             }

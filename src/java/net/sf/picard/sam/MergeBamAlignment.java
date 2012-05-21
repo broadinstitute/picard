@@ -23,6 +23,7 @@
  */
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -100,10 +101,38 @@ public class MergeBamAlignment extends CommandLineProgram {
             doc="The order in which the merged reads should be output.")
     public SortOrder SORT_ORDER = SortOrder.coordinate;
 
+    @Option(doc="Strategy for selecting primary alignment when the aligner has provided more than one alignment " +
+    "for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary " +
+    "alignment is filtered out for some reason.  Note that EarliestFragment may not be used for paired reads.  " +
+    "EarliestFragment prefers the alignment which maps the earliest base in the read.")
+    public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
+
     @Option(doc="For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.")
     public boolean CLIP_OVERLAPPING_READS = true;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
+
+    /**
+     * Mechanism to bridge between command line option and PrimaryAlignmentSelectionStrategy implementation.
+     */
+    enum PrimaryAlignmentStrategy {
+        BestMapq(BestMapqPrimaryAlignmentSelectionStrategy.class),
+        EarliestFragment(EarliestFragmentPrimaryAlignmentSelectionStrategy.class);
+
+        private final Class<PrimaryAlignmentSelectionStrategy> clazz;
+
+        PrimaryAlignmentStrategy(final Class<?> clazz) {
+            this.clazz = (Class<PrimaryAlignmentSelectionStrategy>)clazz;
+        }
+
+        PrimaryAlignmentSelectionStrategy newInstance() {
+            try {
+                return clazz.newInstance();
+            } catch (Exception e) {
+                throw new PicardException("Trouble instantiating " + clazz.getName(), e);
+            }
+        }
+    }
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -128,11 +157,12 @@ public class MergeBamAlignment extends CommandLineProgram {
             EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
         }
 
-        SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
+        final SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
             ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
-            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER);
+            READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
+            PRIMARY_ALIGNMENT_STRATEGY.newInstance());
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.mergeAlignment();
@@ -158,8 +188,8 @@ public class MergeBamAlignment extends CommandLineProgram {
                     "be included."};
         }
 
-        boolean r1sExist = READ1_ALIGNED_BAM != null && READ1_ALIGNED_BAM.size() > 0;
-        boolean r2sExist = READ2_ALIGNED_BAM != null && READ2_ALIGNED_BAM.size() > 0;
+        final boolean r1sExist = READ1_ALIGNED_BAM != null && READ1_ALIGNED_BAM.size() > 0;
+        final boolean r2sExist = READ2_ALIGNED_BAM != null && READ2_ALIGNED_BAM.size() > 0;
         if ((r1sExist && !r2sExist) || (r2sExist && !r1sExist)) {
             return new String[] {"READ1_ALIGNED_BAM and READ2_ALIGNED_BAM " +
                     "must both be supplied or neither should be included.  For " +

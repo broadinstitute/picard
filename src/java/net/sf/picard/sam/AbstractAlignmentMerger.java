@@ -89,9 +89,10 @@ public abstract class AbstractAlignmentMerger {
     private MultiHitAlignedReadIterator alignedIterator = null;
     private boolean clipOverlappingReads = true;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
+    private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
 
-    private SamRecordFilter alignmentFilter = new SamRecordFilter() {
-        public boolean filterOut(SAMRecord record) {
+    private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
+        public boolean filterOut(final SAMRecord record) {
             return ignoreAlignment(record);
         }
         public boolean filterOut(final SAMRecord first, final SAMRecord second) {
@@ -101,7 +102,7 @@ public abstract class AbstractAlignmentMerger {
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
     
-    protected boolean ignoreAlignment(SAMRecord sam) { return false; } // default implementation
+    protected boolean ignoreAlignment(final SAMRecord sam) { return false; } // default implementation
 
     /**
      * Constructor
@@ -126,6 +127,8 @@ public abstract class AbstractAlignmentMerger {
      *                          aligned pairs.  Used to determine the properPair flag.
      * @param sortOrder           The order in which the merged records should be output.  If null,
      *                            output will be coordinate-sorted
+     * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
+     *                                          alignments but none primary, for a read or read pair.
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
@@ -133,7 +136,8 @@ public abstract class AbstractAlignmentMerger {
                                    final SAMProgramRecord programRecord, final List<String> attributesToRetain,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
-                                   final SAMFileHeader.SortOrder sortOrder) {
+                                   final SAMFileHeader.SortOrder sortOrder,
+                                   final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
         IoUtil.assertFileIsReadable(unmappedBamFile);
         IoUtil.assertFileIsWritable(targetBamFile);
         IoUtil.assertFileIsReadable(referenceFasta);
@@ -166,23 +170,8 @@ public abstract class AbstractAlignmentMerger {
         this.read1BasesTrimmed = read1BasesTrimmed;
         this.read2BasesTrimmed = read2BasesTrimmed;
         this.expectedOrientations = expectedOrientations;
-    }
 
-    /**
-     * Constructor retained for backwards compatibility
-     *
-     * @deprecated  Use construct that specifies sortOrder
-     */
-    public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
-                                   final File referenceFasta, final boolean clipAdapters,
-                                   final boolean bisulfiteSequence, final boolean alignedReadsOnly,
-                                   final SAMProgramRecord programRecord, final List<String> attributesToRetain,
-                                   final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                                   final List<SamPairUtil.PairOrientation> expectedOrientations) {
-
-        this(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-             alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed, read2BasesTrimmed,
-             expectedOrientations, SortOrder.coordinate);
+        this.primaryAlignmentSelectionStrategy = primaryAlignmentSelectionStrategy;
     }
 
     /** Allows the caller to override the maximum records in RAM. */
@@ -203,7 +192,8 @@ public abstract class AbstractAlignmentMerger {
         int unmapped = 0;
 
         // Get the aligned records and set up the first one
-        alignedIterator = new MultiHitAlignedReadIterator(getQuerynameSortedAlignedRecords());
+        alignedIterator = new MultiHitAlignedReadIterator(getQuerynameSortedAlignedRecords(),
+                primaryAlignmentSelectionStrategy);
         MultiHitAlignedReadIterator.HitsForInsert nextAligned = nextAligned();
 
         // Create the sorting collection that will write the records in the coordinate order
@@ -314,13 +304,13 @@ public abstract class AbstractAlignmentMerger {
 
         // Write the records to the output file in specified sorted order,
         header.setSortOrder(this.sortOrder);
-        boolean presorted = this.sortOrder == SortOrder.coordinate;
+        final boolean presorted = this.sortOrder == SortOrder.coordinate;
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, this.targetBamFile);
         int count = 0;
         for (final SAMRecord rec : sorted) {
             if (!rec.getReadUnmappedFlag()) {
                 if (refSeq != null) {
-                    byte referenceBases[] = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
+                    final byte[] referenceBases = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
                     rec.setAttribute(SAMTag.NM.name(),
                         SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
                     if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
@@ -354,8 +344,8 @@ public abstract class AbstractAlignmentMerger {
      */
     private MultiHitAlignedReadIterator.HitsForInsert nextAligned() {
         while (alignedIterator.hasNext()) {
-            MultiHitAlignedReadIterator.HitsForInsert hits = alignedIterator.next();
-            hits.filterReads(alignmentFilter);
+            final MultiHitAlignedReadIterator.HitsForInsert hits = alignedIterator.next();
+            hits.filterReads(alignmentFilter, primaryAlignmentSelectionStrategy);
             if (hits.numHits() > 0) {
                 return hits;
             }
@@ -368,7 +358,7 @@ public abstract class AbstractAlignmentMerger {
      * @param unaligned Original SAMRecord, and object into which values are copied.
      * @param aligned Holds alignment info that will be copied into unaligned.
      */
-    private void transferAlignmentInfoToFragment(SAMRecord unaligned, SAMRecord aligned) {
+    private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned) {
         setValuesFromAlignment(unaligned, aligned);
         updateCigarForTrimmedOrClippedBases(unaligned, aligned);
         if (this.programRecord != null) {
@@ -384,7 +374,7 @@ public abstract class AbstractAlignmentMerger {
      * @param firstAligned Aligned first of pair, or null if no alignment.
      * @param secondAligned Aligned second of pair, or null if no alignment.
      */
-    private void transferAlignmentInfoToPairedRead(SAMRecord firstUnaligned, SAMRecord secondUnaligned, SAMRecord firstAligned, SAMRecord secondAligned) {
+    private void transferAlignmentInfoToPairedRead(final SAMRecord firstUnaligned, final SAMRecord secondUnaligned, final SAMRecord firstAligned, final SAMRecord secondAligned) {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
         if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
@@ -477,21 +467,21 @@ public abstract class AbstractAlignmentMerger {
     protected void updateCigarForTrimmedOrClippedBases(final SAMRecord rec, final SAMRecord alignment) {
 
         // If the read maps off the end of the alignment, clip it
-        SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
+        final SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
         if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
             // 1-based index of first base in read to clip.
-            int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-            List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
+            final int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+            final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
             rec.setCigar(new Cigar(newCigarElements));
         }
 
         // If the read was trimmed or not all the bases were sent for alignment, clip it
-        int alignmentReadLength = alignment.getReadLength();
-        int originalReadLength = rec.getReadLength();
-        int trimmed = (!rec.getReadPairedFlag()) || rec.getFirstOfPairFlag()
+        final int alignmentReadLength = alignment.getReadLength();
+        final int originalReadLength = rec.getReadLength();
+        final int trimmed = (!rec.getReadPairedFlag()) || rec.getFirstOfPairFlag()
                 ? this.read1BasesTrimmed != null ? this.read1BasesTrimmed : 0
                 : this.read2BasesTrimmed != null ? this.read2BasesTrimmed : 0;
-        int notWritten = originalReadLength - (alignmentReadLength + trimmed);
+        final int notWritten = originalReadLength - (alignmentReadLength + trimmed);
 
         rec.setCigar(CigarUtil.addSoftClippedBasesToEndsOfCigar(
             rec.getCigar(), rec.getReadNegativeStrandFlag(), notWritten, trimmed));
@@ -507,7 +497,7 @@ public abstract class AbstractAlignmentMerger {
 
     protected SAMProgramRecord getProgramRecord() { return this.programRecord; }
 
-    protected void setProgramRecord(SAMProgramRecord pg ) {
+    protected void setProgramRecord(final SAMProgramRecord pg ) {
         if (this.programRecord != null) {
             throw new IllegalStateException("Cannot set program record more than once on alignment merger.");
         }
@@ -516,14 +506,14 @@ public abstract class AbstractAlignmentMerger {
         SAMUtils.chainSAMProgramRecord(header, pg);
     }
 
-    protected boolean isReservedTag(String tag) {
+    protected boolean isReservedTag(final String tag) {
         final char firstCharOfTag = tag.charAt(0);
 
         // All tags that start with a lower-case letter are user defined and should not be overridden by aligner
         // unless explicitly specified in attributesToRetain.
         if (Character.isLowerCase(firstCharOfTag)) return true;
 
-        for (char c : RESERVED_ATTRIBUTE_STARTS) {
+        for (final char c : RESERVED_ATTRIBUTE_STARTS) {
             if (firstCharOfTag == c) return true;
         }
         return false;
@@ -539,7 +529,7 @@ public abstract class AbstractAlignmentMerger {
         return clipOverlappingReads;
     }
 
-    public void setClipOverlappingReads(boolean clipOverlappingReads) {
+    public void setClipOverlappingReads(final boolean clipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
     }
 }
