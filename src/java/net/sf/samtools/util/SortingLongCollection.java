@@ -23,10 +23,9 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.Defaults;
+
 import java.io.*;
-import java.nio.LongBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.*;
 
 /**
@@ -150,20 +149,19 @@ public class SortingLongCollection {
      * Sort the values in memory, write them to a file, and clear the buffer of values in memory.
      */
     private void spillToDisk() {
+
         try {
             Arrays.sort(this.ramValues, 0, this.numValuesInRam);
             final File f = IOUtil.newTempFile("sortingcollection.", ".tmp", this.tmpDir, IOUtil.FIVE_GBS);
-            RandomAccessFile os = null;
+            DataOutputStream os = null;
             try {
                 final long numBytes = this.numValuesInRam * SIZEOF;
-                os = new RandomAccessFile(f, "rw");
+                os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f), Defaults.BUFFER_SIZE));
                 f.deleteOnExit();
-                final FileChannel channel = os.getChannel();
-                final MappedByteBuffer byteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, numBytes);
-                final LongBuffer longBuffer = byteBuffer.asLongBuffer();
-                longBuffer.put(this.ramValues, 0, this.numValuesInRam);
-                byteBuffer.force();
-                channel.close();
+                for (int i = 0; i < this.numValuesInRam; ++i) {
+                    os.writeLong(ramValues[i]);
+                }
+                os.flush();
             }
             finally {
                 if (os != null) {
@@ -238,39 +236,44 @@ public class SortingLongCollection {
      */
     private static class FileValueIterator {
         private final File file;
-        private LongBuffer longBuffer;
+        private final DataInputStream is;
+        private long currentRecord = 0;
+        private boolean isCurrentRecord = true;
 
         FileValueIterator(final File file) {
             this.file = file;
             try {
-                final FileInputStream is = new FileInputStream(file);
-                final FileChannel channel = is.getChannel();
-                longBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size()).asLongBuffer();
-                // Mapping remains in place despite closing of FileChannel or FileInputStream
-                channel.close();
-                is.close();
+                is = new DataInputStream(new BufferedInputStream(new FileInputStream(file),Defaults.BUFFER_SIZE));
+                next();
             }
             catch (FileNotFoundException e) {
                 throw new RuntimeIOException(file.getAbsolutePath(), e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
 
         boolean hasNext() {
-            return longBuffer.hasRemaining();
+            return isCurrentRecord;
         }
 
         long next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return longBuffer.get();
+            final long ret = currentRecord;
+            try {
+                currentRecord = is.readLong();
+            } catch (EOFException eof) {
+                isCurrentRecord = false;
+                currentRecord = 0;
+            } catch(IOException e) {
+                throw new RuntimeException(e);
+            }
+            return ret;
         }
 
         void close() {
+            CloserUtil.close(is);
             IOUtil.deleteFiles(file);
-            longBuffer = null;
         }
     }
 
