@@ -39,11 +39,12 @@ public class CreateSequenceDictionaryTest {
 
     @Test
     public void testBasic() throws Exception {
-        final File outputFasta = File.createTempFile("CreateSequenceDictionaryTest.", ".fasta");
-        outputFasta.deleteOnExit();
+        final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
+        outputDict.delete();
+        outputDict.deleteOnExit();
         final String[] argv = {
                 "REFERENCE=" + BASIC_FASTA,
-                "OUTPUT=" + outputFasta,
+                "OUTPUT=" + outputDict,
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
         Assert.assertEquals(new CreateSequenceDictionary().instanceMain(argv), 0);
@@ -54,11 +55,11 @@ public class CreateSequenceDictionaryTest {
      */
     @Test(expectedExceptions = PicardException.class)
     public void testNonUniqueSequenceName() throws Exception {
-        final File outputFasta = File.createTempFile("CreateSequenceDictionaryTest.", ".fasta");
-        outputFasta.deleteOnExit();
+        final File outputDict = File.createTempFile("CreateSequenceDictionaryTest.", ".dict");
+        outputDict.deleteOnExit();
         final String[] argv = {
                 "REFERENCE=" + DUPLICATE_FASTA,
-                "OUTPUT=" + outputFasta,
+                "OUTPUT=" + outputDict,
                 "TRUNCATE_NAMES_AT_WHITESPACE=true"
         };
         Assert.assertEquals(new CreateSequenceDictionary().instanceMain(argv), 0);
