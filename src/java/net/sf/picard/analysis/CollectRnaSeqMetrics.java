@@ -24,7 +24,7 @@
 package net.sf.picard.analysis;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.analysis.directed.MultiLevelRnaSeqMetricsCollector;
+import net.sf.picard.analysis.directed.RnaSeqMetricsCollector;
 import net.sf.picard.annotation.Gene;
 import net.sf.picard.annotation.GeneAnnotationReader;
 import net.sf.picard.cmdline.Option;
@@ -58,7 +58,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
             "For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.")
-    public MultiLevelRnaSeqMetricsCollector.StrandSpecificity STRAND_SPECIFICITY;
+    public RnaSeqMetricsCollector.StrandSpecificity STRAND_SPECIFICITY;
 
     @Option(doc="When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.")
     public int MINIMUM_LENGTH = 500;
@@ -76,7 +76,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    private MultiLevelRnaSeqMetricsCollector collector;
+    private RnaSeqMetricsCollector collector;
 
     /** Required main method implementation. */
     public static void main(final String[] argv) {
@@ -92,11 +92,11 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
 
         final Long ribosomalBasesInitialValue = RIBOSOMAL_INTERVALS != null ? 0L : null;
-        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = MultiLevelRnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS);
+        final OverlapDetector<Interval> ribosomalSequenceOverlapDetector = RnaSeqMetricsCollector.makeOverlapDetector(samFile, header, RIBOSOMAL_INTERVALS);
 
-        final HashSet<Integer> ignoredSequenceIndices = MultiLevelRnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
+        final HashSet<Integer> ignoredSequenceIndices = RnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
 
-        collector = new MultiLevelRnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
+        collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE);
     }
 

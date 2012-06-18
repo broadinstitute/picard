@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class MultilevelCollectorTest {
+public class MultiLevelCollectorTest {
 
     public static File TESTFILE = new File("testdata/net/sf/picard/sam/summary_alignment_stats_test_multiple.sam");
 
