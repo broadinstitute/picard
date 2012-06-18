@@ -110,6 +110,10 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      * @return program exit status.
      */
     protected int doWork() {
+        if (OUTPUT.exists()) {
+            throw new PicardException(OUTPUT.getAbsolutePath() +
+                    " already exists.  Delete this file and try again, or specify a different output file.");
+        }
         final SAMSequenceDictionary sequences = makeSequenceDictionary(REFERENCE);
         final SAMFileHeader samHeader = new SAMFileHeader();
         samHeader.setSequenceDictionary(sequences);
