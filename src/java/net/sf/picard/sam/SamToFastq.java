@@ -144,8 +144,12 @@ public class SamToFastq extends CommandLineProgram {
                 } else {
                     assertPairedMates(firstRecord, currentRecord);
 
-                    if (OUTPUT_PER_RG && fq.size() == 1) {
-                        fq.add(factory.newWriter(makeReadGroupFile(currentRecord.getReadGroup(), "_2")));
+                    if (fq.size() == 1) {
+                        if (OUTPUT_PER_RG) {
+                            fq.add(factory.newWriter(makeReadGroupFile(currentRecord.getReadGroup(), "_2")));
+                        } else {
+                            throw new PicardException("Input contains paired reads but no SECOND_END_FASTQ specified.");
+                        }
                     }
 
                     final SAMRecord read1 =
