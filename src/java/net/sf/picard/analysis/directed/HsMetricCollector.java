@@ -189,7 +189,7 @@ public class HsMetricCollector extends SAMRecordMultiLevelCollector<HsMetrics, I
             this.metrics.GENOME_SIZE = that.metrics.GENOME_SIZE;
 
             this.coverageByTarget = new LinkedHashMap<Interval, Coverage>(that.coverageByTarget.keySet().size() * 2, 0.5f);
-            for (Interval target : coverageByTarget.keySet()) {
+            for (Interval target : that.coverageByTarget.keySet()) {
                 this.coverageByTarget.put(target, new Coverage(target,0));
             }
 
