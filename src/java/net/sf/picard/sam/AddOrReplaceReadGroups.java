@@ -8,6 +8,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.util.Iso8601Date;
 
 import javax.xml.bind.SchemaOutputResolver;
 import java.io.File;
@@ -54,6 +55,9 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Option(shortName="DS", doc="Read Group description", optional=true)
     public String RGDS;
 
+    @Option(shortName="DT", doc="Read Group run date", optional=true)
+    public Iso8601Date RGDT;
+
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 
     /** Required main method implementation. */
@@ -75,6 +79,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         rg.setPlatformUnit(RGPU);
         if (RGCN != null) rg.setSequencingCenter(RGCN);
         if (RGDS != null) rg.setDescription(RGDS);
+        if (RGDT != null) rg.setRunDate(RGDT);
 
         log.info(String.format("Created read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 
