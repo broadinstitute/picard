@@ -29,6 +29,8 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 
 import java.io.File;
@@ -51,26 +53,28 @@ public class SamFormatConverter extends CommandLineProgram {
     @Option(doc="The BAM or SAM file to parse.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The BAM or SAM output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) public File OUTPUT;
 
+    public static void main(final String[] argv) {
+        new SamFormatConverter().instanceMainWithExit(argv);
+    }
+
+
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
-        SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
 
         if  (CREATE_INDEX && writer.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate){
             throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
         }
-        final Iterator<SAMRecord> iterator = reader.iterator();
-        while (iterator.hasNext()) {
-            writer.addAlignment(iterator.next());
+
+        final ProgressLogger progress = new ProgressLogger(Log.getInstance(SamFormatConverter.class));
+        for (final SAMRecord rec : reader) {
+            writer.addAlignment(rec);
+            progress.record(rec);
         }
         reader.close();
         writer.close();
         return 0;
     }
-
-    public static void main(String[] argv) {
-        System.exit(new SamFormatConverter().instanceMain(argv));
-    }
-
 }

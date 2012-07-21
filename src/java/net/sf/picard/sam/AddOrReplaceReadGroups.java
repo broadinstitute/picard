@@ -6,6 +6,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.Iso8601Date;
@@ -69,10 +70,10 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-        SAMFileReader in = new SAMFileReader(INPUT);
+        final SAMFileReader in = new SAMFileReader(INPUT);
 
         // create the read group we'll be using
-        SAMReadGroupRecord rg = new SAMReadGroupRecord(RGID);
+        final SAMReadGroupRecord rg = new SAMReadGroupRecord(RGID);
         rg.setLibrary(RGLB);
         rg.setPlatform(RGPL);
         rg.setSample(RGSM);
@@ -93,9 +94,11 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
                                                                                       outHeader.getSortOrder() == inHeader.getSortOrder(),
                                                                                       OUTPUT);
 
+        final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord read : in) {
             read.setAttribute(SAMTag.RG.name(), RGID);
             outWriter.addAlignment(read);
+            progress.record(read);
         }
 
         // cleanup

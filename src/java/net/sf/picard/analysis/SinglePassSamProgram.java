@@ -8,6 +8,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.SAMFileReader;
@@ -103,8 +104,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         }
 
 
-        final NumberFormat fmt = new DecimalFormat("#,###");
-        long i = 0;
+        final ProgressLogger progress = new ProgressLogger(log);
 
         for (final SAMRecord rec : in) {
             final ReferenceSequence ref;
@@ -119,17 +119,10 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                 program.acceptRead(rec, ref);
             }
 
-            // Some progress logging
-            if (++i % 1000000 == 0) {
-                String count = fmt.format(i);
-                if (i < 100000000) count = " " + count;
-                if (i < 10000000 ) count = " " + count;
-
-                log.info("Processed " + count + " records.");
-            }
+            progress.record(rec);
 
             // See if we need to terminate early?
-            if (stopAfter > 0 && i >= stopAfter) {
+            if (stopAfter > 0 && progress.getCount() >= stopAfter) {
                 break;
             }
 

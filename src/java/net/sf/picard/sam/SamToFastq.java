@@ -33,6 +33,7 @@ import net.sf.picard.fastq.FastqWriter;
 import net.sf.picard.fastq.FastqWriterFactory;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
@@ -125,7 +126,7 @@ public class SamToFastq extends CommandLineProgram {
         final FastqWriterFactory factory = new FastqWriterFactory();
         final Map<SAMReadGroupRecord, List<FastqWriter>> writers = getWriters(reader.getFileHeader().getReadGroups(), factory);
 
-        long count = 0;
+        final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord currentRecord : reader) {
             if (currentRecord.getNotPrimaryAlignmentFlag() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
                 continue;
@@ -164,9 +165,7 @@ public class SamToFastq extends CommandLineProgram {
                 writeRecord(currentRecord, null, fq.get(0), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
             }
 
-            if (++count % 10000000 == 0) {
-                log.info("Processed " + count + " records.");
-            }
+            progress.record(currentRecord);
         }
 
         reader.close();

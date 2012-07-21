@@ -32,6 +32,7 @@ import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
@@ -151,7 +152,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
 
-        long written = 0;
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
@@ -206,9 +207,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
             else {
                 out.addAlignment(rec);
-                if (++written % 10000000 == 0) {
-                    log.info("Written " + written + " records.");
-                }
+                progress.record(rec);
             }
         }
 
@@ -323,6 +322,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         final SAMFileHeader header = headerAndIterator.header;
         final ReadEndsMap tmp = new DiskReadEndsMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP);
         long index = 0;
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
 
         while (iterator.hasNext()) {
@@ -378,9 +378,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
 
             // Print out some stats every 1m reads
-            if (++index % 1000000 == 0) {
-                log.info("Read " + index + " records. Tracking " + tmp.size() + " as yet unmatched pairs. " +
-                tmp.sizeInRam() + " records in RAM.  Last sequence index: " + rec.getReferenceIndex());
+            ++index;
+            if (progress.record(rec)) {
+                log.info("Tracking " + tmp.size() + " as yet unmatched pairs. " + tmp.sizeInRam() + " records in RAM.");
             }
         }
 
@@ -417,7 +417,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
 
             if (rg != null && readGroups != null) {
-                for (SAMReadGroupRecord readGroup : readGroups) {
+                for (final SAMReadGroupRecord readGroup : readGroups) {
                     if (readGroup.getReadGroupId().equals(rg)) break;
                     else ends.readGroup++;
                 }

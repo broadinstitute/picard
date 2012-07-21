@@ -29,6 +29,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 
 import java.io.File;
@@ -142,14 +143,12 @@ public class MergeSamFiles extends CommandLineProgram {
         final SAMFileWriter out = samFileWriterFactory.makeSAMOrBAMWriter(header, presorted, OUTPUT);
 
         // Lastly loop through and write out the records
-        for (long numRecords = 1; iterator.hasNext(); ++numRecords) {
+        final ProgressLogger progress = new ProgressLogger(log, PROGRESS_INTERVAL);
+        while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
             out.addAlignment(record);
-            if (numRecords % PROGRESS_INTERVAL == 0) {
-                log.info(numRecords + " records read.");
-            }
+            progress.record(record);
         }
-
 
         log.info("Finished reading inputs.");
         out.close();
