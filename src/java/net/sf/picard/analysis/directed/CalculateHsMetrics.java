@@ -130,14 +130,12 @@ public class CalculateHsMetrics extends CommandLineProgram {
 
         // Add each record to the requested collectors
         final Iterator<SAMRecord> records = samReader.iterator();
-        int i = 0;
+        final ProgressLogger progress = new ProgressLogger(log);
+
         while (records.hasNext()) {
             final SAMRecord sam = records.next();
             hsCollector.acceptRecord(sam, null);
-
-            if (++i % 1000000 == 0) {
-                log.info("Processed " + i + " records so far.");
-            }
+            progress.record(sam);
         }
 
         // Write the output file

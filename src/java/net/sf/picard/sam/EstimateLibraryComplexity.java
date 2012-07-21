@@ -9,6 +9,7 @@ import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
@@ -227,6 +228,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
                                                                                            TMP_DIR);
 
         // Loop through the input files and pick out the read sequences etc.
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         for (final File f : INPUT) {
             final Map<String,PairedReadSequence> pendingByName = new HashMap<String, PairedReadSequence>();
             final SAMFileReader in = new SAMFileReader(f);
@@ -272,7 +274,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
                     sorter.add(prs);
                 }
 
-                if (++recordsRead % 1000000 == 0) log.info("Read " + recordsRead + " records.");
+                progress.record(rec);
             }
         }
 

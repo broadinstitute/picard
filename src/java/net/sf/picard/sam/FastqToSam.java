@@ -33,6 +33,7 @@ import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.FastqQualityFormat;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.picard.util.SolexaQualityConverter;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
@@ -134,11 +135,13 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
 
         int readCount = 0;
+        final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
             final SAMRecord srec = createSamRecord(header, getReadName(frec.getReadHeader()) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
+            progress.record(srec);
         }
 
         writer.close();
@@ -157,6 +160,7 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileWriter writer = (new SAMFileWriterFactory()).makeSAMOrBAMWriter(header, false, OUTPUT);
 
         int readCount = 0;
+        final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader1.hasNext() && freader2.hasNext() ; readCount++) {
             final FastqRecord frec1 = freader1.next();
             final FastqRecord frec2 = freader2.next();
@@ -169,11 +173,13 @@ public class FastqToSam extends CommandLineProgram {
             srec1.setFirstOfPairFlag(true);
             srec1.setSecondOfPairFlag(false);
             writer.addAlignment(srec1);
+            progress.record(srec1);
 
             final SAMRecord srec2 = createSamRecord(header, baseName, frec2, true) ;
             srec2.setFirstOfPairFlag(false);
             srec2.setSecondOfPairFlag(true);
             writer.addAlignment(srec2);
+            progress.record(srec2);
         }
 
         writer.close();

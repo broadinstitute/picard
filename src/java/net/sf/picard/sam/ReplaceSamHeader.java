@@ -29,6 +29,8 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 
 import java.io.File;
@@ -52,7 +54,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    public static void main(String[] argv) {
+    public static void main(final String[] argv) {
         new ReplaceSamHeader().instanceMainWithExit(argv);
     }
     /**
@@ -77,14 +79,18 @@ public class ReplaceSamHeader extends CommandLineProgram {
                 ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
             }
             final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+            
+            final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
             for (final SAMRecord rec : recordReader) {
                 rec.setHeader(replacementHeader);
                 writer.addAlignment(rec);
+                progress.record(rec);
             }
             writer.close();
             headerReader.close();
             recordReader.close();
-        } finally {
+        }
+        finally {
             SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
         return 0;

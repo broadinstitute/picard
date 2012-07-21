@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.sf.picard.util.PeekableIterator;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.picard.util.Log;
@@ -170,7 +171,7 @@ public class FixMateInformation extends CommandLineProgram {
         createSamFileWriter(header);
 
         log.info("Traversing query name sorted records and fixing up mate pair information.");
-        long count = 0;
+        final ProgressLogger progress = new ProgressLogger(log);
         while (iterator.hasNext()) {
             final SAMRecord rec1 = iterator.next();
             final SAMRecord rec2 = iterator.hasNext() ? iterator.peek() : null;
@@ -180,15 +181,11 @@ public class FixMateInformation extends CommandLineProgram {
                 SamPairUtil.setMateInfo(rec1, rec2, header);
                 writeAlignment(rec1);
                 writeAlignment(rec2);
-                count += 2;
+                progress.record(rec1, rec2);
             }
             else {
                 writeAlignment(rec1);
-                ++count;
-            }
-
-            if (count % 1000000 == 0) {
-                log.info("Processed " + count + " records.");
+                progress.record(rec1);
             }
         }
         iterator.close();

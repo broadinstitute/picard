@@ -29,6 +29,8 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.CigarUtil;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
@@ -50,7 +52,7 @@ public class CleanSam extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Where to write cleaned SAM.")
     public File OUTPUT;
 
-    public static void main(String[] argv) {
+    public static void main(final String[] argv) {
         new CleanSam().instanceMainWithExit(argv);
     }
 
@@ -64,33 +66,37 @@ public class CleanSam extends CommandLineProgram {
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
-        SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         if (VALIDATION_STRINGENCY == SAMFileReader.ValidationStringency.STRICT) {
             SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
         }
         try {
-            SAMFileReader reader = new SAMFileReader(INPUT);
-            SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-            CloseableIterator<SAMRecord> it = reader.iterator();
+            final SAMFileReader reader = new SAMFileReader(INPUT);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+            final CloseableIterator<SAMRecord> it = reader.iterator();
+            final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
 
             // If the read maps off the end of the alignment, clip it
             while(it.hasNext()) {
-                SAMRecord rec = it.next();
+                final SAMRecord rec = it.next();
                 if (!rec.getReadUnmappedFlag()) {
-                    SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
+                    final SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
                     if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
                         // 1-based index of first base in read to clip.
-                        int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-                        List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
+                        final int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+                        final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
                         rec.setCigar(new Cigar(newCigarElements));
                     }
                 }
-                writer.addAlignment(rec);
 
+                writer.addAlignment(rec);
+                progress.record(rec);
             }
+
             writer.close();
             it.close();
-        } finally {
+        }
+        finally {
             SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
         return 0;

@@ -32,8 +32,7 @@ import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
+import net.sf.picard.util.*;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.metrics.MetricsFile;
@@ -45,9 +44,6 @@ import net.sf.samtools.util.StringUtil;
 import java.io.File;
 import java.util.*;
 import java.text.NumberFormat;
-
-import net.sf.picard.util.RExecutor;
-import net.sf.picard.util.QualityUtil;
 
 /**
  * Tool to collect information about GC bias in the reads in a given BAM file. Computes
@@ -134,6 +130,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         // Loop over the reference and the reads and calculate the basic metrics
         ////////////////////////////////////////////////////////////////////////////
         ReferenceSequence ref = null;
+        final ProgressLogger progress = new ProgressLogger(log);
         while ((ref = referenceFile.nextSequence()) != null) {
             final byte[] refBases = ref.getBases();
             StringUtil.toUpperCase(refBases);
@@ -162,6 +159,8 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                         }
                     }
                 }
+
+                progress.record(rec);
             }
 
             log.info("Processed reference sequence: " + ref.getName());

@@ -37,6 +37,7 @@ import net.sf.picard.filter.FilteringIterator;
 import net.sf.picard.filter.ReadNameFilter;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriter;
@@ -122,24 +123,20 @@ public class FilterSamReads extends CommandLineProgram {
             OUTPUT.getName() + " [sortorder=" + outputHeader.getSortOrder().name() + "]");
 
         // create OUTPUT file
-        final SAMFileWriter outputWriter =
-            new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader, presorted, OUTPUT);
+        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader, presorted, OUTPUT);
 
-        int count = 0;
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
+        
         while (filteringIterator.hasNext()) {
-            outputWriter.addAlignment(filteringIterator.next());
-            count++;
-            if (count != 0 && (count % 1000000 == 0)) {
-                log.info(new DecimalFormat("#,###").format(count) + " SAMRecords written to " +
-                    OUTPUT.getName());
-            }
+            final SAMRecord rec = filteringIterator.next();
+            outputWriter.addAlignment(rec);
+            progress.record(rec);
         }
 
         filteringIterator.close();
         outputWriter.close();
         inputReader.close();
-        log.info(new DecimalFormat("#,###").format(count) + " SAMRecords written to " +
-            OUTPUT.getName());
+        log.info(new DecimalFormat("#,###").format(progress.getCount()) + " SAMRecords written to " + OUTPUT.getName());
     }
 
     /**

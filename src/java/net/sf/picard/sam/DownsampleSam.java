@@ -6,6 +6,7 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
@@ -57,14 +58,12 @@ public class DownsampleSam extends CommandLineProgram {
 
         long total = 0;
         long kept  = 0;
-
+        
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
 
         for (final SAMRecord rec : in) {
             if (rec.getNotPrimaryAlignmentFlag()) continue;
-
-            if (++total % 10000000 == 0) {
-                log.info("Read " + total + " reads, kept " + kept);
-            }
+            ++total;
 
             final String key = rec.getReadName();
             final Boolean previous = decisions.remove(key);
@@ -82,6 +81,8 @@ public class DownsampleSam extends CommandLineProgram {
                 out.addAlignment(rec);
                 ++kept;
             }
+
+            progress.record(rec);
         }
 
         out.close();

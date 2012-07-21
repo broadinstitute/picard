@@ -29,10 +29,10 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 
 import java.io.File;
-import java.util.Iterator;
 
 /**
  * @author alecw@broadinstitute.org
@@ -53,19 +53,21 @@ public class SortSam extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SortSam.class);
 
-    protected int doWork() {
-        long n = 0;
+    public static void main(final String[] argv) {
+        new SortSam().instanceMainWithExit(argv);
+    }
 
+    protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
-        SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         reader.getFileHeader().setSortOrder(SORT_ORDER);
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
 
-        final Iterator<SAMRecord> iterator = reader.iterator();
-        while (iterator.hasNext()) {
-            writer.addAlignment(iterator.next());
-            if (++n % 10000000 == 0) log.info("Read " + n + " records.");
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
+        for (final SAMRecord rec: reader) {
+            writer.addAlignment(rec);
+            progress.record(rec);
         }
 
         log.info("Finished reading inputs, merging and writing to output now.");
@@ -74,9 +76,4 @@ public class SortSam extends CommandLineProgram {
         writer.close();
         return 0;
     }
-
-    public static void main(String[] argv) {
-        new SortSam().instanceMainWithExit(argv);
-    }
-
 }
