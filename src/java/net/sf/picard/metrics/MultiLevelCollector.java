@@ -104,7 +104,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
      * PerUnitMetricCollector should receive a specific record and distribute records on to the that collector
      *
      * There were will be 0 or 1 Distributors for each of the following MetriAcummulationLevels:
-     * ALL_READSm SAMPLE, LIBRARY, READ_GROUP
+     * ALL_READS, SAMPLE, LIBRARY, READ_GROUP
      */
     private abstract class Distributor {
         //A Map mapping the key for a specific record (as determined by getKey) to the appropriate collector

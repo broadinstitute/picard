@@ -163,23 +163,4 @@ public class HsMetrics extends MultilevelMetrics {
      * reads that should have mapped to GC>=50% regions mapped elsewhere.
      */
     public double GC_DROPOUT;
-
-    /**
-     * Calculates the metrics in this class that can be derived from other metrics in the class.
-     */
-    public void calculateDerivedMetrics() {
-        BAIT_DESIGN_EFFICIENCY = (double) TARGET_TERRITORY / (double) BAIT_TERRITORY;
-
-        PCT_PF_READS         = PF_READS / (double) TOTAL_READS;
-        PCT_PF_UQ_READS      = PF_UNIQUE_READS / (double) TOTAL_READS;
-        PCT_PF_UQ_READS_ALIGNED = PF_UQ_READS_ALIGNED / (double) PF_UNIQUE_READS;
-
-        final double denominator   = (ON_BAIT_BASES + NEAR_BAIT_BASES + OFF_BAIT_BASES);
-
-        PCT_SELECTED_BASES   = (ON_BAIT_BASES + NEAR_BAIT_BASES) / denominator;
-        PCT_OFF_BAIT         = OFF_BAIT_BASES / denominator;
-        ON_BAIT_VS_SELECTED  = ON_BAIT_BASES / (double) (ON_BAIT_BASES + NEAR_BAIT_BASES);
-        MEAN_BAIT_COVERAGE   = ON_BAIT_BASES / (double) BAIT_TERRITORY;
-        FOLD_ENRICHMENT = (ON_BAIT_BASES/ denominator) / ((double) BAIT_TERRITORY / GENOME_SIZE);
-    }
 }
