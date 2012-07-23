@@ -18,6 +18,7 @@ public class ProgressLogger {
     private final long startTime = System.currentTimeMillis();
     
     private final NumberFormat fmt = new DecimalFormat("#,###");
+    private final NumberFormat timeFmt = new DecimalFormat("00");
     
     private long processed = 0;
     private long lastStartTime = startTime;
@@ -58,7 +59,7 @@ public class ProgressLogger {
             this.lastStartTime = now;
 
             final long seconds = (System.currentTimeMillis() - startTime) / 1000;
-            final String elapsed   = pad(fmt.format(seconds), 7);
+            final String elapsed   = formatElapseTime(seconds);
             final String period    = pad(fmt.format(lastPeriodSeconds), 4);
             final String processed = pad(fmt.format(this.processed), 13);
             
@@ -98,5 +99,15 @@ public class ProgressLogger {
         }
         
         return in;
+    }
+    
+    /** Formats a number of seconds into hours:minutes:seconds. */
+    private String formatElapseTime(final long seconds) {
+        final long s = seconds % 60;
+        final long allMinutes = seconds / 60;
+        final long m = allMinutes % 60;
+        final long h = allMinutes / 60;
+
+        return timeFmt.format(h) + ":" + timeFmt.format(m) + ":" + timeFmt.format(s);
     }
 }
