@@ -28,9 +28,7 @@ import net.sf.picard.filter.FilteringIterator;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordQueryNameComparator;
-import net.sf.samtools.SAMTag;
+import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.util.*;
@@ -71,10 +69,11 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
         peekIterator = new PeekableIterator<SAMRecord>(new FilteringIterator(querynameOrderIterator,
                 new SamRecordFilter() {
                     public boolean filterOut(final SAMRecord record) {
-                        return record.getReadUnmappedFlag();
+                        return record.getReadUnmappedFlag() || cigarMapsNoBasesToRef(record.getCigar());
                     }
                     public boolean filterOut(final SAMRecord first, final SAMRecord second) {
-                        return (first.getReadUnmappedFlag() && second.getReadUnmappedFlag());
+                        return ((first.getReadUnmappedFlag() || cigarMapsNoBasesToRef(first.getCigar()))
+                                && (second.getReadUnmappedFlag() || cigarMapsNoBasesToRef(second.getCigar())));
                     }
                 }));
     }
@@ -105,6 +104,24 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
                 throw new IllegalStateException("Underlying iterator is not queryname sorted: " +
                 rec + " > " + peekIterator.peek());
             }
+
+            // If the read has no alignment (all soft-clipped, for example) make it unmapped
+            if (cigarMapsNoBasesToRef(rec.getCigar())) {
+                if (rec.getReadNegativeStrandFlag()) {
+                    SAMRecordUtil.reverseComplement(rec);
+                    rec.setReadNegativeStrandFlag(false);
+                }
+                rec.setDuplicateReadFlag(false);
+                rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+                rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+                rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+                rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+                rec.setInferredInsertSize(0);
+                rec.setNotPrimaryAlignmentFlag(false);
+                rec.setProperPairFlag(false);
+                rec.setReadUnmappedFlag(true);
+            }
+
             if (isPaired == null) {
                 isPaired = rec.getReadPairedFlag();
             } else if (isPaired != rec.getReadPairedFlag()) {
@@ -159,6 +176,19 @@ class MultiHitAlignedReadIterator implements CloseableIterator<MultiHitAlignedRe
 
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Determines if a cigar has any element that both consumes read bases and consumes reference bases
+     * (e.g. is not all soft-clipped)
+     */
+    private boolean cigarMapsNoBasesToRef(final Cigar cigar) {
+        for (final CigarElement el : cigar.getCigarElements()) {
+            if (el.getOperator().consumesReadBases() && el.getOperator().consumesReferenceBases()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
