@@ -31,14 +31,13 @@ import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
-import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
-import net.sf.samtools.util.StringUtil;
+import net.sf.samtools.SAMFileHeader.SortOrder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * Reverts a SAM file by optionally restoring original quality scores and by removing
@@ -87,6 +86,7 @@ public class RevertSam extends CommandLineProgram {
             "same sample alias ", shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional=true)
     public String LIBRARY_NAME;
 
+    private final static Log log = Log.getInstance(RevertSam.class);
 
     /** Default main method impl. */
     public static void main(final String[] args) {
@@ -102,7 +102,7 @@ public class RevertSam extends CommandLineProgram {
 
         // If we are going to override SAMPLE_ALIAS or LIBRARY_NAME, make sure all the read
         // groups have the same values.
-        List<SAMReadGroupRecord> rgs = inHeader.getReadGroups();
+        final List<SAMReadGroupRecord> rgs = inHeader.getReadGroups();
         if (SAMPLE_ALIAS != null || LIBRARY_NAME != null) {
             boolean allSampleAliasesIdentical = true;
             boolean allLibraryNamesIdentical = true;
@@ -128,7 +128,7 @@ public class RevertSam extends CommandLineProgram {
         // Build the output writer with an appropriate header based on the options
         final boolean presorted = inHeader.getSortOrder() == SORT_ORDER;
         final SAMFileHeader outHeader = new SAMFileHeader();
-        for (SAMReadGroupRecord rg : inHeader.getReadGroups()) {
+        for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
             if (SAMPLE_ALIAS != null) {
                 rg.setSample(SAMPLE_ALIAS);
             }
@@ -145,6 +145,7 @@ public class RevertSam extends CommandLineProgram {
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
 
+        final ProgressLogger progress = new ProgressLogger(log, 1000000, "Reverted");
         for (final SAMRecord rec : in) {
             if (rec.getNotPrimaryAlignmentFlag()) continue;
             if (RESTORE_ORIGINAL_QUALITIES) {
@@ -195,6 +196,7 @@ public class RevertSam extends CommandLineProgram {
             }
 
             out.addAlignment(rec);
+            progress.record(rec);
         }
 
         out.close();

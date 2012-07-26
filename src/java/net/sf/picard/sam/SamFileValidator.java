@@ -32,6 +32,7 @@ import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMValidationError.Type;
@@ -227,11 +228,13 @@ public class SamFileValidator {
     }
 
     private void validateSamRecords(final Iterable<SAMRecord> samRecords) {
-        long recordNumber = 1;
         SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
+        final ProgressLogger progress = new ProgressLogger(log, 10000000, "Validated Read");
         try {
             while(iter.hasNext()){
                 SAMRecord record = iter.next();
+
+                final long recordNumber = progress.getCount() + 1;
                 final Collection<SAMValidationError> errors = record.isValid();
                 if (errors != null) {
                     for (final SAMValidationError error : errors) {
@@ -253,16 +256,14 @@ public class SamFileValidator {
                     sequenceDictionaryEmptyAndNoWarningEmitted = false;
 
                 }
-                recordNumber++;
-                if (recordNumber % 10000000 == 0) {
-                    log.info(recordNumber + " reads validated.");
-                }
+                progress.record(record);
             }
         } catch (SAMFormatException e) {
             // increment record number because the iterator behind the SAMFileReader
             // reads one record ahead so we will get this failure one record ahead
-            out.println("SAMFormatException on record " + ++recordNumber);
-            throw new PicardException("SAMFormatException on record " + recordNumber, e);
+            final String msg = "SAMFormatException on record " + progress.getCount() + 1;
+            out.println(msg);
+            throw new PicardException(msg, e);
         } catch (FileTruncatedException e) {
             addError(new SAMValidationError(Type.TRUNCATED_FILE, "File is truncated", null));
         } finally {
