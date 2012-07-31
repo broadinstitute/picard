@@ -78,6 +78,11 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     private RnaSeqMetricsCollector collector;
 
+    /**
+     * A subtitle for the plot, usually corresponding to a library.
+     */
+    private String plotSubtitle = "";
+
     /** Required main method implementation. */
     public static void main(final String[] argv) {
         new CollectRnaSeqMetrics().instanceMainWithExit(argv);
@@ -98,6 +103,12 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
                 geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE);
+
+        // If we're working with a single library, assign that library's name as a suffix to the plot title
+        final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
+        if (readGroups.size() == 1) {
+            this.plotSubtitle = readGroups.get(0).getLibrary();
+        }
     }
 
     @Override
@@ -122,7 +133,8 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             final int rResult = RExecutor.executeFromClasspath("net/sf/picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
                                                                CHART_OUTPUT.getAbsolutePath(),
-                                                               INPUT.getName());
+                                                               INPUT.getName(),
+                                                               this.plotSubtitle);
 
             if (rResult != 0) {
                 throw new PicardException("Problem invoking R to generate plot.");

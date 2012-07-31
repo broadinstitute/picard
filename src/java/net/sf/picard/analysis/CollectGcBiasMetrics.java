@@ -33,12 +33,9 @@ import net.sf.picard.reference.ReferenceSequenceFileFactory;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.*;
-import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.*;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.picard.metrics.MetricsFile;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
@@ -110,6 +107,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         final long[] errorsByGc = new long[101];
 
         final SAMFileReader sam = new SAMFileReader(INPUT);
+
         if (!ASSUME_SORTED && sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             throw new PicardException("Header of input file " + INPUT.getAbsolutePath() + " indicates that it is not coordinate sorted.  " +
             "If you believe the records are in coordinate order, pass option ASSUME_SORTED=true.  If not, sort the file with SortSam.");
@@ -216,10 +214,17 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         fmt.setGroupingUsed(true);
         final String subtitle = "Total clusters: " + fmt.format(this.totalClusters) +
                                 ", Aligned reads: " + fmt.format(this.totalAlignedReads);
+        String title = INPUT.getName().replace(".duplicates_marked", "").replace(".aligned.bam", "");
+
+        // Qualify the title with the library name iff it's for a single sample
+        final List<SAMReadGroupRecord> readGroups = sam.getFileHeader().getReadGroups();
+        if (readGroups.size() == 1) {
+            title += "." + readGroups.get(0).getLibrary();
+        }
         RExecutor.executeFromClasspath(R_SCRIPT,
                                        OUTPUT.getAbsolutePath(),
                                        CHART_OUTPUT.getAbsolutePath(),
-                                       INPUT.getName().replace(".duplicates_marked", "").replace(".aligned.bam", ""),
+                                       title,
                                        subtitle,
                                        String.valueOf(WINDOW_SIZE));
 

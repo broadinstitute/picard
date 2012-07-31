@@ -24,22 +24,21 @@
 
 package net.sf.picard.analysis;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.RExecutor;
 import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
+import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Histogram;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.RExecutor;
 import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -61,6 +60,11 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     private HistogramGenerator q  = new HistogramGenerator(false);
     private HistogramGenerator oq = new HistogramGenerator(true);
+
+    /**
+     * A subtitle for the plot, usually corresponding to a library.
+     */
+    private String plotSubtitle = "";
 
     private final Log log = Log.getInstance(MeanQualityByCycle.class);
 
@@ -147,6 +151,12 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
         IoUtil.assertFileIsWritable(CHART_OUTPUT);
+        // If we're working with a single library, assign that library's name
+        // as a suffix to the plot title
+        final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
+        if (readGroups.size() == 1) {
+            this.plotSubtitle = readGroups.get(0).getLibrary();
+        }
     }
 
     @Override
@@ -177,7 +187,8 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
                     "net/sf/picard/analysis/meanQualityByCycle.R",
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath(),
-                    INPUT.getName());
+                    INPUT.getName(),
+                    this.plotSubtitle);
 
             if (rResult != 0) {
                 throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);

@@ -24,20 +24,21 @@
 
 package net.sf.picard.analysis;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.Histogram;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.RExecutor;
 import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMReadGroupRecord;
+import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.SequenceUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.PicardException;
 
 import java.io.File;
-
-import net.sf.samtools.SAMRecord;
+import java.util.List;
 
 /**
  * Charts quality score distribution within a BAM file.
@@ -60,6 +61,12 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     private final long[] qCounts  = new long[128];
     private final long[] oqCounts = new long[128];
 
+    /**
+     * A subtitle for the plot, usually corresponding to a library.
+     */
+    private String plotSubtitle = "";
+
+
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     /** Required main method. */
@@ -72,6 +79,13 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     protected void setup(final SAMFileHeader header, final File samFile) {
         IoUtil.assertFileIsWritable(OUTPUT);
         IoUtil.assertFileIsWritable(CHART_OUTPUT);
+
+        // If we're working with a single library, assign that library's name
+        // as a suffix to the plot title
+        final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
+        if (readGroups.size() == 1) {
+            this.plotSubtitle = readGroups.get(0).getLibrary();
+        }
     }
 
     @Override
@@ -110,7 +124,6 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         metrics.addHistogram(qHisto);
         if (!oqHisto.isEmpty()) metrics.addHistogram(oqHisto);
         metrics.write(OUTPUT);
-
         if (qHisto.isEmpty() && oqHisto.isEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
         }
@@ -120,7 +133,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
                     "net/sf/picard/analysis/qualityScoreDistribution.R",
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath(),
-                    INPUT.getName());
+                    INPUT.getName(),
+                    this.plotSubtitle);
 
             if (rResult != 0) {
                 throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);

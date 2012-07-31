@@ -5,7 +5,8 @@
 args <- commandArgs(trailing=T)
 metricsFile  <- args[1]
 outputFile   <- args[2]
-titlePrefix  <- args[3]
+bamFile  <- args[3]
+subtitle <- ifelse(length(args) < 4, "", args[4])
 
 # Figure out where the metrics and the histogram are in the file and parse them out
 startFinder <- scan(metricsFile, what="character", sep="\n", quiet=TRUE, blank.lines.skip=FALSE)
@@ -33,7 +34,7 @@ pdf(outputFile)
 plot(histogram$QUALITY,
      histogram$COUNT_OF_Q,
      type="n",
-     main=paste(titlePrefix, " Quality Score Distribution"),
+     main=paste("Quality Score Distribution\nin file ",bamFile," ",ifelse(subtitle == "","",paste("(",subtitle,")",sep="")),sep=""),
      xlab="Quality Score",
      ylab="Observations")
 
