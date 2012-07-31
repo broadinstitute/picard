@@ -498,4 +498,35 @@ public final class SAMUtils
             }
         }
     }
+
+    public static void makeReadUnmapped(SAMRecord rec) {
+        if (rec.getReadNegativeStrandFlag()) {
+            SAMRecordUtil.reverseComplement(rec);
+            rec.setReadNegativeStrandFlag(false);
+        }
+        rec.setDuplicateReadFlag(false);
+        rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+        rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+        rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+        rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+        rec.setInferredInsertSize(0);
+        rec.setNotPrimaryAlignmentFlag(false);
+        rec.setProperPairFlag(false);
+        rec.setReadUnmappedFlag(true);
+    }
+
+
+    /**
+     * Determines if a cigar has any element that both consumes read bases and consumes reference bases
+     * (e.g. is not all soft-clipped)
+     */
+    public static boolean cigarMapsNoBasesToRef(final Cigar cigar) {
+        for (final CigarElement el : cigar.getCigarElements()) {
+            if (el.getOperator().consumesReadBases() && el.getOperator().consumesReferenceBases()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
