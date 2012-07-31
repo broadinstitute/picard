@@ -7,6 +7,7 @@ args <- commandArgs(trailing=T)
 metricsFile  <- args[1]
 outputFile   <- args[2]
 bamName  <- args[3]
+subtitle <- ifelse(length(args) < 4, "", args[4])
 
 # Figure out where the metrics and the histogram are in the file and parse them out
 startFinder <- scan(metricsFile, what="character", sep="\n", quiet=TRUE, blank.lines.skip=FALSE)
@@ -53,7 +54,7 @@ for (i in 1:length(levels)) {
         xlim=c(0, 100),
         ylim=range(0, max(data[nc])),
         col="royalblue",
-        main=paste("RNA-Seq Coverage vs. Transcript Position", "\n", levels[i], "\nin file", bamName))
+        main=paste("RNA-Seq Coverage vs. Transcript Position\n", levels[i], " ", ifelse(subtitle=="", "", paste("(", subtitle, ")", sep="")), "\nin file ", bamName,sep=""))
 
     # Add a horizontal line at coverage=1
     abline(h=1, col="lightgrey");
