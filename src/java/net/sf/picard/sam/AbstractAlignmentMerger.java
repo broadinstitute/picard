@@ -365,6 +365,9 @@ public abstract class AbstractAlignmentMerger {
             unaligned.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID,
                 this.programRecord.getProgramGroupId());
         }
+        if (SAMUtils.cigarMapsNoBasesToRef(unaligned.getCigar())) {
+            SAMUtils.makeReadUnmapped(unaligned);
+        }
     }
 
     /**
