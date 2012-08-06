@@ -100,7 +100,7 @@ public class IlluminaDataProvider implements Iterator<ClusterData>, Iterable<Clu
         if(!more) {
             for(int i = 1; i < parsers.length; i++) {
                 if(parsers[i].hasNext()) {
-                    throw new PicardException("Unequal length Illumina files in " + basecallDirectory + ", lane " + lane + ". Failing parser: " + parsers.getClass().getName());
+                    throw new PicardException("Unequal length Illumina files in " + basecallDirectory + ", lane " + lane + ". Failing parser: " + parsers[i].getClass().getName());
                 }
             }
         }
