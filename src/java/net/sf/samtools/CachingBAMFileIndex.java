@@ -23,6 +23,8 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.SeekableStream;
+
 import java.io.*;
 import java.util.*;
 
@@ -37,6 +39,10 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
 
     public CachingBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
         super(file, dictionary);
+    }
+
+    public CachingBAMFileIndex(final SeekableStream stream, SAMSequenceDictionary dictionary) {
+        super(stream, dictionary);
     }
 
     public CachingBAMFileIndex(final File file, SAMSequenceDictionary dictionary, boolean useMemoryMapping) {

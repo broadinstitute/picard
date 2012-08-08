@@ -47,8 +47,10 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     private final BlockCompressedInputStream mCompressedInputStream;
     private SAMFileHeader mFileHeader = null;
 
-    // Populated if the file is seekable and an index exists
-    private File mIndexFile;
+    // One of these is populated if the file is seekable and an index exists
+    private File mIndexFile = null;
+    private SeekableStream mIndexStream = null;
+
     private BAMIndex mIndex = null;
     private long mFirstRecordPointer = 0;
     private CloseableIterator<SAMRecord> mCurrentIterator = null;
@@ -129,6 +131,15 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this(new BlockCompressedInputStream(strm), indexFile, eagerDecode, strm.getSource(), validationStringency, factory);
     }
 
+    BAMFileReader(final SeekableStream strm,
+                  final SeekableStream indexStream,
+                  final boolean eagerDecode,
+                  final ValidationStringency validationStringency,
+                  final SAMRecordFactory factory)
+        throws IOException {
+        this(new BlockCompressedInputStream(strm), indexStream, eagerDecode, strm.getSource(), validationStringency, factory);
+    }
+
     private BAMFileReader(final BlockCompressedInputStream compressedInputStream,
                           final File indexFile,
                           final boolean eagerDecode,
@@ -146,6 +157,24 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         readHeader(source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }    
+
+    private BAMFileReader(final BlockCompressedInputStream compressedInputStream,
+                          final SeekableStream indexStream,
+                          final boolean eagerDecode,
+                          final String source,
+                          final ValidationStringency validationStringency,
+                          final SAMRecordFactory factory)
+        throws IOException {
+        mIndexStream = indexStream;
+        mIsSeekable = true;
+        mCompressedInputStream = compressedInputStream;
+        mStream = new BinaryCodec(new DataInputStream(mCompressedInputStream));
+        this.eagerDecode = eagerDecode;
+        this.mValidationStringency = validationStringency;
+        this.samRecordFactory = factory;
+        readHeader(source);
+        mFirstRecordPointer = mCompressedInputStream.getFilePointer();
+    }
 
     /**
      * If true, writes the source of every read into the source SAMRecords.
@@ -187,7 +216,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * @return true if ths is a BAM file, and has an index
      */
     public boolean hasIndex() {
-        return (mIndexFile != null);
+        return (mIndexFile != null) || (mIndexStream != null);
     }
 
     /**
@@ -195,11 +224,16 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * @return An index of the given type.
      */
     public BAMIndex getIndex() {
-        if(mIndexFile == null)
+        if(!hasIndex())
             throw new SAMException("No index is available for this BAM file.");
-        if(mIndex == null)
-            mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping)
-                                         : new DiskBasedBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping);
+        if(mIndex == null) {
+            if (mIndexFile != null)
+                mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping)
+                                             : new DiskBasedBAMFileIndex(mIndexFile, getFileHeader().getSequenceDictionary(), mEnableIndexMemoryMapping);
+            else
+                mIndex = mEnableIndexCaching ? new CachingBAMFileIndex(mIndexStream, getFileHeader().getSequenceDictionary())
+                                             : new DiskBasedBAMFileIndex(mIndexStream, getFileHeader().getSequenceDictionary());
+        }
         return mIndex;
     }
 

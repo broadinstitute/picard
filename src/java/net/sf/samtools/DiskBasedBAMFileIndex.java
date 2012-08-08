@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.SeekableStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -35,6 +36,10 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
 {
     DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
         super(file, dictionary);
+    }
+
+    DiskBasedBAMFileIndex(final SeekableStream stream, SAMSequenceDictionary dictionary) {
+        super(stream, dictionary);
     }
 
     DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
