@@ -24,11 +24,13 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.RuntimeIOException;
+import net.sf.samtools.util.SeekableStream;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -61,17 +63,22 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     
     public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
 
-    private final File mFile;
     private final IndexFileBuffer mIndexBuffer;
 
     private SAMSequenceDictionary mBamDictionary = null;
+
+    protected AbstractBAMFileIndex(
+        SeekableStream stream, SAMSequenceDictionary dictionary)
+    {
+        mBamDictionary = dictionary;
+        mIndexBuffer = new IndexStreamBuffer(stream);
+    }
 
     protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
         this(file, dictionary, true);
     }
 
     protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
-        mFile = file;
         mBamDictionary = dictionary;
         mIndexBuffer = (useMemoryMapping ? new MemoryMappedFileBuffer(file) : new RandomAccessFileBuffer(file));
 
@@ -80,7 +87,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         final byte[] buffer = new byte[4];
         readBytes(buffer);
         if (!Arrays.equals(buffer, BAMFileConstants.BAM_INDEX_MAGIC)) {
-            throw new RuntimeException("Invalid file header in BAM index " + mFile +
+            throw new RuntimeException("Invalid file header in BAM index " + file +
                                        ": " + new String(buffer));
         }
     }
@@ -614,6 +621,57 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             } catch (IOException exc) {
                 throw new RuntimeIOException("Exception reading BAM index file " + mFile + ": " + exc.getMessage(), exc);
             }
+        }
+    }
+
+    private static class IndexStreamBuffer extends IndexFileBuffer {
+        private final SeekableStream in;
+        private final ByteBuffer tmpBuf;
+
+        public IndexStreamBuffer(SeekableStream s) {
+            in = s;
+            tmpBuf = ByteBuffer.allocate(8); // Enough to fit a long.
+            tmpBuf.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        @Override public void close() {
+            try { in.close(); }
+            catch (IOException e) { throw new RuntimeIOException(e); }
+        }
+        @Override public void readBytes(byte[] bytes) {
+            try { in.read(bytes); }
+            catch (IOException e) { throw new RuntimeIOException(e); }
+        }
+        @Override public void seek(int position) {
+            try { in.seek(position); }
+            catch (IOException e) { throw new RuntimeIOException(e); }
+        }
+
+        @Override public int readInteger() {
+           try {
+               int r = in.read(tmpBuf.array(), 0, 4);
+               if (r != 4)
+                   throw new RuntimeIOException("Expected 4 bytes, got " + r);
+           } catch (IOException e) { throw new RuntimeIOException(e); }
+           return tmpBuf.getInt(0);
+        }
+        @Override public long readLong() {
+            try {
+                int r = in.read(tmpBuf.array(), 0, 8);
+                if (r != 8)
+                    throw new RuntimeIOException("Expected 8 bytes, got " + r);
+            } catch (IOException e) { throw new RuntimeIOException(e); }
+            return tmpBuf.getLong(0);
+        }
+        @Override public void skipBytes(final int count) {
+            try {
+                for (int s = count; s > 0;) {
+                    int skipped = (int)in.skip(s);
+                    if (skipped <= 0)
+                        throw new RuntimeIOException("Failed to skip " + s);
+                    s -= skipped;
+                }
+            } catch (IOException e) { throw new RuntimeIOException(e); }
         }
     }
 }

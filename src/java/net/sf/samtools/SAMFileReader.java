@@ -192,6 +192,10 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         init(strm, indexFile, eagerDecode, defaultValidationStringency);
     }
 
+    public SAMFileReader(final SeekableStream strm, final SeekableStream indexStream, final boolean eagerDecode) {
+        init(strm, indexStream, eagerDecode, defaultValidationStringency);
+    }
+
     public void close() {
         if (mReader != null) {
             mReader.close();
@@ -475,14 +479,11 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     }
 
 
-
     private void init(final SeekableStream strm, final File indexFile, final boolean eagerDecode,
                       final ValidationStringency validationStringency) {
 
         try {
-            // Its too expensive to examine the remote file to determine type.
-            // Rely on file extension.
-            if (strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam")) {
+            if (streamLooksLikeBam(strm)) {
                 mIsBinary = true;
                 mReader = new BAMFileReader(strm, indexFile, eagerDecode, validationStringency, this.samRecordFactory);
             } else {
@@ -495,6 +496,28 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         }
     }
 
+    private void init(final SeekableStream strm, final SeekableStream indexStream, final boolean eagerDecode,
+                      final ValidationStringency validationStringency) {
+
+        try {
+            if (streamLooksLikeBam(strm)) {
+                mIsBinary = true;
+                mReader = new BAMFileReader(strm, indexStream, eagerDecode, validationStringency, this.samRecordFactory);
+            } else {
+                throw new SAMFormatException("Unrecognized file format: " + strm);
+            }
+            setValidationStringency(validationStringency);
+        }
+        catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
+    }
+
+    // Its too expensive to examine the remote file to determine type.
+    // Rely on file extension.
+    private boolean streamLooksLikeBam(SeekableStream strm) {
+        return strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam");
+    }
 
     private void init(final InputStream stream, final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
         if (stream != null && file != null) throw new IllegalArgumentException("stream and file are mutually exclusive");
