@@ -46,7 +46,7 @@
 
     <property environment="env"/>
 
-    <condition property="isUnix">
+    <condition  property="isUnix">
         <os family="unix"/>
     </condition>
     <target name="set_excluded_test_groups_unix" if="isUnix">
@@ -64,7 +64,7 @@
                 <include name="**/*.jar"/>
             </fileset>
         </path>
-        <path id="metrics.classpath">
+        <path  id="metrics.classpath">
             <pathelement path="${classpath}"/>
             <pathelement location="${classes}"/>
         </path>
@@ -75,9 +75,9 @@
         <delete dir="${classes}"/>
         <delete dir="${classes.test}"/>
         <delete dir="${test.output}"/>
-        <delete dir="${dist}"/>
-        <delete dir="${command_tmp}"/>
-        <delete dir="javadoc"/>
+        <delete  dir="${dist}"/>
+        <delete  dir="${command_tmp}"/>
+        <delete  dir="javadoc"/>
     </target>
 
     <!-- COMPILE -->
@@ -94,8 +94,8 @@
                optimize="${javac.opt}"
                debug="${javac.debug}"
                sourcepath="" srcdir="${src}"
-               includes="net/sf/samtools/**/*.*"
-               excludes="net/sf/picard/**/*.*">
+               includes ="net/sf/samtools/**/*.*"
+               excludes = "net/sf/picard/**/*.*">
             <!--<compilerarg value="-Xlint:all"/>-->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
             <classpath refid="classpath"/>
@@ -106,7 +106,7 @@
         <mkdir dir="${classes}"/>
         <javac destdir="${classes}"
                optimize="${javac.opt}"
-               excludes="net/sf/samtools/**/*.*"
+               excludes ="net/sf/samtools/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:all"/>-->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
@@ -115,15 +115,14 @@
         </javac>
     </target>
 
-    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests"
-            description="Compile test files without cleaning"/>
+    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
 
     <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
         <mkdir dir="${classes.test}"/>
         <javac destdir="${classes.test}"
                optimize="${javac.opt}"
                debug="${javac.debug}"
-               includes="net/sf/samtools/**/*.*">
+               includes ="net/sf/samtools/**/*.*">
             <!--<compilerarg value="-Xlint:unchecked"/>-->
             <src path="${src.test}"/>
             <classpath>
@@ -137,7 +136,7 @@
         <mkdir dir="${classes.test}"/>
         <javac destdir="${classes.test}"
                optimize="${javac.opt}"
-               excludes="net/sf/samtools/**/*.*"
+               excludes ="net/sf/samtools/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:unchecked"/>-->
             <src path="${src.test}"/>
@@ -168,7 +167,7 @@
             </classfileset>
             <jvmarg value="-Xmx1G"/>
         </testng>
-        <junitreport todir="${dist}/test">
+        <junitreport todir="${dist}/test" >
             <fileset dir="${test.output}">
                 <include name="*.xml"/>
             </fileset>
@@ -182,7 +181,7 @@
             depends="compile, compile-tests"
             description="Compile and run a single test.">
         <taskdef resource="testngtasks" classpathref="classpath"/>
-        <fail unless="name" message="Please provide input test: -Dname=..."/>
+        <fail unless="name" message="Please provide input test: -Dname=..." />
         <testng suitename="samtools-single-test" classpathref="classpath" outputdir="${test.output}"
                 verbose="${testng.verbosity}">
             <jvmarg line="-Xmx512M"/>
@@ -201,7 +200,7 @@
             description="Builds sam-${sam-version}.jar for inclusion in other projects">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
-            <fileset dir="${classes}" includes="net/sf/samtools/**/*.*"/>
+            <fileset dir="${classes}" includes ="net/sf/samtools/**/*.*"/>
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
@@ -213,7 +212,7 @@
             description="Builds picard-${picard-version}.jar for inclusion in other projects">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
-            <fileset dir="${classes}" includes="net/sf/picard/**/*.*"/>
+            <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
             <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
@@ -248,7 +247,7 @@
         </javadoc>
     </target>
 
-    <target name="-package-build-prep" description="Creates temporary directories required for package building.">
+    <target name="package-commands" depends="compile, sam-jar, picard-jar">
         <delete dir="${command_tmp}"/>
 
         <mkdir dir="${command_tmp}"/>
@@ -256,186 +255,57 @@
             <fileset dir="${classes}" includes="**/*"/>
         </copy>
 
-        <unzip dest="${command_tmp}">
+        <unzip dest=".command_tmp">
             <fileset dir="${lib}">
-                <include name="*.jar"/>
+                <include  name="*.jar"/>
             </fileset>
         </unzip>
         <delete dir="${command-line-html-dir}"/>
-    </target>
 
-    <target name="package-addorreplacereadgroups" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="AddOrReplaceReadGroups"
-                                      main-class="net.sf.picard.sam.AddOrReplaceReadGroups"/>
+        <!-- The order of these elements determines the order they appear in the on-line help -->
+        <!-- If you don't want to generate on-line doc for a command, use package-command instead of package-and-document-command -->
+        <package-and-document-command title="AddOrReplaceReadGroups"         main-class="net.sf.picard.sam.AddOrReplaceReadGroups"/>
+        <package-and-document-command title="BamToBfq"                       main-class="net.sf.picard.fastq.BamToBfq"/>
+        <package-and-document-command title="BamIndexStats"                  main-class="net.sf.picard.sam.BamIndexStats"/>
+        <package-and-document-command title="BuildBamIndex"                  main-class="net.sf.picard.sam.BuildBamIndex"/>
+        <package-and-document-command title="CalculateHsMetrics"             main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
+        <package-and-document-command title="CleanSam"                       main-class="net.sf.picard.sam.CleanSam"/>
+        <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
+        <package-and-document-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
+        <package-and-document-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
+        <package-and-document-command title="CollectMultipleMetrics"         main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
+        <package-and-document-command title="CollectTargetedPcrMetrics"      main-class="net.sf.picard.analysis.directed.CollectTargetedPcrMetrics"/>
+        <package-and-document-command title="CollectRnaSeqMetrics"           main-class="net.sf.picard.analysis.CollectRnaSeqMetrics"/>
+        <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
+        <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
+        <package-and-document-command title="DownsampleSam"                  main-class="net.sf.picard.sam.DownsampleSam"/>
+        <package-and-document-command title="ExtractIlluminaBarcodes"        main-class="net.sf.picard.illumina.ExtractIlluminaBarcodes"/>
+        <package-and-document-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
+        <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
+        <package-and-document-command title="FilterSamReads"                 main-class="net.sf.picard.sam.FilterSamReads"/>
+        <package-and-document-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
+        <package-and-document-command title="IlluminaBasecallsToSam"         main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
+        <package-and-document-command title="CheckIlluminaDirectory"         main-class="net.sf.picard.illumina.CheckIlluminaDirectory"/>
+        <package-and-document-command title="IntervalListTools"              main-class="net.sf.picard.util.IntervalListTools"/>
+        <package-and-document-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
+        <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
+        <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
+        <package-and-document-command title="MergeSamFiles"                  main-class="net.sf.picard.sam.MergeSamFiles"/>
+        <package-and-document-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
+        <package-and-document-command title="ExtractSequences"               main-class="net.sf.picard.reference.ExtractSequences"/>
+        <package-and-document-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
+        <package-and-document-command title="ReorderSam" id=""               main-class="net.sf.picard.sam.ReorderSam"/>
+        <package-and-document-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
+        <package-and-document-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
+        <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
+        <package-and-document-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
+        <package-and-document-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
+        <package-and-document-command title="ValidateSamFile"                main-class="net.sf.picard.sam.ValidateSamFile"/>
+        <package-and-document-command title="ViewSam"                        main-class="net.sf.picard.sam.ViewSam"/>
     </target>
-
-    <target name="package-bamtobfq" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="BamToBfq" main-class="net.sf.picard.fastq.BamToBfq"/>
-    </target>
-
-    <target name="package-bamindexstats" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="BamIndexStats" main-class="net.sf.picard.sam.BamIndexStats"/>
-    </target>
-
-    <target name="package-buildbamindex" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="BuildBamIndex" main-class="net.sf.picard.sam.BuildBamIndex"/>
-    </target>
-
-    <target name="package-calculatehsmetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CalculateHsMetrics"
-                                      main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
-    </target>
-
-    <target name="package-cleansam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CleanSam" main-class="net.sf.picard.sam.CleanSam"/>
-    </target>
-
-    <target name="package-collectalignmentsummarymetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectAlignmentSummaryMetrics"
-                                      main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
-    </target>
-
-    <target name="package-collectgcbiasmetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectGcBiasMetrics"
-                                      main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
-    </target>
-
-    <target name="package-collectinsertsizemetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectInsertSizeMetrics"
-                                      main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
-    </target>
-
-    <target name="package-collectmultiplemetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectMultipleMetrics"
-                                      main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
-    </target>
-
-    <target name="package-collecttargetedpcrmetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectTargetedPcrMetrics"
-                                      main-class="net.sf.picard.analysis.directed.CollectTargetedPcrMetrics"/>
-    </target>
-
-    <target name="package-collectrnaseqmetrics" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CollectRnaSeqMetrics"
-                                      main-class="net.sf.picard.analysis.CollectRnaSeqMetrics"/>
-    </target>
-
-    <target name="package-comparesams" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CompareSAMs" main-class="net.sf.picard.sam.CompareSAMs"/>
-    </target>
-
-    <target name="package-createsequencedictionary" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CreateSequenceDictionary"
-                                      main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
-    </target>
-
-    <target name="package-downsamplesam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="DownsampleSam" main-class="net.sf.picard.sam.DownsampleSam"/>
-    </target>
-
-    <target name="package-extractilluminabarcodes" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ExtractIlluminaBarcodes"
-                                      main-class="net.sf.picard.illumina.ExtractIlluminaBarcodes"/>
-    </target>
-
-    <target name="package-estimatelibrarycomplexity" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="EstimateLibraryComplexity"
-                                      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
-    </target>
-
-    <target name="package-fastqtosam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="FastqToSam" main-class="net.sf.picard.sam.FastqToSam"/>
-    </target>
-
-    <target name="package-filtersamreads" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="FilterSamReads" main-class="net.sf.picard.sam.FilterSamReads"/>
-    </target>
-
-    <target name="package-fixmateinformation" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="FixMateInformation" main-class="net.sf.picard.sam.FixMateInformation"/>
-    </target>
-
-    <target name="package-illuminabasecallstosam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="IlluminaBasecallsToSam"
-                                      main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
-    </target>
-
-    <target name="package-checkilluminadirectory" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="CheckIlluminaDirectory"
-                                      main-class="net.sf.picard.illumina.CheckIlluminaDirectory"/>
-    </target>
-
-    <target name="package-intervallisttools" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="IntervalListTools" main-class="net.sf.picard.util.IntervalListTools"/>
-    </target>
-
-    <target name="package-markduplicates" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="MarkDuplicates" main-class="net.sf.picard.sam.MarkDuplicates"/>
-    </target>
-
-    <target name="package-meanqualitybycycle" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="MeanQualityByCycle"
-                                      main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
-    </target>
-
-    <target name="package-mergebamalignment" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="MergeBamAlignment" main-class="net.sf.picard.sam.MergeBamAlignment"/>
-    </target>
-
-    <target name="package-mergesamfiles" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="MergeSamFiles" main-class="net.sf.picard.sam.MergeSamFiles"/>
-    </target>
-
-    <target name="package-normalizefasta" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="NormalizeFasta" main-class="net.sf.picard.reference.NormalizeFasta"/>
-    </target>
-
-    <target name="package-extractsequences" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ExtractSequences" main-class="net.sf.picard.reference.ExtractSequences"/>
-    </target>
-
-    <target name="package-qualityscoredistribution" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="QualityScoreDistribution"
-                                      main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
-    </target>
-
-    <target name="package-reordersam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ReorderSam" id="" main-class="net.sf.picard.sam.ReorderSam"/>
-    </target>
-
-    <target name="package-replacesamheader" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ReplaceSamHeader" main-class="net.sf.picard.sam.ReplaceSamHeader"/>
-    </target>
-
-    <target name="package-revertsam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="RevertSam" main-class="net.sf.picard.sam.RevertSam"/>
-    </target>
-
-    <target name="package-samformatconverter" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="SamFormatConverter" main-class="net.sf.picard.sam.SamFormatConverter"/>
-    </target>
-
-    <target name="package-samtofastq" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="SamToFastq" main-class="net.sf.picard.sam.SamToFastq"/>
-    </target>
-
-    <target name="package-sortsam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="SortSam" main-class="net.sf.picard.sam.SortSam"/>
-    </target>
-
-    <target name="package-validatesamfile" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ValidateSamFile" main-class="net.sf.picard.sam.ValidateSamFile"/>
-    </target>
-
-    <target name="package-viewsam" depends="compile, sam-jar, picard-jar,-package-build-prep">
-        <package-and-document-command title="ViewSam" main-class="net.sf.picard.sam.ViewSam"/>
-    </target>
-
-    <target name="package-commands" depends="package-addorreplacereadgroups, package-bamtobfq, package-bamindexstats, package-buildbamindex, package-calculatehsmetrics, package-cleansam, package-collectalignmentsummarymetrics, package-collectgcbiasmetrics, package-collectinsertsizemetrics, package-collectmultiplemetrics, package-collecttargetedpcrmetrics, package-collectrnaseqmetrics, package-comparesams, package-createsequencedictionary, package-downsamplesam, package-extractilluminabarcodes, package-estimatelibrarycomplexity, package-fastqtosam, package-filtersamreads, package-fixmateinformation, package-illuminabasecallstosam, package-checkilluminadirectory, package-intervallisttools, package-markduplicates, package-meanqualitybycycle, package-mergebamalignment, package-mergesamfiles, package-normalizefasta, package-extractsequences, package-qualityscoredistribution, package-reordersam, package-replacesamheader, package-revertsam, package-samformatconverter, package-samtofastq, package-sortsam, package-validatesamfile, package-viewsam"/>
 
     <!-- ALL -->
-    <target name="all" depends="compile, sam-jar, picard-jar, package-commands, document-standard-options"
-            description="Default build target">
+    <target name="all" depends="compile, sam-jar, picard-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
@@ -458,7 +328,7 @@
                 <root classname="@{main-class}"/>
             </classfileset>
             <jar destfile="${dist}/@{title}.jar">
-                <fileset refid="reqdClasses"/>
+                <fileset  refid="reqdClasses"/>
                 <fileset dir="${src.scripts}" includes="**/*.R"/>
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/native/Linux/**/*"/>
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/VERSION"/>
@@ -515,8 +385,8 @@
                   message="&lt;li>&lt;a href=&quot;command-line-overview.shtml#@{title}&quot;>@{title}&lt;/a>${line.separator}"/>
 
             <!-- include usage for each command -->
-            <echo file="${command-line-html-dir}/command-line-usage.shtml" append="true"
-                  message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
+            <echo  file="${command-line-html-dir}/command-line-usage.shtml" append="true"
+                   message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
         </sequential>
     </macrodef>
 
@@ -528,18 +398,6 @@
         <sequential>
             <package-command title="@{title}" main-class="@{main-class}"/>
             <document-command title="@{title}" main-class="@{main-class}"/>
-        </sequential>
-    </macrodef>
-
-    <!-- Runs package-and-document-command for the provided class if the class falls within the build filter -->
-    <macrodef name="conditionally-package-and-document-command">
-        <attribute name="main-class"/>
-        <attribute name="title"/>
-        <sequential>
-            <condition>
-                <contains casesensitive="false" string="@{main-class}" substring="${build-filter}"/>
-            </condition>
-
         </sequential>
     </macrodef>
 
