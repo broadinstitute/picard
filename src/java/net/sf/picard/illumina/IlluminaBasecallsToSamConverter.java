@@ -23,21 +23,19 @@
  */
 package net.sf.picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.filter.AggregateFilter;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.filter.SolexaNoiseFilter;
+import net.sf.picard.illumina.parser.ClusterData;
+import net.sf.picard.illumina.parser.ReadData;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.sam.ReservedTagConstants;
 import net.sf.picard.util.AdapterPair;
 import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.IlluminaUtil;
-import net.sf.samtools.*;
+import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMRecord;
 
-import java.util.*;
-
-import net.sf.picard.illumina.parser.ClusterData;
-import net.sf.picard.illumina.parser.ReadData;
+import java.util.List;
 
 /**
  * Takes ClusterData provided by an IlluminaDataProvider into one or two SAMRecords,
@@ -146,7 +144,7 @@ public class IlluminaBasecallsToSamConverter {
             unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N'); //TODO: This has a separator, where as in other places we do not use a separator
         }
 
-        final SAMRecord firstOfPair  = createSamRecord(
+        final SAMRecord firstOfPair = createSamRecord(
             cluster.getRead(templateIndices[0]), header, readName, cluster.isPf(), true,unmatchedBarcode);
         recordsOut[0] = firstOfPair;
 
@@ -168,6 +166,4 @@ public class IlluminaBasecallsToSamConverter {
             }
         }
     }
-
-
 }
