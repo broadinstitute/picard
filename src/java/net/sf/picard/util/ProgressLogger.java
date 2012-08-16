@@ -52,7 +52,7 @@ public class ProgressLogger {
      * Records that a given record has been processed and triggers logging if necessary.
      * @return boolean true if logging was triggered, false otherwise
      */
-    public boolean record(final SAMRecord rec) {
+    public synchronized boolean record(final SAMRecord rec) {
         if (++this.processed % this.n == 0) {
             final long now = System.currentTimeMillis();
             final long lastPeriodSeconds = (now - this.lastStartTime) / 1000;
