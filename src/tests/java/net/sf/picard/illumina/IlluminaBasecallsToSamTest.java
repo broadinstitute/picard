@@ -23,22 +23,21 @@
  */
 package net.sf.picard.illumina;
 
-import net.sf.picard.util.IlluminaUtil;
+import net.sf.picard.io.IoUtil;
+import net.sf.samtools.util.BufferedLineReader;
+import net.sf.samtools.util.LineReader;
 import net.sf.samtools.util.StringUtil;
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeTest;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
-
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.LineReader;
-import net.sf.samtools.util.BufferedLineReader;
 
 /**
  * Run IlluminaBasecallsToSam in various barcode & non-barcode modes
@@ -70,11 +69,18 @@ public class IlluminaBasecallsToSamTest {
     }
 
     @Test
+    public void testTileNumberComparator() {
+        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
+        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
+        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
+    }
+
+    @Test
     public void testNonBarcoded() throws Exception {
         final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
-        new IlluminaBasecallsToSam().instanceMain(new String[] {
+        new IlluminaBasecallsToSam().instanceMain(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=76T76T",
@@ -88,23 +94,24 @@ public class IlluminaBasecallsToSamTest {
 
     @Test
     public void testMultiplexed() throws Exception {
-        runStandardTest(7, "multiplexedBarcode.", "barcode.params", 1,"30T8B");
+        runStandardTest(7, "multiplexedBarcode.", "barcode.params", 1, "30T8B");
     }
 
     //Same as testMultiplexed except we use BARCODE_1 instead of BARCODE
     @Test
     public void testMultiplexedWithAlternateBarcodeName() throws Exception {
-        runStandardTest(7, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1,"30T8B");
+        runStandardTest(7, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "30T8B");
     }
 
     @Test
     public void testDualBarcodes() throws Exception {
-         runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B") ;
+        runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B");
     }
 
-    /***
+    /**                                                  woot
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
+     *
      * @param jobName
      * @param libraryParamsFile
      * @param concatNColumnFields
@@ -130,14 +137,14 @@ public class IlluminaBasecallsToSamTest {
                 break;
             }
             final String[] fields = line.split("\t");
-            final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) +   ".sam");
+            final File outputSam = new File(outputDir, StringUtil.join("", Arrays.copyOfRange(fields, 0, concatNColumnFields)) + ".sam");
             outputSam.deleteOnExit();
             samFiles.add(outputSam);
             writer.println(line + "\t" + outputSam);
         }
         writer.close();
 
-        new IlluminaBasecallsToSam().instanceMain(new String[] {
+        new IlluminaBasecallsToSam().instanceMain(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
