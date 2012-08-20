@@ -110,7 +110,7 @@ public class SortingCollection<T> implements Iterable<T> {
      */
     private final List<File> files = new ArrayList<File>();
 
-    private boolean destructiveIteration = false;
+    private boolean destructiveIteration = true;
 
     private TempStreamFactory tempStreamFactory = new TempStreamFactory();
 
