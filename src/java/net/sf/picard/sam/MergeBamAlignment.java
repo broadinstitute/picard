@@ -97,6 +97,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(shortName="ORIENTATIONS", doc="The expected orientation of proper read pairs.  Replaces JUMP_SIZE",
             mutex = "JUMP_SIZE", optional=true)
     public List<SamPairUtil.PairOrientation> EXPECTED_ORIENTATIONS;
+    @Option(doc="Use the aligner's idea of what a proper pair is, rather than computing in this program.")
+    public boolean ALIGNER_PROPER_PAIR_FLAGS = false;
+
     @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME,
             doc="The order in which the merged reads should be output.")
     public SortOrder SORT_ORDER = SortOrder.coordinate;
@@ -165,6 +168,7 @@ public class MergeBamAlignment extends CommandLineProgram {
             PRIMARY_ALIGNMENT_STRATEGY.newInstance());
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
+        merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.mergeAlignment();
         return 0;
     }
