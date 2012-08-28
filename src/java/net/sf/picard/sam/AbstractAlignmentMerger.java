@@ -90,6 +90,7 @@ public abstract class AbstractAlignmentMerger {
     private boolean clipOverlappingReads = true;
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
+    private boolean keepAlignerProperPairFlags = false;
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(final SAMRecord record) {
@@ -381,7 +382,10 @@ public abstract class AbstractAlignmentMerger {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
         if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
-        SamPairUtil.setProperPairAndMateInfo(secondUnaligned, firstUnaligned, header, expectedOrientations);
+        SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, header);
+        if (!keepAlignerProperPairFlags) {
+            SamPairUtil.setProperPairFlags(secondUnaligned, firstUnaligned, expectedOrientations);
+        }
     }
 
 
@@ -534,5 +538,16 @@ public abstract class AbstractAlignmentMerger {
 
     public void setClipOverlappingReads(final boolean clipOverlappingReads) {
         this.clipOverlappingReads = clipOverlappingReads;
+    }
+
+    public boolean isKeepAlignerProperPairFlags() {
+        return keepAlignerProperPairFlags;
+    }
+
+    /**
+     * If true, keep the aligner's idea of proper pairs rather than letting alignment merger decide.
+     */
+    public void setKeepAlignerProperPairFlags(boolean keepAlignerProperPairFlags) {
+        this.keepAlignerProperPairFlags = keepAlignerProperPairFlags;
     }
 }

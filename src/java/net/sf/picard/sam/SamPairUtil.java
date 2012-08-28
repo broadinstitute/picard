@@ -251,6 +251,10 @@ public class SamPairUtil {
                                                 final SAMFileHeader header,
                                                 final List<PairOrientation> exepectedOrientations) {
         setMateInfo(rec1, rec2, header);
+        setProperPairFlags(rec1, rec2, exepectedOrientations);
+    }
+
+    public static void setProperPairFlags(SAMRecord rec1, SAMRecord rec2, List<PairOrientation> exepectedOrientations) {
         boolean properPair =  (!rec1.getReadUnmappedFlag() && !rec2.getReadUnmappedFlag())
             ? isProperPair(rec1, rec2, exepectedOrientations)
             : false;
