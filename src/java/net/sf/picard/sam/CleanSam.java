@@ -44,7 +44,8 @@ import java.util.List;
 public class CleanSam extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Read SAM and perform various fix-ups.  " +
-            "Currently, the only fix-up it to soft-clip an alignment that hangs off the end of its reference sequence.";
+            "Currently, the only fix-ups are 1: to soft-clip an alignment that hangs off the end of its reference sequence; " +
+            "and 2: to set MAPQ to 0 if a read is unmapped.";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM to be cleaned.")
     public File INPUT;
@@ -87,6 +88,8 @@ public class CleanSam extends CommandLineProgram {
                         final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
                         rec.setCigar(new Cigar(newCigarElements));
                     }
+                } else if (rec.getMappingQuality() != 0) {
+                    rec.setMappingQuality(0);
                 }
 
                 writer.addAlignment(rec);
