@@ -482,7 +482,20 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 this.prioritizingThreadPool.execute(new PriorityRunnable(--priority) {
                     @Override
                     public void run() {
-                        reader.process();
+                        try {
+                            reader.process();
+                        } catch (RuntimeException e) {
+                            /**
+                             * In the event of an internal failure, signal to the parent thread that something has gone
+                             * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
+                             * will never reach its completed state, and it will never terminate.
+                             */
+                            parentThread.interrupt();
+                            throw e;
+                        } catch (Error e) {
+                            parentThread.interrupt();
+                            throw e;
+                        }
                     }
                 });
             }
@@ -653,6 +666,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                          * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
                          * will never reach its completed state, and it will never terminate.
                          */
+                        parentThread.interrupt();
+                        throw e;
+                    } catch (Error e) {
                         parentThread.interrupt();
                         throw e;
                     }
@@ -833,9 +849,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         try {
             tileReadAggregator.awaitWorkComplete();
         } catch (InterruptedException e) {
-            log.error(e, "Attempting to shut down worker threads ...");
+            log.error(e, "Failure encountered in worker thread; attempting to shut down remaining worker threads and terminate ...");
             tileReadAggregator.shutdown();
-            throw new PicardException(String.format("Main thread interrupted: %s.", e.getMessage()));
         }
     }
 
