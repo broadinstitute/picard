@@ -136,7 +136,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = "Which adapters to look for in the read.")
     public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<IlluminaAdapterPair>(
             Arrays.asList(IlluminaAdapterPair.INDEXED,
-                    IlluminaAdapterPair.DUAL_INDEXED, IlluminaAdapterPair.NEXTERA_V2));
+                          IlluminaAdapterPair.DUAL_INDEXED,
+                          IlluminaAdapterPair.NEXTERA_V2,
+                          IlluminaAdapterPair.FLUIDIGM));
 
     @Option(doc = "Run this many threads in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
