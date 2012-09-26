@@ -136,9 +136,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = "Which adapters to look for in the read.")
     public List<IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<IlluminaAdapterPair>(
             Arrays.asList(IlluminaAdapterPair.INDEXED,
-                          IlluminaAdapterPair.DUAL_INDEXED,
-                          IlluminaAdapterPair.NEXTERA_V2,
-                          IlluminaAdapterPair.FLUIDIGM));
+                    IlluminaAdapterPair.DUAL_INDEXED,
+                    IlluminaAdapterPair.NEXTERA_V2,
+                    IlluminaAdapterPair.FLUIDIGM));
 
     @Option(doc = "Run this many threads in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
@@ -268,13 +268,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
                 final String barcode = cluster.getMatchedBarcode();
-
                 converter.createSamRecords(cluster, null, recordContainer);
-
-                for (final SAMRecord record : recordContainer) {
-                    readProgressLogger.record(record);
-                    this.processingRecord.addRecord(barcode, record);
-                }
+                readProgressLogger.record(recordContainer);
+                this.processingRecord.addRecord(barcode, recordContainer);
             }
 
             this.handler.completeTile(this.tile);
@@ -282,7 +278,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     }
 
     /**
-     * Represents the state of a tile's processing and encapsulates the data collected from that tile
+     * Represents the state of a tile's processing and encapsulates the data collected from that tile.
+     * <p/>
+     * TileProcessingRecords are accessed from each worker thread to assess the progress of the run, so its methods
+     * are synchronized.
      */
     private class TileProcessingRecord {
         final private Map<String, SortingCollection<SAMRecord>> barcodeToRecordCollection = new HashMap<String, SortingCollection<SAMRecord>>();
@@ -293,26 +292,28 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         /**
          * Returns the state of this tile's processing.
          */
-        public TileProcessingState getState() {
+        public synchronized TileProcessingState getState() {
             return this.state;
         }
 
         /**
          * Sets the state of this tile's processing.
          */
-        public void setState(final TileProcessingState state) {
+        public synchronized void setState(final TileProcessingState state) {
             this.state = state;
         }
 
         /**
          * Adds the provided recoded to this tile.
          */
-        public void addRecord(final String barcode, final SAMRecord... records) {
+        public synchronized void addRecord(final String barcode, final SAMRecord... records) {
             this.recordCount += records.length;
 
             // Grab the existing collection, or initialize it if it doesn't yet exist
             SortingCollection<SAMRecord> recordCollection = this.barcodeToRecordCollection.get(barcode);
             if (recordCollection == null) {
+                if (!IlluminaBasecallsToSam.this.barcodeSamWriterMap.containsKey(barcode))
+                    throw new PicardException(String.format("Read records with barcode %s, but this barcode was not expected.  (Is it referenced in the parameters file?)", barcode));
                 recordCollection = this.newSortingCollection();
                 this.barcodeToRecordCollection.put(barcode, recordCollection);
                 this.barcodeToProcessingState.put(barcode, null);
@@ -324,7 +325,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         }
 
-        private SortingCollection<SAMRecord> newSortingCollection() {
+        private synchronized SortingCollection<SAMRecord> newSortingCollection() {
             final int maxRecordsInRam =
                     IlluminaBasecallsToSam.this.MAX_READS_IN_RAM_PER_TILE /
                             IlluminaBasecallsToSam.this.barcodeSamWriterMap.size();
@@ -339,21 +340,21 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         /**
          * Returns the number of unique barcodes read.
          */
-        public long getBarcodeCount() {
+        public synchronized long getBarcodeCount() {
             return this.barcodeToRecordCollection.size();
         }
 
         /**
          * Returns the number of records read.
          */
-        public long getRecordCount() {
+        public synchronized long getRecordCount() {
             return recordCount;
         }
 
         /**
          * Returns the mapping of barcodes to records associated with them.
          */
-        public Map<String, SortingCollection<SAMRecord>> getBarcodeRecords() {
+        public synchronized Map<String, SortingCollection<SAMRecord>> getBarcodeRecords() {
             return barcodeToRecordCollection;
         }
 
@@ -363,7 +364,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          *
          * @throws IllegalStateException When a barcode is queried before the tile is in the DONE_READING state
          */
-        public TileBarcodeProcessingState getBarcodeState(final String barcode) {
+        public synchronized TileBarcodeProcessingState getBarcodeState(final String barcode) {
             if (this.getState() == TileProcessingState.NOT_DONE_READING) {
                 throw new IllegalStateException(
                         "A tile's barcode data's state cannot be queried until the tile has been completely read.");
@@ -376,12 +377,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             }
         }
 
+        public synchronized Map<String, IlluminaBasecallsToSam.TileBarcodeProcessingState> getBarcodeProcessingStates() {
+            return this.barcodeToProcessingState;
+        }
+
         /**
          * Sets the processing state of the provided barcode in this record.
          *
          * @throws NoSuchElementException When the provided barcode is not one associated with this record.
          */
-        public void setBarcodeState(final String barcode, final TileBarcodeProcessingState state) {
+        public synchronized void setBarcodeState(final String barcode, final TileBarcodeProcessingState state) {
             if (this.barcodeToProcessingState.containsKey(barcode)) {
                 this.barcodeToProcessingState.put(barcode, state);
             } else {
@@ -394,7 +399,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          *
          * @return
          */
-        public Set<String> getBarcodes() {
+        public synchronized Set<String> getBarcodes() {
             return this.getBarcodeRecords().keySet();
         }
     }
@@ -690,15 +695,19 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 final TileProcessingRecord tileProcessingRecord = entry.getValue();
 
                 if (tileProcessingRecord.getState() != TileProcessingState.DONE_READING) {
+                    log.debug(String.format("Work is not completed because a tile isn't done being read: %s.", entry.getKey().getNumber()));
                     return false;
                 } else {
-                    for (final TileBarcodeProcessingState barcodeProcessingState : tileProcessingRecord.barcodeToProcessingState.values()) {
+                    for (final Map.Entry<String, TileBarcodeProcessingState> barcodeStateEntry : tileProcessingRecord.getBarcodeProcessingStates().entrySet()) {
+                        TileBarcodeProcessingState barcodeProcessingState = barcodeStateEntry.getValue();
                         if (barcodeProcessingState != TileBarcodeProcessingState.WRITTEN) {
+                            log.debug(String.format("Work is not completed because a tile isn't done being read: Tile %s, Barcode %s, Processing State %s.", entry.getKey().getNumber(), barcodeStateEntry.getKey(), barcodeProcessingState));
                             return false;
                         }
                     }
                 }
             }
+            log.info("All work is complete.");
             return true;
         }
 
@@ -741,10 +750,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     protected int doWork() {
         initialize();
 
-        doTileProcessing();
-
-        finalise();
-
+        try {
+            doTileProcessing();
+        } finally {
+            finalise();
+        }
         return 0;
     }
 
