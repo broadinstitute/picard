@@ -108,7 +108,25 @@ public class IlluminaBasecallsToSamTest {
         runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B");
     }
 
-    /**                                                  woot
+    /**
+     * Ensures that a run missing a barcode from the parameters file throws an error.
+     * 
+     * TODO: This testcase isn't broken, but can spawn an issue with FileChannelJDKBugWorkAround since it expects
+     * an exception to be thrown.
+     */
+    @Test(groups={"broken"})
+    public void testCorruptDataReturnCode() throws Exception {
+        boolean exceptionThrown = false;
+        try {
+            runStandardTest(9, "dualBarcode.", "negative_test.params", 2, "30T8B8B");
+        } catch (Throwable e) {
+            exceptionThrown = true;
+        } finally {
+            Assert.assertTrue(exceptionThrown);
+        }
+    }
+
+    /**
      * This test utility takes a libraryParamsFile and generates output sam files through IlluminaBasecallsToSam to compare against
      * preloaded test data
      *
