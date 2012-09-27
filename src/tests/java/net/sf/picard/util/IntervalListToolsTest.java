@@ -23,6 +23,7 @@
  */
 package net.sf.picard.util;
 
+import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -40,7 +41,7 @@ public class IntervalListToolsTest {
 
     @Test
     public void testScatter() throws IOException {
-        final File scatterDir = new File(TEST_DATA_DIR, "scatter");
+        final File scatterDir = IoUtil.createTempDir("scatter.", ".tmp");
 
         try {
             final File listToScatter = new File(TEST_DATA_DIR, "scatterable.interval_list");
@@ -67,7 +68,6 @@ public class IntervalListToolsTest {
             // Next we test scattering.  This should result in the first
             // scattered file having 2 intervals, the second of which is exactly
             // one base long.
-            scatterDir.mkdir();
             result = new IntervalListTools().instanceMain(new String[] {
                     "INPUT="  + listToScatter.getAbsolutePath(),
                     "OUTPUT=" + scatterDir.getAbsolutePath() ,
