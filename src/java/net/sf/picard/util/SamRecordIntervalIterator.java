@@ -159,8 +159,10 @@ class SamRecordIntervalIterator implements CloseableIterator<SAMRecord> {
     }
 
     public void close() {
-        samIterator.close();
-        samIterator = null;
+        if (samIterator != null) {
+            samIterator.close();
+            samIterator = null;
+        }
     }
 
     public boolean hasNext() {
