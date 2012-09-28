@@ -106,6 +106,24 @@ public class IntervalListToolsTest {
             Assert.assertEquals(lists[3].getIntervals().get(0).getStart(), 30200);
             Assert.assertEquals(lists[0].getUniqueBaseCount() + lists[1].getUniqueBaseCount() +
                     lists[2].getUniqueBaseCount() + lists[3].getUniqueBaseCount(), 200);
+
+            // Test for when scattering consumes less than a full interval interval
+            result = new IntervalListTools().instanceMain(new String[] {
+                    "INPUT="  + listToScatter.getAbsolutePath(),
+                    "OUTPUT=" + scatterDir.getAbsolutePath() ,
+                    "SCATTER_COUNT=" + 5
+            });
+            Assert.assertEquals(result, 0);
+            lists = getIntervalLists(scatterDir, 5);
+            Assert.assertEquals(lists[0].size(), 1);
+            Assert.assertEquals(lists[1].size(), 1);
+            Assert.assertEquals(lists[2].size(), 2);
+            Assert.assertEquals(lists[3].size(), 2);
+            Assert.assertEquals(lists[4].size(), 1);
+            Assert.assertEquals(lists[0].getUniqueBaseCount() + lists[1].getUniqueBaseCount() +
+                     lists[2].getUniqueBaseCount() + lists[3].getUniqueBaseCount() +
+                     lists[4].getUniqueBaseCount(), 200);
+
         }
         finally {
             TestUtil.recursiveDelete(scatterDir);

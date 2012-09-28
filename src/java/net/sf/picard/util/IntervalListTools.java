@@ -197,7 +197,7 @@ public class IntervalListTools extends CommandLineProgram {
 
         while (it.hasNext() && index < SCATTER_COUNT) {
             final Interval interval = it.next();
-            final int projectedSize = splitLength + interval.length();
+            int projectedSize = splitLength + interval.length();
             if (projectedSize < idealSplitLength) {
                 split.add(interval);
                 totalIntervals++;
@@ -211,21 +211,29 @@ public class IntervalListTools extends CommandLineProgram {
                 splitLength = 0;
             }
             else {
-                final int diff = (int)(idealSplitLength - splitLength);
-                // Make one interval to get to the right amount of territory,
-                // add it to the current split and write it out
-                final Interval firstHalf = new Interval(interval.getSequence(), interval.getStart(),
-                        interval.getStart()+diff-1, interval.isNegativeStrand(), interval.getName());
-                split.add(firstHalf);
-                totalIntervals++;
-                split.write(createDirectoryAndGetScatterFile(index++));
-                // Add the remainder to the next split
-                split = new IntervalList(list.getHeader());
-                final Interval secondHalf = new Interval(interval.getSequence(), interval.getStart()+diff,
-                        interval.getEnd(), interval.isNegativeStrand(), interval.getName());
-                split.add(secondHalf);
-                totalIntervals++;
-                splitLength = secondHalf.length();
+                int consumed = 0;
+                while (projectedSize > idealSplitLength) {
+                    final int amountToConsume =(int)(idealSplitLength - splitLength);
+                    final Interval partial = new Interval(interval.getSequence(), interval.getStart()+consumed,
+                        interval.getStart()+consumed+amountToConsume-1, interval.isNegativeStrand(), interval.getName());
+                    split.add(partial);
+                    totalIntervals++;
+                    split.write(createDirectoryAndGetScatterFile(index++));
+                    split = new IntervalList(list.getHeader());
+
+                    consumed += amountToConsume;
+                    splitLength = 0;
+                    projectedSize = interval.length() - consumed;
+                }
+
+                // Add the remainder, if any, to the next split
+                if (projectedSize > 0) {
+                    final Interval remainder = new Interval(interval.getSequence(), interval.getStart()+consumed,
+                            interval.getEnd(), interval.isNegativeStrand(), interval.getName());
+                    split.add(remainder);
+                    totalIntervals++;
+                    splitLength = remainder.length();
+                }
             }
         }
         // Write everything left to the last split
