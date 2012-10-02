@@ -1,4 +1,4 @@
-@HD	VN:1.0	SO:queryname
+@HD	VN:1.4	SO:queryname
 @RG	ID:HiMom.9	PL:illumina	PU:HiMom.9.N-N	LB:LN_N	PI:10025	DS:DESC25	SM:SA_N	CN:BI
 HiMom:9:1:0:1038	516	*	0	0	*	*	0	0	.....C..CA...C...C.CC...C.....	##############################	BC:Z:NNNNNGTN-NNNNNNNN	RG:Z:HiMom.9
 HiMom:9:1:0:1093	516	*	0	0	*	*	0	0	.....C..GT...A...G.AA...A.....	##############################	BC:Z:NNNNNTGN-NNNNNNNN	RG:Z:HiMom.9

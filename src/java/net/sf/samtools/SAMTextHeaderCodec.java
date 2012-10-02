@@ -334,14 +334,26 @@ public class SAMTextHeaderCodec {
     }
 
     /**
-     * Convert SAMFileHeader from in-memory representation to text representation.
+     * Convert SAMFileHeader from in-memory representation to text representation. Always writes
+     * SAMFileHeader.CURRENT_VERSION as the version in the header.
      * @param writer where to write the header text.
      * @param header object to be converted to text.
      */
     public void encode(final Writer writer, final SAMFileHeader header) {
+        encode(writer, header, false);
+    }
+
+    /**
+     * Convert SAMFileHeader from in-memory representation to text representation.
+     * @param writer where to write the header text.
+     * @param header object to be converted to text.
+     * @param keepExistingVersionNumber If true, writes whatever version # was in the header.  If false, writes
+     *                                  SAMFileHeader.CURRENT_VERSION.
+     */
+    public void encode(final Writer writer, final SAMFileHeader header, final boolean keepExistingVersionNumber) {
         mFileHeader = header;
         this.writer = new BufferedWriter(writer);
-        writeHDLine();
+        writeHDLine(keepExistingVersionNumber);
         for (final SAMSequenceRecord sequenceRecord: header.getSequenceDictionary().getSequences()) {
             writeSQLine(sequenceRecord);
         }
@@ -390,14 +402,19 @@ public class SAMTextHeaderCodec {
         println(StringUtil.join(FIELD_SEPARATOR, fields));
     }
 
-    private void writeHDLine() {
-        // Make a copy of the header, excluding the version from the input header, so that
-        // output get CURRENT_VERSION instead of whatever the version of the input header was.
-        final SAMFileHeader newHeader = new SAMFileHeader();
+    private void writeHDLine(final boolean keepExistingVersionNumber) {
+        final SAMFileHeader newHeader;
+        if (keepExistingVersionNumber) {
+            newHeader = mFileHeader;
+        } else {
+            // Make a copy of the header, excluding the version from the input header, so that
+            // output get CURRENT_VERSION instead of whatever the version of the input header was.
+            newHeader = new SAMFileHeader();
 
-        for (final Map.Entry<String, String> entry : mFileHeader.getAttributes()) {
-            if (!entry.getKey().equals(SAMFileHeader.VERSION_TAG)) {
-                newHeader.setAttribute(entry.getKey(), entry.getValue());
+            for (final Map.Entry<String, String> entry : mFileHeader.getAttributes()) {
+                if (!entry.getKey().equals(SAMFileHeader.VERSION_TAG)) {
+                    newHeader.setAttribute(entry.getKey(), entry.getValue());
+                }
             }
         }
 

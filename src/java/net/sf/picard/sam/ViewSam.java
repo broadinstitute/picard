@@ -24,6 +24,7 @@
 
 package net.sf.picard.sam;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -31,8 +32,11 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 
 import net.sf.samtools.*;
+import net.sf.samtools.util.AsciiWriter;
 
 /**
  * Very simple command that just reads a SAM or BAM file and writes out the header
@@ -60,26 +64,45 @@ public class ViewSam extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        final SAMFileReader in = new SAMFileReader(INPUT);
-        final SAMFileHeader header = in.getFileHeader();
+        return writeSamText(System.out);
+    }
 
-        final SAMFileWriter out = new SAMFileWriterFactory().makeSAMWriter(header, true, System.out);
-        for (final SAMRecord rec : in) {
-            if (System.out.checkError()) {
-                return 0;
+    /**
+     * This is factored out of doWork only for unit testing.
+     */
+    int writeSamText(PrintStream printStream) {
+        try {
+            IoUtil.assertFileIsReadable(INPUT);
+            final SAMFileReader in = new SAMFileReader(INPUT);
+            final AsciiWriter writer = new AsciiWriter(printStream);
+            final SAMFileHeader header = in.getFileHeader();
+            if (header.getTextHeader() != null) {
+                writer.write(header.getTextHeader());
+            } else {
+                // Headers that are too large are not retained as text, so need to regenerate text
+                new SAMTextHeaderCodec().encode(writer, header, true);
             }
 
-            if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned   && rec.getReadUnmappedFlag()) continue;
-            if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
+            for (final SAMRecord rec : in) {
+                if (printStream.checkError()) {
+                    return 1;
+                }
 
-            if (this.PF_STATUS == PfStatus.PF    && rec.getReadFailsVendorQualityCheckFlag()) continue;
-            if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
+                if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned   && rec.getReadUnmappedFlag()) continue;
+                if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
 
-            out.addAlignment(rec);
+                if (this.PF_STATUS == PfStatus.PF    && rec.getReadFailsVendorQualityCheckFlag()) continue;
+                if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
+
+                writer.write(rec.getSAMString());
+            }
+            writer.flush();
+            if (printStream.checkError()) {
+                return 1;
+            }
+            return 0;
+        } catch (IOException e) {
+            throw new PicardException("Exception writing SAM text", e);
         }
-        out.close();
-
-        return 0;
     }
 }

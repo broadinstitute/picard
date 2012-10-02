@@ -1,4 +1,4 @@
-@HD	VN:1.0	GO:none	SO:coordinate
+@HD	VN:1.4	GO:none	SO:coordinate
 @SQ	SN:chrM	LN:16571	AS:HG18	UR:/seq/references/Homo_sapiens_assembly18/v0/Homo_sapiens_assembly18.fasta	M5:d2ed829b8a1628d16cbeee88e88e39eb	SP:Homo sapiens
 @RG	ID:1	SM:sample1
 @RG	ID:1.1	SM:sample2

@@ -1,4 +1,4 @@
-@HD	VN:1.0	SO:queryname
+@HD	VN:1.4	SO:queryname
 @RG	ID:HiMom.7	PL:illumina	PU:HiMom.7.GTATAACA	LB:LN_GTATAACA	PI:10017	DS:DESC17	SM:SA_GTATAACA	CN:BI
 HiMom:7:1:2:11	516	*	0	0	*	*	0	0	.AAATGAAAAAAGAAATGCATTGTCAGGTG	##############################	RG:Z:HiMom.7
 HiMom:7:1:2:455	516	*	0	0	*	*	0	0	.GCTTGAACTCAGGATTCACAATTTCAACC	##############################	RG:Z:HiMom.7
