@@ -174,7 +174,7 @@ public class SamFileValidator {
             samReader.setValidationStringency(ValidationStringency.SILENT);
             validateHeader(samReader.getFileHeader());
             orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
-            validateSamRecords(samReader);
+            validateSamRecords(samReader, samReader.getFileHeader());
             validateUnmatchedPairs();
             if (validateIndex){
                 try {
@@ -227,7 +227,7 @@ public class SamFileValidator {
         }
     }
 
-    private void validateSamRecords(final Iterable<SAMRecord> samRecords) {
+    private void validateSamRecords(final Iterable<SAMRecord> samRecords, final SAMFileHeader header) {
         SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Validated Read");
         try {
@@ -245,6 +245,7 @@ public class SamFileValidator {
                 
                 validateMateFields(record, recordNumber);
                 validateSortOrder(record, recordNumber);
+                validateReadGroup(record, header);
                 final boolean cigarIsValid = validateCigar(record, recordNumber);
                 if (cigarIsValid) {
                     validateNmTag(record, recordNumber);
@@ -268,6 +269,19 @@ public class SamFileValidator {
             addError(new SAMValidationError(Type.TRUNCATED_FILE, "File is truncated", null));
         } finally {
             iter.close();
+        }
+    }
+
+    private void validateReadGroup(final SAMRecord record, final SAMFileHeader header) {
+        SAMReadGroupRecord rg = record.getReadGroup();
+        if (rg == null) {
+            addError(new SAMValidationError(Type.RECORD_MISSING_READ_GROUP,
+                    "A record is missing a read group", record.getReadName()));
+        }
+        else if (!header.getReadGroups().contains(rg)) {
+            addError(new SAMValidationError(Type.READ_GROUP_NOT_FOUND,
+                    "A record has a read group not found in the header: ",
+                    record.getReadName() + ", " + rg.getReadGroupId()));
         }
     }
 
