@@ -119,6 +119,9 @@ public class SAMValidationError {
         /** A read group ID on a SAMRecord is not found in the header */
         READ_GROUP_NOT_FOUND,
 
+        /** A SAMRecord is found with no read group id */
+        RECORD_MISSING_READ_GROUP(Severity.WARNING),
+
         /** Indexing bin set on SAMRecord does not agree with computed value. */
         INVALID_INDEXING_BIN,
 
