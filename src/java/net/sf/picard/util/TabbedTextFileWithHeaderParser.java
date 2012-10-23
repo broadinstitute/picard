@@ -99,15 +99,19 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
     private final TabbedInputParser parser;
     private TheIterator extantIterator;
 
-    public TabbedTextFileWithHeaderParser(final File file) {
-        parser = new TabbedInputParser(false, file);
+    public TabbedTextFileWithHeaderParser(final TabbedInputParser parser) {
+        this.parser = parser;
         if (!parser.hasNext()) {
-            throw new PicardException("No header line found in file " + file);
+            throw new PicardException("No header line found in file " + parser.getFileName());
         }
         final String[] columnLabels = parser.next();
         for (int i = 0; i < columnLabels.length; ++i) {
             columnLabelIndices.put(columnLabels[i], i);
         }
+    }
+    
+    public TabbedTextFileWithHeaderParser(final File file) {
+        this(new TabbedInputParser(false, file));
     }
 
     public TabbedTextFileWithHeaderParser(final File file, final String[] columnHeaders) {
