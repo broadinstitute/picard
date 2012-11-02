@@ -120,13 +120,13 @@ public class FormatUtil {
 
     /** Parses a String into a float. */
     public float parseFloat(String value) {
-        if ("?".equals(value)) return Float.NaN;
+        if ("?".equals(value) || "-?".equals(value)) return Float.NaN;
         else return Float.parseFloat(value);
     }
 
     /** Parses a String into a double. */
     public double parseDouble(String value) {
-        if ("?".equals(value)) return Double.NaN;        
+        if ("?".equals(value) || "-?".equals(value)) return Double.NaN;        
         else return Double.parseDouble(value);
     }
 
