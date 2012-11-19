@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 /**
  * Very basic test for scatter functionality in IntervalListTools
@@ -83,7 +84,7 @@ public class IntervalListToolsTest {
             Assert.assertEquals(lists[0].size(), 2);
             Assert.assertEquals(lists[0].getIntervals().get(1).length(), 1, "Length of split interval list is wrong");
             Assert.assertEquals(lists[0].getUniqueBaseCount(), 100, "Unique base count in first interval is wrong.");
-            final IntervalList second = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, 2, 1));
+            final IntervalList second = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, 2, "0001"));
             Assert.assertEquals(lists[1].getUniqueBaseCount(), 100, "Unique base count in second interval is wrong.");
 
             // Test for when scattering breaks exactly at the end of an interval
@@ -136,8 +137,9 @@ public class IntervalListToolsTest {
     // Gets all the interval lists for a given scatter count in a directory
     final IntervalList[] getIntervalLists(final File scatterDir, final int scatterCount) {
         final IntervalList result[] = new IntervalList[scatterCount];
+        final DecimalFormat format = new DecimalFormat("0000");
         for (int i = 0; i < scatterCount; i++) {
-            result[i] = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, scatterCount, i+1));
+            result[i] = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, scatterCount, format.format(i+1)));
         }
         return result;
     }

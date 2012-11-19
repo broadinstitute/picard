@@ -48,11 +48,7 @@ public class ProgressLogger {
      */
     public ProgressLogger(final Log log) { this(log, 1000000); }
 
-    /**
-     * Records that a given record has been processed and triggers logging if necessary.
-     * @return boolean true if logging was triggered, false otherwise
-     */
-    public synchronized boolean record(final SAMRecord rec) {
+    public synchronized boolean record(final String chrom, final int pos) {
         if (++this.processed % this.n == 0) {
             final long now = System.currentTimeMillis();
             final long lastPeriodSeconds = (now - this.lastStartTime) / 1000;
@@ -62,20 +58,30 @@ public class ProgressLogger {
             final String elapsed   = formatElapseTime(seconds);
             final String period    = pad(fmt.format(lastPeriodSeconds), 4);
             final String processed = pad(fmt.format(this.processed), 13);
-            
+
             final String readInfo;
-            if (rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
-                readInfo = "*/*";
-            } else {
-                readInfo = rec.getReferenceName() + ":" + fmt.format(rec.getAlignmentStart());
-            }
-            
+            if (chrom == null) readInfo = "*/*";
+            else readInfo = chrom + ":" + fmt.format(pos);
+
             log.info(this.verb, " ", processed, " records.  Elapsed time: ", elapsed, "s.  Time for last ", fmt.format(this.n),
                      ": ", period, "s.  Last read position: ", readInfo);
             return true;
         }
         else {
             return false;
+        }
+    }
+
+    /**
+     * Records that a given record has been processed and triggers logging if necessary.
+     * @return boolean true if logging was triggered, false otherwise
+     */
+    public synchronized boolean record(final SAMRecord rec) {
+        if (rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            return record(null, 0);
+        }
+        else {
+            return record(rec.getReferenceName(), rec.getAlignmentStart());
         }
     }
     

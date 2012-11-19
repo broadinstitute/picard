@@ -91,7 +91,7 @@ public class RnaSeqMetrics extends MultilevelMetrics {
     /** CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific. */
     public double PCT_CORRECT_STRAND_READS;
 
-    /** The median CV of coverage of the 1000 most highly expressed transcripts. */
+    /** The median CV of coverage of the 1000 most highly expressed transcripts. Ideal value = 0. */
     public double MEDIAN_CV_COVERAGE;
 
     /**

@@ -10,6 +10,7 @@ import net.sf.samtools.SAMProgramRecord;
 import net.sf.samtools.util.SequenceUtil;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import net.sf.picard.cmdline.CommandLineProgram;
@@ -194,6 +195,7 @@ public class IntervalListTools extends CommandLineProgram {
         int index = 1;   // The index of the next split file to write
         final Iterator<Interval> it = list.iterator();
         int totalIntervals = 0;
+        final DecimalFormat format = new DecimalFormat("0000");
 
         while (it.hasNext() && index < SCATTER_COUNT) {
             final Interval interval = it.next();
@@ -206,7 +208,7 @@ public class IntervalListTools extends CommandLineProgram {
             else if (projectedSize == idealSplitLength) {
                 split.add(interval);
                 totalIntervals++;
-                split.write(createDirectoryAndGetScatterFile(index++));
+                split.write(createDirectoryAndGetScatterFile(format.format(index++)));
                 split = new IntervalList(list.getHeader());
                 splitLength = 0;
             }
@@ -218,7 +220,7 @@ public class IntervalListTools extends CommandLineProgram {
                         interval.getStart()+consumed+amountToConsume-1, interval.isNegativeStrand(), interval.getName());
                     split.add(partial);
                     totalIntervals++;
-                    split.write(createDirectoryAndGetScatterFile(index++));
+                    split.write(createDirectoryAndGetScatterFile(format.format(index++)));
                     split = new IntervalList(list.getHeader());
 
                     consumed += amountToConsume;
@@ -241,21 +243,21 @@ public class IntervalListTools extends CommandLineProgram {
             split.add(it.next());
             totalIntervals++;
         }
-        split.write(createDirectoryAndGetScatterFile(index));
+        split.write(createDirectoryAndGetScatterFile(format.format(index)));
         return totalIntervals;
 
 
     }
 
-    public static File getScatteredFileName(final File scatterDirectory, final int scatterTotal, final int index) {
-        return new File(scatterDirectory.getAbsolutePath() + "/temp_" + index + "_of_" +
+    public static File getScatteredFileName(final File scatterDirectory, final int scatterTotal, final String formattedIndex) {
+        return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
                 scatterTotal + "/scattered.intervals");
 
     }
 
-    private File createDirectoryAndGetScatterFile(final int index) {
+    private File createDirectoryAndGetScatterFile(final String formattedIndex) {
         createDirectoryOrFail(OUTPUT);
-        final File result = getScatteredFileName(OUTPUT, SCATTER_COUNT, index);
+        final File result = getScatteredFileName(OUTPUT, SCATTER_COUNT, formattedIndex);
         createDirectoryOrFail(result.getParentFile());
         return result;
     }

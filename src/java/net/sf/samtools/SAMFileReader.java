@@ -432,6 +432,11 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * mate information.  This method iterates over the SAM file, so there may not be an unclosed
      * iterator on the SAM file when this method is called.
      *
+     * Note that it is not possible to call queryMate when iterating over the SAMFileReader, because queryMate
+     * requires its own iteration, and there cannot be two simultaneous iterations on the same SAMFileReader.  The
+     * work-around is to open a second SAMFileReader on the same input file, and call queryMate on the second
+     * reader.
+     *
      * @param rec Record for which mate is sought.  Must be a paired read.
      * @return rec's mate, or null if it cannot be found.
      */
