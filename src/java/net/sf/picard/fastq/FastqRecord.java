@@ -28,14 +28,16 @@ package net.sf.picard.fastq;
  */
 public class FastqRecord {
 
-    private String seqHeaderPrefix;
-    private String seqLine;
-    private String qualHeaderPrefix;
-    private String qualLine;
+    private final String seqHeaderPrefix;
+    private final String seqLine;
+    private final String qualHeaderPrefix;
+    private final String qualLine;
 
     public FastqRecord(final String seqHeaderPrefix, final String seqLine, final String qualHeaderPrefix, final String qualLine) {
-        if (seqHeaderPrefix.length() > 0) this.seqHeaderPrefix = seqHeaderPrefix;
-        if (qualHeaderPrefix.length() > 0) this.qualHeaderPrefix = qualHeaderPrefix;
+        if (seqHeaderPrefix != null && seqHeaderPrefix.length() > 0) this.seqHeaderPrefix = seqHeaderPrefix;
+        else this.seqHeaderPrefix = null;
+        if (qualHeaderPrefix != null && qualHeaderPrefix.length() > 0) this.qualHeaderPrefix = qualHeaderPrefix;
+        else this.qualHeaderPrefix = null;
         this.seqLine = seqLine ;
         this.qualLine = qualLine ;
     }
