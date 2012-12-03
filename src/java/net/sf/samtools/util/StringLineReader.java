@@ -23,20 +23,24 @@
  */
 package net.sf.samtools.util;
 
+import java.util.regex.Pattern;
+
 /**
  * Implementation of LineReader that gets its input from a String.  No charset conversion
  * is necessary because the String is in unicode.  Handles CR, LF or CRLF line termination,
  * but if asked to return the line terminator, it always comes back as LF.
  */
 public class StringLineReader implements LineReader {
-
+    private static final Pattern CRLF = Pattern.compile("\r\n");
     private final String theString;
     private int curPos = 0;
     private int lineNumber = 0;
 
     public StringLineReader(final String s) {
-        // Simplify later processing by replacing crlf with just lf, and replacing solo cr with lf
-        this.theString = s.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+        // Simplify later processing by replacing crlf with just lf, and replacing solo cr with lf.
+        // Note that String.replace(String, String) causes a regex to be used, so precompilation should be
+        // the best we can do short of handling the string directly.
+        this.theString = CRLF.matcher(s).replaceAll("\n").replace('\r', '\n');
     }
 
     /**
