@@ -95,14 +95,11 @@ public class DateParser {
     private static boolean check(StringTokenizer st, String token)
             throws InvalidDateException
     {
-        try {
-            if (st.nextToken().equals(token)) {
-                return true;
-            } else {
-                throw new InvalidDateException("Missing ["+token+"]");
-            }
-        } catch (NoSuchElementException ex) {
-            return false;
+        if (!st.hasMoreElements()) return false;
+        if (st.nextToken().equals(token)) {
+            return true;
+        } else {
+            throw new InvalidDateException("Missing ["+token+"]");
         }
     }
 
