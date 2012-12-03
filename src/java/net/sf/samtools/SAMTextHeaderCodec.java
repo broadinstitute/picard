@@ -32,6 +32,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Parser for a SAM text header, and a generator of SAM text header.
@@ -59,7 +60,10 @@ public class SAMTextHeaderCodec {
     private BufferedWriter writer;
 
     private static final String TAG_KEY_VALUE_SEPARATOR = ":";
+    private static final char TAG_KEY_VALUE_SEPARATOR_CHAR = ':';
     private static final String FIELD_SEPARATOR = "\t";
+    private static final char FIELD_SEPARATOR_CHAR = '\t';
+    private static final Pattern FIELD_SEPARATOR_RE = Pattern.compile(FIELD_SEPARATOR);
 
     public static final String COMMENT_PREFIX = HEADER_LINE_START + HeaderRecordType.CO.name() + FIELD_SEPARATOR;
 
@@ -250,7 +254,13 @@ public class SAMTextHeaderCodec {
             assert(line.startsWith(HEADER_LINE_START));
 
             // Tab-separate
-            final String[] fields = line.split(FIELD_SEPARATOR);
+            String[] fields = new String[1024];
+            int numFields = StringUtil.split(line, fields, FIELD_SEPARATOR_CHAR);
+            if (numFields == fields.length) {
+                // Lots of fields, so fall back
+                fields = FIELD_SEPARATOR_RE.split(line);
+                numFields = fields.length;
+            }
 
             // Parse the HeaderRecordType
             try {
@@ -267,10 +277,10 @@ public class SAMTextHeaderCodec {
                 return;
             }
 
+            final String[] keyAndValue = new String[2];
             // Parse they key:value pairs
-            for (int i = 1; i < fields.length; ++i) {
-                final String[] keyAndValue = fields[i].split(TAG_KEY_VALUE_SEPARATOR, 2);
-                if (keyAndValue.length != 2) {
+            for (int i = 1; i < numFields; ++i) {
+                if (StringUtil.splitConcatenateExcessTokens(fields[i], keyAndValue, TAG_KEY_VALUE_SEPARATOR_CHAR) != 2) {
                     reportErrorParsingLine("Problem parsing " + HEADER_LINE_START + mHeaderRecordType +
                             " key:value pair", SAMValidationError.Type.POORLY_FORMATTED_HEADER_TAG, null);
                     continue;
