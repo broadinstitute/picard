@@ -35,7 +35,11 @@
       <entry name="?*.tld" />
       <entry name="?*.ftl" />
     </wildcardResourcePatterns>
-    <annotationProcessing enabled="false" useClasspath="true" />
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+    </annotationProcessing>
   </component>
   <component name="CopyrightManager" default="">
     <module2copyright />
@@ -91,6 +95,21 @@
         <inspection_tool class="LocalCanBeFinal" enabled="true" level="WARNING" enabled_by_default="true">
           <option name="REPORT_VARIABLES" value="true" />
           <option name="REPORT_PARAMETERS" value="true" />
+        </inspection_tool>
+        <inspection_tool class="UnusedDeclaration" enabled="false" level="WARNING" enabled_by_default="false">
+          <option name="ADD_MAINS_TO_ENTRIES" value="true" />
+          <option name="ADD_APPLET_TO_ENTRIES" value="true" />
+          <option name="ADD_SERVLET_TO_ENTRIES" value="true" />
+          <option name="ADD_NONJAVA_TO_ENTRIES" value="true" />
+        </inspection_tool>
+        <inspection_tool class="groupsTestNG" enabled="true" level="WARNING" enabled_by_default="true">
+          <option name="groups">
+            <value>
+              <list size="1">
+                <item index="0" class="java.lang.String" itemvalue="unix" />
+              </list>
+            </value>
+          </option>
         </inspection_tool>
       </profile>
     </profiles>
@@ -246,6 +265,15 @@
   </component>
   <component name="ProjectDetails">
     <option name="projectName" value="Picard-public" />
+  </component>
+  <component name="ProjectDictionaryState">
+    <dictionary name="mccowan">
+      <words>
+        <w>inferer</w>
+        <w>inferrer</w>
+        <w>phread</w>
+      </words>
+    </dictionary>
   </component>
   <component name="ProjectKey">
     <option name="state" value="https://picard.svn.sourceforge.net/svnroot/picard/trunk/Picard-public.ipr" />
