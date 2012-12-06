@@ -30,9 +30,7 @@ import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
+import net.sf.picard.util.*;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMValidationError.Type;
@@ -48,15 +46,15 @@ import java.util.*;
  * <li>checks sam file header for read groups</li>
  * <li>for each sam record
  * <ul>
- *     <li>reports error detected by SAMRecord.isValid()</li>
- *     <li>validates NM (nucleotide differences) exists and matches reality</li>
- *     <li>validates mate fields agree with data in the mate record</li>
+ * <li>reports error detected by SAMRecord.isValid()</li>
+ * <li>validates NM (nucleotide differences) exists and matches reality</li>
+ * <li>validates mate fields agree with data in the mate record</li>
  * </ul>
  * </li>
  * </ul>
  *
- * @see SAMRecord#isValid()
  * @author Doug Voet
+ * @see SAMRecord#isValid()
  */
 public class SamFileValidator {
     private Histogram<Type> errorsByType = new Histogram<Type>();
@@ -80,7 +78,9 @@ public class SamFileValidator {
         this.maxTempFiles = maxTempFiles;
     }
 
-    /** Sets one or more error types that should not be reported on. */
+    /**
+     * Sets one or more error types that should not be reported on.
+     */
     public void setErrorsToIgnore(final Collection<Type> types) {
         if (!types.isEmpty()) {
             this.errorsToIgnore = EnumSet.copyOf(types);
@@ -93,7 +93,7 @@ public class SamFileValidator {
 
     /**
      * Outputs validation summary report to out.
-     * 
+     *
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
      * @return boolean  true if there are no validation errors, otherwise false
@@ -123,10 +123,10 @@ public class SamFileValidator {
 
     /**
      * Outputs validation error details to out.
-     * 
+     *
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
-     * processing will stop after this threshold has been reached
+     *                  processing will stop after this threshold has been reached
      * @return boolean  true if there are no validation errors, otherwise false
      */
     public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
@@ -174,16 +174,16 @@ public class SamFileValidator {
             samReader.setValidationStringency(ValidationStringency.SILENT);
             validateHeader(samReader.getFileHeader());
             orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
-            validateSamRecords(samReader, samReader.getFileHeader());
+            validateSamRecordsAndQualityFormat(samReader, samReader.getFileHeader());
             validateUnmatchedPairs();
-            if (validateIndex){
+            if (validateIndex) {
                 try {
-                   BamIndexValidator.exhaustivelyTestIndex(samReader);
-                } catch (Exception e){
+                    BamIndexValidator.exhaustivelyTestIndex(samReader);
+                } catch (Exception e) {
                     addError(new SAMValidationError(Type.INVALID_INDEX_FILE_POINTER, e.getMessage(), null));
                 }
             }
-            
+
             if (errorsByType.isEmpty()) {
                 out.println("No errors found");
             }
@@ -202,7 +202,7 @@ public class SamFileValidator {
             // For the coordinate-sorted map, need to detect mate pairs in which the mateReferenceIndex on one end
             // does not match the readReference index on the other end, so the pairs weren't united and validated.
             inMemoryPairMap = new InMemoryPairEndInfoMap();
-            CloseableIterator<Map.Entry<String, PairEndInfo>> it = ((CoordinateSortedPairEndInfoMap)pairEndInfoByName).iterator();
+            CloseableIterator<Map.Entry<String, PairEndInfo>> it = ((CoordinateSortedPairEndInfoMap) pairEndInfoByName).iterator();
             while (it.hasNext()) {
                 Map.Entry<String, PairEndInfo> entry = it.next();
                 PairEndInfo pei = inMemoryPairMap.remove(entry.getValue().readReferenceIndex, entry.getKey());
@@ -219,21 +219,29 @@ public class SamFileValidator {
             }
             it.close();
         } else {
-            inMemoryPairMap = (InMemoryPairEndInfoMap)pairEndInfoByName;
+            inMemoryPairMap = (InMemoryPairEndInfoMap) pairEndInfoByName;
         }
         // At this point, everything in InMemoryMap is a read marked as a pair, for which a mate was not found.
-        for (final Map.Entry<String, PairEndInfo> entry: inMemoryPairMap) {
+        for (final Map.Entry<String, PairEndInfo> entry : inMemoryPairMap) {
             addError(new SAMValidationError(Type.MATE_NOT_FOUND, "Mate not found for paired read", entry.getKey()));
         }
     }
 
-    private void validateSamRecords(final Iterable<SAMRecord> samRecords, final SAMFileHeader header) {
+    /**
+     * SAM record and quality format validations are combined into a single method because validation must be completed
+     * in only a single pass of the SamRecords (because a SamReader's iterator() method may not return the same
+     * records on a subsequent call).
+     */
+    private void validateSamRecordsAndQualityFormat(final Iterable<SAMRecord> samRecords, final SAMFileHeader header) {
         SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Validated Read");
+        final QualityEncodingDetector qualityDetector = new QualityEncodingDetector();
         try {
-            while(iter.hasNext()){
-                SAMRecord record = iter.next();
-
+            while (iter.hasNext()) {
+                final SAMRecord record = iter.next();
+                
+                qualityDetector.add(record);
+                
                 final long recordNumber = progress.getCount() + 1;
                 final Collection<SAMValidationError> errors = record.isValid();
                 if (errors != null) {
@@ -242,7 +250,7 @@ public class SamFileValidator {
                         addError(error);
                     }
                 }
-                
+
                 validateMateFields(record, recordNumber);
                 validateSortOrder(record, recordNumber);
                 validateReadGroup(record, header);
@@ -258,6 +266,15 @@ public class SamFileValidator {
 
                 }
                 progress.record(record);
+            }
+
+            try {
+                final FastqQualityFormat format = qualityDetector.generateBestGuess(QualityEncodingDetector.FileContext.SAM) ;
+                if (format != FastqQualityFormat.Standard) {
+                    addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, String.format("Detected %s quality score encoding, but expected %s.", format, FastqQualityFormat.Standard), null));
+                }
+            } catch (PicardException e) {
+                addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, e.getMessage(), null));
             }
         } catch (SAMFormatException e) {
             // increment record number because the iterator behind the SAMFileReader
@@ -277,8 +294,7 @@ public class SamFileValidator {
         if (rg == null) {
             addError(new SAMValidationError(Type.RECORD_MISSING_READ_GROUP,
                     "A record is missing a read group", record.getReadName()));
-        }
-        else if (!header.getReadGroups().contains(rg)) {
+        } else if (!header.getReadGroups().contains(rg)) {
             addError(new SAMValidationError(Type.READ_GROUP_NOT_FOUND,
                     "A record has a read group not found in the header: ",
                     record.getReadName() + ", " + rg.getReadGroupId()));
@@ -299,7 +315,7 @@ public class SamFileValidator {
     }
 
     private void validateSecondaryBaseCalls(final SAMRecord record, final long recordNumber) {
-        final String e2 = (String)record.getAttribute(SAMTag.E2.name());
+        final String e2 = (String) record.getAttribute(SAMTag.E2.name());
         if (e2 != null) {
             if (e2.length() != record.getReadLength()) {
                 addError(new SAMValidationError(Type.MISMATCH_READ_LENGTH_AND_E2_LENGTH,
@@ -315,13 +331,13 @@ public class SamFileValidator {
                 if (SequenceUtil.basesEqual(bases[i], secondaryBases[i])) {
                     addError(new SAMValidationError(Type.E2_BASE_EQUALS_PRIMARY_BASE,
                             String.format("Secondary base call  (%c) == primary base call (%c)",
-                                    (char)secondaryBases[i], (char)bases[i]),
+                                    (char) secondaryBases[i], (char) bases[i]),
                             record.getReadName(), recordNumber));
                     break;
                 }
             }
         }
-        final String u2 = (String)record.getAttribute(SAMTag.U2.name());
+        final String u2 = (String) record.getAttribute(SAMTag.U2.name());
         if (u2 != null && u2.length() != record.getReadLength()) {
             addError(new SAMValidationError(Type.MISMATCH_READ_LENGTH_AND_U2_LENGTH,
                     String.format("U2 tag length (%d) != read length (%d)", u2.length(), record.getReadLength()),
@@ -352,18 +368,18 @@ public class SamFileValidator {
         final SAMRecord prev = orderChecker.getPreviousRecord();
         if (!orderChecker.isSorted(record)) {
             addError(new SAMValidationError(
-                    Type.RECORD_OUT_OF_ORDER, 
+                    Type.RECORD_OUT_OF_ORDER,
                     String.format(
                             "The record is out of [%s] order, prior read name [%s], prior coodinates [%d:%d]",
                             record.getHeader().getSortOrder().name(),
                             prev.getReadName(),
                             prev.getReferenceIndex(),
                             prev.getAlignmentStart()),
-                    record.getReadName(), 
+                    record.getReadName(),
                     recordNumber));
         }
     }
-    
+
     private void init(final ReferenceSequenceFile reference, final SAMFileHeader header) {
         if (header.getSortOrder() == SAMFileHeader.SortOrder.coordinate) {
             this.pairEndInfoByName = new CoordinateSortedPairEndInfoMap();
@@ -386,8 +402,8 @@ public class SamFileValidator {
             final Integer tagNucleotideDiffs = record.getIntegerAttribute(ReservedTagConstants.NM);
             if (tagNucleotideDiffs == null) {
                 addError(new SAMValidationError(
-                        Type.MISSING_TAG_NM, 
-                        "NM tag (nucleotide differences) is missing", 
+                        Type.MISSING_TAG_NM,
+                        "NM tag (nucleotide differences) is missing",
                         record.getReadName(),
                         recordNumber));
             } else if (refFileWalker != null) {
@@ -397,27 +413,27 @@ public class SamFileValidator {
 
                 if (!tagNucleotideDiffs.equals(actualNucleotideDiffs)) {
                     addError(new SAMValidationError(
-                            Type.INVALID_TAG_NM, 
+                            Type.INVALID_TAG_NM,
                             "NM tag (nucleotide differences) in file [" + tagNucleotideDiffs +
-                            "] does not match reality [" + actualNucleotideDiffs + "]", 
+                                    "] does not match reality [" + actualNucleotideDiffs + "]",
                             record.getReadName(),
                             recordNumber));
                 }
             }
         }
     }
-    
+
     private void validateMateFields(final SAMRecord record, final long recordNumber) {
         if (!record.getReadPairedFlag() || record.getNotPrimaryAlignmentFlag()) {
             return;
         }
-        
+
         final PairEndInfo pairEndInfo = pairEndInfoByName.remove(record.getReferenceIndex(), record.getReadName());
         if (pairEndInfo == null) {
             pairEndInfoByName.put(record.getMateReferenceIndex(), record.getReadName(), new PairEndInfo(record, recordNumber));
         } else {
             final List<SAMValidationError> errors =
-                pairEndInfo.validateMates(new PairEndInfo(record, recordNumber), record.getReadName());
+                    pairEndInfo.validateMates(new PairEndInfo(record, recordNumber), record.getReadName());
             for (final SAMValidationError error : errors) {
                 addError(error);
             }
@@ -443,8 +459,8 @@ public class SamFileValidator {
             addError(new SAMValidationError(Type.MISSING_READ_GROUP, "Read groups is empty", null));
         }
         List<SAMProgramRecord> pgs = fileHeader.getProgramRecords();
-        for (int i = 0; i < pgs.size()-1; i++) {
-            for (int j=i+1; j < pgs.size(); j++) {
+        for (int i = 0; i < pgs.size() - 1; i++) {
+            for (int j = i + 1; j < pgs.size(); j++) {
                 if (pgs.get(i).getProgramGroupId().equals(pgs.get(j).getProgramGroupId())) {
                     addError(new SAMValidationError(Type.DUPLICATE_PROGRAM_GROUP_ID, "Duplicate " +
                             "program group id: " + pgs.get(i).getProgramGroupId(), null));
@@ -453,8 +469,8 @@ public class SamFileValidator {
         }
 
         List<SAMReadGroupRecord> rgs = fileHeader.getReadGroups();
-        for (int i = 0; i < rgs.size()-1; i++) {
-            for (int j=i+1; j < rgs.size(); j++) {
+        for (int i = 0; i < rgs.size() - 1; i++) {
+            for (int j = i + 1; j < rgs.size(); j++) {
                 if (rgs.get(i).getReadGroupId().equals(rgs.get(j).getReadGroupId())) {
                     addError(new SAMValidationError(Type.DUPLICATE_READ_GROUP_ID, "Duplicate " +
                             "read group id: " + rgs.get(i).getReadGroupId(), null));
@@ -482,7 +498,8 @@ public class SamFileValidator {
 
     /**
      * Control verbosity
-     * @param verbose True in order to emit a message per error or warning.
+     *
+     * @param verbose          True in order to emit a message per error or warning.
      * @param maxVerboseOutput If verbose, emit no more than this many messages.  Ignored if !verbose.
      */
     public void setVerbose(final boolean verbose, final int maxVerboseOutput) {
@@ -490,8 +507,13 @@ public class SamFileValidator {
         this.maxVerboseOutput = maxVerboseOutput;
     }
 
-    public boolean isBisulfiteSequenced() { return bisulfiteSequenced; }
-    public void setBisulfiteSequenced(boolean bisulfiteSequenced) { this.bisulfiteSequenced = bisulfiteSequenced; }
+    public boolean isBisulfiteSequenced() {
+        return bisulfiteSequenced;
+    }
+
+    public void setBisulfiteSequenced(boolean bisulfiteSequenced) {
+        this.bisulfiteSequenced = bisulfiteSequenced;
+    }
 
     public SamFileValidator setValidateIndex(boolean validateIndex) {
         // The SAMFileReader must also have IndexCaching enabled to have the index validated,
@@ -502,8 +524,8 @@ public class SamFileValidator {
 
     public static class ValidationMetrics extends MetricBase {
     }
-    
-    /** 
+
+    /**
      * This class is used so we don't have to store the entire SAMRecord in memory while we wait
      * to find a record's mate and also to store the record number.
      */
@@ -519,17 +541,17 @@ public class SamFileValidator {
         private final boolean mateUnmappedFlag;
 
         private final boolean firstOfPairFlag;
-        
+
         private final long recordNumber;
-        
+
         public PairEndInfo(final SAMRecord record, final long recordNumber) {
             this.recordNumber = recordNumber;
-            
+
             this.readAlignmentStart = record.getAlignmentStart();
             this.readNegStrandFlag = record.getReadNegativeStrandFlag();
             this.readReferenceIndex = record.getReferenceIndex();
             this.readUnmappedFlag = record.getReadUnmappedFlag();
-            
+
             this.mateAlignmentStart = record.getMateAlignmentStart();
             this.mateNegStrandFlag = record.getMateNegativeStrandFlag();
             this.mateReferenceIndex = record.getMateReferenceIndex();
@@ -559,7 +581,7 @@ public class SamFileValidator {
             validateMateFields(mate, this, readName, errors);
             // Validations that should not be repeated on both ends
             if (this.firstOfPairFlag == mate.firstOfPairFlag) {
-                final String whichEnd = this.firstOfPairFlag? "first": "second";
+                final String whichEnd = this.firstOfPairFlag ? "first" : "second";
                 errors.add(new SAMValidationError(
                         Type.MATES_ARE_SAME_END,
                         "Both mates are marked as " + whichEnd + " of pair",
@@ -569,40 +591,42 @@ public class SamFileValidator {
             }
             return errors;
         }
-        
+
         private void validateMateFields(final PairEndInfo end1, final PairEndInfo end2, final String readName, final List<SAMValidationError> errors) {
             if (end1.mateAlignmentStart != end2.readAlignmentStart) {
                 errors.add(new SAMValidationError(
-                        Type.MISMATCH_MATE_ALIGNMENT_START, 
-                        "Mate alignment does not match alignment start of mate", 
+                        Type.MISMATCH_MATE_ALIGNMENT_START,
+                        "Mate alignment does not match alignment start of mate",
                         readName,
                         end1.recordNumber));
             }
             if (end1.mateNegStrandFlag != end2.readNegStrandFlag) {
                 errors.add(new SAMValidationError(
-                        Type.MISMATCH_FLAG_MATE_NEG_STRAND, 
-                        "Mate negative strand flag does not match read negative strand flag of mate", 
+                        Type.MISMATCH_FLAG_MATE_NEG_STRAND,
+                        "Mate negative strand flag does not match read negative strand flag of mate",
                         readName,
                         end1.recordNumber));
             }
             if (end1.mateReferenceIndex != end2.readReferenceIndex) {
                 errors.add(new SAMValidationError(
-                        Type.MISMATCH_MATE_REF_INDEX, 
-                        "Mate reference index (MRNM) does not match reference index of mate", 
+                        Type.MISMATCH_MATE_REF_INDEX,
+                        "Mate reference index (MRNM) does not match reference index of mate",
                         readName,
                         end1.recordNumber));
             }
             if (end1.mateUnmappedFlag != end2.readUnmappedFlag) {
                 errors.add(new SAMValidationError(
-                        Type.MISMATCH_FLAG_MATE_UNMAPPED, 
-                        "Mate unmapped flag does not match read unmapped flag of mate", 
+                        Type.MISMATCH_FLAG_MATE_UNMAPPED,
+                        "Mate unmapped flag does not match read unmapped flag of mate",
                         readName,
                         end1.recordNumber));
             }
         }
     }
-    
-    /** Thrown in addError indicating that maxVerboseOutput has been exceeded and processing should stop */
+
+    /**
+     * Thrown in addError indicating that maxVerboseOutput has been exceeded and processing should stop
+     */
     private static class MaxOutputExceededException extends PicardException {
         MaxOutputExceededException() {
             super("maxVerboseOutput exceeded.");
@@ -611,7 +635,9 @@ public class SamFileValidator {
 
     interface PairEndInfoMap extends Iterable<Map.Entry<String, PairEndInfo>> {
         void put(int mateReferenceIndex, String key, PairEndInfo value);
+
         PairEndInfo remove(int mateReferenceIndex, String key);
+
         CloseableIterator<Map.Entry<String, PairEndInfo>> iterator();
     }
 
@@ -624,7 +650,7 @@ public class SamFileValidator {
         }
 
         public PairEndInfo remove(int mateReferenceIndex, String key) {
-            return onDiskMap.remove(mateReferenceIndex, key); 
+            return onDiskMap.remove(mateReferenceIndex, key);
         }
 
         public CloseableIterator<Map.Entry<String, PairEndInfo>> iterator() {
@@ -635,8 +661,13 @@ public class SamFileValidator {
             private DataInputStream in;
             private DataOutputStream out;
 
-            public void setOutputStream(final OutputStream os) { this.out = new DataOutputStream(os); }
-            public void setInputStream(final InputStream is) { this.in = new DataInputStream(is); }
+            public void setOutputStream(final OutputStream os) {
+                this.out = new DataOutputStream(os);
+            }
+
+            public void setInputStream(final InputStream is) {
+                this.in = new DataInputStream(is);
+            }
 
             public void encode(String key, PairEndInfo record) {
                 try {

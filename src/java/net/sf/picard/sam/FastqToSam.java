@@ -31,10 +31,7 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.FastqQualityFormat;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.picard.util.SolexaQualityConverter;
+import net.sf.picard.util.*;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.Iso8601Date;
@@ -66,7 +63,7 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 " +
             "style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled " +
-            "scores with a character shift of 33.")
+            "scores with a character shift of 33.  If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
     @Option(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) 
@@ -120,6 +117,23 @@ public class FastqToSam extends CommandLineProgram {
 
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
+        if (QUALITY_FORMAT == null) {
+            final QualityEncodingDetector detector = new QualityEncodingDetector();
+            final FastqReader reader = new FastqReader(FASTQ);
+            if (FASTQ2 == null) {
+                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader);
+            } else {
+                final FastqReader reader2 = new FastqReader(FASTQ2);       
+                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader, reader2);
+                reader2.close();
+            }
+            reader.close();
+            
+            QUALITY_FORMAT = detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ);
+            if (detector.isDeterminationAmbiguous())
+                LOG.warn("Making ambiguous determination about fastq's quality encoding; more than one format possible based on observed qualities.");
+            LOG.info(String.format("Auto-detected quality format as: %s.", QUALITY_FORMAT));
+        }
         final int readCount = (FASTQ2 == null) ?  doUnpaired() : doPaired();
         LOG.info("Processed " + readCount + " fastq reads");
         return 0;

@@ -284,6 +284,13 @@ public class ValidateSamFileTest {
     }
 
     @Test
+    public void testQualityFormatValidation() throws Exception {
+        final SAMFileReader samReader = new SAMFileReader(new File("./testdata/net/sf/picard/util/QualityEncodingDetectorTest/illumina-as-standard.bam"));
+        final Histogram<String> results = executeValidation(samReader, null);
+        Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_QUALITY_FORMAT.getHistogramString()).getValue(), 1.0);
+    }
+    
+    @Test
     public void testCigarOffEndOfReferenceValidation() throws Exception {
         final SAMRecordSetBuilder samBuilder = new SAMRecordSetBuilder();
         samBuilder.addFrag(String.valueOf(0), 0, 1, false);

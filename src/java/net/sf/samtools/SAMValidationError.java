@@ -35,6 +35,9 @@ public class SAMValidationError {
     }
 
     public enum Type {
+        /** quality encodings out of range; appear to be Solexa or Illumina when Phread expected */
+        INVALID_QUALITY_FORMAT(Severity.WARNING),
+        
         /** proper pair flag set for unpaired read */
         INVALID_FLAG_PROPER_PAIR,
 
