@@ -239,9 +239,9 @@ public class SamFileValidator {
         try {
             while (iter.hasNext()) {
                 final SAMRecord record = iter.next();
-                
+
                 qualityDetector.add(record);
-                
+
                 final long recordNumber = progress.getCount() + 1;
                 final Collection<SAMValidationError> errors = record.isValid();
                 if (errors != null) {
@@ -269,9 +269,11 @@ public class SamFileValidator {
             }
 
             try {
-                final FastqQualityFormat format = qualityDetector.generateBestGuess(QualityEncodingDetector.FileContext.SAM) ;
-                if (format != FastqQualityFormat.Standard) {
-                    addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, String.format("Detected %s quality score encoding, but expected %s.", format, FastqQualityFormat.Standard), null));
+                if (progress.getCount() > 0) { // Avoid exception being thrown as a result of no qualities being read
+                    final FastqQualityFormat format = qualityDetector.generateBestGuess(QualityEncodingDetector.FileContext.SAM);
+                    if (format != FastqQualityFormat.Standard) {
+                        addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, String.format("Detected %s quality score encoding, but expected %s.", format, FastqQualityFormat.Standard), null));
+                    }
                 }
             } catch (PicardException e) {
                 addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, e.getMessage(), null));
