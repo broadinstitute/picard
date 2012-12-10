@@ -172,12 +172,12 @@ public class SAMFileWriterFactory {
 
     private void initializeBAMWriter(final BAMFileWriter writer, final SAMFileHeader header, final boolean presorted, final boolean createIndex) {
         writer.setSortOrder(header.getSortOrder(), presorted);
+        if (maxRecordsInRam != null) {
+            writer.setMaxRecordsInRam(maxRecordsInRam);
+        }
         writer.setHeader(header);
         if (createIndex && writer.getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)){
             writer.enableBamIndexConstruction();
-        }
-        if (maxRecordsInRam != null) {
-            writer.setMaxRecordsInRam(maxRecordsInRam);
         }
     }
 
