@@ -137,6 +137,24 @@ public class SAMLineParser {
         this.mFile = samFile;
     }
 
+    /**
+     * Get the File header.
+     * @return the SAM file header
+     */
+    private SAMFileHeader getFileHeader() {
+
+        return this.mFileHeader;
+    }
+
+    /**
+     * Get validation stringency.
+     * @return validation stringency
+     */
+    private SAMFileReader.ValidationStringency getValidationStringency() {
+
+        return this.validationStringency;
+    }
+
     private int parseInt(final String s, final String fieldName) {
         final int ret;
         try {
