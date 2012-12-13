@@ -181,6 +181,20 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
+     * Do this unconditionally, not just for aligned records, for two reasons:
+     * - An unaligned read has been processed by the aligner, so it is more truthful.
+     * - When chaining additional PG records, having all the records in the output file refer to the same PG
+     *   record means that only one chain will need to be created, rather than a chain for the mapped reads
+     *   and a separate chain for the unmapped reads.
+     */
+    private void maybeSetPgTag(final SAMRecord rec) {
+        if (this.programRecord != null) {
+            rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, this.programRecord.getProgramGroupId());
+        }
+    }
+    /**
+
+    /**
      * Merges the alignment data with the non-aligned records from the source BAM file.
      */
     public void mergeAlignment() {
@@ -206,12 +220,15 @@ public abstract class AbstractAlignmentMerger {
         while (unmappedIterator.hasNext()) {
             // Load next unaligned read or read pair.
             final SAMRecord rec = unmappedIterator.next();
+
             rec.setHeader(this.header);
+            maybeSetPgTag(rec);
 
             final SAMRecord secondOfPair;
             if (rec.getReadPairedFlag()) {
                 secondOfPair = unmappedIterator.next();
                 secondOfPair.setHeader(this.header);
+                maybeSetPgTag(secondOfPair);
 
                 // Validate that paired reads arrive as first of pair followed by second of pair
                 if (!rec.getReadName().equals(secondOfPair.getReadName()))
@@ -362,10 +379,6 @@ public abstract class AbstractAlignmentMerger {
     private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned) {
         setValuesFromAlignment(unaligned, aligned);
         updateCigarForTrimmedOrClippedBases(unaligned, aligned);
-        if (this.programRecord != null) {
-            unaligned.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID,
-                this.programRecord.getProgramGroupId());
-        }
         if (SAMUtils.cigarMapsNoBasesToRef(unaligned.getCigar())) {
             SAMUtils.makeReadUnmapped(unaligned);
         }

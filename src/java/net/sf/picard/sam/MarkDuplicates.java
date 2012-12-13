@@ -69,6 +69,26 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     @Option(shortName="M", doc="File to write duplication metrics to")
     public File METRICS_FILE;
 
+    @Option(shortName=StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
+            doc="The program record ID for the @PG record(s) created by this program.  " +
+                    "Set to null to disable PG record creation.  This string may have a suffix appended to avoid " +
+            "collision with other program record IDs.",
+            optional=true)
+    public String PROGRAM_RECORD_ID = "MarkDuplicates";
+
+    @Option(shortName="PG_VERSION",
+            doc="Value of VN tag of PG record to be created. If not specified, the version will be detected automatically.",
+            optional=true)
+    public String PROGRAM_GROUP_VERSION;
+
+    @Option(shortName="PG_COMMAND",
+            doc="Value of CL tag of PG record to be created. If not supplied the command line will be detected automatically.",
+            optional=true)
+    public String PROGRAM_GROUP_COMMAND_LINE;
+
+    @Option(shortName="PG_NAME", doc="Value of PN tag of PG record to be created.")
+    public String PROGRAM_GROUP_NAME = "MarkDuplicates";
+
     @Option(doc="Comment(s) to include in the output file's header.", optional=true, shortName="CO")
     public List<String> COMMENT = new ArrayList<String>();
 
@@ -102,6 +122,13 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     // Variables used for optical duplicate detection and tracking
     private final Histogram<Short> opticalDupesByLibraryId = new Histogram<Short>();
 
+    // All PG IDs seen in merged input files in first pass.  These are gather for two reasons:
+    // - to know how many different PG records to create to represent this program invocation.
+    // - to know what PG IDs are already used to avoid collisions when creating new ones.
+    // Note that if there are one or more records that do not have a PG tag, then a null value
+    // will be stored in this set.
+    private final Set<String> pgIdsSeen = new HashSet<String>();
+
     /** Stock main method. */
     public static void main(final String[] args) {
         System.exit(new MarkDuplicates().instanceMain(args));
@@ -134,6 +161,33 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         final SAMFileHeader outputHeader = header.clone();
         outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         for (final String comment : COMMENT) outputHeader.addComment(comment);
+
+        // Key: previous PG ID on a SAM Record (or null).  Value: New PG ID to replace it.
+        final Map<String, String> chainedPgIds;
+        // Generate new PG record(s)
+        if (PROGRAM_RECORD_ID != null) {
+            final PgIdGenerator pgIdGenerator = new PgIdGenerator(outputHeader);
+            if (PROGRAM_GROUP_VERSION == null) {
+                PROGRAM_GROUP_VERSION = this.getVersion();
+            }
+            if (PROGRAM_GROUP_COMMAND_LINE == null) {
+                PROGRAM_GROUP_COMMAND_LINE = this.getCommandLine();
+            }
+            chainedPgIds = new HashMap<String, String>();
+            for (final String existingId : pgIdsSeen) {
+                final String newPgId = pgIdGenerator.getNonCollidingId(PROGRAM_RECORD_ID);
+                chainedPgIds.put(existingId, newPgId);
+                final SAMProgramRecord programRecord = new SAMProgramRecord(newPgId);
+                programRecord.setProgramVersion(PROGRAM_GROUP_VERSION);
+                programRecord.setCommandLine(PROGRAM_GROUP_COMMAND_LINE);
+                programRecord.setProgramName(PROGRAM_GROUP_NAME);
+                programRecord.setPreviousProgramGroupId(existingId);
+                outputHeader.addProgramRecord(programRecord);
+            }
+        } else {
+            chainedPgIds = null;
+        }
+
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
                                                                                 true,
                                                                                 OUTPUT);
@@ -206,6 +260,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
                 // do nothing
             }
             else {
+                if (PROGRAM_RECORD_ID != null) {
+                    rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+                }
                 out.addAlignment(rec);
                 progress.record(rec);
             }
@@ -327,6 +384,13 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
 
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
+
+            // This doesn't have anything to do with building sorted ReadEnd lists, but it can be done in the same pass
+            // over the input
+            if (PROGRAM_RECORD_ID != null) {
+                pgIdsSeen.add(rec.getStringAttribute(SAMTag.PG.name()));
+            }
+
             if (rec.getReadUnmappedFlag()) {
                 if (rec.getReferenceIndex() == -1) {
                     // When we hit the unmapped reads with no coordinate, no reason to continue.
@@ -607,7 +671,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         final boolean[] opticalDuplicateFlags = findOpticalDuplicates(list, OPTICAL_DUPLICATE_PIXEL_DISTANCE);
 
         int opticalDuplicates = 0;
-        for (boolean b: opticalDuplicateFlags) if (b) ++opticalDuplicates;
+        for (final boolean b: opticalDuplicateFlags) if (b) ++opticalDuplicates;
         if (opticalDuplicates > 0) {
             this.opticalDupesByLibraryId.increment(list.get(0).libraryId, opticalDuplicates);
         }
@@ -656,6 +720,40 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             if (retval == 0) retval = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
 
             return retval;
+        }
+    }
+
+    static class PgIdGenerator {
+        private int recordCounter;
+
+        private final Set<String> idsThatAreAlreadyTaken = new HashSet<String>();
+
+        PgIdGenerator(final SAMFileHeader header) {
+            for (final SAMProgramRecord pgRecord : header.getProgramRecords()) {
+                idsThatAreAlreadyTaken.add(pgRecord.getProgramGroupId());
+            }
+            recordCounter = idsThatAreAlreadyTaken.size();
+        }
+
+        String getNonCollidingId(final String recordId) {
+            if(!idsThatAreAlreadyTaken.contains(recordId)) {
+                // don't remap 1st record. If there are more records
+                // with this id, they will be remapped in the 'else'.
+                idsThatAreAlreadyTaken.add(recordId);
+                ++recordCounter;
+                return recordId;
+            } else {
+                String newId;
+                // Below we tack on one of roughly 1.7 million possible 4 digit base36 at random. We do this because
+                // our old process of just counting from 0 upward and adding that to the previous id led to 1000s of
+                // calls idsThatAreAlreadyTaken.contains() just to resolve 1 collision when merging 1000s of similarly
+                // processed bams.
+                while(idsThatAreAlreadyTaken.contains(newId = recordId + "." + SamFileHeaderMerger.positiveFourDigitBase36Str(recordCounter++)));
+
+                idsThatAreAlreadyTaken.add( newId );
+                return newId;
+            }
+
         }
     }
 }
