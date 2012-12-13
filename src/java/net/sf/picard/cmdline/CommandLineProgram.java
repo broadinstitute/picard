@@ -247,8 +247,19 @@ public abstract class CommandLineProgram {
         return commandLineParser;
     }
 
+    /**
+     * @return This is a little-used version string that can be put in the @Usage annotation
+     */
     public String getProgramVersion() {
         return commandLineParser.getProgramVersion();
+    }
+
+
+    /**
+     * @return Version stored in the manifest of the jarfile.
+     */
+    public String getVersion() {
+        return getCommandLineParser().getVersion();
     }
 
     public String getCommandLine() {
