@@ -35,7 +35,7 @@
     <property name="scripts" value="src/scripts"/>
     <property name="test.output" value="dist/test"/>
     <property name="javac.debug" value="true"/>
-    <!-- Get SVN revision, if available, otherwise leave it blank. -->
+    <!-- Get SVN revision, if available, otherwise leave it blank.  -->
     <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
     <property name="repository.revision" value=""/>
     <property name="sam-version" value="1.82"/>
