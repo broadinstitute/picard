@@ -37,8 +37,7 @@ function branch_exists() {
         else return 0
     fi
 }
-
-SVNROOT=https://picard.svn.sourceforge.net/svnroot/picard
+SVNROOT=https://svn.code.sf.net/p/picard/code
 
 set -e
 
