@@ -41,25 +41,26 @@ import java.util.*;
  */
 public class MergeBamAlignmentTest {
 
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/MergeBamAlignment");
+
     private static final File unmappedBam = new File("testdata/net/sf/picard/sam/unmapped.sam");
     private static final File alignedBam = new File("testdata/net/sf/picard/sam/aligned.sam");
     private static final File oneHalfAlignedBam = new File("testdata/net/sf/picard/sam/onehalfaligned.sam");
     private static final File otherHalfAlignedBam = new File("testdata/net/sf/picard/sam/otherhalfaligned.sam");
-    private static final File mergingUnmappedBam = new File("testdata/net/sf/picard/sam/MergeBamAlignment/unmapped.sam");
-    private static final File firstReadAlignedBam = new File("testdata/net/sf/picard/sam/MergeBamAlignment/allread1.trimmed.aligned.sam");
-    private static final File secondReadAlignedBam = new File("testdata/net/sf/picard/sam/MergeBamAlignment/allread2.trimmed.aligned.sam");
-    private static final File firstReadAlignedBam_firstHalf = new File("testdata/net/sf/picard/sam/MergeBamAlignment/firsthalf.read1.trimmed.aligned.sam");
-    private static final File firstReadAlignedBam_secondHalf = new File("testdata/net/sf/picard/sam/MergeBamAlignment/secondhalf.read1.trimmed.aligned.sam");
-    private static final File secondReadAlignedBam_firstHalf = new File("testdata/net/sf/picard/sam/MergeBamAlignment/firsthalf.read2.trimmed.aligned.sam");
-    private static final File secondReadAlignedBam_secondHalf = new File("testdata/net/sf/picard/sam/MergeBamAlignment/secondhalf.read2.trimmed.aligned.sam");
+    private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
+    private static final File firstReadAlignedBam = new File(TEST_DATA_DIR, "allread1.trimmed.aligned.sam");
+    private static final File secondReadAlignedBam = new File(TEST_DATA_DIR, "allread2.trimmed.aligned.sam");
+    private static final File firstReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read1.trimmed.aligned.sam");
+    private static final File firstReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read1.trimmed.aligned.sam");
+    private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
+    private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File alignedQuerynameSortedBam =
             new File("testdata/net/sf/picard/sam/aligned_queryname_sorted.sam");
     private static final File fasta = new File("testdata/net/sf/picard/sam/merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
     private static final File sequenceDict = new File("testdata/net/sf/picard/sam/merger.dict");
-    private static final File badorderUnmappedBam = new File("testdata/net/sf/picard/sam/MergeBamAlignment/unmapped.badorder.sam");
-    private static final File badorderAlignedBam = new File("testdata/net/sf/picard/sam/MergeBamAlignment/aligned.badorder.sam");
-    private static final File TESTDATA_DIR = new File("testdata/net/sf/picard/sam/MergeBamAlignment");
+    private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
+    private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
 
     // For EarliestFragment tests, tag placed on the alignments which are expected to be marked as primary.
     private static final String ONE_OF_THE_BEST_TAG = "YB";
@@ -270,7 +271,7 @@ public class MergeBamAlignmentTest {
      */
     @Test(dataProvider="separateTrimmed")
     public void testMergingFromSeparatedReadTrimmedAlignments(final File unmapped, final List<File> r1Align, final List<File> r2Align, final int r1Trim, final int r2Trim, final String testName) throws Exception {
-         final File output = File.createTempFile("mergeMultileAlignmentsTest", ".sam");
+         final File output = File.createTempFile("mergeMultipleAlignmentsTest", ".sam");
          output.deleteOnExit();
 
          final MergeBamAlignment merger = new MergeBamAlignment();
@@ -374,8 +375,8 @@ public class MergeBamAlignmentTest {
 
     @Test
     public void testMultiHit() throws IOException {
-        final File unmappedSam = new File(TESTDATA_DIR, "multihit.unmapped.sam");
-        final File alignedSam = new File(TESTDATA_DIR, "multihit.aligned.sam");
+        final File unmappedSam = new File(TEST_DATA_DIR, "multihit.unmapped.sam");
+        final File alignedSam = new File(TEST_DATA_DIR, "multihit.aligned.sam");
         final File merged = File.createTempFile("merged", ".sam");
         merged.deleteOnExit();
 
@@ -519,7 +520,7 @@ public class MergeBamAlignmentTest {
                                                 final int expectedNumSecond, final int expectedPrimaryMapq) throws Exception {
 
         // Create the aligned file by copying bases, quals, readname from the unmapped read, and conforming to each HitSpec.
-        final File unmappedSam = new File(TESTDATA_DIR, "multihit.filter.unmapped.sam");
+        final File unmappedSam = new File(TEST_DATA_DIR, "multihit.filter.unmapped.sam");
         final SAMRecordIterator unmappedSamFileIterator = new SAMFileReader(unmappedSam).iterator();
         final SAMRecord firstUnmappedRec = unmappedSamFileIterator.next();
         final SAMRecord secondUnmappedRec = unmappedSamFileIterator.next();
@@ -798,7 +799,7 @@ public class MergeBamAlignmentTest {
                                                 final int expectedPrimaryMapq) throws Exception {
 
         // Create the aligned file by copying bases, quals, readname from the unmapped read, and conforming to each HitSpec.
-        final File unmappedSam = new File(TESTDATA_DIR, "multihit.filter.fragment.unmapped.sam");
+        final File unmappedSam = new File(TEST_DATA_DIR, "multihit.filter.fragment.unmapped.sam");
         final SAMRecordIterator unmappedSamFileIterator = new SAMFileReader(unmappedSam).iterator();
         final SAMRecord unmappedRec = unmappedSamFileIterator.next();
         unmappedSamFileIterator.close();
@@ -1082,7 +1083,7 @@ public class MergeBamAlignmentTest {
     }
 
     /**
-     * @return a 2-element array in which the first element is the unmapped SAM, and the secon the mapped SAM.
+     * @return a 2-element array in which the first element is the unmapped SAM, and the second the mapped SAM.
      */
     private File[] createSamFilesToBeMerged(final MultipleAlignmentSpec[] specs) {
         try {
@@ -1145,5 +1146,50 @@ public class MergeBamAlignmentTest {
             this.mapQ = mapQ;
             this.oneOfTheBest = oneOfTheBest;
         }
+    }
+
+    /**
+     * Test that clipping of FR reads for fragments shorter than read length happens only when it should.
+     */
+    @Test
+    public  void testShortFragmentClipping() throws Exception {
+        final File output = File.createTempFile("testShortFragmentClipping", ".sam");
+        output.deleteOnExit();
+        MergeBamAlignment merger = new MergeBamAlignment();
+        merger.UNMAPPED_BAM = new File(TEST_DATA_DIR, "cliptest.unmapped.sam");
+        merger.ALIGNED_BAM = Arrays.asList(new File(TEST_DATA_DIR, "cliptest.aligned.sam"));
+        merger.ALIGNED_READS_ONLY = false;
+        merger.CLIP_ADAPTERS = true;
+        merger.IS_BISULFITE_SEQUENCE = false;
+        merger.MAX_INSERTIONS_OR_DELETIONS = 1;
+        merger.PROGRAM_RECORD_ID = "0";
+        merger.PROGRAM_GROUP_VERSION = "1.0";
+        merger.PROGRAM_GROUP_COMMAND_LINE = "align!";
+        merger.PROGRAM_GROUP_NAME = "myAligner";
+        merger.PAIRED_RUN = true;
+        merger.REFERENCE_SEQUENCE = new File(TEST_DATA_DIR, "cliptest.fasta");
+        merger.OUTPUT = output;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(SamPairUtil.PairOrientation.FR);
+
+        Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed");
+        SAMFileReader result = new SAMFileReader(output);
+        Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+
+        for (final SAMRecord rec : result) {
+            final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
+            if (otherEnd == null) {
+                firstReadEncountered.put(rec.getReadName(), rec);
+            } else {
+                int fragmentStart = Math.min(rec.getAlignmentStart(), otherEnd.getAlignmentStart());
+                int fragmentEnd = Math.max(rec.getAlignmentEnd(), otherEnd.getAlignmentEnd());
+                String[] readNameFields = rec.getReadName().split(":");
+                // Read name of each pair includes the expected fragment start and fragment end positions.
+                int expectedFragmentStart = Integer.parseInt(readNameFields[1]);
+                int expectedFragmentEnd = Integer.parseInt(readNameFields[2]);
+                Assert.assertEquals(fragmentStart, expectedFragmentStart, rec.getReadName());
+                Assert.assertEquals(fragmentEnd, expectedFragmentEnd, rec.getReadName());
+            }
+        }
+        result.close();
     }
 }
