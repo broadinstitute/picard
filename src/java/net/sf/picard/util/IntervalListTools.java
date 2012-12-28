@@ -214,7 +214,7 @@ public class IntervalListTools extends CommandLineProgram {
             }
             else {
                 int consumed = 0;
-                while (projectedSize > idealSplitLength) {
+                while (projectedSize > idealSplitLength && index < SCATTER_COUNT) {
                     final int amountToConsume =(int)(idealSplitLength - splitLength);
                     final Interval partial = new Interval(interval.getSequence(), interval.getStart()+consumed,
                         interval.getStart()+consumed+amountToConsume-1, interval.isNegativeStrand(), interval.getName());
