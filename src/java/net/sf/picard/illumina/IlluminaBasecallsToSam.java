@@ -171,6 +171,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
     private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
     private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
+    // If FORCE_GC, this is non-null.  For production this is not necessary because it will run until the JVM
+    // ends, but for unit testing it is desirable to stop the task when done with this instance.
+    private TimerTask gcTimerTask;
 
     /**
      * Describes the state of a barcode's data's processing in the context of a tile.  It is either not available in
@@ -770,6 +773,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             log.debug(String.format("Closing file for barcode %s.", entry.getKey()));
             writer.close();
         }
+        try {
+            gcTimerTask.cancel();
+        } catch (Throwable ex) {
+            log.warn(ex, "Ignoring exception stopping background GC thread.");
+        }
     }
 
     /**
@@ -788,7 +796,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (this.FORCE_GC) {
             final Timer gcTimer = new Timer(true);
             final long delay = 5 * 1000 * 60;
-            gcTimer.scheduleAtFixedRate(new TimerTask() {
+            gcTimerTask = new TimerTask() {
                 @Override
                 public void run() {
                     System.out.println("Before explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
@@ -796,7 +804,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     System.runFinalization();
                     System.out.println("After explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
                 }
-            }, delay, delay);
+            };
+            gcTimer.scheduleAtFixedRate(gcTimerTask, delay, delay);
         }
 
         readStructure = new ReadStructure(READ_STRUCTURE);
