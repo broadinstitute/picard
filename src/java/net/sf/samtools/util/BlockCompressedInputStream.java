@@ -35,6 +35,10 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import net.sf.samtools.FileTruncatedException;
+import net.sf.samtools.seekablestream.SeekableBufferedStream;
+import net.sf.samtools.seekablestream.SeekableFileStream;
+import net.sf.samtools.seekablestream.SeekableHTTPStream;
+import net.sf.samtools.seekablestream.SeekableStream;
 
 /*
  * Utility class for reading BGZF block compressed files.  The caller can treat this file like any other InputStream.

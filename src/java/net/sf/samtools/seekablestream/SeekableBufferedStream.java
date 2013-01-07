@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.samtools.util;
+package net.sf.samtools.seekablestream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -86,5 +86,10 @@ public class SeekableBufferedStream extends SeekableStream {
     @Override
     public String getSource() {
         return wrappedStream.getSource();
+    }
+
+    @Override
+    public long position() throws IOException {
+        return position;
     }
 }

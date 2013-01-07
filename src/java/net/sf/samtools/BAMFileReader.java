@@ -26,6 +26,7 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
+import net.sf.samtools.seekablestream.SeekableStream;
 
 import java.io.*;
 import java.util.ArrayList;

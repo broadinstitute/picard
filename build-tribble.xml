@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ The MIT License
+  ~
+  ~ Copyright (c) 2010 The Broad Institute
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+  -->
+
+<project name="tribble" basedir="." default="all">
+
+    <property name="src" value="src"/>
+    <property name="src.test" value="tests/java"/>
+    <property name="lib" value="lib"/>
+    <property name="dist" value="dist"/>
+    <property name="classes" value="classes"/>
+    <property name="classes.test" value="testclasses"/>
+    <property name="reports" value="dist/test"/>
+    <property name="javac.debug" value="true"/>
+    <property name="javac.target" value="1.6"/>
+    <property name="tribble-version" value="0.2"/>
+    <property name="singleTest" value="*" /> <!-- used to determine what tests to run -->
+<!-- INIT -->
+    <target name="init">
+        <path id="classpath">
+            <fileset dir="${lib}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </path>
+    </target>
+
+<!-- CLEAN -->
+    <target name="clean">
+        <delete dir="${classes}"/>
+        <delete dir="${classes.test}"/>
+        <delete  dir="${dist}"/>
+        <delete  dir="javadoc"/>
+    </target>
+
+<!-- COMPILE -->
+	<target name="compile" depends="init" description="Compile tribble files">
+    	<echo message="os.name:          ${os.name}"          />
+		<echo message="basdir:           ${basedir}"          />
+		<echo message="ant.file:         ${ant.file}"         />
+		<echo message="ant.project.name: ${ant.project.name}" />
+		<echo message="ant.java.version: ${ant.java.version}" />
+
+        <mkdir dir="${classes}"/>
+        <javac destdir="${classes}"
+               debug="${javac.debug}"
+               target="${javac.target}"
+               source="${javac.target}">
+            <src path="${src}"/>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <target name="compile-tests" depends="compile" description="Compile test files">
+        <mkdir dir="${classes.test}"/>
+        <javac destdir="${classes.test}"
+               debug="${javac.debug}"
+               target="${javac.target}"
+               source="${javac.target}">
+          <compilerarg value="-Xlint:all"/>
+          <src path="${src.test}"/>
+          <classpath>
+            <path refid="classpath"/>
+            <pathelement location="${classes}"/>
+          </classpath>
+        </javac>
+    </target>
+
+    <!-- TEST -->
+    <target name="test" depends="compile,compile-tests" description="Run unit tests">
+        <taskdef resource="testngtasks" classpathref="classpath"/>
+        <testng classpathref="classpath"
+                outputDir="${reports}"
+                haltOnFailure="true" verbose="2"
+                workingDir="${basedir}">
+            <jvmarg value="-Xmx1g"/>
+            <jvmarg value="-Djava.awt.headless=true" />
+            <jvmarg value="-Xdebug -verbose"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"/>
+
+            <classpath>
+                <pathelement path="${classes}"/>
+                <pathelement path="${classes.test}"/>
+            </classpath>
+            <classfileset dir="${classes.test}" includes="**/${singleTest}.class"/>
+        </testng>
+
+        <!-- generate a report for Bamboo or Hudson to read in -->
+        <junitreport  todir="${reports}">
+            <fileset dir="${reports}">
+                <include name="*/*.xml"/>
+            </fileset>
+            <report format="noframes"  todir="${reports}"/>
+        </junitreport>
+    </target>
+
+
+<!-- CREATE JAR -->
+    <target name="tribble-jar" depends="compile"
+            description="Builds tribble-${tribble-version}.jar for inclusion in other projects">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/tribble-${tribble-version}.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+        </jar>
+        <copy todir="${dist}">
+                <fileset dir="lib" includes="*.jar"/>
+        </copy>
+        <jar destfile="${dist}/CountRecords.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+            <manifest>
+                <attribute name="Class-Path" value="log4j-1.2.15.jar"/>
+                <attribute name="Main-Class" value="org.broad.tribble.example.CountRecords" />
+          </manifest>
+        </jar>
+        <jar destfile="${dist}/IndicesAreEqual.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+            <manifest>
+                <attribute name="Class-Path" value="log4j-1.2.15.jar"/>
+                <attribute name="Main-Class" value="org.broad.tribble.example.IndicesAreEqual" />
+          </manifest>
+        </jar>
+
+        <jar destfile="${dist}/IndexToTable.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+            <manifest>
+                <attribute name="Class-Path" value="log4j-1.2.15.jar"/>
+                <attribute name="Main-Class" value="org.broad.tribble.example.IndexToTable" />
+          </manifest>
+        </jar>
+
+        <jar destfile="${dist}/ProfileIndexReading.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+            <manifest>
+                <attribute name="Class-Path" value="log4j-1.2.15.jar"/>
+                <attribute name="Main-Class" value="org.broad.tribble.example.ProfileIndexReading" />
+          </manifest>
+        </jar>
+    </target>
+
+<!-- JAVADOC -->
+    <target name="javadoc" depends="init" description="Generates the project javadoc.">
+        <javadoc
+           sourcepath="${src}"
+           destdir="javadoc"
+           packagenames="org.broad.tribble.*"
+           windowtitle="Tribble API Documentation"
+           doctitle="&lt;h1&gt;Tribble API Documentation&lt;/h1&gt;"
+           author="true"
+           protected="true"
+           use="true"
+           version="true">
+          <classpath location="${java.home}/../lib/tools.jar"/>
+          <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+          </javadoc>
+        </target>
+
+<!-- ALL -->
+    <target name="all" depends="compile, tribble-jar" description="Default build target">
+    </target>
+
+</project>
