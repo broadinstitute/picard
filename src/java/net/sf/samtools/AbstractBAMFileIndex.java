@@ -24,7 +24,7 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.RuntimeIOException;
-import net.sf.samtools.util.SeekableStream;
+import net.sf.samtools.seekablestream.SeekableStream;
 
 import java.io.*;
 import java.nio.channels.FileChannel;

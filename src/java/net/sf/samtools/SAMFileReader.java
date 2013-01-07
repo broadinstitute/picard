@@ -24,7 +24,10 @@
 package net.sf.samtools;
 
 
+import net.sf.samtools.seekablestream.SeekableBufferedStream;
 import net.sf.samtools.util.*;
+import net.sf.samtools.seekablestream.SeekableHTTPStream;
+import net.sf.samtools.seekablestream.SeekableStream;
 
 import java.io.*;
 import java.util.Arrays;
