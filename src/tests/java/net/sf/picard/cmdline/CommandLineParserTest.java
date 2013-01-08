@@ -80,8 +80,9 @@ public class CommandLineParserTest {
     class OptionsWithoutPositional {
         @Usage
         public static final String USAGE = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n";
+        public static final int DEFAULT_FROBNICATION_THRESHOLD = 20;
         @Option(shortName="T", doc="Frobnication threshold setting.")
-        public Integer FROBNICATION_THRESHOLD = 20;
+        public Integer FROBNICATION_THRESHOLD = DEFAULT_FROBNICATION_THRESHOLD;
 
         @Option
         public FrobnicationFlavor FROBNICATION_FLAVOR;
@@ -100,7 +101,7 @@ public class CommandLineParserTest {
         public String frob;
     }
     
-    class MutextOptions {
+    class MutexOptions {
         @Option(mutex={"M", "N", "Y", "Z"})
         public String A;
         @Option(mutex={"M", "N", "Y", "Z"})
@@ -115,6 +116,7 @@ public class CommandLineParserTest {
         public String Z;
         
     }
+
 
     @Test
     public void testUsage() {
@@ -489,19 +491,18 @@ public class CommandLineParserTest {
     
     @DataProvider(name="mutexScenarios")
     public Object[][] mutexScenarios() {
-        final Object[][] scenarios = new Object[][] {
+        return new Object[][] {
                 { "pass", new String[] {"A=1", "B=2"}, true },
                 { "no args", new String[0], false },
                 { "1 of group required", new String[] {"A=1"}, false },
                 { "mutex", new String[]  {"A=1", "Y=3"}, false },
                 { "mega mutex", new String[]  {"A=1", "B=2", "Y=3", "Z=1", "M=2", "N=3"}, false }
         };
-        return scenarios; 
     }
     
     @Test(dataProvider="mutexScenarios")
     public void testMutex(final String testName, final String[] args, final boolean expected) {
-        final MutextOptions o = new MutextOptions();
+        final MutexOptions o = new MutexOptions();
         final CommandLineParser clp = new CommandLineParser(o);
         Assert.assertEquals(clp.parseOptions(System.err, args), expected);
     }
@@ -572,5 +573,334 @@ public class CommandLineParserTest {
         final String[] args = {"LIST=baz", "LIST=frob"};
         Assert.assertTrue(clp.parseOptions(System.err, args));
         Assert.assertEquals(o.LIST, CollectionUtil.makeList("foo", "bar", "baz", "frob"));
+    }
+
+    class OptionsWithNested {
+        @Usage
+        public String USAGE = "Class with nested options.";
+        @Option
+        public Integer AN_INT;
+        @NestedOptions(doc="Doc for FROB")
+        public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
+        @NestedOptions
+        public OptionsWithNestedAgain NESTED = new OptionsWithNestedAgain();
+        @Option
+        public String A_STRING;
+    }
+
+    class OptionsWithNestedAgain {
+        @NestedOptions(doc="Doc for inner FROB")
+        public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
+    }
+
+
+    @Test
+    public void testStaticNestedOptions() {
+        final OptionsWithNested o = new OptionsWithNested();
+        final CommandLineParser clp = new CommandLineParser(o);
+        clp.usage(System.out, false);
+        clp.htmlUsage(System.out, "testStaticNestedOptions", false);
+        final int outerInt = 123;
+        final String outerString = "outerString";
+        final FrobnicationFlavor outerFlavor = FrobnicationFlavor.BAR;
+        final FrobnicationFlavor innerFlavor = FrobnicationFlavor.BAZ;
+        final boolean outerTruthiness = true;
+        final boolean innerTruthiness = false;
+        final int innerThreshold = 10;
+        final String[] outerShmiggle = {"shmiggle1", "shmiggle2"};
+        final String[] innerShmiggle = {"inner1", "inner2", "inner3"};
+
+        final List<String> args = new ArrayList<String>();
+        args.add("AN_INT=" + outerInt);
+        args.add("A_STRING=" + outerString);
+        args.add("frob.truThIness=" + outerTruthiness);
+        args.add("FrOb.FROBNICATION_FLAVOR=" + outerFlavor);
+        for (final String shmiggle : outerShmiggle) {
+            args.add("FROB.SHMIGGLE_TYPE=" + shmiggle);
+        }
+        args.add("NeStEd.Frob.FROBNICATION_THRESHOLD=" + innerThreshold);
+        args.add("NeStEd.Frob.FROBNICATION_FLAVOR=" + innerFlavor);
+        args.add("NeStEd.Frob.truthIness=" + innerTruthiness);
+        for (final String shmiggle : innerShmiggle) {
+            args.add("NESTED.FROB.SHMIGGLE_TYPE=");
+            args.add(shmiggle);
+        }
+        Assert.assertTrue(clp.parseOptions(System.err, args.toArray(new String[args.size()])));
+        System.out.println(clp.getCommandLine());
+        Assert.assertEquals(o.AN_INT.intValue(), outerInt);
+        Assert.assertEquals(o.A_STRING, outerString);
+        Assert.assertEquals(o.FROB.FROBNICATION_FLAVOR, outerFlavor);
+        Assert.assertEquals(o.FROB.FROBNICATION_THRESHOLD.intValue(), OptionsWithoutPositional.DEFAULT_FROBNICATION_THRESHOLD);
+        Assert.assertEquals(o.FROB.SHMIGGLE_TYPE, Arrays.asList(outerShmiggle));
+        Assert.assertEquals(o.FROB.TRUTHINESS.booleanValue(), outerTruthiness);
+        Assert.assertEquals(o.NESTED.FROB.SHMIGGLE_TYPE, Arrays.asList(innerShmiggle));
+        Assert.assertEquals(o.NESTED.FROB.FROBNICATION_THRESHOLD.intValue(), innerThreshold);
+        Assert.assertEquals(o.NESTED.FROB.FROBNICATION_FLAVOR, innerFlavor);
+        Assert.assertEquals(o.NESTED.FROB.TRUTHINESS.booleanValue(), innerTruthiness);
+    }
+
+    @Test void testStaticNestedNegative() {
+        final OptionsWithNested o = new OptionsWithNested();
+        final CommandLineParser clp = new CommandLineParser(o);
+        final int outerInt = 123;
+        final String outerString = "outerString";
+        final FrobnicationFlavor outerFlavor = FrobnicationFlavor.BAR;
+        final boolean outerTruthiness = true;
+        final String[] outerShmiggle = {"shmiggle1", "shmiggle2"};
+
+        final List<String> args = new ArrayList<String>();
+        args.add("AN_INT=" + outerInt);
+        args.add("A_STRING=" + outerString);
+        Assert.assertFalse(clp.parseOptions(System.err, args.toArray(new String[args.size()])));
+        System.out.println(clp.getCommandLine());
+    }
+
+    class ClpOptionsWithNested extends CommandLineProgram {
+        @Usage
+        public String USAGE = "Class with nested options.";
+        @Option
+        public Integer AN_INT;
+        @NestedOptions(doc="This will be ignored")
+        public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
+
+        @Option
+        public String A_STRING;
+
+        private final ClpOptionsWithNestedAgain NESTED = new ClpOptionsWithNestedAgain();
+
+        @Override
+        public Map<String, Object> getNestedOptions() {
+            final Map<String, Object> ret = new LinkedHashMap<String, Object>();
+            ret.put("CLP_NESTED", NESTED);
+            ret.put("FRAB", FROB);
+            return ret;
+        }
+
+        @Override
+        Map<String, Object> getNestedOptionsForHelp() {
+            final Map<String, Object> ret = new LinkedHashMap<String, Object>();
+            ret.put("CLP_NESTED", NESTED);
+            return ret;
+        }
+
+        @Override
+        protected int doWork() {
+            return 0;
+        }
+    }
+
+    class ClpOptionsWithNestedAgain extends CommandLineProgram {
+        private final OptionsWithoutPositional FROB = new OptionsWithoutPositional();
+
+        @Override
+        public Map<String, Object> getNestedOptions() {
+            final Map<String, Object> ret = new LinkedHashMap<String, Object>();
+            ret.put("FROB_NESTED", FROB);
+            return ret;
+        }
+
+        @Override
+        protected int doWork() {
+            return 0;
+        }
+    }
+
+
+    @Test
+    public void testDynamicNestedOptions() {
+        final ClpOptionsWithNested o = new ClpOptionsWithNested();
+        final int outerInt = 123;
+        final String outerString = "aString";
+        final int outerThreshold = 456;
+        final FrobnicationFlavor outerFlavor = FrobnicationFlavor.FOO;
+        final List<String> outerShmiggleType = Arrays.asList("shmiggle1");
+        final boolean outerTruthiness = true;
+        final int innerThreshold = -1000;
+        final FrobnicationFlavor innerFlavor = FrobnicationFlavor.BAZ;
+        final List<String> innerShmiggleType = Arrays.asList("innershmiggle1", "skeezwitz");
+        final boolean innerTruthiness = false;
+
+        final List<String> args = new ArrayList<String>();
+        args.add("AN_INT=" + outerInt);
+        args.add("A_STRING=" + outerString);
+        args.add("FRAB.FROBNICATION_THRESHOLD=" + outerThreshold);
+        args.add("FRAB.FROBNICATION_FLAVOR=" + outerFlavor);
+        args.add("FRAB.SHMIGGLE_TYPE=" + outerShmiggleType.get(0));
+        args.add("FRAB.TRUTHINESS=" + outerTruthiness);
+        args.add("CLP_NESTED.FROB_NESTED.FROBNICATION_THRESHOLD=" + innerThreshold);
+        args.add("CLP_NESTED.FROB_NESTED.FROBNICATION_FLAVOR=" + innerFlavor);
+        for (final String ist : innerShmiggleType) {
+            args.add("CLP_NESTED.FROB_NESTED.SHMIGGLE_TYPE=" + ist);
+        }
+        args.add("CLP_NESTED.FROB_NESTED.TRUTHINESS=" + innerTruthiness);
+
+        Assert.assertTrue(o.parseArgs(args.toArray(new String[args.size()])));
+        System.out.println(o.getCommandLine());
+        Assert.assertEquals(o.AN_INT.intValue(), outerInt);
+        Assert.assertEquals(o.A_STRING, outerString);
+        Assert.assertEquals(o.FROB.FROBNICATION_THRESHOLD.intValue(), outerThreshold);
+        Assert.assertEquals(o.FROB.FROBNICATION_FLAVOR, outerFlavor);
+        Assert.assertEquals(o.FROB.SHMIGGLE_TYPE, outerShmiggleType);
+        Assert.assertEquals(o.FROB.TRUTHINESS.booleanValue(), outerTruthiness);
+        Assert.assertEquals(o.NESTED.FROB.FROBNICATION_THRESHOLD.intValue(), innerThreshold);
+        Assert.assertEquals(o.NESTED.FROB.FROBNICATION_FLAVOR, innerFlavor);
+        Assert.assertEquals(o.NESTED.FROB.SHMIGGLE_TYPE, innerShmiggleType);
+        Assert.assertEquals(o.NESTED.FROB.TRUTHINESS.booleanValue(), innerTruthiness);
+        Assert.assertFalse(new ClpOptionsWithNested().parseArgs(new String[]{"-h"}));
+        new CommandLineParser(o).htmlUsage(System.err, o.getClass().getSimpleName(), false);
+    }
+
+    class StaticPropagationParent {
+        @Option
+        public String STRING1 = "String1ParentDefault";
+
+        @Option
+        public String STRING2 = "String2ParentDefault";
+
+        @Option
+        public String STRING3 = "String3ParentDefault";
+
+        @Option
+        public String STRING4 = "String4ParentDefault";
+
+        @Option
+        public String STRING5;
+
+        @Option
+        public List<String> COLLECTION;
+
+        @NestedOptions
+        public PropagationChild CHILD = new PropagationChild();
+    }
+
+    class PropagationChild {
+        // Parent has default, child does not, should propagate
+        @Option
+        public String STRING1;
+
+        // Parent and child have default, should not propagate
+        @Option
+        public String STRING2 = "String2ChildDefault";
+
+        // Parent has explicitly set value, child has default, should propagate
+        @Option
+        public String STRING3 = "String3ChildDefault";
+
+        // Parent has default, child has explicitly set value, should not propagate
+        @Option
+        public String STRING4;
+
+        // Parent and child have explicitly set value, should not propagate
+        @Option
+        public String STRING5;
+
+        // Parent has explicitly set value, but collection should not propagate
+        @Option
+        public List<String> COLLECTION;
+    }
+
+    @Test
+    public void testStaticPropagation() {
+        final StaticPropagationParent o = new StaticPropagationParent();
+        final CommandLineParser clp = new CommandLineParser(o);
+        clp.usage(System.out, false);
+        clp.htmlUsage(System.out, "testStaticPropagation", false);
+
+        final List<String> args = new ArrayList<String>();
+        args.add("STRING3=String3Parent");
+        args.add("CHILD.STRING4=String4Child");
+        args.add("STRING5=String5Parent");
+        args.add("CHILD.STRING5=String5Child");
+        args.add("COLLECTION=CollectionParent");
+
+        Assert.assertTrue(clp.parseOptions(System.err, args.toArray(new String[args.size()])));
+        System.out.println(clp.getCommandLine());
+
+        Assert.assertEquals(o.CHILD.STRING1, "String1ParentDefault");
+        Assert.assertEquals(o.CHILD.STRING2, "String2ChildDefault");
+        Assert.assertEquals(o.CHILD.STRING3, "String3Parent");
+        Assert.assertEquals(o.CHILD.STRING4, "String4Child");
+        Assert.assertEquals(o.CHILD.STRING5, "String5Child");
+        Assert.assertEquals(o.CHILD.COLLECTION, new ArrayList<String>());
+    }
+
+    class DynamicPropagationParent extends CommandLineProgram {
+        @Option
+        public String STRING1 = "String1ParentDefault";
+
+        @Option
+        public String STRING2 = "String2ParentDefault";
+
+        @Option
+        public String STRING3 = "String3ParentDefault";
+
+        @Option
+        public String STRING4 = "String4ParentDefault";
+
+        @Option
+        public String STRING5;
+
+        @Option
+        public List<String> COLLECTION;
+
+        public PropagationChild CHILD = new PropagationChild();
+
+        @Override
+        protected int doWork() {
+            return 0;
+        }
+
+        @Override
+        public Map<String, Object> getNestedOptions() {
+            final Map<String, Object> ret = new HashMap<String, Object>();
+            ret.put("CHILD", CHILD);
+            return ret;
+        }
+    }
+
+    @Test
+    public void testDynamicPropagation() {
+        final DynamicPropagationParent o = new DynamicPropagationParent();
+
+        final List<String> args = new ArrayList<String>();
+        args.add("STRING3=String3Parent");
+        args.add("CHILD.STRING4=String4Child");
+        args.add("STRING5=String5Parent");
+        args.add("CHILD.STRING5=String5Child");
+        args.add("COLLECTION=CollectionParent");
+
+        Assert.assertTrue(o.parseArgs(args.toArray(new String[args.size()])));
+        System.out.println(o.getCommandLine());
+        Assert.assertFalse(new DynamicPropagationParent().parseArgs(new String[]{"-h"}));
+        new CommandLineParser(o).htmlUsage(System.err, o.getClass().getSimpleName(), false);
+
+        Assert.assertEquals(o.CHILD.STRING1, "String1ParentDefault");
+        Assert.assertEquals(o.CHILD.STRING2, "String2ChildDefault");
+        Assert.assertEquals(o.CHILD.STRING3, "String3Parent");
+        Assert.assertEquals(o.CHILD.STRING4, "String4Child");
+        Assert.assertEquals(o.CHILD.STRING5, "String5Child");
+        Assert.assertEquals(o.CHILD.COLLECTION, new ArrayList<String>());
+    }
+
+    class NegativePropagationParent {
+        @Option
+        public int STRING1 = 1;
+
+
+        @Option
+        public List<String> COLLECTION;
+
+        @NestedOptions
+        public PropagationChild CHILD = new PropagationChild();
+    }
+
+    /** parent and child option of the same name are not type-compatible. */
+    @Test(expectedExceptions = {IllegalArgumentException.class})
+    public void testStaticPropagationNegative() {
+        final NegativePropagationParent o = new NegativePropagationParent();
+        final CommandLineParser clp = new CommandLineParser(o);
+        clp.usage(System.out, false);
+
+        clp.parseOptions(System.err, new String[0]);
     }
 }
