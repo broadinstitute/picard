@@ -52,10 +52,6 @@ import java.util.*;
 
 public class LinearIndex extends AbstractIndex implements Index {
 
-    //Going to remove logging from tribble
-    @Deprecated
-    private final static boolean DEBUG = false;
-
     // NOTE: To debug uncomment the System.getProperty and recompile.
     public static final double MAX_FEATURES_PER_BIN = Double.valueOf(System.getProperty("MAX_FEATURES_PER_BIN", "100"));
 
@@ -314,9 +310,6 @@ public class LinearIndex extends AbstractIndex implements Index {
             if (idx.binWidth > MAX_BIN_WIDTH || idx.binWidth < 0) // an overflow occurred
                 return true;
             else if (MAX_BIN_WIDTH_FOR_OCCUPIED_CHR_INDEX != 0 && idx.getNFeatures() > 1 && idx.binWidth > MAX_BIN_WIDTH_FOR_OCCUPIED_CHR_INDEX) {
-//                if ( DEBUG )
-//                    log.debug(String.format("No longer merging up bins on %s with %d features as binWidth %d > max %d for occupied indices",
-//                        idx.getName(), idx.getNFeatures(), idx.binWidth, MAX_BIN_WIDTH_FOR_OCCUPIED_CHR_INDEX));
                 return true;
             } else {
                 return false;
@@ -328,10 +321,6 @@ public class LinearIndex extends AbstractIndex implements Index {
 
             while (true) {
                 double score = idx.optimizeScore();
-                if ( DEBUG )
-                    //log.debug(String.format("  %s%6s with %8d bins of size %6d: feature size est.  is %.2f, features per block %.5f, most dense %.5f, score %.5f",
-                    //        dupString(' ', level * 2), idx.getName(), idx.getNBlocks(), idx.binWidth, idx.getAverageFeatureSize(),
-                    //        idx.getFeaturesPerBlock(), idx.getNFeaturesOfMostDenseBlock(idx.getAverageFeatureSize()), score));
 
                 if (score > threshold || idx.getNBlocks() == 1 || badBinWidth(idx))
                     break;
@@ -387,10 +376,6 @@ public class LinearIndex extends AbstractIndex implements Index {
     // ----------------------------------------------------------------------------------------------------
     public Index optimize(double threshold) {
         if (enableAdaptiveIndexing) {
-//            if ( DEBUG )
-//                log.debug("Adaptive optimization of " + this.indexedFile + " with threshold " + threshold);
-//            if ( DEBUG && log.isDebugEnabled())
-//                printIndexInfo();
 
             List<ChrIndex> newIndices = new ArrayList<ChrIndex>(this.chrIndices.size());
             for (String name : chrIndices.keySet()) {
@@ -398,13 +383,7 @@ public class LinearIndex extends AbstractIndex implements Index {
                 LinearIndex.ChrIndex newIdx = oldIdx.optimize(threshold);
                 newIndices.add(newIdx);
             }
-
-            LinearIndex newIndex = new LinearIndex(this, newIndices);
-
-//            if ( DEBUG )
-//                log.debug(String.format("Old index %s vs. new %s", this.statsSummary(), newIndex.statsSummary()));
-
-            return newIndex;
+            return new LinearIndex(this, newIndices);
         } else {
             return this;
         }
