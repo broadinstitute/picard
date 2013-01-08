@@ -24,6 +24,5 @@ package org.broad.tribble;
  * Date: 2012-Dec-13
  */
 public class TestUtils {
-
     public static String DATA_DIR = "testdata/tribble/";
 }
