@@ -26,7 +26,8 @@
 <project name="tribble" basedir="." default="all">
 
     <property name="src" value="src"/>
-    <property name="src.test" value="tests/java"/>
+    <property name="src.test" value="${src}/tests/java"/>
+
     <property name="lib" value="lib"/>
     <property name="dist" value="dist"/>
     <property name="classes" value="classes"/>
@@ -34,7 +35,7 @@
     <property name="reports" value="dist/test"/>
     <property name="javac.debug" value="true"/>
     <property name="javac.target" value="1.6"/>
-    <property name="tribble-version" value="0.2"/>
+    <property name="tribble-version" value="0"/>
     <property name="singleTest" value="*" /> <!-- used to determine what tests to run -->
 <!-- INIT -->
     <target name="init">
@@ -76,9 +77,10 @@
         <javac destdir="${classes.test}"
                debug="${javac.debug}"
                target="${javac.target}"
-               source="${javac.target}">
+               source="${javac.target}"
+               srcdir="${src.test}">
           <compilerarg value="-Xlint:all"/>
-          <src path="${src.test}"/>
+          <include name="org/broad/tribble/**/*"/>
           <classpath>
             <path refid="classpath"/>
             <pathelement location="${classes}"/>
