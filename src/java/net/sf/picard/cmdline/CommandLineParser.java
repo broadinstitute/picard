@@ -31,6 +31,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
+import net.sf.picard.util.CollectionUtil.MultiMap;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.picard.PicardException;
@@ -96,7 +97,8 @@ public class CommandLineParser {
     public static String getStandardUsagePreamble(final Class mainClass) {
         return "USAGE: " + mainClass.getSimpleName() + " [options]\n\n" +
                 (hasWebDocumentation(mainClass) ?
-                        "Documentation: http://picard.sourceforge.net/command-line-overview.shtml#" + mainClass.getSimpleName() + "\n\n"
+                        "Documentation: http://picard.sourceforge.net/command-line-overview.shtml#" +
+                                mainClass.getSimpleName() + "\n\n"
                         : "");
     }
 
@@ -122,9 +124,37 @@ public class CommandLineParser {
         return "FAQ:  http://sourceforge.net/apps/mediawiki/picard/index.php?title=Main_Page";
     }
 
+    /**
+     * Find all of the members annotated with @NestedOptions.
+     * This is package scope and static so that CommandLineProgram can use it to provide default implementation
+     * of its own getNestedOptions() method.
+     */
+    static Map<String, Object> getNestedOptions(final Object callerOptions) {
+        // LinkedHashMap so usage message is generated in order of declaration
+        final Map<String, Object> ret = new LinkedHashMap<String, Object>();
+        final Class<?> clazz = callerOptions.getClass();
+        for (final Field field : getAllFields(clazz)) {
+            if (field.getAnnotation(NestedOptions.class) != null) {
+                field.setAccessible(true);
+                try {
+                    ret.put(field.getName(), field.get(callerOptions));
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Should never happen.", e);
+                }
+            }
+        }
+        return ret;
+    }
+
     // This is the object that the caller has provided that contains annotations,
     // and into which the values will be assigned.
     private final Object callerOptions;
+
+    // For child CommandLineParser, this contains the prefix for the option names, which is needed for generating
+    // the command line.  For non-nested, this is the empty string.
+    private final String prefix;
+    // For non-nested, empty string.  For nested, prefix + "."
+    private final String prefixDot;
 
     private String usagePreamble;
     // null if no @PositionalArguments annotation
@@ -139,6 +169,14 @@ public class CommandLineParser {
     // also in the optionDefinitions list.
     private final Map<String, OptionDefinition> optionMap = new HashMap<String, OptionDefinition>();
 
+    // Maps child options prefix to CommandLineParser for the child object.
+    // Key: option prefix.
+    private final Map<String, CommandLineParser> childOptionsMap = new LinkedHashMap<String, CommandLineParser>();
+
+    // Holds the command-line arguments for a child option parser.
+    // Key: option prefix.  Value: List of arguments for child corresponding to that prefix (with prefix stripped).
+    private final MultiMap<String, ChildOptionArg> childOptionArguments = new MultiMap<String, ChildOptionArg>();
+
     // For printing error messages when parsing command line.
     private PrintStream messageStream;
 
@@ -149,7 +187,7 @@ public class CommandLineParser {
 
     // The command line used to launch this program, including non-null default options that
     // weren't explicitly specified. This is used for logging and debugging.
-    private String commandLine;
+    private String commandLine = "";
 
     /**
      * This attribute is here just to facilitate printing usage for OPTIONS_FILE
@@ -162,7 +200,19 @@ public class CommandLineParser {
      * and ultimately will receive the settings when a command line is parsed.
      */
     public CommandLineParser(final Object callerOptions) {
+        this(callerOptions, "");
+    }
+
+    /**
+     * @param prefix Non-empty for child options object.
+     */
+    private CommandLineParser(final Object callerOptions, final String prefix) {
         this.callerOptions = callerOptions;
+
+        this.prefix = prefix;
+        if (prefix.isEmpty()) {prefixDot = "";}
+        else {prefixDot = prefix + ".";}
+
 
         for (final Field field : getAllFields(this.callerOptions.getClass())) {
             if (field.getAnnotation(PositionalArguments.class) != null) {
@@ -173,6 +223,11 @@ public class CommandLineParser {
             }
             if (field.getAnnotation(Option.class) != null) {
                 handleOptionAnnotation(field);
+            } else if (!isCommandLineProgram() && field.getAnnotation(NestedOptions.class) != null) {
+                // If callerOptions is an instance of CommandLineProgram, defer creation of child
+                // CommandLineParsers until after parsing options for this parser, in case CommandLineProgram
+                // wants to do something dynamic based on values for this parser.
+                handleNestedOptionsAnnotation(field);
             }
         }
 
@@ -185,7 +240,11 @@ public class CommandLineParser {
         }
     }
 
-    private List<Field> getAllFields(Class clazz) {
+    private boolean isCommandLineProgram() {
+        return callerOptions instanceof CommandLineProgram;
+    }
+
+    private static List<Field> getAllFields(Class clazz) {
         final List<Field> ret = new ArrayList<Field>();
         do {
             ret.addAll(Arrays.asList(clazz.getDeclaredFields()));
@@ -203,12 +262,14 @@ public class CommandLineParser {
      * @param stream Where to write the usage message.
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
-        stream.print(usagePreamble);
-        stream.println("\nVersion: " + getVersion());
-        stream.println("\n\nOptions:\n");
+        if (prefix.isEmpty()) {
+            stream.print(usagePreamble);
+            stream.println("\nVersion: " + getVersion());
+            stream.println("\n\nOptions:\n");
 
-        for (final String[] optionDoc : FRAMEWORK_OPTION_DOC) {
-            printOptionParamUsage(stream, optionDoc[0], optionDoc[1], null, optionDoc[2]);
+            for (final String[] optionDoc : FRAMEWORK_OPTION_DOC) {
+                printOptionParamUsage(stream, optionDoc[0], optionDoc[1], null, optionDoc[2]);
+            }
         }
 
         if (!optionDefinitions.isEmpty()) {
@@ -225,14 +286,40 @@ public class CommandLineParser {
                 throw new PicardException("Should never happen", e);
             }
             final OptionDefinition optionsFileOptionDefinition =
-                    new OptionDefinition(fileField, OPTIONS_FILE, "",
-                            "File of OPTION_NAME=value pairs.  No positional parameters allowed.  Unlike command-line options, " +
-                    "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
-                    "by a subsequent command-line option.  " +
-                    "A line starting with '#' is considered a comment.", false, true, 0, Integer.MAX_VALUE, null, true, new String[0]);
+              new OptionDefinition(fileField, OPTIONS_FILE, "",
+                "File of OPTION_NAME=value pairs.  No positional parameters allowed.  Unlike command-line options, " +
+                "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
+                "by a subsequent command-line option.  " +
+                "A line starting with '#' is considered a comment.",
+                false, true, 0, Integer.MAX_VALUE, null, true, new String[0]);
             printOptionUsage(stream, optionsFileOptionDefinition);
         }
+
+        // Generate usage for child parsers.
+        final Collection<CommandLineParser> childClps;
+        childClps = getChildParsersForHelp();
+        for (final CommandLineParser childClp : childClps) {
+            childClp.usage(stream, printCommon);
+        }
     }
+
+    private Collection<CommandLineParser> getChildParsersForHelp() {
+        final Collection<CommandLineParser> childClps;
+        if (isCommandLineProgram()) {
+            childClps = new ArrayList<CommandLineParser>();
+            for (final Map.Entry<String, Object> entry :
+                    ((CommandLineProgram)callerOptions).getNestedOptionsForHelp().entrySet()) {
+                if (entry.getKey().contains(".")) {
+                    throw new IllegalArgumentException("Prefix for nested options should not contain period: " + entry.getKey());
+                }
+                childClps.add(new CommandLineParser(entry.getValue(), prefixDot + entry.getKey()));
+            }
+        } else {
+            childClps = childOptionsMap.values();
+        }
+        return childClps;
+    }
+
 
     public void htmlUsage(final PrintStream stream, final String programName, final boolean printCommon) {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
@@ -262,12 +349,25 @@ public class CommandLineParser {
 
             }
         }
+        htmlPrintOptionTableRows(stream, printCommon);
+        stream.println("</table>");
+    }
+
+    /**
+     *
+     * @param stream
+     * @param printCommon
+     */
+    private void htmlPrintOptionTableRows(final PrintStream stream, final boolean printCommon) {
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!optionDefinition.isCommon || printCommon) {
                 printHtmlOptionUsage(stream, optionDefinition);
             }
         }
-        stream.println("</table>");
+        for (final CommandLineParser childParser : getChildParsersForHelp()) {
+            childParser.htmlPrintOptionTableRows(stream, false);
+        }
+
     }
 
     private static String htmlEscape(String str) {
@@ -286,7 +386,9 @@ public class CommandLineParser {
     public boolean parseOptions(final PrintStream messageStream, final String[] args) {
         this.argv = args;
         this.messageStream = messageStream;
-        commandLine = callerOptions.getClass().getName();
+        if (prefix.isEmpty()) {
+            commandLine = callerOptions.getClass().getName();
+        }
         for (int i = 0; i < args.length; ++i) {
             final String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
@@ -312,19 +414,10 @@ public class CommandLineParser {
                 }
             }
             if (pair.length == 2) {
-                if (pair[0].equals(OPTIONS_FILE)) {
-                    if (!parseOptionsFile(pair[1])) {
-                        messageStream.println();
-                        usage(messageStream, true);
-                        return false;
-                    }
-                    commandLine += " " + OPTIONS_FILE + "=" + pair[1];
-                } else {
-                    if (!parseOption(pair[0], pair[1], false)) {
-                        messageStream.println();
-                        usage(messageStream, true);
-                        return false;
-                    }
+                if (!parseOption(pair[0], pair[1], false)) {
+                    messageStream.println();
+                    usage(messageStream, true);
+                    return false;
                 }
             } else if (!parsePositionalArgument(arg)) {
                 messageStream.println();
@@ -333,6 +426,12 @@ public class CommandLineParser {
             }
         }
         if (!checkNumArguments()) {
+            messageStream.println();
+            usage(messageStream, false);
+            return false;
+        }
+
+        if (!parseChildOptions()) {
             messageStream.println();
             usage(messageStream, false);
             return false;
@@ -348,18 +447,19 @@ public class CommandLineParser {
      */
     private boolean checkNumArguments() {
         //Also, since we're iterating over all options and args, use this opportunity to recreate the commandLineString
-        final StringBuffer commandLineString = new StringBuffer();
+        final StringBuilder commandLineString = new StringBuilder();
         try {
             for (final OptionDefinition optionDefinition : optionDefinitions) {
+                final String fullName = prefixDot + optionDefinition.name;
                 final StringBuilder mutextOptionNames = new StringBuilder();
                 for (final String mutexOption : optionDefinition.mutuallyExclusive) {
                     final OptionDefinition mutextOptionDef = optionMap.get(mutexOption);
                     if (mutextOptionDef != null && mutextOptionDef.hasBeenSet) {
-                        mutextOptionNames.append(" ").append(mutextOptionDef.name);
+                        mutextOptionNames.append(" ").append(prefixDot + mutextOptionDef.name);
                     }
                 }
                 if (optionDefinition.hasBeenSet && mutextOptionNames.length() > 0) {
-                    messageStream.println("ERROR: Option '" + optionDefinition.name +
+                    messageStream.println("ERROR: Option '" + fullName +
                             "' cannot be used in conjunction with option(s)" +
                             mutextOptionNames.toString());
                     return false;
@@ -367,16 +467,18 @@ public class CommandLineParser {
                 if (optionDefinition.isCollection) {
                     final Collection c = (Collection)optionDefinition.field.get(callerOptions);
                     if (c.size() < optionDefinition.minElements) {
-                        messageStream.println("ERROR: Option '" + optionDefinition.name + "' must be specified at least " +
+                        messageStream.println("ERROR: Option '" + fullName + "' must be specified at least " +
                         optionDefinition.minElements + " times.");
                         return false;
                     }
-                } else if (!optionDefinition.optional && !optionDefinition.hasBeenSet && mutextOptionNames.length() == 0) {
-                    messageStream.print("ERROR: Option '" + optionDefinition.name + "' is required");
+                } else if (!optionDefinition.optional && !optionDefinition.hasBeenSet &&
+                        !optionDefinition.hasBeenSetFromParent && mutextOptionNames.length() == 0) {
+                    messageStream.print("ERROR: Option '" + fullName + "' is required");
                     if (optionDefinition.mutuallyExclusive.isEmpty()) {
                         messageStream.println(".");
                     } else {
-                        messageStream.println(" unless any of " + optionDefinition.mutuallyExclusive + " are specified.");
+                        messageStream.println(" unless any of " + optionDefinition.mutuallyExclusive +
+                                " are specified.");
                     }
                     return false;
                 }
@@ -396,14 +498,16 @@ public class CommandLineParser {
             //first, append args that were explicitly set
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if(optionDefinition.hasBeenSet) {
-                    commandLineString.append(" " + optionDefinition.name + "=" + optionDefinition.field.get(callerOptions));
+                    commandLineString.append(" " + prefixDot + optionDefinition.name + "=" +
+                            optionDefinition.field.get(callerOptions));
                 }
             }
             commandLineString.append("   "); //separator to tell the 2 apart
             //next, append args that weren't explicitly set, but have a default value
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if(!optionDefinition.hasBeenSet && !optionDefinition.defaultValue.equals("null")) {
-                    commandLineString.append(" " + optionDefinition.name + "=" + optionDefinition.defaultValue);
+                    commandLineString.append(" " + prefixDot + optionDefinition.name + "=" +
+                            optionDefinition.defaultValue);
                 }
             }
             this.commandLine += commandLineString.toString();
@@ -443,14 +547,37 @@ public class CommandLineParser {
         return true;
     }
 
-    private boolean parseOption(String key, final String stringValue, final boolean optionsFile) {
+    private boolean parseOption(final String key, final String stringValue, final boolean optionsFile) {
+        return parseOption(key, stringValue, optionsFile, false);
+    }
+
+    private boolean parseOption(String key, final String stringValue, final boolean optionsFile,
+                                boolean precedenceSet) {
         key = key.toUpperCase();
+        if (key.equals(OPTIONS_FILE)) {
+            commandLine += " " + prefix +  OPTIONS_FILE + "=" + stringValue;
+            return parseOptionsFile(stringValue);
+        }
 
         // Check to see if the precedence symbol was used
-        boolean precedenceSet = false;
         if (key.startsWith(PRECEDENCE_SYMBOL)) {
             key = key.substring(PRECEDENCE_SYMBOL.length());
             precedenceSet = true;
+        }
+
+        // Save child options for later processing.
+        final Integer prefixIndex = key.indexOf('.');
+        if (prefixIndex != -1) {
+            final String prefix = key.substring(0, prefixIndex);
+            final String subKey = key.substring(prefixIndex+1);
+            if (!subKey.isEmpty()) {
+                childOptionArguments.append(prefix, new ChildOptionArg(subKey, stringValue, optionsFile,
+                        precedenceSet));
+                return true;
+            } else {
+                messageStream.println("ERROR: Unrecognized option: " + key);
+                return false;
+            }
         }
 
         final OptionDefinition optionDefinition = optionMap.get(key);
@@ -566,7 +693,7 @@ public class CommandLineParser {
 
     private void printHtmlOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
         final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
-        final String optionLabel = optionDefinition.name + "=" + type;
+        final String optionLabel = prefixDot + optionDefinition.name + "=" + type;
         stream.println("<tr><td>" + optionLabel + "</td><td>" +
                 htmlEscape(makeOptionDescription(optionDefinition)) + "</td></tr>");
     }
@@ -580,13 +707,13 @@ public class CommandLineParser {
 
     private void printOptionParamUsage(final PrintStream stream, final String name, final String shortName,
                                        final String type, final String optionDescription) {
-        String optionLabel = name;
+        String optionLabel = prefixDot + name;
         if(type != null) optionLabel += "=" + type;
 
         stream.print(optionLabel);
         if (shortName != null && shortName.length() > 0) {
             stream.println();
-            optionLabel = shortName;
+            optionLabel = prefixDot + shortName;
             if(type != null) optionLabel += "=" + type;
             stream.print(optionLabel);
         }
@@ -643,7 +770,8 @@ public class CommandLineParser {
                 if (optionDefinition.maxElements == Integer.MAX_VALUE) {
                     sb.append("This option may be specified 0 or more times. ");
                 } else {
-                    sb.append("This option must be specified no more than " + optionDefinition.maxElements + " times. ");
+                    sb.append("This option must be specified no more than " + optionDefinition.maxElements +
+                            " times. ");
                 }
             } else  if (optionDefinition.maxElements == Integer.MAX_VALUE) {
                 sb.append("This option must be specified at least " + optionDefinition.minElements + " times. ");
@@ -663,7 +791,8 @@ public class CommandLineParser {
                 final OptionDefinition mutextOptionDefinition = optionMap.get(option);
 
                 if(mutextOptionDefinition == null) {
-                    throw new PicardException("Invalid option definition in source code.  " + option + " doesn't match any known option.");
+                    throw new PicardException("Invalid option definition in source code.  " + option +
+                            " doesn't match any known option.");
                 }
 
                 sb.append(" ").append(mutextOptionDefinition.name);
@@ -726,7 +855,8 @@ public class CommandLineParser {
             optionMap.put(optionDefinition.name, optionDefinition);
             if (optionDefinition.shortName.length() > 0) {
                 if (optionMap.containsKey(optionDefinition.shortName)) {
-                    throw new CommandLineParserDefinitionException(optionDefinition.shortName + " has already been used");
+                    throw new CommandLineParserDefinitionException(optionDefinition.shortName +
+                            " has already been used");
                 }
                 optionMap.put(optionDefinition.shortName, optionDefinition);
             }
@@ -791,6 +921,16 @@ public class CommandLineParser {
         }
     }
 
+    private void handleNestedOptionsAnnotation(final Field field) {
+        field.setAccessible(true);
+        try {
+            childOptionsMap.put(field.getName(),
+                    new CommandLineParser(field.get(this.callerOptions), prefixDot + field.getName()));
+        } catch (IllegalAccessException e) {
+            throw new CommandLineParserDefinitionException("Should never happen.", e);
+        }
+    }
+
     private boolean isCollectionField(final Field field) {
         try {
             field.getType().asSubclass(Collection.class);
@@ -800,15 +940,17 @@ public class CommandLineParser {
         }
     }
 
-    private void createCollection(final Field field, final Object callerOptions, final String annotationType) throws IllegalAccessException {
+    private void createCollection(final Field field, final Object callerOptions, final String annotationType)
+            throws IllegalAccessException {
         try {
             field.set(callerOptions, field.getType().newInstance());
         } catch (Exception ex) {
             try {
                 field.set(callerOptions, new ArrayList());
             } catch (IllegalArgumentException e) {
-                throw new CommandLineParserDefinitionException("In collection " + annotationType + " member " + field.getName() +
-                        " cannot be constructed or auto-initialized with ArrayList, so collection must be initialized explicitly.");
+                throw new CommandLineParserDefinitionException("In collection " + annotationType +
+                  " member " + field.getName() +
+                  " cannot be constructed or auto-initialized with ArrayList, so collection must be initialized explicitly.");
             }
 
         }
@@ -825,7 +967,8 @@ public class CommandLineParser {
             final ParameterizedType clazz = (ParameterizedType)(field.getGenericType());
             final Type[] genericTypes = clazz.getActualTypeArguments();
             if (genericTypes.length != 1) {
-                throw new CommandLineParserDefinitionException("Strange collection type for field " + field.getName());
+                throw new CommandLineParserDefinitionException("Strange collection type for field " +
+                        field.getName());
             }
             return (Class)genericTypes[0];
 
@@ -879,8 +1022,8 @@ public class CommandLineParser {
             throw new CommandLineParseException("String constructor for option value type '" + clazz.getSimpleName() +
                     "' must be public.", e);
         } catch (InvocationTargetException e) {
-            throw new CommandLineParseException("Problem constructing " + clazz.getSimpleName() + " from the string '" + s + "'.",
-                    e.getCause());
+            throw new CommandLineParseException("Problem constructing " + clazz.getSimpleName() +
+                    " from the string '" + s + "'.", e.getCause());
         }
     }
 
@@ -901,10 +1044,13 @@ public class CommandLineParser {
         final boolean isCommon;
         boolean hasBeenSet = false;
         boolean hasBeenSetFromOptionsFile = false;
-        Set<String> mutuallyExclusive;
+        boolean hasBeenSetFromParent = false;
+        final Set<String> mutuallyExclusive;
 
-        private OptionDefinition(final Field field, final String name, final String shortName, final String doc, final boolean optional, final boolean collection,
-                                 final int minElements, final int maxElements, final Object defaultValue, final boolean isCommon, final String[] mutuallyExclusive) {
+        private OptionDefinition(final Field field, final String name, final String shortName, final String doc,
+                                 final boolean optional, final boolean collection, final int minElements,
+                                 final int maxElements, final Object defaultValue, final boolean isCommon,
+                                 final String[] mutuallyExclusive) {
             this.field = field;
             this.name = name.toUpperCase();
             this.shortName = shortName.toUpperCase();
@@ -926,6 +1072,111 @@ public class CommandLineParser {
             }
             this.isCommon = isCommon;
             this.mutuallyExclusive = new HashSet<String>(Arrays.asList(mutuallyExclusive));
+        }
+    }
+
+    /**
+     * Holds a command-line argument that is destined for a child parser.  Prefix has been stripped from name.
+     */
+    private static class ChildOptionArg {
+        final String name;
+        final String value;
+        final boolean fromFile;
+        final boolean precedenceSet;
+
+        private ChildOptionArg(final String name, final String value, final boolean fromFile, final boolean precedenceSet) {
+            this.name = name;
+            this.value = value;
+            this.fromFile = fromFile;
+            this.precedenceSet = precedenceSet;
+        }
+    }
+
+    /**
+     * Propagate options from parent to children as appropriate, parse command line options for
+     * children, and then validate that children have been properly initialized.  This is done recursively
+     * for any child that itself has a child.
+     * @return true if parsing is successful.  Writes any errors to the message stream.
+     */
+    private boolean parseChildOptions() {
+
+        // If callerOptions is not an instance of CommandLineProgram, then the child options are populated
+        // when annotations are processed.
+        if (isCommandLineProgram()) {
+            final CommandLineProgram commandLineProgram = (CommandLineProgram)callerOptions;
+            for (final Map.Entry<String, Object> entry : commandLineProgram.getNestedOptions().entrySet()) {
+                if (entry.getKey().contains(".")) {
+                    throw new IllegalArgumentException("Prefix for nested options should not contain period: " + entry.getKey());
+                }
+                childOptionsMap.put(entry.getKey(),
+                        new CommandLineParser(entry.getValue(), prefixDot + entry.getKey()));
+            }
+        }
+        boolean retval = true;
+
+        // Check for child options for which there is no parser
+        for (final String prefix : childOptionArguments.keySet()) {
+            if (!childOptionsMap.containsKey(prefix)) {
+                messageStream.println("ERROR: Option prefix '" + prefix + "' is not valid.");
+                retval = false;
+            }
+        }
+
+        try {
+            // Propagate options from this parser to child parsers
+            for (final OptionDefinition optionDefinition : optionDefinitions) {
+                // Handling collection value propagation is confusing, so just don't do it.
+                if (optionDefinition.isCollection) continue;
+                final Object value = optionDefinition.field.get(callerOptions);
+                if (value == null) continue;
+                for (final CommandLineParser childParser : childOptionsMap.values()) {
+                    maybePropagateValueToChild(childParser, optionDefinition, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Should never happen", e);
+        }
+
+        for (final Map.Entry<String, CommandLineParser> entry : childOptionsMap.entrySet()) {
+            final String prefix = entry.getKey();
+            final CommandLineParser childParser = entry.getValue();
+            childParser.messageStream = this.messageStream;
+            final Collection<ChildOptionArg> childOptionArgs = this.childOptionArguments.get(prefix);
+            if (childOptionArgs != null) {
+                for (final ChildOptionArg arg : childOptionArgs) {
+                    childParser.parseOption(arg.name, arg.value, arg.fromFile, arg.precedenceSet);
+                }
+            }
+            if (!childParser.checkNumArguments()) {
+                retval = false;
+            }
+            if (!childParser.parseChildOptions()) {
+                retval = false;
+            }
+            this.commandLine += " " + childParser.getCommandLine();
+        }
+
+        return retval;
+    }
+
+    /**
+     * Propagate value from parent to child if appropriate to do so.
+     */
+    private void maybePropagateValueToChild(final CommandLineParser childParser,
+                                            final OptionDefinition optionDefinition,
+                                            final Object value) {
+        try {
+            final OptionDefinition childOptionDefinition = childParser.optionMap.get(optionDefinition.name);
+            if (childOptionDefinition != null) {
+                final Object childValue = childOptionDefinition.field.get(childParser.callerOptions);
+                if (childValue == null || optionDefinition.hasBeenSet) {
+                    childOptionDefinition.field.set(childParser.callerOptions, value);
+                    childOptionDefinition.hasBeenSetFromParent = true;
+                    childOptionDefinition.hasBeenSetFromOptionsFile = optionDefinition.hasBeenSetFromOptionsFile;
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Should never happen", e);
         }
     }
 

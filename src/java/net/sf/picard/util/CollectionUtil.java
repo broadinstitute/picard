@@ -56,4 +56,22 @@ public class CollectionUtil {
 
         return builder.toString();
     }
+
+    /** Simple multi-map for convenience of storing collections in map values. */
+    public static class MultiMap<K, V> extends HashMap<K, Collection<V>> {
+        public void append(final K k, final V v) {
+            this.initializeKeyIfUninitialized(k);
+            this.get(k).add(v);
+        }
+
+        public void appendAll(final K k, final Collection<? extends V> v) {
+            this.initializeKeyIfUninitialized(k);
+            this.get(k).addAll(v);
+        }
+
+        private void initializeKeyIfUninitialized(final K k) {
+            if (!this.containsKey(k))
+                this.put(k, new LinkedList<V>());
+        }
+    }
 }

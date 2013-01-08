@@ -134,7 +134,7 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
@@ -274,5 +274,22 @@ public abstract class CommandLineProgram {
     public List<Header> getDefaultHeaders() {
         return this.defaultHeaders;
     }
-}
 
+    /**
+     * @return Map of nested options, where the key is the prefix to be used when specifying Options inside of a nested
+     * options object, and the value is the nested options object itself.  Default implementation is to return a
+     * map of all the fields annotated with @NestedOptions, with key being the field name.
+     */
+    public Map<String, Object> getNestedOptions() {
+        return CommandLineParser.getNestedOptions(this);
+    }
+
+    /**
+     * @return Map of nested options, where the key is the prefix to be used when specifying Options inside of a nested
+     * options object, and the value is the nested options object itself, for the purpose of generating help.
+     * Default implementation is to return the same map as getNestedOptions().
+     */
+    Map<String, Object> getNestedOptionsForHelp() {
+        return getNestedOptions();
+    }
+}
