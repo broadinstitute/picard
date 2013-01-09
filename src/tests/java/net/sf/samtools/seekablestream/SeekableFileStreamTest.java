@@ -23,9 +23,7 @@
  */
 package net.sf.samtools.seekablestream;
 
-import net.sf.samtools.seekablestream.SeekableFileStream;
-import org.broad.tribble.readers.AsciiLineReader;
-import org.broad.tribble.readers.PositionalBufferedStream;
+import net.sf.samtools.util.BufferedLineReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -46,7 +44,7 @@ public class SeekableFileStreamTest {
         File testFile = new File("testdata/tribble/seekTest.txt");
         SeekableFileStream is = new SeekableFileStream(testFile);
         is.seek(20);
-        AsciiLineReader reader = new AsciiLineReader(new PositionalBufferedStream(is));
+        BufferedLineReader reader = new BufferedLineReader(is);
         String nextLine = reader.readLine();
         Assert.assertEquals(expectedLine, nextLine);
         reader.close();
