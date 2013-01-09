@@ -28,6 +28,7 @@
     <property name="src" value="src/java"/>
     <property name="src.scripts" value="src/scripts"/>
     <property name="src.test" value="src/tests"/>
+    <property name="src.test.java" value="${src.test}/java"/>
     <property name="lib" value="lib"/>
     <property name="dist" value="dist"/>
     <property name="classes" value="classes"/>
@@ -106,7 +107,7 @@
         <mkdir dir="${classes}"/>
         <javac destdir="${classes}"
                optimize="${javac.opt}"
-               excludes ="net/sf/samtools/**/*.*"
+               excludes ="net/sf/samtools/**/*.* org/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:all"/>-->
             <!--<compilerarg value="-Xlint:unchecked"/>-->
@@ -124,7 +125,7 @@
                debug="${javac.debug}"
                includes ="net/sf/samtools/**/*.*">
             <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src.test}"/>
+            <src path="${src.test.java}"/>
             <classpath>
                 <path refid="classpath"/>
                 <pathelement location="${classes}"/>
@@ -136,10 +137,10 @@
         <mkdir dir="${classes.test}"/>
         <javac destdir="${classes.test}"
                optimize="${javac.opt}"
-               excludes ="net/sf/samtools/**/*.*"
+               excludes ="net/sf/samtools/**/*.* org/**/*.*"
                debug="${javac.debug}">
             <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src.test}"/>
+            <src path="${src.test.java}"/>
             <classpath>
                 <path refid="classpath"/>
                 <pathelement location="${classes}"/>
