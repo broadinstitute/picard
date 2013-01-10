@@ -203,6 +203,21 @@ public abstract class CommandLineProgram {
     * to be written to the appropriate place.
     */
     protected String[] customCommandLineValidation() {
+        final List<String> ret = new ArrayList<String>();
+        for (final Object childOptionsObject : getNestedOptions().values()) {
+            if (childOptionsObject instanceof CommandLineProgram) {
+                final CommandLineProgram childClp = (CommandLineProgram)childOptionsObject;
+                final String[] childErrors = childClp.customCommandLineValidation();
+                if (childErrors != null) {
+                    for (final String error: childErrors) {
+                        ret.add(error);
+                    }
+                }
+            }
+        }
+        if (!ret.isEmpty()) {
+            ret.toArray(new String[ret.size()]);
+        }
         return null;
     }
 
