@@ -24,8 +24,10 @@
 package org.broad.tribble.util;
 
 import java.awt.*;
-import java.io.*;
-import java.lang.reflect.Constructor;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -353,17 +355,15 @@ public class ParsingUtils {
 
         boolean remoteFile = resource.startsWith("http://") || resource.startsWith("https://") || resource.startsWith("ftp://");
         if (remoteFile) {
-            if (resource.startsWith("ftp://")) {
-                throw new RuntimeException("FTP prototcol not yet supported: " + resource);
-            } else {
-                try {
-                    URL url = new URL(resource);
-                    URLHelper helper = new HTTPHelper(url);
-                    return helper.exists();
-                } catch (MalformedURLException e) {
-                    throw new RuntimeException("Malformed URL " + resource, e);
-                }
+            URL url = null;
+            try {
+                url = new URL(resource);
+            } catch (MalformedURLException e) {
+                // Malformed URLs by definition don't exist
+                return false;
             }
+            URLHelper helper = new HTTPHelper(url);
+            return helper.exists();
         } else {
             return (new File(resource)).exists();
         }
