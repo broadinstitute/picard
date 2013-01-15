@@ -111,6 +111,9 @@ public class LittleEndianInputStream extends FilterInputStream {
         ByteArrayOutputStream bis = new ByteArrayOutputStream(100);
         byte b;
         while ((b = (byte) in.read()) != 0) {
+            if(b < 0) {
+                throw new EOFException();
+            }
             bis.write(b);
         }
         return new String(bis.toByteArray());
