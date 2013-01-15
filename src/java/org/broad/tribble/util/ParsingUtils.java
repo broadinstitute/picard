@@ -351,7 +351,7 @@ public class ParsingUtils {
 
     }
 
-    public static boolean resourceExists(String resource) {
+    public static boolean resourceExists(String resource) throws IOException{
 
         boolean remoteFile = resource.startsWith("http://") || resource.startsWith("https://") || resource.startsWith("ftp://");
         if (remoteFile) {

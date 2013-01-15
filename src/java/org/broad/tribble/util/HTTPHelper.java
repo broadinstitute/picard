@@ -18,6 +18,7 @@
 
 package org.broad.tribble.util;
 
+import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -111,14 +112,15 @@ public class HTTPHelper implements URLHelper {
         return connection;
     }
 
-    public boolean exists() {
+    public boolean exists() throws IOException{
         HttpURLConnection con = null;
         try {
             con = openConnection();
             con.setRequestMethod("HEAD");
             return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
         }
-        catch (IOException e) {
+        catch (FileNotFoundException e) {
+            // This is what we are testing for, so its not really an exception
             return false;
         }
         finally {

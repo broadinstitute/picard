@@ -39,6 +39,6 @@ public interface URLHelper {
 
     InputStream openInputStreamForRange(long start, long end) throws IOException;
 
-    public boolean exists();
+    public boolean exists() throws IOException;
 
 }
