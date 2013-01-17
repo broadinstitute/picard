@@ -304,7 +304,7 @@ public abstract class CommandLineProgram {
      * options object, and the value is the nested options object itself, for the purpose of generating help.
      * Default implementation is to return the same map as getNestedOptions().
      */
-    Map<String, Object> getNestedOptionsForHelp() {
+    public Map<String, Object> getNestedOptionsForHelp() {
         return getNestedOptions();
     }
 }

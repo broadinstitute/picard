@@ -677,7 +677,7 @@ public class CommandLineParserTest {
         }
 
         @Override
-        Map<String, Object> getNestedOptionsForHelp() {
+        public Map<String, Object> getNestedOptionsForHelp() {
             final Map<String, Object> ret = new LinkedHashMap<String, Object>();
             ret.put("CLP_NESTED", NESTED);
             return ret;
