@@ -34,13 +34,18 @@
     <property name="classes" value="classes"/>
     <property name="classes.test" value="testclasses"/>
     <property name="scripts" value="src/scripts"/>
+    <property name="reports" value="dist/test"/>
     <property name="test.output" value="dist/test"/>
+
+    <!--property name="javac.target" value="1.6"/-->
     <property name="javac.debug" value="true"/>
+
     <!-- Get SVN revision, if available, otherwise leave it blank.  -->
     <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
     <property name="repository.revision" value=""/>
     <property name="sam-version" value="1.84"/>
     <property name="picard-version" value="${sam-version}"/>
+    <property name="tribble-version" value="${sam-version}"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
@@ -86,69 +91,35 @@
             description="Compile files without cleaning">
     </target>
 
-    <target name="compile-src" depends="compile-sam-jdk, compile-picard" description="Compile files without cleaning"/>
+    <target name="compile-src" depends="compile-sam-jdk, compile-picard, compile-tribble" description="Compile files without cleaning"/>
 
     <target name="compile-sam-jdk" depends="init" description="Compile sam-jdk files without cleaning">
-        <mkdir dir="${classes}"/>
-        <!-- complain if net.sf.picard code is referenced -->
-        <javac destdir="${classes}"
-               optimize="${javac.opt}"
-               debug="${javac.debug}"
-               sourcepath="" srcdir="${src}"
-               includes ="net/sf/samtools/**/*.*"
-               excludes = "net/sf/picard/**/*.*">
-            <!--<compilerarg value="-Xlint:all"/>-->
-            <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <classpath refid="classpath"/>
-        </javac>
+        <compile-src includes="net/sf/samtools/**/*.*"/>
     </target>
 
     <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
-        <mkdir dir="${classes}"/>
-        <javac destdir="${classes}"
-               optimize="${javac.opt}"
-               excludes ="net/sf/samtools/**/*.* org/**/*.*"
-               debug="${javac.debug}">
-            <!--<compilerarg value="-Xlint:all"/>-->
-            <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src}"/>
-            <classpath refid="classpath"/>
-        </javac>
+        <compile-src includes="net/sf/picard/**/*.*"/>
     </target>
 
-    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
+    <target name="compile-tribble" depends="init" description="Compile tribble files without cleaning">
+        <compile-src includes="org/broad/tribble/**/*.*"/>
+    </target>
+
+    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests, compile-tribble-tests" description="Compile test files without cleaning"/>
 
     <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
-        <mkdir dir="${classes.test}"/>
-        <javac destdir="${classes.test}"
-               optimize="${javac.opt}"
-               debug="${javac.debug}"
-               includes ="net/sf/samtools/**/*.*">
-            <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src.test.java}"/>
-            <classpath>
-                <path refid="classpath"/>
-                <pathelement location="${classes}"/>
-            </classpath>
-        </javac>
+        <compile-tests includes="net/sf/samtools/**/*.*"/>
     </target>
 
     <target name="compile-picard-tests" depends="init" description="Compile picard test files without cleaning">
-        <mkdir dir="${classes.test}"/>
-        <javac destdir="${classes.test}"
-               optimize="${javac.opt}"
-               excludes ="net/sf/samtools/**/*.* org/**/*.*"
-               debug="${javac.debug}">
-            <!--<compilerarg value="-Xlint:unchecked"/>-->
-            <src path="${src.test.java}"/>
-            <classpath>
-                <path refid="classpath"/>
-                <pathelement location="${classes}"/>
-            </classpath>
-        </javac>
+        <compile-tests includes="net/sf/picard/**/*.*"/>
         <copy todir="${classes.test}/">
             <fileset dir="${src.test}/scripts" includes="**/*"/>
         </copy>
+    </target>
+
+    <target name="compile-tribble-tests" depends="init" description="Compile tribble test files without cleaning">
+        <compile-tests includes="org/broad/tribble/**/*.*"/>
     </target>
 
     <!-- TEST -->
@@ -222,6 +193,17 @@
         </jar>
     </target>
 
+    <target name="tribble-jar" depends="compile"
+            description="Builds tribble-${tribble-version}.jar for inclusion in other projects">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/tribble-${tribble-version}.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
+        </jar>
+        <copy todir="${dist}">
+            <fileset dir="lib" includes="*.jar"/>
+        </copy>
+    </target>
+
     <target name="javadoc" depends="init" description="Generates the project javadoc.">
         <javadoc
                 sourcepath="${src}"
@@ -248,7 +230,7 @@
         </javadoc>
     </target>
 
-    <target name="package-commands" depends="compile, sam-jar, picard-jar">
+    <target name="package-commands" depends="compile, sam-jar, picard-jar, tribble-jar">
         <delete dir="${command_tmp}"/>
 
         <mkdir dir="${command_tmp}"/>
@@ -306,7 +288,7 @@
     </target>
 
     <!-- ALL -->
-    <target name="all" depends="compile, sam-jar, picard-jar, package-commands, document-standard-options" description="Default build target">
+    <target name="all" depends="compile, sam-jar, picard-jar, tribble-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
@@ -402,4 +384,40 @@
         </sequential>
     </macrodef>
 
+    <!-- Compile source files specified by includes, from source root. Can specifically
+    include or exclude-->
+    <macrodef name="compile-src">
+        <attribute name="includes" default=""/>
+        <attribute name="excludes" default=""/>
+        <sequential>
+        <mkdir dir="${classes}"/>
+            <javac destdir="${classes}"
+                   optimize="${javac.opt}"
+                   debug="${javac.debug}"
+                   srcdir="${src}"
+                   includes="@{includes}"
+                   excludes="@{excludes}">
+                <classpath refid="classpath"/>
+            </javac>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="compile-tests">
+        <attribute name="includes" default=""/>
+        <attribute name="excludes" default=""/>
+        <sequential>
+            <mkdir dir="${classes.test}"/>
+            <javac destdir="${classes.test}"
+                   optimize="${javac.opt}"
+                   debug="${javac.debug}"
+                   srcdir="${src.test.java}"
+                   includes="@{includes}"
+                   excludes="@{excludes}">
+                <classpath>
+                    <path refid="classpath"/>
+                    <pathelement location="${classes}"/>
+                </classpath>
+            </javac>
+        </sequential>
+    </macrodef>
 </project>
