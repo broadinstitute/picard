@@ -33,6 +33,7 @@
     <property name="dist" value="dist"/>
     <property name="classes" value="classes"/>
     <property name="classes.test" value="testclasses"/>
+    <property name="contracts" value="contracts"/>
     <property name="scripts" value="src/scripts"/>
     <property name="reports" value="dist/test"/>
     <property name="test.output" value="dist/test"/>
@@ -46,9 +47,11 @@
     <property name="sam-version" value="1.84"/>
     <property name="picard-version" value="${sam-version}"/>
     <property name="tribble-version" value="${sam-version}"/>
+    <property name="variant-version" value="${sam-version}"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
+    <property name="contracts.jar" value="${lib}/cofoja-1.0-r139.jar"/>
 
     <property environment="env"/>
 
@@ -74,6 +77,10 @@
             <pathelement path="${classpath}"/>
             <pathelement location="${classes}"/>
         </path>
+        <path id="contracts.compile.classpath">
+            <path refid="classpath"/>
+            <pathelement location="${classes}"/>
+        </path>
     </target>
 
     <!-- CLEAN -->
@@ -84,6 +91,7 @@
         <delete  dir="${dist}"/>
         <delete  dir="${command_tmp}"/>
         <delete  dir="javadoc"/>
+        <delete dir="contracts"/>
     </target>
 
     <!-- COMPILE -->
@@ -91,7 +99,7 @@
             description="Compile files without cleaning">
     </target>
 
-    <target name="compile-src" depends="compile-sam-jdk, compile-picard, compile-tribble" description="Compile files without cleaning"/>
+    <target name="compile-src" depends="compile-sam-jdk, compile-picard, compile-tribble, compile-variant" description="Compile files without cleaning"/>
 
     <target name="compile-sam-jdk" depends="init" description="Compile sam-jdk files without cleaning">
         <compile-src includes="net/sf/samtools/**/*.*"/>
@@ -105,7 +113,15 @@
         <compile-src includes="org/broad/tribble/**/*.*"/>
     </target>
 
-    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests, compile-tribble-tests" description="Compile test files without cleaning"/>
+    <target name="compile-variant" depends="init" description="Compile variant files without cleaning">
+        <compile-src includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:none"/>
+
+        <!-- Compile contracts into a separate directory -->
+        <mkdir dir="${contracts}"/>
+        <compile-src includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:only" destdir="${contracts}" compile.classpath="contracts.compile.classpath"/>
+    </target>
+
+    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests, compile-tribble-tests, compile-variant-tests" description="Compile test files without cleaning"/>
 
     <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
         <compile-tests includes="net/sf/samtools/**/*.*"/>
@@ -122,6 +138,10 @@
         <compile-tests includes="org/broad/tribble/**/*.*"/>
     </target>
 
+    <target name="compile-variant-tests" depends="init" description="Compile variant test files without cleaning">
+        <compile-tests includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:none"/>
+    </target>
+
     <!-- TEST -->
     <target name="test" depends="compile, set_excluded_test_groups" description="Run unit tests">
         <taskdef resource="testngtasks" classpathref="classpath"/>
@@ -132,12 +152,14 @@
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>
                 <pathelement path="${scripts}"/>
+                <pathelement path="${contracts}"/>
             </classpath>
             <classfileset dir="${classes.test}">
                 <include name="**/Test*.class"/>
                 <include name="**/*Test.class"/>
             </classfileset>
             <jvmarg value="-Xmx1G"/>
+            <jvmarg line="-javaagent:${contracts.jar} -Dcom.google.java.contract.log.contract=false"/>
         </testng>
         <junitreport todir="${dist}/test" >
             <fileset dir="${test.output}">
@@ -157,10 +179,12 @@
         <testng suitename="samtools-single-test" classpathref="classpath" outputdir="${test.output}"
                 verbose="${testng.verbosity}">
             <jvmarg line="-Xmx512M"/>
+            <jvmarg line="-javaagent:${contracts.jar} -Dcom.google.java.contract.log.contract=false"/>
             <classpath>
                 <pathelement path="${classes}"/>
                 <pathelement path="${classes.test}"/>
                 <pathelement path="${scripts}"/>
+                <pathelement path="${contracts}"/>
             </classpath>
             <classfileset dir="${classes.test}">
                 <include name="**/${name}.class"/>
@@ -204,6 +228,17 @@
         </copy>
     </target>
 
+    <target name="variant-jar" depends="compile"
+            description="Builds variant-${variant-version}.jar for inclusion in other projects">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/variant-${variant-version}.jar" compress="no">
+            <fileset dir="${classes}" includes="org/broadinstitute/variant/**/*.*"/>
+        </jar>
+        <copy todir="${dist}">
+            <fileset dir="lib" includes="*.jar"/>
+        </copy>
+    </target>
+
     <target name="javadoc" depends="init" description="Generates the project javadoc.">
         <javadoc
                 sourcepath="${src}"
@@ -230,7 +265,7 @@
         </javadoc>
     </target>
 
-    <target name="package-commands" depends="compile, sam-jar, picard-jar, tribble-jar">
+    <target name="package-commands" depends="compile, sam-jar, picard-jar, tribble-jar, variant-jar">
         <delete dir="${command_tmp}"/>
 
         <mkdir dir="${command_tmp}"/>
@@ -288,7 +323,7 @@
     </target>
 
     <!-- ALL -->
-    <target name="all" depends="compile, sam-jar, picard-jar, tribble-jar, package-commands, document-standard-options" description="Default build target">
+    <target name="all" depends="compile, sam-jar, picard-jar, tribble-jar, variant-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
@@ -389,15 +424,19 @@
     <macrodef name="compile-src">
         <attribute name="includes" default=""/>
         <attribute name="excludes" default=""/>
+        <attribute name="destdir" default="${classes}"/>
+        <attribute name="compile.classpath" default="classpath"/>
+        <attribute name="compiler.args" default=""/>
         <sequential>
         <mkdir dir="${classes}"/>
-            <javac destdir="${classes}"
+            <javac destdir="@{destdir}"
                    optimize="${javac.opt}"
                    debug="${javac.debug}"
                    srcdir="${src}"
                    includes="@{includes}"
                    excludes="@{excludes}">
-                <classpath refid="classpath"/>
+                <classpath refid="@{compile.classpath}"/>
+                <compilerarg line="@{compiler.args}" />
             </javac>
         </sequential>
     </macrodef>
@@ -405,6 +444,8 @@
     <macrodef name="compile-tests">
         <attribute name="includes" default=""/>
         <attribute name="excludes" default=""/>
+        <attribute name="compiler.args" default=""/>
+
         <sequential>
             <mkdir dir="${classes.test}"/>
             <javac destdir="${classes.test}"
@@ -416,7 +457,9 @@
                 <classpath>
                     <path refid="classpath"/>
                     <pathelement location="${classes}"/>
+                    <pathelement location="${contracts}"/>
                 </classpath>
+                <compilerarg line="@{compiler.args}"/>
             </javac>
         </sequential>
     </macrodef>
