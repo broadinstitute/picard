@@ -81,6 +81,9 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
             shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
+    @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
+    public boolean IS_BISULFITE_SEQUENCED = false;
+
     private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
 
     // Used to keep track of the total clusters as this is kinda important for bias
@@ -152,7 +155,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
                             ++readsByGc[windowGc];
                             basesByGc[windowGc]  += rec.getReadLength();
                             errorsByGc[windowGc] +=
-                                    SequenceUtil.countMismatches(rec, refBases) +
+                                    SequenceUtil.countMismatches(rec, refBases, IS_BISULFITE_SEQUENCED) +
                                             SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
                         }
                     }

@@ -298,6 +298,19 @@ public class SequenceUtil {
     }
 
     /**
+     * Calculates the number of mismatches between the read and the reference sequence provided.
+     *
+     * @param referenceBases Array of ASCII bytes that covers at least the the portion of the reference sequence
+     * to which read is aligned from getReferenceStart to getReferenceEnd.
+     * @param bisulfiteSequence If this is true, it is assumed that the reads were bisulfite treated
+     *      and C->T on the positive strand and G->A on the negative strand will not be counted
+     *      as mismatches.
+     */
+    public static int countMismatches(final SAMRecord read, final byte[] referenceBases, final boolean bisulfiteSequence) {
+        return countMismatches(read, referenceBases, 0, bisulfiteSequence);
+    }
+
+    /**
      * Sadly, this is a duplicate of the method above, except that it takes char[] for referenceBases rather
      * than byte[].  This is because GATK needs it this way.
      *
