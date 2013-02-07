@@ -25,4 +25,5 @@ package org.broad.tribble;
  */
 public class TestUtils {
     public static String DATA_DIR = "testdata/tribble/";
+    public static String OUTPUT_DIR = DATA_DIR + "tmp/";
 }
