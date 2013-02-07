@@ -22,17 +22,18 @@ import java.util.List;
 
 public class FeatureReaderTest {
     private final static File asciiBedFile = new File(TestUtils.DATA_DIR + "test.bed");
-    private final static File binaryBedFile = new File(TestUtils.DATA_DIR + "test.binary.bed");
+    private final static File binaryBedFile = new File(TestUtils.OUTPUT_DIR + "test.binary.bed");
     private final static File tabixBedFile = new File(TestUtils.DATA_DIR + "test.tabix.bed.gz");
 
     @BeforeClass
     public void setup() throws IOException {
         ExampleBinaryCodec.convertToBinaryTest(asciiBedFile, binaryBedFile, new BEDCodec());
+        binaryBedFile.deleteOnExit();
     }
 
     @AfterClass
-    public void teardown() throws Exception {
-//        binaryBedFile.delete();
+    public void tearDown() throws Exception {
+        binaryBedFile.delete();
     }
 
     @DataProvider(name = "indexProvider")
