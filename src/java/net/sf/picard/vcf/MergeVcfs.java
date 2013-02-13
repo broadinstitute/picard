@@ -32,6 +32,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.MergingIterator;
 import net.sf.picard.util.ProgressLogger;
+import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
@@ -68,6 +69,9 @@ public class MergeVcfs extends CommandLineProgram {
 
 	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="VCF file to write merged result to")
 	public File OUTPUT;
+
+	@Option(shortName="D", doc="The index sequence dictionary (required if CREATE_INDEX=true)", optional = true)
+	public File SEQUENCE_DICTIONARY;
 
 	private final Log log = Log.getInstance(MergeVcfs.class);
 
@@ -114,7 +118,10 @@ public class MergeVcfs extends CommandLineProgram {
 		}
 
 		final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
-		final VariantContextWriter out = VariantContextUtils.getConditionallyCompressingWriter(OUTPUT, options);
+		final SAMSequenceDictionary sequenceDictionary =
+				SEQUENCE_DICTIONARY != null ? VariantContextUtils.getSequenceDictionary(SEQUENCE_DICTIONARY) : null;
+		final VariantContextWriter out = VariantContextUtils.getConditionallyCompressingWriter(OUTPUT, sequenceDictionary, options);
+
 		out.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
 
 		final MergingIterator<VariantContext> mergingIterator = new MergingIterator<VariantContext>(variantContextComparator, iteratorCollection);
@@ -126,5 +133,12 @@ public class MergeVcfs extends CommandLineProgram {
 
 		out.close();
 		return 0;
+	}
+
+	protected String[] customCommandLineValidation() {
+		if (this.CREATE_INDEX && (this.SEQUENCE_DICTIONARY == null)) {
+			return new String[] { "If CREATE_INDEX is set a sequence dictionary must be specified." };
+		}
+		return null;
 	}
 }
