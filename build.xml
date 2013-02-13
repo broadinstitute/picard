@@ -396,6 +396,7 @@
                 <classpath>
                     <pathelement location="${dist}/picard-${picard-version}.jar"/>
                     <pathelement location="${dist}/sam-${sam-version}.jar"/>
+                    <pathelement location="${dist}/variant-${variant-version}.jar"/>
                 </classpath>
                 <arg value="@{main-class}"/>
             </java>
