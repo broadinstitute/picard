@@ -36,14 +36,12 @@ import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.vcf.VCFContigHeaderLine;
 import org.broadinstitute.variant.vcf.VCFHeader;
 import org.broadinstitute.variant.vcf.VCFUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -85,7 +83,6 @@ public class MergeVcfs extends CommandLineProgram {
 	protected int doWork() {
 		final ProgressLogger progress = new ProgressLogger(log, 10000);
 		final List<String> sampleList = new ArrayList<String>();
-		final List<String> contigList = new ArrayList<String>();
 		final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
 		final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
 
