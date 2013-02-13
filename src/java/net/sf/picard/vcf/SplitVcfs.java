@@ -8,6 +8,7 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
+import net.sf.samtools.SAMSequenceDictionary;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
@@ -39,6 +40,9 @@ public class SplitVcfs extends CommandLineProgram {
 	@Option(doc="VCF file to which indel records should be written")
 	public File INDEL_OUTPUT;
 
+	@Option(shortName="D", doc="The index sequence dictionary (required if CREATE_INDEX=true)", optional = true)
+	public File SEQUENCE_DICTIONARY;
+
 	private final Log log = Log.getInstance(SplitVcfs.class);
 
 	public static void main(final String[] argv) {
@@ -57,9 +61,11 @@ public class SplitVcfs extends CommandLineProgram {
 		final VCFHeader header = variantIterator.getHeader();
 
 		final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+		final SAMSequenceDictionary sequenceDictionary =
+				SEQUENCE_DICTIONARY != null ? VariantContextUtils.getSequenceDictionary(SEQUENCE_DICTIONARY) : null;
 
-		final VariantContextWriter snpOutput = VariantContextUtils.getConditionallyCompressingWriter(SNP_OUTPUT, options);
-		final VariantContextWriter indelOutput = VariantContextUtils.getConditionallyCompressingWriter(INDEL_OUTPUT, options);
+		final VariantContextWriter snpOutput = VariantContextUtils.getConditionallyCompressingWriter(SNP_OUTPUT, sequenceDictionary, options);
+		final VariantContextWriter indelOutput = VariantContextUtils.getConditionallyCompressingWriter(INDEL_OUTPUT, sequenceDictionary, options);
 		snpOutput.writeHeader(header);
 		indelOutput.writeHeader(header);
 
@@ -75,5 +81,12 @@ public class SplitVcfs extends CommandLineProgram {
 		indelOutput.close();
 
 		return 0;
+	}
+
+	protected String[] customCommandLineValidation() {
+		if (this.CREATE_INDEX && (this.SEQUENCE_DICTIONARY == null)) {
+			return new String[] { "If CREATE_INDEX is set a sequence dictionary must be specified." };
+		}
+		return null;
 	}
 }

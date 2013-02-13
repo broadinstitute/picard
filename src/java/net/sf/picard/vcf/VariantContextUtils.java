@@ -2,6 +2,8 @@ package net.sf.picard.vcf;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.Defaults;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMSequenceDictionary;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
@@ -25,10 +27,10 @@ public final class VariantContextUtils {
 	 * Default compression level for compressed files is 5: it seems to be a good tradeoff between
 	 * compression ratio and time.
 	 */
-	public static VariantContextWriter getConditionallyCompressingWriter(final File output, final EnumSet<Options> options) {
+	public static VariantContextWriter getConditionallyCompressingWriter(final File output, final SAMSequenceDictionary indexSequenceDictionary, final EnumSet<Options> options) {
 		return output.getName().endsWith(".gz")
-				? getCompressingWriter(output, options)
-				: VariantContextWriterFactory.create(output, null, options);
+				? getCompressingWriter(output, indexSequenceDictionary, options)
+				: VariantContextWriterFactory.create(output, indexSequenceDictionary, options);
 	}
 
 	/**
@@ -39,16 +41,24 @@ public final class VariantContextUtils {
 	 * Default compression level for compressed files is 5: it seems to be a good tradeoff between
 	 * compression ratio and time.
 	 */
-	public static VariantContextWriter getCompressingWriter(final File output, final EnumSet<Options> options) {
+	public static VariantContextWriter getCompressingWriter(final File output, final SAMSequenceDictionary indexSequenceDictionary, final EnumSet<Options> options) {
 		try {
 			final GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(output)) {{
 				def.setLevel(Defaults.COMPRESSION_LEVEL);
 			}};
 			final OutputStream outputStream = new BufferedOutputStream(gzipOutputStream);
-			return VariantContextWriterFactory.create(output, outputStream, null, options);
+			return VariantContextWriterFactory.create(output, outputStream, indexSequenceDictionary, options);
 
 		} catch (final Exception e) {
 			throw new PicardException("Could not create a compressed output stream for the VCF writer: " + e.getMessage(), e);
 		}
+	}
+
+	/**
+	 * Returns the SAMSequenceDictionary from the provided FASTA.
+	 */
+	public static SAMSequenceDictionary getSequenceDictionary(final File dictionaryFile) {
+		final SAMFileReader samFileReader = new SAMFileReader(dictionaryFile);
+		return samFileReader.getFileHeader().getSequenceDictionary();
 	}
 }
