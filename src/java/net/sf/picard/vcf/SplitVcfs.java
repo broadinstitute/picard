@@ -42,7 +42,7 @@ public class SplitVcfs extends CommandLineProgram {
 	private final Log log = Log.getInstance(SplitVcfs.class);
 
 	public static void main(final String[] argv) {
-		System.exit(new MergeVcfs().instanceMain(argv));
+		new SplitVcfs().instanceMainWithExit(argv);
 	}
 
 	public SplitVcfs() {
