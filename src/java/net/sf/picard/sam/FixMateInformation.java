@@ -54,7 +54,8 @@ import net.sf.samtools.util.SortingCollection;
 public class FixMateInformation extends CommandLineProgram {
     @Usage public final String USAGE = "Ensure that all mate-pair information is in sync between each read " +
             " and it's mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
-            " and then copied over the INPUT file.";
+            " and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
+            "to the output file unchanged.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input file to fix.")
     public List<File> INPUT;
@@ -116,7 +117,7 @@ public class FixMateInformation extends CommandLineProgram {
 
         {
             // Deal with merging if necessary
-            Iterator<SAMRecord> tmp;
+            final Iterator<SAMRecord> tmp;
             if (INPUT.size() > 1) {
                 final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
                 for (final SAMFileReader reader : readers) {
@@ -174,7 +175,25 @@ public class FixMateInformation extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log);
         while (iterator.hasNext()) {
             final SAMRecord rec1 = iterator.next();
-            final SAMRecord rec2 = iterator.hasNext() ? iterator.peek() : null;
+            if (rec1.getNotPrimaryAlignmentFlag()) {
+                writeAlignment(rec1);
+                progress.record(rec1);
+                continue;
+            }
+            SAMRecord rec2 = null;
+            // Keep peeking at next SAMRecord until one is found that is not marked as secondary alignment,
+            // or until there are no more SAMRecords.
+            while (iterator.hasNext()) {
+                rec2 = iterator.peek();
+                if (rec2.getNotPrimaryAlignmentFlag()) {
+                    iterator.next();
+                    writeAlignment(rec2);
+                    progress.record(rec2);
+                    rec2 = null;
+                } else {
+                    break;
+                }
+            }
 
             if (rec2 != null && rec1.getReadName().equals(rec2.getReadName())) {
                 iterator.next(); // consume the peeked record
