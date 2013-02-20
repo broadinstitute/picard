@@ -29,15 +29,17 @@ public class SplitVcfs extends CommandLineProgram {
 	@Usage
 	public final String USAGE =
 			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Splits an input VCF file into two files, one for indel records and one for SNPs.\n";
+			"Splits an input VCF file into two files, one for indel records and one for SNPs. The" +
+			"headers of the two output files will be identical. An index file is created and a" +
+			"sequence dictionary is required by default.";
 
-	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF input file")
+	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF input file")
 	public File INPUT;
 
-	@Option(doc="VCF file to which SNP records should be written")
+	@Option(doc="The VCF file to which SNP records should be written")
 	public File SNP_OUTPUT;
 
-	@Option(doc="VCF file to which indel records should be written")
+	@Option(doc="The VCF file to which indel records should be written")
 	public File INDEL_OUTPUT;
 
 	@Option(shortName="D", doc="The index sequence dictionary (required if CREATE_INDEX=true)", optional = true)

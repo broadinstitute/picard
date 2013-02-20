@@ -64,7 +64,7 @@ public class MergeVcfs extends CommandLineProgram {
 			CommandLineParser.getStandardUsagePreamble(getClass()) +
 			"Merges multiple VCF files into one file. Input files must be sorted by their contigs " +
 			"and, within contigs, by start position. The input files must have the same sample and " +
-			"contig lists. An index file is created by default.";
+			"contig lists. An index file is created and a sequence dictionary is required by default.";
 
 	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF input files", minElements=1)
 	public List<File> INPUT;
