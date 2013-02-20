@@ -144,6 +144,22 @@ public class Allele implements Comparable<Allele> {
         this(bases.getBytes(), isRef);
     }
 
+    /**
+     * Creates a new allele based on the provided one.  Ref state will be copied unless ignoreRefState is true
+     * (in which case the returned allele will be non-Ref).
+     *
+     * This method is efficient because it can skip the validation of the bases (since the original allele was already validated)
+     *
+     * @param allele  the allele from which to copy the bases
+     * @param ignoreRefState  should we ignore the reference state of the input allele and use the default ref state?
+     */
+    protected Allele(final Allele allele, final boolean ignoreRefState) {
+        this.bases = allele.bases;
+        this.isRef = ignoreRefState ? false : allele.isRef;
+        this.isNoCall = allele.isNoCall;
+        this.isSymbolic = allele.isSymbolic;
+    }
+
 
     private final static Allele REF_A = new Allele("A", true);
     private final static Allele ALT_A = new Allele("A", false);
@@ -194,7 +210,6 @@ public class Allele implements Comparable<Allele> {
     }
 
     public static Allele create(byte base, boolean isRef) {
-//    public Allele(byte base, boolean isRef) {
         return create( new byte[]{ base }, isRef);
     }
 
@@ -293,7 +308,6 @@ public class Allele implements Comparable<Allele> {
      * @param isRef  is this the reference allele?
      */
     public static Allele create(String bases, boolean isRef) {
-    //public Allele(String bases, boolean isRef) {
         return create(bases.getBytes(), isRef);
     }
 
@@ -314,7 +328,19 @@ public class Allele implements Comparable<Allele> {
      */
     public static Allele create(byte[] bases) {
         return create(bases, false);
-        //this(bases, false);
+    }
+
+    /**
+     * Creates a new allele based on the provided one.  Ref state will be copied unless ignoreRefState is true
+     * (in which case the returned allele will be non-Ref).
+     *
+     * This method is efficient because it can skip the validation of the bases (since the original allele was already validated)
+     *
+     * @param allele  the allele from which to copy the bases
+     * @param ignoreRefState  should we ignore the reference state of the input allele and use the default ref state?
+     */
+    public static Allele create(final Allele allele, final boolean ignoreRefState) {
+        return new Allele(allele, ignoreRefState);
     }
 
     // ---------------------------------------------------------------------------------------------------------
