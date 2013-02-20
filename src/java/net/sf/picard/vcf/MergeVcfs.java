@@ -62,12 +62,14 @@ public class MergeVcfs extends CommandLineProgram {
 	@Usage
 	public final String USAGE =
 			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Merges multiple SAM/BAM files into one file.\n";
+			"Merges multiple VCF files into one file. Input files must be sorted by their contigs " +
+			"and, within contigs, by start position. The input files must have the same sample and " +
+			"contig lists. An index file is created by default.";
 
 	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF input files", minElements=1)
 	public List<File> INPUT;
 
-	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="VCF file to write merged result to")
+	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The merged VCF file")
 	public File OUTPUT;
 
 	@Option(shortName="D", doc="The index sequence dictionary (required if CREATE_INDEX=true)", optional = true)
