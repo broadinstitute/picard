@@ -42,28 +42,36 @@ import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
 
 /**
- * Commandline program wrapping SamFileValidator.
+ * Command line program wrapping SamFileValidator.
  *
  * @author Doug Voet
  */
 public class ValidateSamFile extends CommandLineProgram {
+
     @Usage
-    public final String usage = getStandardUsagePreamble() + "Read a SAM or BAM file and report on its validity.";
+    public final String USAGE =
+		    getStandardUsagePreamble() +
+		    "Read a SAM or BAM file and report on its validity.";
     
     public enum Mode { VERBOSE, SUMMARY }
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM/BAM file")
+    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
+		    doc="Input SAM/BAM file")
     public File INPUT;
     
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output file or standard out if missing", optional=true)
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+		    doc="Output file or standard out if missing",
+		    optional=true)
     public File OUTPUT;
     
-    @Option(shortName="M", doc="Mode of output")
+    @Option(shortName="M",
+		    doc="Mode of output")
     public Mode MODE = Mode.VERBOSE;
 
     @Option(doc="List of validation error types to ignore.")
     public List<SAMValidationError.Type> IGNORE = new ArrayList<SAMValidationError.Type>();
     
-    @Option(shortName="MO", doc="The maximum number of lines output in verbose mode")
+    @Option(shortName="MO",
+		    doc="The maximum number of lines output in verbose mode")
     public Integer MAX_OUTPUT = 100;
     
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, 
@@ -71,20 +79,20 @@ public class ValidateSamFile extends CommandLineProgram {
             optional=true)
     public File REFERENCE_SEQUENCE;
 
-    @Option(doc="If true, only report errors, and ignore warnings.")
+    @Option(doc="If true, only report errors and ignore warnings.")
     public boolean IGNORE_WARNINGS = false;
 
     @Option(doc="If true and input is a BAM file with an index file, also validates the index.")
     public boolean VALIDATE_INDEX = true;
 
-    @Option (shortName="BISULFITE", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
+    @Option (shortName="BISULFITE",
+		    doc="Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
             "If so, C->T is not counted as an error in computing the value of the NM tag.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
-    
-    @Option(doc="Relevant for a coordinate-sorted file containing read pairs only.  " +
-            "Maximum number of file handles to keep open when spilling mate info to disk.  " + "" +
-            "Set this number a little lower than the per-process maximum number of file that may be open.  " +
+    @Option(doc="Relevant for a coordinate-sorted file containing read pairs only. " +
+            "Maximum number of file handles to keep open when spilling mate info to disk. " +
+            "Set this number a little lower than the per-process maximum number of file that may be open. " +
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
 

@@ -24,6 +24,7 @@
 
 package net.sf.picard.sam;
 
+import net.sf.picard.cmdline.CommandLineParser;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
@@ -56,23 +57,28 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * be enough file handles.
      */
 
-    @Usage public final String USAGE =
+    @Usage
+    public final String USAGE =
+		    CommandLineParser.getStandardUsagePreamble(getClass()) +
             "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
             "All records are then written to the output file with the duplicate records flagged.";
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more input SAM or BAM files to analyze.  Must be coordinate sorted.")
+    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
+		    doc="One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
     public List<File> INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to right marked records to")
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+		    doc="The output file to right marked records to")
     public File OUTPUT;
 
-    @Option(shortName="M", doc="File to write duplication metrics to")
+    @Option(shortName="M",
+		    doc="File to write duplication metrics to")
     public File METRICS_FILE;
 
     @Option(shortName=StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
-            doc="The program record ID for the @PG record(s) created by this program.  " +
-                    "Set to null to disable PG record creation.  This string may have a suffix appended to avoid " +
-            "collision with other program record IDs.",
+            doc="The program record ID for the @PG record(s) created by this program. Set to null to disable " +
+                "PG record creation.  This string may have a suffix appended to avoid collision with other " +
+	            "program record IDs.",
             optional=true)
     public String PROGRAM_RECORD_ID = "MarkDuplicates";
 
@@ -86,25 +92,30 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             optional=true)
     public String PROGRAM_GROUP_COMMAND_LINE;
 
-    @Option(shortName="PG_NAME", doc="Value of PN tag of PG record to be created.")
+    @Option(shortName="PG_NAME",
+		    doc="Value of PN tag of PG record to be created.")
     public String PROGRAM_GROUP_NAME = "MarkDuplicates";
 
-    @Option(doc="Comment(s) to include in the output file's header.", optional=true, shortName="CO")
+    @Option(shortName="CO",
+		    doc="Comment(s) to include in the output file's header.",
+		    optional=true)
     public List<String> COMMENT = new ArrayList<String>();
 
     @Option(doc="If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
 
-    @Option(doc="If true, assume that the input file is coordinate sorted, even if the header says otherwise.",
-            shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+    @Option(shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
+		    doc="If true, assume that the input file is coordinate sorted even if the header says otherwise.")
     public boolean ASSUME_SORTED = false;
 
-    @Option(doc="This option is obsolete.  ReadEnds will always be spilled to disk.", shortName="MAX_SEQS")
+    @Option(shortName="MAX_SEQS",
+		    doc="This option is obsolete. ReadEnds will always be spilled to disk.")
     public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
 
-    @Option(doc="Maximum number of file handles to keep open when spilling read ends to disk.  " + "" +
-            "Set this number a little lower than the per-process maximum number of file that may be open.  " +
-            "This number can be found by executing the 'ulimit -n' command on a Unix system.", shortName = "MAX_FILE_HANDLES")
+    @Option(shortName="MAX_FILE_HANDLES",
+		    doc="Maximum number of file handles to keep open when spilling read ends to disk. " +
+            "Set this number a little lower than the per-process maximum number of file that may be open. " +
+            "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_FILE_HANDLES_FOR_READ_ENDS_MAP = 8000;
 
     @Option(doc="This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
