@@ -83,35 +83,43 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     public String USAGE =
             getStandardUsagePreamble() + "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n";
 
-    @Option(doc = "The basecalls output directory. ", shortName = "B")
+    @Option(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
+
     @Option(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
+
     @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public File OUTPUT;
 
-    @Option(doc = "Prefixed to read names.")
+    @Option(doc = "The barcode of the run.  Prefixed to read names.")
     public String RUN_BARCODE;
+
     @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced sample",
             shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String SAMPLE_ALIAS;
+
     @Option(doc = "ID used to link RG header record with RG tag in SAM record.  " +
             "If these are unique in SAM files that get merged, merge performance is better.  " +
-            "If not specified, READ_GROUP_ID = <first 5 chars of RUN_BARCODE>.<LANE> .",
+            "If not specified, READ_GROUP_ID will be set to <first 5 chars of RUN_BARCODE>.<LANE> .",
             shortName = StandardOptionDefinitions.READ_GROUP_ID_SHORT_NAME, optional = true)
     public String READ_GROUP_ID;
+
     @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced library",
             shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
             optional = true,
             mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String LIBRARY_NAME;
-    @Option(doc = "The name of the sequencing center that produced the reads to fill in the RG.CN tag.", optional = true)
+
+    @Option(doc = "The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.", optional = true)
     public String SEQUENCING_CENTER = "BI";
+
     @Option(doc = "The start date of the run.", optional = true)
     public Date RUN_START_DATE;
+
     @Option(doc = "The name of the sequencing technology that produced the read.", optional = true)
     public String PLATFORM = "illumina";
 
@@ -124,9 +132,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "LIBRARY_PARAMS"})
     public File BARCODE_PARAMS;
 
-    @Option(doc = "Tab-separated file for creating all output BAMs for a run with single IlluminaBasecallsToSam " +
-            "invocation.  TheColumns are OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME, BARCODE_1, BARCODE_2 ... BARCODE_X " +
-            "where X = number of barcodes per cluster (optional).  Row with BARCODE_1=N is used to specify a file " +
+    @Option(doc = "Tab-separated file for creating all output BAMs for a lane with single IlluminaBasecallsToSam " +
+            "invocation.  The columns are OUTPUT, SAMPLE_ALIAS, and LIBRARY_NAME, BARCODE_1, BARCODE_2 ... BARCODE_X " +
+            "where X = number of barcodes per cluster (optional).  Row with BARCODE_1 set to 'N' is used to specify a file " +
             "for no barcode match.  You may also provide any 2 letter RG header attributes (excluding PU, CN, PL, and" +
             " DT)  as columns in this file and the values for those columns will be inserted into the RG tag for the" +
             " BAM file created for a given row.",
@@ -140,20 +148,23 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                     IlluminaAdapterPair.NEXTERA_V2,
                     IlluminaAdapterPair.FLUIDIGM));
 
-    @Option(doc = "Run this many threads in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
+    @Option(doc = "The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will" +
             " be the number available on the machine less NUM_PROCESSORS.")
     public Integer NUM_PROCESSORS = 0;
-    @Option(doc = "If set, this is the first tile to be processed (for debugging).  Note that tiles are not processed" +
+
+    @Option(doc = "If set, this is the first tile to be processed (used for debugging).  Note that tiles are not processed" +
             " in numerical order.",
             optional = true)
     public Integer FIRST_TILE;
-    @Option(doc = "If set, process no more than this many tiles (for debugging).", optional = true)
+
+    @Option(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
     @Option(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
-            "is larger than the available memory.  Default: true.", optional = true)
+            "is larger than the available memory.")
     public Boolean FORCE_GC = true;
+
     @Option(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;

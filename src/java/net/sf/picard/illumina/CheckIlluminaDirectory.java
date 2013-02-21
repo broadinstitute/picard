@@ -25,15 +25,16 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     public String USAGE = getStandardUsagePreamble() +
             "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
             "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-            "CheckIlluminaDirectory  DOES NOT check that the individual records in a file are well-formed.\n";
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
 
     @Option(doc="The basecalls output directory. ", shortName="B")
     public File BASECALLS_DIR;
 
-    @Option(doc="The data types that should be available for each tile/cycle.  If this value remains null then the data types that are used in" +
-            "IlluminaBaseCallsToSam which is a superset of those used in ExtractIlluminaBarcodes.  These data types vary slightly depending on" +
-            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that passed to IlluminaBaseCallsToSam.  Therefore, if you omit this option " +
-            "and IlluminaDirIntegrityChecker passes then both those programs should complete UNLESS the individual records of the files themselves are spurious. ",
+    @Option(doc="The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those " +
+            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on" +
+            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option " +
+            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the " +
+			"individual records of the files themselves are spurious. ",
             shortName="DT",
             optional=true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
@@ -42,7 +43,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.", shortName="RS")
     public String READ_STRUCTURE;
 
-    @Option(doc="Lane number. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, minElements = 1)
+    @Option(doc="The number of the lane(s) to check. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, minElements = 1)
     public List<Integer> LANES;
 
     /** Required main method implementation. */

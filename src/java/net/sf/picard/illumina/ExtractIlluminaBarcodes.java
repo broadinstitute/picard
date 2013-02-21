@@ -64,15 +64,15 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Usage
     public String USAGE =
         getStandardUsagePreamble() +  "Determine the barcode for each read in an Illumina lane.\n" +
-                "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt." +
-                "An output file contains a line for each read in the tile, aligned with the regular basecall output\n" +
+                "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. " +
+                "An output file contains a line for each read in the tile, aligned with the regular basecall output. \n" +
                 "The output file contains the following tab-separated columns: \n" +
                 "    * read subsequence at barcode position\n" +
                 "    * Y or N indicating if there was a barcode match\n" +
                 "    * matched barcode sequence\n" +
                 "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n";
 
-    @Option(doc="The Illumina basecalls output directory. ", shortName="B")
+    @Option(doc="The Illumina basecalls directory. ", shortName="B")
     public File BASECALLS_DIR;
 
     @Option(doc="Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.", optional = true)
@@ -88,8 +88,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "have more than one barcode; use BARCODE_FILE in that case. ", mutex = {"BARCODE_FILE"})
     public List<String> BARCODE = new ArrayList<String>();
 
-    @Option(doc="Tab-delimited file of barcode sequences, barcode name and and optionally library name.  " +
-            "Barcodes must be unique, and all the same length.  Column headers must be 'barcode_sequence_1', " +
+    @Option(doc="Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  " +
+            "Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', " +
             "'barcode_sequence_2' (optional), 'barcode_name', and 'library_name'.", mutex = {"BARCODE"})
     public File BARCODE_FILE;
 
@@ -105,7 +105,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(doc="Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.")
     public int MAX_NO_CALLS = 2;
     
-    @Option(shortName="Q", doc="Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match!")
+    @Option(shortName="Q", doc="Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
     public int MINIMUM_BASE_QUALITY = 0;
 
     @Option(shortName="GZIP", doc="Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the filenames.")
