@@ -31,7 +31,7 @@ public class IntervalListTools extends CommandLineProgram {
     public List<File> INPUT;
 
     @Option(doc="The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
-            "to write the scattered interval sub-directories", shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true)
+            "to write the scattered interval sub-directories (if SCATTER_COUNT > 1)", shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true)
     public File OUTPUT;
 
     @Option(doc="The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
@@ -47,7 +47,7 @@ public class IntervalListTools extends CommandLineProgram {
     @Option(doc="One or more lines of comment to add to the header of the output file.", optional=true)
     public List<String> COMMENT = null;
 
-    @Option(doc="The number of files into which to scatter the resulting list by locus,")
+    @Option(doc="The number of files into which to scatter the resulting list by locus.")
     public int SCATTER_COUNT = 1;
 
     private final Log log = Log.getInstance(IntervalListTools.class);
