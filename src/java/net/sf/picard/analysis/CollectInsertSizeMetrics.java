@@ -51,15 +51,16 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final String HISTOGRAM_R_SCRIPT = "net/sf/picard/analysis/insertSizeHistogram.R";
     // Usage and parameters
     @Usage
-    public String USAGE = "Reads a SAM or BAM file and writes a file containing metrics about " +
+    public String USAGE = getStandardUsagePreamble() +
+			"Reads a SAM or BAM file and writes a file containing metrics about " +
             "the statistical distribution of insert size (excluding duplicates) " +
             "and generates a histogram plot.\n";
 
-    @Option(shortName="H", doc="File to write insert size histogram chart to")
+    @Option(shortName="H", doc="File to write insert size histogram chart to.")
     public File HISTOGRAM_FILE;
 
     @Option(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
-            "This is done because insert size data typically includes enough anomolous values from chimeras and other " +
+            "This is done because insert size data typically includes enough anomalous values from chimeras and other " +
             "artifacts to make the mean and sd grossly misleading regarding the real distribution.")
     public double DEVIATIONS = 10;
 
@@ -68,7 +69,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     public Integer HISTOGRAM_WIDTH = null;
 
     @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
-            "percentage of overall reads. (Range: 0 to 1)")
+            "percentage of overall reads. (Range: 0 to 1).")
     public float MINIMUM_PCT = 0.05f;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")

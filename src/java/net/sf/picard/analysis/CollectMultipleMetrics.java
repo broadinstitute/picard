@@ -57,14 +57,15 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     }
 
     @Usage
-    public final String USAGE = "Takes an input BAM and reference sequence and runs one or more Picard " +
+    public final String USAGE = getStandardUsagePreamble() +
+			"Takes an input BAM and reference sequence and runs one or more Picard " +
             "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
             "default options and fixed output extesions, but this may become more flexible in future.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM or BAM file.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence fasta", optional=true)
+    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence fasta.", optional=true)
     public File REFERENCE_SEQUENCE;
 
     @Option(doc="If true (default), then the sort order in the header file will be ignored.",
@@ -74,10 +75,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     @Option(doc="Stop after processing N reads, mainly for debugging.")
     public int STOP_AFTER = 0;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Base name of output files")
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Base name of output files.")
     public String OUTPUT;
 
-    @Option
+    @Option(doc="List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.values());
 
     // Stock main method

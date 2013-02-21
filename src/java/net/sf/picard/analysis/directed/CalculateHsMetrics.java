@@ -41,7 +41,8 @@ import net.sf.samtools.SAMReadGroupRecord;
  */
 public class CalculateHsMetrics extends CollectTargetedMetrics {
 
-    @Usage public final String USAGE =
+    @Usage
+	public final String USAGE = getStandardUsagePreamble() +
             "Calculates a set of Hybrid Selection specific metrics from an aligned SAM" +
             "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
             "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +

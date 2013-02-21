@@ -623,7 +623,7 @@ class TargetMetrics extends MultilevelMetrics {
     /** The number of bases in the reference genome used for alignment. */
     public long GENOME_SIZE;
 
-    /** The total number of reads in the SAM or BAM file examine. */
+    /** The total number of reads in the SAM or BAM file examined. */
     public long TOTAL_READS;
 
     /** The number of reads that pass the vendor's filter. */

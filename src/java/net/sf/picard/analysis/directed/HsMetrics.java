@@ -80,7 +80,7 @@ public class HsMetrics extends MultilevelMetrics {
     /** The number of PF aligned bases that mapped to neither on or near a bait. */
     public long OFF_BAIT_BASES;
 
-    /** The number of PF aligned bases that mapped to a targetted region of the genome. */
+    /** The number of PF aligned bases that mapped to a targeted region of the genome. */
     public long ON_TARGET_BASES;
 
     /** On+Near Bait Bases / PF Bases Aligned. */
@@ -95,7 +95,7 @@ public class HsMetrics extends MultilevelMetrics {
     /** The mean coverage of all baits in the experiment. */
     public double MEAN_BAIT_COVERAGE;
 
-    /** The mean coverage of targets that recieved at least coverage depth = 2 at one base. */
+    /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
     public double MEAN_TARGET_COVERAGE;
 
     /** The number of aligned, de-duped, on-bait bases out of the PF bases available. */
@@ -116,13 +116,13 @@ public class HsMetrics extends MultilevelMetrics {
      */
     public double FOLD_80_BASE_PENALTY;
 
-    /** The percentage of ALL target bases acheiving 2X or greater coverage. */
+    /** The percentage of ALL target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
-    /** The percentage of ALL target bases acheiving 10X or greater coverage. */
+    /** The percentage of ALL target bases achieving 10X or greater coverage. */
     public double PCT_TARGET_BASES_10X;
-    /** The percentage of ALL target bases acheiving 20X or greater coverage. */
+    /** The percentage of ALL target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-    /** The percentage of ALL target bases acheiving 30X or greater coverage. */
+    /** The percentage of ALL target bases achieving 30X or greater coverage. */
     public double PCT_TARGET_BASES_30X;
     /** The estimated number of unique molecules in the selected part of the library. */
     public Long HS_LIBRARY_SIZE;

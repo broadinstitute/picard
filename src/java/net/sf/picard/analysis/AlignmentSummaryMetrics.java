@@ -56,7 +56,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
 
     /**
      * The number of PF reads that are marked as noise reads.  A noise read is one which is composed
-     * entirey of A bases and/or N bases. These reads are marked as they are usually artifactual and
+     * entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
      * are of no use in downstream analysis.
      */
     public long PF_NOISE_READS;
@@ -92,7 +92,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public long PF_HQ_ALIGNED_BASES;
 
     /**
-     * The subest of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.
+     * The subset of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.
      */
     public long PF_HQ_ALIGNED_Q20_BASES;
 
