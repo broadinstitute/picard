@@ -46,16 +46,16 @@ import java.util.List;
  * @author Tim Fennell
  */
 public class QualityScoreDistribution extends SinglePassSamProgram {
-    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to")
+    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc="If set to true calculate mean quality over aligned reads only")
+    @Option(doc="If set to true calculate mean quality over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Option(shortName="PF", doc="If set to true calculate mean quality over PF reads only")
+    @Option(shortName="PF", doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
-    @Option(doc="If set to true, include quality for no-call bases in the distribution")
+    @Option(doc="If set to true, include quality for no-call bases in the distribution.")
     public boolean INCLUDE_NO_CALLS = false;
 
     private final long[] qCounts  = new long[128];

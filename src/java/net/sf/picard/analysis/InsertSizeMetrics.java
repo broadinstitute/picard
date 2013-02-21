@@ -60,7 +60,7 @@ public class InsertSizeMetrics extends MultilevelMetrics {
      * N=10, but this is configurable.
      */
     public double MEAN_INSERT_SIZE;
-    /** Standard deviation of insert sizes over the "core" of the distrubution. */
+    /** Standard deviation of insert sizes over the "core" of the distribution. */
     public double STANDARD_DEVIATION;
     /** The total number of read pairs that were examined in the entire distribution. */
     public long READ_PAIRS;
