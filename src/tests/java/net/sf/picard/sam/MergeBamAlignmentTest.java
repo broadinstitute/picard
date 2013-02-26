@@ -1155,7 +1155,7 @@ public class MergeBamAlignmentTest {
     public  void testShortFragmentClipping() throws Exception {
         final File output = File.createTempFile("testShortFragmentClipping", ".sam");
         output.deleteOnExit();
-        MergeBamAlignment merger = new MergeBamAlignment();
+        final MergeBamAlignment merger = new MergeBamAlignment();
         merger.UNMAPPED_BAM = new File(TEST_DATA_DIR, "cliptest.unmapped.sam");
         merger.ALIGNED_BAM = Arrays.asList(new File(TEST_DATA_DIR, "cliptest.aligned.sam"));
         merger.ALIGNED_READS_ONLY = false;
@@ -1172,20 +1172,20 @@ public class MergeBamAlignmentTest {
         merger.EXPECTED_ORIENTATIONS=Arrays.asList(SamPairUtil.PairOrientation.FR);
 
         Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed");
-        SAMFileReader result = new SAMFileReader(output);
-        Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
+        final SAMFileReader result = new SAMFileReader(output);
+        final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
 
         for (final SAMRecord rec : result) {
             final SAMRecord otherEnd = firstReadEncountered.get(rec.getReadName());
             if (otherEnd == null) {
                 firstReadEncountered.put(rec.getReadName(), rec);
             } else {
-                int fragmentStart = Math.min(rec.getAlignmentStart(), otherEnd.getAlignmentStart());
-                int fragmentEnd = Math.max(rec.getAlignmentEnd(), otherEnd.getAlignmentEnd());
-                String[] readNameFields = rec.getReadName().split(":");
+                final int fragmentStart = Math.min(rec.getAlignmentStart(), otherEnd.getAlignmentStart());
+                final int fragmentEnd = Math.max(rec.getAlignmentEnd(), otherEnd.getAlignmentEnd());
+                final String[] readNameFields = rec.getReadName().split(":");
                 // Read name of each pair includes the expected fragment start and fragment end positions.
-                int expectedFragmentStart = Integer.parseInt(readNameFields[1]);
-                int expectedFragmentEnd = Integer.parseInt(readNameFields[2]);
+                final int expectedFragmentStart = Integer.parseInt(readNameFields[1]);
+                final int expectedFragmentEnd = Integer.parseInt(readNameFields[2]);
                 Assert.assertEquals(fragmentStart, expectedFragmentStart, rec.getReadName());
                 Assert.assertEquals(fragmentEnd, expectedFragmentEnd, rec.getReadName());
             }
