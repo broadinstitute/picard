@@ -29,7 +29,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final List<File> alignedSamFile;
     private final List<File> read1AlignedSamFile;
     private final List<File> read2AlignedSamFile;
-    private final boolean pairedRun;
     private final int maxGaps;
     private boolean forceSort = false;
 
@@ -110,7 +109,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.alignedSamFile = alignedSamFile;
         this.read1AlignedSamFile = read1AlignedSamFile;
         this.read2AlignedSamFile = read2AlignedSamFile;
-        this.pairedRun = pairedRun;
         this.maxGaps = maxGaps;
         if (programRecord == null) {
             final File tmpFile = this.alignedSamFile != null && this.alignedSamFile.size() > 0
@@ -211,13 +209,48 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         log.info("Finished reading " + count + " total records from alignment SAM/BAM.");
 
         mergingIterator.close();
-        return new DelegatingIterator(alignmentSorter.iterator()) {
+        return new DelegatingIterator<SAMRecord>(alignmentSorter.iterator()) {
             @Override
             public void close() {
                 super.close();
                 alignmentSorter.cleanup();
             }
         };
+    }
+
+    private class SuffixTrimingSamRecordIterator implements CloseableIterator<SAMRecord> {
+        private final CloseableIterator<SAMRecord> underlyingIterator;
+        private final String suffixToTrim;
+
+        private SuffixTrimingSamRecordIterator(final CloseableIterator<SAMRecord> underlyingIterator, final String suffixToTrim) {
+            this.underlyingIterator = underlyingIterator;
+            this.suffixToTrim = suffixToTrim;
+        }
+
+        @Override
+        public void close() {
+            underlyingIterator.close();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return underlyingIterator.hasNext();
+        }
+
+        @Override
+        public SAMRecord next() {
+            final SAMRecord rec = underlyingIterator.next();
+            final String readName = rec.getReadName();
+            if (readName.endsWith(suffixToTrim)) {
+                rec.setReadName(readName.substring(0, readName.length() - suffixToTrim.length()));
+            }
+            return rec;
+        }
+
+        @Override
+        public void remove() {
+            underlyingIterator.remove();
+        }
     }
 
     private class SeparateEndAlignmentIterator implements CloseableIterator<SAMRecord> {
@@ -242,8 +275,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
 
             final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
-            read1Iterator = new PeekableIterator(new MergingSamRecordIterator(headerMerger, read1, true));
-            read2Iterator = new PeekableIterator(new MergingSamRecordIterator(headerMerger, read2, true));
+            read1Iterator = new PeekableIterator<SAMRecord>(
+                    new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read1, true), "/1"));
+            read2Iterator = new PeekableIterator<SAMRecord>(
+                    new SuffixTrimingSamRecordIterator(new MergingSamRecordIterator(headerMerger, read2, true), "/2"));
 
             header = headerMerger.getMergedHeader();
         }
