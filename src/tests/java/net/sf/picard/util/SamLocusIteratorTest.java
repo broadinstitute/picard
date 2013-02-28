@@ -24,6 +24,7 @@
 package net.sf.picard.util;
 
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.util.CoordMath;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -64,6 +65,39 @@ public class SamLocusIteratorTest {
             Assert.assertEquals(pos++, li.getPosition());
             Assert.assertEquals(2, li.getRecordAndPositions().size());
         }
+
+    }
+
+    // Test added after bug report...bug needs to be fixed.
+    @Test(groups = {"broken"})
+    public void testEmitUncoveredLoci() {
+
+        final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
+        final String seq1  = "ACCTACGTTCAATATTACAGGCGAACATACTTACTA";
+        final String qual1 = "++++++++++++++++++++++++++++++++++++"; // phred 10
+        final String s1 = "3851612\t16\tchrM\t165\t255\t36M\t*\t0\t0\t" + seq1 + "\t" + qual1 + "\n";
+        final String exampleSam = sqHeader + s1 + s1;
+
+        final SAMFileReader samReader = createSamFileReader(exampleSam);
+        final SamLocusIterator sli = new SamLocusIterator(samReader);
+
+
+
+        // make sure we accumulated depth of 2 for each position
+        int pos = 1;
+        final int coveredStart = 165;
+        final int coveredEnd = CoordMath.getEnd(coveredStart, seq1.length());
+        for (final SamLocusIterator.LocusInfo li : sli) {
+            Assert.assertEquals(li.getPosition(), pos++);
+            final int expectedReads;
+            if (li.getPosition() >= coveredStart && li.getPosition() <= coveredEnd) {
+                expectedReads = 2;
+            } else {
+                expectedReads = 0;
+            }
+            Assert.assertEquals(li.getRecordAndPositions().size(), expectedReads);
+        }
+        Assert.assertEquals(pos, 100001);
 
     }
 
