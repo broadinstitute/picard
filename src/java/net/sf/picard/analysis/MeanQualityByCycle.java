@@ -49,13 +49,18 @@ import java.util.List;
  * @author Tim Fennell
  */
 public class MeanQualityByCycle extends SinglePassSamProgram {
-    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to")
+
+	public final String USAGE = getStandardUsagePreamble() + "Program to generate a data table and chart of " +
+			"mean quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
+			"merged BAMs.";
+
+	@Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
-    @Option(doc="If set to true calculate mean quality over aligned reads only")
+    @Option(doc="If set to true, calculate mean quality over aligned reads only.")
     public boolean ALIGNED_READS_ONLY = false;
 
-    @Option(doc="If set to true calculate mean quality over PF reads only")
+    @Option(doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
     private HistogramGenerator q  = new HistogramGenerator(false);
