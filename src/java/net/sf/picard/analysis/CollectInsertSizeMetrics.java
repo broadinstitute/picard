@@ -65,7 +65,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     public double DEVIATIONS = 10;
 
     @Option(shortName="W", doc="Explicitly sets the histogram width, overriding automatic truncation of histogram tail. " +
-            "Also, when calculating mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
+            "Also, when calculating mean and standard deviation, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
     public Integer HISTOGRAM_WIDTH = null;
 
     @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
