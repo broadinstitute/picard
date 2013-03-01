@@ -26,6 +26,7 @@ package net.sf.picard.analysis;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.Option;
+import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
@@ -46,6 +47,10 @@ import java.util.List;
  * @author Tim Fennell
  */
 public class QualityScoreDistribution extends SinglePassSamProgram {
+	@Usage
+	public final String USAGE = getStandardUsagePreamble() + "Program to chart " +
+			"quality score distributions in a SAM or BAM file.";
+
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
