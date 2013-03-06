@@ -550,50 +550,59 @@ public class SequenceUtil {
     
     /** Reverses the quals in place. */
     public static void reverseQualities(final byte[] quals) {
-        final int lastIndex = quals.length - 1;
+		final int lastIndex = quals.length - 1;
 
-        int i, j;
-        for (i=0, j=lastIndex; i<j; ++i, --j) {
-            final byte tmp = quals[i];
-            quals[i] = quals[j];
-            quals[j] = tmp;
-        }
-    }
+		int i, j;
+		for (i=0, j=lastIndex; i<j; ++i, --j) {
+			final byte tmp = quals[i];
+			quals[i] = quals[j];
+			quals[j] = tmp;
+		}
+	}
     
     /** Returns true if the bases are equal OR if the mismatch cannot be accounted for by
      * bisfulite treatment.  C->T on the positive strand and G->A on the negative strand
      * do not count as mismatches */
     public static boolean bisulfiteBasesEqual(final boolean negativeStrand, final byte read, final byte reference) {
-
-        if (basesEqual(read, reference)) {
-            return true;
-        }
-
-        if (negativeStrand) {
-            if (basesEqual(reference, (byte)'G') && basesEqual(read, (byte)'A')) {
-                return true;
-            }
-        }
-        else {
-            if (basesEqual(reference, (byte)'C') && basesEqual(read, (byte)'T')) {
-                return true;
-            }
-        }
-        return false;
+		return (basesEqual(read, reference)) || (isBisulfiteConverted(read, reference, negativeStrand));
     }
 
+	public static boolean bisulfiteBasesEqual(final byte read, final byte reference) {
+		return bisulfiteBasesEqual(false, read, reference);
+	}
 
-    /*
-     * Regexp for MD string.
-     *
-     * \G = end of previous match.
-     * (?:[0-9]+) non-capturing (why non-capturing?) group of digits.  For this number of bases read matches reference.
-     *  - or -
-     * Single reference base for case in which reference differs from read.
-     *  - or -
-     * ^one or more reference bases that are deleted in read.
-     *
-     */
+	/**
+	 * Checks for bisulfite conversion, C->T on the positive strand and G-> on the negative strand.
+	 */
+	public static boolean isBisulfiteConverted(final byte read, final byte reference, final boolean negativeStrand) {
+		if (negativeStrand) {
+			if (basesEqual(reference, G) && basesEqual(read, A)) {
+				return true;
+			}
+		}
+		else {
+			if (basesEqual(reference, C) && basesEqual(read, T)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isBisulfiteConverted(final byte read, final byte reference) {
+		return isBisulfiteConverted(read, reference, false);
+	}
+
+	/*
+	 * Regexp for MD string.
+	 *
+	 * \G = end of previous match.
+	 * (?:[0-9]+) non-capturing (why non-capturing?) group of digits.  For this number of bases read matches reference.
+	 *  - or -
+	 * Single reference base for case in which reference differs from read.
+	 *  - or -
+	 * ^one or more reference bases that are deleted in read.
+	 *
+	 */
     static final Pattern mdPat = Pattern.compile("\\G(?:([0-9]+)|([ACTGNactgn])|(\\^[ACTGNactgn]+))");
 
     /**
