@@ -214,6 +214,29 @@ public class Histogram<K extends Comparable> extends TreeMap<K, Bin> {
         return (getSumOfValues() / size());
     }
 
+	/**
+	 * Calculates the median bin size
+	 */
+	public double getMedianBinSize() {
+		if (size() == 0) {
+			return 0;
+		}
+
+		final List<Double> binValues = new ArrayList<Double>();
+		for (final Bin bin : values()) {
+			binValues.add(bin.getValue());
+		}
+		Collections.sort(binValues);
+
+		final int midPoint = binValues.size() / 2;
+		double median = binValues.get(midPoint);
+		if (binValues.size() % 2 == 0) {
+			median = (median + binValues.get(midPoint-1)) / 2;
+		}
+
+		return median;
+	}
+
     /**
      * Calculates the standard deviation of the bin size
      */
