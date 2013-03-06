@@ -529,4 +529,36 @@ public final class SAMUtils
         return true;
     }
 
+    /**
+     *
+     * @return negative if mapq1 < mapq2, etc.
+     * Note that MAPQ(0) < MAPQ(255) < MAPQ(1)
+     */
+    public static int compareMapqs(final int mapq1, final int mapq2) {
+        if (mapq1 == mapq2) return 0;
+        if (mapq1 == 0)  return -1;
+        else if (mapq2 == 0) return 1;
+        else if (mapq1 == 255) return -1;
+        else if (mapq2 == 255) return 1;
+        else return mapq1 - mapq2;
+    }
+
+
+    /**
+     * Hokey algorithm for combining two MAPQs into values that are comparable, being cognizant of the fact
+     * that in MAPQ world, 1 > 255 > 0. In this algorithm, 255 is treated as if it were 0.01, so that
+     * CombinedMapq(1,0) > CombinedMapq(255, 255) > CombinedMapq(0, 0).
+     * The return value should not be used for anything other than comparing to the return value of other
+     * invocations of this method.
+     */
+    public static int combineMapqs(int m1, int m2) {
+        if (m1 == 255) m1 = 1;
+        else m1 *= 100;
+
+        if (m2 == 255) m2 = 1;
+        else m2 *= 100;
+
+        return m1 + m2;
+
+    }
 }

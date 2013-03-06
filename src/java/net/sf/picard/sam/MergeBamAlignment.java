@@ -155,12 +155,24 @@ public class MergeBamAlignment extends CommandLineProgram {
 
     @Option(doc="Strategy for selecting primary alignment when the aligner has provided more than one alignment " +
     "for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary " +
-    "alignment is filtered out for some reason.  Note that EarliestFragment may not be used for paired reads.  " +
-    "EarliestFragment prefers the alignment which maps the earliest base in the read.")
+    "alignment is filtered out for some reason. " +
+     "BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of " +
+     "alignments with the largest MAPQ, in the absence of a primary selected by the aligner. " +
+    "EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment " +
+     "may not be used for paired reads. " +
+    "BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. " +
+    "It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless " +
+    "of whether the two alignments make sense together." +
+    "MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. " +
+    "If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, " +
+    "ties are resolved arbitrarily.")
     public PrimaryAlignmentStrategy PRIMARY_ALIGNMENT_STRATEGY = PrimaryAlignmentStrategy.BestMapq;
 
     @Option(doc="For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.")
     public boolean CLIP_OVERLAPPING_READS = true;
+
+    @Option(doc="If false, do not write secondary alignments to output.")
+    public boolean INCLUDE_SECONDARY_ALIGNMENTS = true;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
@@ -169,7 +181,9 @@ public class MergeBamAlignment extends CommandLineProgram {
      */
     enum PrimaryAlignmentStrategy {
         BestMapq(BestMapqPrimaryAlignmentSelectionStrategy.class),
-        EarliestFragment(EarliestFragmentPrimaryAlignmentSelectionStrategy.class);
+        EarliestFragment(EarliestFragmentPrimaryAlignmentSelectionStrategy.class),
+        BestEndMapq(BestEndMapqPrimaryAlignmentStrategy.class),
+        MostDistant(MostDistantPrimaryAlignmentSelectionStrategy.class);
 
         private final Class<PrimaryAlignmentSelectionStrategy> clazz;
 
@@ -218,6 +232,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
+        merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
         merger.mergeAlignment();
         return 0;
     }
