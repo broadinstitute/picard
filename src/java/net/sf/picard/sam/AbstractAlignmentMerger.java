@@ -34,6 +34,7 @@ import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
+import net.sf.picard.filter.FilteringIterator;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -100,6 +101,7 @@ public abstract class AbstractAlignmentMerger {
             throw new UnsupportedOperationException("Paired SamRecordFilter not implemented!");
         }
     };
+    private boolean includeSecondaryAlignments = true;
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
     
@@ -207,9 +209,10 @@ public abstract class AbstractAlignmentMerger {
         int unmapped = 0;
 
         // Get the aligned records and set up the first one
-        alignedIterator = new MultiHitAlignedReadIterator(getQuerynameSortedAlignedRecords(),
+        alignedIterator = new MultiHitAlignedReadIterator(
+                new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter),
                 primaryAlignmentSelectionStrategy);
-        MultiHitAlignedReadIterator.HitsForInsert nextAligned = nextAligned();
+        HitsForInsert nextAligned = nextAligned();
 
         // Create the sorting collection that will write the records in the coordinate order
         // to the final bam file
@@ -271,12 +274,12 @@ public abstract class AbstractAlignmentMerger {
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
                         if (!firstToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            sorted.add(firstToWrite);
+                            addIfNotFiltered(sorted, firstToWrite);
                             if (firstToWrite.getReadUnmappedFlag()) ++unmapped;
                             else ++aligned;
                         }
                         if (!secondToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            sorted.add(secondToWrite);
+                            addIfNotFiltered(sorted, secondToWrite);
                             if (!secondToWrite.getReadUnmappedFlag()) ++aligned;
                             else ++unmapped;
                         }
@@ -285,7 +288,7 @@ public abstract class AbstractAlignmentMerger {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
-                        sorted.add(recToWrite);
+                        addIfNotFiltered(sorted, recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
                         else ++aligned;
                     }
@@ -348,6 +351,12 @@ public abstract class AbstractAlignmentMerger {
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
+    private void addIfNotFiltered(final SortingCollection<SAMRecord> sorted, final SAMRecord rec) {
+        if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
+            sorted.add(rec);
+        }
+    }
+
     private SAMRecord clone(final SAMRecord rec) {
         try {
             return (SAMRecord)rec.clone();
@@ -360,14 +369,8 @@ public abstract class AbstractAlignmentMerger {
      * The alignments are run through ignoreAlignment() filter before being returned, which may result
      * in an entire read being skipped if all alignments for that read should be ignored.
      */
-    private MultiHitAlignedReadIterator.HitsForInsert nextAligned() {
-        while (alignedIterator.hasNext()) {
-            final MultiHitAlignedReadIterator.HitsForInsert hits = alignedIterator.next();
-            hits.filterReads(alignmentFilter, primaryAlignmentSelectionStrategy);
-            if (hits.numHits() > 0) {
-                return hits;
-            }
-        }
+    private HitsForInsert nextAligned() {
+        if (alignedIterator.hasNext()) return alignedIterator.next();
         return null;
     }
 
@@ -560,7 +563,11 @@ public abstract class AbstractAlignmentMerger {
     /**
      * If true, keep the aligner's idea of proper pairs rather than letting alignment merger decide.
      */
-    public void setKeepAlignerProperPairFlags(boolean keepAlignerProperPairFlags) {
+    public void setKeepAlignerProperPairFlags(final boolean keepAlignerProperPairFlags) {
         this.keepAlignerProperPairFlags = keepAlignerProperPairFlags;
+    }
+
+    public void setIncludeSecondaryAlignments(final boolean includeSecondaryAlignments) {
+        this.includeSecondaryAlignments = includeSecondaryAlignments;
     }
 }

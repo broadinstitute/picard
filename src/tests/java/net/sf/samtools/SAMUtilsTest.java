@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The Broad Institute
+ * Copyright (c) 2013 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package net.sf.samtools;
 
-/**
- * Given a set of alignments for a read or read pair, mark one alignment as primary, according to whatever
- * strategy is appropriate.  Any pre-existing primary designation is ignored, so if the aligner has selected an
- * appropriate primary alignment, this class should not be called.
- */
-public interface PrimaryAlignmentSelectionStrategy {
-    /**
-     * When this method returns, one alignment has been marked as primary according to the implementation's strategy.
-     *
-     */
-    void pickPrimaryAlignment(HitsForInsert hitsForInsert);
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+public class SAMUtilsTest {
+    @Test
+    public void testCompareMapqs() {
+        Assert.assertEquals(SAMUtils.compareMapqs(0, 0), 0);
+        Assert.assertEquals(SAMUtils.compareMapqs(255, 255), 0);
+        Assert.assertEquals(SAMUtils.compareMapqs(1, 1), 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(0, 255) < 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(0, 1) < 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(255, 1) < 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(1, 2) < 0);
+
+        Assert.assertTrue(SAMUtils.compareMapqs(255, 0) > 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(1, 0) > 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(1, 255) > 0);
+        Assert.assertTrue(SAMUtils.compareMapqs(2, 1) > 0);
+    }
 }
