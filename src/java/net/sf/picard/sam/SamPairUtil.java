@@ -83,7 +83,7 @@ public class SamPairUtil {
 
         final long negativeStrandFivePrimePos = ( readIsOnReverseStrand
             ?  r.getAlignmentEnd()                                   //read's 5' position  ( <---x )
-            :  r.getAlignmentStart() + Math.abs(r.getInferredInsertSize() ));  //mate's 5' position  ( <---x )
+            :  r.getAlignmentStart() + r.getInferredInsertSize() );  //mate's 5' position  ( <---x )
 
         return ( positiveStrandFivePrimePos < negativeStrandFivePrimePos
             ? PairOrientation.FR
