@@ -37,7 +37,6 @@ function branch_exists() {
         else return 0
     fi
 }
-SVNROOT=https://svn.code.sf.net/p/picard/code
 
 set -e
 
@@ -65,6 +64,8 @@ if [[ x"$EDITOR" == x ]]
 then echo "EDITOR environment variable must be set." >&2
        exit 1
 fi
+
+SVNROOT=svn+ssh://$USERNAME@svn.code.sf.net/p/picard/code
 
 RELEASE_ID=$1
 
