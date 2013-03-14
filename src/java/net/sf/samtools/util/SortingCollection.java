@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.picard.util.Log;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -41,6 +43,7 @@ import java.util.*;
  * to compress temporary files.
  */
 public class SortingCollection<T> implements Iterable<T> {
+    private static final Log log = Log.getInstance(SortingCollection.class);
 
     /**
      * Client must implement this class, which defines the way in which records are written to and
@@ -213,8 +216,10 @@ public class SortingCollection<T> implements Iterable<T> {
                 }
 
                 os.flush();
-            }
-            finally {
+            } catch (RuntimeIOException ex) {
+                throw new RuntimeIOException("Problem writing temporary file " + f.getAbsolutePath() +
+                        ".  Try setting TMP_DIR to a file system with lots of space.", ex);
+            } finally {
                 if (os != null) {
                     os.close();
                 }
