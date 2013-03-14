@@ -121,7 +121,7 @@ public class CommandLineParser {
      * @return
      */
     public static String getFaqLink() {
-        return "FAQ:  http://sourceforge.net/apps/mediawiki/picard/index.php?title=Main_Page";
+        return "To get help, see http://picard.sourceforge.net/index.shtml#GettingHelp";
     }
 
     /**
