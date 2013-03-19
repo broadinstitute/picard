@@ -27,22 +27,19 @@ import java.util.*;
 
 /**
  * Small utility methods for dealing with collection classes.
+ * @author mccowan
  */
 public class CollectionUtil {
 
     public static <T> List<T> makeList (final T... list) {
         final List<T> result = new ArrayList<T>();
-        for (final T item : list) {
-            result.add(item);
-        }
+        Collections.addAll(result, list);
         return result;
     }
 
     public static <T> Set<T> makeSet (final T... list) {
         final Set<T> result = new HashSet<T>();
-        for (final T item : list) {
-            result.add(item);
-        }
+        Collections.addAll(result, list);
         return result;
     }
 
@@ -72,6 +69,60 @@ public class CollectionUtil {
         private void initializeKeyIfUninitialized(final K k) {
             if (!this.containsKey(k))
                 this.put(k, new LinkedList<V>());
+        }
+    }
+
+    /**
+     * A defaulting map, which returns a default value when a value that does not exist in the map is looked up.
+     * 
+     * This map supports two modes: injecting-on-default, and not injecting-on-default.  When injecting on default, when a lookup is
+     * performed and a default value is returned, the default value is injected at that key, so that it now lives in the underlying map.
+     * Without this mode, the value is simply returned and the underlying map is unaffected.
+     * 
+     * Note: When using injecting-on-default mode, and performing a lookup with a non-key type (the get method accepts any object), a 
+     * class cast exception will be thrown because a non-key type cannot be added to the map.
+     * @param <K>
+     * @param <V>
+     */
+    public static class DefaultingMap<K, V> extends HashMap<K, V> {
+        final Factory<V> defaultGenerator;
+        final boolean injectValueOnDefault;
+        
+        /** Creates a defaulting map which defaults to the provided value and with injecting-on-default disabled. */
+        public DefaultingMap(final V defaultValue) {
+            this(new Factory<V>() {
+                @Override
+                public V make() {
+                    return defaultValue;
+                }
+            }, false);
+        }
+        
+        /**
+         * Creates a defaulting map that generates defaults from the provided factory. This is useful when the default is non-static, or
+         * the default is mutable, and the client wishes to get a value and mutate it and persist those changes in the map.
+         */
+        public DefaultingMap(final Factory<V> defaultGenerator, final boolean injectValueOnDefaulting) {
+            this.defaultGenerator = defaultGenerator;
+            this.injectValueOnDefault = injectValueOnDefaulting;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked") // Expect that the cast is successful; otherwise, client is breaking contract.
+        public V get(final Object key) {
+            if (!this.containsKey(key)) {
+                final V val = this.defaultGenerator.make();
+                if (this.injectValueOnDefault) {
+                    this.put((K) key, val); 
+                }
+                return val;
+            } else {
+                return super.get(key);
+            }
+        }
+        
+        public interface Factory<V> {
+            V make();
         }
     }
 }
