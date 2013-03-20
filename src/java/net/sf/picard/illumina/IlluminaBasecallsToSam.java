@@ -87,17 +87,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
+    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public File OUTPUT;
 
     @Option(doc = "The barcode of the run.  Prefixed to read names.")
     public String RUN_BARCODE;
 
-    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The name of the sequenced sample",
+    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced sample",
             shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String SAMPLE_ALIAS;
 
     @Option(doc = "ID used to link RG header record with RG tag in SAM record.  " +
@@ -106,10 +106,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             shortName = StandardOptionDefinitions.READ_GROUP_ID_SHORT_NAME, optional = true)
     public String READ_GROUP_ID;
 
-    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The name of the sequenced library",
+    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced library",
             shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
             optional = true,
-            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
     public String LIBRARY_NAME;
 
     @Option(doc = "The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.", optional = true)
@@ -124,10 +124,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run " +
+    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run " +
             "with single IlluminaBasecallsToSam invocation.  Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and " +
             "LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
-            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "MULTIPLEX_PARAMS"})
+            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "LIBRARY_PARAMS"})
     public File BARCODE_PARAMS;
 
     @Option(doc = "Tab-separated file for creating all output BAMs for a lane with single IlluminaBasecallsToSam " +
@@ -231,7 +231,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if (missingColumns.size() > 0) {
             throw new PicardException(String.format(
-                    "MULTIPLEX_PARAMS file %s is missing the following columns: %s.",
+                    "LIBRARY_PARAMS file %s is missing the following columns: %s.",
                     LIBRARY_PARAMS.getAbsolutePath(), StringUtil.join(", ", missingColumns
             )));
         }
@@ -279,7 +279,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             } else if (libraryParamsParser.hasColumn("BARCODE_1")) {
                 barcodeColumnLabels.add("BARCODE_1");
             } else {
-                throw new PicardException("MULTIPLEX_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
+                throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
             }
         } else {
             for (int i = 1; i <= readStructure.barcodes.length(); i++) {
@@ -303,7 +303,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
             final String key = (barcodeValues == null || barcodeValues.contains("N")) ? null : StringUtil.join("", barcodeValues);
             if (barcodeSamWriterMap.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded LIBRARY_PARAMS file
-                throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS or BARCODE_PARAMS file " +
+                throw new PicardException("Row for barcode " + key + " appears more than once in LIBRARY_PARAMS or BARCODE_PARAMS file " +
                         LIBRARY_PARAMS);
             }
 
@@ -318,7 +318,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             barcodeSamWriterMap.put(key, writer);
         }
         if (barcodeSamWriterMap.isEmpty()) {
-            throw new PicardException("MULTIPLEX_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
+            throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
         }
     }
 
@@ -400,8 +400,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (!readStructure.barcodes.isEmpty()) {
             if (LIBRARY_PARAMS == null) {
-                messages.add("BARCODE_PARAMS or MULTIPLEX_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
-                        " then either MULTIPLEX_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
+                messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
+                        " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
             }
         }
 
