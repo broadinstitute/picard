@@ -147,10 +147,11 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             populateWritersFromMultiplexParams();
             demultiplex = true;
         }
-
+        int readsPerCluster = readStructure.templates.length() + readStructure.barcodes.length();
         basecallsConverter = new IlluminaBasecallsConverter<FastqRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
-                barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
-                FIRST_TILE, TILE_LIMIT, queryNameComparator, new FastqRecordsForClusterCodec(readStructure.templates.length(),
+                barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE/readsPerCluster, TMP_DIR, NUM_PROCESSORS,
+                FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
+                new FastqRecordsForClusterCodec(readStructure.templates.length(),
                 readStructure.barcodes.length()), FastqRecordsForCluster.class);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());

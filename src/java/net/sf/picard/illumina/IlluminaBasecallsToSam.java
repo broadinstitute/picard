@@ -203,8 +203,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final int numOutputRecords = readStructure.templates.length();
 
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
-                barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE, TMP_DIR, NUM_PROCESSORS, FORCE_GC, FIRST_TILE,
-                TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class);
+                barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE/numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
+                FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class);
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 
