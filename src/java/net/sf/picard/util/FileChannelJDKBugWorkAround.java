@@ -40,7 +40,10 @@ import java.nio.ByteBuffer;
  * @author alecw@broadinstitute.org
  */
 public class FileChannelJDKBugWorkAround {
+    private static boolean alreadyCalled = false;
+
     public static byte doBugWorkAround() {
+        if (alreadyCalled) return 0;
         try {
             File tmpFile = File.createTempFile("ignore-me.", ".bug-work-around");
             FileWriter writer = new FileWriter(tmpFile);
@@ -51,9 +54,11 @@ public class FileChannelJDKBugWorkAround {
             is.close();
             byte ret = buf.get();
             tmpFile.delete();
+            alreadyCalled = true;
             return ret;
         } catch (IOException e) {
             throw new PicardException("IOException", e);
         }
+
     }
 }

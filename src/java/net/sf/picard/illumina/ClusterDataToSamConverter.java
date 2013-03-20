@@ -32,7 +32,6 @@ import net.sf.picard.sam.ReservedTagConstants;
 import net.sf.picard.util.AdapterPair;
 import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.IlluminaUtil;
-import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 
 import java.util.List;
@@ -44,18 +43,19 @@ import java.util.List;
  * 
  * @author jburke@broadinstitute.org
  */
-public class IlluminaBasecallsToSamConverter {
+public class ClusterDataToSamConverter implements
+        IlluminaBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
 
 
     private final String runBarcode;
     private final String readGroupId;
-    private final ReadStructure readStructure;
     private final SamRecordFilter filters = new SolexaNoiseFilter();
     private final boolean isPairedEnd;
     private final boolean isBarcoded;
     private final int [] templateIndices;
     private final int [] barcodeIndices;
     private final AdapterPair[] adaptersToCheck;
+    private final int outputRecordsPerCluster;
 
     /**
      * Constructor
@@ -66,13 +66,12 @@ public class IlluminaBasecallsToSamConverter {
      *                          and their length) in the read.
      * @param adapters          The list of adapters to check for in the read
      */
-    public IlluminaBasecallsToSamConverter(final String runBarcode,
-                                           final String readGroupId,
-                                           final ReadStructure readStructure,
-                                           final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
+    public ClusterDataToSamConverter(final String runBarcode,
+                                     final String readGroupId,
+                                     final ReadStructure readStructure,
+                                     final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
         this.runBarcode  = runBarcode;
         this.readGroupId = readGroupId;
-        this.readStructure = readStructure;
 
         this.isPairedEnd = readStructure.templates.length() == 2;
         this.isBarcoded  = !readStructure.barcodes.isEmpty();
@@ -82,20 +81,15 @@ public class IlluminaBasecallsToSamConverter {
 
         this.templateIndices = readStructure.templates.getIndices();
         this.barcodeIndices = readStructure.barcodes.getIndices();
-    }
 
-    /**
-     * Gets the number of non-index reads per cluster
-     */
-    public int getNumRecordsPerCluster() {
-        return readStructure.templates.length();
+        this.outputRecordsPerCluster = readStructure.templates.length();
     }
 
     /**
      * Creates a new SAM record from the basecall data
      */
-    private SAMRecord createSamRecord(final ReadData readData, final SAMFileHeader header, final String readName, final boolean isPf, final boolean firstOfPair, final String unmatchedBarcode) {
-        final SAMRecord sam = new SAMRecord(header);
+    private SAMRecord createSamRecord(final ReadData readData, final String readName, final boolean isPf, final boolean firstOfPair, final String unmatchedBarcode) {
+        final SAMRecord sam = new SAMRecord(null);
         sam.setReadName(readName);
         sam.setReadBases(readData.getBases());
         sam.setBaseQualities(readData.getQualities());
@@ -130,7 +124,9 @@ public class IlluminaBasecallsToSamConverter {
     /**
      * Creates the SAMRecord for each read in the cluster
      */
-    public void createSamRecords(final ClusterData cluster, final SAMFileHeader header, final SAMRecord [] recordsOut) {
+    public IlluminaBasecallsToSam.SAMRecordsForCluster convertClusterToOutputRecord(final ClusterData cluster) {
+
+        final IlluminaBasecallsToSam.SAMRecordsForCluster ret = new IlluminaBasecallsToSam.SAMRecordsForCluster(outputRecordsPerCluster);
 
         final String readName = IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
 
@@ -145,15 +141,15 @@ public class IlluminaBasecallsToSamConverter {
         }
 
         final SAMRecord firstOfPair = createSamRecord(
-            cluster.getRead(templateIndices[0]), header, readName, cluster.isPf(), true,unmatchedBarcode);
-        recordsOut[0] = firstOfPair;
+            cluster.getRead(templateIndices[0]), readName, cluster.isPf(), true,unmatchedBarcode);
+        ret.records[0] = firstOfPair;
 
         SAMRecord secondOfPair = null;
 
         if(isPairedEnd) {
             secondOfPair  = createSamRecord(
-                cluster.getRead(templateIndices[1]), header, readName, cluster.isPf(), false, unmatchedBarcode);
-            recordsOut[1] = secondOfPair;
+                cluster.getRead(templateIndices[1]), readName, cluster.isPf(), false, unmatchedBarcode);
+            ret.records[1] = secondOfPair;
         }
 
         if (adaptersToCheck.length > 0) {
@@ -165,5 +161,6 @@ public class IlluminaBasecallsToSamConverter {
                 ClippingUtility.adapterTrimIlluminaSingleRead(firstOfPair, adaptersToCheck);
             }
         }
+        return ret;
     }
 }

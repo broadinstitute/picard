@@ -302,6 +302,7 @@
         <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
         <package-and-document-command title="FilterSamReads"                 main-class="net.sf.picard.sam.FilterSamReads"/>
         <package-and-document-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
+        <package-and-document-command title="IlluminaBasecallsToFastq"       main-class="net.sf.picard.illumina.IlluminaBasecallsToFastq"/>
         <package-and-document-command title="IlluminaBasecallsToSam"         main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
         <package-and-document-command title="CheckIlluminaDirectory"         main-class="net.sf.picard.illumina.CheckIlluminaDirectory"/>
         <package-and-document-command title="IntervalListTools"              main-class="net.sf.picard.util.IntervalListTools"/>
