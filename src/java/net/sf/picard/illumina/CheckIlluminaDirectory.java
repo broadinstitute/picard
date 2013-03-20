@@ -56,7 +56,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
         if(DATA_TYPES.size() == 0) {
-            DATA_TYPES.addAll(Arrays.asList(IlluminaBasecallsToSam.DATA_TYPES_NO_BARCODE));
+            DATA_TYPES.addAll(Arrays.asList(IlluminaBasecallsConverter.DATA_TYPES_NO_BARCODE));
         }
 
         final List<Integer> failingLanes = new ArrayList<Integer>();

@@ -29,24 +29,22 @@ import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.*;
+import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.*;
+import net.sf.picard.util.CollectionUtil;
+import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.TabbedTextFileWithHeaderParser;
 import net.sf.samtools.*;
 import net.sf.samtools.util.Iso8601Date;
-import net.sf.samtools.util.PeekIterator;
 import net.sf.samtools.util.SortingCollection;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into
@@ -89,17 +87,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = "Lane number. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
+    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The output SAM or BAM file. Format is determined by extension.",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
     public File OUTPUT;
 
     @Option(doc = "The barcode of the run.  Prefixed to read names.")
     public String RUN_BARCODE;
 
-    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced sample",
+    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The name of the sequenced sample",
             shortName = StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME,
-            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
     public String SAMPLE_ALIAS;
 
     @Option(doc = "ID used to link RG header record with RG tag in SAM record.  " +
@@ -108,10 +106,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             shortName = StandardOptionDefinitions.READ_GROUP_ID_SHORT_NAME, optional = true)
     public String READ_GROUP_ID;
 
-    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  The name of the sequenced library",
+    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  The name of the sequenced library",
             shortName = StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME,
             optional = true,
-            mutex = {"BARCODE_PARAMS", "LIBRARY_PARAMS"})
+            mutex = {"BARCODE_PARAMS", "MULTIPLEX_PARAMS"})
     public String LIBRARY_NAME;
 
     @Option(doc = "The name of the sequencing center that produced the reads.  Used to set the RG.CN tag.", optional = true)
@@ -126,10 +124,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc = "Deprecated (use LIBRARY_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run " +
+    @Option(doc = "Deprecated (use MULTIPLEX_PARAMS).  Tab-separated file for creating all output BAMs for barcoded run " +
             "with single IlluminaBasecallsToSam invocation.  Columns are BARCODE, OUTPUT, SAMPLE_ALIAS, and " +
             "LIBRARY_NAME.  Row with BARCODE=N is used to specify a file for no barcode match",
-            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "LIBRARY_PARAMS"})
+            mutex = {"OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME", "MULTIPLEX_PARAMS"})
     public File BARCODE_PARAMS;
 
     @Option(doc = "Tab-separated file for creating all output BAMs for a lane with single IlluminaBasecallsToSam " +
@@ -169,626 +167,17 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
 
-    private final Map<String, SAMFileWriter> barcodeSamWriterMap = new HashMap<String, SAMFileWriter>();
-    private IlluminaBasecallsToSamConverter converter;
-    private IlluminaDataProviderFactory factory;
+    private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
-    private int numThreads;
-    private final Comparator<SAMRecord> samRecordQueryNameComparator = new SAMRecordQueryNameComparator();
-    private List<Integer> tiles;
-    public static final IlluminaDataType[] DATA_TYPES_NO_BARCODE =
-            {IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Position, IlluminaDataType.PF};
-    private static final IlluminaDataType[] DATA_TYPES_WITH_BARCODE = Arrays.copyOf(DATA_TYPES_NO_BARCODE, DATA_TYPES_NO_BARCODE.length + 1);
+    IlluminaBasecallsConverter<SAMRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
-    private final ProgressLogger readProgressLogger = new ProgressLogger(log, 1000000, "Read");
-    private final ProgressLogger writeProgressLogger = new ProgressLogger(log, 1000000, "Write");
-    // If FORCE_GC, this is non-null.  For production this is not necessary because it will run until the JVM
-    // ends, but for unit testing it is desirable to stop the task when done with this instance.
-    private TimerTask gcTimerTask;
 
-    /**
-     * Describes the state of a barcode's data's processing in the context of a tile.  It is either not available in
-     * that tile, has been read, has been queued to be written to file, or has been written to file.  A barcode only
-     * takes on a state once the tile (which is serving as the context of this state) has been read.
-     */
-    private enum TileBarcodeProcessingState {
-        NA, READ, QUEUED_FOR_WRITE, WRITTEN
-    }
-
-    /**
-     * Describes the state of a tile being processed.  It is either not yet completely read, or read.
-     */
-    private enum TileProcessingState {
-        NOT_DONE_READING, DONE_READING
-    }
-
-    /**
-     * A comparator for tile numbers, which are not necessarily ordered by the number's value.
-     */
-    public static final Comparator<Integer> TILE_NUMBER_COMPARATOR = new Comparator<Integer>() {
-        @Override
-        public int compare(final Integer integer1, final Integer integer2) {
-            final String s1 = integer1.toString();
-            final String s2 = integer2.toString();
-            // Because a the tile number is followed by a colon, a tile number that
-            // is a prefix of another tile number should sort after. (e.g. 10 sorts after 100).
-            if (s1.length() < s2.length()) {
-                if (s2.startsWith(s1)) {
-                    return 1;
-                }
-            } else if (s2.length() < s1.length()) {
-                if (s1.startsWith(s2)) {
-                    return -1;
-                }
-            }
-            return s1.compareTo(s2);
-        }
-    };
-
-    static {
-        DATA_TYPES_WITH_BARCODE[DATA_TYPES_WITH_BARCODE.length - 1] = IlluminaDataType.Barcodes;
-    }
-
-    /**
-     * Simple representation of a tile
-     */
-    private class Tile implements Comparable<Tile> {
-        private final int tileNumber;
-
-        public Tile(final int i) {
-            tileNumber = i;
-        }
-
-        public int getNumber() {
-            return tileNumber;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            return o instanceof Tile && this.getNumber() == ((Tile) o).getNumber();
-        }
-
-        @Override
-        public int compareTo(final Tile o) {
-            return TILE_NUMBER_COMPARATOR.compare(this.getNumber(), o.getNumber());
-        }
-    }
-
-    /**
-     * Reads the information from a tile via an IlluminaDataProvider and feeds red information into a processingRecord
-     * managed by the TileReadAggregator.
-     */
-    private class TileReader {
-        private final Tile tile;
-        private final TileReadAggregator handler;
-        private final TileProcessingRecord processingRecord;
-
-        public TileReader(final Tile tile, final TileReadAggregator handler, final TileProcessingRecord processingRecord) {
-            this.tile = tile;
-            this.handler = handler;
-            this.processingRecord = processingRecord;
-        }
-
-        /**
-         * Reads the data from the appropriate IlluminaDataProvider and feeds it into the TileProcessingRecord for
-         * this tile.
-         */
-        public void process() {
-            final IlluminaDataProvider dataProvider = factory.makeDataProvider(Arrays.asList(this.tile.getNumber()));
-            final SAMRecord[] recordContainer = new SAMRecord[converter.getNumRecordsPerCluster()];
-
-            log.debug(String.format("Reading data from tile %s ...", tile.getNumber()));
-
-            while (dataProvider.hasNext()) {
-                final ClusterData cluster = dataProvider.next();
-                final String barcode = cluster.getMatchedBarcode();
-                converter.createSamRecords(cluster, null, recordContainer);
-                readProgressLogger.record(recordContainer);
-                this.processingRecord.addRecord(barcode, recordContainer);
-            }
-
-            this.handler.completeTile(this.tile);
-        }
-    }
-
-    /**
-     * Represents the state of a tile's processing and encapsulates the data collected from that tile.
-     * <p/>
-     * TileProcessingRecords are accessed from each worker thread to assess the progress of the run, so its methods
-     * are synchronized.
-     */
-    private class TileProcessingRecord {
-        final private Map<String, SortingCollection<SAMRecord>> barcodeToRecordCollection = new HashMap<String, SortingCollection<SAMRecord>>();
-        final private Map<String, TileBarcodeProcessingState> barcodeToProcessingState = new HashMap<String, TileBarcodeProcessingState>();
-        private TileProcessingState state = TileProcessingState.NOT_DONE_READING;
-        private long recordCount = 0;
-
-        /**
-         * Returns the state of this tile's processing.
-         */
-        public synchronized TileProcessingState getState() {
-            return this.state;
-        }
-
-        /**
-         * Sets the state of this tile's processing.
-         */
-        public synchronized void setState(final TileProcessingState state) {
-            this.state = state;
-        }
-
-        /**
-         * Adds the provided recoded to this tile.
-         */
-        public synchronized void addRecord(final String barcode, final SAMRecord... records) {
-            this.recordCount += records.length;
-
-            // Grab the existing collection, or initialize it if it doesn't yet exist
-            SortingCollection<SAMRecord> recordCollection = this.barcodeToRecordCollection.get(barcode);
-            if (recordCollection == null) {
-                if (!IlluminaBasecallsToSam.this.barcodeSamWriterMap.containsKey(barcode))
-                    throw new PicardException(String.format("Read records with barcode %s, but this barcode was not expected.  (Is it referenced in the parameters file?)", barcode));
-                recordCollection = this.newSortingCollection();
-                this.barcodeToRecordCollection.put(barcode, recordCollection);
-                this.barcodeToProcessingState.put(barcode, null);
-            }
-
-            for (final SAMRecord record : records) {
-                recordCollection.add(record);
-            }
-
-        }
-
-        private synchronized SortingCollection<SAMRecord> newSortingCollection() {
-            final int maxRecordsInRam =
-                    IlluminaBasecallsToSam.this.MAX_READS_IN_RAM_PER_TILE /
-                            IlluminaBasecallsToSam.this.barcodeSamWriterMap.size();
-            return SortingCollection.newInstance(
-                    SAMRecord.class,
-                    new BAMRecordCodec(null),
-                    new SAMRecordQueryNameComparator(),
-                    maxRecordsInRam,
-                    IlluminaBasecallsToSam.this.TMP_DIR);
-        }
-
-        /**
-         * Returns the number of unique barcodes read.
-         */
-        public synchronized long getBarcodeCount() {
-            return this.barcodeToRecordCollection.size();
-        }
-
-        /**
-         * Returns the number of records read.
-         */
-        public synchronized long getRecordCount() {
-            return recordCount;
-        }
-
-        /**
-         * Returns the mapping of barcodes to records associated with them.
-         */
-        public synchronized Map<String, SortingCollection<SAMRecord>> getBarcodeRecords() {
-            return barcodeToRecordCollection;
-        }
-
-        /**
-         * Gets the state of the provided barcode's data's processing progress.  Only invoke this query if this tile
-         * is in a DONE_READING state.
-         *
-         * @throws IllegalStateException When a barcode is queried before the tile is in the DONE_READING state
-         */
-        public synchronized TileBarcodeProcessingState getBarcodeState(final String barcode) {
-            if (this.getState() == TileProcessingState.NOT_DONE_READING) {
-                throw new IllegalStateException(
-                        "A tile's barcode data's state cannot be queried until the tile has been completely read.");
-            }
-
-            if (this.barcodeToProcessingState.containsKey(barcode)) {
-                return this.barcodeToProcessingState.get(barcode);
-            } else {
-                return TileBarcodeProcessingState.NA;
-            }
-        }
-
-        public synchronized Map<String, IlluminaBasecallsToSam.TileBarcodeProcessingState> getBarcodeProcessingStates() {
-            return this.barcodeToProcessingState;
-        }
-
-        /**
-         * Sets the processing state of the provided barcode in this record.
-         *
-         * @throws NoSuchElementException When the provided barcode is not one associated with this record.
-         */
-        public synchronized void setBarcodeState(final String barcode, final TileBarcodeProcessingState state) {
-            if (this.barcodeToProcessingState.containsKey(barcode)) {
-                this.barcodeToProcessingState.put(barcode, state);
-            } else {
-                throw new NoSuchElementException(String.format("No record of the provided barcode, %s.", barcode));
-            }
-        }
-
-        /**
-         * Returns the distinct set of barcodes for which data has been collected in this record.
-         *
-         * @return
-         */
-        public synchronized Set<String> getBarcodes() {
-            return this.getBarcodeRecords().keySet();
-        }
-    }
-
-    /**
-     * Aggregates data collected from tiles and writes them to file. Accepts records from TileReaders and maps
-     * them to the appropriate BAM writers.
-     */
-    private class TileReadAggregator {
-        /**
-         * The collection of records associated with a particular tile.
-         * <p/>
-         * Implemented as a TreeMap to guarantee tiles are iterated over in natural order.
-         */
-        private final Map<Tile, TileProcessingRecord> tileRecords = new TreeMap<Tile, TileProcessingRecord>();
-
-        /**
-         * The executor responsible for doing work.
-         * <p/>
-         * Implemented as a ThreadPoolExecutor with a PriorityBlockingQueue which orders submitted Runnables by their
-         * priority.
-         */
-        private final ExecutorService prioritizingThreadPool = new ThreadPoolExecutor(
-                IlluminaBasecallsToSam.this.numThreads,
-                IlluminaBasecallsToSam.this.numThreads,
-                0L,
-                MILLISECONDS,
-                new PriorityBlockingQueue<Runnable>(5, new Comparator<Runnable>() {
-                    @Override
-                    /**
-                     * Compare the two Runnables, and assume they are PriorityRunnable; if not something strange is
-                     * going on, so allow a ClassCastException be thrown.
-                     */
-                    public int compare(final Runnable o1, final Runnable o2) {
-                        // Higher priority items go earlier in the queue, so reverse the "natural" comparison.
-                        return ((PriorityRunnable) o2).getPriority() - ((PriorityRunnable) o1).getPriority();
-                    }
-                }));
-
-        /**
-         * The object acting as a latch to notify when the aggregator completes its work.
-         */
-        private final Object completionLatch = new Object();
-
-        /**
-         * Stores the thread that is executing this work so that it can be interrupted upon failure.
-         */
-        private Thread parentThread;
-        private final Object workEnqueueMonitor = new Object();
-        private final AtomicBoolean submitted = new AtomicBoolean(false);
-
-
-        /**
-         * Creates a TileReadAggregator that reads from the provided tiles.
-         *
-         * @param tiles
-         */
-        public TileReadAggregator(final Collection<Tile> tiles) {
-            for (final Tile t : tiles) {
-                tileRecords.put(t, new TileProcessingRecord());
-            }
-        }
-
-        /**
-         * Execute the tile aggregator's work.  Creates a thread pool to read data from tiles and write them to file.
-         * Invoke this method only once.
-         *
-         * @throws IllegalStateException If submit was called more than once.
-         */
-        public void submit() {
-            // Ensure the aggregator as not yet been submitted
-            if (!this.submitted.compareAndSet(false, true)) {
-                throw new IllegalStateException("The submit() method may not be called more than once.");
-            }
-
-            // Set the thread that is executing this work
-            this.parentThread = Thread.currentThread();
-
-            /**
-             * For each tile, create and submit a tile processor.  Give it a negative execution priority (so that
-             * prioritized tasks with a positive execution priority execute first), and give later tiles a lesser
-             * (more negative) priority.
-             */
-            int priority = 0;
-            for (final Tile tile : this.tileRecords.keySet()) {
-                final TileReader reader = new TileReader(tile, this, this.tileRecords.get(tile));
-                this.prioritizingThreadPool.execute(new PriorityRunnable(--priority) {
-                    @Override
-                    public void run() {
-                        try {
-                            reader.process();
-                        } catch (RuntimeException e) {
-                            /**
-                             * In the event of an internal failure, signal to the parent thread that something has gone
-                             * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
-                             * will never reach its completed state, and it will never terminate.
-                             */
-                            parentThread.interrupt();
-                            throw e;
-                        } catch (Error e) {
-                            parentThread.interrupt();
-                            throw e;
-                        }
-                    }
-                });
-            }
-        }
-
-        /**
-         * Signals that a tile's processing is complete.  This must be invoked exactly once per tile, and only after
-         * all of that tile has been processed.
-         *
-         * @throws IllegalStateException When the tile is already in the completed state.
-         */
-        private void completeTile(final Tile tile) {
-            final TileProcessingRecord tileRecord = this.tileRecords.get(tile);
-
-            if (tileRecord.getState() == TileProcessingState.DONE_READING) {
-                throw new IllegalStateException("This tile is already in the completed state.");
-            }
-
-            // Update all of the barcodes and the tile to be marked as read
-            for (final String barcode : tileRecord.getBarcodes()) {
-                tileRecord.setBarcodeState(barcode, TileBarcodeProcessingState.READ);
-            }
-            tileRecord.setState(TileProcessingState.DONE_READING);
-
-            log.debug(String.format("Completed reading tile %s; collected %s reads spanning %s barcodes.",
-                    tile.getNumber(), tileRecord.getRecordCount(), tileRecord.getBarcodeCount()));
-
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
-            this.findAndEnqueueWorkOrSignalCompletion();
-        }
-
-        /**
-         * Blocks until this aggregator completes its work.
-         *
-         * @throws InterruptedException
-         */
-        public void awaitWorkComplete() throws InterruptedException {
-            synchronized (this.completionLatch) {
-                this.completionLatch.wait();
-            }
-        }
-
-        /**
-         * Signals to any thread awaiting via awaitWorkComplete() that no work remains. Called
-         * when this aggregator has reached its completed state.
-         */
-        private void signalWorkComplete() {
-            synchronized (this.completionLatch) {
-                this.completionLatch.notifyAll();
-            }
-        }
-
-        /**
-         * Poll the aggregator to find more tasks for it to enqueue.  Specifically, searches for un-written data
-         * read from tiles for each barcode and enqueues it for writing.
-         */
-        private void findAndEnqueueWorkOrSignalCompletion() {
-            synchronized (this.workEnqueueMonitor) {
-                /**
-                 * If there is work remaining to be done in this aggregator, walk through all of the barcodes and find
-                 * tiles which have not yet written their barcode data but are in a state where they are able to.
-                 */
-                if (this.isWorkCompleted()) {
-                    this.signalWorkComplete();
-                } else {
-                    final Queue<Runnable> tasks = new LinkedList<Runnable>();
-                    for (final String barcode : barcodeSamWriterMap.keySet()) {
-                        NEXT_BARCODE:
-                        for (final Map.Entry<Tile, TileProcessingRecord> entry : this.tileRecords.entrySet()) {
-                            final Tile tile = entry.getKey();
-                            final TileProcessingRecord tileRecord = entry.getValue();
-
-                            /**
-                             * If this tile has not been read, we cannot write this or later tiles' barcode data;
-                             * move to the next barcode.
-                             */
-                            if (tileRecord.getState() != TileProcessingState.DONE_READING) {
-                                break NEXT_BARCODE;
-                            }
-                            switch (tileRecord.getBarcodeState(barcode)) {
-                                case NA:
-                                case WRITTEN:
-                                    /**
-                                     * There is no data for this barcode for this tile, or it is already written; in
-                                     * either scenario, this barcode will not be processed further for this tile, so
-                                     * move onto the next tile as a possible candidate.
-                                     */
-                                    continue;
-                                case QUEUED_FOR_WRITE:
-                                    /**
-                                     * The write for this barcode is in progress for this tile, so skip to the next
-                                     * barcode.
-                                     */
-                                    break NEXT_BARCODE;
-                                case READ:
-                                    /**
-                                     * This barcode has beenr read, and all of the earlier tiles have been written
-                                     * for this barcode, so queue its writing.
-                                     */
-                                    tileRecord.setBarcodeState(barcode, TileBarcodeProcessingState.QUEUED_FOR_WRITE);
-                                    log.debug(String.format("Enqueuing work for tile %s and barcode %s.", tile.getNumber(), barcode));
-                                    tasks.add(this.newBarcodeWorkInstance(tile, tileRecord, barcode));
-                                    break NEXT_BARCODE;
-                            }
-                        }
-                    }
-
-                    for (final Runnable task : tasks) {
-                        this.prioritizingThreadPool.execute(task);
-                    }
-                }
-            }
-        }
-
-        /**
-         * Returns a PriorityRunnable that encapsulates the work involved with writing the provided tileRecord's data
-         * for the given barcode to disk.
-         *
-         * @param tile       The tile from which the record was read
-         * @param tileRecord The processing record associated with the tile
-         * @param barcode    The barcode whose data within the tileRecord is to be written
-         * @return The runnable that upon invocation writes the barcode's data from the tileRecord to disk
-         */
-        private PriorityRunnable newBarcodeWorkInstance(final Tile tile, final TileProcessingRecord tileRecord, final String barcode) {
-            return new PriorityRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        final SortingCollection<SAMRecord> records = tileRecord.getBarcodeRecords().get(barcode);
-                        final SAMFileWriter writer = barcodeSamWriterMap.get(barcode);
-
-                        log.debug(String.format("Writing records from tile %s with barcode %s ...", tile.getNumber(), barcode));
-
-                        final PeekIterator<SAMRecord> it = new PeekIterator<SAMRecord>(records.iterator());
-                        while (it.hasNext()) {
-                            final SAMRecord rec = it.next();
-
-                            /**
-                             * PIC-330 Sometimes there are two reads with the same cluster coordinates, and thus
-                             * the same read name.  Discard both of them.  This code assumes that the two first of pairs
-                             * will come before the two second of pairs, so it isn't necessary to look ahead a different
-                             * distance for paired end.  It also assumes that for paired ends there will be duplicates
-                             * for both ends, so there is no need to be PE-aware.
-                             */
-                            if (it.hasNext()) {
-                                final SAMRecord lookAhead = it.peek();
-                                if (!rec.getReadUnmappedFlag() || !lookAhead.getReadUnmappedFlag()) {
-                                    throw new IllegalStateException("Should not have mapped reads.");
-                                }
-
-                                if (samRecordQueryNameComparator.compare(rec, lookAhead) == 0) {
-                                    it.next();
-                                    log.info("Skipping reads with identical read names: " + rec.getReadName());
-                                    continue;
-                                }
-                            }
-
-                            writer.addAlignment(rec);
-                            writeProgressLogger.record(rec);
-                        }
-
-                        tileRecord.setBarcodeState(barcode, TileBarcodeProcessingState.WRITTEN);
-                        findAndEnqueueWorkOrSignalCompletion();
-
-                    } catch (RuntimeException e) {
-                        /**
-                         * In the event of an internal failure, signal to the parent thread that something has gone
-                         * wrong.  This is necessary because if an item of work fails to complete, the aggregator will
-                         * will never reach its completed state, and it will never terminate.
-                         */
-                        parentThread.interrupt();
-                        throw e;
-                    } catch (Error e) {
-                        parentThread.interrupt();
-                        throw e;
-                    }
-                }
-
-            };
-        }
-
-        /**
-         * Returns true if this aggregator has not completed its work.  Specifically, returns false iff
-         * any tile's barcode data yas not yet been written.
-         *
-         * @return True if more work remains to be done, false otherwise
-         */
-        public boolean isWorkCompleted() {
-            for (final Map.Entry<Tile, TileProcessingRecord> entry : this.tileRecords.entrySet()) {
-                final TileProcessingRecord tileProcessingRecord = entry.getValue();
-
-                if (tileProcessingRecord.getState() != TileProcessingState.DONE_READING) {
-                    log.debug(String.format("Work is not completed because a tile isn't done being read: %s.", entry.getKey().getNumber()));
-                    return false;
-                } else {
-                    for (final Map.Entry<String, TileBarcodeProcessingState> barcodeStateEntry : tileProcessingRecord.getBarcodeProcessingStates().entrySet()) {
-                        TileBarcodeProcessingState barcodeProcessingState = barcodeStateEntry.getValue();
-                        if (barcodeProcessingState != TileBarcodeProcessingState.WRITTEN) {
-                            log.debug(String.format("Work is not completed because a tile isn't done being read: Tile %s, Barcode %s, Processing State %s.", entry.getKey().getNumber(), barcodeStateEntry.getKey(), barcodeProcessingState));
-                            return false;
-                        }
-                    }
-                }
-            }
-            log.info("All work is complete.");
-            return true;
-        }
-
-        /**
-         * Terminates the threads currently exiting in the thread pool abruptly via ThreadPoolExecutor.shutdownNow().
-         */
-        public void shutdown() {
-            this.prioritizingThreadPool.shutdownNow();
-        }
-    }
-
-    /**
-     * A Runnable that carries a priority which is used to compare and order other PriorityRunnables in a task queue.
-     */
-    private abstract class PriorityRunnable implements Runnable {
-        private final int priority;
-
-        /**
-         * Create a new priority runnable with a default priority of 1.
-         */
-        public PriorityRunnable() {
-            this(1);
-        }
-
-        public PriorityRunnable(final int priority) {
-            this.priority = priority;
-        }
-
-        /**
-         * Returns the priority level.  Higher priorities are run earlier.
-         *
-         * @return
-         */
-        int getPriority() {
-            return this.priority;
-        }
-    }
 
     @Override
     protected int doWork() {
         initialize();
-
-        try {
-            doTileProcessing();
-        } finally {
-            finalise();
-        }
+        basecallsConverter.doTileProcessing();
         return 0;
-    }
-
-    /**
-     * Closes the SAMFileWriters in barcodeSamWriterMap.
-     * <p/>
-     * This method is intentionally misspelled to avoid conflict with Object.finalize();
-     */
-    private void finalise() {
-        // Close the writers
-        for (final Map.Entry<String, SAMFileWriter> entry : barcodeSamWriterMap.entrySet()) {
-            final SAMFileWriter writer = entry.getValue();
-            log.debug(String.format("Closing file for barcode %s.", entry.getKey()));
-            writer.close();
-        }
-        try {
-            gcTimerTask.cancel();
-        } catch (Throwable ex) {
-            log.warn(ex, "Ignoring exception stopping background GC thread.");
-        }
     }
 
     /**
@@ -803,88 +192,30 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             IoUtil.assertFileIsReadable(LIBRARY_PARAMS);
         }
 
-        // If we're forcing garbage collection, collect every 5 minutes in a daemon thread.
-        if (this.FORCE_GC) {
-            final Timer gcTimer = new Timer(true);
-            final long delay = 5 * 1000 * 60;
-            gcTimerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    System.out.println("Before explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
-                    System.gc();
-                    System.runFinalization();
-                    System.out.println("After explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
-                }
-            };
-            gcTimer.scheduleAtFixedRate(gcTimerTask, delay, delay);
-        }
-
-        readStructure = new ReadStructure(READ_STRUCTURE);
-        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, getDataTypesFromReadStructure(readStructure));
-
-        log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
-
-        this.tiles = new ArrayList<Integer>(factory.getAvailableTiles());
-        // Since the first non-fixed part of the read name is the tile number, without preceding zeroes,
-        // and the output is sorted by read name, process the tiles in this order.
-        Collections.sort(tiles, TILE_NUMBER_COMPARATOR);
-        if (FIRST_TILE != null) {
-            int i;
-            for (i = 0; i < tiles.size(); ++i) {
-                if (tiles.get(i).intValue() == FIRST_TILE.intValue()) {
-                    tiles = tiles.subList(i, tiles.size());
-                    break;
-                }
-            }
-            if (tiles.get(0).intValue() != FIRST_TILE.intValue()) {
-                throw new PicardException("FIRST_TILE=" + FIRST_TILE + ", but that tile was not found.");
-            }
-        }
-        if (TILE_LIMIT != null && tiles.size() > TILE_LIMIT) {
-            tiles = tiles.subList(0, TILE_LIMIT);
-        }
-
         if (OUTPUT != null) {
             barcodeSamWriterMap.put(null, buildSamFileWriter(OUTPUT, SAMPLE_ALIAS, LIBRARY_NAME, buildSamHeaderParameters(null)));
         } else {
             populateWritersFromLibraryParams();
         }
 
+        readStructure = new ReadStructure(READ_STRUCTURE);
+
+        final int numOutputRecords = readStructure.templates.length();
+
+        basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
+                barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE, TMP_DIR, NUM_PROCESSORS, FORCE_GC, FIRST_TILE,
+                TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class);
+
+        log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
+
         /**
-         * Be sure to pass the outputReadStructure to IlluminaBasecallsToSamConverter, which reflects the structure of the output cluster
+         * Be sure to pass the outputReadStructure to ClusterDataToSamConverter, which reflects the structure of the output cluster
          * data which may be different from the input read structure (specifically if there are skips).
          */
-        converter = new IlluminaBasecallsToSamConverter(RUN_BARCODE, READ_GROUP_ID, factory.getOutputReadStructure(), ADAPTERS_TO_CHECK);
+        final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
+                basecallsConverter.getFactory().getOutputReadStructure(), ADAPTERS_TO_CHECK);
+        basecallsConverter.setConverter(converter);
 
-        if (NUM_PROCESSORS == 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors();
-        } else if (NUM_PROCESSORS < 0) {
-            this.numThreads = Runtime.getRuntime().availableProcessors() + NUM_PROCESSORS;
-        } else {
-            this.numThreads = NUM_PROCESSORS;
-        }
-        this.numThreads = Math.max(1, Math.min(this.numThreads, tiles.size()));
-    }
-
-    private void doTileProcessing() {
-        // TODO: Eliminate this when switch to JDK 7
-        FileChannelJDKBugWorkAround.doBugWorkAround();
-
-        // Generate the list of tiles that will be processed
-        final List<Tile> tiles = new ArrayList<Tile>();
-        for (final Integer tileNumber : this.tiles) {
-            tiles.add(new Tile(tileNumber));
-        }
-
-        final TileReadAggregator tileReadAggregator = new TileReadAggregator(tiles);
-        tileReadAggregator.submit();
-        try {
-            tileReadAggregator.awaitWorkComplete();
-        } catch (InterruptedException e) {
-            log.error(e, "Failure encountered in worker thread; attempting to shut down remaining worker threads and terminate ...");
-            tileReadAggregator.shutdown();
-            throw new PicardException("Failure encountered in worker thread; see log for details.");
-        }
     }
 
     /**
@@ -900,7 +231,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         if (missingColumns.size() > 0) {
             throw new PicardException(String.format(
-                    "LIBRARY_PARAMS file %s is missing the following columns: %s.",
+                    "MULTIPLEX_PARAMS file %s is missing the following columns: %s.",
                     LIBRARY_PARAMS.getAbsolutePath(), StringUtil.join(", ", missingColumns
             )));
         }
@@ -948,7 +279,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             } else if (libraryParamsParser.hasColumn("BARCODE_1")) {
                 barcodeColumnLabels.add("BARCODE_1");
             } else {
-                throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
+                throw new PicardException("MULTIPLEX_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
             }
         } else {
             for (int i = 1; i <= readStructure.barcodes.length(); i++) {
@@ -972,7 +303,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
             final String key = (barcodeValues == null || barcodeValues.contains("N")) ? null : StringUtil.join("", barcodeValues);
             if (barcodeSamWriterMap.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded LIBRARY_PARAMS file
-                throw new PicardException("Row for barcode " + key + " appears more than once in LIBRARY_PARAMS or BARCODE_PARAMS file " +
+                throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS or BARCODE_PARAMS file " +
                         LIBRARY_PARAMS);
             }
 
@@ -982,12 +313,12 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 samHeaderParams.put(tagName, row.getField(tagName));
             }
 
-            final SAMFileWriter writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
+            final SAMFileWriterWrapper writer = buildSamFileWriter(new File(row.getField("OUTPUT")),
                     row.getField("SAMPLE_ALIAS"), row.getField("LIBRARY_NAME"), samHeaderParams);
             barcodeSamWriterMap.put(key, writer);
         }
         if (barcodeSamWriterMap.isEmpty()) {
-            throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
+            throw new PicardException("MULTIPLEX_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
         }
     }
 
@@ -1019,7 +350,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     }
 
     /**
-     * Build a SamFileWriter that will output it's contents to output.
+     * Build a SamFileWriter that will write its contents to the output file.
      *
      * @param output           The file to which to write
      * @param sampleAlias      The sample alias set in the read group header
@@ -1027,7 +358,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * @param headerParameters Header parameters that will be added to the RG header for this SamFile
      * @return A SAMFileWriter
      */
-    private SAMFileWriter buildSamFileWriter(final File output, final String sampleAlias, final String libraryName, final Map<String, String> headerParameters) {
+    private SAMFileWriterWrapper buildSamFileWriter(final File output, final String sampleAlias,
+                                                    final String libraryName, final Map<String, String> headerParameters) {
         IoUtil.assertFileIsWritable(output);
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
         rg.setSample(sampleAlias);
@@ -1042,7 +374,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
         header.addReadGroup(rg);
-        return new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, output);
+        return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, output));
     }
 
     public static void main(final String[] args) {
@@ -1068,8 +400,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (!readStructure.barcodes.isEmpty()) {
             if (LIBRARY_PARAMS == null) {
-                messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
-                        " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
+                messages.add("BARCODE_PARAMS or MULTIPLEX_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
+                        " then either MULTIPLEX_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
             }
         }
 
@@ -1082,16 +414,96 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return messages.toArray(new String[messages.size()]);
     }
 
-    /**
-     * Given a read structure return the data types that need to be parsed for this run
-     */
-    private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure) {
-        if (readStructure.barcodes.isEmpty()) {
-            return DATA_TYPES_NO_BARCODE;
-        } else {
-            return DATA_TYPES_WITH_BARCODE;
+
+    private static class SAMFileWriterWrapper
+            implements IlluminaBasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
+        public final SAMFileWriter writer;
+
+        private SAMFileWriterWrapper(final SAMFileWriter writer) {
+            this.writer = writer;
+        }
+
+        @Override
+        public void write(final SAMRecordsForCluster records) {
+            for (final SAMRecord rec : records.records) {
+            writer.addAlignment(rec);
+            }
+        }
+
+        @Override
+        public void close() {
+            writer.close();
         }
     }
 
+    static class SAMRecordsForCluster {
+        final SAMRecord[] records;
 
+        SAMRecordsForCluster(final int numRecords) {
+            records = new SAMRecord[numRecords];
+        }
+    }
+
+    static class QueryNameComparator implements Comparator<SAMRecordsForCluster> {
+        private final SAMRecordQueryNameComparator comparator = new SAMRecordQueryNameComparator();
+        @Override
+        public int compare(final SAMRecordsForCluster s1, final SAMRecordsForCluster s2) {
+            return comparator.compare(s1.records[0], s2.records[0]);
+        }
+    }
+
+    static class Codec implements SortingCollection.Codec<SAMRecordsForCluster> {
+        private final BAMRecordCodec bamCodec;
+        private final int numRecords;
+
+        Codec(final int numRecords, final BAMRecordCodec bamCodec) {
+            this.numRecords = numRecords;
+            this.bamCodec = bamCodec;
+        }
+
+        Codec(final int numRecords) {
+            this(numRecords, new BAMRecordCodec(null));
+        }
+
+        @Override
+        public void setOutputStream(final OutputStream os) {
+            bamCodec.setOutputStream(os);
+        }
+
+        @Override
+        public void setInputStream(final InputStream is) {
+            bamCodec.setInputStream(is);
+        }
+
+        @Override
+        public void encode(final SAMRecordsForCluster val) {
+            if (val.records.length != numRecords) {
+                throw new IllegalStateException(String.format("Expected number of clusters %d != actual %d",
+                        numRecords, val.records.length));
+            }
+            for (final SAMRecord rec : val.records) {
+                bamCodec.encode(rec);
+            }
+        }
+
+        @Override
+        public SAMRecordsForCluster decode() {
+            final SAMRecord zerothRecord = bamCodec.decode();
+            if (zerothRecord == null) return null;
+            final SAMRecordsForCluster ret = new SAMRecordsForCluster(numRecords);
+            ret.records[0] = zerothRecord;
+            for (int i = 1; i < numRecords; ++i) {
+                ret.records[i] = bamCodec.decode();
+                if (ret.records[i] == null) {
+                    throw new IllegalStateException(String.format("Expected to read % records but read only %d", numRecords, i));
+                }
+            }
+            return ret;
+        }
+
+        @Override
+        public SortingCollection.Codec<SAMRecordsForCluster> clone() {
+            return new Codec(numRecords, bamCodec.clone());
+        }
+    }
 }

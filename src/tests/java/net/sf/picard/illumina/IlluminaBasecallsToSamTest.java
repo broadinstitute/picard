@@ -28,8 +28,6 @@ import net.sf.samtools.util.BufferedLineReader;
 import net.sf.samtools.util.LineReader;
 import net.sf.samtools.util.StringUtil;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -46,33 +44,14 @@ import java.util.List;
  */
 public class IlluminaBasecallsToSamTest {
 
-    private static final String RANDOM_SEED_PROPERTY = "picard.random.seed";
-
-    private String picardRandomSeed;
     private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/IlluminaTests/BasecallsDir");
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/IlluminaBasecallsToSamTest");
 
-    @BeforeTest
-    void beforeTest() {
-        // For predictable 2ndary base calling
-        picardRandomSeed = System.getProperty(RANDOM_SEED_PROPERTY);
-        System.setProperty(RANDOM_SEED_PROPERTY, "0");
-    }
-
-    @AfterTest
-    void afterTest() {
-        if (picardRandomSeed != null) {
-            System.setProperty(RANDOM_SEED_PROPERTY, picardRandomSeed);
-        } else {
-            System.clearProperty(RANDOM_SEED_PROPERTY);
-        }
-    }
-
     @Test
     public void testTileNumberComparator() {
-        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
-        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
-        Assert.assertTrue(IlluminaBasecallsToSam.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
+        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
+        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
+        Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
     }
 
     @Test

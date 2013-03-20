@@ -30,15 +30,24 @@ import java.io.File;
 import java.io.PrintStream;
 
 /**
- * @author alecw@broadinstitute.org
+ * In general FastqWriterFactory should be used so that AsyncFastqWriter can be enabled, but there are some
+ * cases in which that behavior is explicitly not wanted.
  */
-class BasicFastqWriter implements FastqWriter {
-    private final File file;
+public class BasicFastqWriter implements FastqWriter {
+    private final String path;
     private final PrintStream writer;
 
-    BasicFastqWriter(final File file) {
-        this.file = file;
-        this.writer = new PrintStream(IoUtil.openFileForWriting(file));
+    public BasicFastqWriter(final File file) {
+        this(file, new PrintStream(IoUtil.openFileForWriting(file)));
+    }
+
+    private BasicFastqWriter(File file, PrintStream writer) {
+        this.path = (file != null? file.getAbsolutePath(): "");
+        this.writer = writer;
+    }
+
+    public BasicFastqWriter(PrintStream writer) {
+        this(null, writer);
     }
 
     public void write(final FastqRecord rec) {
@@ -49,8 +58,12 @@ class BasicFastqWriter implements FastqWriter {
         writer.println(rec.getBaseQualityHeader() == null ? "" : rec.getBaseQualityHeader());
         writer.println(rec.getBaseQualityString());
         if (writer.checkError()) {
-            throw new PicardException("Error in writing file " + file);
+            throw new PicardException("Error in writing fastq file " + path);
         }
+    }
+
+    public void flush() {
+        writer.flush();
     }
 
     public void close() {
