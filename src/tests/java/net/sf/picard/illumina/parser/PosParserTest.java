@@ -159,7 +159,7 @@ public class PosParserTest {
         Assert.assertFalse(parser.hasNext());
     }
 
-    @DataProvider(name = "singleTileData")
+    @DataProvider(name = "multiTileData")
     public Object [][] multiTileData() {
         return new Object[][]{
             {makeList(1,2,3),     null,    makeList(S_1_1_POS, S_1_2_POS, S_1_3_POS)},
