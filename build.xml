@@ -158,7 +158,7 @@
                 <include name="**/Test*.class"/>
                 <include name="**/*Test.class"/>
             </classfileset>
-            <jvmarg value="-Xmx1G"/>
+            <jvmarg value="-Xmx2G"/>
             <jvmarg line="-javaagent:${contracts.jar} -Dcom.google.java.contract.log.contract=false"/>
         </testng>
         <junitreport todir="${dist}/test" >
