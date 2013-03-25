@@ -76,7 +76,8 @@ public class IntervalListReferenceSequenceMask implements ReferenceSequenceMask 
      */
     public int nextPosition(final int sequenceIndex, final int position) {
         ensureSequenceLoaded(sequenceIndex);
-        return currentBitSet.nextSetBit(position);
+		// nextSetBit returns the first set bit on or after the starting index, therefore position+1
+        return currentBitSet.nextSetBit(position+1);
     }
 
     private void ensureSequenceLoaded(final int sequenceIndex) {

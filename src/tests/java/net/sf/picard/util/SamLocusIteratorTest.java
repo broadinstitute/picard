@@ -68,8 +68,7 @@ public class SamLocusIteratorTest {
 
     }
 
-    // Test added after bug report...bug needs to be fixed.
-    @Test(groups = {"broken"})
+    @Test
     public void testEmitUncoveredLoci() {
 
         final String sqHeader = "@HD\tSO:coordinate\tVN:1.0\n@SQ\tSN:chrM\tAS:HG18\tLN:100000\n";
