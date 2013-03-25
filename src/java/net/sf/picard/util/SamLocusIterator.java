@@ -250,7 +250,7 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
         }
         return (lastReferenceSequence < referenceSequenceMask.getMaxSequenceIndex() ||
                (lastReferenceSequence == referenceSequenceMask.getMaxSequenceIndex() &&
-                lastPosition <= referenceSequenceMask.nextPosition(lastReferenceSequence, lastPosition+1)));
+                lastPosition < referenceSequenceMask.nextPosition(lastReferenceSequence, lastPosition)));
     }
 
     /**
@@ -378,7 +378,7 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
 
 
 
-            final int nextbit = referenceSequenceMask.nextPosition(lastReferenceSequence, lastPosition+1);
+            final int nextbit = referenceSequenceMask.nextPosition(lastReferenceSequence, lastPosition);
 
             // try the next reference sequence
             if (nextbit == -1) {
