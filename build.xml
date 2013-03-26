@@ -310,7 +310,13 @@
         <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
         <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
         <package-and-document-command title="MergeSamFiles"                  main-class="net.sf.picard.sam.MergeSamFiles"/>
-        <package-and-document-command title="MergeVcfs"                      main-class="net.sf.picard.vcf.MergeVcfs"/>
+        <package-and-document-command title="MergeVcfs"                      main-class="net.sf.picard.vcf.MergeVcfs">
+            <package-filesets>
+                <fileset dir=".command_tmp" >
+                    <include name="org/apache/commons/logging/**/*"/>
+                </fileset>
+            </package-filesets>
+        </package-and-document-command>
         <package-and-document-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
         <package-and-document-command title="ExtractSequences"               main-class="net.sf.picard.reference.ExtractSequences"/>
         <package-and-document-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
@@ -320,7 +326,13 @@
         <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
         <package-and-document-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
         <package-and-document-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
-        <package-and-document-command title="SplitVcfs"                      main-class="net.sf.picard.vcf.SplitVcfs"/>
+        <package-and-document-command title="SplitVcfs"                      main-class="net.sf.picard.vcf.SplitVcfs">
+            <package-filesets>
+                <fileset dir=".command_tmp" >
+                    <include name="org/apache/commons/logging/**/*"/>
+                </fileset>
+            </package-filesets>
+        </package-and-document-command>
         <package-and-document-command title="ValidateSamFile"                main-class="net.sf.picard.sam.ValidateSamFile"/>
         <package-and-document-command title="ViewSam"                        main-class="net.sf.picard.sam.ViewSam"/>
     </target>
@@ -354,6 +366,7 @@
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/native/Linux/**/*"/>
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/VERSION"/>
                 <fileset dir="${command_tmp}" includes="META-INF/maven/org.xerial.snappy/snappy-java/pom.properties"/>
+                <filesets/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
                     <attribute name="Main-Class" value="@{main-class}"/>
@@ -416,9 +429,13 @@
     <macrodef name="package-and-document-command">
         <attribute name="main-class"/>
         <attribute name="title"/>
-        <element name="filesets" optional="yes"/>
+        <element name="package-filesets" optional="yes"/>
         <sequential>
-            <package-command title="@{title}" main-class="@{main-class}"/>
+            <package-command title="@{title}" main-class="@{main-class}">
+                <filesets>
+                    <package-filesets/>
+                </filesets>
+            </package-command>
             <document-command title="@{title}" main-class="@{main-class}"/>
         </sequential>
     </macrodef>
