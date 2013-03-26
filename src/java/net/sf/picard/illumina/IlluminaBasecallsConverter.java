@@ -169,7 +169,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         }
 
         this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure,
-                getDataTypesFromReadStructure(readStructure));
+                getDataTypesFromReadStructure(readStructure, demultiplex));
 
         if (numProcessors == 0) {
             this.numThreads = Runtime.getRuntime().availableProcessors();
@@ -790,8 +790,9 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     /**
      * Given a read structure return the data types that need to be parsed for this run
      */
-    private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure) {
-        if (readStructure.barcodes.isEmpty()) {
+    private static IlluminaDataType[] getDataTypesFromReadStructure(final ReadStructure readStructure,
+                                                                    final boolean demultiplex) {
+        if (readStructure.barcodes.isEmpty() || !demultiplex) {
             return DATA_TYPES_NO_BARCODE;
         } else {
             return DATA_TYPES_WITH_BARCODE;
