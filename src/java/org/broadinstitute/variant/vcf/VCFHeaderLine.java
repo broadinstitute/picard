@@ -54,6 +54,8 @@ public class VCFHeaderLine implements Comparable {
     public VCFHeaderLine(String key, String value) {
         if ( key == null )
             throw new IllegalArgumentException("VCFHeaderLine: key cannot be null");
+        if ( key.contains("<") || key.contains(">") )
+            throw new IllegalArgumentException("VCFHeaderLine: key cannot contain angle brackets");
         mKey = key;
         mValue = value;
     }
