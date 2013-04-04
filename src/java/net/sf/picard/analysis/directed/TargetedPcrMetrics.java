@@ -100,12 +100,6 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
     public double PCT_TARGET_BASES_20X;
 	/** The percentage of ALL target bases achieving 30X or greater coverage. */
 	public double PCT_TARGET_BASES_30X;
-	/** The percentage of ALL target bases achieving 40X or greater coverage. */
-	public double PCT_TARGET_BASES_40X;
-	/** The percentage of ALL target bases achieving 50X or greater coverage. */
-	public double PCT_TARGET_BASES_50X;
-	/** The percentage of ALL target bases achieving 100X or greater coverage. */
-	public double PCT_TARGET_BASES_100X;
 
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
