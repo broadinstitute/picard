@@ -46,7 +46,7 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
     }
 
     @Override
-    public HsMetrics convertMetric(TargetMetrics targetMetrics) {
+    public HsMetrics convertMetric(final TargetMetrics targetMetrics) {
         final HsMetrics hsMetrics = new HsMetrics();
         TargetMetricsCollector.reflectiveCopy(targetMetrics, hsMetrics,
                 new String[]{"PROBE_SET", "PROBE_TERRITORY", "ON_PROBE_BASES", "NEAR_PROBE_BASES", "OFF_PROBE_BASES", "PCT_OFF_PROBE", "ON_PROBE_VS_SELECTED", "MEAN_PROBE_COVERAGE"},
@@ -61,7 +61,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
         //need HSLIBRARY_SIZE
         hsMetrics.HS_PENALTY_10X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 10);
         hsMetrics.HS_PENALTY_20X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 20);
-        hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
+	    hsMetrics.HS_PENALTY_30X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 30);
+	    hsMetrics.HS_PENALTY_40X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 40);
+	    hsMetrics.HS_PENALTY_50X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 50);
+	    hsMetrics.HS_PENALTY_100X = calculateHsPenalty(hsMetrics.HS_LIBRARY_SIZE, targetMetrics, 100);
         return hsMetrics;
     }
 
