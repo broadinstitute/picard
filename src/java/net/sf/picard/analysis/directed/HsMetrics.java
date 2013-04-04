@@ -122,8 +122,15 @@ public class HsMetrics extends MultilevelMetrics {
     public double PCT_TARGET_BASES_10X;
     /** The percentage of ALL target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-    /** The percentage of ALL target bases achieving 30X or greater coverage. */
-    public double PCT_TARGET_BASES_30X;
+	/** The percentage of ALL target bases achieving 30X or greater coverage. */
+	public double PCT_TARGET_BASES_30X;
+	/** The percentage of ALL target bases achieving 40X or greater coverage. */
+	public double PCT_TARGET_BASES_40X;
+	/** The percentage of ALL target bases achieving 50X or greater coverage. */
+	public double PCT_TARGET_BASES_50X;
+	/** The percentage of ALL target bases achieving 100X or greater coverage. */
+	public double PCT_TARGET_BASES_100X;
+
     /** The estimated number of unique molecules in the selected part of the library. */
     public Long HS_LIBRARY_SIZE;
 
@@ -141,12 +148,33 @@ public class HsMetrics extends MultilevelMetrics {
      */
     public double HS_PENALTY_20X;
 
-    /**
-     * The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
-     * should be interpreted as: if I have a design with 10 megabases of target, and want to get
-     * 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.
-     */
-    public double HS_PENALTY_30X;
+	/**
+	 * The "hybrid selection penalty" incurred to get 80% of target bases to 30X. This metric
+	 * should be interpreted as: if I have a design with 10 megabases of target, and want to get
+	 * 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.
+	 */
+	public double HS_PENALTY_30X;
+
+	/**
+	 * The "hybrid selection penalty" incurred to get 80% of target bases to 40X. This metric
+	 * should be interpreted as: if I have a design with 10 megabases of target, and want to get
+	 * 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.
+	 */
+	public double HS_PENALTY_40X;
+
+	/**
+	 * The "hybrid selection penalty" incurred to get 80% of target bases to 50X. This metric
+	 * should be interpreted as: if I have a design with 10 megabases of target, and want to get
+	 * 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.
+	 */
+	public double HS_PENALTY_50X;
+
+	/**
+	 * The "hybrid selection penalty" incurred to get 80% of target bases to 100X. This metric
+	 * should be interpreted as: if I have a design with 10 megabases of target, and want to get
+	 * 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.
+	 */
+	public double HS_PENALTY_100X;
 
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]

@@ -449,7 +449,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             int targetBases2x  = 0;
             int targetBases10x = 0;
             int targetBases20x = 0;
-            int targetBases30x = 0;
+	        int targetBases30x = 0;
+	        int targetBases40x = 0;
+	        int targetBases50x = 0;
+	        int targetBases100x = 0;
 
             for (final Coverage c : this.coverageByTarget.values()) {
                 for (final short depth : c.getDepths()) {
@@ -463,6 +466,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                 ++targetBases20x;
                                 if (depth >=30) {
                                     ++targetBases30x;
+	                                if (depth >=40) {
+		                                ++targetBases40x;
+		                                if (depth >=50) {
+			                                ++targetBases50x;
+			                                if (depth >=100) {
+				                                ++targetBases100x;
+			                                }
+		                                }
+	                                }
                                 }
                             }
                         }
@@ -473,7 +485,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.metrics.PCT_TARGET_BASES_2X  = (double) targetBases2x  / (double) totalTargetBases;
             this.metrics.PCT_TARGET_BASES_10X = (double) targetBases10x / (double) totalTargetBases;
             this.metrics.PCT_TARGET_BASES_20X = (double) targetBases20x / (double) totalTargetBases;
-            this.metrics.PCT_TARGET_BASES_30X = (double) targetBases30x / (double) totalTargetBases;
+	        this.metrics.PCT_TARGET_BASES_30X = (double) targetBases30x / (double) totalTargetBases;
+	        this.metrics.PCT_TARGET_BASES_40X = (double) targetBases40x / (double) totalTargetBases;
+	        this.metrics.PCT_TARGET_BASES_50X = (double) targetBases50x / (double) totalTargetBases;
+	        this.metrics.PCT_TARGET_BASES_100X = (double) targetBases100x / (double) totalTargetBases;
         }
 
         private void calculateGcMetrics() {
@@ -706,8 +721,14 @@ class TargetMetrics extends MultilevelMetrics {
     public double PCT_TARGET_BASES_10X;
     /** The percentage of ALL target bases acheiving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-    /** The percentage of ALL target bases acheiving 30X or greater coverage. */
-    public double PCT_TARGET_BASES_30X;
+	/** The percentage of ALL target bases acheiving 30X or greater coverage. */
+	public double PCT_TARGET_BASES_30X;
+	/** The percentage of ALL target bases acheiving 40X or greater coverage. */
+	public double PCT_TARGET_BASES_40X;
+	/** The percentage of ALL target bases acheiving 50X or greater coverage. */
+	public double PCT_TARGET_BASES_50X;
+	/** The percentage of ALL target bases acheiving 100X or greater coverage. */
+	public double PCT_TARGET_BASES_100X;
 
     /**
      * A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
