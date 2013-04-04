@@ -56,6 +56,8 @@ public class VCFHeaderLine implements Comparable {
             throw new IllegalArgumentException("VCFHeaderLine: key cannot be null");
         if ( key.contains("<") || key.contains(">") )
             throw new IllegalArgumentException("VCFHeaderLine: key cannot contain angle brackets");
+        if ( key.contains("=") )
+            throw new IllegalArgumentException("VCFHeaderLine: key cannot contain an equals sign");
         mKey = key;
         mValue = value;
     }

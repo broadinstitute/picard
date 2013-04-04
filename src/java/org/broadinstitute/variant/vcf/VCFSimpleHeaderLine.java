@@ -74,6 +74,10 @@ public class VCFSimpleHeaderLine extends VCFHeaderLine implements VCFIDHeaderLin
     protected void initialize(String name, Map<String, String> genericFields) {
         if ( name == null || genericFields == null || genericFields.isEmpty() )
             throw new IllegalArgumentException(String.format("Invalid VCFSimpleHeaderLine: key=%s name=%s", super.getKey(), name));
+        if ( name.contains("<") || name.contains(">") )
+            throw new IllegalArgumentException("VCFHeaderLine: ID cannot contain angle brackets");
+        if ( name.contains("=") )
+            throw new IllegalArgumentException("VCFHeaderLine: ID cannot contain an equals sign");
 
         this.name = name;
         this.genericFields.putAll(genericFields);
