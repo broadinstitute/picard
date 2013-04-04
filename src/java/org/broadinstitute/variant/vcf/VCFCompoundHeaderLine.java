@@ -193,6 +193,10 @@ public abstract class VCFCompoundHeaderLine extends VCFHeaderLine implements VCF
         if ( name == null || type == null || description == null || lineType == null )
             throw new IllegalArgumentException(String.format("Invalid VCFCompoundHeaderLine: key=%s name=%s type=%s desc=%s lineType=%s", 
                     super.getKey(), name, type, description, lineType ));
+        if ( name.contains("<") || name.contains(">") )
+            throw new IllegalArgumentException("VCFHeaderLine: ID cannot contain angle brackets");
+        if ( name.contains("=") )
+            throw new IllegalArgumentException("VCFHeaderLine: ID cannot contain an equals sign");
 
         if ( type == VCFHeaderLineType.Flag && count != 0 ) {
             count = 0;
