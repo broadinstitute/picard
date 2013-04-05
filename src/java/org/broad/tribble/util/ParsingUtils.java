@@ -23,11 +23,14 @@
  */
 package org.broad.tribble.util;
 
+import net.sf.picard.util.Log;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -37,6 +40,8 @@ import java.util.List;
  * @author jrobinso
  */
 public class ParsingUtils {
+
+    private static final Log log = Log.getInstance(ParsingUtils.class);
 
     public static Map<Object, Color> colorCache = new WeakHashMap<Object, Color>(100);
 
@@ -367,5 +372,24 @@ public class ParsingUtils {
         } else {
             return (new File(resource)).exists();
         }
+    }
+
+    public static URLHelper getURLHelper(URL url) {
+        try {
+            Constructor constr = httpHelperClass.getConstructor(URL.class);
+            URLHelper helper = (URLHelper) constr.newInstance(url);
+            return helper;
+        } catch (Exception e) {
+            log.error("Error instantiating url helper for class: " + httpHelperClass, e);
+            return new HTTPHelper(url);
+        }
+    }
+
+    public static void registerHelperClass(Class helperClass) {
+        if (!helperClass.isAssignableFrom(URLHelper.class)) {
+            // TODO -- throw exception here.  Also check that class implements the required constructor
+        }
+        httpHelperClass = helperClass;
+
     }
 }
