@@ -40,12 +40,15 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Factory class for creating indexes, either new instances, or .  It is the responsibility of this class to determine and create the
+ * Factory class for creating indexes.  It is the responsibility of this class to determine and create the
  * correct index type from the input file or stream
  */
-
 public class IndexFactory {
 
+    /**
+     * We can optimize index-file-creation for different factors.
+     * As of this writing, those are index-file size or seeking time.
+     */
     public enum IndexBalanceApproach {
         FOR_SIZE,
         FOR_SEEK_TIME
@@ -97,6 +100,12 @@ public class IndexFactory {
             return indexType;
         }
 
+        /**
+         *
+         * @param headerValue
+         * @return The {@code IndexType} based on the {@code headerValue}
+         * @throws TribbleException.UnableToCreateCorrectIndexType
+         */
         public static IndexType getIndexType(int headerValue) {
             for (IndexType type : IndexType.values())
                 if (type.indexValue == headerValue) return type;
@@ -163,8 +172,10 @@ public class IndexFactory {
     /**
      * a helper method for creating a linear binned index
      *
+     * @see #createIndex(File, FeatureCodec, IndexType, int)
      * @param inputFile the input file to load features from
      * @param codec     the codec to use for decoding records
+     * @param binSize   the bin size
      * @return a index
      */
     public static Index createLinearIndex(File inputFile, FeatureCodec codec, int binSize) {
@@ -188,6 +199,7 @@ public class IndexFactory {
      *
      * @param inputFile the input file to load features from
      * @param codec     the codec to use for decoding records
+     * @param binSize   the bin size
      * @return a index
      */
     public static Index createIntervalIndex(File inputFile, FeatureCodec codec, int binSize) {
@@ -210,6 +222,7 @@ public class IndexFactory {
      *
      * @param inputFile the input file to load features from
      * @param codec     the codec to use for decoding records
+     * @param type      the type of index to create
      * @return a index
      */
     public static Index createIndex(File inputFile, FeatureCodec codec, IndexType type) {
@@ -221,6 +234,8 @@ public class IndexFactory {
      *
      * @param inputFile the input file to load features from
      * @param codec     the codec to use for decoding records
+     * @param type      the type of index to create
+     * @param binSize   the bin size
      * @return a index
      */
     public static Index createIndex(File inputFile, FeatureCodec codec, IndexType type, final int binSize) {
@@ -232,6 +247,12 @@ public class IndexFactory {
         return createIndex(inputFile, new FeatureIterator(inputFile, codec), idx);
     }
 
+    /**
+     * Write the index to a file; little endian.
+     * @param idx
+     * @param idxFile
+     * @throws IOException
+     */
     public static void writeIndex(final Index idx, final File idxFile) throws IOException {
         LittleEndianOutputStream stream = null;
         try {
@@ -308,7 +329,7 @@ public class IndexFactory {
 
 
     /**
-     *
+     * Iterator for reading features from a file, given a {@code FeatureCodec}.
      */
     static class FeatureIterator implements CloseableTribbleIterator<Feature> {
         // the stream we use to get features
@@ -322,6 +343,11 @@ public class IndexFactory {
         // we also need cache our position
         private long cachedPosition;
 
+        /**
+         *
+         * @param inputFile The file from which to read. Stream for reading is opened on construction.
+         * @param codec
+         */
         public FeatureIterator(File inputFile, FeatureCodec codec) {
             this.codec = codec;
             this.inputFile = inputFile;
@@ -358,7 +384,6 @@ public class IndexFactory {
             }
         }
 
-        // the standard iterator methods
         public boolean hasNext() {
             return nextFeature != null;
         }
@@ -369,12 +394,17 @@ public class IndexFactory {
             return ret;
         }
 
+        /**
+         * @throws UnsupportedOperationException
+         */
         public void remove() {
             throw new UnsupportedOperationException("We cannot remove");
         }
 
-        // get the file position from the underlying reader
 
+        /**
+         * @return the file position from the underlying reader
+         */
         public long getPosition() {
             return (hasNext()) ? cachedPosition : stream.getPosition();
         }
@@ -389,7 +419,10 @@ public class IndexFactory {
             stream.close();
         }
 
-        // read the next feature
+        /**
+         * Read the next feature from the stream
+         * @throws TribbleException.MalformedFeatureFile
+         */
         private void readNextFeature() {
             cachedPosition = stream.getPosition();
             try {

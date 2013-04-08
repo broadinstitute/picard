@@ -41,7 +41,12 @@ public interface ChrIndex {
      * @return all blocks in ChrIndex
      */
     List<Block> getBlocks();
-    
+
+    /**
+     * @param start the start position, one based
+     * @param end   the end position, one based
+     * @return a list of blocks that include the region defined from start to stop.  Can never return null
+     */
     List<Block> getBlocks(int start, int end);
 
     void write(LittleEndianOutputStream dos) throws IOException;

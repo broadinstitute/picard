@@ -19,18 +19,29 @@
 package org.broad.tribble.index.interval;
 
 
-/** An implementation of an interval tree, following the explanation.
- * from CLR.
- */
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+/** An implementation of an interval tree, following the explanation.
+ * from CLR. For efficiently finding all intervals which overlap a given
+ * interval or point.
+ *
+ * References:
+ * http://en.wikipedia.org/wiki/Interval_tree
+ *
+ * Cormen, Thomas H.; Leiserson, Charles E., Rivest, Ronald L. (1990). Introduction to Algorithms (1st ed.). MIT Press and McGraw-Hill. ISBN 0-262-03141-8
+ *
+ *
+ */
 public class IntervalTree {
 
     Node root;
     Node NIL = Node.NIL;
+
+    /**
+     * See {@link #getSize()}
+     */
     int size;
 
     public IntervalTree() {
@@ -45,13 +56,21 @@ public class IntervalTree {
         size++;
     }
 
+    /**
+     * The estimated size of the tree. We keep a running count
+     * on each insert, this getter returns that count.
+     * @see #size()
+     * @return
+     */
     public int getSize() {
         return size;
     }
 
-
-    // Returns all matches as a list of Intervals
-
+    /**
+     *
+     * @param interval
+     * @return all matches as a list of Intervals
+     */
     public List<Interval> findOverlapping(Interval interval) {
 
         if (root().isNull()) {
@@ -94,6 +113,13 @@ public class IntervalTree {
         return results;
     }
 
+    /**
+     * Get all nodes which are descendants of {@code node}, inclusive.
+     * {@code results} is modified in place
+     * @param node
+     * @param results
+     * @return the total list of descendants, including original {@code results}
+     */
     private List<Interval> getAll(Node node, List<Interval> results) {
 
         results.add(node.interval);
@@ -291,9 +317,10 @@ public class IntervalTree {
         node.min = Math.min(Math.min(node.left.min, node.right.min), node.interval.start);
     }
 
-
     /**
-     * Returns the number of nodes in the tree.
+     * @see #getSize()
+     * @return Returns the number of nodes in the tree.
+     *         Recalculated each call
      */
     public int size() {
         return _size(this.root);
@@ -367,7 +394,6 @@ public class IntervalTree {
      * This code is expensive, and only meant to be used for
      * assertions and testing.
      */
-
     public boolean isValid() {
         if (this.root.color != Node.BLACK) {
             //logger.warn("root color is wrong");

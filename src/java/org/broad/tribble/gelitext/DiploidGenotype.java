@@ -25,13 +25,12 @@ package org.broad.tribble.gelitext;
 
 
 /**
- * 
- * @author aaron 
- * 
  * Class DiploidGenotype
  *
  * Enum describing all possible combinations of diploid genotype variations;
  * AA, AC, etc.
+ *
+ * @author aaron
  */
 public enum DiploidGenotype {
     AA, AC, AG, AT, CC, CG, CT, GG, GT, TT;

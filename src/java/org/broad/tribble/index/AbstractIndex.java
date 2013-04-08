@@ -27,11 +27,12 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * User: jrobinso
  * <p/>
  * An abstract implementation of the index class.  This class takes care of the basics that are common
  * to all of the current indexing classes; including the version information, common header properties,
  * and reading and writing the header to disk.
+ *
+ * @author jrobinso
  */
 public abstract class AbstractIndex implements Index {
 
@@ -65,20 +66,21 @@ public abstract class AbstractIndex implements Index {
         return indexedFileMD5 != NO_MD5;
     }
 
-    // out listing of properties, order preserved
     private LinkedHashMap<String, String> properties;
 
-    // the hashmap of our chromosome bins
+    /**
+     * the map of our chromosome bins
+     */
     protected LinkedHashMap<String, ChrIndex> chrIndices;
 
-    // any flags we're using:
+    /**
+     * Any flags we're using
+     */
     private static final int SEQUENCE_DICTIONARY_FLAG = 0x8000; // if we have a sequence dictionary in our header
 
     /**
-     * Returns true if this and obj are 'effectively' equivalent data structures.
-     *
      * @param obj
-     * @return
+     * @return true if this and obj are 'effectively' equivalent data structures.
      */
     public boolean equalsIgnoreProperties(Object obj) {
         if (this == obj) return true;
@@ -190,28 +192,14 @@ public abstract class AbstractIndex implements Index {
         return version;
     }
 
-    /**
-     * set the MD5 value
-     *
-     * @param md5 the MD5 sum
-     */
     public void setMD5(String md5) {
         this.indexedFileMD5 = md5;
     }
 
-    /**
-     * do we have an entry for the target chromosome?
-     *
-     * @param chr the chromosome (or contig) name
-     * @return true if we have an entry; false otherwise
-     */
     public boolean containsChromosome(String chr) {
         return chrIndices.containsKey(chr);
     }
 
-    /**
-     * Should be called after the index is created to finalize all of the header information
-     */
     public void finalizeIndex() {
         // these two functions must be called now because the file may be being written during on the fly indexing
         if (indexedFile != null) {
@@ -290,22 +278,10 @@ public abstract class AbstractIndex implements Index {
         }
     }
 
-
-    /**
-     * get the sequence names
-     *
-     * @return a linked hash set of sequence names (Linked to ensure ordering)
-     */
     public LinkedHashSet<String> getSequenceNames() {
         return new LinkedHashSet(chrIndices.keySet());
     }
 
-    /**
-     * @param chr   the chromosome
-     * @param start the start position, one based
-     * @param end   the end position, one based
-     * @return a list of blocks that include the region defined from start to stop.  Can never return null
-     */
     public List<Block> getBlocks(String chr, int start, int end) {
         return getChrIndex(chr).getBlocks(start, end);
     }
@@ -316,7 +292,8 @@ public abstract class AbstractIndex implements Index {
 
     /**
      * @param chr
-     * @return return the ChrIndex associated with chr, or throw an IllegalArgumentException if not found
+     * @return return the ChrIndex associated with chr,
+     * @throws IllegalArgumentException if {@code chr} not found
      */
     private final ChrIndex getChrIndex(final String chr) {
         ChrIndex chrIdx = chrIndices.get(chr);
@@ -327,12 +304,6 @@ public abstract class AbstractIndex implements Index {
         }
     }
 
-    /**
-     * Store self to a file
-     *
-     * @param stream the input stream
-     * @throws java.io.IOException
-     */
     public void write(LittleEndianOutputStream stream) throws IOException {
         writeHeader(stream);
 
@@ -343,12 +314,6 @@ public abstract class AbstractIndex implements Index {
         }
     }
 
-    /**
-     * read the index from a little endian input stream
-     *
-     * @param dis the little endian input stream
-     * @throws IOException if we fail to successfully read from disk
-     */
     public void read(LittleEndianInputStream dis) throws IOException {
         try {
             readHeader(dis);
@@ -412,12 +377,6 @@ public abstract class AbstractIndex implements Index {
         return String.format("%12d blocks (%12d empty (%.2f%%))", stats.total, stats.empty, (100.0 * stats.empty) / stats.total);
     }
 
-    /**
-     * add properties to the the existing property listing;
-     *
-     * @param key   the key
-     * @param value the value, stored as a string, though it may represent an different underlying type
-     */
     public void addProperty(String key, String value) {
         properties.put(key, value);
     }
@@ -434,7 +393,7 @@ public abstract class AbstractIndex implements Index {
     /**
      * get the index type
      *
-     * @return
+     * @return The index type
      */
     protected abstract int getType();
 

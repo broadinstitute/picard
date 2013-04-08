@@ -25,12 +25,11 @@ package org.broad.tribble.exception;
 
 
 /**
- * 
- * @author aaron 
- * 
  * Class CodecLineParsingException
  *
  * a generic exception we use if the codec has trouble parsing the line its given
+ *
+ * @author aaron
  */
 public class CodecLineParsingException extends RuntimeException {
 

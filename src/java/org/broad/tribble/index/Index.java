@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Interface for all index implementations.  
+ * Interface for all index implementations.
+ * An index file is used for efficient lookup of features from a feature file;
+ * and Index represents that index file.
  */
 public interface Index {
     /**
@@ -40,13 +42,12 @@ public interface Index {
      * @param chr the chromosome
      * @param start the start position
      * @param end the end position
-     * @return a list of blocks that contain the specified interval.
+     * @return a list of blocks that contain the specified interval.  Can never return null
      * @throws IllegalArgumentException of chr isn't part of this index
      */
     List<Block> getBlocks(String chr, int start, int end);
 
     /**
-     * does this index represent an up-to-date version
      * @return true if the index is up to date, false otherwise
      */
     public boolean isCurrentVersion();
@@ -58,7 +59,6 @@ public interface Index {
     LinkedHashSet<String> getSequenceNames();
 
     /**
-     * do we have an entry for the target chromosome?
      * @param chr the chromosome (or contig) name
      * @return true if we have an entry; false otherwise
      */
@@ -92,8 +92,7 @@ public interface Index {
      */
     public void finalizeIndex();
 
-/**
-     * this method allows properties to added to the index
+    /**
      * @return get the list of properties for this index
      */
     public Map<String,String> getProperties();

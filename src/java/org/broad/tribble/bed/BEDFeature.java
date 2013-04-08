@@ -29,8 +29,8 @@ import org.broad.tribble.annotation.Strand;
 import java.awt.*;
 
 /**
- * @author: jrobinso
- * @date: Dec 24, 2009
+ * @author jrobinso
+ * @date Dec 24, 2009
  */
 public interface BEDFeature extends Feature {
     Strand getStrand();
