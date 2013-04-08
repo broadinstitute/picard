@@ -29,11 +29,12 @@ import java.util.Arrays;
 
 
 /**
- * @author aaron
  *         <p/>
  *         Class GeliTextFeature
  *         <p/>
  *         This is a feature for the Geli text object, which is the text version of the Geli binary genotyping format.
+ *
+ * @author aaron
  */
 public class GeliTextFeature implements Feature {
 

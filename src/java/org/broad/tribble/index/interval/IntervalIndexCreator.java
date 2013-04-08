@@ -28,25 +28,28 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
- * Created by IntelliJ IDEA.
- * User: jrobinso
- * creates interval indexes from a stream of features
+ * Creates interval indexes from a stream of features
+ * @author jrobinso
  */
 public class IntervalIndexCreator implements IndexCreator {
-    // how many features we store by default, and our current value
+
     public static int DEFAULT_FEATURE_COUNT = 600;
 
+    /**
+     * Maximum number of features stored per interval.
+     * @see #DEFAULT_FEATURE_COUNT
+     */
     private int featuresPerInterval = DEFAULT_FEATURE_COUNT;
 
     private LinkedList<ChrIndex> chrList = new LinkedList<ChrIndex>();
 
-    // instance variable for the number of features we currently are storing in the interval
+    /**
+     * Instance variable for the number of features we currently are storing in the interval
+     */
     private int featureCount = 0;
 
-    // a list of intervals
     private ArrayList<MutableInterval> intervals = new ArrayList<MutableInterval>();
 
-    // the input file we're using
     File inputFile;
 
     public void initialize(File inputFile, int binSize) {
@@ -106,10 +109,6 @@ public class IntervalIndexCreator implements IndexCreator {
         return featureIndex;
     }
 
-    /**
-     * we default to DEFAULT_FEATURE_COUNT currently
-     * @return the default number of features in a bin
-     */
     public int defaultBinSize() {
         return DEFAULT_FEATURE_COUNT;
     }
@@ -120,7 +119,7 @@ public class IntervalIndexCreator implements IndexCreator {
 }
 
 /**
- * the interval class isn't mutable; use this private class as a temporary storage until we're ready to make intervals
+ * The interval class isn't mutable; use this private class as a temporary storage until we're ready to make intervals
  */
 class MutableInterval {
 

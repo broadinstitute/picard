@@ -49,7 +49,6 @@ import java.util.*;
  * ------  LINEAR INDEX
  * nChromosomes     integer
  */
-
 public class LinearIndex extends AbstractIndex implements Index {
 
     // NOTE: To debug uncomment the System.getProperty and recompile.
@@ -67,8 +66,13 @@ public class LinearIndex extends AbstractIndex implements Index {
      */
     public LinearIndex() {}
 
-    public LinearIndex(List<ChrIndex> indices, File inputFile) {
-        super(inputFile.getAbsolutePath());
+    /**
+     * Initialize using the specified {@code indices}
+     * @param indices
+     * @param featureFile
+     */
+    public LinearIndex(List<ChrIndex> indices, File featureFile) {
+        super(featureFile.getAbsolutePath());
         for (ChrIndex index : indices)
             chrIndices.put(index.getName(), index);
     }
@@ -79,6 +83,10 @@ public class LinearIndex extends AbstractIndex implements Index {
             chrIndices.put(index.getName(), index);
     }
 
+    /**
+     * Initialize with default parameters
+     * @param featureFile File for which this is an index
+     */
     public LinearIndex(String featureFile) {
         super(featureFile);
     }
@@ -172,11 +180,6 @@ public class LinearIndex extends AbstractIndex implements Index {
             return blocks;
         }
 
-        /**
-         * @param start the start position, one based
-         * @param end   the end position, one based
-         * @return a list of blocks that include the region defined from start to stop.  Can never return null
-         */
         public List<Block> getBlocks(int start, int end) {
             if (blocks.isEmpty()) {
                 return Collections.emptyList();
@@ -274,6 +277,9 @@ public class LinearIndex extends AbstractIndex implements Index {
                     && blocks.equals(other.blocks);
         }
 
+        /**
+         * @return  Total size of all blocks
+         */
         public long getTotalSize() {
             long n = 0;
             for (Block b : getBlocks())
@@ -369,11 +375,11 @@ public class LinearIndex extends AbstractIndex implements Index {
         }
     }
 
-    // ----------------------------------------------------------------------------------------------------
-    //
-    // Adapative optimization of the linear index
-    //
-    // ----------------------------------------------------------------------------------------------------
+    /**
+     * Adapative optimization of the linear index
+     * @param threshold threshold to use for optimizing each constituent {@code chrIndex}
+     * @return The new optimized index
+     */
     public Index optimize(double threshold) {
         if (enableAdaptiveIndexing) {
 
@@ -393,12 +399,10 @@ public class LinearIndex extends AbstractIndex implements Index {
         return optimize(MAX_FEATURES_PER_BIN);
     }
 
-
-    // ----------------------------------------------------------------------------------------------------
-    //
-    // Code to convert linear index to a text table for analysis
-    //
-    // ----------------------------------------------------------------------------------------------------
+    /**
+     * Code to convert linear index to a text table for analysis
+     * @param out Stream to which to write out table to
+     */
     public void writeTable(PrintStream out) {
         out.printf("chr binWidth avg.feature.size nFeatures.total block.id start.pos size nFeatures%n");
         for (String name : chrIndices.keySet()) {

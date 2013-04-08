@@ -21,17 +21,20 @@ package org.broad.tribble.index.interval;
 import org.broad.tribble.index.Block;
 
 
-// Quick and dirty interval class
-
+/**
+ *  Quick and dirty interval class
+ *  Describes a genomic interval and where in a file information for that
+ *  interval can be obtained
+ */
 public class Interval implements Comparable {
     /**
-     * Start of the interval in genomic coordinates -- this is exposed on purpose, accessors have a significant
+     * Start of the interval in genomic coordinates -- this is exposed on purpose, getters have a significant
      * performance penalty for this field.
      */
      final int start;
 
     /**
-     * End of the interval in genomic coordinates -- this is exposed on purpose, accessors have a significant
+     * End of the interval in genomic coordinates -- this is exposed on purpose, getters have a significant
      * performance penalty for this field.
      */
      final int end;
@@ -94,7 +97,7 @@ public class Interval implements Comparable {
 
 
     /**
-     * Returns true if this interval overlaps the other.
+     * @return whether this interval overlaps the other.
      */
     public boolean overlaps(Interval other) {
         return (this.start <= other.end &&
@@ -103,7 +106,7 @@ public class Interval implements Comparable {
 
 
     /**
-     * File position / # of bytes for this interval
+     * @return The file block for this interval
      */
     public Block getBlock() {
         return block;

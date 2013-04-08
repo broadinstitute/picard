@@ -31,10 +31,13 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
+ * Index based on an interval tree
+ * @see IntervalTree
  * @author jrobinso
- *         Date: Jul 9, 2010
+ * @date Jul 9, 2010
  */
 public class IntervalTreeIndex extends AbstractIndex {
+
     /**
      * Default constructor -- used by factory methods.  Do not remove.
      */
@@ -42,6 +45,10 @@ public class IntervalTreeIndex extends AbstractIndex {
 
     }
 
+    /**
+     *
+     * @param featureFile File which we are indexing
+     */
     public IntervalTreeIndex(String featureFile) {
         super(featureFile);
     }
@@ -56,6 +63,11 @@ public class IntervalTreeIndex extends AbstractIndex {
         return IndexFactory.IndexType.INTERVAL_TREE.getHeaderValue();
     }
 
+    /**
+     * Add a new interval to this index
+     * @param chr  Chromosome
+     * @param interval
+     */
     public void insert(String chr, Interval interval) {
         ChrIndex chrIdx = (ChrIndex) chrIndices.get(chr);
         if (chrIdx == null) {

@@ -31,9 +31,8 @@ import java.util.Arrays;
 
 
 /**
- * @author aaron
  *         <p/>
- *         a codec for parsing geli text files, which is the text version of the geli binary format.
+ *         A codec for parsing geli text files, which is the text version of the geli binary format.
  *         <p/>
  *
  *         GELI text has the following tab-seperated fields:
@@ -46,6 +45,8 @@ import java.util.Arrays;
  *         LODBestToReference the LOD score of the best to the reference (double)
  *         LODBestToNext      the LOD score of the best to the next best genotype (double)
  *         likelihoods        the array of all genotype likelihoods, in ordinal ordering (array of 10 doubles, in ordinal order)
+ *
+ * @author aaron
  */
 public class GeliTextCodec extends AsciiFeatureCodec<GeliTextFeature> {
     private String[] parts;

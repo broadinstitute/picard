@@ -32,10 +32,8 @@ public class Block {
     private long size;
 
     /**
-     * Constructs ...
-     *
-     * @param startPosition
-     * @param size
+     * @param startPosition  in bytes
+     * @param size in bytes
      */
     public Block(long startPosition, long size) {
         this.startPosition = startPosition;
@@ -54,7 +52,9 @@ public class Block {
     }
 
     /**
-     * This method is used to aid in consolidating blocks
+     * This method is used to aid in consolidating blocks.
+     * Sets the size based on the provided {@code endPosition}
+     * @param endPosition Where the block ends, in bytes
      */
     public void setEndPosition(long endPosition) {
         if(endPosition < startPosition)

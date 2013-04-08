@@ -36,20 +36,23 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * Factory class for creating indexes, either new instances, or .  It is the responsibility of this class to determine and create the
- * correct index type from the input file or stream
- */
 
+/**
+ * A DynamicIndexCreator creates the proper index based on an {@link IndexFactory.IndexBalanceApproach} and
+ * the characteristics of the file.
+ */
 public class DynamicIndexCreator implements IndexCreator {
     IndexFactory.IndexBalanceApproach iba;
     Map<IndexFactory.IndexType,IndexCreator> creators;
 
-    // we're interested in two stats; the longest feature,
+    /**
+     * we're interested in two stats:
+     * the longest feature and the density of features
+      */
     int longestFeatureLength = 0;
-    MathUtils.RunningStat stats = new MathUtils.RunningStat();
-    // and the density of features
     long featureCount = 0;
+
+    MathUtils.RunningStat stats = new MathUtils.RunningStat();
     long basesSeen = 0;
     Feature lastFeature = null;
     File inputFile;
@@ -67,10 +70,6 @@ public class DynamicIndexCreator implements IndexCreator {
     public int defaultBinSize() { return -1; }
     public int getBinSize() { return -1; }
 
-    /**
-     * create an index, given an input file, codec,
-     * @return a index
-     */
     public Index finalizeIndex(long finalFilePosition) {
         // finalize all of the indexes
         // return the score of the indexes we've generated
@@ -130,11 +129,6 @@ public class DynamicIndexCreator implements IndexCreator {
     }
 
 
-    /**
-     * create an index, given an iterator of features, and a index balancing approach.
-     *
-     * This method is split off to make testing a lot easier
-     */
     public void addFeature(Feature f, long filePosition) {
         // protected static Map<Double,Index> createIndex(FileBasedFeatureIterator<Feature> iterator, Map<IndexType,IndexCreator> creators, IndexBalanceApproach iba) {
         // feed each feature to the indexes we've created
@@ -174,7 +168,7 @@ public class DynamicIndexCreator implements IndexCreator {
      * by the bin size X the longest feature).
      *
      * @param densityOfFeatures the density of features (features/base)
-     * @param indexes the list of indexes we've seen
+     * @param indexes Map from IndexType -> IndexCreator
      * @param longestFeature the longest feature we've found
      * @param iba the index balancing approach
      * @return the best index available for the target indexes
