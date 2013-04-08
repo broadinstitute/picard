@@ -39,10 +39,12 @@ public class IndexToTable {
      * this class:
      *  1) checks to see that the feature file exists
      *  2) loads an index from disk, if one doesn't exist, it creates it and writes it to disk
-     *  3) creates a FeatureSource
-     *  4) iterates over the records, emitting a final tally for the number of features seen
+     *  3) Converts the index to a human readable table
+     *  @see LinearIndex#writeTable(java.io.PrintStream)
      *
-     * @param args a single parameter, the file name to load
+     * @param args 2 parameters:
+     *             1) The path of the file to index
+     *             2) The output file path
      */
     public static void main(String[] args) {
 

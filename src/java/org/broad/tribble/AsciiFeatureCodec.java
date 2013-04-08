@@ -93,8 +93,8 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
 
     /**
      * Decode a set of tokens as a Feature.
-     * Default implementation joins by tabs, and calls
-     * {@link #decode(String)}, for backwards compatibility.
+     * For backwards compatibility, the
+     * default implementation joins by tabs, and calls {@link #decode(String)}.
      *
      * It is recommended that you override {@link #decode(String[])}
      * as well as {@link #decode(String)}

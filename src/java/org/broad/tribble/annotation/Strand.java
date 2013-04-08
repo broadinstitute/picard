@@ -24,12 +24,14 @@
 package org.broad.tribble.annotation;
 
 /**
- * a public enum for Strand encoding
+ * Enum for strand, which can be encoded as string
  */
 public enum Strand {
     POSITIVE("+"), NEGATIVE("-"), NONE("!");  // not really sure what we should do for the NONE Enum
 
-    // how we encode the strand information as text
+    /**
+     * How we represent the strand information as text
+     */
     private String encoding;
     Strand(String str) {
         encoding = str;

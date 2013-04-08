@@ -30,13 +30,11 @@ import org.broad.tribble.index.IndexFactory;
 public class ProfileIndexReading {
 
     /**
-     * this class:
-     *  1) checks to see that the feature file exists
-     *  2) loads an index from disk, if one doesn't exist, it creates it and writes it to disk
-     *  3) creates a FeatureSource
-     *  4) iterates over the records, emitting a final tally for the number of features seen
-     *
-     * @param args a single parameter, the file name to load
+     * This class times the loading of an index file a number of times,
+     * and prints the result of each trial
+     * @param args Two parameters:
+     *             1) The number of trials to run
+     *             2) Index file to load
      */
     public static void main(String[] args) {
 
