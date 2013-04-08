@@ -29,19 +29,13 @@ import org.broad.tribble.index.IndexFactory;
 import java.io.File;
 
 /**
- * a quick example of how to index a feature file, and then count all the records in the file.  This is also useful
- * for testing the feature reader
+ * Check with two index files are equal
  */
 public class IndicesAreEqual {
 
     /**
-     * this class:
-     *  1) checks to see that the feature file exists
-     *  2) loads an index from disk, if one doesn't exist, it creates it and writes it to disk
-     *  3) creates a FeatureSource
-     *  4) iterates over the records, emitting a final tally for the number of features seen
-     *  
-     * @param args a single parameter, the file name to load
+     *
+     * @param args 2 parameters, the paths of the two index files to compare
      */
     public static void main(String[] args) {
         if ( args.length != 2 )

@@ -30,6 +30,9 @@ import org.broad.tribble.util.ParsingUtils;
 import java.util.regex.Pattern;
 
 /**
+ * Codec for parsing BED file, as described by UCSC
+ * See https://genome.ucsc.edu/FAQ/FAQformat.html#format1
+ *
  * @author jrobinso
  *         Date: Dec 20, 2009
  */
@@ -38,8 +41,8 @@ public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
     private int startOffsetValue;
 
     /**
-     * BED format is 0-based, but Tribble is 1-based by default.  Initialize with
-     * start position of one.
+     * Calls {@link #BEDCodec(StartOffset)} with an argument
+     * of {@code StartOffset.ONE}
      */
     public BEDCodec() {
         this(StartOffset.ONE);
@@ -61,13 +64,6 @@ public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
         return decode(line);
     }
 
-    /**
-     * Convert a string to a BEDFeature.
-     * <p/>
-     *
-     * @param line the input line to decode
-     * @return a BEDFeature corresponding to line
-     */
     @Override
     public BEDFeature decode(String line) {
 

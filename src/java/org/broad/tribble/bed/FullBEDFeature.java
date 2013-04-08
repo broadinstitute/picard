@@ -29,8 +29,6 @@ import java.util.ArrayList;
 
 /**
  * Object for full BED file.
- * <p/>
- * TODO -- many bed files have only the first 5 columns,  no exons.  Consider a "Simple BED" class for these
  */
 public class FullBEDFeature extends SimpleBEDFeature implements BEDFeature {
 

@@ -29,11 +29,8 @@ import org.broad.tribble.annotation.Strand;
 import java.awt.*;
 
 /**
- * Created by IntelliJ IDEA.
- * User: jrobinso
- * Date: Dec 24, 2009
- * Time: 3:46:08 PM
- * To change this template use File | Settings | File Templates.
+ * @author: jrobinso
+ * @date: Dec 24, 2009
  */
 public interface BEDFeature extends Feature {
     Strand getStrand();

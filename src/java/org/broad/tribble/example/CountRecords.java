@@ -41,18 +41,18 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * a quick example of how to index a feature file, and then count all the records in the file.  This is also useful
- * for testing the feature reader
+ * An example of how to index a feature file, and then count all the records in the file.
+ * This is also useful for testing the feature reader
  */
 public class CountRecords {
 
     /**
-     * this class:
+     *  The main method of this class:
      *  1) checks to see that the feature file exists
      *  2) loads an index from disk, if one doesn't exist, it creates it and writes it to disk
      *  3) creates a FeatureSource
      *  4) iterates over the records, emitting a final tally for the number of features seen
-     *  
+     *
      * @param args a single parameter, the file name to load
      */
     public static void main(String[] args) {
@@ -77,6 +77,14 @@ public class CountRecords {
 
     }
 
+    /**
+     *
+     * @see org.broad.tribble.index.linear.LinearIndex#optimize(double)
+     * @param featureInput  File containing features
+     * @param codec  Codec used to read the features
+     * @param optimizeThreshold Threshold used to optimize the linear index
+     * @return
+     */
     public static long runWithIndex(File featureInput, FeatureCodec codec, int optimizeThreshold) {
         // get an index
         Index index = loadIndex(featureInput, codec);
@@ -171,6 +179,13 @@ public class CountRecords {
         }
     }
 
+    /**
+     * Return a {@code FeatureCodec} instance appropriate for the given
+     * {@code featureFile}. Codec is generated based on file extension
+     * @param featureFile
+     * @return
+     * @throws IllegalArgumentException If a codec cannot be found
+     */
     public static FeatureCodec getFeatureCodec(File featureFile) {
         // quickly determine the codec type
         //if (featureFile.getName().endsWith(".vcf") || featureFile.getName().endsWith(".VCF") )
