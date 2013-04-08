@@ -59,14 +59,6 @@ public class GeliTextCodec extends AsciiFeatureCodec<GeliTextFeature> {
         return decode(line);
     }
 
-    /**
-     * Decode a line as a Feature.
-     *
-     * @param line the line to decode
-     *
-     * @return Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
-     *         a comment)
-     */
     @Override
     public GeliTextFeature decode(String line) {
             // clean out header lines and comments

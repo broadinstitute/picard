@@ -30,7 +30,8 @@ package org.broad.tribble.gelitext;
  * 
  * Class DiploidGenotype
  *
- * A descriptions should go here. Blame aaron if it's missing.
+ * Enum describing all possible combinations of diploid genotype variations;
+ * AA, AC, etc.
  */
 public enum DiploidGenotype {
     AA, AC, AG, AT, CC, CG, CT, GG, GT, TT;
