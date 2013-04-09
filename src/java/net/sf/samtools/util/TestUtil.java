@@ -45,10 +45,28 @@ package net.sf.samtools.util;/*
  * THE SOFTWARE.
  */
 
+import net.sf.picard.PicardException;
+
 import java.io.File;
+import java.io.IOException;
 
 public class TestUtil {
 
+    public static File getTempDirecory(final String prefix, final String suffix) {
+        final File tempDirectory;
+        try {
+            tempDirectory = File.createTempFile(prefix, suffix);
+        } catch (IOException e) {
+            throw new PicardException("Failed to create temporary file.", e);
+        }
+        if (!tempDirectory.delete())
+            throw new PicardException("Failed to delete file: " + tempDirectory);
+        if (!tempDirectory.mkdir())
+            throw new PicardException("Failed to make directory: " + tempDirectory);
+        tempDirectory.deleteOnExit();
+        return tempDirectory;
+    }
+    
     /**
      * Little test utility to help tests that create multiple levels of subdirectories
      * clean up after themselves.
