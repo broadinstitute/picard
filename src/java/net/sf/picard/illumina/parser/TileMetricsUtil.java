@@ -76,16 +76,16 @@ public class TileMetricsUtil {
         private final int lane, tile;
         private final float density, clusters;
 
-        /** Returns the number of this tile's parent lane. */
-        public int getLaneNumber() {
-            return lane;
-        }
-
         protected Tile(final int lane, final int tile, final float density, final float clusters) {
             this.lane = lane;
             this.tile = tile;
             this.density = density;
             this.clusters = clusters;
+        }
+
+        /** Returns the number of this tile's parent lane. */
+        public int getLaneNumber() {
+            return lane;
         }
 
         /** Returns the number/name of this tile. */
