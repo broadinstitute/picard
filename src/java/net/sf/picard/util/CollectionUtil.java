@@ -23,6 +23,8 @@
  */
 package net.sf.picard.util;
 
+import net.sf.picard.PicardException;
+
 import java.util.*;
 
 /**
@@ -34,15 +36,24 @@ public class CollectionUtil {
     public static <T> List<T> makeList (final T... list) {
         final List<T> result = new ArrayList<T>();
         Collections.addAll(result, list);
+
         return result;
     }
-
+    
     public static <T> Set<T> makeSet (final T... list) {
         final Set<T> result = new HashSet<T>();
         Collections.addAll(result, list);
         return result;
     }
-
+    
+    public static <T> Collection<T> makeCollection (final Iterator<T> i) {
+        final List<T> list = new LinkedList<T>();
+        while (i.hasNext()) {
+            list.add(i.next());
+        }
+        return list;
+    }
+    
     /** Construct a string by toString()ing each item in the collection with inBetween between each item. */
     public static String join(final Collection<?> items, final String inBetween) {
         final StringBuilder builder = new StringBuilder();
@@ -54,6 +65,12 @@ public class CollectionUtil {
         return builder.toString();
     }
 
+    public static <T> T getSoleElement(final Collection<T> items) {
+        if (items.size() != 1)
+            throw new PicardException(String.format("Expected a single element in %s, but found %s.", items, items.size()));
+        return items.iterator().next();
+    }
+    
     /** Simple multi-map for convenience of storing collections in map values. */
     public static class MultiMap<K, V> extends HashMap<K, Collection<V>> {
         public void append(final K k, final V v) {
@@ -72,6 +89,21 @@ public class CollectionUtil {
         }
     }
 
+    /** 
+     * Partitions a collection into groups based on a characteristics of that group.  Partitions are embodied in a map, whose keys are the
+     * value of that characteristic, and the values are the partition of elements whose characteristic evaluate to that key.
+     */
+    public static <K, V> Map<K,Collection<V>> partition(final Collection<V> collection,  final Partitioner<V, K> p) {
+        final MultiMap<K, V> partitionToValues = new MultiMap<K, V>();
+        for (final V entry : collection) {
+            partitionToValues.append(p.getPartition(entry), entry);
+        }
+        return partitionToValues;
+    }
+    public static abstract class Partitioner<V, K> {
+        public abstract K getPartition(final V v);
+    }
+    
     /**
      * A defaulting map, which returns a default value when a value that does not exist in the map is looked up.
      * 
