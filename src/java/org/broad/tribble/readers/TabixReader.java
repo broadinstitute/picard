@@ -1,32 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2013 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package org.broad.tribble.readers;
-/* The MIT License
-
-   Copyright (c) 2010 Broad Institute.
-
-   Permission is hereby granted, free of charge, to any person obtaining
-   a copy of this software and associated documentation files (the
-   "Software"), to deal in the Software without restriction, including
-   without limitation the rights to use, copy, modify, merge, publish,
-   distribute, sublicense, and/or sell copies of the Software, and to
-   permit persons to whom the Software is furnished to do so, subject to
-   the following conditions:
-
-   The above copyright notice and this permission notice shall be
-   included in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-*/
-
-/* Contact: Heng Li <hengli@broadinstitute.org> */
-
-//import net.sf.samtools.util.BlockCompressedInputStream;
 
 import java.io.*;
 import java.nio.*;
@@ -38,6 +33,9 @@ import net.sf.samtools.seekablestream.SeekableStream;
 import net.sf.samtools.util.BlockCompressedInputStream;
 import net.sf.samtools.seekablestream.SeekableStreamFactory;
 
+/**
+ * @author Heng Li <hengli@broadinstitute.org>
+ */
 public class TabixReader {
     private String mFn;
     BlockCompressedInputStream mFp;
@@ -74,40 +72,29 @@ public class TabixReader {
         }
     }
 
-    ;
-
     protected class TIndex {
         HashMap<Integer, TPair64[]> b; // binning index
         long[] l; // linear index
     }
 
-    ;
     protected TIndex[] mIndex;
 
     private class TIntv {
         int tid, beg, end;
     }
 
-    ;
-
     private static boolean less64(final long u, final long v) { // unsigned 64-bit comparison
         return (u < v) ^ (u < 0) ^ (v < 0);
     }
 
     /**
-     * The constructor
-     *
      * @param fn File name of the data file
      */
     public TabixReader(final String fn) throws IOException {
-        mFn = fn;
-        mFp = new BlockCompressedInputStream(SeekableStreamFactory.getStreamFor(fn)); //  new File(fn));
-        readIndex();
+        this(fn, SeekableStreamFactory.getStreamFor(fn));
     }
 
     /**
-     * Alternate constructor
-     *
      * @param fn File name of the data file  (used for error messages only)
      * @param stream Seekable stream from which the data is read 
      */
@@ -353,8 +340,13 @@ public class TabixReader {
         }
     }
 
-    ;
-
+    /**
+     * Return
+     * @param tid Sequence id
+     * @param beg beginning of interval, genomic coords
+     * @param end end of interval, genomic coords
+     * @return an iterator over the lines within the specified interval
+     */
     public Iterator query(final int tid, final int beg, final int end) {
         TPair64[] off, chunks;
         long min_off;
@@ -408,6 +400,12 @@ public class TabixReader {
         return new TabixReader.Iterator(tid, beg, end, ret);
     }
 
+    /**
+     *
+     * @see #parseReg(String)
+     * @param reg A region string of the form acceptable by {@link #parseReg(String)}
+     * @return
+     */
     public Iterator query(final String reg) {
         int[] x = parseReg(reg);
         return query(x[0], x[1], x[2]);
