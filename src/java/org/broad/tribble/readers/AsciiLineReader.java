@@ -22,7 +22,7 @@ import org.broad.tribble.TribbleException;
 import java.io.*;
 
 /**
- * A simple class that provides readLine() functionality around a PositionalBufferedStream
+ * A simple class that provides {@link #readLine()} functionality around a PositionalBufferedStream
  *
  * @author jrobinso
  */
@@ -34,6 +34,9 @@ public class AsciiLineReader implements LineReader {
     PositionalBufferedStream is;
     char[] lineBuffer;
 
+    /**
+     * Initialize without a default stream
+     */
     public AsciiLineReader() {
         this(null);
     }
@@ -49,6 +52,9 @@ public class AsciiLineReader implements LineReader {
         lineBuffer = new char[10000];
     }
 
+    /**
+     * @return The position of the InputStream
+     */
     public long getPosition(){
         if(is == null){
             throw new TribbleException("getPosition() called but no default stream was provided to the class on creation");
@@ -65,7 +71,7 @@ public class AsciiLineReader implements LineReader {
      * @return A String containing the contents of the line or null if the
      *         end of the stream has been reached
      */
-    public final String readLine(final PositionalBufferedStream stream) throws IOException {
+    public final String readLine(final PositionalBufferedStream stream) throws IOException{
         int linePosition = 0;
 
         while (true) {
@@ -103,12 +109,11 @@ public class AsciiLineReader implements LineReader {
     }
 
     /**
-     * Same as readLine(stream) but uses the stream provided in the constructure
+     * Same as {@link #readLine(PositionalBufferedStream)} but uses the stream provided in the constructor
      *
      * @return
-     * @throws IOException
      */
-    public final String readLine() throws IOException {
+    public final String readLine() throws IOException{
         if ( is == null ){
             throw new TribbleException("readLine() called without an explicit stream argument but no default stream was provided to the class on creation");
         }

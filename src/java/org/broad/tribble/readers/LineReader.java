@@ -29,6 +29,14 @@ import java.io.IOException;
  * Interface for line-oriented readers.
  */
 public interface LineReader {
+
+    /**
+     * @return The next "line" from the source. Typically a line is a set of characters
+     * terminated by '\n', '\r', or '\r\n'. The line-terminator is not included
+     * @throws IOException
+     */
     public String readLine() throws IOException;
+
+
     public void close();
 }
