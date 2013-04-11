@@ -11,7 +11,7 @@ import static org.testng.Assert.assertNotNull;
  */
 public class AbstractFeatureReaderTest {
 
-    @Test(enabled = false, description = "Tribble doesn't have full FTP support yet")
+    @Test
     public void testLoadBEDFTP() throws Exception {
         String path = "ftp://ftp.broadinstitute.org/distribution/igv/TEST/cpgIslands with spaces.hg18.bed";
         FeatureCodec codec = new BEDCodec();

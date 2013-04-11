@@ -119,7 +119,7 @@ public class HTTPHelper implements URLHelper {
             con.setRequestMethod("HEAD");
             return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
         }
-        catch (FileNotFoundException e) {
+        catch (IOException e) {
             // This is what we are testing for, so its not really an exception
             return false;
         }
