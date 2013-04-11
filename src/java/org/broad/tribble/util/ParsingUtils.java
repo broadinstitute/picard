@@ -47,7 +47,7 @@ public class ParsingUtils {
 
     // HTML 4.1 color table,  + orange and magenta
     static Map<String, String> colorSymbols = new HashMap();
-    public static Class httpHelperClass = HTTPHelper.class;
+    public static Class urlHelperClass = HTTPHelper.class;
 
     static {
         colorSymbols.put("white", "FFFFFF");
@@ -77,7 +77,7 @@ public class ParsingUtils {
         InputStream inputStream;
 
         if (path.startsWith("http:") || path.startsWith("https:") || path.startsWith("ftp:")) {
-            inputStream = (new HTTPHelper(new URL(path))).openInputStream();
+            inputStream = getURLHelper(new URL(path)).openInputStream();
         } else {
             File file = new File(path);
             inputStream = new FileInputStream(file);
@@ -367,7 +367,8 @@ public class ParsingUtils {
                 // Malformed URLs by definition don't exist
                 return false;
             }
-            URLHelper helper = new HTTPHelper(url);
+            //TODO Make FTP helper, use it where necessary
+            URLHelper helper = getURLHelper(url);
             return helper.exists();
         } else {
             return (new File(resource)).exists();
@@ -376,20 +377,20 @@ public class ParsingUtils {
 
     public static URLHelper getURLHelper(URL url) {
         try {
-            Constructor constr = httpHelperClass.getConstructor(URL.class);
+            Constructor constr = urlHelperClass.getConstructor(URL.class);
             URLHelper helper = (URLHelper) constr.newInstance(url);
             return helper;
         } catch (Exception e) {
-            log.error("Error instantiating url helper for class: " + httpHelperClass, e);
+            log.error("Error instantiating url helper for class: " + urlHelperClass, e);
             return new HTTPHelper(url);
         }
     }
 
     public static void registerHelperClass(Class helperClass) {
-        if (!helperClass.isAssignableFrom(URLHelper.class)) {
-            // TODO -- throw exception here.  Also check that class implements the required constructor
+        if (!URLHelper.class.isAssignableFrom(helperClass)) {
+            throw new IllegalArgumentException("helperClass must implement URLHelper");
         }
-        httpHelperClass = helperClass;
+        urlHelperClass = helperClass;
 
     }
 }
