@@ -47,7 +47,9 @@ public class ParsingUtils {
 
     // HTML 4.1 color table,  + orange and magenta
     static Map<String, String> colorSymbols = new HashMap();
-    public static Class urlHelperClass = HTTPHelper.class;
+
+    private static final Class defaultUrlHelperClass = RemoteURLHelper.class;
+    public static Class urlHelperClass = defaultUrlHelperClass;
 
     static {
         colorSymbols.put("white", "FFFFFF");
@@ -367,7 +369,6 @@ public class ParsingUtils {
                 // Malformed URLs by definition don't exist
                 return false;
             }
-            //TODO Make FTP helper, use it where necessary
             URLHelper helper = getURLHelper(url);
             return helper.exists();
         } else {
@@ -375,22 +376,48 @@ public class ParsingUtils {
         }
     }
 
+    /**
+     * Return the registered URLHelper, constructed with the provided URL
+     * @see #registerHelperClass(Class)
+     * @param url
+     * @return
+     */
     public static URLHelper getURLHelper(URL url) {
         try {
-            Constructor constr = urlHelperClass.getConstructor(URL.class);
-            URLHelper helper = (URLHelper) constr.newInstance(url);
-            return helper;
+            return getURLHelper(urlHelperClass, url);
         } catch (Exception e) {
-            log.error("Error instantiating url helper for class: " + urlHelperClass, e);
-            return new HTTPHelper(url);
+            return getURLHelper(defaultUrlHelperClass, url);
         }
     }
 
+    private static URLHelper getURLHelper(Class helperClass, URL url) {
+        try {
+            Constructor constr = helperClass.getConstructor(URL.class);
+            return (URLHelper) constr.newInstance(url);
+        } catch (Exception e) {
+            String errMsg = "Error instantiating url helper for class: " + helperClass;
+            log.error(errMsg, e);
+            throw new IllegalStateException(errMsg, e);
+        }
+    }
+
+    /**
+     * Register a {@code URLHelper} class to be used for URL operations. The helper
+     * may be used for both FTP and HTTP operations, so if any FTP URLs are used
+     * the {@code URLHelper} must support it.
+     *
+     * The default helper class is {@link RemoteURLHelper}, which delegates to FTP/HTTP
+     * helpers as appropriate.
+     *
+     * @see URLHelper
+     * @param helperClass Class which implements {@link URLHelper}, and have a constructor
+     *                    which takes a URL as it's only argument.
+     */
     public static void registerHelperClass(Class helperClass) {
         if (!URLHelper.class.isAssignableFrom(helperClass)) {
             throw new IllegalArgumentException("helperClass must implement URLHelper");
+            //TODO check that it has 1 arg constructor of proper type
         }
         urlHelperClass = helperClass;
-
     }
 }

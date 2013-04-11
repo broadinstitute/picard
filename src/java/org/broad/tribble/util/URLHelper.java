@@ -24,8 +24,10 @@ import java.net.URL;
 
 /**
  * Interface defining a helper class for dealing with URL resources.  Purpose of this class is to provide the
- * flexibility to use either URLConnection or Apache HTTPClientt.   
+ * flexibility to use either URLConnection or Apache HTTPClient. Also want to delegate to either HTTP or FTP
  *
+ * @see HTTPHelper
+ * @see FTPHelper
  * @author jrobinso
  * @date Jun 28, 2011
  */
@@ -37,6 +39,16 @@ public interface URLHelper {
 
     InputStream openInputStream() throws IOException;
 
+    /**
+     * May throw an OperationUnsupportedException
+     * @deprecated Will be removed in a future release, as is somewhat fragile
+     * and not used.
+     * @param start
+     * @param end
+     * @return
+     * @throws IOException
+     */
+    @Deprecated
     InputStream openInputStreamForRange(long start, long end) throws IOException;
 
     public boolean exists() throws IOException;
