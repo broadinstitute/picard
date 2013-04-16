@@ -105,7 +105,7 @@
         <compile-src includes="net/sf/samtools/**/*.*"/>
     </target>
 
-    <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
+    <target name="compile-picard" depends="init, compile-variant" description="Compile picard files without cleaning">
         <compile-src includes="net/sf/picard/**/*.*"/>
     </target>
 
@@ -113,7 +113,7 @@
         <compile-src includes="org/broad/tribble/**/*.*"/>
     </target>
 
-    <target name="compile-variant" depends="init" description="Compile variant files without cleaning">
+    <target name="compile-variant" depends="init, compile-tribble" description="Compile variant files without cleaning">
         <compile-src includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:none"/>
 
         <!-- Compile contracts into a separate directory -->
@@ -450,9 +450,11 @@
         <attribute name="compiler.args" default=""/>
         <sequential>
         <mkdir dir="${classes}"/>
+            <!-- unset the sourcepath attribute in order to compile only files explicitly specified and disable javac's default searching mechanism -->
             <javac destdir="@{destdir}"
                    optimize="${javac.opt}"
                    debug="${javac.debug}"
+                   sourcepath=""
                    srcdir="${src}"
                    includes="@{includes}"
                    excludes="@{excludes}">
