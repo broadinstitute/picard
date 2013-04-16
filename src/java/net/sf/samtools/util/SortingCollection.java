@@ -23,8 +23,6 @@
  */
 package net.sf.samtools.util;
 
-import net.sf.picard.util.Log;
-
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -43,7 +41,6 @@ import java.util.*;
  * to compress temporary files.
  */
 public class SortingCollection<T> implements Iterable<T> {
-    private static final Log log = Log.getInstance(SortingCollection.class);
 
     /**
      * Client must implement this class, which defines the way in which records are written to and
