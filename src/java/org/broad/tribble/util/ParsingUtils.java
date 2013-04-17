@@ -23,8 +23,6 @@
  */
 package org.broad.tribble.util;
 
-import net.sf.picard.util.Log;
-
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,8 +38,6 @@ import java.util.List;
  * @author jrobinso
  */
 public class ParsingUtils {
-
-    private static final Log log = Log.getInstance(ParsingUtils.class);
 
     public static Map<Object, Color> colorCache = new WeakHashMap<Object, Color>(100);
 
@@ -396,7 +392,6 @@ public class ParsingUtils {
             return (URLHelper) constr.newInstance(url);
         } catch (Exception e) {
             String errMsg = "Error instantiating url helper for class: " + helperClass;
-            log.error(errMsg, e);
             throw new IllegalStateException(errMsg, e);
         }
     }
