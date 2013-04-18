@@ -190,7 +190,7 @@ public class Cigar {
                         }
                         if (isInDelOperator(nextOperator) && op == nextOperator) {
                             if (ret == null) ret = new ArrayList<SAMValidationError>();
-                            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                            ret.add(new SAMValidationError(SAMValidationError.Type.ADJACENT_INDEL_IN_CIGAR,
                                     "No M or N operator between pair of " + op.name() + " operators in CIGAR", readName, recordNumber));
                         }
                     }
