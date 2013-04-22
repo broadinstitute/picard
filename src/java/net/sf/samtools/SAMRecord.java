@@ -1640,6 +1640,14 @@ public class SAMRecord implements Cloneable
             ret.add(new SAMValidationError(SAMValidationError.Type.MISMATCH_READ_LENGTH_AND_QUALS_LENGTH,
                     "Read length does not match quals length", getReadName()));
         }
+
+        if (this.getAlignmentStart() != NO_ALIGNMENT_START && this.getIndexingBin() != null &&
+                this.computeIndexingBin() != this.getIndexingBin()) {
+            ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_INDEXING_BIN,
+                    "bin field of BAM record does not equal value computed based on alignment start and end, and length of sequence to which read is aligned",
+                    getReadName()));
+        }
+
         if (ret == null || ret.size() == 0) {
             return null;
         }
