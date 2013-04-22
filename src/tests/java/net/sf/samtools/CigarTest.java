@@ -56,7 +56,7 @@ public class CigarTest {
         // Cannot have two consecutive insertions
         List<SAMValidationError> errors = codec.decode("1M1I1I1M").isValid(null, -1);
         Assert.assertEquals(errors.size(), 1);
-        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
+        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.ADJACENT_INDEL_IN_CIGAR);
 
         // Cannot have two consecutive deletions
         errors = codec.decode("1M1D1D1M").isValid(null, -1);
