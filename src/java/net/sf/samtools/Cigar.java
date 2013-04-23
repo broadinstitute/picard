@@ -139,6 +139,11 @@ public class Cigar {
         boolean seenRealOperator = false;
         for (int i = 0; i < cigarElements.size(); ++i) {
             final CigarElement element = cigarElements.get(i);
+            if (element.getLength() == 0) {
+                if (ret == null) ret = new ArrayList<SAMValidationError>();
+                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_CIGAR,
+                        "CIGAR element with zero length", readName, recordNumber));
+            }
             // clipping operator can only be at start or end of CIGAR
             final CigarOperator op = element.getOperator();
             if (isClippingOperator(op)) {
