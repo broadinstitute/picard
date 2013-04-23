@@ -45,8 +45,15 @@ class BclParser extends PerTilePerCycleParser<BclData>{
 
     private static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(makeSet(IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores));
 
+    private final boolean applyEamssFilter;
+
     public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
+        this(directory, lane, tilesToCycleFiles, outputMapping, true);
+    }
+
+    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping, final boolean applyEamssFilter) {
         super(directory, lane, tilesToCycleFiles, outputMapping);
+        this.applyEamssFilter = applyEamssFilter;
     }
 
     /** Create the BclData object segmented by the given outputLengths */
@@ -104,8 +111,10 @@ class BclParser extends PerTilePerCycleParser<BclData>{
         final byte [][] qualities = bclData.qualities;
 
         //first run EAMSS
-        for(int i = 0; i < bases.length; i++) {
-            runEamssForReadInPlace(bases[i], qualities[i]);
+        if (this.applyEamssFilter) {
+            for(int i = 0; i < bases.length; i++) {
+                runEamssForReadInPlace(bases[i], qualities[i]);
+            }
         }
 
         return bclData;

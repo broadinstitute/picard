@@ -141,7 +141,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                                       final Integer firstTile, final Integer tileLimit,
                                       final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
                                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
-                                      final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass) {
+                                      final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+                                      final boolean applyEamssFiltering) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.demultiplex = demultiplex;
         this.maxReadsInRamPerTile = maxReadsInRamPerTile;
@@ -168,8 +169,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             gcTimerTask = null;
         }
 
-        this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure,
-                getDataTypesFromReadStructure(readStructure, demultiplex));
+        this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure, getDataTypesFromReadStructure(readStructure, demultiplex));
+        this.factory.setApplyEamssFiltering(applyEamssFiltering);
 
         if (numProcessors == 0) {
             this.numThreads = Runtime.getRuntime().availableProcessors();

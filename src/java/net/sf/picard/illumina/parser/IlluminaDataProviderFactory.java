@@ -88,6 +88,11 @@ public class IlluminaDataProviderFactory {
     private final Set<IlluminaDataType> dataTypes;
 
     /**
+     * Whether or not to apply EAMSS filtering if parsing BCLs for the bases and quality scores.
+     */
+    private boolean applyEamssFiltering = true;
+
+    /**
      * A Map of file formats to the dataTypes they will provide for this run.
      */
     protected final Map<SupportedIlluminaFormat, Set<IlluminaDataType>> formatToDataTypes;
@@ -162,6 +167,11 @@ public class IlluminaDataProviderFactory {
      */
     public List<Integer> getAvailableTiles() {
         return availableTiles;
+    }
+
+    /** Sets whether or not EAMSS filtering will be applied if parsing BCL files for bases and quality scores. */
+    public void setApplyEamssFiltering(final boolean applyEamssFiltering) {
+        this.applyEamssFiltering = applyEamssFiltering;
     }
 
     /**
@@ -298,7 +308,7 @@ public class IlluminaDataProviderFactory {
             case Bcl:
                 final CycleIlluminaFileMap bclFileMap = fileUtil.bcl().getFiles(requestedTiles, outputMapping.getOutputCycles());
                 bclFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
-                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping);
+                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping, this.applyEamssFiltering);
                 break;
 
             case Cif:

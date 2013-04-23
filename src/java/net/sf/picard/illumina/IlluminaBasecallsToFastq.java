@@ -100,6 +100,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(doc = "If set, process no more than this many tiles (used for debugging).", optional = true)
     public Integer TILE_LIMIT;
 
+    @Option(doc="Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads" +
+            " and convert their quality scores to Q2.")
+    public boolean APPLY_EAMSS_FILTER = true;
+
     @Option(doc = "If true, call System.gc() periodically.  This is useful in cases in which the -Xmx value passed " +
             "is larger than the available memory.")
     public Boolean FORCE_GC = true;
@@ -152,7 +156,8 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE/readsPerCluster, TMP_DIR, NUM_PROCESSORS,
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                readStructure.barcodes.length()), FastqRecordsForCluster.class);
+                readStructure.barcodes.length()), FastqRecordsForCluster.class,
+                this.APPLY_EAMSS_FILTER);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
 
