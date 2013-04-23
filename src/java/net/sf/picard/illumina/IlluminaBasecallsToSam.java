@@ -163,6 +163,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             "is larger than the available memory.")
     public Boolean FORCE_GC = true;
 
+    @Option(doc="Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads" +
+            " and convert their quality scores to Q2.")
+    public boolean APPLY_EAMSS_FILTER = true;
+
     @Option(doc = "Configure SortingCollections to store this many records before spilling to disk. For an indexed" +
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
@@ -204,7 +208,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
                 barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE/numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
-                FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class);
+                FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
+                this.APPLY_EAMSS_FILTER);
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 
