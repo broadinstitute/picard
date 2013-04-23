@@ -61,6 +61,7 @@ public class ExtractIlluminaBarcodesTest {
 
     private File basecallsDir;
     private File dual;
+    private File qual;
 
     @BeforeTest
     private void setUp() throws Exception {
@@ -84,12 +85,23 @@ public class ExtractIlluminaBarcodesTest {
             final File dest = new File(dual, source.getName());
             IoUtil.copyFile(source, dest);
         }
+        qual = File.createTempFile("eib_qual", ".tmp");
+        Assert.assertTrue(qual.delete());
+        Assert.assertTrue(qual.mkdir());
+        for (final File source : new File(TEST_DATA_DIR, "qual").listFiles()) {
+            if (!source.isFile()) {
+                continue;
+            }
+            final File dest = new File(qual, source.getName());
+            IoUtil.copyFile(source, dest);
+        }
     }
 
     @AfterTest
     private void tearDown() {
         IoUtil.deleteDirectoryTree(basecallsDir);
         IoUtil.deleteDirectoryTree(dual);
+        IoUtil.deleteDirectoryTree(qual);
     }
 
     @Test
@@ -190,13 +202,14 @@ public class ExtractIlluminaBarcodesTest {
 
         // Tack on test of barcode-informed Illumina Basecall parsing
         final ReadStructure rs = new ReadStructure("36T6B");
-        IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs,
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs,
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
         testParsing(factory, rs, metricACAGTG, barcodePosition);
     }
 
     @Test(dataProvider = "dualBarcodeData")
-    public void testDualBarcodes(int lane, String readStructure, int perfectMatches, int oneMismatchMatches, String testName) throws Exception {
+    public void testDualBarcodes(final int lane, final String readStructure, final int perfectMatches, final int oneMismatchMatches,
+                                 final String testName) throws Exception {
         final File metricsFile = File.createTempFile("dual.", ".metrics");
         metricsFile.deleteOnExit();
 
@@ -212,7 +225,7 @@ public class ExtractIlluminaBarcodesTest {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> result =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches");
-        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatchMatches, "Got wrong number of perfect matches");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatchMatches, "Got wrong number of one-mismatch matches");
     }
 
     @DataProvider(name = "dualBarcodeData")
@@ -223,6 +236,44 @@ public class ExtractIlluminaBarcodesTest {
                 {6, "10T8B8B10T", 1, 2, "Two barcodes in the middle"},
                 {7, "8B10T10T8B", 1, 2, "Two barcodes on either end"},
                 {8, "4B10T4B4B10T4B", 1, 2, "Four crazy barcodes, one on either end and two in the middle"}
+        };
+    }
+
+    /**
+     *  Testing the quality thresholding. Looking at a single barcode (ACAGTG) with a min quality of 25 and no mismatches
+     */
+    @Test(dataProvider = "qualityBarcodeData")
+    public void testQualityBarcodes(final int lane, final String readStructure, final String barcode, final int quality,
+                                    final int maxMismatches, final int perfectMatches, final int oneMismatch,
+                                    final String testName) throws Exception {
+        final File metricsFile = File.createTempFile("qual.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final List<String> args = new ArrayList<String>(Arrays.asList(
+                "BASECALLS_DIR=" + qual.getPath(),
+                "LANE=" + lane,
+                "READ_STRUCTURE=" + readStructure,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "MINIMUM_BASE_QUALITY=" + quality,
+                "MAX_MISMATCHES=" + maxMismatches,
+                "BARCODE=" + barcode
+        ));
+
+        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> result =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
+        result.read(new FileReader(metricsFile));
+        Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches for test: '" + testName + "'");
+        Assert.assertEquals(result.getMetrics().get(0).ONE_MISMATCH_MATCHES, oneMismatch, "Got wrong number of one-mismatch matches for test: '" + testName + "'");
+    }
+
+    @DataProvider(name = "qualityBarcodeData")
+    public Object[][] getQualityTestData() {
+        return new Object[][] {
+                {1, "6B36T", "ACAGTG", 25, 0, 1, 0, "Barcode has good quality, 1 match"},
+                {2, "6B36T", "ACAGTG", 25, 0, 0, 0, "Barcode has quality failures, no matches"},
+                {3, "6B36T", "ACAGTG", 25, 0, 0, 0, "Barcode has one low quality, no matches"},
+                {4, "36T6B", "ACAGTG", 25, 0, 0, 0, "Barcode at end, quality failures, no matches"},
+                {5, "6B36T", "ACAGTG", 25, 1, 0, 1, "Barcode has 1 low quality, 1 mismatch allowed, 1 match"}
         };
     }
 
@@ -261,7 +312,7 @@ public class ExtractIlluminaBarcodesTest {
         return runIt(args, metricsFile);
     }
 
-    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(List<String> args, final File metricsFile) throws Exception {
+    private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final List<String> args, final File metricsFile) throws Exception {
 
         // Generate _barcode.txt files and metrics file.
         Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
