@@ -399,8 +399,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         public double PCT_MATCHES = 0d;
         /**
          * The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
-         * most prevelant barcode this will be 1, for all others it will be less than 1.  One over the lowest
-         * number in this column gives you the fold-difference in representation between barcodes.
+         * most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+         * exception of when there are more orphan reads than for any other barcode, in which case the value
+         * may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
+         * in representation between barcodes.
          */
         public double RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
         /** The percentage of PF reads in the lane that matched to this barcode. */
@@ -408,8 +410,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         /**
          * The rate of PF reads matching this barcode to PF reads matching the most prevelant barcode. For the
-         * most prevelant barcode this will be 1, for all others it will be less than 1.  One over the lowest
-         * number in this column gives you the fold-difference in representation of PF reads between barcodes.
+         * most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+         * exception of when there are more orphan reads than for any other barcode, in which case the value
+         * may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference 
+         * in representation of PF reads between barcodes.
+         * 
          */
         public double PF_RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT = 0d;
 
