@@ -73,5 +73,9 @@ public class CigarTest {
         Assert.assertEquals(errors.size(), 1);
         Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
 
+        // Zero length for an element not allowed.
+        errors = codec.decode("100M0D10M1D10M").isValid(null, -1);
+        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.get(0).getType(), SAMValidationError.Type.INVALID_CIGAR);
     }
 }
