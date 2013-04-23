@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * Simple implementation of URLHelper based on the JDK URL and HttpURLConnection classes.  This
@@ -43,7 +44,14 @@ public class HTTPHelper implements URLHelper {
 
     public HTTPHelper(URL url) {
         this.url = url;
-        this.proxy = null;
+        proxy = null;
+
+        try {
+            URLConnection conn = openConnection();
+            conn.setDefaultUseCaches(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static synchronized void setProxy(Proxy p) {

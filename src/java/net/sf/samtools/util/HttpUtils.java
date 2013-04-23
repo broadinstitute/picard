@@ -1,5 +1,6 @@
 package net.sf.samtools.util;
 
+import java.io.IOException;
 import java.net.URLConnection;
 import java.net.URL;
 import java.net.HttpURLConnection;
@@ -11,34 +12,26 @@ import java.net.MalformedURLException;
  */
 public class HttpUtils {
 
-
     public static String getETag(final URL url) {
-        URLConnection conn = null;
-        try {
-            // Create a URLConnection object for a URL
-            conn = url.openConnection();
-            conn.setReadTimeout(3000);
-            return conn.getHeaderField("ETag");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        finally {
-            if (conn != null && conn instanceof HttpURLConnection) {
-                ((HttpURLConnection) conn).disconnect();
-            }
-        }
+        return getHeaderField(url, "ETag");
+    }
+
+    private static URLConnection openConnection(final URL url) throws IOException{
+        URLConnection conn = url.openConnection();
+        conn.setReadTimeout(3000);
+        conn.setDefaultUseCaches(false);
+        conn.setUseCaches(false);
+        return conn;
     }
 
     public static String getHeaderField(final URL url, final String name) {
         URLConnection conn = null;
         try {
             // Create a URLConnection object for a URL
-            conn = url.openConnection();
-            conn.setReadTimeout(3000);
+            conn = openConnection(url);
             return conn.getHeaderField(name);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -54,8 +47,7 @@ public class HttpUtils {
         URLConnection conn = null;
         try {
             // Create a URLConnection object for a URL
-            conn = url.openConnection();
-            conn.setReadTimeout(3000);
+            conn = openConnection(url);
 
             for (final String name : conn.getHeaderFields().keySet()) {
                 System.out.println(name + "\t" + conn.getHeaderField(name));
@@ -72,21 +64,7 @@ public class HttpUtils {
     }
 
     public static boolean resourceAvailable(final URL url) {
-        URLConnection conn = null;
-        try {
-            // Create a URLConnection object for a URL
-            conn = url.openConnection();
-            conn.setReadTimeout(3000);
-            return conn.getHeaderField("ETag") != null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        finally {
-            if (conn != null && conn instanceof HttpURLConnection) {
-                ((HttpURLConnection) conn).disconnect();
-            }
-        }
+        return getETag(url) != null;
     }
 
     public static void main(final String[] args) throws MalformedURLException {

@@ -53,6 +53,7 @@ public class SeekableHTTPStream extends SeekableStream {
         this.url = url;
 
         // Try to get the file length
+        // Note: This also sets setDefaultUseCaches(false), which is important
         final String contentLengthString = HttpUtils.getHeaderField(url, "Content-Length");
         if (contentLengthString != null) {
             try {
