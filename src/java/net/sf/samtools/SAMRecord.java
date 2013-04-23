@@ -1643,6 +1643,7 @@ public class SAMRecord implements Cloneable
 
         if (this.getAlignmentStart() != NO_ALIGNMENT_START && this.getIndexingBin() != null &&
                 this.computeIndexingBin() != this.getIndexingBin()) {
+            if (ret == null) ret = new ArrayList<SAMValidationError>();
             ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_INDEXING_BIN,
                     "bin field of BAM record does not equal value computed based on alignment start and end, and length of sequence to which read is aligned",
                     getReadName()));
