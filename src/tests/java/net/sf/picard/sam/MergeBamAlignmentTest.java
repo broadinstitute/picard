@@ -618,11 +618,11 @@ public class MergeBamAlignmentTest {
         final int readLength = rec.getReadLength();
         if (hitSpec.filtered) {
             // Add two insertions so alignment is filtered.
-            cigar.add(new CigarElement(readLength/2, CigarOperator.M));
+            cigar.add(new CigarElement(readLength-4, CigarOperator.M));
             cigar.add(new CigarElement(1, CigarOperator.I));
             cigar.add(new CigarElement(1, CigarOperator.M));
             cigar.add(new CigarElement(1, CigarOperator.I));
-            cigar.add(new CigarElement(readLength - (readLength/2 + 3), CigarOperator.M));
+            cigar.add(new CigarElement(1, CigarOperator.M));
         } else {
             cigar.add(new CigarElement(readLength, CigarOperator.M));
         }
