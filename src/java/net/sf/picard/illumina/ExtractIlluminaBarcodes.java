@@ -139,7 +139,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Override
 	protected int doWork() {
 
-        IoUtil.assertDirectoryIsWritable(BASECALLS_DIR);
         IoUtil.assertFileIsWritable(METRICS_FILE);
         if (OUTPUT_DIR == null) {
             OUTPUT_DIR = BASECALLS_DIR;
