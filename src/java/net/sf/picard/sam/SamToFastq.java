@@ -45,7 +45,6 @@ import java.io.File;
 import java.util.*;
 
 /**
- * $Id$
  * <p/>
  * Extracts read sequences and qualities from the input SAM/BAM file and writes them into
  * the output file in Sanger fastq format.
@@ -67,7 +66,7 @@ public class SamToFastq extends CommandLineProgram {
     @Option(shortName="F", doc="Output fastq file (single-end fastq or, if paired, first end of the pair fastq).", mutex={"OUTPUT_PER_RG"})
     public File FASTQ ;
 
-    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true, mutex={"OUTPUT_PER_RG"})
+    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true, mutex={"OUTPUT_PER_RG", "INTERLEAVE"})
     public File SECOND_END_FASTQ ;
 
     @Option(shortName="OPRG", doc="Output a fastq file per read group (two fastq files per read group if the group is paired).", optional=true, mutex={"FASTQ", "SECOND_END_FASTQ"})
@@ -78,6 +77,9 @@ public class SamToFastq extends CommandLineProgram {
 
     @Option(shortName="RC", doc="Re-reverse bases and qualities of reads with negative strand flag set before writing them to fastq", optional=true)
     public boolean RE_REVERSE = true;
+
+    @Option(shortName="INTER", doc="Will generate an interleaved fastq if paired, each line will have /1 or /2 to describe which end it came from", mutex={"SECOND_END_FASTQ"})
+    public boolean INTERLEAVE = false;
 
     @Option(shortName="NON_PF", doc="Include non-PF reads from the SAM file into the output FASTQ files.")
     public boolean INCLUDE_NON_PF_READS = false;
@@ -145,7 +147,7 @@ public class SamToFastq extends CommandLineProgram {
                 } else {
                     assertPairedMates(firstRecord, currentRecord);
 
-                    if (fq.size() == 1) {
+                    if (fq.size() == 1 && !INTERLEAVE) {
                         if (OUTPUT_PER_RG) {
                             fq.add(factory.newWriter(makeReadGroupFile(currentRecord.getReadGroup(), "_2")));
                         } else {
@@ -153,12 +155,15 @@ public class SamToFastq extends CommandLineProgram {
                         }
                     }
 
+                    final FastqWriter firstPairWriter = fq.get(0);
+                    final FastqWriter secondPairWriter = INTERLEAVE ? firstPairWriter : fq.get(1);
+
                     final SAMRecord read1 =
                         currentRecord.getFirstOfPairFlag() ? currentRecord : firstRecord;
                     final SAMRecord read2 =
                         currentRecord.getFirstOfPairFlag() ? firstRecord : currentRecord;
-                    writeRecord(read1, 1, fq.get(0), READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
-                    writeRecord(read2, 2, fq.get(1), READ2_TRIM, READ2_MAX_BASES_TO_WRITE);
+                    writeRecord(read1, 1, firstPairWriter, READ1_TRIM, READ1_MAX_BASES_TO_WRITE);
+                    writeRecord(read2, 2, secondPairWriter, READ2_TRIM, READ2_MAX_BASES_TO_WRITE);
 
                 }
             } else {
