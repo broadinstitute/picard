@@ -26,6 +26,7 @@ package net.sf.samtools.seekablestream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A wrapper class to provide buffered read access to a SeekableStream.  Just wrapping such a stream with
@@ -34,31 +35,59 @@ import java.io.IOException;
  */
 public class SeekableBufferedStream extends SeekableStream {
 
+    /** Little extension to buffered input stream to give access to the available bytes in the buffer. */
+    private class ExtBufferedInputStream extends BufferedInputStream {
+        private ExtBufferedInputStream(final InputStream inputStream, final int i) {
+            super(inputStream, i);
+        }
+
+        /** Returns the number of bytes that can be read from the buffer without reading more into the buffer. */
+        int getBytesInBufferAvailable() {
+            if (this.count == this.pos) return 0; // documented test for "is buffer empty"
+            else return this.buf.length - this.pos;
+        }
+    }
+
+
     public static final int DEFAULT_BUFFER_SIZE = 512000;
 
     final private int bufferSize;
     final SeekableStream wrappedStream;
-    BufferedInputStream bufferedStream;
+    ExtBufferedInputStream bufferedStream;
     long position;
 
-    public SeekableBufferedStream(SeekableStream httpStream, int bufferSize) {
+    public SeekableBufferedStream(final SeekableStream stream, final int bufferSize) {
         this.bufferSize = bufferSize;
-        this.wrappedStream = httpStream;
+        this.wrappedStream = stream;
         this.position = 0;
-        bufferedStream = new BufferedInputStream(wrappedStream, bufferSize);
+        bufferedStream = new ExtBufferedInputStream(wrappedStream, bufferSize);
     }
-    public SeekableBufferedStream(SeekableStream httpStream) {
-        this(httpStream, DEFAULT_BUFFER_SIZE);
+    public SeekableBufferedStream(final SeekableStream stream) {
+        this(stream, DEFAULT_BUFFER_SIZE);
     }
 
     public long length() {
         return wrappedStream.length();
     }
 
-    public void seek(long position) throws IOException {
+    @Override
+    public long skip(final long l) throws IOException {
+        if (l < this.bufferedStream.getBytesInBufferAvailable()) {
+            final long retval = this.bufferedStream.skip(l);
+            this.position += retval;
+            return retval;
+        }
+        else {
+            final long position = this.position + l;
+            seek(position);
+            return l;
+        }
+    }
+
+    public void seek(final long position) throws IOException {
         this.position = position;
         wrappedStream.seek(position);
-        bufferedStream = new BufferedInputStream(wrappedStream, bufferSize);
+        bufferedStream = new ExtBufferedInputStream(wrappedStream, bufferSize);
     }
 
     public int read() throws IOException {
@@ -67,8 +96,8 @@ public class SeekableBufferedStream extends SeekableStream {
         return b;
     }
 
-    public int read(byte[] buffer, int offset, int length) throws IOException {
-        int nBytesRead = bufferedStream.read(buffer, offset, length);
+    public int read(final byte[] buffer, final int offset, final int length) throws IOException {
+        final int nBytesRead = bufferedStream.read(buffer, offset, length);
         if (nBytesRead > 0) {
             position += nBytesRead;
         }
