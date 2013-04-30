@@ -25,6 +25,8 @@
 package net.sf.samtools.seekablestream;
 
 import static org.testng.Assert.assertEquals;
+
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -88,6 +90,44 @@ public class SeekableBufferedStreamTest {
         // Subsequent reads should return -1
         bytesRead = bufferedStream.read(buffer, 0, length);
         assertEquals(-1, bytesRead);
+    }
 
+    @Test
+    public void testSkip() throws IOException {
+        final int[] BUFFER_SIZES = new int[]{8, 96, 1024, 8*1024, 16*1024, 96*1024, 48*1024};
+
+        for (final int bufferSize : BUFFER_SIZES) {
+            final SeekableBufferedStream in1 = new SeekableBufferedStream(new SeekableFileStream(BAM_FILE), bufferSize);
+            final SeekableBufferedStream in2 = new SeekableBufferedStream(new SeekableFileStream(BAM_FILE), bufferSize);
+
+            final int SIZE = 10000;
+            final byte[] bytes1 = new byte[SIZE];
+            final byte[] bytes2 = new byte[SIZE];
+
+            reallyRead(bytes1, in1);
+            reallyRead(bytes1, in1);
+            in1.skip(bytes1.length);
+            reallyRead(bytes1, in1);
+
+            reallyRead(bytes2, in2);
+            reallyRead(bytes2, in2);
+            in2.seek(bytes2.length * 3);
+            reallyRead(bytes2, in2);
+
+            in1.close();
+            in2.close();
+
+            Assert.assertEquals(bytes1, bytes2, "Error at buffer size " + bufferSize);
+        }
+    }
+
+    private int reallyRead(final byte[] bytes, final SeekableBufferedStream in) throws IOException {
+        int read = 0, total = 0;
+        do {
+            read = in.read(bytes, total, bytes.length-total);
+            total += read;
+        } while (total != bytes.length && read > 0);
+
+        return total;
     }
 }
