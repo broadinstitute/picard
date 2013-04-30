@@ -71,16 +71,16 @@ public class SeekableBufferedStream extends SeekableStream {
     }
 
     @Override
-    public long skip(final long l) throws IOException {
-        if (l < this.bufferedStream.getBytesInBufferAvailable()) {
-            final long retval = this.bufferedStream.skip(l);
+    public long skip(final long skipLength) throws IOException {
+        if (skipLength < this.bufferedStream.getBytesInBufferAvailable()) {
+            final long retval = this.bufferedStream.skip(skipLength);
             this.position += retval;
             return retval;
         }
         else {
-            final long position = this.position + l;
+            final long position = this.position + skipLength;
             seek(position);
-            return l;
+            return skipLength;
         }
     }
 
