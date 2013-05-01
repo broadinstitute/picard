@@ -41,7 +41,7 @@ public class GenotypeLikelihoods {
     // caching numAlleles up to 5 and ploidy up to 10
     private final static int[][] numLikelihoodCache = new int[NUM_LIKELIHOODS_CACHE_N_ALLELES][NUM_LIKELIHOODS_CACHE_PLOIDY];
 
-    public final static int MAX_PL = Short.MAX_VALUE;
+    public final static int MAX_PL = Integer.MAX_VALUE;
 
     //
     // There are two objects here because we are lazy in creating both representations
