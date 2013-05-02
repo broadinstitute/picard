@@ -66,7 +66,7 @@ public class SamToFastq extends CommandLineProgram {
     @Option(shortName="F", doc="Output fastq file (single-end fastq or, if paired, first end of the pair fastq).", mutex={"OUTPUT_PER_RG"})
     public File FASTQ ;
 
-    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true, mutex={"OUTPUT_PER_RG", "INTERLEAVE"})
+    @Option(shortName="F2", doc="Output fastq file (if paired, second end of the pair fastq).", optional=true, mutex={"OUTPUT_PER_RG"})
     public File SECOND_END_FASTQ ;
 
     @Option(shortName="OPRG", doc="Output a fastq file per read group (two fastq files per read group if the group is paired).", optional=true, mutex={"FASTQ", "SECOND_END_FASTQ"})
@@ -78,7 +78,7 @@ public class SamToFastq extends CommandLineProgram {
     @Option(shortName="RC", doc="Re-reverse bases and qualities of reads with negative strand flag set before writing them to fastq", optional=true)
     public boolean RE_REVERSE = true;
 
-    @Option(shortName="INTER", doc="Will generate an interleaved fastq if paired, each line will have /1 or /2 to describe which end it came from", mutex={"SECOND_END_FASTQ"})
+    @Option(shortName="INTER", doc="Will generate an interleaved fastq if paired, each line will have /1 or /2 to describe which end it came from")
     public boolean INTERLEAVE = false;
 
     @Option(shortName="NON_PF", doc="Include non-PF reads from the SAM file into the output FASTQ files.")
@@ -340,11 +340,18 @@ public class SamToFastq extends CommandLineProgram {
     * messages to be written to the appropriate place.
     */
     protected String[] customCommandLineValidation() {
+	    if (INTERLEAVE && SECOND_END_FASTQ != null) {
+		    return new String[] {
+				    "Cannot set INTERLEAVE to true and pass in a SECOND_END_FASTQ"
+		    };
+	    }
+
         if ((CLIPPING_ATTRIBUTE != null && CLIPPING_ACTION == null) ||
             (CLIPPING_ATTRIBUTE == null && CLIPPING_ACTION != null)) {
             return new String[] {
                     "Both or neither of CLIPPING_ATTRIBUTE and CLIPPING_ACTION should be set." };
         }
+
         if (CLIPPING_ACTION != null) {
             if (CLIPPING_ACTION.equals("N") || CLIPPING_ACTION.equals("X")) {
                 // Do nothing, this is fine
@@ -358,6 +365,7 @@ public class SamToFastq extends CommandLineProgram {
                 }
             }
         }
+
         if ((OUTPUT_PER_RG && OUTPUT_DIR == null) || ((!OUTPUT_PER_RG) && OUTPUT_DIR != null)) {
             return new String[] {
                     "If OUTPUT_PER_RG is true, then OUTPUT_DIR should be set. " +
