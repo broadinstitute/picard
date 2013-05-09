@@ -19,7 +19,15 @@ import java.util.List;
  * @author Tim Fennell
  */
 public class CollectMultipleMetrics extends CommandLineProgram {
-    public static enum Program {
+
+    /**
+     * This interface allows developers to create Programs to run in addition to the ones defined in the Program enum.
+     */
+    public static interface ProgramInterface {
+        SinglePassSamProgram makeInstance(final String outbase);
+    }
+
+    public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
             @Override public SinglePassSamProgram makeInstance(final String outbase) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
@@ -53,7 +61,6 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
         };
 
-        public abstract SinglePassSamProgram makeInstance(final String outbase);
     }
 
     @Usage
@@ -81,9 +88,30 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     @Option(doc="List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.values());
 
+    /**
+     * Contents of PROGRAM list is transferred to this list during command-line validation, so that an outside
+     * developer can invoke this class programmatically and provide alternative Programs to run by calling
+     * setProgramsToRun().
+     */
+    private List<ProgramInterface> programsToRun;
+
     // Stock main method
     public static void main(final String[] args) {
         new CollectMultipleMetrics().instanceMainWithExit(args);
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        programsToRun = new ArrayList<ProgramInterface>(PROGRAM);
+        return super.customCommandLineValidation();
+    }
+
+    /**
+     * Use this method when invoking CollectMultipleMetrics programmatically to run programs other than the ones
+     * available via enum.  This must be called before doWork().
+     */
+    public void setProgramsToRun(List<ProgramInterface> programsToRun) {
+        this.programsToRun = programsToRun;
     }
 
     @Override protected int doWork() {
