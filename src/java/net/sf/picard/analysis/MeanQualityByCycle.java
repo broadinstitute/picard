@@ -137,10 +137,9 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             }
 
             for (int i=0; i< secondReadTotalsByCycle.length; ++i) {
-                final int cycle = firstReadLength + i;
-
                 if (secondReadCountsByCycle[i] > 0) {
-                    meanQualities.increment(cycle, secondReadTotalsByCycle[i] / firstReadCountsByCycle[i]);
+                    final int cycle = firstReadLength + i;
+                    meanQualities.increment(cycle, secondReadTotalsByCycle[i] / secondReadCountsByCycle[i]);
                 }
             }
 
