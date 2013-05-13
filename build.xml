@@ -209,6 +209,7 @@
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
+            <fileset dir="${src.scripts}" includes="**/*.R"/>
             <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>

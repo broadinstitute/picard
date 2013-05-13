@@ -114,13 +114,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         this.programsToRun = programsToRun;
     }
 
-    @Override protected int doWork() {
+    @Override public int doWork() {
         if (OUTPUT.endsWith(".")) {
             OUTPUT = OUTPUT.substring(0, OUTPUT.length()-1);
         }
 
         final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
-        for (Program program : new HashSet<Program>(PROGRAM)) {
+        for (ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
             SinglePassSamProgram instance = program.makeInstance(OUTPUT);
 
             // Generally programs should not be accessing these directly but it might make things smoother

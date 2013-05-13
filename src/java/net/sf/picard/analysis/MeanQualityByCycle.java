@@ -160,6 +160,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
         if (readGroups.size() == 1) {
             this.plotSubtitle = readGroups.get(0).getLibrary();
+            if (null == this.plotSubtitle) this.plotSubtitle = "";
         }
     }
 

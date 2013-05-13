@@ -56,7 +56,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         return 0;
     }
 
-    protected static void makeItSo(final File input,
+    public static void makeItSo(final File input,
                                    final File referenceSequence,
                                    final boolean assumeSorted,
                                    final long stopAfter,
