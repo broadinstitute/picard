@@ -128,6 +128,30 @@ public class ExtractIlluminaBarcodesTest {
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 1);
     }
 
+    @Test
+    public void testNonWritableOutputFile() throws Exception {
+        final File existingFile = new File(basecallsDir, "s_1_0001_barcode.txt.gz");
+        existingFile.createNewFile();
+        existingFile.setReadOnly();
+        final String readStructure = "6B36T";
+        final int lane = 1;
+
+        final File metricsFile = File.createTempFile("eib.", ".metrics");
+        metricsFile.deleteOnExit();
+
+        final List<String> args = new ArrayList<String>(Arrays.asList(
+                "BASECALLS_DIR=" + basecallsDir.getPath(),
+                "LANE=" + lane,
+                "READ_STRUCTURE=" + readStructure,
+                "METRICS_FILE=" + metricsFile.getPath(),
+                "COMPRESS_OUTPUTS=true"
+        ));
+        for (final String barcode : BARCODES) {
+            args.add("BARCODE=" + barcode);
+        }
+        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 4);
+    }
+
     /**
      * 4 cases tested:
      * * exact match to ACAGTG
@@ -305,7 +329,7 @@ public class ExtractIlluminaBarcodesTest {
                 "LANE=" + lane,
                 "READ_STRUCTURE=" + readStructure,
                 "METRICS_FILE=" + metricsFile.getPath()
-                ));
+        ));
         for (final String barcode : BARCODES) {
             args.add("BARCODE=" + barcode);
         }

@@ -517,18 +517,18 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
          * run method which extracts barcodes and accumulates metrics for an entire tile
          */
         synchronized public void run() {
-            log.info("Extracting barcodes for tile " + tile);
-
-            //Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
-            //is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
-            //so they are not all waiting for each others file operations
-            final IlluminaDataProvider provider = factory.makeDataProvider(Arrays.asList(tile));
-
-            //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
-            //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
-            final int [] barcodeIndices = outputReadStructure.barcodes.getIndices();
-            final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
             try {
+                log.info("Extracting barcodes for tile " + tile);
+
+                //Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
+                //is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
+                //so they are not all waiting for each others file operations
+                final IlluminaDataProvider provider = factory.makeDataProvider(Arrays.asList(tile));
+
+                //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
+                //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
+                final int [] barcodeIndices = outputReadStructure.barcodes.getIndices();
+                final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
                 final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
                 final byte qualityScores[][] = usingQualityScores ? new byte[barcodeIndices.length][] : null;
                 while (provider.hasNext()) {
@@ -547,7 +547,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                         writer.write(StringUtil.bytesToString(bc));
                     }
                     writer.write("\t" + yOrN + "\t" + match.barcode + "\t" + String.valueOf(match.mismatches) +
-                                 "\t" + String.valueOf(match.mismatchesToSecondBest));
+                            "\t" + String.valueOf(match.mismatchesToSecondBest));
                     writer.newLine();
                 }
                 writer.close();
