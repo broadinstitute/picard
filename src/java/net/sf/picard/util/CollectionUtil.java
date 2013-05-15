@@ -117,14 +117,14 @@ public class CollectionUtil {
      * @param <V>
      */
     public static class DefaultingMap<K, V> extends HashMap<K, V> {
-        final Factory<V> defaultGenerator;
+        final Factory<V, K> defaultGenerator;
         final boolean injectValueOnDefault;
         
         /** Creates a defaulting map which defaults to the provided value and with injecting-on-default disabled. */
         public DefaultingMap(final V defaultValue) {
-            this(new Factory<V>() {
+            this(new Factory<V, K>() {
                 @Override
-                public V make() {
+                public V make(final K k) {
                     return defaultValue;
                 }
             }, false);
@@ -134,7 +134,7 @@ public class CollectionUtil {
          * Creates a defaulting map that generates defaults from the provided factory. This is useful when the default is non-static, or
          * the default is mutable, and the client wishes to get a value and mutate it and persist those changes in the map.
          */
-        public DefaultingMap(final Factory<V> defaultGenerator, final boolean injectValueOnDefaulting) {
+        public DefaultingMap(final Factory<V, K> defaultGenerator, final boolean injectValueOnDefaulting) {
             this.defaultGenerator = defaultGenerator;
             this.injectValueOnDefault = injectValueOnDefaulting;
         }
@@ -143,7 +143,7 @@ public class CollectionUtil {
         @SuppressWarnings("unchecked") // Expect that the cast is successful; otherwise, client is breaking contract.
         public V get(final Object key) {
             if (!this.containsKey(key)) {
-                final V val = this.defaultGenerator.make();
+                final V val = this.defaultGenerator.make((K) key);
                 if (this.injectValueOnDefault) {
                     this.put((K) key, val); 
                 }
@@ -153,8 +153,11 @@ public class CollectionUtil {
             }
         }
         
-        public interface Factory<V> {
-            V make();
+        public interface Factory<V, K> {
+            /**
+             * @param k
+             */
+            V make(K k);
         }
     }
 }
