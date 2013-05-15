@@ -28,8 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
-import net.sf.picard.util.ProcessExecutor;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 
@@ -39,6 +39,7 @@ import net.sf.picard.io.IoUtil;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class RExecutor {
+    private static final Log LOG = Log.getInstance(RExecutor.class);
     private static final String R_EXE = "Rscript";
     
     /**
@@ -50,9 +51,9 @@ public class RExecutor {
      * @param arguments any arguments required by the script
      * @return the return code of the R process
      */
-    public static int executeFromClasspath(String rScriptName, String... arguments) {
-        File scriptFile = writeScriptFile(rScriptName);
-        int returnCode = executeFromFile(scriptFile, arguments);
+    public static int executeFromClasspath(final String rScriptName, final String... arguments) {
+        final File scriptFile = writeScriptFile(rScriptName);
+        final int returnCode = executeFromFile(scriptFile, arguments);
         net.sf.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
@@ -65,18 +66,19 @@ public class RExecutor {
      * @param arguments any arguments required by the script
      * @return the return code of the R process
      */
-    public static int executeFromFile(File scriptFile, String... arguments) {
-        String[] command = new String[arguments.length + 2];
+    public static int executeFromFile(final File scriptFile, final String... arguments) {
+        final String[] command = new String[arguments.length + 2];
         command[0] = R_EXE;
         command[1] = scriptFile.getAbsolutePath();
         System.arraycopy(arguments, 0, command, 2, arguments.length);
+        LOG.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         return ProcessExecutor.execute(command);
     }
 
     /**
      * Writes the classpath resource named by rScriptName to the temp dir.
      */
-    private static File writeScriptFile(String rScriptName) {
+    private static File writeScriptFile(final String rScriptName) {
         InputStream scriptStream = null;
         OutputStream scriptFileStream = null;
         try {
@@ -84,7 +86,7 @@ public class RExecutor {
             if (scriptStream == null) {
                 throw new IllegalArgumentException("Script [" + rScriptName + "] not found in classpath");
             }
-            File scriptFile = File.createTempFile("script", ".R");
+            final File scriptFile = File.createTempFile("script", ".R");
             scriptFileStream = IoUtil.openFileForWriting(scriptFile);
             IoUtil.copyStream(scriptStream, scriptFileStream);
             return scriptFile;
@@ -94,13 +96,13 @@ public class RExecutor {
             if (scriptStream != null) {
                 try {
                     scriptStream.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
             if (scriptFileStream != null) {
                 try {
                     scriptFileStream.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
         }
