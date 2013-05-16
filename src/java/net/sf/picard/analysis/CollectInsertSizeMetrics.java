@@ -124,7 +124,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             //can happen if user sets MINIMUM_PCT = 0.5, etc.
             log.warn("All data categories were discarded because they contained < " + MINIMUM_PCT +
                      " of the total aligned paired data.");
-            log.warn("Total mapped pairs in all categories: " + ((InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector) multiCollector.getAllReadsCollector()).getTotalInserts());
+            final InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector allReadsCollector = (InsertSizeMetricsCollector.PerUnitInsertSizeMetricsCollector) multiCollector.getAllReadsCollector();
+            log.warn("Total mapped pairs in all categories: " + (allReadsCollector == null ? allReadsCollector : allReadsCollector.getTotalInserts()));
         }
         else  {
             file.write(OUTPUT);
