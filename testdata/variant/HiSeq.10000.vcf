@@ -5,6 +5,7 @@
 ##FILTER=<ID=FDRtranche0.10to1.00,Description="FDR tranche level at qual 0.03">
 ##FILTER=<ID=FDRtranche1.00to2.00,Description="FDR tranche level at qual 0.02">
 ##FILTER=<ID=FDRtranche2.00to10.00+,Description="FDR tranche level at qual > 0.06">
+##FILTER=<ID=FDRtranche2.00to10.00,Description="FDR tranche level at qual unknown">
 ##FILTER=<ID=HARD_TO_VALIDATE,Description="MQ0 = 4 && ((MQ0 / (1.0 * DP))  0.1)">
 ##FILTER=<ID=Indel,Description="Overlaps a user-input mask">
 ##FILTER=<ID=LowQual,Description="Low quality">
