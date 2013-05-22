@@ -38,7 +38,7 @@
     <property name="reports" value="dist/test"/>
     <property name="test.output" value="dist/test"/>
 
-    <!--property name="javac.target" value="1.6"/-->
+    <property name="javac.target" value="1.6"/>
     <property name="javac.debug" value="true"/>
 
     <!-- Get SVN revision, if available, otherwise leave it blank.  -->
@@ -458,7 +458,9 @@
                    sourcepath=""
                    srcdir="${src}"
                    includes="@{includes}"
-                   excludes="@{excludes}">
+                   excludes="@{excludes}"
+                   source="${javac.target}"
+                   target="${javac.target}">
                 <classpath refid="@{compile.classpath}"/>
                 <compilerarg line="@{compiler.args}" />
             </javac>
@@ -477,7 +479,9 @@
                    debug="${javac.debug}"
                    srcdir="${src.test.java}"
                    includes="@{includes}"
-                   excludes="@{excludes}">
+                   excludes="@{excludes}"
+                   source="${javac.target}"
+                   target="${javac.target}">
                 <classpath>
                     <path refid="classpath"/>
                     <pathelement location="${classes}"/>
