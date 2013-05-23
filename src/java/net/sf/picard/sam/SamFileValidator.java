@@ -296,7 +296,7 @@ public class SamFileValidator {
         if (rg == null) {
             addError(new SAMValidationError(Type.RECORD_MISSING_READ_GROUP,
                     "A record is missing a read group", record.getReadName()));
-        } else if (!header.getReadGroups().contains(rg)) {
+        } else if (header.getReadGroup(rg.getId()) == null) {
             addError(new SAMValidationError(Type.READ_GROUP_NOT_FOUND,
                     "A record has a read group not found in the header: ",
                     record.getReadName() + ", " + rg.getReadGroupId()));
