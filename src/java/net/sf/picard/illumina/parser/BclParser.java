@@ -76,7 +76,7 @@ class BclParser extends PerTilePerCycleParser<BclData>{
 
             @Override
             public void close() {
-                reader = null;
+                reader.close();
             }
 
             @Override
