@@ -1,4 +1,4 @@
-/*
+ /*
  * The MIT License
  *
  * Copyright (c) 2012 The Broad Institute
@@ -25,10 +25,13 @@ package net.sf.picard.illumina.parser.readers;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.util.UnsignedTypeUtil;
+import net.sf.samtools.util.CloserUtil;
 
-import java.io.File;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Iterator;
+import java.util.zip.GZIPInputStream;
 
 /**
  * BCL Files are base call and quality score binary files containing a (base,quality) pair for successive clusters.
@@ -59,15 +62,14 @@ import java.util.Iterator;
  *  So the output base/quality will be a (T/34)
  */
 public class BclReader implements Iterator<BclReader.BclValue> {
-
-    /** The byte iteterator created by fileReader that reads successive byte values (after the header) */
-    private final BinaryFileIterator<Byte> bbIterator;
-
     /** The size of the opening header (consisting solely of numClusters*/
     private static final int HEADER_SIZE = 4;
 
     /** The number of clusters provided in this BCL */
     public final long numClusters;
+
+    private final InputStream inputStream;
+    private final String filePath;
 
     /* This strips off the leading bits in order to compare the read byte against the static values below */
     private final static byte BASE_MASK = 0x0003;
@@ -90,11 +92,59 @@ public class BclReader implements Iterator<BclReader.BclValue> {
     }
 
     public BclReader(final File file) {
-        bbIterator = MMapBackedIteratorFactory.getByteIterator(HEADER_SIZE, file);
-        final ByteBuffer headerBuf = bbIterator.getHeaderBytes();
-        numClusters = UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
-        bbIterator.assertTotalElementsEqual(numClusters);
+        filePath = file.getAbsolutePath();
+        final boolean isGzip = filePath.endsWith(".gz");
+
+        // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
+        // if necessary
+        final BufferedInputStream bufferedInputStream;
+        try {
+             bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
+            inputStream = isGzip ? new GZIPInputStream(bufferedInputStream) : bufferedInputStream;
+        } catch (FileNotFoundException fnfe) {
+            throw new PicardException("File not found: (" + filePath + ")", fnfe);
+        } catch (IOException ioe) {
+            throw new PicardException("Error reading file: (" + filePath + ")", ioe);
+        }
+
+        // numClusters is used both for the file structure checks and in hasNext()
+        numClusters = getNumClusters();
+
+        if (file.length() == 0) {
+            throw new PicardException("Zero length BCL file detected: " + filePath);
+        }
+        if (!isGzip) {
+            // The file structure checks rely on the file size (as information is stored as individual bytes) but
+            // we can't reliably know the number of uncompressed bytes in the file ahead of time for gzip files. Only
+            // run the main check
+            assertProperFileStructure(file);
+        }
+
         nextCluster = 0;
+    }
+
+    private long getNumClusters() {
+        final byte[] header = new byte[HEADER_SIZE];
+
+        try {
+            final int headerBytesRead = inputStream.read(header);
+            if (headerBytesRead != HEADER_SIZE) {
+                throw new PicardException("Malformed file, expected header of size " + HEADER_SIZE + " but received " + headerBytesRead);
+            }
+        } catch (IOException ioe) {
+            throw new PicardException("Unable to read header for file (" + filePath + ")", ioe);
+        }
+
+        final ByteBuffer headerBuf = ByteBuffer.wrap(header);
+        headerBuf.order(ByteOrder.LITTLE_ENDIAN);
+        return UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
+    }
+
+    private void assertProperFileStructure(final File file) {
+        final long elementsInFile = file.length() - HEADER_SIZE;
+        if (numClusters != elementsInFile) {
+            throw new PicardException("Expected " + numClusters + " in file but found " + elementsInFile);
+        }
     }
 
     public boolean hasNext() {
@@ -102,11 +152,25 @@ public class BclReader implements Iterator<BclReader.BclValue> {
     }
 
     public BclValue next() {
+        // TODO(ish) There are multiple optimizations that could be made here if we find that this becomes a pinch
+        // point. For instance base & quality could be moved into BclValue, element & elements could be moved to be
+        // class members - all in an attempt to reduce the number of allocations being made.
         final byte base;
         final byte quality;
 
-        final byte element = bbIterator.next();
+        final byte element;
+        final byte[] elements = new byte[1];
+        try {
+            if (inputStream.read(elements) != 1) {
+                throw new PicardException("Error when reading byte from file (" + filePath + ")");
+            }
+        } catch (EOFException eofe) {
+            throw new PicardException("Attempted to read byte from file but none were available: (" + filePath + ")", eofe);
+        }catch (IOException ioe) {
+            throw new PicardException("Error when reading byte from file (" + filePath + ")", ioe);
+        }
 
+        element = elements[0];
         if(element == 0) { //NO CALL, don't confuse with an A call
             base = '.';
             quality = 2;
@@ -129,7 +193,7 @@ public class BclReader implements Iterator<BclReader.BclValue> {
                     break;
 
                 default:
-                    throw new PicardException("Impossible case! BCL Base value neither A, C, G, nor T! Value(" + (element & BASE_MASK) + ") + in file(" + bbIterator.getFile().getAbsolutePath() + ")");
+                    throw new PicardException("Impossible case! BCL Base value neither A, C, G, nor T! Value(" + (element & BASE_MASK) + ") + in file(" + filePath + ")");
             }
 
             quality = (byte)(UnsignedTypeUtil.uByteToInt(element) >>> 2);
@@ -140,6 +204,10 @@ public class BclReader implements Iterator<BclReader.BclValue> {
 
         ++nextCluster;
         return new BclValue(base, quality);
+    }
+
+    public void close() {
+        CloserUtil.close(inputStream);
     }
 
     public void remove() {

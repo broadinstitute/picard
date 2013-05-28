@@ -57,17 +57,12 @@ public class IlluminaFileUtil {
         Barcode
     }
 
-    private final File dataDir;
-    private final File intensityDir;
     private final File intensityLaneDir;
     private final File basecallDir;
-    private final File basecallLaneDir;
-    private final File interopDir;
     private final int lane;
 
 
     /** A regex string matching only qseq files */
-    private final String QSeqRegex = "s_(\\d+)_(\\d)_(\\d{4}).qseq.txt";   //s_lane_end_tile
     private final QSeqIlluminaFileUtil qseq;
     private final PerTilePerCycleFileUtil bcl;
     private final PerTilePerCycleFileUtil cif;
@@ -80,22 +75,23 @@ public class IlluminaFileUtil {
     private final File tileMetricsOut;
     private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils;
 
+
     public IlluminaFileUtil(final File basecallDir, final int lane) {
         this.basecallDir  = basecallDir;
-        this.intensityDir = basecallDir.getParentFile();
-        this.dataDir      = intensityDir.getParentFile();
+        final File intensityDir = basecallDir.getParentFile();
+        final File dataDir      = intensityDir.getParentFile();
+        final File interopDir       = new File(dataDir.getParentFile(), "InterOp");
         this.lane = lane;
 
-        this.basecallLaneDir  = new File(basecallDir, longLaneStr(lane));
+        final File basecallLaneDir  = new File(basecallDir, longLaneStr(lane));
         this.intensityLaneDir = new File(intensityDir, longLaneStr(lane));
-        this.interopDir       = new File(dataDir.getParentFile(), "InterOp");
 
         utils = new HashMap<SupportedIlluminaFormat, ParameterizedFileUtil>();
 
         qseq = new QSeqIlluminaFileUtil();
         utils.put(SupportedIlluminaFormat.Qseq, qseq);
 
-        bcl  = new PerTilePerCycleFileUtil(".bcl", basecallLaneDir);
+        bcl  = new PerTilePerCycleFileUtil(inferBclExtension(basecallLaneDir), basecallLaneDir);
         utils.put(SupportedIlluminaFormat.Bcl, bcl);
 
         cif  = new PerTilePerCycleFileUtil(".cif");
@@ -216,7 +212,6 @@ public class IlluminaFileUtil {
 
     public static String UNPARAMETERIZED_PER_TILE_PATTERN = "s_(\\d+)_(\\d{1,4})";
     public static String UNPARAMETERIZED_QSEQ_PATTERN     = "s_(\\d+)_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
-    private static String LANE_TILE_QSEQ_PATTERN          = "s_(\\d+)_\\d_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
     private static final Pattern CYCLE_SUBDIRECTORY_PATTERN = Pattern.compile("^C(\\d+)\\.1$");
 
     public static String makeParameterizedLaneAndTileRegex(final int lane) {
@@ -251,8 +246,8 @@ public class IlluminaFileUtil {
          * still contains all of the files for this given type (e.g. If we're talking about BCLs the directory
          * structure is:
          *
-         * BaseCall Dir
-         * |
+         *   BaseCall Dir
+         *       |
          *      L001
          * |     |        |
          * C1.1 C2.1 ... Cn.1
@@ -271,7 +266,7 @@ public class IlluminaFileUtil {
             this.base      = base;
         }
 
-        /** The period separator is expectexd in the file extension, since some do not start with it */
+        /** The period separator is expected in the file extension, since some do not start with it */
         private String escapePeriods(final String preEscaped) {
             return preEscaped.replaceAll("\\.", "\\."); //In the first one the \\ is inside a regex in the second it's NOT
         }
@@ -314,7 +309,7 @@ public class IlluminaFileUtil {
         protected final IlluminaFileMap fileMap;
         protected final List<Integer> tiles;
 
-        public PerTileFileUtil(final String fileNameEndPattern, boolean padTile, final File base) {
+        public PerTileFileUtil(final String fileNameEndPattern, final boolean padTile, final File base) {
             super(makeLTRegex(processTxtExtension(fileNameEndPattern)), makeLTRegex(processTxtExtension(fileNameEndPattern), lane), fileNameEndPattern, base);
             this.txtBased = fileNameEndPattern.endsWith(".txt");
             this.padTile  = padTile;
@@ -327,7 +322,7 @@ public class IlluminaFileUtil {
             }
         }
 
-        public PerTileFileUtil(final String fileNameEndPattern, boolean padTile) {
+        public PerTileFileUtil(final String fileNameEndPattern, final boolean padTile) {
             this(fileNameEndPattern, padTile, intensityLaneDir);
         }
 
@@ -358,7 +353,7 @@ public class IlluminaFileUtil {
         }
 
         @Override
-        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+        public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
             final List<String> failures = new LinkedList<String>();
 
             if(!base.exists()) {
@@ -382,9 +377,8 @@ public class IlluminaFileUtil {
      */
     class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         private final CycleIlluminaFileMap cycleFileMap;
-        private List<Integer> tiles;
+        private final List<Integer> tiles;
         private int [] detectedCycles;
-       // private Set<Integer> detectedCyclesSet;
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern, final File base) {
             super(makeLTRegex(fileNameEndPattern), makeLTRegex(fileNameEndPattern, lane), fileNameEndPattern, base);
@@ -395,12 +389,6 @@ public class IlluminaFileUtil {
             } else {
                 this.tiles = new ArrayList<Integer>();
             }
-
-            /*
-            detectedCyclesSet = new TreeSet<Integer>();
-            for(final Integer cycle : detectedCycles) {
-                detectedCyclesSet.add(cycle);
-            }*/
         }
 
         public PerTilePerCycleFileUtil(final String fileNameEndPattern) {
@@ -480,7 +468,7 @@ public class IlluminaFileUtil {
             return cycleFileMap;
         }
 
-        public CycleIlluminaFileMap getFiles(List<Integer> tiles) {
+        public CycleIlluminaFileMap getFiles(final List<Integer> tiles) {
             return cycleFileMap.keep(tiles, null);
         }
 
@@ -491,8 +479,8 @@ public class IlluminaFileUtil {
          * @return A CycleIlluminaFileMap with all available tiles but at most the cycles passed in by the cycles parameter
          */
         public CycleIlluminaFileMap getFiles(final int [] cycles) {
-            //Remove any cycles that were discovered to be NON-EXISTANT when this util was instantiated
-            int [] filteredCycles = removeNonexistantCycles(cycles);
+            //Remove any cycles that were discovered to be NON-EXISTENT when this util was instantiated
+            final int[] filteredCycles = removeNonExistentCycles(cycles);
             return cycleFileMap.keep(null, filteredCycles);
         }
 
@@ -503,12 +491,12 @@ public class IlluminaFileUtil {
          * @return A CycleIlluminaFileMap with at most the tiles/cycles listed in the parameters
          */
         public CycleIlluminaFileMap getFiles(final List<Integer> tiles, final int [] cycles) {
-            //Remove any cycles that were discovered to be NON-EXISTANT when this util was instantiated
-            int [] filteredCycles = removeNonexistantCycles(cycles);
+            //Remove any cycles that were discovered to be NON-EXISTENT when this util was instantiated
+            final int[] filteredCycles = removeNonExistentCycles(cycles);
             return cycleFileMap.keep(tiles, filteredCycles);
         }
 
-        private int [] removeNonexistantCycles(final int[] cycles) {
+        private int[] removeNonExistentCycles(final int[] cycles) {
             final TreeSet<Integer> detectedCyclesSet = new TreeSet<Integer>();
             for(final Integer cycle : detectedCycles) {
                 detectedCyclesSet.add(cycle);
@@ -520,7 +508,7 @@ public class IlluminaFileUtil {
             }
 
             //This also sorts outputCycles
-            final int [] outputCycles;
+            final int[] outputCycles;
             inputCyclesSet.retainAll(detectedCyclesSet);
             outputCycles = new int[inputCyclesSet.size()];
             int i = 0;
@@ -549,10 +537,10 @@ public class IlluminaFileUtil {
         }
 
         @Override
-        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+        public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
             final List<String> failures = new LinkedList<String>();
 
-            if(!base.exists()) {
+            if (!base.exists()) {
                 failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
             } else {
                 final CycleIlluminaFileMap cfm = getFiles(expectedTiles, expectedCycles);
@@ -703,14 +691,14 @@ public class IlluminaFileUtil {
         }
 
         @Override
-        public List<String> verify(List<Integer> expectedTiles, int [] expectedCycles) {
+        public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
             final List<String> failures = new LinkedList<String>();
 
             if(!this.base.exists()) {
                 failures.add("Base directory( " + this.base.getAbsolutePath() + ") does not exist!");
             } else {
                 final List<IlluminaFileMap> fileMapPerRead = getFiles(expectedTiles);
-                int [] qseqReadLengths = new int[numberOfEnds()];
+                final int[] qseqReadLengths = new int[numberOfEnds()];
                 int lastCycle = 0;
                 for(int i = 0; i < qseqReadLengths.length; i++) {
                     final File currentReadForTile = fileMapPerRead.get(i).get(expectedTiles.get(0));
@@ -744,7 +732,7 @@ public class IlluminaFileUtil {
         public boolean filesAvailable() {
             return !tiles.isEmpty();
         }
-    };
+    }
 
     /** A support class for return lane tile and end information for a given file */
     static class LaneTileEnd {
@@ -773,7 +761,7 @@ public class IlluminaFileUtil {
         return "^" + makeParameterizedLaneAndTileRegex(lane) + fileNameEndPattern + "$";
     }
 
-    private static int getCycleFromDir(File tempCycleDir) {
+    private static int getCycleFromDir(final File tempCycleDir) {
         final char [] name = tempCycleDir.getName().toCharArray();
         if(name[0] != 'C') {
             throw new PicardException("Invalid cycle directory name " + tempCycleDir.getName());
@@ -882,13 +870,51 @@ public class IlluminaFileUtil {
         List<Integer> tiles = pfu.getTiles();
         summary = pfu.extension + "(" + liToStr(tiles) + ")";
 
-        for(int i = 0; i < formats.size(); i++) {
-            pfu = utils.get(formats.get(i));
+        for (final SupportedIlluminaFormat format : formats) {
+            pfu = utils.get(format);
             tiles = pfu.getTiles();
 
             summary += ", " + pfu.extension + "(" + liToStr(tiles) + ")";
         }
 
         return summary;
+    }
+
+    /**
+     * We want to be able to predetermine if the BCL files are gzipped or not and we also want to verify
+     * that all of the files are the same. Look through all of the cycle dirs in this lane and grab all
+     * BCL (gzipped or not) files in the tree. Determine the exension and then verify that they're all the same.
+     *
+     * If there are no BCL files, return the standard extension (i.e. ".bcl") to conserve backwards compatibility
+     */
+    private String inferBclExtension(final File laneDir) {
+        final Pattern bclExtensionPattern = Pattern.compile(".*.bcl(\\.gz)?$");
+        final String bclGzipExtension = ".bcl.gz";
+        String bclExtension = ".bcl";
+
+        final File[] cycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, CYCLE_SUBDIRECTORY_PATTERN);
+        final List<File> allBclFiles = new ArrayList<File>();
+        if (cycleDirs != null && cycleDirs.length > 0) {
+            // Get all of the BCL files in the various cycle dirs
+            for (final File cycleDir : cycleDirs) {
+                allBclFiles.addAll(Arrays.asList(IoUtil.getFilesMatchingRegexp(cycleDir, bclExtensionPattern)));
+            }
+
+            if (allBclFiles.size() > 0) {
+                // Define the extension to be the one the first file has. After that, verify that all files have the
+                // same extension
+                if (allBclFiles.get(0).getPath().endsWith(bclGzipExtension)) {
+                    bclExtension = bclGzipExtension;
+                }
+
+                for (final File bclFile : allBclFiles) {
+                    if (!bclFile.getPath().endsWith(bclExtension)) {
+                        throw new PicardException("Not all BCL files in " + laneDir.getAbsolutePath() + " have the same extension!");
+                    }
+                }
+            }
+        }
+
+        return bclExtension;
     }
 }
