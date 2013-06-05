@@ -2,6 +2,7 @@ package net.sf.picard.vcf;
 
 import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
+import org.broadinstitute.variant.vcf.VCFHeader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -14,7 +15,7 @@ public class VariantContextIteratorTest {
 	@Test
 	public void testNext() {
 		final File input = new File(TEST_DATA_PATH + "CEUTrio-merged-indels-snps.vcf");
-		final CloseableIterator<VariantContext> variantContextIterator = new VariantContextIterator(input);
+		final CloseableIterator<VariantContext> variantContextIterator = VariantContextIteratorFactory.create(input);
 
 		Assert.assertNotNull(variantContextIterator.next());
 		Assert.assertTrue(variantContextIterator.hasNext());

@@ -94,8 +94,8 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     public void close() {
         try {
             // try to close the index stream (keep it separate to help debugging efforts)
-            if ( indexer != null ) {
-                Index index = indexer.finalizeIndex(positionalOutputStream.getPosition());
+            if (indexer != null) {
+                final Index index = indexer.finalizeIndex(positionalOutputStream.getPosition());
                 setIndexSequenceDictionary(index, refDict);
                 index.write(idxStream);
                 idxStream.close();
@@ -120,7 +120,7 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
      *
      * @param vc      the Variant Context object
      */
-    public void add(VariantContext vc) {
+    public void add(final VariantContext vc) {
         // if we are doing on the fly indexing, add the record ***before*** we write any bytes
         if ( indexer != null )
             indexer.addFeature(vc, positionalOutputStream.getPosition());
@@ -140,8 +140,8 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     // a constant we use for marking sequence dictionary entries in the Tribble index property list
     private static final String SequenceDictionaryPropertyPredicate = "DICT:";
 
-    private static void setIndexSequenceDictionary(Index index, SAMSequenceDictionary dict) {
-        for ( SAMSequenceRecord seq : dict.getSequences() ) {
+    private static void setIndexSequenceDictionary(final Index index, final SAMSequenceDictionary dict) {
+        for (final SAMSequenceRecord seq : dict.getSequences()) {
             final String contig = SequenceDictionaryPropertyPredicate + seq.getSequenceName();
             final String length = String.valueOf(seq.getSequenceLength());
             index.addProperty(contig,length);
@@ -149,6 +149,10 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     }
 }
 
+/**
+ * Wraps output stream in a manner which keeps track of the position within the file and allowing writes
+ * at arbitrary points
+ */
 final class PositionalOutputStream extends OutputStream {
     private final OutputStream out;
     private long position = 0;
