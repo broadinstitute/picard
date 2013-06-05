@@ -76,8 +76,8 @@ public class MergeVcfsTest {
 		final File snpInputFile = new File(TEST_DATA_PATH + "CEUTrio-snps.vcf");
 		final File output = new File(TEST_DATA_PATH + "merge-indels-snps-test-output-delete-me.vcf");
 
-		final VariantContextIterator indelIterator = new VariantContextIterator(indelInputFile);
-		final VariantContextIterator snpIterator = new VariantContextIterator(snpInputFile);
+		final VariantContextIterator indelIterator = VariantContextIteratorFactory.create(indelInputFile);
+		final VariantContextIterator snpIterator = VariantContextIteratorFactory.create(snpInputFile);
 
 		final Queue<String> indelContigPositions = getContigPositions(indelIterator);
 		final Queue<String> snpContigPositions = getContigPositions(snpIterator);
@@ -98,7 +98,7 @@ public class MergeVcfsTest {
 		// if the context is an indel (snp), the next genomic position in the indel
 		// (snp) queue is the same. Also make sure that the context is in the order
 		// specified by the input files.
-		final VariantContextIterator outputIterator = new VariantContextIterator(output);
+		final VariantContextIterator outputIterator = VariantContextIteratorFactory.create(output);
 		final VariantContextComparator outputComparator = new VariantContextComparator(getContigs(outputIterator));
 		VariantContext last = null;
 		while (outputIterator.hasNext()) {
@@ -126,12 +126,12 @@ public class MergeVcfsTest {
 		final File five = new File(TEST_DATA_PATH, "CEUTrio-random-scatter-5.vcf");
 
 		final List<Queue<String>> positionQueues = new ArrayList<Queue<String>>(6);
-		positionQueues.add(0, getContigPositions(new VariantContextIterator(zero)));
-		positionQueues.add(1, getContigPositions(new VariantContextIterator(one)));
-		positionQueues.add(2, getContigPositions(new VariantContextIterator(two)));
-		positionQueues.add(3, getContigPositions(new VariantContextIterator(three)));
-		positionQueues.add(4, getContigPositions(new VariantContextIterator(four)));
-		positionQueues.add(5, getContigPositions(new VariantContextIterator(five)));
+		positionQueues.add(0, getContigPositions(VariantContextIteratorFactory.create(zero)));
+		positionQueues.add(1, getContigPositions(VariantContextIteratorFactory.create(one)));
+		positionQueues.add(2, getContigPositions(VariantContextIteratorFactory.create(two)));
+		positionQueues.add(3, getContigPositions(VariantContextIteratorFactory.create(three)));
+		positionQueues.add(4, getContigPositions(VariantContextIteratorFactory.create(four)));
+		positionQueues.add(5, getContigPositions(VariantContextIteratorFactory.create(five)));
 
 		final File output = new File(TEST_DATA_PATH + "random-scatter-test-output-delete-me.vcf");
 
@@ -143,7 +143,7 @@ public class MergeVcfsTest {
 		final int returnCode = mergeVcfs.instanceMain(new String[0]);
 		Assert.assertEquals(returnCode, 0);
 
-		final VariantContextIterator outputIterator = new VariantContextIterator(output);
+		final VariantContextIterator outputIterator = VariantContextIteratorFactory.create(output);
 		final VariantContextComparator outputComparator = new VariantContextComparator(getContigs(outputIterator));
 		VariantContext last = null;
 		while (outputIterator.hasNext()) {
@@ -176,7 +176,7 @@ public class MergeVcfsTest {
 				new File("/Users/jrose/development/long-merge-test.vcf")
 		};
 		for (final File file : files) {
-			final VariantContextIterator iterator = new VariantContextIterator(file);
+			final VariantContextIterator iterator = VariantContextIteratorFactory.create(file);
 			final File output = new File("/Volumes/Disko Segundo/mergevcfs/", file.getName() + ".header");
 			final VariantContextWriter writer = VariantContextWriterFactory.create(output, null, VariantContextWriterFactory.NO_OPTIONS);
 			writer.writeHeader(iterator.getHeader());

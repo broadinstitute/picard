@@ -31,13 +31,13 @@ public class SplitVcfsTest {
 		final int returnCode = splitVcfs.instanceMain(new String[0]);
 		Assert.assertEquals(returnCode, 0);
 
-		final VariantContextIterator indelIterator = new VariantContextIterator(indelOutputFile);
-		final VariantContextIterator snpIterator = new VariantContextIterator(snpOutputFile);
+		final VariantContextIterator indelIterator = VariantContextIteratorFactory.create(indelOutputFile);
+		final VariantContextIterator snpIterator = VariantContextIteratorFactory.create(snpOutputFile);
 
 		final Queue<String> indelContigPositions = MergeVcfsTest.getContigPositions(indelIterator);
 		final Queue<String> snpContigPositions = MergeVcfsTest.getContigPositions(snpIterator);
 
-		final VariantContextIterator inputIterator = new VariantContextIterator(input);
+		final VariantContextIterator inputIterator = VariantContextIteratorFactory.create(input);
 		while (inputIterator.hasNext()) {
 			final VariantContext inputContext = inputIterator.next();
 			if (inputContext.isIndel()) Assert.assertEquals(MergeVcfsTest.getContigPosition(inputContext), indelContigPositions.poll());
@@ -62,7 +62,7 @@ public class SplitVcfsTest {
 		final Map<Type, Integer> inputCounts = new HashMap<Type, Integer>();
 		final Map<Type, Integer> outputCounts = new HashMap<Type, Integer>();
 		final File INPUT = new File("/Volumes/Disko Segundo/splitvcfs/CEUTrio.HiSeq.WGS.b37.snps_and_indels.recalibrated.filtered.phased.CURRENT.vcf.gz");
-		final VariantContextIterator variantContextIterator = new VariantContextIterator(INPUT);
+		final VariantContextIterator variantContextIterator = VariantContextIteratorFactory.create(INPUT);
 
 		final VariantContextWriter OUTPUT =
 				VariantContextWriterFactory.create(

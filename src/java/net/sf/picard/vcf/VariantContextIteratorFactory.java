@@ -25,10 +25,25 @@
 
 package net.sf.picard.vcf;
 
-import net.sf.samtools.util.CloseableIterator;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.vcf.VCFHeader;
+import net.sf.picard.io.IoUtil;
 
-public interface VariantContextIterator extends CloseableIterator<VariantContext> {
-    public VCFHeader getHeader();
+import java.io.File;
+import java.io.InputStream;
+
+/**
+ * Creates an iterator for a VCF/BCF based on the filename
+ */
+public class VariantContextIteratorFactory {
+    private VariantContextIteratorFactory() {}
+
+    public static VariantContextIterator create(final File location) {
+        final InputStream inputStream = IoUtil.openFileForReading(location);
+        // TODO: Both this and VariantContextWriterFactory base this on filename, in the future we may want to change this
+        if (location.getName().toLowerCase().endsWith(".bcf")) {
+            return new BcfIterator(inputStream);
+        } else {
+            return new VcfIterator(inputStream);
+        }
+    }
 }
+

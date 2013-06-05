@@ -29,11 +29,11 @@ public class SplitVcfs extends CommandLineProgram {
 	@Usage
 	public final String USAGE =
 			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Splits an input VCF file into two files, one for indel records and one for SNPs. The" +
+			"Splits an input VCF or BCF file into two VCF files, one for indel records and one for SNPs. The" +
 			"headers of the two output files will be identical. An index file is created and a" +
 			"sequence dictionary is required by default.";
 
-	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF input file")
+	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
 	public File INPUT;
 
 	@Option(doc="The VCF file to which SNP records should be written")
@@ -59,7 +59,7 @@ public class SplitVcfs extends CommandLineProgram {
 	protected int doWork() {
 		IoUtil.assertFileIsReadable(INPUT);
 		final ProgressLogger progress = new ProgressLogger(log, 10000);
-		final VariantContextIterator variantIterator = new VariantContextIterator(INPUT);
+		final VariantContextIterator variantIterator = VariantContextIteratorFactory.create(INPUT);
 		final VCFHeader header = variantIterator.getHeader();
 
 		final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);

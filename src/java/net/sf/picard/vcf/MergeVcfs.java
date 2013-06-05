@@ -62,11 +62,11 @@ public class MergeVcfs extends CommandLineProgram {
 	@Usage
 	public final String USAGE =
 			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Merges multiple VCF files into one file. Input files must be sorted by their contigs " +
+			"Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
 			"and, within contigs, by start position. The input files must have the same sample and " +
 			"contig lists. An index file is created and a sequence dictionary is required by default.";
 
-	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF input files", minElements=1)
+	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files", minElements=1)
 	public List<File> INPUT;
 
 	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The merged VCF file")
@@ -96,7 +96,7 @@ public class MergeVcfs extends CommandLineProgram {
 
 		for (final File file : INPUT) {
 			IoUtil.assertFileIsReadable(file);
-			final VariantContextIterator variantIterator = new VariantContextIterator(file);
+			final VariantContextIterator variantIterator = VariantContextIteratorFactory.create(file);
 			final VCFHeader header = variantIterator.getHeader();
 			if (variantContextComparator == null) {
 				variantContextComparator = new VariantContextComparator(header.getContigLines());
