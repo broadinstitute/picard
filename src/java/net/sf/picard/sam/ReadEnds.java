@@ -43,7 +43,7 @@ class ReadEnds implements MarkDuplicates.PhysicalLocation {
 
     // Information used to detect optical dupes
     short readGroup = -1;
-    byte tile = -1;
+    short tile = -1;
     short x = -1, y = -1;
 
 
@@ -52,8 +52,8 @@ class ReadEnds implements MarkDuplicates.PhysicalLocation {
     public short getReadGroup() { return this.readGroup; }
     public void setReadGroup(short readGroup) { this.readGroup = readGroup; }
 
-    public byte getTile() { return this.tile; }
-    public void setTile(byte tile) { this.tile = tile; }
+    public short getTile() { return this.tile; }
+    public void setTile(short tile) { this.tile = tile; }
 
     public short getX() { return this.x; }
     public void setX(short x) { this.x = x; }
