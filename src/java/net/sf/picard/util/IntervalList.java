@@ -304,7 +304,15 @@ class IntervalCoordinateComparator implements Comparator<Interval> {
             else if (lhs.isNegativeStrand() && rhs.isPositiveStrand()) retval = 1;
         }
         if (retval == 0) {
-            retval = lhs.getName().compareTo(rhs.getName());
+            if (lhs.getName() == null) {
+                if (rhs.getName() == null) return 0;
+                else return -1;
+            } else if (rhs.getName() == null) {
+                return 1;
+            }
+            else {
+                return lhs.getName().compareTo(rhs.getName());
+            }
         }
 
         return retval;
