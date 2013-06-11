@@ -66,7 +66,16 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
         // Optimized version if using the default read name regex (== used on purpose):
         if (READ_NAME_REGEX == DEFAULT_READ_NAME_REGEX) {
             final int fields = StringUtil.split(readName, tmpLocationFields, ':');
-            if (fields < 5) return false;
+            if (fields < 5) {
+                if (!warnedAboutRegexNotMatching) {
+                    LOG.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
+                            "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
+                            "Note that this message will not be emitted again even if other read names do not match the regex.",
+                            READ_NAME_REGEX, readName));
+                    warnedAboutRegexNotMatching = true;
+                }
+                return false;
+            }
 
             loc.setTile((short) rapidParseInt(tmpLocationFields[2]));
             loc.setX((short) rapidParseInt(tmpLocationFields[3]));
@@ -90,7 +99,8 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
             else {
                 if (!warnedAboutRegexNotMatching) {
                     LOG.warn(String.format("READ_NAME_REGEX '%s' did not match read name '%s'.  Your regex may not be correct.  " +
-                            "Note that this message will not be emitted again even if other read names do not match the regex."));
+                            "Note that this message will not be emitted again even if other read names do not match the regex.",
+                            READ_NAME_REGEX, readName));
                     warnedAboutRegexNotMatching = true;
                 }
                 return false;
