@@ -2,6 +2,7 @@ package net.sf.picard.sam;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
+import net.sf.picard.util.Log;
 import net.sf.samtools.util.StringUtil;
 
 import java.util.Collections;
@@ -17,6 +18,8 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgram {
+    private static Log LOG = Log.getInstance(AbstractDuplicateFindingAlgorithm.class);
+
     private static final String DEFAULT_READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*".intern();
 
     @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
@@ -32,6 +35,8 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
 
     private Pattern READ_NAME_PATTERN = null;
 
+    private boolean warnedAboutRegexNotMatching = false;
+
     /**
      * Small interface that provides access to the physical location information about a cluster.
      * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
@@ -40,8 +45,8 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
     public static interface PhysicalLocation {
         short getReadGroup();
         void  setReadGroup(short rg);
-        byte  getTile();
-        void  setTile(byte tile);
+        short  getTile();
+        void  setTile(short tile);
         short getX();
         void  setX(short x);
         short getY();
@@ -63,7 +68,7 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
             final int fields = StringUtil.split(readName, tmpLocationFields, ':');
             if (fields < 5) return false;
 
-            loc.setTile((byte) rapidParseInt(tmpLocationFields[2]));
+            loc.setTile((short) rapidParseInt(tmpLocationFields[2]));
             loc.setX((short) rapidParseInt(tmpLocationFields[3]));
             loc.setY((short) rapidParseInt(tmpLocationFields[4]));
             return true;
@@ -77,12 +82,17 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
 
             final Matcher m = READ_NAME_PATTERN.matcher(readName);
             if (m.matches()) {
-                loc.setTile((byte) Integer.parseInt(m.group(1)));
+                loc.setTile((short) Integer.parseInt(m.group(1)));
                 loc.setX((short) Integer.parseInt(m.group(2)));
                 loc.setY((short) Integer.parseInt(m.group(3)));
                 return true;
             }
             else {
+                if (!warnedAboutRegexNotMatching) {
+                    LOG.warn(String.format("READ_NAME_REGEX '%s' did not match read name '%s'.  Your regex may not be correct.  " +
+                            "Note that this message will not be emitted again even if other read names do not match the regex."));
+                    warnedAboutRegexNotMatching = true;
+                }
                 return false;
             }
         }

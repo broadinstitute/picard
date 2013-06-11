@@ -93,7 +93,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
     static class PairedReadSequence implements PhysicalLocation {
         static int size_in_bytes = 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
         short readGroup = -1;
-        byte tile = -1;
+        short tile = -1;
         short x = -1, y = -1;
         boolean qualityOk = true;
         byte[] read1;
@@ -102,8 +102,8 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
         public short getReadGroup() { return this.readGroup; }
         public void setReadGroup(final short readGroup) { this.readGroup = readGroup; }
 
-        public byte getTile() { return this.tile; }
-        public void setTile(final byte tile) { this.tile = tile; }
+        public short getTile() { return this.tile; }
+        public void setTile(final short tile) { this.tile = tile; }
 
         public short getX() { return this.x; }
         public void setX(final short x) { this.x = x; }
@@ -130,7 +130,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
         public void encode(final PairedReadSequence val) {
             try {
                 this.out.writeShort(val.readGroup);
-                this.out.writeByte(val.tile);
+                this.out.writeShort(val.tile);
                 this.out.writeShort(val.x);
                 this.out.writeShort(val.y);
                 this.out.writeInt(val.read1.length);
@@ -153,7 +153,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
                     return null;
                 }
 
-                val.tile = this.in.readByte();
+                val.tile = this.in.readShort();
                 val.x = this.in.readShort();
                 val.y = this.in.readShort();
 

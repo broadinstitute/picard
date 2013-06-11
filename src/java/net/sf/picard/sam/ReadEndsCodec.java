@@ -64,7 +64,7 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
             }
 
             this.out.writeShort(read.readGroup);
-            this.out.writeByte(read.tile);
+            this.out.writeShort(read.tile);
             this.out.writeShort(read.x);
             this.out.writeShort(read.y);
         }
@@ -93,7 +93,7 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
             }
 
             read.readGroup = this.in.readShort();
-            read.tile      = this.in.readByte();
+            read.tile      = this.in.readShort();
             read.x         = this.in.readShort();
             read.y         = this.in.readShort();
 
