@@ -45,6 +45,9 @@ public class SplitVcfs extends CommandLineProgram {
 	@Option(shortName="D", doc="The index sequence dictionary (required if CREATE_INDEX=true)", optional = true)
 	public File SEQUENCE_DICTIONARY;
 
+    @Option(doc="If true an exception will be thrown if an event type other than SNP or indel is encountered")
+    public Boolean STRICT = true;
+
 	private final Log log = Log.getInstance(SplitVcfs.class);
 
 	public static void main(final String[] argv) {
@@ -71,13 +74,23 @@ public class SplitVcfs extends CommandLineProgram {
 		snpOutput.writeHeader(header);
 		indelOutput.writeHeader(header);
 
+        int incorrectVariantCount = 0;
+
 		while (variantIterator.hasNext()) {
 			final VariantContext context = variantIterator.next();
+
 			if (context.isIndel()) indelOutput.add(context);
 			else if (context.isSNP()) snpOutput.add(context);
-			else throw new IllegalStateException("Found a record with type " + context.getType().name());
-			progress.record(context.getChr(), context.getStart());
+			else {
+                if (STRICT) throw new IllegalStateException("Found a record with type " + context.getType().name());
+                else incorrectVariantCount++;
+            }
+
+            progress.record(context.getChr(), context.getStart());
 		}
+        if (incorrectVariantCount > 0) {
+            log.debug("Found " + incorrectVariantCount + " records that didn't match SNP or INDEL");
+        }
 
 		snpOutput.close();
 		indelOutput.close();
