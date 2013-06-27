@@ -108,6 +108,9 @@ public class FastqToSam extends CommandLineProgram {
     @Option(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
     public int MAX_Q = SAMUtils.MAX_PHRED_SCORE;
 
+    @Option(doc="If true and this is an unpaired fastq any occurance of '/1' will be removed from the end of a read name.")
+    public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
+
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
     /** Stock main method. */
@@ -152,7 +155,7 @@ public class FastqToSam extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
-            final SAMRecord srec = createSamRecord(header, getReadName(frec.getReadHeader()) , frec, false) ;
+            final SAMRecord srec = createSamRecord(header, getReadName(frec.getReadHeader(), false) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
             progress.record(srec);
@@ -179,8 +182,8 @@ public class FastqToSam extends CommandLineProgram {
             final FastqRecord frec1 = freader1.next();
             final FastqRecord frec2 = freader2.next();
 
-            final String frec1Name = getReadName(frec1.getReadHeader());
-            final String frec2Name = getReadName(frec2.getReadHeader());
+            final String frec1Name = getReadName(frec1.getReadHeader(), true);
+            final String frec2Name = getReadName(frec2.getReadHeader(), true);
             final String baseName = getBaseName(frec1Name, frec2Name, freader1, freader2);
 
             final SAMRecord srec1 = createSamRecord(header, baseName, frec1, true) ;
@@ -332,9 +335,19 @@ public class FastqToSam extends CommandLineProgram {
     }
 
     // Read names cannot contain blanks
-    private String getReadName(final String fastaqHeader) {
-        final int idx = fastaqHeader.indexOf(" ");
-        return (idx == -1) ? fastaqHeader : fastaqHeader.substring(0,idx); 
+    private String getReadName(final String fastqHeader, final boolean paired) {
+        final int idx = fastqHeader.indexOf(" ");
+        String readName = (idx == -1) ? fastqHeader : fastqHeader.substring(0,idx);
+
+        // NOTE: the while loop isn't necessarily the most efficient way to handle this but we don't
+        // expect this to ever happen more than once, just trapping pathological cases
+        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && readName.endsWith("/1")) {
+            // If this is an unpaired run we want to make sure that "/1" isn't tacked on the end of the read name,
+            // as this can cause problems down the road in MergeBamAlignment
+            readName = readName.substring(0, readName.length() - 2);
+        }
+
+        return readName;
     }
 
     @Override
