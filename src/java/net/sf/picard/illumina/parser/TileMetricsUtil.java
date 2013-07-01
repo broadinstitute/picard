@@ -34,7 +34,9 @@ public class TileMetricsUtil {
      */
     public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile) throws FileNotFoundException {
 
-        final Collection<IlluminaTileMetrics> metrics = CollectionUtil.makeCollection(new TileMetricsOutReader(tileMetricsOutFile));
+        // Discard duplicate tile data entries (which has caused problems) via Set. 
+        final Set<IlluminaTileMetrics> metrics = 
+                new HashSet<IlluminaTileMetrics>(CollectionUtil.makeCollection(new TileMetricsOutReader(tileMetricsOutFile)));
         final Map<String, Collection<IlluminaTileMetrics>> locationToMetricsMap = CollectionUtil.partition(metrics, new CollectionUtil.Partitioner<IlluminaTileMetrics, String>() {
             @Override
             public String getPartition(final IlluminaTileMetrics metric) {

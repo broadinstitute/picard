@@ -66,7 +66,8 @@ public class TileMetricsUtilTest {
             for (final TileMetricsUtil.Tile tile : tiles) {
                 System.out.println(String.format("%s\t%s\t%s\t%s", tile.getLaneNumber(), tile.getTileNumber(), tile.getClusterDensity(), tile.getClusterCount()));
             }
-            Assert.assertEquals(testcase.tiles, HashableTile.from(tiles.toArray(new TileMetricsUtil.Tile[tiles.size()])));
+            // TestNG does not handle set equality properly.
+            Assert.assertTrue(testcase.tiles.equals(HashableTile.from(tiles.toArray(new TileMetricsUtil.Tile[tiles.size()]))));
         }
     }
 
