@@ -30,7 +30,10 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.util.CloserUtil;
+import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
 
@@ -42,6 +45,8 @@ import java.io.File;
  */
 public class VcfFormatConverter extends CommandLineProgram {
     // The following attributes define the command-line arguments
+    public static final Log LOG = Log.getInstance(VcfFormatConverter.class);
+    
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Convert a VCF file to a BCF file, or BCF to VCF.\n" + "" +
             "Input and output formats are determined by file extension.";
@@ -55,6 +60,8 @@ public class VcfFormatConverter extends CommandLineProgram {
 
     @Override
     protected int doWork() {
+        final ProgressLogger progress = new ProgressLogger(LOG, 10000);
+        
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
@@ -64,7 +71,9 @@ public class VcfFormatConverter extends CommandLineProgram {
         writer.writeHeader(readerIterator.getHeader());
 
         while (readerIterator.hasNext()) {
-            writer.add(readerIterator.next());
+            final VariantContext v = readerIterator.next();
+            writer.add(v);
+            progress.record(v.getChr(), v.getStart());
         }
 
         CloserUtil.close(readerIterator);
