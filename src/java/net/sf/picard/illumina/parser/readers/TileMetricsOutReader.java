@@ -100,5 +100,23 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
         public float getMetricValue() {
             return metricValue;
         }
+        
+        @Override
+        public boolean equals(final Object o) {
+            if (o instanceof IlluminaTileMetrics) {
+                final IlluminaTileMetrics that = (IlluminaTileMetrics) o;
+                return laneNumber == that.laneNumber 
+                        && tileNumber == that.tileNumber 
+                        && metricCode == that.metricCode
+                        && metricValue == that.metricValue; // Identical tile data should render exactly the same float.
+            } else {
+                return false;
+            }
+        }
+        
+        @Override
+        public int hashCode() {
+            return String.format("%s:%s:%s:%s", laneNumber, tileNumber, metricCode, metricValue).hashCode(); // Slow but adequate.
+        }
     }
 }
