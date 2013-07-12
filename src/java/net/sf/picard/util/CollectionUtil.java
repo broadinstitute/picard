@@ -160,4 +160,13 @@ public class CollectionUtil {
             V make(K k);
         }
     }
+
+    public static class Tuple<A, B> {
+        public final A a;
+        public final B b;
+        public Tuple(final A a, final B b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
 }
