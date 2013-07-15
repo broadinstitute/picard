@@ -867,7 +867,7 @@ public class VariantContextUnitTest extends VariantBaseTest {
         VariantContext vc = new VariantContextBuilder("genotypes", snpLoc, snpLocStart, snpLocStop, Arrays.asList(Aref, T)).genotypes(gc).make();
 
         // same sample names => success
-        Assert.assertEquals(vc.getSampleNames(), new HashSet<String>(cfg.sampleNames), "vc.getSampleNames() = " + vc.getSampleNames());
+        Assert.assertTrue(vc.getSampleNames().equals(new HashSet<String>(cfg.sampleNames)), "vc.getSampleNames() = " + vc.getSampleNames());
         Assert.assertEquals(vc.getSampleNamesOrderedByName(), cfg.sampleNamesInOrder, "vc.getSampleNamesOrderedByName() = " + vc.getSampleNamesOrderedByName());
 
         assertGenotypesAreInOrder(vc.getGenotypesOrderedByName(), cfg.sampleNamesInOrder);
