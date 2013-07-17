@@ -65,6 +65,12 @@ then echo "EDITOR environment variable must be set." >&2
        exit 1
 fi
 
+# Require actual Java 1.6.  This is not necessary for compiling, because can run 1.7 with -target 1.6,
+# but this is necessary in order to force unit tests to run with 1.6.
+(echo $JAVA_HOME | fgrep -q 1.6 ) || { echo "JAVA_HOME $JAVA_HOME is not 1.6" ; exit 1; }
+java_version=`java -version 2>&1 | fgrep -i version`
+(echo $java_version | fgrep -q 1.6. ) || { echo "java -version: $java_version is not 1.6"; exit 1; }
+
 SVNROOT=svn+ssh://$USERNAME@svn.code.sf.net/p/picard/code
 
 RELEASE_ID=$1
