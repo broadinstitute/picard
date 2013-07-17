@@ -47,7 +47,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/cofoja-1.0-r139.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/cofoja/cofoja-1.0-r139.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
