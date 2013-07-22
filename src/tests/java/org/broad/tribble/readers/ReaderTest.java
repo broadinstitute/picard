@@ -144,7 +144,7 @@ public class ReaderTest {
         final byte[] bytes = lines.getBytes();
         final InputStream is = new ByteArrayInputStream(bytes);
         final PositionalBufferedStream pbs = new PositionalBufferedStream(is);
-        final AsciiLineReader alr = new AsciiLineReader(pbs);
+        final LineReader alr = LineReaderUtil.fromBufferedStream(pbs, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
 
         int bytePos = 0, linePos = 0;
         while ( ! pbs.isDone() ) {

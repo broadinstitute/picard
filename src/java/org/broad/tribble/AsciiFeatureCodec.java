@@ -18,8 +18,8 @@
 
 package org.broad.tribble;
 
-import org.broad.tribble.readers.AsciiLineReader;
 import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broad.tribble.util.ParsingUtils;
 
@@ -28,16 +28,13 @@ import java.util.regex.Pattern;
 
 /**
  * A convenience base class for codecs that want to read in features from ASCII lines.
- *
+ * <p/>
  * This class overrides the general decode locs for streams and presents instead
  * Strings to decode(String) and readHeader(LineReader) functions.
  *
  * @param <T> The feature type this codec reads
  */
 public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatureCodec<T> {
-    /** A cached line reader we will use for decode and decodeLoc() */
-    private final AsciiLineReader lineReader = new AsciiLineReader();
-
     /**
      * regex used to identify what separates fields
      */
@@ -50,9 +47,9 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
     @Override
     public Feature decodeLoc(final PositionalBufferedStream stream) throws IOException {
         String line = readLine(stream);
-        try{
+        try {
             return decodeLoc(line);
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             String msg = "\nLine: " + line;
             throw new RuntimeException(msg, e);
         }
@@ -61,9 +58,9 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
     @Override
     public T decode(final PositionalBufferedStream stream) throws IOException {
         String line = readLine(stream);
-        try{
+        try {
             return decode(line);
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             String msg = "\nLine: " + line;
             throw new RuntimeException(msg, e);
         }
@@ -71,21 +68,17 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
 
     @Override
     public FeatureCodecHeader readHeader(final PositionalBufferedStream stream) throws IOException {
-        final AsciiLineReader br = new AsciiLineReader(stream);
+        final LineReader br = LineReaderUtil.fromBufferedStream(stream, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
         // TODO -- track header end here
         return new FeatureCodecHeader(readHeader(br), FeatureCodecHeader.NO_HEADER_END);
-    }
-
-    private final String readLine(final PositionalBufferedStream stream) throws IOException {
-        return lineReader.readLine(stream);
     }
 
     /**
      * Decode a line to obtain just its FeatureLoc for indexing -- contig, start, and stop.
      *
      * @param line the input line to decode
-     * @return  Return the FeatureLoc encoded by the line, or null if the line does not represent a feature (e.g. is
-     * a comment)
+     * @return Return the FeatureLoc encoded by the line, or null if the line does not represent a feature (e.g. is
+     *         a comment)
      */
     public Feature decodeLoc(String line) {
         return decode(line);
@@ -95,13 +88,14 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
      * Decode a set of tokens as a Feature.
      * For backwards compatibility, the
      * default implementation joins by tabs, and calls {@link #decode(String)}.
-     *
+     * <p/>
      * It is recommended that you override {@link #decode(String[])}
      * as well as {@link #decode(String)}
+     *
      * @param tokens
      * @return
      */
-    public T decode(String[] tokens){
+    public T decode(String[] tokens) {
         String line = ParsingUtils.join("\t", tokens);
         return decode(line);
     }
@@ -110,8 +104,8 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
      * Decode a line as a Feature.
      *
      * @param line the input line to decode
-     * @return  Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
-     * a comment)
+     * @return Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
+     *         a comment)
      */
     abstract public T decode(String line);
 
@@ -124,4 +118,54 @@ public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatu
         return null;
     }
 
+    /**
+     * Read a line of text.  A line is considered to be terminated by any one
+     * of a line feed ('\n'), a carriage return ('\r'), or a carriage return
+     * followed immediately by a linefeed.
+     *
+     * @param stream the stream to read the next line from
+     * @return A String containing the contents of the line or null if the
+     *         end of the stream has been reached
+     */
+    private String readLine(final PositionalBufferedStream stream) throws IOException {
+        int linePosition = 0;
+
+        while (true) {
+            final int b = stream.read();
+
+            if (b == -1) {
+                // eof reached.  Return the last line, or null if this is a new line
+                if (linePosition > 0) {
+                    return new String(lineBuffer, 0, linePosition);
+                } else {
+                    return null;
+                }
+            }
+
+            final char c = (char) (b & 0xFF);
+            if (c == LINEFEED || c == CARRIAGE_RETURN) {
+                if (c == CARRIAGE_RETURN && stream.peek() == LINEFEED) {
+                    stream.read(); // <= skip the trailing \n in case of \r\n termination
+                }
+
+                return new String(lineBuffer, 0, linePosition);
+            } else {
+                // Expand line buffer size if neccessary.  Reserve at least 2 characters
+                // for potential line-terminators in return string
+
+                if (linePosition > (lineBuffer.length - 3)) {
+                    char[] temp = new char[BUFFER_OVERFLOW_INCREASE_FACTOR * lineBuffer.length];
+                    System.arraycopy(lineBuffer, 0, temp, 0, lineBuffer.length);
+                    lineBuffer = temp;
+                }
+
+                lineBuffer[linePosition++] = c;
+            }
+        }
+    }
+
+    private static final int BUFFER_OVERFLOW_INCREASE_FACTOR = 2;
+    private static final byte LINEFEED = (byte) ('\n' & 0xff);
+    private static final byte CARRIAGE_RETURN = (byte) ('\r' & 0xff);
+    private char[] lineBuffer = new char[10000];
 }

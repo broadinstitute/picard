@@ -71,8 +71,9 @@ public final class PositionalBufferedStream extends InputStream implements Posit
             while ( remaining > 0 ) {
                 // Try to Refill buffer if at the end of current buffer
                 if ( nChars == nextChar )
-                    if ( fill() < 0 )
+                    if ( fill() < 0 ) { // EOF
                         break;
+                    }
 
                 // we copy as many bytes from the buffer as possible, up to the number of need
                 final int nCharsToCopy = Math.min(nChars - nextChar, remaining);
@@ -86,7 +87,9 @@ public final class PositionalBufferedStream extends InputStream implements Posit
 
             // make sure we update our position tracker to reflect having advanced by nRead bytes
             position += nRead;
-            return nRead;
+            
+            /** Conform to {@link InputStream#read(byte[], int, int)} contract by returning -1 if EOF and no data was read. */
+            return nRead == 0 ? -1 : nRead;
         }
     }
 

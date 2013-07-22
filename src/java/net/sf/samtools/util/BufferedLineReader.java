@@ -34,6 +34,8 @@ import java.nio.charset.Charset;
  * than AsciiLineReaderImpl.  If you use AsciiLineReader rather than this class, it will detect the OS
  * and delegate to the preferred implementation.
  *
+ * TODO: Replace this with {@link java.io.LineNumberReader}?
+ * 
  * @author alecw@broadinstitute.org
  */
 public class BufferedLineReader implements LineReader {

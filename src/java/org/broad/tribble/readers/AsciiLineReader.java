@@ -26,6 +26,7 @@ import java.io.*;
  *
  * @author jrobinso
  */
+@Deprecated
 public class AsciiLineReader implements LineReader {
     private static final int BUFFER_OVERFLOW_INCREASE_FACTOR = 2;
     private static final byte LINEFEED = (byte) ('\n' & 0xff);
@@ -148,6 +149,19 @@ public class AsciiLineReader implements LineReader {
                 reader2.close();
             }
 
+            if ( includeBufferedReader ) {
+                LongLineBufferedReader longLineBufferedReader = new LongLineBufferedReader(new BufferedReader(new FileReader(testFile)));
+                t0 = System.currentTimeMillis();
+                lineCount = 0;
+                while (longLineBufferedReader.readLine() != null) {
+                    lineCount++;
+                }
+                dt = System.currentTimeMillis() - t0;
+                rate = ((double) lineCount) / dt;
+                printStatus("BufferedReader", lineCount, rate, dt);
+                longLineBufferedReader.close();
+            }
+            
             PositionalBufferedStream pbs = new PositionalBufferedStream(new FileInputStream(testFile));
             LineReader reader = new AsciiLineReader(pbs);
             t0 = System.currentTimeMillis();
