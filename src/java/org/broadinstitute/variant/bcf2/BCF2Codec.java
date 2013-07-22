@@ -132,16 +132,6 @@ public final class BCF2Codec implements FeatureCodec<VariantContext> {
     }
 
     @Override
-    public Feature decodeLoc(final String line) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public VariantContext decode(final String line) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public Class<VariantContext> getFeatureType() {
         return VariantContext.class;
     }

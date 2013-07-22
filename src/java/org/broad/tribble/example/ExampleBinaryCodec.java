@@ -24,10 +24,8 @@
 package org.broad.tribble.example;
 
 import org.broad.tribble.*;
-import org.broad.tribble.readers.LineReader;
-import org.broad.tribble.readers.LineReaderUtil;
+import org.broad.tribble.readers.AsciiLineReader;
 import org.broad.tribble.readers.PositionalBufferedStream;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -57,18 +55,8 @@ public class ExampleBinaryCodec implements FeatureCodec<Feature> {
     }
 
     @Override
-    public Feature decodeLoc(String line) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public Feature decode(String line) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public FeatureCodecHeader readHeader(final PositionalBufferedStream stream) throws IOException {
-        final LineReader reader = LineReaderUtil.fromBufferedStream(stream, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
+        final AsciiLineReader reader = new AsciiLineReader(stream);
         String line;
         List<String> headerLines = new ArrayList<String>();
         long headerLengthInBytes = 0;
