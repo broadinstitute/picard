@@ -221,7 +221,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
-            if (!rec.getNotPrimaryAlignmentFlag()) {
+            if (!rec.isSecondaryOrSupplementary()) {
                 final String library = getLibraryName(header, rec);
                 DuplicationMetrics metrics = metricsByLibrary.get(library);
                 if (metrics == null) {
@@ -409,7 +409,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
                 }
                 // If this read is unmapped but sorted with the mapped reads, just skip it.
             }
-            else if (!rec.getNotPrimaryAlignmentFlag()){
+            else if (!rec.isSecondaryOrSupplementary()){
                 final ReadEnds fragmentEnd = buildReadEnds(header, index, rec);
                 this.fragSort.add(fragmentEnd);
 

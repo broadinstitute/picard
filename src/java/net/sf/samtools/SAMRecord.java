@@ -144,6 +144,7 @@ public class SAMRecord implements Cloneable
     private static final int NOT_PRIMARY_ALIGNMENT_FLAG = 0x100;
     private static final int READ_FAILS_VENDOR_QUALITY_CHECK_FLAG = 0x200;
     private static final int DUPLICATE_READ_FLAG = 0x400;
+    private static final int SUPPLEMENTARY_ALIGNMENT_FLAG = 0x800;
 
 
     private String mReadName = null;
@@ -323,7 +324,7 @@ public class SAMRecord implements Cloneable
             mReferenceIndex = NO_ALIGNMENT_REFERENCE_INDEX;
             return;
         } else if (mHeader != null) {
-            int referenceIndex = mHeader.getSequenceIndex(value);
+            final int referenceIndex = mHeader.getSequenceIndex(value);
             if (referenceIndex != -1) {
                 setReferenceIndex(referenceIndex);
                 return;
@@ -382,7 +383,7 @@ public class SAMRecord implements Cloneable
             mMateReferenceIndex = NO_ALIGNMENT_REFERENCE_INDEX;
             return;
         } else if (mHeader != null) {
-            int referenceIndex = mHeader.getSequenceIndex(mateReferenceName);
+            final int referenceIndex = mHeader.getSequenceIndex(mateReferenceName);
             if (referenceIndex != -1) {
                 setMateReferenceIndex(referenceIndex);
                 return;
@@ -428,14 +429,14 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @return 1-based inclusive leftmost position of the clippped sequence, or 0 if there is no position.
+     * @return 1-based inclusive leftmost position of the clipped sequence, or 0 if there is no position.
      */
     public int getAlignmentStart() {
         return mAlignmentStart;
     }
 
     /**
-     * @param value 1-based inclusive leftmost position of the clippped sequence, or 0 if there is no position.
+     * @param value 1-based inclusive leftmost position of the clipped sequence, or 0 if there is no position.
      */
     public void setAlignmentStart(final int value) {
         mAlignmentStart = value;
@@ -446,7 +447,7 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @return 1-based inclusive rightmost position of the clippped sequence, or 0 read if unmapped.
+     * @return 1-based inclusive rightmost position of the clipped sequence, or 0 read if unmapped.
      */
     public int getAlignmentEnd() {
         if (getReadUnmappedFlag()) {
@@ -508,7 +509,7 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @return 1-based inclusive reference position of the unclippped sequence at a given offset,
+     * @return 1-based inclusive reference position of the unclipped sequence at a given offset,
      *         or 0 if there is no position.
      *         For example, given the sequence NNNAAACCCGGG, cigar 3S9M, and an alignment start of 1,
      *         and a (1-based)offset 10 (start of GGG) it returns 7 (1-based offset starting after the soft clip.
@@ -542,7 +543,7 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * @return 1-based inclusive leftmost position of the clippped mate sequence, or 0 if there is no position.
+     * @return 1-based inclusive leftmost position of the clipped mate sequence, or 0 if there is no position.
      */
     public int getMateAlignmentStart() {
         return mMateAlignmentStart;
@@ -651,7 +652,7 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-     * It is preferrable to use the get*Flag() methods that handle the flag word symbolically.
+     * It is preferable to use the get*Flag() methods that handle the flag word symbolically.
      */
     public int getFlags() {
         return mFlags;
@@ -758,6 +759,13 @@ public class SAMRecord implements Cloneable
     }
 
     /**
+     * the alignment is supplementary (TODO: further explanation?).
+     */
+    public boolean getSupplementaryAlignmentFlag() {
+        return (mFlags & SUPPLEMENTARY_ALIGNMENT_FLAG) != 0;
+    }    
+    
+    /**
      * the read fails platform/vendor quality checks.
      */
     public boolean getReadFailsVendorQualityCheckFlag() {
@@ -846,6 +854,13 @@ public class SAMRecord implements Cloneable
     }
 
     /**
+     * the alignment is supplementary (TODO: further explanation?).
+     */
+    public void setSupplementaryAlignmentFlag(final boolean flag) {
+        setFlag(flag, SUPPLEMENTARY_ALIGNMENT_FLAG);
+    }
+
+    /**
      * the read fails platform/vendor quality checks.
      */
     public void setReadFailsVendorQualityCheckFlag(final boolean flag) {
@@ -859,6 +874,14 @@ public class SAMRecord implements Cloneable
         setFlag(flag, DUPLICATE_READ_FLAG);
     }
 
+    /**
+     * Tests if this record is either a secondary and/or supplementary alignment;
+     * equivalent to {@code (getNotPrimaryAlignmentFlag() || getSupplementaryAlignmentFlag())}.
+     */
+    public boolean isSecondaryOrSupplementary() {
+        return getNotPrimaryAlignmentFlag() || getSupplementaryAlignmentFlag();
+    }
+    
     private void setFlag(final boolean flag, final int bit) {
         if (flag) {
             mFlags |= bit;
@@ -1134,7 +1157,7 @@ public class SAMRecord implements Cloneable
         setAttribute(tag, value, false);
     }
 
-    protected void setAttribute(final short tag, final Object value, boolean isUnsignedArray) {
+    protected void setAttribute(final short tag, final Object value, final boolean isUnsignedArray) {
         if (value != null &&
                 !(value instanceof Byte || value instanceof Short || value instanceof Integer ||
                 value instanceof String || value instanceof Character || value instanceof Float ||
@@ -1551,6 +1574,10 @@ public class SAMRecord implements Cloneable
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_NOT_PRIM_ALIGNMENT, "Not primary alignment flag should not be set for unmapped read.", getReadName()));
             }
+            if (getSupplementaryAlignmentFlag()) {
+                if (ret == null) ret = new ArrayList<SAMValidationError>();
+                ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT, "Supplementary alignment flag should not be set for unmapped read.", getReadName()));
+            }
             if (getMappingQuality() != 0) {
                 if (ret == null) ret = new ArrayList<SAMValidationError>();
                 ret.add(new SAMValidationError(SAMValidationError.Type.INVALID_MAPPING_QUALITY, "MAPQ should be 0 for unmapped read.", getReadName()));
@@ -1609,18 +1636,19 @@ public class SAMRecord implements Cloneable
             if (ret == null) ret = new ArrayList<SAMValidationError>();
             ret.addAll(errors);
         }
-        if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {
-            Object fz = getAttribute(SAMTagUtil.getSingleton().FZ);
+        // TODO(mccowan): Is this asking "is this the primary alignment"?
+        if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {  
+            final Object fz = getAttribute(SAMTagUtil.getSingleton().FZ);
             if (fz == null) {
-                String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
-                String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
+                final String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
+                final String cs = (String)getAttribute(SAMTagUtil.getSingleton().CS);
                 if (cq == null || cq.length() == 0 || cs == null || cs.length() == 0) {
                     if (ret == null) ret = new ArrayList<SAMValidationError>();
                     ret.add(new SAMValidationError(SAMValidationError.Type.EMPTY_READ,
                             "Zero-length read without FZ, CS or CQ tag", getReadName()));
                 } else if (!getReadUnmappedFlag()) {
                     boolean hasIndel = false;
-                    for (CigarElement cigarElement : getCigar().getCigarElements()) {
+                    for (final CigarElement cigarElement : getCigar().getCigarElements()) {
                         if (cigarElement.getOperator() == CigarOperator.DELETION ||
                                 cigarElement.getOperator() == CigarOperator.INSERTION) {
                             hasIndel = true;

@@ -175,7 +175,7 @@ public class FixMateInformation extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log);
         while (iterator.hasNext()) {
             final SAMRecord rec1 = iterator.next();
-            if (rec1.getNotPrimaryAlignmentFlag()) {
+            if (rec1.isSecondaryOrSupplementary()) {
                 writeAlignment(rec1);
                 progress.record(rec1);
                 continue;
@@ -185,7 +185,7 @@ public class FixMateInformation extends CommandLineProgram {
             // or until there are no more SAMRecords.
             while (iterator.hasNext()) {
                 rec2 = iterator.peek();
-                if (rec2.getNotPrimaryAlignmentFlag()) {
+                if (rec2.isSecondaryOrSupplementary()) {
                     iterator.next();
                     writeAlignment(rec2);
                     progress.record(rec2);

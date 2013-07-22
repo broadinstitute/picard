@@ -59,6 +59,9 @@ class HitsForInsert {
     final List<SAMRecord> firstOfPairOrFragment = new ArrayList<SAMRecord>();
     final List<SAMRecord> secondOfPair = new ArrayList<SAMRecord>();
 
+    private final List<SAMRecord> supplementalFirstOfPairOrFragment = new ArrayList<SAMRecord>();
+    private final List<SAMRecord> supplementalSecondOfPair = new ArrayList<SAMRecord>();
+
     /**
      * @throws if numHits() == 0
      */
@@ -107,6 +110,14 @@ class HitsForInsert {
 
     public void addSecondOfPair(final SAMRecord rec) {
         secondOfPair.add(rec);
+    }
+
+    public void addSupplementalFirstOfPairOrFragment(final SAMRecord rec) {
+        supplementalFirstOfPairOrFragment.add(rec);
+    }
+
+    public void addSupplementalSecondOfPair(final SAMRecord rec) {
+        supplementalSecondOfPair.add(rec);
     }
 
     /**
@@ -214,7 +225,7 @@ class HitsForInsert {
     private NumPrimaryAlignmentState tallyPrimaryAlignments(final List<SAMRecord> records) {
         boolean seenPrimary = false;
         for (int i = 0; i < records.size(); ++i) {
-            if (records.get(i) != null && !records.get(i).getNotPrimaryAlignmentFlag()) {
+            if (records.get(i) != null && !records.get(i).isSecondaryOrSupplementary()) {
                 if (seenPrimary) return NumPrimaryAlignmentState.MORE_THAN_ONE;
                 else seenPrimary = true;
             }
@@ -223,7 +234,7 @@ class HitsForInsert {
         else return NumPrimaryAlignmentState.NONE;
     }
 
-    public NumPrimaryAlignmentState tallyPrimaryAlignments(boolean firstEnd) {
+    public NumPrimaryAlignmentState tallyPrimaryAlignments(final boolean firstEnd) {
         if (firstEnd) return tallyPrimaryAlignments(firstOfPairOrFragment);
         else return tallyPrimaryAlignments(secondOfPair);
     }
@@ -231,7 +242,7 @@ class HitsForInsert {
     int findPrimaryAlignment(final List<SAMRecord> records) {
         int indexOfPrimaryAlignment = -1;
         for (int i = 0; i < records.size(); ++i) {
-            if (records.get(i) != null && !records.get(i).getNotPrimaryAlignmentFlag()) {
+            if (records.get(i) != null && !records.get(i).isSecondaryOrSupplementary()) {
                 if (indexOfPrimaryAlignment != -1) {
                     throw new IllegalStateException("Multiple primary alignments found for read " + getReadName());
                 }
@@ -255,5 +266,13 @@ class HitsForInsert {
                 return hi1.compareTo(hi2);
             }
         }
+    }
+
+    List<SAMRecord> getSupplementalFirstOfPairOrFragment() {
+        return supplementalFirstOfPairOrFragment;
+    }
+
+    List<SAMRecord> getSupplementalSecondOfPair() {
+        return supplementalSecondOfPair;
     }
 }

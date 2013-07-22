@@ -119,7 +119,7 @@ public abstract class AbstractAlignmentMerger {
      * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
      *                          NM and UQ tags). Required.
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param programRecord     Program record for taget file SAMRecords created.
+     * @param programRecord     Program record for target file SAMRecords created.
      * @param attributesToRetain  private attributes from the alignment record that should be
      *                          included when merging.  This overrides the exclusion of
      *                          attributes whose tags start with the reserved characters
@@ -253,6 +253,14 @@ public abstract class AbstractAlignmentMerger {
 
                 if (rec.getReadPairedFlag()) {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
+                        // firstAligned or secondAligned may be null, if there wasn't an alignment for the end,
+                        // or if the alignment was rejected by ignoreAlignment.
+                        final SAMRecord firstAligned = nextAligned.getFirstOfPair(i);
+                        final SAMRecord secondAligned = nextAligned.getSecondOfPair(i);
+
+                        final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.isSecondaryOrSupplementary()) ||
+                                (secondAligned != null && !secondAligned.isSecondaryOrSupplementary());
+
                         final SAMRecord firstToWrite;
                         final SAMRecord secondToWrite;
                         if (clone) {
@@ -262,13 +270,6 @@ public abstract class AbstractAlignmentMerger {
                             firstToWrite = rec;
                             secondToWrite = secondOfPair;
                         }
-                        // firstAligned or secondAligned may be null, if there wasn't an alignment for the end,
-                        // or if the alignment was rejected by ignoreAlignment.
-                        final SAMRecord firstAligned = nextAligned.getFirstOfPair(i);
-                        final SAMRecord secondAligned = nextAligned.getSecondOfPair(i);
-
-                        final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.getNotPrimaryAlignmentFlag()) ||
-                                (secondAligned != null && !secondAligned.getNotPrimaryAlignmentFlag());
 
                         transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned);
 
@@ -284,10 +285,40 @@ public abstract class AbstractAlignmentMerger {
                             else ++unmapped;
                         }
                     }
+
+                    // This is already being checked at construction, but just to be sure ....
+                    if (nextAligned.getSupplementalFirstOfPairOrFragment().size() != nextAligned.getSupplementalSecondOfPair().size()) {
+                        throw new IllegalStateException("Supplemental first of pairs not the same size as second of pairs!");
+                    }
+                    // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
+                    for (int i = 0; i < nextAligned.getSupplementalFirstOfPairOrFragment().size(); i++) {
+                        final SAMRecord firstToWrite = clone(rec);
+                        final SAMRecord secondToWrite = clone(secondOfPair);
+                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite,
+                                nextAligned.getSupplementalFirstOfPairOrFragment().get(i),
+                                nextAligned.getSupplementalSecondOfPair().get(i));
+                        addIfNotFiltered(sorted, firstToWrite);
+                        addIfNotFiltered(sorted, secondToWrite);
+
+                        if (!firstToWrite.getReadUnmappedFlag()) ++unmapped;
+                        else ++aligned;
+
+                        if (!secondToWrite.getReadUnmappedFlag()) ++unmapped;
+                        else ++aligned;
+                    }
                 } else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
+                        addIfNotFiltered(sorted, recToWrite);
+                        if (recToWrite.getReadUnmappedFlag()) ++unmapped;
+                        else ++aligned;
+                    }
+                    // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
+                    for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
+                        // always clone supplementals
+                        final SAMRecord recToWrite = clone(rec);
+                        transferAlignmentInfoToFragment(recToWrite, supplementalRec);
                         addIfNotFiltered(sorted, recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
                         else ++aligned;
@@ -351,6 +382,9 @@ public abstract class AbstractAlignmentMerger {
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
+    /**
+     * Add record if it is primary or optionally secondary.
+     */
     private void addIfNotFiltered(final SortingCollection<SAMRecord> sorted, final SAMRecord rec) {
         if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
             sorted.add(rec);
@@ -468,6 +502,7 @@ public abstract class AbstractAlignmentMerger {
         rec.setAlignmentStart(alignment.getAlignmentStart());
         rec.setReadNegativeStrandFlag(alignment.getReadNegativeStrandFlag());
         rec.setNotPrimaryAlignmentFlag(alignment.getNotPrimaryAlignmentFlag());
+        rec.setSupplementaryAlignmentFlag(alignment.getSupplementaryAlignmentFlag());
         if (!alignment.getReadUnmappedFlag()) {
             // only aligned reads should have cigar and mapping quality set
             rec.setCigar(alignment.getCigar());  // cigar may change when a

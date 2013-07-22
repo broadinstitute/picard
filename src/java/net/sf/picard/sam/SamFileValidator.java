@@ -426,7 +426,7 @@ public class SamFileValidator {
     }
 
     private void validateMateFields(final SAMRecord record, final long recordNumber) {
-        if (!record.getReadPairedFlag() || record.getNotPrimaryAlignmentFlag()) {
+        if (!record.getReadPairedFlag() || record.isSecondaryOrSupplementary()) {
             return;
         }
 

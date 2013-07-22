@@ -74,6 +74,7 @@ public class RevertSam extends CommandLineProgram {
         add("PG");
         add("MD");
         add("MQ");
+        add("SA"); // Supplementary alignment metadata
     }};
 
     @Option(doc="The sample alias to use in the reverted output file.  This will override the existing " +
@@ -147,7 +148,7 @@ public class RevertSam extends CommandLineProgram {
 
         final ProgressLogger progress = new ProgressLogger(log, 1000000, "Reverted");
         for (final SAMRecord rec : in) {
-            if (rec.getNotPrimaryAlignmentFlag()) continue;
+            if (rec.isSecondaryOrSupplementary()) continue;
             if (RESTORE_ORIGINAL_QUALITIES) {
                 final byte[] oq = rec.getOriginalBaseQualities();
                 if (oq != null) {

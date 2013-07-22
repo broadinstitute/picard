@@ -169,7 +169,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         // Skip unwanted records
         if (PF_READS_ONLY && rec.getReadFailsVendorQualityCheckFlag()) return;
         if (ALIGNED_READS_ONLY && rec.getReadUnmappedFlag()) return;
-        if (rec.getNotPrimaryAlignmentFlag()) return;
+        if (rec.isSecondaryOrSupplementary()) return;
 
         q.addRecord(rec);
         oq.addRecord(rec);

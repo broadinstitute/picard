@@ -54,6 +54,7 @@ public class MergeBamAlignmentTest {
     private static final File firstReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read1.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_firstHalf = new File(TEST_DATA_DIR, "firsthalf.read2.trimmed.aligned.sam");
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
+    private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
     private static final File alignedQuerynameSortedBam =
             new File("testdata/net/sf/picard/sam/aligned_queryname_sorted.sam");
     private static final File fasta = new File("testdata/net/sf/picard/sam/merger.fasta");
@@ -64,6 +65,84 @@ public class MergeBamAlignmentTest {
 
     // For EarliestFragment tests, tag placed on the alignments which are expected to be marked as primary.
     private static final String ONE_OF_THE_BEST_TAG = "YB";
+
+    @Test
+    public void testMergerWithSupplemental() throws Exception {
+//        final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
+//        outputWithSupplemental.deleteOnExit();
+
+        final File outputWithSupplemental = new File("/Users/jgentry/test.sam");
+        final MergeBamAlignment merger = new MergeBamAlignment();
+        merger.UNMAPPED_BAM = unmappedBam;
+        merger.ALIGNED_BAM = Arrays.asList(supplementalReadAlignedBam);
+        merger.ALIGNED_READS_ONLY = false;
+        merger.CLIP_ADAPTERS = true;
+        merger.IS_BISULFITE_SEQUENCE = false;
+        merger.MAX_INSERTIONS_OR_DELETIONS = 1;
+        merger.PROGRAM_RECORD_ID = "0";
+        merger.PROGRAM_GROUP_VERSION = "1.0";
+        merger.PROGRAM_GROUP_COMMAND_LINE = "align!";
+        merger.PROGRAM_GROUP_NAME = "myAligner";
+        merger.PAIRED_RUN = true;
+        merger.REFERENCE_SEQUENCE = fasta;
+        merger.OUTPUT = outputWithSupplemental;
+        merger.EXPECTED_ORIENTATIONS=Arrays.asList(SamPairUtil.PairOrientation.FR);
+
+        Assert.assertEquals(merger.doWork(), 0, "Merge did not succeed");
+        final SAMFileReader result = new SAMFileReader(outputWithSupplemental);
+
+        final List<Integer> clipAdapterFlags = new ArrayList<Integer>(Arrays.asList(99, 2147, 147, 2195));
+        final List<Integer> foundClipAdapterFlags = new ArrayList<Integer>();
+
+        for (final SAMRecord sam : result) {
+            if (sam.getReadName().equals("both_reads_align_clip_adapter")) {
+                foundClipAdapterFlags.add(sam.getFlags());
+            }
+
+            // This tests that we clip both (a) when the adapter is marked in the unmapped BAM file and
+            // (b) when the insert size is less than the read length
+            if (sam.getReadName().equals("both_reads_align_clip_adapter") ||
+                    sam.getReadName().equals("both_reads_align_clip_marked")) {
+                Assert.assertEquals(sam.getReferenceName(), "chr7");
+                if (sam.getReadNegativeStrandFlag()) {
+                    Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " +
+                            sam.getReadName());
+                } else {
+                    Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " +
+                            sam.getReadName());
+                }
+            }
+            // This tests that we DON'T clip when we run off the end if there are equal to or more than
+            // MIN_ADAPTER_BASES hanging off the end
+            else if (sam.getReadName().equals("both_reads_align_min_adapter_bases_exceeded")) {
+                Assert.assertEquals(sam.getReferenceName(), "chr7");
+                Assert.assertTrue(!sam.getCigarString().contains("S"),
+                        "Read was clipped when it should not be.");
+            } else if (sam.getReadName().equals("neither_read_aligns_or_present")) {
+                Assert.assertTrue(sam.getReadUnmappedFlag(), "Read should be unmapped but isn't");
+            }
+            // Two pairs in which only the first read should align
+            else if (sam.getReadName().equals("both_reads_present_only_first_aligns") ||
+                    sam.getReadName().equals("read_2_too_many_gaps")) {
+                if (sam.getFirstOfPairFlag()) {
+                    Assert.assertEquals(sam.getReferenceName(), "chr7", "Read should be mapped but isn't");
+                } else {
+                    Assert.assertTrue(sam.getReadUnmappedFlag(), "Read should not be mapped but is");
+                }
+            } else {
+                throw new Exception("Unexpected read name: " + sam.getReadName());
+            }
+        }
+
+        // Make sure that we have the appropriate primary and supplementary reads in the new file
+        Assert.assertEquals(clipAdapterFlags.size(), foundClipAdapterFlags.size());
+        Collections.sort(clipAdapterFlags);
+        Collections.sort(foundClipAdapterFlags);
+        for (int i = 0; i < clipAdapterFlags.size(); i++) {
+            Assert.assertEquals(clipAdapterFlags.get(i), foundClipAdapterFlags.get(i));
+        }
+
+    }
 
     @Test
     public void testMerger() throws Exception {
@@ -265,7 +344,6 @@ public class MergeBamAlignmentTest {
         };
     }
 
-
     /**
      * Minimal test of merging data from separate read 1 and read 2 alignments
      */
@@ -297,8 +375,7 @@ public class MergeBamAlignmentTest {
          final SAMFileReader result = new SAMFileReader(output);
          final SAMProgramRecord pg = result.getFileHeader().getProgramRecords().get(0);
 
-
-        for (final SAMRecord sam : result) {
+         for (final SAMRecord sam : result) {
             // Get the alignment record
             final List<File> rFiles = sam.getFirstOfPairFlag() ? r1Align : r2Align;
             SAMRecord alignment = null;
@@ -1152,7 +1229,7 @@ public class MergeBamAlignmentTest {
      * Test that clipping of FR reads for fragments shorter than read length happens only when it should.
      */
     @Test
-    public  void testShortFragmentClipping() throws Exception {
+    public void testShortFragmentClipping() throws Exception {
         final File output = File.createTempFile("testShortFragmentClipping", ".sam");
         output.deleteOnExit();
         final MergeBamAlignment merger = new MergeBamAlignment();

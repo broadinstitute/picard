@@ -124,10 +124,10 @@ public class CompareSAMs extends CommandLineProgram {
 
 
     private boolean compareCoordinateSortedAlignments() {
-        final NotPrimarySkippingIterator itLeft =
-                new NotPrimarySkippingIterator(samReaders[0].iterator());
-        final NotPrimarySkippingIterator itRight =
-                new NotPrimarySkippingIterator(samReaders[1].iterator());
+        final SecondaryOrSupplementarySkippingIterator itLeft =
+                new SecondaryOrSupplementarySkippingIterator(samReaders[0].iterator());
+        final SecondaryOrSupplementarySkippingIterator itRight =
+                new SecondaryOrSupplementarySkippingIterator(samReaders[1].iterator());
 
         // Save any reads which haven't been matched during in-order scan.
         final Map<String, SAMRecord> leftUnmatched = new HashMap<String, SAMRecord>();
@@ -244,8 +244,8 @@ public class CompareSAMs extends CommandLineProgram {
     }
 
     private boolean compareQueryNameSortedAlignments() {
-        final NotPrimarySkippingIterator it1 = new NotPrimarySkippingIterator(samReaders[0].iterator());
-        final NotPrimarySkippingIterator it2 = new NotPrimarySkippingIterator(samReaders[1].iterator());
+        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(samReaders[0].iterator());
+        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(samReaders[1].iterator());
 
         boolean ret = true;
         while (it1.hasCurrent()) {
@@ -278,8 +278,8 @@ public class CompareSAMs extends CommandLineProgram {
     }
 
     private boolean compareUnsortedAlignments() {
-        final NotPrimarySkippingIterator it1 = new NotPrimarySkippingIterator(samReaders[0].iterator());
-        final NotPrimarySkippingIterator it2 = new NotPrimarySkippingIterator(samReaders[1].iterator());
+        final SecondaryOrSupplementarySkippingIterator it1 = new SecondaryOrSupplementarySkippingIterator(samReaders[0].iterator());
+        final SecondaryOrSupplementarySkippingIterator it2 = new SecondaryOrSupplementarySkippingIterator(samReaders[1].iterator());
         boolean ret = true;
         for (; it1.hasCurrent(); it1.advance(), it2.advance()) {
             if (!it2.hasCurrent()) {
@@ -301,7 +301,7 @@ public class CompareSAMs extends CommandLineProgram {
         return ret;
     }
 
-    private int countRemaining(final NotPrimarySkippingIterator it) {
+    private int countRemaining(final SecondaryOrSupplementarySkippingIterator it) {
         int i;
         for (i = 0; it.hasCurrent(); ++i) {
             it.advance();

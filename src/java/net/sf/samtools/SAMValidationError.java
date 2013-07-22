@@ -65,6 +65,9 @@ public class SAMValidationError {
         /** not primary alignment flag set for unmapped read */
         INVALID_FLAG_NOT_PRIM_ALIGNMENT,
 
+        /** supplementary alignment flag set for unmapped read */
+        INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT,
+        
         /** mapped read flat not set for mapped read */
         INVALID_FLAG_READ_UNMAPPED,
 
