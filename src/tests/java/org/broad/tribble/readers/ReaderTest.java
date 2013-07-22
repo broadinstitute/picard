@@ -144,9 +144,14 @@ public class ReaderTest {
         final byte[] bytes = lines.getBytes();
         final InputStream is = new ByteArrayInputStream(bytes);
         final PositionalBufferedStream pbs = new PositionalBufferedStream(is);
-        final LineReader alr = LineReaderUtil.fromBufferedStream(pbs, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
+        final LineReader alr = new AsciiLineReader(pbs); // AsciiLineReader must be used here because it does not read ahead.
 
         int bytePos = 0, linePos = 0;
+        /** 
+         * TODO: Requires revision: we're calling readLine() here, but making assumptions about how the underlying input stream operates.
+         * Specifically, these tests assume the underlying stream only advances exactly the required number of characters to find the
+         * newline, which is not true for most buffered readers.
+         */
         while ( ! pbs.isDone() ) {
             Assert.assertTrue(bytePos < bytes.length);
 
