@@ -130,7 +130,7 @@ public class SamToFastq extends CommandLineProgram {
 
         final ProgressLogger progress = new ProgressLogger(log);
         for (final SAMRecord currentRecord : reader) {
-            if (currentRecord.getNotPrimaryAlignmentFlag() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
+            if (currentRecord.isSecondaryOrSupplementary() && !INCLUDE_NON_PRIMARY_ALIGNMENTS)
                 continue;
 
             // Skip non-PF reads as necessary

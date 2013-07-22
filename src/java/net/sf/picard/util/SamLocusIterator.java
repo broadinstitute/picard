@@ -118,7 +118,7 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
     private final SAMFileReader samReader;
     private final ReferenceSequenceMask referenceSequenceMask;
     private PeekableIterator<SAMRecord> samIterator;
-    private List<SamRecordFilter> samFilters = Arrays.asList(new NotPrimaryAlignmentFilter(),
+    private List<SamRecordFilter> samFilters = Arrays.asList(new SecondaryOrSupplementaryFilter(),
                                                              new DuplicateReadFilter());
     private final List<Interval> intervals;
     private final boolean useIndex;

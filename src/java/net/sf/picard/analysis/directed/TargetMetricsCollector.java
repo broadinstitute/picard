@@ -296,7 +296,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         /** Adds information about an individual SAMRecord to the statistics. */
         public void acceptRecord(final SAMRecord rec) {
             // Just plain avoid records that are marked as not-primary
-            if (rec.getNotPrimaryAlignmentFlag()) return;
+            if (rec.isSecondaryOrSupplementary()) return;
 
             this.metrics.TOTAL_READS += 1;
 

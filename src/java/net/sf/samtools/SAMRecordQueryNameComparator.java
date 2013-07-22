@@ -50,6 +50,9 @@ public class SAMRecordQueryNameComparator implements SAMRecordComparator {
         if (samRecord1.getNotPrimaryAlignmentFlag() != samRecord2.getNotPrimaryAlignmentFlag()) {
             return samRecord2.getNotPrimaryAlignmentFlag()? -1: 1;
         }
+        if (samRecord1.getSupplementaryAlignmentFlag() != samRecord2.getSupplementaryAlignmentFlag()) {
+            return samRecord2.getSupplementaryAlignmentFlag() ? -1 : 1;
+        }
         final Integer hitIndex1 = samRecord1.getIntegerAttribute(SAMTag.HI.name());
         final Integer hitIndex2 = samRecord2.getIntegerAttribute(SAMTag.HI.name());
         if (hitIndex1 != null) {

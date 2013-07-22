@@ -62,7 +62,7 @@ public class DownsampleSam extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
 
         for (final SAMRecord rec : in) {
-            if (rec.getNotPrimaryAlignmentFlag()) continue;
+            if (rec.isSecondaryOrSupplementary()) continue;
             ++total;
 
             final String key = rec.getReadName();

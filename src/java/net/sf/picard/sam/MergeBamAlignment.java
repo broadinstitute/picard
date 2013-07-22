@@ -217,13 +217,13 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
         // TEMPORARY FIX until internal programs all specify EXPECTED_ORIENTATIONS
         if (JUMP_SIZE != null) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.RF});
+            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.RF);
         }
         else if (EXPECTED_ORIENTATIONS == null || EXPECTED_ORIENTATIONS.isEmpty()) {
-            EXPECTED_ORIENTATIONS = Arrays.asList(new SamPairUtil.PairOrientation[]{SamPairUtil.PairOrientation.FR});
+            EXPECTED_ORIENTATIONS = Arrays.asList(SamPairUtil.PairOrientation.FR);
         }
 
-        final SamAlignmentMerger merger = new SamAlignmentMerger (UNMAPPED_BAM, OUTPUT,
+        final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
             ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,

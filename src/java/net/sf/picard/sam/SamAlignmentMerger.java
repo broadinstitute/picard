@@ -96,8 +96,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             for (final File f : alignedSamFile) {
                 IoUtil.assertFileIsReadable(f);
             }
-        }
-        else {
+        } else {
             for (final File f : read1AlignedSamFile) {
                 IoUtil.assertFileIsReadable(f);
             }

@@ -80,8 +80,6 @@ public class SamLocusIteratorTest {
         final SAMFileReader samReader = createSamFileReader(exampleSam);
         final SamLocusIterator sli = new SamLocusIterator(samReader);
 
-
-
         // make sure we accumulated depth of 2 for each position
         int pos = 1;
         final int coveredStart = 165;

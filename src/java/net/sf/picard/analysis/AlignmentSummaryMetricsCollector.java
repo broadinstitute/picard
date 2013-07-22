@@ -62,7 +62,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
     @Override
     public void acceptRecord(final SAMRecord rec, final ReferenceSequence ref) {
-        if (!rec.getNotPrimaryAlignmentFlag()) {
+        if (!rec.isSecondaryOrSupplementary()) {
             super.acceptRecord(rec, ref);
         }
     }
@@ -215,7 +215,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             public void addRecord(final SAMRecord record, final ReferenceSequence ref) {
-                if (record.getNotPrimaryAlignmentFlag()) {
+                if (record.isSecondaryOrSupplementary()) {
                     // only want 1 count per read so skip non primary alignments
                     return;
                 }

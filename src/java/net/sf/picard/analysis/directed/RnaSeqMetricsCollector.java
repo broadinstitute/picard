@@ -96,7 +96,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
         public void acceptRecord(SAMRecord rec) {
             // Filter out some reads, and collect the total number of PF bases
-            if (rec.getReadFailsVendorQualityCheckFlag() || rec.getNotPrimaryAlignmentFlag()) return;
+            if (rec.getReadFailsVendorQualityCheckFlag() || rec.isSecondaryOrSupplementary()) return;
 
             this.metrics.PF_BASES += rec.getReadLength();
             if (rec.getReadUnmappedFlag()) return;

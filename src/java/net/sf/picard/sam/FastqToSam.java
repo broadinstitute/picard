@@ -247,7 +247,7 @@ public class FastqToSam extends CommandLineProgram {
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
 
-        for (String comment : COMMENT) {
+        for (final String comment : COMMENT) {
             header.addComment(comment);
         }
 
@@ -255,7 +255,7 @@ public class FastqToSam extends CommandLineProgram {
         return header ;
     }
 
-    /** Based on the type of quality scores coming in, converts them to a numeric byte[] in prhred scale. */
+    /** Based on the type of quality scores coming in, converts them to a numeric byte[] in phred scale. */
     void convertQuality(final byte[] quals, final FastqQualityFormat version) {
         switch (version)  {
             case Standard:
