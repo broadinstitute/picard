@@ -24,9 +24,11 @@
 package org.broad.tribble;
 
 import net.sf.samtools.seekablestream.SeekableStream;
+import net.sf.samtools.util.CloserUtil;
 import org.broad.tribble.index.Block;
 import org.broad.tribble.index.Index;
 import org.broad.tribble.index.IndexFactory;
+import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broad.tribble.util.ParsingUtils;
 import net.sf.samtools.seekablestream.SeekableStreamFactory;
@@ -265,9 +267,9 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
         int start;
         int end;
         private T currentRecord;
-        private PositionalBufferedStream stream;
         private Iterator<Block> blockIterator;
         private SeekableStream seekableStream;
+        private LineReaderUtil.LineIterator lineIterator;
 
 
         public QueryIterator(String chr, int start, int end, List<Block> blocks) throws IOException {
@@ -309,16 +311,18 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
                 if (block.getSize() > 0) {
                     seekableStream.seek(block.getStartPosition());
                     int bufferSize = Math.min(2000000, block.getSize() > 100000000 ? 10000000 : (int)block.getSize());
-                    stream = new PositionalBufferedStream(new BlockStreamWrapper(seekableStream, block), bufferSize);
+                    lineIterator = new LineReaderUtil.LineIterator(
+                            LineReaderUtil.fromBufferedStream(new PositionalBufferedStream(new BlockStreamWrapper(seekableStream, block), bufferSize))
+                    );
                     // note we don't have to skip the header here as the block should never start in the header
                     return;
                 }
             }
 
             // If we get here the blocks are exhausted, set reader to null
-            if ( stream != null ) {
-                stream.close();
-                stream = null;
+            if ( lineIterator != null ) {
+                lineIterator.close();
+                lineIterator = null;
             }
         }
 
@@ -329,17 +333,18 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
          */
         private void readNextRecord() throws IOException {
 
-            if(stream == null) {
+            if(lineIterator == null) {
                 return;  // <= no more features to read
             }
 
             currentRecord = null;
 
             while (true) {   // Loop through blocks
-                while (!stream.isDone()) {  // Loop through current block
+                while (lineIterator.hasNext()) {  // Loop through current block
                     Feature f = null;
+                    final String line = lineIterator.next();
                     try {
-                        f = codec.decode(stream);
+                        f = codec.decode(line);
                         if (f == null) {
                             continue;   // Skip
                         }
@@ -362,7 +367,7 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
                         e.setSource(path);
                         throw e;
                     } catch (NumberFormatException e) {
-                        String error = "Error parsing line: " + stream.getPosition();
+                        String error = "Error parsing line: " + line;
                         throw new TribbleException.MalformedFeatureFile(error, path, e);
                     }
                 }
@@ -381,12 +386,8 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
 
 
         public void close() {
-            if ( stream != null ) stream.close();
-            try {
-                seekableStream.close(); // todo -- uncomment to fix bug
-            } catch (IOException e) {
-                throw new TribbleException("Couldn't close seekable stream", e);
-            }
+            CloserUtil.close(lineIterator);
+            CloserUtil.close(seekableStream);
         }
 
         public Iterator<T> iterator() {

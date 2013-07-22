@@ -27,7 +27,8 @@ package net.sf.picard.vcf;
 
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.RuntimeIOException;
-import org.broad.tribble.readers.AsciiLineReader;
+import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineReaderUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.vcf.VCFCodec;
 import org.broadinstitute.variant.vcf.VCFHeader;
@@ -38,12 +39,11 @@ import java.util.NoSuchElementException;
 public class VcfIterator implements VariantContextIterator {
     private final VCFCodec vcfCodec = new VCFCodec();
     private final VCFHeader vcfHeader;
-    private final AsciiLineReader reader;
-
+    private final LineReader reader;
     private String line = null;
 
     public VcfIterator(final InputStream vcfStream) {
-        this.reader = new AsciiLineReader(vcfStream);
+        this.reader = LineReaderUtil.fromBufferedStream(vcfStream);
         final Object header = vcfCodec.readHeader(reader);
         if (!(header instanceof VCFHeader)) {
             throw new IllegalArgumentException("No VCF header found");
@@ -87,6 +87,4 @@ public class VcfIterator implements VariantContextIterator {
     public void remove() {
         throw new UnsupportedOperationException();
     }
-
-
 }

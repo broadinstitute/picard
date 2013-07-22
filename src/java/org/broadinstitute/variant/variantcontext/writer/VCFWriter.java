@@ -42,6 +42,11 @@ import java.util.*;
 class VCFWriter extends IndexingVariantContextWriter {
     private final static String VERSION_LINE = VCFHeader.METADATA_INDICATOR + VCFHeaderVersion.VCF4_1.getFormatString() + "=" + VCFHeaderVersion.VCF4_1.getVersionString();
 
+    /**
+     * The encoding used for VCF files.  ISO-8859-1
+     */
+    static final private Charset charset = Charset.forName("ISO-8859-1");
+    
     // should we write genotypes or just sites?
     final protected boolean doNotWriteGenotypes;
 
@@ -60,13 +65,8 @@ class VCFWriter extends IndexingVariantContextWriter {
      */
     private static final int INITIAL_BUFFER_SIZE = 1024 * 16;
     private final ByteArrayOutputStream lineBuffer = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
-    private final Writer writer;
-
-    /**
-     * The encoding used for VCF files.  ISO-8859-1
-     */
-    final private Charset charset;
-
+    /** Wrapping in a {@link BufferedWriter} avoids frequent conversions with individual writes to OutputStreamWriter. */
+    private final Writer writer = new BufferedWriter(new OutputStreamWriter(lineBuffer, charset));
     private IntGenotypeFieldAccessors intGenotypeFieldAccessors = new IntGenotypeFieldAccessors();
 
     public VCFWriter(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
@@ -75,8 +75,6 @@ class VCFWriter extends IndexingVariantContextWriter {
         super(writerName(location, output), location, output, refDict, enableOnTheFlyIndexing);
         this.doNotWriteGenotypes = doNotWriteGenotypes;
         this.allowMissingFieldsInHeader = allowMissingFieldsInHeader;
-        this.charset = Charset.forName("ISO-8859-1");
-        this.writer = new OutputStreamWriter(lineBuffer, charset);
     }
 
     // --------------------------------------------------------------------------------

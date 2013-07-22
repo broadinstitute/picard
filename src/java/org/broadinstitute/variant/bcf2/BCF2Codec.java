@@ -31,11 +31,13 @@ import org.broad.tribble.Feature;
 import org.broad.tribble.FeatureCodec;
 import org.broad.tribble.FeatureCodecHeader;
 import org.broad.tribble.TribbleException;
-import org.broad.tribble.readers.AsciiLineReader;
+import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broadinstitute.variant.utils.GeneralUtils;
 import org.broadinstitute.variant.vcf.*;
 import org.broadinstitute.variant.variantcontext.*;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -130,6 +132,16 @@ public final class BCF2Codec implements FeatureCodec<VariantContext> {
     }
 
     @Override
+    public Feature decodeLoc(final String line) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public VariantContext decode(final String line) {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public Class<VariantContext> getFeatureType() {
         return VariantContext.class;
     }
@@ -161,7 +173,7 @@ public final class BCF2Codec implements FeatureCodec<VariantContext> {
                 error("Couldn't read all of the bytes specified in the header length = " + headerSizeInBytes);
 
             final PositionalBufferedStream bps = new PositionalBufferedStream(new ByteArrayInputStream(headerBytes));
-            final AsciiLineReader headerReader = new AsciiLineReader(bps);
+            final LineReader headerReader = LineReaderUtil.fromBufferedStream(bps, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
             final VCFCodec headerParser = new VCFCodec();
             this.header = (VCFHeader)headerParser.readHeader(headerReader);
             bps.close();

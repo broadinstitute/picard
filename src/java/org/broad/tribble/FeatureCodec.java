@@ -67,6 +67,20 @@ public interface FeatureCodec<T extends Feature> {
     public T decode(final PositionalBufferedStream stream) throws IOException;
 
     /**
+     * Like {@link #decodeLoc(org.broad.tribble.readers.PositionalBufferedStream)}, but the source is a string representing a line.
+     * @param line
+     * @return
+     */
+    public Feature decodeLoc(final String line);
+
+    /**
+     * Like {@link #decode(org.broad.tribble.readers.PositionalBufferedStream)}, but the source is a string representing a line.
+     * @param line
+     * @return
+     */
+    public T decode(final String line);
+    
+    /**
      * Read and return the header, or null if there is no header.
      *
      *
