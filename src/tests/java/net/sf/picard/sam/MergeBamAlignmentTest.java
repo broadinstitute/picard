@@ -68,10 +68,8 @@ public class MergeBamAlignmentTest {
 
     @Test
     public void testMergerWithSupplemental() throws Exception {
-//        final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
-//        outputWithSupplemental.deleteOnExit();
-
-        final File outputWithSupplemental = new File("/Users/jgentry/test.sam");
+        final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
+        outputWithSupplemental.deleteOnExit();
         final MergeBamAlignment merger = new MergeBamAlignment();
         merger.UNMAPPED_BAM = unmappedBam;
         merger.ALIGNED_BAM = Arrays.asList(supplementalReadAlignedBam);
