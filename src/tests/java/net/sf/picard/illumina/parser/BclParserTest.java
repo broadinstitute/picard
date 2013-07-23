@@ -7,6 +7,7 @@ import static net.sf.picard.illumina.parser.BinTdUtil.T;
 import static net.sf.picard.illumina.parser.BinTdUtil.P;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.io.IoUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -83,7 +84,7 @@ public class BclParserTest {
         final ReadStructure rs = new ReadStructure(readStructure);
         final OutputMapping outputMapping = new OutputMapping(rs);
 
-        final BclParser bclParser = new BclParser(dir, 3, makeCycleIlluminaFileMap(dir, tiles, outputMapping.getOutputCycles()), outputMapping);
+        final BclParser bclParser = new BclParser(dir, 3, makeCycleIlluminaFileMap(dir, tiles, outputMapping.getOutputCycles()), outputMapping, new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
         final Map<Integer, ClusterData> testData = BinTdUtil.clusterData(LANE, Arrays.asList(boxArr(tiles)), readStructure, DATA_TYPES);
 
         int count = 0;
@@ -401,6 +402,6 @@ public class BclParserTest {
 
 class TestBclParser extends BclParser{
     public TestBclParser() {
-        super(null, 1, null, new OutputMapping(new ReadStructure("1T")));
+        super(null, 1, null, new OutputMapping(new ReadStructure("1T")), new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
     }
 }

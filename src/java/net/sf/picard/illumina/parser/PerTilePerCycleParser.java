@@ -68,10 +68,14 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         this.outputMapping = outputMapping;
 
         cycleFileParsers = new ArrayList<CycleFileParser<ILLUMINA_DATA>>(outputMapping.getTotalOutputCycles());
-
-        seekToTile(tilesToCycleFiles.firstKey());
     }
 
+    /** Do initialization work.  This bit was excised from the constructor because inheriting classes that called super() could not
+     * initialize member variables first. */
+    protected void initialize() {
+        seekToTile(tilesToCycleFiles.firstKey());
+    }
+    
     /**
      * Per cluster makeData will make the relevant IlluminaData object with the given outputLengths
      * @param outputLengths The expected lengths of the output data

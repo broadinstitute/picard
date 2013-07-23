@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.*;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.util.Log;
 import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import net.sf.samtools.util.StringUtil;
@@ -104,7 +105,7 @@ public class IlluminaDataProviderFactory {
     private final List<Integer> availableTiles;
 
     private final OutputMapping outputMapping;
-
+    private  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     /**
      * Create factory with the specified options, one that favors using QSeqs over all other files
@@ -116,9 +117,10 @@ public class IlluminaDataProviderFactory {
      *                          in a run's QSeq files
      * @param dataTypes         Which data types to read
      */
-    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure, final IlluminaDataType... dataTypes) {
+    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final IlluminaDataType... dataTypes) {
         this.basecallDirectory     = basecallDirectory;
         this.intensitiesDirectory = basecallDirectory.getParentFile();
+        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         this.lane = lane;
         this.dataTypes = Collections.unmodifiableSet(new HashSet<IlluminaDataType>(Arrays.asList(dataTypes)));
@@ -308,7 +310,7 @@ public class IlluminaDataProviderFactory {
             case Bcl:
                 final CycleIlluminaFileMap bclFileMap = fileUtil.bcl().getFiles(requestedTiles, outputMapping.getOutputCycles());
                 bclFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
-                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping, this.applyEamssFiltering);
+                parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping, this.applyEamssFiltering, bclQualityEvaluationStrategy);
                 break;
 
             case Cif:

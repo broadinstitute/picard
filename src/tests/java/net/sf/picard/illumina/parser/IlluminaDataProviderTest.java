@@ -24,6 +24,7 @@
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.util.SolexaQualityConverter;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -43,6 +44,7 @@ import static net.sf.picard.util.CollectionUtil.*;
 
 public class IlluminaDataProviderTest {
 
+    public static final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
     public static final File PARSING_TEST_BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/IlluminaBarcodeParsingTest/BaseCalls");
     public static final File TEST_DATA_LOCATION = new File("testdata/net/sf/picard/illumina/IlluminaTests/BasecallsDir");
     public static final File BINARY_TD_LOCATION = new File("testdata/net/sf/picard/illumina/CompleteIlluminaDir/Intensities/BaseCalls");
@@ -61,7 +63,7 @@ public class IlluminaDataProviderTest {
             throws Exception {
 
         final IlluminaDataType [] dts = getDataTypes(extraDataTypes);
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), dts);
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), bclQualityEvaluationStrategy, dts);
         final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
 
         runTest(testName, size, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
@@ -237,7 +239,7 @@ public class IlluminaDataProviderTest {
 
     @Test
     public void barcodeParsingTest() {
-        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, new ReadStructure("76T76T6B"), IlluminaDataType.Barcodes));
+        runBarcodeParsingTest(new IlluminaDataProviderFactory(PARSING_TEST_BASECALLS_DIR, 6, new ReadStructure("76T76T6B"), bclQualityEvaluationStrategy, IlluminaDataType.Barcodes));
     }
 
     @DataProvider(name="binaryData")
@@ -339,7 +341,7 @@ public class IlluminaDataProviderTest {
         final IlluminaDataType [] dts = getDataTypes(extraDataTypes);
 
         Map<Integer, ClusterData> readNoToClusterData = BinTdUtil.clusterData(lane, tiles, illuminaConfigStr, dts);
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), dts);
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), bclQualityEvaluationStrategy, dts);
         final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
 
         runTest(testName, size, readNoToClusterData, seekAfterFirstRead, seekTestDataReadOffset, dataProvider);
@@ -409,7 +411,7 @@ public class IlluminaDataProviderTest {
             final String illuminaConfigStr,
             final File basecallsDirectory)
             throws Exception {
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), actualDts);
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDirectory, lane, new ReadStructure(illuminaConfigStr), bclQualityEvaluationStrategy, actualDts);
         final IlluminaDataProvider dataProvider   = factory.makeDataProvider();
     }
 }

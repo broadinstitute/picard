@@ -64,6 +64,8 @@ import java.util.zip.GZIPInputStream;
 public class BclReader implements Iterator<BclReader.BclValue> {
     /** The size of the opening header (consisting solely of numClusters*/
     private static final int HEADER_SIZE = 4;
+    
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     /** The number of clusters provided in this BCL */
     public final long numClusters;
@@ -91,7 +93,9 @@ public class BclReader implements Iterator<BclReader.BclValue> {
         }
     }
 
-    public BclReader(final File file) {
+    public BclReader(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
+        
         filePath = file.getAbsolutePath();
         final boolean isGzip = filePath.endsWith(".gz");
 
@@ -196,10 +200,7 @@ public class BclReader implements Iterator<BclReader.BclValue> {
                     throw new PicardException("Impossible case! BCL Base value neither A, C, G, nor T! Value(" + (element & BASE_MASK) + ") + in file(" + filePath + ")");
             }
 
-            quality = (byte)(UnsignedTypeUtil.uByteToInt(element) >>> 2);
-            if(quality == 0 || quality == 1) {
-                throw new PicardException("If base is NOT a NO CALL then it should have a quality of 2 or greater!  Quality Found(" + quality + ")  Cluster(" + nextCluster + ")");
-            }
+            quality = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte)(UnsignedTypeUtil.uByteToInt(element) >>> 2));
         }
 
         ++nextCluster;

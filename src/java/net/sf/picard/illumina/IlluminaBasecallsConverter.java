@@ -25,6 +25,7 @@ package net.sf.picard.illumina;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.*;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.util.FileChannelJDKBugWorkAround;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
@@ -97,6 +98,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
     private final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator;
 
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
     private final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap;
     private final int maxReadsInRamPerTile;
     private final boolean demultiplex;
@@ -142,6 +144,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                                       final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
                                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                       final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+                                      final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
                                       final boolean applyEamssFiltering) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.demultiplex = demultiplex;
@@ -150,6 +153,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.outputRecordComparator = outputRecordComparator;
         this.codecPrototype = codecPrototype;
         this.outputRecordClass = outputRecordClass;
+        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         // If we're forcing garbage collection, collect every 5 minutes in a daemon thread.
         if (forceGc) {
@@ -169,7 +173,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             gcTimerTask = null;
         }
 
-        this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure, getDataTypesFromReadStructure(readStructure, demultiplex));
+        this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
         this.factory.setApplyEamssFiltering(applyEamssFiltering);
 
         if (numProcessors == 0) {
@@ -243,6 +247,11 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                 throw new PicardException("Failure encountered in worker thread; see log for details.");
             }
 
+            for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
+                log.warn(String.format("Observed low quality of %s %s times.", entry.getKey(), entry.getValue()));
+            }
+            bclQualityEvaluationStrategy.assertMinimumQualities();
+            
         } finally {
             try {
                 gcTimerTask.cancel();
