@@ -1,4 +1,3 @@
-
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
@@ -17,6 +16,7 @@ import java.util.Map;
 abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePerCycleParser<T> {
     public IlluminaIntensityParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
         super(directory, lane, tilesToCycleFiles, outputMapping);
+        this.initialize();
     }
 
     /**

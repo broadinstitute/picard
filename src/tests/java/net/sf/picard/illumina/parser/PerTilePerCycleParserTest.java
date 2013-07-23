@@ -37,6 +37,7 @@ public class PerTilePerCycleParserTest {
         public MockPerTilePerCycleParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
             super(directory, lane, tilesToCycleFiles, outputMapping);
             expectedOutputLengths = outputMapping.getOutputReadLengths();
+            this.initialize();
         }
 
         @Override

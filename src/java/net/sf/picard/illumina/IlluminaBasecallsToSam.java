@@ -30,6 +30,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.illumina.parser.ReadStructure;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.CollectionUtil;
 import net.sf.picard.util.IlluminaUtil;
@@ -171,11 +172,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
 
+    @Option(doc="The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
+            "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
+    public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+
+
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<SAMRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToSam.class);
-
+    private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     @Override
     protected int doWork() {
@@ -188,6 +194,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
+        this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
+        
         if (OUTPUT != null) {
             IoUtil.assertFileIsWritable(OUTPUT);
         }
@@ -209,7 +217,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
                 barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE/numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                 FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                this.APPLY_EAMSS_FILTER);
+                bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER);
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 

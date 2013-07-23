@@ -23,6 +23,7 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.util.BasicInputParser;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
@@ -226,7 +227,8 @@ public class ExtractIlluminaBarcodesTest {
 
         // Tack on test of barcode-informed Illumina Basecall parsing
         final ReadStructure rs = new ReadStructure("36T6B");
-        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs,
+        final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(basecallsDir, lane, rs, 
+                new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
                 IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.Barcodes);
         testParsing(factory, rs, metricACAGTG, barcodePosition);
     }

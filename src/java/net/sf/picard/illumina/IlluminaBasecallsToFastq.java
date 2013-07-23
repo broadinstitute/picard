@@ -32,6 +32,7 @@ import net.sf.picard.fastq.*;
 import net.sf.picard.illumina.parser.ClusterData;
 import net.sf.picard.illumina.parser.ReadData;
 import net.sf.picard.illumina.parser.ReadStructure;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.CollectionUtil;
 import net.sf.picard.util.IlluminaUtil;
@@ -112,6 +113,11 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             " run, each SortingCollection gets this value/number of indices.")
     public int MAX_READS_IN_RAM_PER_TILE = 1200000;
 
+    @Option(doc="The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
+            "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
+    public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+
+
     private final Map<String, FastqRecordsWriter> barcodeFastqWriterMap = new HashMap<String, FastqRecordsWriter>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<FastqRecordsForCluster> basecallsConverter;
@@ -125,6 +131,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     r2.templateRecords[0].getReadHeader());
         }
     };
+    private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
 
     @Override
@@ -132,6 +139,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         initialize();
 
         basecallsConverter.doTileProcessing();
+
         return 0;
     }
 
@@ -139,6 +147,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
+        bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (MULTIPLEX_PARAMS != null) {
             IoUtil.assertFileIsReadable(MULTIPLEX_PARAMS);
@@ -156,7 +165,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE/readsPerCluster, TMP_DIR, NUM_PROCESSORS,
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                readStructure.barcodes.length()), FastqRecordsForCluster.class,
+                readStructure.barcodes.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
                 this.APPLY_EAMSS_FILTER);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());

@@ -24,6 +24,7 @@
 package net.sf.picard.illumina;
 
 import net.sf.picard.illumina.parser.*;
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;
@@ -108,6 +109,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Option(shortName="Q", doc="Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.")
     public int MINIMUM_BASE_QUALITY = 0;
 
+    @Option(doc="The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown." +
+            "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
+    public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
+    
     @Option(shortName="GZIP", doc="Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the filenames.")
     public boolean COMPRESS_OUTPUTS = false;
 
@@ -130,6 +135,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     private BarcodeMetric noMatchMetric = null;
 
     private final NumberFormat tileNumberFormatter = NumberFormat.getNumberInstance();
+    private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     public ExtractIlluminaBarcodes() {
         tileNumberFormatter.setMinimumIntegerDigits(4);
@@ -254,6 +260,12 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
+        // Warn about minimum qualities and assert that we've achieved the minimum.
+        for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
+            log.warn(String.format("Observed low quality of %s %s times.", entry.getKey(), entry.getValue()));
+        }
+        bclQualityEvaluationStrategy.assertMinimumQualities();
+        
         // Calculate the normalized matches
         if (totalPfReadsAssigned > 0) {
             final double mean = (double) totalPfReadsAssigned / (double) barcodeToMetrics.values().size();
@@ -289,6 +301,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final ArrayList<String> messages = new ArrayList<String>();
 
+        this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
+        
         /**
          * In extract illumina barcodes we NEVER want to look at the template reads, therefore replace them with skips because
          * IlluminaDataProvider and its factory will not open these nor produce ClusterData with the template reads in them, thus reducing
@@ -298,7 +312,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ? 
                                              new IlluminaDataType[] {IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores}:
                                              new IlluminaDataType[] {IlluminaDataType.BaseCalls, IlluminaDataType.PF};
-        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, datatypes);
+        factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, readStructure, bclQualityEvaluationStrategy, datatypes);
         outputReadStructure = factory.getOutputReadStructure();
 
         if (BARCODE_FILE != null) {

@@ -24,6 +24,7 @@
 package net.sf.picard.illumina.parser;
 
 
+import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.illumina.parser.readers.BclReader;
 
 import java.io.File;
@@ -44,16 +45,19 @@ class BclParser extends PerTilePerCycleParser<BclData>{
     public static final byte MASKING_QUALITY = (byte) 0x02;
 
     private static final Set<IlluminaDataType> SUPPORTED_TYPES = Collections.unmodifiableSet(makeSet(IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores));
-
+    
+    private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
     private final boolean applyEamssFilter;
 
-    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping) {
-        this(directory, lane, tilesToCycleFiles, outputMapping, true);
+    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+        this(directory, lane, tilesToCycleFiles, outputMapping, true, bclQualityEvaluationStrategy);
     }
 
-    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping, final boolean applyEamssFilter) {
+    public BclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles, final OutputMapping outputMapping, final boolean applyEamssFilter, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
         super(directory, lane, tilesToCycleFiles, outputMapping);
+        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
         this.applyEamssFilter = applyEamssFilter;
+        this.initialize();
     }
 
     /** Create the BclData object segmented by the given outputLengths */
@@ -72,7 +76,7 @@ class BclParser extends PerTilePerCycleParser<BclData>{
     protected CycleFileParser<BclData> makeCycleFileParser(final File file, final int cycle) {
         return new CycleFileParser<BclData>(){
             final OutputMapping.TwoDIndex cycleOutputIndex = outputMapping.getOutputIndexForCycle(cycle);
-            BclReader reader = new BclReader(file);
+            BclReader reader = new BclReader(file, bclQualityEvaluationStrategy);
 
             @Override
             public void close() {
