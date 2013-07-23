@@ -61,7 +61,7 @@ public class MergeSamFiles extends CommandLineProgram {
     shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(shortName="MSD", doc="Merge the seqeunce dictionaries", optional=true)
+    @Option(shortName="MSD", doc="Merge the sequence dictionaries", optional=true)
     public boolean MERGE_SEQUENCE_DICTIONARIES = false;
 
     @Option(doc="Option to create a background thread to encode, " +
