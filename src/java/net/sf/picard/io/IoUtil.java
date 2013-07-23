@@ -25,11 +25,13 @@ package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.Defaults;
+import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -545,6 +547,21 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         }
         catch (IOException ioe) {
             throw new RuntimeIOException("Error reading stream", ioe);
+        }
+    }
+
+    /** Convenience overload for {@link #slurp(java.io.InputStream, java.nio.charset.Charset)} using the default charset {@link Charset#defaultCharset()}. */
+    public static String slurp(final InputStream is) {
+        return slurp(is, Charset.defaultCharset());
+    }
+
+    /** Reads all of the stream into a String, decoding with the provided {@link Charset} then closes the stream quietly. */
+    public static String slurp(final InputStream is, final Charset charSet) {
+        try {
+            final Scanner s = new Scanner(is, charSet.toString()).useDelimiter("\\A");
+            return s.hasNext() ? s.next() : "";
+        } finally {
+            CloserUtil.close(is);
         }
     }
 }
