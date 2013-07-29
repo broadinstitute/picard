@@ -93,7 +93,10 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
      */
     public void close() {
         try {
-            // try to close the index stream (keep it separate to help debugging efforts)
+            // close the underlying output stream
+            outputStream.close();
+
+            // close the index stream (keep it separate to help debugging efforts)
             if (indexer != null) {
                 final Index index = indexer.finalizeIndex(positionalOutputStream.getPosition());
                 setIndexSequenceDictionary(index, refDict);
@@ -101,8 +104,7 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
                 idxStream.close();
             }
 
-            // close the underlying output stream as well
-            outputStream.close();
+
         } catch (IOException e) {
             throw new RuntimeException("Unable to close index for " + getStreamName(), e);
         }
