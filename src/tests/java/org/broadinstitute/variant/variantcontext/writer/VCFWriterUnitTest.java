@@ -25,7 +25,8 @@
 
 package org.broadinstitute.variant.variantcontext.writer;
 
-import net.sf.picard.reference.IndexedFastaSequenceFile;
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.util.TestUtil;
 import org.broad.tribble.AbstractFeatureReader;
 import org.broad.tribble.FeatureReader;
 import org.broad.tribble.Tribble;
@@ -36,13 +37,10 @@ import org.broadinstitute.variant.vcf.VCFHeaderLine;
 import org.broadinstitute.variant.vcf.VCFHeaderVersion;
 import org.broadinstitute.variant.variantcontext.*;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 
@@ -114,6 +112,11 @@ public class VCFWriterUnitTest extends VariantBaseTest {
      * @return a VCFRecord
      */
     private VariantContext createVC(VCFHeader header) {
+
+       return createVCGeneral(header,"chr1",1);
+    }
+
+    private VariantContext createVCGeneral(VCFHeader header,String chrom, int position) {
         List<Allele> alleles = new ArrayList<Allele>();
         Set<String> filters = null;
         Map<String, Object> attributes = new HashMap<String,Object>();
@@ -127,7 +130,7 @@ public class VCFWriterUnitTest extends VariantBaseTest {
             Genotype gt = new GenotypeBuilder(name,alleles.subList(1,2)).GQ(0).attribute("BB", "1").phased(true).make();
             genotypes.add(gt);
         }
-        return new VariantContextBuilder("RANDOM", "chr1", 1, 1, alleles)
+        return new VariantContextBuilder("RANDOM", chrom, position, position, alleles)
                 .genotypes(genotypes).attributes(attributes).make();
     }
 
@@ -184,5 +187,41 @@ public class VCFWriterUnitTest extends VariantBaseTest {
     public void testVCFWriterDoubleFormatTestData(final double d, final String expected) {
         Assert.assertEquals(VCFWriter.formatVCFDouble(d), expected, "Failed to pretty print double in VCFWriter");
     }
+
+    @Test(enabled=true)
+    public void TestWritingLargeVCF() throws FileNotFoundException, InterruptedException {
+
+        final Set<String> Columns = new HashSet<String>();
+        for (int i = 0; i < 123; i++) {
+
+            Columns.add(String.format("SAMPLE_%d", i));
+        }
+
+        final VCFHeader header = createFakeHeader(metaData,Columns);
+        final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER,Options.INDEX_ON_THE_FLY);
+
+        final File tempDir = TestUtil.getTempDirecory("VCFWriter", "StaleIndex");
+
+        tempDir.deleteOnExit();
+
+        final File vcf = new File(tempDir, "test.vcf");
+        final File vcfIndex = new File(tempDir, "test.vcf.idx");
+        final SAMSequenceDictionary dict=createArtificialSequenceDictionary();
+
+        for(int count=1;count<2; count++){
+            final VariantContextWriter writer = VariantContextWriterFactory.create(vcf, dict, options);
+            writer.writeHeader(header);
+
+            for (int i = 1; i < 17 ; i++) { // write 17 chromosomes
+                for (int j = 1; j < 10; j++) { //10 records each
+                    writer.add(createVCGeneral(header, String.format("chr%d", i), j * 100));
+                }
+            }
+            writer.close();
+
+            Assert.assertTrue(vcf.lastModified() <= vcfIndex.lastModified());
+        }
+    }
+
 }
 
