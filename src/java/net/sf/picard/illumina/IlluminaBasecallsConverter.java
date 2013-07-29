@@ -243,8 +243,9 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                 tileReadAggregator.awaitWorkComplete();
             } catch (InterruptedException e) {
                 log.error(e, "Failure encountered in worker thread; attempting to shut down remaining worker threads and terminate ...");
-                tileReadAggregator.shutdown();
                 throw new PicardException("Failure encountered in worker thread; see log for details.");
+            } finally {
+                tileReadAggregator.shutdown();
             }
 
             for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
