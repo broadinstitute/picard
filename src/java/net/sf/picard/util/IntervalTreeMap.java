@@ -239,10 +239,11 @@ public class IntervalTreeMap<T>
                 throw new NoSuchElementException("Iterator exhausted");
             }
             final IntervalTree.Node<T> node = mTreeIterator.next();
+            final String sequence = mSequence;
             if (!mTreeIterator.hasNext()) {
                 advanceSequence();
             }
-            final Interval key = new Interval(mSequence, node.getStart(), node.getEnd());
+            final Interval key = new Interval(sequence, node.getStart(), node.getEnd());
             final T value = node.getValue();
             return new MapEntry(key, value);
         }
