@@ -37,6 +37,15 @@ public class SeekableStreamFactory {
         return getStreamFor(url.toExternalForm());
     }
 
+    /**
+     * Does this path point to a regular file on disk and not something like a URL?
+     * @param path the path to test
+     * @return true if the path is to a file on disk
+     */
+    public static boolean isFilePath(final String path) {
+        return ! ( path.startsWith("http:") || path.startsWith("https:") || path.startsWith("ftp:") );
+    }
+
     public static SeekableStream getStreamFor(String path) throws IOException {
         // todo -- add support for SeekableBlockInputStream
 

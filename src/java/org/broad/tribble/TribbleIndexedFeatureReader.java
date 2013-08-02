@@ -49,9 +49,13 @@ import java.util.zip.GZIPInputStream;
  * @since 2/11/12
  */
 public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeatureReader {
-
     private Index index;
 
+    /** is the path pointing to our source data a regular file? */
+    private final boolean pathIsRegularFile;
+
+    /** a potentially reusable seekable stream for queries over regular files */
+    private SeekableStream seekableStream = null;
 
     /**
      * @param featurePath  - path to the feature file, can be a local file path, http url, or ftp url
@@ -78,7 +82,42 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
             }
         }
 
+        // does path point to a regular file?
+        this.pathIsRegularFile = SeekableStreamFactory.isFilePath(path);
+
         readHeader();
+    }
+
+    /**
+     * Get a seekable stream appropriate to read information from the current feature path
+     *
+     * This function ensures that if reuseStreamInQuery returns true then this function will only
+     * ever return a single unique instance of SeekableStream for all calls given this instance of
+     * TribbleIndexedFeatureReader.  If reuseStreamInQuery() returns false then the returned SeekableStream
+     * will be newly opened each time, and should be closed after each use.
+     *
+     * @return a SeekableStream
+     */
+    private SeekableStream getSeekableStream() throws IOException {
+        final SeekableStream result;
+        if ( reuseStreamInQuery() ) {
+            // if the stream points to an underlying file, only create the underlying seekable stream once
+            if ( seekableStream == null ) seekableStream = SeekableStreamFactory.getStreamFor(path);
+            result = seekableStream;
+        } else {
+            // we are not reusing the stream, so make a fresh copy each time we request it
+            result = SeekableStreamFactory.getStreamFor(path);
+        }
+
+        return result;
+    }
+
+    /**
+     * Are we attempting to reuse the underlying stream in query() calls?
+     * @return true if
+     */
+    private boolean reuseStreamInQuery() {
+        return pathIsRegularFile;
     }
 
     /**
@@ -94,7 +133,8 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
 
 
     public void close() throws IOException {
-        // Nothing to do -- streams are opened and closed in the iterator classes
+        // close the seekable stream if that's necessary
+        if ( seekableStream != null ) seekableStream.close();
     }
 
     /**
@@ -133,6 +173,15 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
 
     /**
      * Return an iterator to iterate over features overlapping the specified interval
+     *
+     * Note that TribbleIndexedFeatureReader only supports issuing and manipulating a single query
+     * for each reader.  That is, the behavior of the following code is undefined:
+     *
+     * reader = new TribbleIndexedFeatureReader()
+     * Iterator it1 = reader.query("x", 10, 20)
+     * Iterator it2 = reader.query("x", 1000, 1010)
+     *
+     * As a consequence of this, the TribbleIndexedFeatureReader are also not thread-safe.
      *
      * @param chr contig
      * @param start start position
@@ -259,23 +308,20 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
      * @param <T>
      */
     class QueryIterator<T extends Feature> implements CloseableTribbleIterator {
-
         private String chr;
         private String chrAlias;
         int start;
         int end;
         private T currentRecord;
+        private SeekableStream mySeekableStream;
         private PositionalBufferedStream stream;
         private Iterator<Block> blockIterator;
-        private SeekableStream seekableStream;
-
 
         public QueryIterator(String chr, int start, int end, List<Block> blocks) throws IOException {
-
-            seekableStream = SeekableStreamFactory.getStreamFor(path);
             this.chr = chr;
             this.start = start;
             this.end = end;
+            mySeekableStream = getSeekableStream();
             blockIterator = blocks.iterator();
             advanceBlock();
             readNextRecord();
@@ -307,9 +353,8 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
             while (blockIterator != null && blockIterator.hasNext()) {
                 Block block = blockIterator.next();
                 if (block.getSize() > 0) {
-                    seekableStream.seek(block.getStartPosition());
                     int bufferSize = Math.min(2000000, block.getSize() > 100000000 ? 10000000 : (int)block.getSize());
-                    stream = new PositionalBufferedStream(new BlockStreamWrapper(seekableStream, block), bufferSize);
+                    stream = new PositionalBufferedStream(new BlockStreamWrapper(mySeekableStream, block), bufferSize);
                     // note we don't have to skip the header here as the block should never start in the header
                     return;
                 }
@@ -381,11 +426,16 @@ public class TribbleIndexedFeatureReader<T extends Feature> extends AbstractFeat
 
 
         public void close() {
+            // Note that this depends on BlockStreamWrapper not actually closing the underlying stream
             if ( stream != null ) stream.close();
-            try {
-                seekableStream.close(); // todo -- uncomment to fix bug
-            } catch (IOException e) {
-                throw new TribbleException("Couldn't close seekable stream", e);
+
+            if ( ! reuseStreamInQuery() ) {
+                // if we are going to reuse the underlying stream we don't close the underlying stream.
+                try {
+                    mySeekableStream.close();
+                } catch (IOException e) {
+                    throw new TribbleException("Couldn't close seekable stream", e);
+                }
             }
         }
 
