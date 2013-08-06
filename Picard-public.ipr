@@ -264,9 +264,18 @@
   <component name="ProjectDictionaryState">
     <dictionary name="mccowan">
       <words>
+        <w>bgzipped</w>
+        <w>codecs</w>
+        <w>endian</w>
+        <w>gzipped</w>
+        <w>indexable</w>
         <w>inferer</w>
         <w>inferrer</w>
+        <w>parsability</w>
         <w>phread</w>
+        <w>seekable</w>
+        <w>tabix</w>
+        <w>tribble</w>
       </words>
     </dictionary>
   </component>
