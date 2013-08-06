@@ -184,6 +184,7 @@ public class VariantContextUnitTest extends VariantBaseTest {
         Assert.assertFalse(vc.isIndel());
         Assert.assertFalse(vc.isSimpleInsertion());
         Assert.assertFalse(vc.isSimpleDeletion());
+        Assert.assertFalse(vc.isSimpleIndel());
         Assert.assertFalse(vc.isMixed());
         Assert.assertTrue(vc.isBiallelic());
         Assert.assertEquals(vc.getNAlleles(), 2);
@@ -211,6 +212,7 @@ public class VariantContextUnitTest extends VariantBaseTest {
         Assert.assertFalse(vc.isIndel());
         Assert.assertFalse(vc.isSimpleInsertion());
         Assert.assertFalse(vc.isSimpleDeletion());
+        Assert.assertFalse(vc.isSimpleIndel());
         Assert.assertFalse(vc.isMixed());
         Assert.assertFalse(vc.isBiallelic());
         Assert.assertEquals(vc.getNAlleles(), 1);
@@ -237,6 +239,7 @@ public class VariantContextUnitTest extends VariantBaseTest {
         Assert.assertTrue(vc.isIndel());
         Assert.assertFalse(vc.isSimpleInsertion());
         Assert.assertTrue(vc.isSimpleDeletion());
+        Assert.assertTrue(vc.isSimpleIndel());
         Assert.assertFalse(vc.isMixed());
         Assert.assertTrue(vc.isBiallelic());
         Assert.assertEquals(vc.getNAlleles(), 2);
@@ -245,6 +248,34 @@ public class VariantContextUnitTest extends VariantBaseTest {
         Assert.assertEquals(vc.getAlleles().size(), 2);
         Assert.assertEquals(vc.getAlternateAlleles().size(), 1);
         Assert.assertEquals(vc.getAlternateAllele(0), del);
+
+        Assert.assertFalse(vc.hasGenotypes());
+
+        Assert.assertEquals(vc.getSampleNames().size(), 0);
+    }
+
+    @Test
+    public void testCreatingComplexSubstitutionVariantContext() {
+        List<Allele> alleles = Arrays.asList(Tref, ATC);
+        VariantContext vc = new VariantContextBuilder("test", insLoc, insLocStart, insLocStop, alleles).make();
+
+        Assert.assertEquals(vc.getChr(), insLoc);
+        Assert.assertEquals(vc.getStart(), insLocStart);
+        Assert.assertEquals(vc.getEnd(), insLocStop);
+        Assert.assertEquals(vc.getType(), VariantContext.Type.INDEL);
+        Assert.assertFalse(vc.isSNP());
+        Assert.assertTrue(vc.isIndel());
+        Assert.assertFalse(vc.isSimpleInsertion());
+        Assert.assertFalse(vc.isSimpleDeletion());
+        Assert.assertFalse(vc.isSimpleIndel());
+        Assert.assertFalse(vc.isMixed());
+        Assert.assertTrue(vc.isBiallelic());
+        Assert.assertEquals(vc.getNAlleles(), 2);
+
+        Assert.assertEquals(vc.getReference(), Tref);
+        Assert.assertEquals(vc.getAlleles().size(), 2);
+        Assert.assertEquals(vc.getAlternateAlleles().size(), 1);
+        Assert.assertEquals(vc.getAlternateAllele(0), ATC);
 
         Assert.assertFalse(vc.hasGenotypes());
 
@@ -274,6 +305,7 @@ public class VariantContextUnitTest extends VariantBaseTest {
         Assert.assertTrue(vc.isIndel());
         Assert.assertTrue(vc.isSimpleInsertion());
         Assert.assertFalse(vc.isSimpleDeletion());
+        Assert.assertTrue(vc.isSimpleIndel());
         Assert.assertFalse(vc.isMixed());
         Assert.assertTrue(vc.isBiallelic());
         Assert.assertEquals(vc.getNAlleles(), 2);
