@@ -522,7 +522,7 @@ public class VariantContext implements Feature { // to enable tribble integratio
      */
     public boolean isSimpleInsertion() {
         // can't just call !isSimpleDeletion() because of complex indels
-        return getType() == Type.INDEL && isBiallelic() && getReference().length() == 1;
+        return isSimpleIndel() && getReference().length() == 1;
     }
 
     /**
@@ -530,7 +530,19 @@ public class VariantContext implements Feature { // to enable tribble integratio
      */
     public boolean isSimpleDeletion() {
         // can't just call !isSimpleInsertion() because of complex indels
-        return getType() == Type.INDEL && isBiallelic() && getAlternateAllele(0).length() == 1;
+        return isSimpleIndel() && getAlternateAllele(0).length() == 1;
+    }
+
+    /**
+     * @return true if the alleles indicate a simple indel, false otherwise.
+     */
+    public boolean isSimpleIndel() {
+        return getType() == Type.INDEL                   // allelic lengths differ
+                && isBiallelic()                         // exactly 2 alleles
+                && getReference().length() > 0           // ref is not null or symbolic
+                && getAlternateAllele(0).length() > 0    // alt is not null or symbolic
+                && getReference().getBases()[0] == getAlternateAllele(0).getBases()[0]    // leading bases match for both alleles
+                && (getReference().length() == 1 || getAlternateAllele(0).length() == 1);
     }
 
     /**
