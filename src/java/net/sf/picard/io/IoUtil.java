@@ -24,6 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.util.IterableIterator;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.RuntimeIOException;
@@ -31,6 +32,7 @@ import net.sf.samtools.util.RuntimeIOException;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -549,6 +551,44 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
             throw new RuntimeIOException("Error reading stream", ioe);
         }
     }
+
+    /**
+     * Returns an iterator over the lines in a text file. The underlying resources are automatically
+     * closed when the iterator hits the end of the input, or manually by calling close().
+     *
+     * @param f a file that is to be read in as text
+     * @return an iterator over the lines in the text file
+     */
+    public static IterableIterator<String> readLines(final File f) {
+        try {
+            final BufferedReader in = IoUtil.openFileForBufferedReading(f);
+
+            return new IterableIterator<String>() {
+                private String next = in.readLine();
+
+                /** Returns true if there is another line to read or false otherwise. */
+                @Override public boolean hasNext() { return next != null; }
+
+                /** Returns the next line in the file or null if there are no more lines. */
+                @Override public String next() {
+                    try {
+                        final String tmp = next;
+                        next = in.readLine();
+                        if (next == null) in.close();
+                        return tmp;
+                    }
+                    catch (IOException ioe) { throw new RuntimeIOException(ioe); }
+                }
+
+                /** Closes the underlying input stream. Not required if end of stream has already been hit. */
+                @Override public void close() throws IOException { CloserUtil.close(in); }
+            };
+        }
+        catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
+    }
+
 
     /** Convenience overload for {@link #slurp(java.io.InputStream, java.nio.charset.Charset)} using the default charset {@link Charset#defaultCharset()}. */
     public static String slurp(final InputStream is) {
