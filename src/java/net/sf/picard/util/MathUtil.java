@@ -34,6 +34,9 @@ import static java.lang.Math.pow;
  * @author Tim Fennell
  */
 public class MathUtil {
+    /** The double value closest to 1 while still being less than 1. */
+    public static final double MAX_PROB_BELOW_ONE = 0.9999999999999999d;
+
     /** Calculated the mean of an array of doubles. */
     public static double mean(final double[] in, final int start, final int stop) {
         double total = 0;
@@ -115,7 +118,8 @@ public class MathUtil {
 
     /**
      * Takes a complete set of mutually exclusive log likelihoods and converts them to probabilities
-     * that sum to 1 with as much fidelity as possible.
+     * that sum to 1 with as much fidelity as possible.  Limits probabilities to be in the space:
+     * 0.9999999999999999 >= p >= (1-0.9999999999999999)/(likelihoods.length-1)
      */
     public static double[] logLikelihoodsToProbs(final double[] likelihoods) {
         // Note: bumping all the LLs so that the biggest is 300 ensures that we have the
@@ -132,8 +136,13 @@ public class MathUtil {
             total += tmp[i];
         }
 
+        final double maxP = MAX_PROB_BELOW_ONE;
+        final double minP = (1-MAX_PROB_BELOW_ONE) / (tmp.length-1);
+
         for (int i=0; i<likelihoods.length; ++i) {
             tmp[i] /= total;
+            if      (tmp[i] > maxP) tmp[i] = maxP;
+            else if (tmp[i] < minP) tmp[i] = minP;
         }
 
         return tmp;
