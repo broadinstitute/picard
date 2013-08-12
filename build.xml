@@ -298,6 +298,7 @@
         <package-and-document-command title="IlluminaBasecallsToSam"         main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
         <package-and-document-command title="CheckIlluminaDirectory"         main-class="net.sf.picard.illumina.CheckIlluminaDirectory"/>
         <package-and-document-command title="IntervalListTools"              main-class="net.sf.picard.util.IntervalListTools"/>
+        <package-and-document-command title="MakeSitesOnlyVcf"               main-class="net.sf.picard.vcf.MakeSitesOnlyVcf"/>
         <package-and-document-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
         <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
         <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
