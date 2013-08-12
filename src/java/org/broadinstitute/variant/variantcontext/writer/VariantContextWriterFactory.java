@@ -25,12 +25,10 @@
 
 package org.broadinstitute.variant.variantcontext.writer;
 
+import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.EnumSet;
 
 /**
@@ -113,7 +111,7 @@ public class VariantContextWriterFactory {
      */
     protected static OutputStream openOutputStream(final File location) {
         try {
-            return new FileOutputStream(location);
+            return new BufferedOutputStream(new FileOutputStream(location), Defaults.BUFFER_SIZE);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(location + ": Unable to create VCF writer", e);
         }
