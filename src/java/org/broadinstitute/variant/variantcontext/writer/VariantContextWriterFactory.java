@@ -111,7 +111,7 @@ public class VariantContextWriterFactory {
      */
     protected static OutputStream openOutputStream(final File location) {
         try {
-            return new BufferedOutputStream(new FileOutputStream(location), Defaults.BUFFER_SIZE);
+            return new FileOutputStream(location);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(location + ": Unable to create VCF writer", e);
         }
