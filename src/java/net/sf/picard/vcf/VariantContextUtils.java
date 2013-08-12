@@ -59,6 +59,8 @@ public final class VariantContextUtils {
 	 */
 	public static SAMSequenceDictionary getSequenceDictionary(final File dictionaryFile) {
 		final SAMFileReader samFileReader = new SAMFileReader(dictionaryFile);
-		return samFileReader.getFileHeader().getSequenceDictionary();
+        final SAMSequenceDictionary dict = samFileReader.getFileHeader().getSequenceDictionary();
+        samFileReader.close();
+		return dict;
 	}
 }
