@@ -1,26 +1,3 @@
-/*
- * The MIT License
- *
- * Copyright (c) 2011 The Broad Institute
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
@@ -28,14 +5,9 @@ import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.*;
-import java.util.Set;
 
-/**
- * Parse a tabbed text file in which columns are found by looking at a header line rather than by position.
- *
- * @author alecw@broadinstitute.org
- */
-public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWithHeaderParser.Row> {
+public class DelimitedTextFileWithHeaderParser implements Iterable<DelimitedTextFileWithHeaderParser.Row> {
+    
     public class Row {
         private final String[] fields;
         private final String currentLine;
@@ -97,10 +69,10 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
      * Map from column label to positional index.
      */
     private final Map<String, Integer> columnLabelIndices = new HashMap<String, Integer>();
-    private final TabbedInputParser parser;
+    private final BasicInputParser parser;
     private TheIterator extantIterator;
 
-    public TabbedTextFileWithHeaderParser(final TabbedInputParser parser) {
+    public DelimitedTextFileWithHeaderParser(final BasicInputParser parser) {
         this.parser = parser;
         if (!parser.hasNext()) {
             throw new PicardException("No header line found in file " + parser.getFileName());
@@ -108,21 +80,6 @@ public class TabbedTextFileWithHeaderParser implements Iterable<TabbedTextFileWi
         final String[] columnLabels = parser.next();
         for (int i = 0; i < columnLabels.length; ++i) {
             columnLabelIndices.put(columnLabels[i], i);
-        }
-    }
-    
-    public TabbedTextFileWithHeaderParser(final File file) {
-        this(new TabbedInputParser(false, file));
-    }
-
-    public TabbedTextFileWithHeaderParser(final File file, final String[] columnHeaders) {
-        parser = new TabbedInputParser(false, file);
-        if (!parser.hasNext()) {
-            throw new PicardException("No header line found in file " + file);
-        }
-
-        for (int i = 0; i < columnHeaders.length; ++i) {
-            columnLabelIndices.put(columnHeaders[i], i);
         }
     }
 

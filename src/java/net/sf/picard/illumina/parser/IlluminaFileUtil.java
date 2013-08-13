@@ -576,7 +576,9 @@ public class IlluminaFileUtil {
                                         failures.add("0 Length tile file(" + cycleFile.getAbsolutePath() + ")");
                                     } else if(cycleSize == null) {
                                         cycleSize = cycleFile.length();
-                                    } else if(cycleSize != cycleFile.length()) {
+                                    } else if (!extension.equals(".bcl.gz") && cycleSize != cycleFile.length()) {
+                                        // TODO: The gzip bcl files might not be the same length despite having the same content,
+                                        // for now we're punting on this but this should be looked into at some point
                                         failures.add("File type " + extension + " has cycles files of different length.  Current cycle (" + currentCycle + ") " +
                                                      "Length of first non-empty file (" + cycleSize + ") length of current cycle (" + cycleFile.length() + ")"  + " File(" + cycleFile.getAbsolutePath() + ")");
                                     }
