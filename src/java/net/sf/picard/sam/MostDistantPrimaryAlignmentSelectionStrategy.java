@@ -23,7 +23,7 @@
  */
 package net.sf.picard.sam;
 
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMUtils;
 import net.sf.samtools.util.CoordMath;

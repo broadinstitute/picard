@@ -23,27 +23,25 @@
  */
 package org.broad.tribble;
 
-import org.broad.tribble.readers.PositionalBufferedStream;
-
 import java.io.IOException;
 
 /**
  * Simple basic class providing much of the basic functionality of codecs
  */
-public abstract class AbstractFeatureCodec<T extends Feature> implements FeatureCodec {
-    Class<T> myClass;
+public abstract class AbstractFeatureCodec<FEATURE_TYPE extends Feature, SOURCE> implements FeatureCodec<FEATURE_TYPE, SOURCE> {
+    private final Class<FEATURE_TYPE> myClass;
 
-    protected AbstractFeatureCodec(final Class<T> myClass) {
+    protected AbstractFeatureCodec(final Class<FEATURE_TYPE> myClass) {
         this.myClass = myClass;
     }
-
+    
     @Override
-    public Feature decodeLoc(final PositionalBufferedStream stream) throws IOException {
-        return decode(stream);
+    public Feature decodeLoc(final SOURCE source) throws IOException {
+        return decode(source);
     }
 
     @Override
-    public Class<T> getFeatureType() {
+    public Class<FEATURE_TYPE> getFeatureType() {
         return myClass;
     }
 

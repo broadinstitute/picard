@@ -25,11 +25,11 @@
 
 package org.broadinstitute.variant.vcf;
 
+import org.broad.tribble.readers.LineIteratorImpl;
 import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broadinstitute.variant.VariantBaseTest;
 import org.testng.Assert;
-
 import org.testng.annotations.Test;
 
 import java.io.*;
@@ -48,7 +48,7 @@ public class VCFHeaderUnitTest extends VariantBaseTest {
 
     private VCFHeader createHeader(String headerStr) {
         VCFCodec codec = new VCFCodec();
-        VCFHeader header = (VCFHeader)codec.readHeader(LineReaderUtil.fromBufferedStream(new PositionalBufferedStream(new StringBufferInputStream(headerStr)), LineReaderUtil.LineReaderOption.SYNCHRONOUS));
+        VCFHeader header = (VCFHeader) codec.readActualHeader(new LineIteratorImpl(LineReaderUtil.fromBufferedStream(new PositionalBufferedStream(new StringBufferInputStream(headerStr)), LineReaderUtil.LineReaderOption.SYNCHRONOUS)));
         Assert.assertEquals(header.getMetaDataInInputOrder().size(), VCF4headerStringCount);
         return header;
     }

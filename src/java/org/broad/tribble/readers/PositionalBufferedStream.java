@@ -22,9 +22,9 @@ import org.broad.tribble.TribbleException;
 import java.io.*;
 
 /**
- * A wrapper around an {@code InputStream} which performs it's own buffering, and keeps track
- * of the position
- * @author Mark DePristo
+ * A wrapper around an {@code InputStream} which performs it's own buffering, and keeps track of the position.
+ * 
+ * @author depristo
  */
 public final class PositionalBufferedStream extends InputStream implements Positional {
     final InputStream is;

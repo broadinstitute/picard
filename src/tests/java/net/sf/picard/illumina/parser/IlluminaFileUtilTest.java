@@ -2,7 +2,7 @@ package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
-import static net.sf.picard.util.CollectionUtil.makeList;
+import static net.sf.samtools.util.CollectionUtil.makeList;
 import org.testng.Assert;
 import org.testng.annotations.*;
 

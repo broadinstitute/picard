@@ -6,7 +6,7 @@ import org.testng.annotations.DataProvider;
 
 import java.util.*;
 
-import static net.sf.picard.util.CollectionUtil.makeList;
+import static net.sf.samtools.util.CollectionUtil.makeList;
 import static net.sf.picard.illumina.parser.QSeqTdUtil.*;
 import static net.sf.picard.illumina.parser.OutputMapping.TwoDIndex;
 

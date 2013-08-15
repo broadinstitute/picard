@@ -6,7 +6,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
-import static net.sf.picard.util.CollectionUtil.*;
+import static net.sf.samtools.util.CollectionUtil.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

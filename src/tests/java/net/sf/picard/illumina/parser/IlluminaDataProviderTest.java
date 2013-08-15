@@ -25,7 +25,6 @@ package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.util.SolexaQualityConverter;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import static net.sf.picard.illumina.parser.QSeqTdUtil.*;
 import static net.sf.picard.illumina.parser.QSeqTdUtil.getTiledReadData;
-import static net.sf.picard.util.CollectionUtil.*;
+import static net.sf.samtools.util.CollectionUtil.*;
 
 /**
 * @author jburke@broadinstitute.org

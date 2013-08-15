@@ -4,7 +4,7 @@ import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;

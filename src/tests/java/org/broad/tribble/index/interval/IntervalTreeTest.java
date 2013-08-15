@@ -131,7 +131,7 @@ public class IntervalTreeTest {
 
         // Interval tree index
         int batchSize = 1;
-        Index idx = IndexFactory.createIntervalIndex(new File(bedFile), new BEDCodec(),batchSize);
+        Index idx = IndexFactory.createIntervalIndex(new File(bedFile), new BEDCodec(), batchSize);
 
         FeatureReader<BEDFeature> bfr = AbstractFeatureReader.getFeatureReader(bedFile, new BEDCodec(), idx);
         CloseableTribbleIterator<BEDFeature>iter = bfr.query(chr, start, end);

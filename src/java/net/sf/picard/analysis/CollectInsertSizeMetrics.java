@@ -34,7 +34,7 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.RExecutor;
 import net.sf.samtools.SAMFileHeader;

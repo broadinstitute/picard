@@ -26,9 +26,8 @@
 package org.broadinstitute.variant.vcf;
 
 import org.broad.tribble.TribbleException;
-import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineIterator;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -73,46 +72,45 @@ public class VCFCodec extends AbstractVCFCodec {
     public final static String VCF4_MAGIC_HEADER = "##fileformat=VCFv4";
 
     /**
-     * @param reader the line reader to take header lines from
-     * @return the number of header lines
+     * Reads all of the header from the provided iterator, but no reads no further.
+     * @param lineIterator the line reader to take header lines from
+     * @return The parsed header
      */
-    public Object readHeader(LineReader reader) {
-        List<String> headerStrings = new ArrayList<String>();
+    @Override
+    public Object readActualHeader(final LineIterator lineIterator) {
+        final List<String> headerStrings = new ArrayList<String>();
 
         String line;
-        try {
-            boolean foundHeaderVersion = false;
-            while ((line = reader.readLine()) != null) {
-                lineNo++;
-                if (line.startsWith(VCFHeader.METADATA_INDICATOR)) {
-                    String[] lineFields = line.substring(2).split("=");
-                    if (lineFields.length == 2 && VCFHeaderVersion.isFormatString(lineFields[0]) ) {
-                        if ( !VCFHeaderVersion.isVersionString(lineFields[1]) )
-                            throw new TribbleException.InvalidHeader(lineFields[1] + " is not a supported version");
-                        foundHeaderVersion = true;
-                        version = VCFHeaderVersion.toHeaderVersion(lineFields[1]);
-                        if ( version == VCFHeaderVersion.VCF3_3 || version == VCFHeaderVersion.VCF3_2 )
-                            throw new TribbleException.InvalidHeader("This codec is strictly for VCFv4; please use the VCF3 codec for " + lineFields[1]);
-                        if ( version != VCFHeaderVersion.VCF4_0 && version != VCFHeaderVersion.VCF4_1 )
-                            throw new TribbleException.InvalidHeader("This codec is strictly for VCFv4 and does not support " + lineFields[1]);
-                    }
-                    headerStrings.add(line);
+        boolean foundHeaderVersion = false;
+        while (lineIterator.hasNext()) {
+            line = lineIterator.peek();
+            lineNo++;
+            if (line.startsWith(VCFHeader.METADATA_INDICATOR)) {
+                final String[] lineFields = line.substring(2).split("=");
+                if (lineFields.length == 2 && VCFHeaderVersion.isFormatString(lineFields[0]) ) {
+                    if ( !VCFHeaderVersion.isVersionString(lineFields[1]) )
+                        throw new TribbleException.InvalidHeader(lineFields[1] + " is not a supported version");
+                    foundHeaderVersion = true;
+                    version = VCFHeaderVersion.toHeaderVersion(lineFields[1]);
+                    if ( version == VCFHeaderVersion.VCF3_3 || version == VCFHeaderVersion.VCF3_2 )
+                        throw new TribbleException.InvalidHeader("This codec is strictly for VCFv4; please use the VCF3 codec for " + lineFields[1]);
+                    if ( version != VCFHeaderVersion.VCF4_0 && version != VCFHeaderVersion.VCF4_1 )
+                        throw new TribbleException.InvalidHeader("This codec is strictly for VCFv4 and does not support " + lineFields[1]);
                 }
-                else if (line.startsWith(VCFHeader.HEADER_INDICATOR)) {
-                    if (!foundHeaderVersion) {
-                        throw new TribbleException.InvalidHeader("We never saw a header line specifying VCF version");
-                    }
-                    headerStrings.add(line);
-                    super.parseHeaderFromLines(headerStrings, version);
-                    return this.header;
-                }
-                else {
-                    throw new TribbleException.InvalidHeader("We never saw the required CHROM header line (starting with one #) for the input VCF file");
-                }
-
+                headerStrings.add(lineIterator.next());
             }
-        } catch (IOException e) {
-            throw new RuntimeException("IO Exception ", e);
+            else if (line.startsWith(VCFHeader.HEADER_INDICATOR)) {
+                if (!foundHeaderVersion) {
+                    throw new TribbleException.InvalidHeader("We never saw a header line specifying VCF version");
+                }
+                headerStrings.add(lineIterator.next());
+                super.parseHeaderFromLines(headerStrings, version);
+                return this.header;
+            }
+            else {
+                throw new TribbleException.InvalidHeader("We never saw the required CHROM header line (starting with one #) for the input VCF file");
+            }
+
         }
         throw new TribbleException.InvalidHeader("We never saw the required CHROM header line (starting with one #) for the input VCF file");
     }

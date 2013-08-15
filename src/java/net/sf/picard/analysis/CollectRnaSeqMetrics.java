@@ -34,6 +34,7 @@ import net.sf.picard.metrics.*;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.util.*;
 import net.sf.samtools.*;
+import net.sf.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.util.*;

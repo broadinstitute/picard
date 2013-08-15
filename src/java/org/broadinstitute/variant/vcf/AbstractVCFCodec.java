@@ -25,12 +25,11 @@
 
 package org.broadinstitute.variant.vcf;
 
+import net.sf.samtools.util.BlockCompressedInputStream;
 import org.broad.tribble.AsciiFeatureCodec;
 import org.broad.tribble.Feature;
 import org.broad.tribble.NameAwareCodec;
 import org.broad.tribble.TribbleException;
-import org.broad.tribble.readers.LineReader;
-import net.sf.samtools.util.BlockCompressedInputStream;
 import org.broad.tribble.util.ParsingUtils;
 import org.broadinstitute.variant.utils.GeneralUtils;
 import org.broadinstitute.variant.variantcontext.*;
@@ -114,12 +113,6 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
             return createGenotypeMap((String) data, alleles, contig, start);
         }
     }
-
-    /**
-     * @param reader the line reader to take header lines from
-     * @return the number of header lines
-     */
-    public abstract Object readHeader(LineReader reader);
 
     /**
      * parse the filter string, first checking to see if we already have parsed it in a previous attempt

@@ -2,11 +2,14 @@ package org.broad.tribble;
 
 import org.broad.tribble.bed.BEDCodec;
 import org.broad.tribble.example.ExampleBinaryCodec;
+import org.broad.tribble.readers.LineIterator;
+import org.broad.tribble.readers.LineReader;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,7 +25,7 @@ public class BinaryFeaturesTest {
     }
 
     @Test(enabled = true, dataProvider = "BinaryFeatureSources")
-    public void testBinaryCodec(final File source, final FeatureCodec<Feature> codec) throws IOException {
+    public void testBinaryCodec(final File source, final FeatureCodec<Feature, LineIterator> codec) throws IOException {
         final File tmpFile = File.createTempFile("testBinaryCodec", ".binary.bed");
         ExampleBinaryCodec.convertToBinaryTest(source, tmpFile, codec);
         tmpFile.deleteOnExit();
@@ -31,7 +34,7 @@ public class BinaryFeaturesTest {
         final FeatureReader<Feature> binaryReader = AbstractFeatureReader.getFeatureReader(tmpFile.getAbsolutePath(), new ExampleBinaryCodec(), false);
 
         // make sure the header is what we expect
-        final List<String> header = (List<String>)binaryReader.getHeader();
+        final List<String> header = (List<String>) binaryReader.getHeader();
         Assert.assertEquals(header.size(), 1, "We expect exactly one header line");
         Assert.assertEquals(header.get(0), ExampleBinaryCodec.HEADER_LINE, "Failed to read binary header line");
 

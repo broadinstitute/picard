@@ -21,9 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
-
-import net.sf.picard.PicardException;
+package net.sf.samtools.util;
 
 import java.util.*;
 
@@ -67,7 +65,7 @@ public class CollectionUtil {
 
     public static <T> T getSoleElement(final Collection<T> items) {
         if (items.size() != 1)
-            throw new PicardException(String.format("Expected a single element in %s, but found %s.", items, items.size()));
+            throw new IllegalArgumentException(String.format("Expected a single element in %s, but found %s.", items, items.size()));
         return items.iterator().next();
     }
     
@@ -161,12 +159,4 @@ public class CollectionUtil {
         }
     }
 
-    public static class Tuple<A, B> {
-        public final A a;
-        public final B b;
-        public Tuple(final A a, final B b) {
-            this.a = a;
-            this.b = b;
-        }
-    }
 }

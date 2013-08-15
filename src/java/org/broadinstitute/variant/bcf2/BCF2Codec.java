@@ -27,17 +27,17 @@ package org.broadinstitute.variant.bcf2;
 
 import com.google.java.contract.Ensures;
 import com.google.java.contract.Requires;
+import org.broad.tribble.BinaryFeatureCodec;
 import org.broad.tribble.Feature;
-import org.broad.tribble.FeatureCodec;
 import org.broad.tribble.FeatureCodecHeader;
 import org.broad.tribble.TribbleException;
-import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineIterator;
+import org.broad.tribble.readers.LineIteratorImpl;
 import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broadinstitute.variant.utils.GeneralUtils;
-import org.broadinstitute.variant.vcf.*;
 import org.broadinstitute.variant.variantcontext.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.broadinstitute.variant.vcf.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -51,7 +51,7 @@ import java.util.Map;
 /**
  * Decode BCF2 files
  */
-public final class BCF2Codec implements FeatureCodec<VariantContext> {
+public final class BCF2Codec extends BinaryFeatureCodec<VariantContext> {
     private final static int ALLOWED_MAJOR_VERSION = 2;
     private final static int MIN_MINOR_VERSION = 1;
 
@@ -163,9 +163,9 @@ public final class BCF2Codec implements FeatureCodec<VariantContext> {
                 error("Couldn't read all of the bytes specified in the header length = " + headerSizeInBytes);
 
             final PositionalBufferedStream bps = new PositionalBufferedStream(new ByteArrayInputStream(headerBytes));
-            final LineReader headerReader = LineReaderUtil.fromBufferedStream(bps, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
+            final LineIterator lineIterator = new LineIteratorImpl(LineReaderUtil.fromBufferedStream(bps, LineReaderUtil.LineReaderOption.SYNCHRONOUS));
             final VCFCodec headerParser = new VCFCodec();
-            this.header = (VCFHeader)headerParser.readHeader(headerReader);
+            this.header = (VCFHeader) headerParser.readActualHeader(lineIterator);
             bps.close();
         } catch ( IOException e ) {
             throw new TribbleException("I/O error while reading BCF2 header");

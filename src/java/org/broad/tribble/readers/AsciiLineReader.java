@@ -24,23 +24,18 @@ import java.io.*;
 /**
  * A simple class that provides {@link #readLine()} functionality around a PositionalBufferedStream
  *
+ * {@link BufferedReader} and its {@link java.io.BufferedReader#readLine()} method should be used in preference to this class (when the
+ * {@link LocationAware} functionality is not required) because it offers greater performance.
+ * 
  * @author jrobinso
  */
-@Deprecated
-public class AsciiLineReader implements LineReader {
+public class AsciiLineReader implements LineReader, LocationAware {
     private static final int BUFFER_OVERFLOW_INCREASE_FACTOR = 2;
     private static final byte LINEFEED = (byte) ('\n' & 0xff);
     private static final byte CARRIAGE_RETURN = (byte) ('\r' & 0xff);
 
     PositionalBufferedStream is;
     char[] lineBuffer;
-
-    /**
-     * Initialize without a default stream
-     */
-    public AsciiLineReader() {
-        this(null);
-    }
 
     public AsciiLineReader(InputStream is){
         this(new PositionalBufferedStream(is));

@@ -28,6 +28,7 @@ import org.broad.tribble.index.interval.IntervalIndexCreator;
 import org.broad.tribble.index.interval.IntervalTreeIndex;
 import org.broad.tribble.index.linear.LinearIndex;
 import org.broad.tribble.index.linear.LinearIndexCreator;
+import org.broad.tribble.readers.LocationAware;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broad.tribble.util.LittleEndianInputStream;
 import org.broad.tribble.util.LittleEndianOutputStream;
@@ -44,11 +45,7 @@ import java.util.zip.GZIPInputStream;
  * correct index type from the input file or stream
  */
 public class IndexFactory {
-
-    /**
-     * We can optimize index-file-creation for different factors.
-     * As of this writing, those are index-file size or seeking time.
-     */
+    /** We can optimize index-file-creation for different factors. As of this writing, those are index-file size or seeking time. */
     public enum IndexBalanceApproach {
         FOR_SIZE,
         FOR_SEEK_TIME
@@ -85,7 +82,7 @@ public class IndexFactory {
             return indexCreatorClass != null;
         }
 
-        IndexType(int headerValue, Class creator, Class indexClass, int defaultBinSize) {
+        IndexType(final int headerValue, final Class creator, final Class indexClass, final int defaultBinSize) {
             indexValue = headerValue;
             indexCreatorClass = creator;
             indexType = indexClass;
@@ -106,8 +103,8 @@ public class IndexFactory {
          * @return The {@code IndexType} based on the {@code headerValue}
          * @throws TribbleException.UnableToCreateCorrectIndexType
          */
-        public static IndexType getIndexType(int headerValue) {
-            for (IndexType type : IndexType.values())
+        public static IndexType getIndexType(final int headerValue) {
+            for (final IndexType type : IndexType.values())
                 if (type.indexValue == headerValue) return type;
             throw new TribbleException.UnableToCreateCorrectIndexType("Unknown index type value" + headerValue);
         }
@@ -121,7 +118,7 @@ public class IndexFactory {
      * @param indexFile from which to load the index
      * @return the parsed index object
      */
-    public static Index loadIndex(String indexFile) {
+    public static Index loadIndex(final String indexFile) {
         Index idx = null;
         InputStream is = null;
         LittleEndianInputStream dis = null;
@@ -135,9 +132,9 @@ public class IndexFactory {
             dis = new LittleEndianInputStream(is);
 
             // Read the type and version,  then create the appropriate type
-            int magicNumber = dis.readInt();
-            int type = dis.readInt();
-            Class indexClass = IndexType.getIndexType(type).getIndexType();
+            final int magicNumber = dis.readInt();
+            final int type = dis.readInt();
+            final Class indexClass = IndexType.getIndexType(type).getIndexType();
 
             idx = (Index) indexClass.newInstance();
             idx.read(dis);
@@ -165,7 +162,7 @@ public class IndexFactory {
      * @param codec     the codec to use for decoding records
      * @return a index
      */
-    public static Index createLinearIndex(File inputFile, FeatureCodec codec) {
+    public static Index createLinearIndex(final File inputFile, final FeatureCodec codec) {
         return createIndex(inputFile, codec, IndexType.LINEAR);
     }
 
@@ -178,7 +175,7 @@ public class IndexFactory {
      * @param binSize   the bin size
      * @return a index
      */
-    public static Index createLinearIndex(File inputFile, FeatureCodec codec, int binSize) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createLinearIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec, final int binSize) {
         return createIndex(inputFile, codec, IndexType.LINEAR, binSize);
     }
 
@@ -189,7 +186,7 @@ public class IndexFactory {
      * @param codec to decode the features
      * @return
      */
-    public static Index createIntervalIndex(File inputFile, FeatureCodec codec) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createIntervalIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec) {
         return createIndex(inputFile, codec, IndexType.INTERVAL_TREE);
     }
 
@@ -202,7 +199,7 @@ public class IndexFactory {
      * @param binSize   the bin size
      * @return a index
      */
-    public static Index createIntervalIndex(File inputFile, FeatureCodec codec, int binSize) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createIntervalIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec, final int binSize) {
         return createIndex(inputFile, codec, IndexType.INTERVAL_TREE, binSize);
     }
 
@@ -213,7 +210,7 @@ public class IndexFactory {
      * @param codec     the codec to use for decoding records
      * @return a index
      */
-    public static Index createDynamicIndex(File inputFile, FeatureCodec codec) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createDynamicIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec) {
         return createDynamicIndex(inputFile, codec, IndexBalanceApproach.FOR_SEEK_TIME);
     }
 
@@ -225,7 +222,7 @@ public class IndexFactory {
      * @param type      the type of index to create
      * @return a index
      */
-    public static Index createIndex(File inputFile, FeatureCodec codec, IndexType type) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec, final IndexType type) {
         return createIndex(inputFile, codec, type, type.getDefaultBinSize());
     }
 
@@ -238,13 +235,13 @@ public class IndexFactory {
      * @param binSize   the bin size
      * @return a index
      */
-    public static Index createIndex(File inputFile, FeatureCodec codec, IndexType type, final int binSize) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec, final IndexType type, final int binSize) {
         if ( ! type.canCreate() )
             throw new TribbleException("Tribble can only read, not create indices of type " + type.name());
 
-        IndexCreator idx = type.getIndexCreator();
+        final IndexCreator idx = type.getIndexCreator();
         idx.initialize(inputFile, binSize);
-        return createIndex(inputFile, new FeatureIterator(inputFile, codec), idx);
+        return createIndex(inputFile, new FeatureIterator<FEATURE_TYPE, SOURCE_TYPE>(inputFile, codec), idx);
     }
 
     /**
@@ -274,26 +271,26 @@ public class IndexFactory {
      * @param iba       the index balancing approach
      * @return a index
      */
-    public static Index createDynamicIndex(File inputFile, FeatureCodec codec, IndexBalanceApproach iba) {
+    public static <FEATURE_TYPE extends Feature, SOURCE_TYPE> Index createDynamicIndex(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE_TYPE> codec, final IndexBalanceApproach iba) {
         // get a list of index creators
-        DynamicIndexCreator indexCreator = new DynamicIndexCreator(iba);
+        final DynamicIndexCreator indexCreator = new DynamicIndexCreator(iba);
         indexCreator.initialize(inputFile, indexCreator.defaultBinSize());
-        return createIndex(inputFile, new FeatureIterator(inputFile, codec), indexCreator);
+        return createIndex(inputFile, new FeatureIterator<FEATURE_TYPE, SOURCE_TYPE>(inputFile, codec), indexCreator);
     }
 
 
-    private static Index createIndex(File inputFile, FeatureIterator iterator, IndexCreator creator) {
+    private static Index createIndex(final File inputFile, final FeatureIterator iterator, final IndexCreator creator) {
         Feature lastFeature = null;
         Feature currentFeature;
-        Map<String, Feature> visitedChromos = new HashMap<String, Feature>(40);
+        final Map<String, Feature> visitedChromos = new HashMap<String, Feature>(40);
         while (iterator.hasNext()) {
-            long position = iterator.getPosition();
+            final long position = iterator.getPosition();
             currentFeature = iterator.next();
 
             checkSorted(inputFile, lastFeature, currentFeature);
             //should only visit chromosomes once
-            String curChr = currentFeature.getChr();
-            String lastChr = lastFeature != null ? lastFeature.getChr() : null;
+            final String curChr = currentFeature.getChr();
+            final String lastChr = lastFeature != null ? lastFeature.getChr() : null;
             if(!curChr.equals(lastChr)){
                 if(visitedChromos.containsKey(curChr)){
                     String msg = "Input file must have contiguous chromosomes.";
@@ -315,11 +312,11 @@ public class IndexFactory {
         return creator.finalizeIndex(iterator.getPosition());
     }
 
-    private static String featToString(Feature feature){
+    private static String featToString(final Feature feature){
         return feature.getChr() + ":" + feature.getStart() + "-" + feature.getEnd();
     }
 
-    private static void checkSorted(File inputFile, Feature lastFeature, Feature currentFeature){
+    private static void checkSorted(final File inputFile, final Feature lastFeature, final Feature currentFeature){
         // if the last currentFeature is after the current currentFeature, exception out
         if (lastFeature != null && currentFeature.getStart() < lastFeature.getStart() && lastFeature.getChr().equals(currentFeature.getChr()))
             throw new TribbleException.MalformedFeatureFile("Input file is not sorted by start position. \n" +
@@ -331,13 +328,13 @@ public class IndexFactory {
     /**
      * Iterator for reading features from a file, given a {@code FeatureCodec}.
      */
-    static class FeatureIterator implements CloseableTribbleIterator<Feature> {
+    static class FeatureIterator<FEATURE_TYPE extends Feature, SOURCE> implements CloseableTribbleIterator<Feature> {
         // the stream we use to get features
-        private PositionalBufferedStream stream;
+        private SOURCE source;
         // the next feature
         private Feature nextFeature;
         // our codec
-        private final FeatureCodec codec;
+        private final FeatureCodec<FEATURE_TYPE, SOURCE> codec;
         private final File inputFile;
 
         // we also need cache our position
@@ -348,11 +345,11 @@ public class IndexFactory {
          * @param inputFile The file from which to read. Stream for reading is opened on construction.
          * @param codec
          */
-        public FeatureIterator(File inputFile, FeatureCodec codec) {
+        public FeatureIterator(final File inputFile, final FeatureCodec<FEATURE_TYPE, SOURCE> codec) {
             this.codec = codec;
             this.inputFile = inputFile;
-            FeatureCodecHeader header = readHeader();
-            stream = initStream(inputFile, header.getHeaderEnd());
+            final FeatureCodecHeader header = readHeader();
+            source = (SOURCE) codec.makeIndexableSourceFromStream(initStream(inputFile, header.getHeaderEnd()));
             readNextFeature();
         }
 
@@ -362,19 +359,19 @@ public class IndexFactory {
          */
         private FeatureCodecHeader readHeader() {
             try {
-                PositionalBufferedStream pbs = initStream(inputFile, 0);
-                FeatureCodecHeader header = this.codec.readHeader(pbs);
-                pbs.close();
+                final SOURCE source = this.codec.makeSourceFromStream(initStream(inputFile, 0));
+                final FeatureCodecHeader header = this.codec.readHeader(source);
+                codec.close(source);
                 return header;
             } catch (IOException e) {
                 throw new TribbleException.InvalidHeader("Error reading header " + e.getMessage());
             }
         }
 
-        private PositionalBufferedStream initStream(File inputFile, long skip) {
+        private PositionalBufferedStream initStream(final File inputFile, final long skip) {
             try {
                 final FileInputStream is = new FileInputStream(inputFile);
-                PositionalBufferedStream pbs = new PositionalBufferedStream(is);
+                final PositionalBufferedStream pbs = new PositionalBufferedStream(is);
                 if ( skip > 0 ) pbs.skip(skip);
                 return pbs;
             } catch (FileNotFoundException e) {
@@ -389,7 +386,7 @@ public class IndexFactory {
         }
 
         public Feature next() {
-            Feature ret = nextFeature;
+            final Feature ret = nextFeature;
             readNextFeature();
             return ret;
         }
@@ -406,7 +403,7 @@ public class IndexFactory {
          * @return the file position from the underlying reader
          */
         public long getPosition() {
-            return (hasNext()) ? cachedPosition : stream.getPosition();
+            return (hasNext()) ? cachedPosition : ((LocationAware) source).getPosition();
         }
 
         @Override
@@ -416,7 +413,7 @@ public class IndexFactory {
 
         @Override
         public void close() {
-            stream.close();
+            codec.close(source);
         }
 
         /**
@@ -424,11 +421,11 @@ public class IndexFactory {
          * @throws TribbleException.MalformedFeatureFile
          */
         private void readNextFeature() {
-            cachedPosition = stream.getPosition();
+            cachedPosition = ((LocationAware) source).getPosition();
             try {
                 nextFeature = null;
-                while ( ! stream.isDone() && nextFeature == null ) {
-                    nextFeature = codec.decodeLoc(stream);
+                while (nextFeature == null && !codec.isDone(source)) {
+                    nextFeature = codec.decodeLoc(source);
                 }
             } catch (IOException e) {
                 throw new TribbleException.MalformedFeatureFile("Unable to read a line from the file", inputFile.getAbsolutePath(), e);

@@ -33,8 +33,8 @@ import net.sf.picard.util.Log;
 import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import net.sf.samtools.util.StringUtil;
 
-import static net.sf.picard.util.CollectionUtil.makeList;
-import static net.sf.picard.util.CollectionUtil.makeSet;
+import static net.sf.samtools.util.CollectionUtil.makeList;
+import static net.sf.samtools.util.CollectionUtil.makeSet;
 
 /**
  * IlluminaDataProviderFactory accepts options for parsing Illumina data files for a lane and creates an

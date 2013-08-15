@@ -31,7 +31,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import net.sf.picard.util.CollectionUtil.MultiMap;
+import net.sf.samtools.util.CollectionUtil.MultiMap;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.picard.PicardException;

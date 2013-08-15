@@ -26,7 +26,7 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.illumina.parser.readers.FilterFileReader;
 import net.sf.samtools.util.CloseableIterator;
 
-import static net.sf.picard.util.CollectionUtil.*;
+import static net.sf.samtools.util.CollectionUtil.*;
 
 import java.io.File;
 import java.util.*;

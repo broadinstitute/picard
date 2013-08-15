@@ -26,36 +26,31 @@
 package net.sf.picard.vcf;
 
 import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.RuntimeIOException;
-import org.broad.tribble.readers.LineReader;
+import org.broad.tribble.readers.LineIterator;
+import org.broad.tribble.readers.LineIteratorImpl;
 import org.broad.tribble.readers.LineReaderUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.vcf.VCFCodec;
 import org.broadinstitute.variant.vcf.VCFHeader;
-import java.io.IOException;
+
 import java.io.InputStream;
-import java.util.NoSuchElementException;
 
 public class VcfIterator implements VariantContextIterator {
     private final VCFCodec vcfCodec = new VCFCodec();
     private final VCFHeader vcfHeader;
-    private final LineReader reader;
-    private String line = null;
-
-    public VcfIterator(final InputStream vcfStream) {
-        this.reader = LineReaderUtil.fromBufferedStream(vcfStream);
-        final Object header = vcfCodec.readHeader(reader);
-        if (!(header instanceof VCFHeader)) {
-            throw new IllegalArgumentException("No VCF header found");
-        }
-        this.vcfHeader = (VCFHeader) header;
-    }
+    private final LineIterator lineIterator;
 
     // TODO: Add a c'tor that reads intervals.
 
+    public VcfIterator(final InputStream vcfStream) {
+        this.lineIterator = new LineIteratorImpl(LineReaderUtil.fromBufferedStream(vcfStream));
+        this.vcfHeader = (VCFHeader) vcfCodec.readActualHeader(lineIterator);
+    }
+
+
     @Override
     public void close() {
-        CloserUtil.close(reader);
+        CloserUtil.close(lineIterator);
     }
 
     public VCFHeader getHeader() {
@@ -64,20 +59,12 @@ public class VcfIterator implements VariantContextIterator {
 
     @Override
     public boolean hasNext() {
-        try {
-            if (line == null) line = reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeIOException(e);
-        }
-        return line != null;
+        return lineIterator.hasNext();
     }
 
     @Override
     public VariantContext next() {
-        if ( ! this.hasNext()) throw new NoSuchElementException("Called next() on an exhausted VcfIterator");
-        final String tmp = line;
-        line = null;
-        return vcfCodec.decode(tmp);
+        return vcfCodec.decode(lineIterator.next());
     }
 
     /**

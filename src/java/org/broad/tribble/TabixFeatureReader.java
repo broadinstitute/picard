@@ -23,8 +23,8 @@
  */
 package org.broad.tribble;
 
-import org.broad.tribble.readers.*;
 import net.sf.samtools.util.BlockCompressedInputStream;
+import org.broad.tribble.readers.*;
 import org.broad.tribble.util.ParsingUtils;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.List;
  * @author Jim Robinson
  * @since 2/11/12
  */
-public class TabixFeatureReader extends AbstractFeatureReader {
+public class TabixFeatureReader<T extends Feature, SOURCE> extends AbstractFeatureReader<T, SOURCE> {
 
     TabixReader tabixReader;
     List<String> sequenceNames;
@@ -48,7 +48,7 @@ public class TabixFeatureReader extends AbstractFeatureReader {
      * @param codec
      * @throws IOException
      */
-    public TabixFeatureReader(String featureFile, AsciiFeatureCodec codec) throws IOException {
+    public TabixFeatureReader(final String featureFile, final AsciiFeatureCodec codec) throws IOException {
         super(featureFile, codec);
         tabixReader = new TabixReader(featureFile);
         sequenceNames = new ArrayList<String>(tabixReader.mChr2tid.keySet());
@@ -63,15 +63,15 @@ public class TabixFeatureReader extends AbstractFeatureReader {
      * @throws IOException throws an IOException if we can't open the file
      */
     private void readHeader() throws IOException {
-        PositionalBufferedStream is = null;
+        SOURCE source = null;
         try {
-            is = new PositionalBufferedStream(new BlockCompressedInputStream(ParsingUtils.openInputStream(path)));
-            header = codec.readHeader(is);
+            source = codec.makeSourceFromStream(new PositionalBufferedStream(new BlockCompressedInputStream(ParsingUtils.openInputStream(path))));
+            header = codec.readHeader(source);
         } catch (Exception e) {
             throw new TribbleException.MalformedFeatureFile("Unable to parse header with error: " + e.getMessage(), path, e);
         } finally {
-            if (is != null) {
-                is.close();
+            if (source != null) {
+                codec.close(source);
             }
         }
     }
@@ -90,22 +90,22 @@ public class TabixFeatureReader extends AbstractFeatureReader {
      * @return
      * @throws IOException
      */
-    public CloseableTribbleIterator query(String chr, int start, int end) throws IOException {
-        List<String> mp = getSequenceNames();
+    public CloseableTribbleIterator<T> query(final String chr, final int start, final int end) throws IOException {
+        final List<String> mp = getSequenceNames();
         if (mp == null) throw new TribbleException.TabixReaderFailure("Unable to find sequence named " + chr +
                 " in the tabix index. ", path);
         if (!mp.contains(chr)) {
-            return new EmptyIterator();
+            return new EmptyIterator<T>();
         }
-        TabixIteratorLineReader lineReader = new TabixIteratorLineReader(tabixReader.query(tabixReader.mChr2tid.get(chr), start - 1, end));
-        return new FeatureIterator(lineReader, start - 1, end);
+        final TabixIteratorLineReader lineReader = new TabixIteratorLineReader(tabixReader.query(tabixReader.mChr2tid.get(chr), start - 1, end));
+        return new FeatureIterator<T>(lineReader, start - 1, end);
     }
 
-    public CloseableTribbleIterator iterator() throws IOException {
+    public CloseableTribbleIterator<T> iterator() throws IOException {
         final InputStream is = new BlockCompressedInputStream(ParsingUtils.openInputStream(path));
         final PositionalBufferedStream stream = new PositionalBufferedStream(is);
         final LineReader reader = LineReaderUtil.fromBufferedStream(stream, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
-        return new FeatureIterator(reader, 0, Integer.MAX_VALUE);
+        return new FeatureIterator<T>(reader, 0, Integer.MAX_VALUE);
     }
 
     public void close() throws IOException {
@@ -113,13 +113,13 @@ public class TabixFeatureReader extends AbstractFeatureReader {
     }
 
 
-    class FeatureIterator<T extends Feature> implements CloseableTribbleIterator {
+    class FeatureIterator<T extends Feature> implements CloseableTribbleIterator<T> {
         private T currentRecord;
         private LineReader lineReader;
         private int start;
         private int end;
 
-        public FeatureIterator(LineReader lineReader, int start, int end) throws IOException {
+        public FeatureIterator(final LineReader lineReader, final int start, final int end) throws IOException {
             this.lineReader = lineReader;
             this.start = start;
             this.end = end;
@@ -136,7 +136,7 @@ public class TabixFeatureReader extends AbstractFeatureReader {
             currentRecord = null;
             String nextLine;
             while (currentRecord == null && (nextLine = lineReader.readLine()) != null) {
-                Feature f = null;
+                final Feature f;
                 try {
                     f = ((AsciiFeatureCodec)codec).decode(nextLine);
                     if (f == null) {

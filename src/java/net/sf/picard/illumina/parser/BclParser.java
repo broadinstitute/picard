@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import static net.sf.picard.util.CollectionUtil.makeSet;
+import static net.sf.samtools.util.CollectionUtil.makeSet;
 
 /**
  * BclParser parses a number of BclFiles equal to the total of all the values in outputLengths and returns a BclData object

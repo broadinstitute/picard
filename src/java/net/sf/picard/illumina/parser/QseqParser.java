@@ -25,6 +25,7 @@ package net.sf.picard.illumina.parser;
 
 import net.sf.picard.util.*;
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;

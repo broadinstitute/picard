@@ -1,16 +1,12 @@
 package org.broad.tribble.readers;
 
 import net.sf.samtools.Defaults;
-import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 import org.broad.tribble.TribbleException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.NoSuchElementException;
 
 /**
  * A collection of factories for generating {@link LineReader}s.
@@ -44,8 +40,12 @@ public class LineReaderUtil {
                     final LongLineBufferedReader reader = new LongLineBufferedReader(bufferedInputStreamReader);
 
                     @Override
-                    public String readLine() throws IOException {
-                        return reader.readLine();
+                    public String readLine() {
+                        try {
+                            return reader.readLine();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
 
                     @Override
@@ -57,53 +57,5 @@ public class LineReaderUtil {
                 throw new TribbleException(String.format("Unrecognized LineReaderUtil option: %s.", option));
         }
     }
-    
-    /** A simple iterator over the elements in LineReader. */
-    public static class LineIterator implements CloseableIterator<String> {
-        private final LineReader lineReader;
 
-        /**
-         * @param lineReader The line reader whose elements are to be iterated over.
-         */
-        public LineIterator(final LineReader lineReader) {
-            this.lineReader = lineReader;
-            try {
-                this.nextLine = lineReader.readLine();
-            } catch (IOException e) {
-                throw new TribbleException("Failed to read first line.", e);
-            }
-        }
-        
-        private String nextLine;
-        
-        @Override
-        public boolean hasNext() {
-            return nextLine != null;
-        }
-
-        @Override
-        public String next() {
-            if (hasNext()) {
-                try {
-                    final String ret = nextLine;
-                    nextLine = lineReader.readLine();
-                    return ret;
-                } catch (IOException e) {
-                    throw new TribbleException("Failed to read line.", e);
-                }
-            } else {
-                throw new NoSuchElementException();
-            }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void close() {
-            lineReader.close();
-        }
-    } 
 }
