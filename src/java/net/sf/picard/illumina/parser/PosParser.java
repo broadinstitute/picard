@@ -34,7 +34,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
-import static net.sf.picard.util.CollectionUtil.makeSet;
+import static net.sf.samtools.util.CollectionUtil.makeSet;
 
 /**
  * PosParser parses multiple files formatted as one of the three file formats that contain position information

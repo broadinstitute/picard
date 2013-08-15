@@ -8,7 +8,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.reference.ReferenceSequenceFileFactory;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.picard.util.IntervalList;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
@@ -16,7 +16,6 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StopWatch;
 
 import java.io.File;
 import java.util.Iterator;

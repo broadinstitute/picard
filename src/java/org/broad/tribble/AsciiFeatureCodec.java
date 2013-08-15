@@ -18,13 +18,11 @@
 
 package org.broad.tribble;
 
-import org.broad.tribble.readers.LineReader;
-import org.broad.tribble.readers.LineReaderUtil;
-import org.broad.tribble.readers.PositionalBufferedStream;
-import org.broad.tribble.util.ParsingUtils;
+import net.sf.samtools.util.CloserUtil;
+import org.broad.tribble.readers.*;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
+import java.io.InputStream;
 
 /**
  * A convenience base class for codecs that want to read in features from ASCII lines.
@@ -34,138 +32,60 @@ import java.util.regex.Pattern;
  *
  * @param <T> The feature type this codec reads
  */
-public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatureCodec<T> {
-    /**
-     * regex used to identify what separates fields
-     */
-    protected Pattern splitPattern = Pattern.compile("\\t");
-
+public abstract class AsciiFeatureCodec<T extends Feature> extends AbstractFeatureCodec<T, LineIterator> {
     protected AsciiFeatureCodec(final Class<T> myClass) {
         super(myClass);
     }
+    
+    @Override
+    public void close(final LineIterator lineIterator) {
+        CloserUtil.close(lineIterator);
+    }
 
     @Override
-    public Feature decodeLoc(final PositionalBufferedStream stream) throws IOException {
-        String line = readLine(stream);
-        try {
-            return decodeLoc(line);
-        } catch (RuntimeException e) {
-            String msg = "\nLine: " + line;
-            throw new RuntimeException(msg, e);
+    public boolean isDone(final LineIterator lineIterator) {
+        return !lineIterator.hasNext();
+    }
+
+    @Override
+    public LocationAware makeIndexableSourceFromStream(final InputStream bufferedInputStream) {
+        final PositionalBufferedStream pbs;
+        if (bufferedInputStream instanceof PositionalBufferedStream) {
+            pbs = (PositionalBufferedStream) bufferedInputStream;
+        } else {
+            pbs = new PositionalBufferedStream(bufferedInputStream);
         }
+        return new AsciiLineReaderIterator(new AsciiLineReader(pbs));
     }
 
     @Override
-    public T decode(final PositionalBufferedStream stream) throws IOException {
-        String line = readLine(stream);
-        try {
-            return decode(line);
-        } catch (RuntimeException e) {
-            String msg = "\nLine: " + line;
-            throw new RuntimeException(msg, e);
-        }
+    public LineIterator makeSourceFromStream(final InputStream bufferedInputStream) {
+        return new LineIteratorImpl(LineReaderUtil.fromBufferedStream(bufferedInputStream));
     }
+
+    /** 
+     * Convenience method.  Decoding in ASCII files operates line-by-line, so obviate the need to call 
+     * {@link org.broad.tribble.readers.LineIterator#next()} in implementing classes and, instead, have them implement
+     * {@link AsciiFeatureCodec#decode(String)}.
+     */
+    @Override
+    public T decode(final LineIterator lineIterator) {
+        return decode(lineIterator.next());
+    }
+
+    /** @see {@link AsciiFeatureCodec#decode(org.broad.tribble.readers.LineIterator)} */
+    public abstract T decode(String s);
 
     @Override
-    public FeatureCodecHeader readHeader(final PositionalBufferedStream stream) throws IOException {
-        final LineReader br = LineReaderUtil.fromBufferedStream(stream, LineReaderUtil.LineReaderOption.SYNCHRONOUS);
-        // TODO -- track header end here
-        return new FeatureCodecHeader(readHeader(br), FeatureCodecHeader.NO_HEADER_END);
+    public FeatureCodecHeader readHeader(final LineIterator lineIterator) throws IOException {
+        // TODO: Track header end here, rather than assuming there isn't one.
+        return new FeatureCodecHeader(readActualHeader(lineIterator), FeatureCodecHeader.NO_HEADER_END);
     }
-
-    /**
-     * Decode a line to obtain just its FeatureLoc for indexing -- contig, start, and stop.
-     *
-     * @param line the input line to decode
-     * @return Return the FeatureLoc encoded by the line, or null if the line does not represent a feature (e.g. is
-     *         a comment)
-     */
-    public Feature decodeLoc(String line) {
-        return decode(line);
-    }
-
-    /**
-     * Decode a set of tokens as a Feature.
-     * For backwards compatibility, the
-     * default implementation joins by tabs, and calls {@link #decode(String)}.
-     * <p/>
-     * It is recommended that you override {@link #decode(String[])}
-     * as well as {@link #decode(String)}
-     *
-     * @param tokens
-     * @return
-     */
-    public T decode(String[] tokens) {
-        String line = ParsingUtils.join("\t", tokens);
-        return decode(line);
-    }
-
-    /**
-     * Decode a line as a Feature.
-     *
-     * @param line the input line to decode
-     * @return Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
-     *         a comment)
-     */
-    abstract public T decode(String line);
 
     /**
      * Read and return the header, or null if there is no header.
      *
      * @return the actual header data in the file, or null if none is available
      */
-    public Object readHeader(LineReader reader) {
-        return null;
-    }
-
-    /**
-     * Read a line of text.  A line is considered to be terminated by any one
-     * of a line feed ('\n'), a carriage return ('\r'), or a carriage return
-     * followed immediately by a linefeed.
-     *
-     * @param stream the stream to read the next line from
-     * @return A String containing the contents of the line or null if the
-     *         end of the stream has been reached
-     */
-    private String readLine(final PositionalBufferedStream stream) throws IOException {
-        int linePosition = 0;
-
-        while (true) {
-            final int b = stream.read();
-
-            if (b == -1) {
-                // eof reached.  Return the last line, or null if this is a new line
-                if (linePosition > 0) {
-                    return new String(lineBuffer, 0, linePosition);
-                } else {
-                    return null;
-                }
-            }
-
-            final char c = (char) (b & 0xFF);
-            if (c == LINEFEED || c == CARRIAGE_RETURN) {
-                if (c == CARRIAGE_RETURN && stream.peek() == LINEFEED) {
-                    stream.read(); // <= skip the trailing \n in case of \r\n termination
-                }
-
-                return new String(lineBuffer, 0, linePosition);
-            } else {
-                // Expand line buffer size if neccessary.  Reserve at least 2 characters
-                // for potential line-terminators in return string
-
-                if (linePosition > (lineBuffer.length - 3)) {
-                    char[] temp = new char[BUFFER_OVERFLOW_INCREASE_FACTOR * lineBuffer.length];
-                    System.arraycopy(lineBuffer, 0, temp, 0, lineBuffer.length);
-                    lineBuffer = temp;
-                }
-
-                lineBuffer[linePosition++] = c;
-            }
-        }
-    }
-
-    private static final int BUFFER_OVERFLOW_INCREASE_FACTOR = 2;
-    private static final byte LINEFEED = (byte) ('\n' & 0xff);
-    private static final byte CARRIAGE_RETURN = (byte) ('\r' & 0xff);
-    private char[] lineBuffer = new char[10000];
+    abstract public Object readActualHeader(final LineIterator reader);
 }

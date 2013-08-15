@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.*;
-import static net.sf.picard.util.CollectionUtil.makeList;
+import static net.sf.samtools.util.CollectionUtil.makeList;
 
 public class PosParserTest {
 

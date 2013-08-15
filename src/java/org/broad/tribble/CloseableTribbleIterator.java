@@ -18,14 +18,10 @@
 
 package org.broad.tribble;
 
-import org.broad.tribble.Feature;
-
-import java.util.Iterator;
+import net.sf.samtools.util.CloseableIterator;
 
 /**
  * The basic iterator we use in Tribble, which allows closing and basic iteration.
  * @param <T> the feature type
  */
-public interface CloseableTribbleIterator<T extends Feature> extends Iterator<T>, Iterable<T> {
-    public void close();
-}
+public interface CloseableTribbleIterator<T extends Feature> extends CloseableIterator<T>, Iterable<T> {}

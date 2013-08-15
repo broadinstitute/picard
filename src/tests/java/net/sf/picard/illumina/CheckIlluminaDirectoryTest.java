@@ -6,7 +6,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
 
-import static net.sf.picard.util.CollectionUtil.makeList;
+import static net.sf.samtools.util.CollectionUtil.makeList;
 import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
 import static net.sf.picard.illumina.parser.IlluminaDataType.*;

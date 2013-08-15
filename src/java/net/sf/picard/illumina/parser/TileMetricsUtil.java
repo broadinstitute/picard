@@ -3,7 +3,7 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
 import net.sf.picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;

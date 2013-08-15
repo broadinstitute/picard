@@ -38,8 +38,12 @@ public class TabixIteratorLineReader implements LineReader {
         this.iterator = iterator;
     }
 
-    public String readLine() throws IOException {
-        return iterator != null ? iterator.next() : null;
+    public String readLine() {
+        try {
+            return iterator != null ? iterator.next() : null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void close() {

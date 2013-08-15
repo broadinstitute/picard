@@ -25,6 +25,7 @@ package org.broad.tribble.bed;
 
 import org.broad.tribble.AsciiFeatureCodec;
 import org.broad.tribble.annotation.Strand;
+import org.broad.tribble.readers.LineIterator;
 import org.broad.tribble.util.ParsingUtils;
 
 import java.util.regex.Pattern;
@@ -38,7 +39,8 @@ import java.util.regex.Pattern;
  */
 public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
 
-    private int startOffsetValue;
+    private static final Pattern SPLIT_PATTERN = Pattern.compile("\\t|( +)");
+    private final int startOffsetValue;
 
     /**
      * Calls {@link #BEDCodec(StartOffset)} with an argument
@@ -53,10 +55,9 @@ public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
      * BED format is 0-based, but Tribble is 1-based.
      * Set desired start position at either ZERO or ONE
      */
-    public BEDCodec(StartOffset startOffset) {
+    public BEDCodec(final StartOffset startOffset) {
         super(BEDFeature.class);
         this.startOffsetValue = startOffset.value();
-        splitPattern = Pattern.compile("\\t|( +)");
     }
 
 
@@ -76,11 +77,15 @@ public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
             return null;
         }
 
-        String[] tokens = splitPattern.split(line, -1);
+        String[] tokens = SPLIT_PATTERN.split(line, -1);
         return decode(tokens);
     }
 
     @Override
+    public Object readActualHeader(LineIterator reader) {
+        return null;
+    }
+
     public BEDFeature decode(String[] tokens) {
         int tokenCount = tokens.length;
 
@@ -200,8 +205,8 @@ public class BEDCodec extends AsciiFeatureCodec<BEDFeature> {
 
     /**
      * Indicate whether co-ordinates or 0-based or 1-based.
-     * Tribble uses 1-based, BED files use 0.
      * <p/>
+     * Tribble uses 1-based, BED files use 0.
      * e.g.:
      * start_position = bedline_start_position - startIndex.value()
      */

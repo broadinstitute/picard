@@ -26,6 +26,7 @@ package org.broad.tribble.dbsnp;
 import org.broad.tribble.AsciiFeatureCodec;
 import org.broad.tribble.Feature;
 import org.broad.tribble.annotation.Strand;
+import org.broad.tribble.readers.LineIterator;
 
 
 /**
@@ -39,7 +40,7 @@ public class OldDbSNPCodec extends AsciiFeatureCodec<OldDbSNPFeature> {
 
     // the number of tokens we expect to parse from a dbSNP line
     static final int expectedTokenCount = 18;
-
+    
     public OldDbSNPCodec() {
         super(OldDbSNPFeature.class);
     }
@@ -77,7 +78,6 @@ public class OldDbSNPCodec extends AsciiFeatureCodec<OldDbSNPFeature> {
      * 18 weight
      */
     public OldDbSNPFeature decode(String line) {
-
         // we may be asked to process a header line; ignore it
         if (line.startsWith("#")) return null;
 
@@ -87,6 +87,10 @@ public class OldDbSNPCodec extends AsciiFeatureCodec<OldDbSNPFeature> {
     }
 
     @Override
+    public Object readActualHeader(final LineIterator reader) {
+        return null;
+    }
+
     public OldDbSNPFeature decode(String[] tokens){
         // check to see if we've parsed the string into the right number of tokens (expectedTokenCount)
         if (tokens.length != expectedTokenCount)

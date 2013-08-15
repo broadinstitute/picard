@@ -1,7 +1,7 @@
 package net.sf.picard.illumina.parser.readers;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

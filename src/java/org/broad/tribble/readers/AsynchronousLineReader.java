@@ -3,7 +3,6 @@ package org.broad.tribble.readers;
 import net.sf.samtools.util.CloserUtil;
 import org.broad.tribble.TribbleException;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,7 +35,7 @@ public class AsynchronousLineReader implements LineReader {
     }
 
     @Override
-    public String readLine() throws IOException {
+    public String readLine() {
         try {
             // Continually poll until we get a result, unless the underlying reader is finished.
             for (; ; ) {

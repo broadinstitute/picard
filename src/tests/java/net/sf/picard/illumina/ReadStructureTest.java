@@ -1,11 +1,8 @@
 package net.sf.picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.Range;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.illumina.parser.ReadDescriptor;
 import net.sf.picard.illumina.parser.ReadType;
-import net.sf.samtools.util.CoordMath;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -13,7 +10,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 import static net.sf.picard.illumina.parser.ReadType.*;
-import static net.sf.picard.util.CollectionUtil.*;
+import static net.sf.samtools.util.CollectionUtil.*;
 
 public class ReadStructureTest {
 

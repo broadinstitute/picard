@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package net.sf.samtools.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -34,13 +34,13 @@ import java.util.NoSuchElementException;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public abstract class AbstractIterator<E> implements Iterator<E> {
-    private E next;
+    protected E next;
     private boolean iterating = false;
 
     @Override
     public boolean hasNext() {
         // If this is the start of iteration, queue up the first item
-        if(!iterating) {
+        if (!iterating) {
             next = advance();
             iterating = true;
         }
@@ -52,7 +52,7 @@ public abstract class AbstractIterator<E> implements Iterator<E> {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        
+
         E ret = next;
         next = advance();
         return ret;
@@ -67,6 +67,14 @@ public abstract class AbstractIterator<E> implements Iterator<E> {
      * @return the next element or null if the iterator is at the end
      */
     protected abstract E advance();
+
+    /**
+     * Returns the next element in the iterator, if one exists.  Otherwise, returns null.  Invoking this method does not advance the iterator.
+     * @return The next element in the iterator, without advancing, or, if no other element exists, null.
+     */
+    public E peek() {
+        return next;
+    }
 
     /**
      * @return true after the first time hasNext() or next() have been called

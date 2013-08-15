@@ -18,81 +18,104 @@
 
 package org.broad.tribble;
 
-import org.broad.tribble.readers.PositionalBufferedStream;
+import org.broad.tribble.readers.LocationAware;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * the base interface for classes that read in features.
- *
+ * <p/>
  * FeatureCodecs have to implement two key methods:
- *
+ * <p/>
  * readHeader() => starting from the first line of the file, read the full header, if any, and
- *   return it, as well as the position in the file where the header stops and records begin.  The
- *   contract with the readers is that the header and decoders see fresh streams, so you can
- *   safely read into the first record of the file looking for the header.  It's always why
- *   you need to return the file position (via getPosition() in the stream) of the last
- *   header record.
- *
- * decode(stream) => parse out the next record, and return it.  Decode is always called on a
- *   fresh stream after the header is read.
- *
+ * return it, as well as the position in the file where the header stops and records begin.  The
+ * contract with the readers is that the header and decoders see fresh streams, so you can
+ * safely read into the first record of the file looking for the header.  It's always why
+ * you need to return the file position (via getPosition() in the stream) of the last
+ * header record.
+ * <p/>
+ * decode(SOURCE) => parse out the next record, and return it.  Decode is always called on a
+ * fresh stream after the header is read, if the source is a stream.
+ * <p/>
  * Note that it's not safe to carry state about the PositionalBufferedStream arguments here.  There's
- * no guarentee on the state of the stream between calls.
- *
+ * no guarantee on the state of the stream between calls.
+ * <p/>
  * The canDecode is used to determine if a file can be decoded by this codec.  Just open up the
  * file and check if it can be decoded with this codec.
  *
- * @param <T> The feature type this codec reads
+ * @param <FEATURE_TYPE> The type of {@link Feature} this codec generates
+ * @param <SOURCE> The type of the data source this codec reads from
  */
-public interface FeatureCodec<T extends Feature> {
+public interface FeatureCodec<FEATURE_TYPE extends Feature, SOURCE> {
     /**
      * Decode a line to obtain just its FeatureLoc for indexing -- contig, start, and stop.
      *
-     *
-     * @param stream the input stream from which to decode the next record
-     * @return  Return the FeatureLoc encoded by the line, or null if the line does not represent a feature (e.g. is
-     * a comment)
+     * @param source the input stream from which to decode the next record
+     * @return Return the FeatureLoc encoded by the line, or null if the line does not represent a feature (e.g. is
+     *         a comment)
      */
-    public Feature decodeLoc(final PositionalBufferedStream stream) throws IOException;
+    public Feature decodeLoc(final SOURCE source) throws IOException;
 
     /**
-     * Decode a line as a Feature.
+     * Decode a single {@link Feature} from the {@link SOURCE}, reading no further in the underlying source than beyond that feature.
      *
-     *
-     * @param stream the input stream from which to decode the next record
-     * @return  Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
-     * a comment)
+     * @param source the input stream from which to decode the next record
+     * @return Return the Feature encoded by the line,  or null if the line does not represent a feature (e.g. is
+     *         a comment)
      */
-    public T decode(final PositionalBufferedStream stream) throws IOException;
+    public FEATURE_TYPE decode(final SOURCE source) throws IOException;
 
     /**
      * Read and return the header, or null if there is no header.
+     * 
+     * Note: Implementers of this method must be careful to read exactly as much from {@link SOURCE} as needed to parse the header, and no 
+     * more. Otherwise, data that might otherwise be fed into parsing a {@link Feature} may be lost.
      *
-     *
-     *
-     * @param stream the input stream from which to decode the header
+     * @param source the source from which to decode the header
      * @return header object
      */
-    public FeatureCodecHeader readHeader(final PositionalBufferedStream stream) throws IOException;
+    public FeatureCodecHeader readHeader(final SOURCE source) throws IOException;
 
     /**
      * This function returns the object the codec generates.  This is allowed to be Feature in the case where
      * conditionally different types are generated.  Be as specific as you can though.
-     *
+     * <p/>
      * This function is used by reflections based tools, so we can know the underlying type
      *
      * @return the feature type this codec generates.
      */
-    public Class<T> getFeatureType();
+    public Class<FEATURE_TYPE> getFeatureType();
+
+    /**
+     * Generates a reader of type {@link SOURCE} appropriate for use by this codec from the generic input stream.  Implementers should
+     * assume the stream is buffered.
+     */
+    public SOURCE makeSourceFromStream(final InputStream bufferedInputStream);
+
+    /**
+     * Generates a {@link LocationAware} reader of type {@link SOURCE}.  Like {@link #makeSourceFromStream(java.io.InputStream)}, except
+     * the {@link LocationAware} compatibility is required for creating indexes.
+     * 
+     * Implementers of this method must return a type that is both {@link LocationAware} as well as {@link SOURCE}.  Note that this 
+     * requirement cannot be enforced via the method signature due to limitations in Java's generic typing system.  Instead, consumers
+     * should cast the call result into a {@link SOURCE} when applicable.
+     */
+    public LocationAware makeIndexableSourceFromStream(final InputStream bufferedInputStream);
+
+    /** Adapter method that assesses whether the provided {@link SOURCE} has more data. True if it does, false otherwise. */
+    public boolean isDone(final SOURCE source);
+
+    /** Adapter method that closes the provided {@link SOURCE}. */
+    public void close(final SOURCE source);
 
     /**
      * This function returns true iff the File potentialInput can be parsed by this
      * codec.
-     *
+     * <p/>
      * There is an assumption that there's never a situation where two different Codecs
      * return true for the same file.  If this occurs, the recommendation would be to error out.
-     *
+     * <p/>
      * Note this function must never throw an error.  All errors should be trapped
      * and false returned.
      *

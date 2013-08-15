@@ -32,6 +32,7 @@ import java.util.Arrays;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
+import net.sf.samtools.util.CollectionUtil;
 
 /**
  * Util class for executing R scripts.

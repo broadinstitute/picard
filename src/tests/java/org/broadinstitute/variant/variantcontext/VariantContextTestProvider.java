@@ -27,18 +27,19 @@ package org.broadinstitute.variant.variantcontext;
 
 import org.broad.tribble.FeatureCodec;
 import org.broad.tribble.FeatureCodecHeader;
+import org.broad.tribble.readers.LineIterator;
+import org.broad.tribble.readers.LineIteratorImpl;
+import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broadinstitute.variant.VariantBaseTest;
 import org.broadinstitute.variant.bcf2.BCF2Codec;
 import org.broadinstitute.variant.utils.GeneralUtils;
-import org.broadinstitute.variant.vcf.*;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
+import org.broadinstitute.variant.vcf.*;
 import org.testng.Assert;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -91,14 +92,16 @@ public class VariantContextTestProvider {
         }
     }
 
-    public abstract static class VariantContextIOTest {
+    public abstract static class VariantContextIOTest<CODECTYPE> {
         public String toString() {
             return "VariantContextIOTest:" + getExtension();
         }
         public abstract String getExtension();
-        public abstract FeatureCodec<VariantContext> makeCodec();
+        public abstract CODECTYPE makeCodec();
         public abstract VariantContextWriter makeWriter(final File outputFile, final EnumSet<Options> baseOptions);
 
+        public abstract VariantContextContainer readAllVCs(final File input) throws IOException;
+        
         public List<VariantContext> preprocess(final VCFHeader header, List<VariantContext> vcsBeforeIO) {
             return vcsBeforeIO;
         }
@@ -633,7 +636,7 @@ public class VariantContextTestProvider {
             writeVCsToFile(writer, header, data.vcs);
 
             // ensure writing of expected == actual
-            final VariantContextContainer p = readAllVCs(tmpFile, tester.makeCodec());
+            final VariantContextContainer p = tester.readAllVCs(tmpFile);
             final Iterable<VariantContext> actual = p.getVCs();
 
             int i = 0;
@@ -672,13 +675,13 @@ public class VariantContextTestProvider {
         writeVCsToFile(writer, header, vcs);
 
         // ensure writing of expected == actual
-        final VariantContextContainer p = readAllVCs(tmpFile, tester.makeCodec());
+        final VariantContextContainer p = tester.readAllVCs(tmpFile);
         final Iterable<VariantContext> actual = p.getVCs();
         assertEquals(actual, expected);
 
         if ( recurse ) {
             // if we are doing a recursive test, grab a fresh iterator over the written values
-            final Iterable<VariantContext> read = readAllVCs(tmpFile, tester.makeCodec()).getVCs();
+            final Iterable<VariantContext> read = tester.readAllVCs(tmpFile).getVCs();
             testReaderWriter(tester, p.getHeader(), expected, read, false);
         }
     }
@@ -692,34 +695,11 @@ public class VariantContextTestProvider {
         writer.close();
     }
 
-    /**
-     * Utility class to read all of the VC records from a file
-     *
-     * @param source
-     * @param codec
-     * @return
-     * @throws IOException
-     */
-    public final static VariantContextContainer readAllVCs( final File source, final FeatureCodec<VariantContext> codec ) throws IOException {
-        // read in the features
-        PositionalBufferedStream pbs = new PositionalBufferedStream(new FileInputStream(source));
-        FeatureCodecHeader header = codec.readHeader(pbs);
-        pbs.close();
-
-        pbs = new PositionalBufferedStream(new FileInputStream(source));
-        pbs.skip(header.getHeaderEnd());
-
-        final VCFHeader vcfHeader = (VCFHeader)header.getHeaderValue();
-        return new VariantContextContainer(vcfHeader, new VCIterable(pbs, codec, vcfHeader));
-    }
-
-    public static class VCIterable implements Iterable<VariantContext>, Iterator<VariantContext> {
-        final PositionalBufferedStream pbs;
-        final FeatureCodec<VariantContext> codec;
+    public static abstract class VCIterable<SOURCE> implements Iterable<VariantContext>, Iterator<VariantContext> {
+        final FeatureCodec<VariantContext, SOURCE> codec;
         final VCFHeader header;
 
-        private VCIterable(final PositionalBufferedStream pbs, final FeatureCodec<VariantContext> codec, final VCFHeader header) {
-            this.pbs = pbs;
+        public VCIterable(final FeatureCodec<VariantContext, SOURCE> codec, final VCFHeader header) {
             this.codec = codec;
             this.header = header;
         }
@@ -730,18 +710,14 @@ public class VariantContextTestProvider {
         }
 
         @Override
-        public boolean hasNext() {
-            try {
-                return ! pbs.isDone();
-            } catch ( IOException e ) {
-                throw new RuntimeException(e);
-            }
-        }
+        public abstract boolean hasNext();
 
+        public abstract SOURCE nextSource();
+        
         @Override
         public VariantContext next() {
             try {
-                final VariantContext vc = codec.decode(pbs);
+                final VariantContext vc = codec.decode(nextSource());
                 return vc == null ? null : vc.fullyDecode(header, false);
             } catch ( IOException e ) {
                 throw new RuntimeException(e);
@@ -749,11 +725,51 @@ public class VariantContextTestProvider {
         }
 
         @Override
-        public void remove() {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
+        public void remove() { }
     }
 
+    public static VariantContextContainer readAllVCs(final File input, final BCF2Codec codec) throws IOException {
+        PositionalBufferedStream headerPbs = new PositionalBufferedStream(new FileInputStream(input));
+        FeatureCodecHeader header = codec.readHeader(headerPbs);
+        headerPbs.close();
+
+        final PositionalBufferedStream pbs = new PositionalBufferedStream(new FileInputStream(input));
+        pbs.skip(header.getHeaderEnd());
+
+        final VCFHeader vcfHeader = (VCFHeader)header.getHeaderValue();
+        return new VariantContextTestProvider.VariantContextContainer(vcfHeader, new VariantContextTestProvider.VCIterable(codec, vcfHeader) {
+            @Override
+            public boolean hasNext() {
+                try {
+                    return !pbs.isDone();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public Object nextSource() {
+                return pbs;
+            }
+        });
+    }
+
+    public static VariantContextContainer readAllVCs(final File input, final VCFCodec codec) throws FileNotFoundException {
+        final LineIterator lineIterator = new LineIteratorImpl(LineReaderUtil.fromBufferedStream(new BufferedInputStream(new FileInputStream(input))));
+        final VCFHeader vcfHeader = (VCFHeader) codec.readActualHeader(lineIterator);
+        return new VariantContextTestProvider.VariantContextContainer(vcfHeader, new VariantContextTestProvider.VCIterable<LineIterator>(codec, vcfHeader) {
+            @Override
+            public boolean hasNext() {
+                return lineIterator.hasNext();
+            }
+
+            @Override
+            public LineIterator nextSource() {
+                return lineIterator;
+            }
+        });
+    }
+    
     public static void assertVCFandBCFFilesAreTheSame(final File vcfFile, final File bcfFile) throws IOException {
         final VariantContextContainer vcfData = readAllVCs(vcfFile, new VCFCodec());
         final VariantContextContainer bcfData = readAllVCs(bcfFile, new BCF2Codec());

@@ -24,7 +24,7 @@
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.illumina.parser.readers.BarcodeFileReader;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;

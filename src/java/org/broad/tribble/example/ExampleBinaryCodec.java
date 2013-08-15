@@ -25,6 +25,7 @@ package org.broad.tribble.example;
 
 import org.broad.tribble.*;
 import org.broad.tribble.readers.AsciiLineReader;
+import org.broad.tribble.readers.LineIterator;
 import org.broad.tribble.readers.PositionalBufferedStream;
 
 import java.io.*;
@@ -37,7 +38,7 @@ import java.util.List;
  *
  * @author Mark DePristo
  */
-public class ExampleBinaryCodec implements FeatureCodec<Feature> {
+public class ExampleBinaryCodec extends BinaryFeatureCodec<Feature> {
     public final static String HEADER_LINE = "# BinaryTestFeature";
 
     @Override
@@ -56,17 +57,13 @@ public class ExampleBinaryCodec implements FeatureCodec<Feature> {
 
     @Override
     public FeatureCodecHeader readHeader(final PositionalBufferedStream stream) throws IOException {
-        final AsciiLineReader reader = new AsciiLineReader(stream);
-        String line;
-        List<String> headerLines = new ArrayList<String>();
+        // Construct a reader that does not read ahead (because we don't want to consume data from the stream that is not the header)
+        final AsciiLineReader nonReadAheadLineReader = new AsciiLineReader(stream);
+        final List<String> headerLines = new ArrayList<String>();
         long headerLengthInBytes = 0;
-        while ((line = reader.readLine()) != null) {
-            if (line.startsWith("#")) {
-                headerLines.add(line);
-                headerLengthInBytes = stream.getPosition();
-            } else {
-                break; // no more header lines
-            }
+        while (stream.peek() == ('#' & 0xff)) { // Look for header lines, which are prefixed by '#'.
+            headerLines.add(nonReadAheadLineReader.readLine());
+            headerLengthInBytes = stream.getPosition();
         }
         return new FeatureCodecHeader(headerLines, headerLengthInBytes);
     }
@@ -91,8 +88,8 @@ public class ExampleBinaryCodec implements FeatureCodec<Feature> {
      * @param codec of the source file features
      * @throws IOException
      */
-    public static void convertToBinaryTest(final File source, final File dest, final FeatureCodec<Feature> codec) throws IOException {
-        final FeatureReader<Feature> reader = AbstractFeatureReader.getFeatureReader(source.getAbsolutePath(), codec, false); // IndexFactory.loadIndex(idxFile));
+    public static <FEATURE_TYPE extends Feature> void convertToBinaryTest(final File source, final File dest, final FeatureCodec<FEATURE_TYPE, LineIterator> codec) throws IOException {
+        final FeatureReader<FEATURE_TYPE> reader = AbstractFeatureReader.getFeatureReader(source.getAbsolutePath(), codec, false); // IndexFactory.loadIndex(idxFile));
         final OutputStream output = new FileOutputStream(dest);
         ExampleBinaryCodec.convertToBinaryTest(reader, output);
     }
@@ -104,10 +101,10 @@ public class ExampleBinaryCodec implements FeatureCodec<Feature> {
      *
      * @throws IOException
      */
-    public static void convertToBinaryTest(final FeatureReader<Feature> reader, final OutputStream out) throws IOException {
+    public static <FEATURE_TYPE extends Feature> void convertToBinaryTest(final FeatureReader<FEATURE_TYPE> reader, final OutputStream out) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
         dos.writeBytes(HEADER_LINE + "\n");
-        Iterator<Feature> it = reader.iterator();
+        Iterator<FEATURE_TYPE> it = reader.iterator();
         while ( it.hasNext() ) {
             final Feature f = it.next();
             dos.writeUTF(f.getChr());

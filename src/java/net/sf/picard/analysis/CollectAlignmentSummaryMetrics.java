@@ -25,7 +25,7 @@
 package net.sf.picard.analysis;
 
 import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;

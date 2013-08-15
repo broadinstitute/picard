@@ -1,11 +1,13 @@
 package org.broad.tribble;
 
 import net.sf.samtools.seekablestream.SeekableFileStream;
+import net.sf.samtools.util.CloserUtil;
 import org.broad.tribble.bed.BEDCodec;
 import org.broad.tribble.example.ExampleBinaryCodec;
 import org.broad.tribble.index.Block;
 import org.broad.tribble.index.Index;
 import org.broad.tribble.index.IndexFactory;
+import org.broad.tribble.readers.LocationAware;
 import org.broad.tribble.util.ParsingUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -48,8 +50,8 @@ public class FeatureReaderTest {
     }
 
     @Test(dataProvider = "indexProvider")
-    public void testBedQuery(final File featureFile, IndexFactory.IndexType indexType, FeatureCodec<Feature> codec) throws IOException {
-        final AbstractFeatureReader<Feature> reader = getReader(featureFile, indexType, codec);
+    public void testBedQuery(final File featureFile, final IndexFactory.IndexType indexType, final FeatureCodec<Feature, LocationAware> codec) throws IOException {
+        final AbstractFeatureReader<Feature, ?> reader = getReader(featureFile, indexType, codec);
 
         // Query
         testQuery(reader, "chr1", 1, 500, 3);
@@ -73,18 +75,17 @@ public class FeatureReaderTest {
     }
 
     @Test(dataProvider = "indexProvider")
-    public void testLargeNumberOfQueries(final File featureFile, IndexFactory.IndexType indexType, FeatureCodec<Feature> codec) throws IOException {
-        final AbstractFeatureReader<Feature> reader = getReader(featureFile, indexType, codec);
-
-        final List<Integer> sites = Arrays.asList(500, 200, 201, 600, 100000);
+    public void testLargeNumberOfQueries(final File featureFile, final IndexFactory.IndexType indexType, final FeatureCodec<Feature, LocationAware> codec) throws IOException {
+        final AbstractFeatureReader<Feature, LocationAware> reader = getReader(featureFile, indexType, codec);
         for (int i = 0; i < 2000; i++) {
-            for (int start : sites) {
-                int end = start + 1; // query so we find something
-                if (start < end) {
-                    for (final String chr : Arrays.asList("chr1", "chr2", "chr3")) {
-                        CloseableTribbleIterator<Feature> iter = reader.query(chr, start, end);
-                        Assert.assertTrue(iter != null, "Failed to create non-null iterator");
-                        iter.close();
+            for (final int start : Arrays.asList(500, 200, 201, 600, 100000)) {
+                for (final String chr : Arrays.asList("chr1", "chr2", "chr3")) {
+                    CloseableTribbleIterator<Feature> iter = null;
+                    try {
+                        iter = reader.query(chr, start, start + 1);
+                        Assert.assertNotNull(iter, "Failed to create non-null iterator");
+                    } finally {
+                        CloserUtil.close(iter);
                     }
                 }
             }
@@ -94,8 +95,8 @@ public class FeatureReaderTest {
         reader.close();
     }
 
-    private void testQuery(AbstractFeatureReader<Feature> reader, final String chr, int start, int stop, int expectedNumRecords) throws IOException {
-        Iterator<Feature> iter = reader.query(chr, start, stop);
+    private void testQuery(final AbstractFeatureReader<Feature, ?> reader, final String chr, final int start, final int stop, final int expectedNumRecords) throws IOException {
+        final Iterator<Feature> iter = reader.query(chr, start, stop);
         int count = 0;
         while (iter.hasNext()) {
             final Feature f = iter.next();
@@ -106,32 +107,32 @@ public class FeatureReaderTest {
     }
 
     @Test(dataProvider = "indexProvider")
-    public void testBedNames(final File featureFile, IndexFactory.IndexType indexType, FeatureCodec<Feature> codec) throws IOException {
-        final AbstractFeatureReader<Feature> reader = getReader(featureFile, indexType, codec);
-        String[] expectedSequences = {"chr1", "chr2"};
+    public void testBedNames(final File featureFile, final IndexFactory.IndexType indexType, final FeatureCodec<Feature, LocationAware> codec) throws IOException {
+        final AbstractFeatureReader<Feature, ?> reader = getReader(featureFile, indexType, codec);
+        final String[] expectedSequences = {"chr1", "chr2"};
 
-        List<String> seqNames = reader.getSequenceNames();
+        final List<String> seqNames = reader.getSequenceNames();
         Assert.assertEquals(seqNames.size(), expectedSequences.length,
                 "Expected sequences " + ParsingUtils.join(",", expectedSequences) + " but saw " + ParsingUtils.join(",", seqNames));
 
-        for (String s : expectedSequences) {
+        for (final String s : expectedSequences) {
             Assert.assertTrue(seqNames.contains(s));
         }
     }
 
-    private AbstractFeatureReader<Feature> getReader(final File featureFile,
-                                                     IndexFactory.IndexType indexType,
-                                                     FeatureCodec<Feature> codec)
+    private static <FEATURE extends Feature, SOURCE extends LocationAware> AbstractFeatureReader<FEATURE, SOURCE> getReader(final File featureFile,
+                                                                                                                            final IndexFactory.IndexType indexType,
+                                                                                                                            final FeatureCodec<FEATURE, SOURCE> codec)
             throws IOException {
         if (indexType.canCreate()) {
             // for types we can create make a new index each time
-            File idxFile = Tribble.indexFile(featureFile);
+            final File idxFile = Tribble.indexFile(featureFile);
 
             // delete an already existing index
             if (idxFile.exists()) {
                 idxFile.delete();
             }
-            Index idx = IndexFactory.createIndex(featureFile, codec, indexType);
+            final Index idx = IndexFactory.createIndex(featureFile, codec, indexType);
             IndexFactory.writeIndex(idx, idxFile);
 
             idxFile.deleteOnExit();

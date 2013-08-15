@@ -29,20 +29,19 @@ package org.broadinstitute.variant.variantcontext.writer;
 // the imports for unit testing.
 
 
-import net.sf.picard.reference.IndexedFastaSequenceFile;
 import net.sf.samtools.SAMSequenceDictionary;
-import org.broad.tribble.FeatureCodec;
 import org.broadinstitute.variant.VariantBaseTest;
 import org.broadinstitute.variant.bcf2.BCF2Codec;
-import org.broadinstitute.variant.vcf.VCFCodec;
-import org.broadinstitute.variant.vcf.VCFHeader;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextTestProvider;
+import org.broadinstitute.variant.vcf.VCFCodec;
+import org.broadinstitute.variant.vcf.VCFHeader;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -82,20 +81,26 @@ public class VariantContextWritersUnitTest extends VariantBaseTest {
         VariantContextTestProvider.testReaderWriterWithMissingGenotypes(new BCFIOTester(), testData);
     }
 
-    private class BCFIOTester extends VariantContextTestProvider.VariantContextIOTest {
+    private class BCFIOTester extends VariantContextTestProvider.VariantContextIOTest<BCF2Codec> {
         @Override
         public String getExtension() {
             return ".bcf";
         }
 
         @Override
-        public FeatureCodec<VariantContext> makeCodec() {
+        public BCF2Codec makeCodec() {
             return new BCF2Codec();
         }
 
         @Override
         public VariantContextWriter makeWriter(final File file, final EnumSet<Options> baseOptions) {
             return VariantContextWriterFactory.create(file, dictionary, baseOptions);
+        }
+
+        @Override
+        public VariantContextTestProvider.VariantContextContainer readAllVCs(File input) throws IOException {
+            final BCF2Codec codec = this.makeCodec();
+            return VariantContextTestProvider.readAllVCs(input, codec);
         }
     }
 
@@ -115,7 +120,7 @@ public class VariantContextWritersUnitTest extends VariantBaseTest {
         VariantContextTestProvider.testReaderWriterWithMissingGenotypes(new VCFIOTester(), testData);
     }
 
-    private class VCFIOTester extends VariantContextTestProvider.VariantContextIOTest {
+    private class VCFIOTester extends VariantContextTestProvider.VariantContextIOTest<VCFCodec> {
         @Override
         public String getExtension() {
             return ".vcf";
@@ -132,13 +137,19 @@ public class VariantContextWritersUnitTest extends VariantBaseTest {
         }
 
         @Override
-        public FeatureCodec<VariantContext> makeCodec() {
+        public VCFCodec makeCodec() {
             return new VCFCodec();
         }
 
         @Override
         public VariantContextWriter makeWriter(final File file, final EnumSet<Options> baseOptions) {
             return VariantContextWriterFactory.create(file, dictionary, baseOptions);
+        }
+
+        @Override
+        public VariantContextTestProvider.VariantContextContainer readAllVCs(File input) throws FileNotFoundException {
+            final VCFCodec codec = this.makeCodec();
+            return VariantContextTestProvider.readAllVCs(input, codec);
         }
     }
 }

@@ -34,7 +34,7 @@ import net.sf.picard.illumina.parser.ReadData;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.CollectionUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.TabbedTextFileWithHeaderParser;

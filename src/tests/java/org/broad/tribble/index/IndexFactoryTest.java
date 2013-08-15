@@ -23,7 +23,6 @@
  */
 package org.broad.tribble.index;
 
-import org.broad.tribble.FeatureCodec;
 import org.broad.tribble.TestUtils;
 import org.broad.tribble.TribbleException;
 import org.broad.tribble.bed.BEDCodec;
@@ -43,7 +42,7 @@ public class IndexFactoryTest {
     final File sortedBedFile = new File(TestUtils.DATA_DIR + "bed/Unigene.sample.bed");
     final File unsortedBedFile = new File(TestUtils.DATA_DIR + "bed/unsorted.bed");
     final File discontinuousFile = new File(TestUtils.DATA_DIR + "bed/disconcontigs.bed");
-    final FeatureCodec bedCodec = new BEDCodec();
+    final BEDCodec bedCodec = new BEDCodec();
 
     @Test
     public void testCreateLinearIndex() throws Exception {
