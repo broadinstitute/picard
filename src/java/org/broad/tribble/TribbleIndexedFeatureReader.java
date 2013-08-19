@@ -234,15 +234,21 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
         public WFIterator() throws IOException {
             final InputStream inputStream = ParsingUtils.openInputStream(path);
 
+            final PositionalBufferedStream pbs;
             if (path.endsWith(".gz")) {
                 // Gzipped -- we need to buffer the GZIPInputStream methods as this class makes read() calls,
                 // and seekableStream does not support single byte reads
                 final InputStream is = new GZIPInputStream(new BufferedInputStream(inputStream, 512000));
-                source = codec.makeSourceFromStream(new PositionalBufferedStream(is, 1000));  // Small buffer as this is buffered already.
+                pbs = new PositionalBufferedStream(is, 1000);  // Small buffer as this is buffered already.
             } else {
-                source = codec.makeSourceFromStream(new PositionalBufferedStream(inputStream, 512000));
+                pbs = new PositionalBufferedStream(inputStream, 512000);
             }
-            header = codec.readHeader(source);
+            /**
+             * The header was already read from the original source in the constructor; don't read it again, since some codecs keep state
+             * about its initializagtion.  Instead, skip that part of the stream.
+             */
+            pbs.skip(header.getHeaderEnd());
+            source = codec.makeSourceFromStream(pbs);
             readNextRecord();
         }
 
