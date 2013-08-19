@@ -24,25 +24,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * the base interface for classes that read in features.
+ * The base interface for classes that read in features.
  * <p/>
  * FeatureCodecs have to implement two key methods:
  * <p/>
- * readHeader() => starting from the first line of the file, read the full header, if any, and
- * return it, as well as the position in the file where the header stops and records begin.  The
- * contract with the readers is that the header and decoders see fresh streams, so you can
- * safely read into the first record of the file looking for the header.  It's always why
- * you need to return the file position (via getPosition() in the stream) of the last
- * header record.
+ * {@link #readHeader(SOURCE)} - Reads the header, provided a {@link SOURCE} pointing at the beginning of the source input.
+ * {@link #decode(SOURCE)} - Reads a {@link Feature} record, provided a {@link SOURCE} pointing at the beginning of a record within the 
+ * source input.
  * <p/>
- * decode(SOURCE) => parse out the next record, and return it.  Decode is always called on a
- * fresh stream after the header is read, if the source is a stream.
- * <p/>
- * Note that it's not safe to carry state about the PositionalBufferedStream arguments here.  There's
- * no guarantee on the state of the stream between calls.
- * <p/>
- * The canDecode is used to determine if a file can be decoded by this codec.  Just open up the
- * file and check if it can be decoded with this codec.
+ * Note that it's not safe to carry state about the {@link SOURCE} within the codec.  There's no guarantee about its  state between calls.
  *
  * @param <FEATURE_TYPE> The type of {@link Feature} this codec generates
  * @param <SOURCE> The type of the data source this codec reads from
