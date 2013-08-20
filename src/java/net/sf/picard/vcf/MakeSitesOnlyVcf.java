@@ -16,8 +16,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Writes out a VCF that contains all the site-level information for all records in the input
- * VCF and no per-sample information.
+ * Writes out a VCF that contains all the site-level information for all records in the input VCF and no per-sample information.
  *
  * @author Tim Fennell
  */
@@ -31,6 +30,8 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc="Sequence dictionary to use when indexing the VCF.")
     public File SEQUENCE_DICTIONARY;
 
+    private static final Set<String> NO_SAMPLES = Collections.emptySet();
+    
     // Stock main method
     public static void main(final String[] args) {
         new MakeSitesOnlyVcf().instanceMainWithExit(args);
@@ -48,12 +49,14 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
         final VCFHeader header = new VCFHeader(in.getHeader());
         out.writeHeader(header);
 
-        final Set<String> NO_SAMPLES = Collections.emptySet();
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(MakeSitesOnlyVcf.class), 10000);
 
         while (in.hasNext()) {
             final VariantContext ctx = in.next();
-            out.add(ctx.subContextFromSamples(NO_SAMPLES));
+            out.add(ctx.subContextFromSamples(
+                    NO_SAMPLES, 
+                    false // Do not re-derive the alleles from the new, subsetted genotypes: our site-only VCF should retain these values.
+            ));
             progress.record(ctx.getChr(), ctx.getStart());
         }
 
