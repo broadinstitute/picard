@@ -57,7 +57,8 @@ public class TabbedInputParser extends BasicInputParser {
      * @param b the character to evaluate
      * @return  true if <code>b</code> is a delimiter; otherwise false
      */
-    protected boolean isDelimiter(byte b) {
+    @Override
+    protected boolean isDelimiter(final byte b) {
         return b == '\t';
     }
 }
