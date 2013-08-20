@@ -3,11 +3,17 @@ package net.sf.picard.util;
 import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloseableIterator;
 
-import java.io.File;
 import java.util.*;
 
-public class DelimitedTextFileWithHeaderParser implements Iterable<DelimitedTextFileWithHeaderParser.Row> {
-    
+/**
+ * Iterate through a delimited text file in which columns are found by looking at a header line rather than by position.
+ *
+ * TODO: This effectively replaces TabbedTextFileWithHeaderParser although the latter hasn't been modified to use this
+ * code instead.
+ *
+ * @author jgentry@broadinstitute.org
+ */
+public class DelimitedTextFileWithHeaderIterator implements CloseableIterator<DelimitedTextFileWithHeaderIterator.Row> {
     public class Row {
         private final String[] fields;
         private final String currentLine;
@@ -40,39 +46,13 @@ public class DelimitedTextFileWithHeaderParser implements Iterable<DelimitedText
         }
     }
 
-    class TheIterator implements CloseableIterator<Row> {
-
-        @Override
-        public boolean hasNext() {
-            return parser.hasNext();
-        }
-
-        @Override
-        public Row next() {
-            final String[] fields = parser.next();
-            final String source = parser.getCurrentLine();
-            return new Row(fields, source);
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void close() {
-            extantIterator = null;
-        }
-    }
-
     /**
      * Map from column label to positional index.
      */
     private final Map<String, Integer> columnLabelIndices = new HashMap<String, Integer>();
     private final BasicInputParser parser;
-    private TheIterator extantIterator;
 
-    public DelimitedTextFileWithHeaderParser(final BasicInputParser parser) {
+    public DelimitedTextFileWithHeaderIterator(final BasicInputParser parser) {
         this.parser = parser;
         if (!parser.hasNext()) {
             throw new PicardException("No header line found in file " + parser.getFileName());
@@ -99,32 +79,33 @@ public class DelimitedTextFileWithHeaderParser implements Iterable<DelimitedText
         return columnLabelIndices.keySet();
     }
 
-    /**
-     * Creates the iterator object.  It is illegal to have more than one iterator extant
-     * on the same parser object.
-     */
-    @Override
-    public CloseableIterator<Row> iterator() {
-        if (extantIterator != null) {
-            throw new ConcurrentModificationException("Only one iterator allowed at a time.");
-        }
-        extantIterator = new TheIterator();
-        return extantIterator;
-    }
-
-    /**
-     * Release all resources associated with the parser.  Iteration will not work after this
-     * has been called.
-     */
-    public void close() {
-        parser.close();
-    }
-
     public int getCurrentLineNumber() {
         return parser.getCurrentLineNumber();
     }
 
     public Set<String> getColumnNames() {
         return Collections.unmodifiableSet(this.columnLabelIndices.keySet());
+    }
+
+    @Override
+    public boolean hasNext() {
+        return parser.hasNext();
+    }
+
+    @Override
+    public Row next() {
+        final String[] fields = parser.next();
+        final String source = parser.getCurrentLine();
+        return new Row(fields, source);
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void close() {
+        parser.close();
     }
 }
