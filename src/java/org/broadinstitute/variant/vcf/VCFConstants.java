@@ -93,6 +93,7 @@ public final class VCFConstants {
     public static final String ALT_HEADER_START = "##ALT";
     public static final String CONTIG_HEADER_KEY = "contig";
     public static final String CONTIG_HEADER_START = "##" + CONTIG_HEADER_KEY;
+    public static final String GATK_COMMAND_START = "##GATKCommandLine";
 
     // old indel alleles
     public static final char DELETION_ALLELE_v3 = 'D';

@@ -51,4 +51,9 @@ public class VCFInfoHeaderLine extends VCFCompoundHeaderLine {
     boolean allowFlagValues() {
         return true;
     }
+
+    @Override
+    public boolean shouldBeAddedToDictionary() {
+        return true;
+    }
 }

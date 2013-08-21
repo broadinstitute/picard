@@ -84,7 +84,7 @@ public final class BCF2Utils {
 
         // set up the strings dictionary
         for ( VCFHeaderLine line : header.getMetaDataInInputOrder() ) {
-            if ( line instanceof VCFIDHeaderLine && ! (line instanceof VCFContigHeaderLine) ) {
+            if ( line.shouldBeAddedToDictionary() ) {
                 final VCFIDHeaderLine idLine = (VCFIDHeaderLine)line;
                 if ( ! seen.contains(idLine.getID())) {
                     dict.add(idLine.getID());

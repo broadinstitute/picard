@@ -60,4 +60,9 @@ public class VCFFilterHeaderLine extends VCFSimpleHeaderLine  {
     public VCFFilterHeaderLine(String line, VCFHeaderVersion version) {
         super(line, version, "FILTER", Arrays.asList("ID", "Description"));
     }
+
+    @Override
+    public boolean shouldBeAddedToDictionary() {
+        return true;
+    }
 }

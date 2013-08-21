@@ -26,10 +26,13 @@
 package org.broadinstitute.variant.bcf2;
 
 import org.broadinstitute.variant.VariantBaseTest;
+import org.broadinstitute.variant.bcf2.BCF2Utils;
 import org.broadinstitute.variant.utils.GeneralUtils;
 import org.broadinstitute.variant.vcf.*;
 
 import java.util.*;
+
+import org.broadinstitute.variant.vcf.VCFSimpleHeaderLine;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -57,6 +60,29 @@ public final class BCF2UtilsUnitTest extends VariantBaseTest {
         if ( isCollapsed )
             Assert.assertEquals(BCF2Utils.explodeStringList(actualCollapsed), in);
     }
+
+    @Test
+    public void testCreateDictionary() {
+        final List<VCFHeaderLine> inputLines = new ArrayList<VCFHeaderLine>();
+        int counter = 0;
+        inputLines.add(new VCFFilterHeaderLine(String.valueOf(counter++)));
+        inputLines.add(new VCFFilterHeaderLine(String.valueOf(counter++)));
+        inputLines.add(new VCFContigHeaderLine(Collections.singletonMap("ID", String.valueOf(counter++)), counter));
+        inputLines.add(new VCFContigHeaderLine(Collections.singletonMap("ID", String.valueOf(counter++)), counter));
+        inputLines.add(new VCFInfoHeaderLine(String.valueOf(counter++), VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "x"));
+        inputLines.add(new VCFInfoHeaderLine(String.valueOf(counter++), VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "x"));
+        inputLines.add(new VCFHeaderLine("x", "misc"));
+        inputLines.add(new VCFHeaderLine("y", "misc"));
+        inputLines.add(new VCFSimpleHeaderLine("GATKCommandLine","z","misc"));
+        inputLines.add(new VCFFormatHeaderLine(String.valueOf(counter++), VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "x"));
+        inputLines.add(new VCFFormatHeaderLine(String.valueOf(counter++), VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "x"));
+        final int inputLineCounter = counter;
+        final VCFHeader inputHeader = new VCFHeader(new LinkedHashSet<VCFHeaderLine>(inputLines));
+        final ArrayList<String> dict = BCF2Utils.makeDictionary(inputHeader);
+        final int dict_size = dict.size();
+        Assert.assertEquals(7,dict_size);
+    }
+
 
     @DataProvider(name = "HeaderOrderTestProvider")
     public Object[][] makeHeaderOrderTestProvider() {
@@ -150,4 +176,8 @@ public final class BCF2UtilsUnitTest extends VariantBaseTest {
         final boolean actualOrderConsistency = BCF2Utils.headerLinesAreOrderedConsistently(testHeader, inputHeader);
         Assert.assertEquals(actualOrderConsistency, expectedConsistent);
     }
+
+
+
+
 }
