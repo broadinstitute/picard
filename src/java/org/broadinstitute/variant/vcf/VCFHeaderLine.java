@@ -80,7 +80,7 @@ public class VCFHeaderLine implements Comparable {
     }
 
     /**
-     * By default the header lines won't be added to the dictionary, unless this method will be overridden (for example in FORMAT, INFO or FILTER header lines)
+     * By default the header lines won't be added to the dictionary, unless this method will be override (for example in FORMAT, INFO or FILTER header lines)
      *
      * @return false
      */
