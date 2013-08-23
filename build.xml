@@ -331,6 +331,7 @@
                 </fileset>
             </package-filesets>
         </package-and-document-command>
+        <package-and-document-command title="MarkIlluminaAdapters"         main-class="net.sf.picard.illumina.MarkIlluminaAdapters"/>
         <package-and-document-command title="SplitVcfs"                      main-class="net.sf.picard.vcf.SplitVcfs">
             <package-filesets>
                 <fileset dir=".command_tmp" >
