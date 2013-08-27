@@ -11,7 +11,6 @@ import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.Iso8601Date;
 
-import javax.xml.bind.SchemaOutputResolver;
 import java.io.File;
 import java.util.Arrays;
 
@@ -59,6 +58,9 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Option(shortName="DT", doc="Read Group run date", optional=true)
     public Iso8601Date RGDT;
 
+    @Option(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
+    public Integer RGPI;
+
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 
     /** Required main method implementation. */
@@ -81,6 +83,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         if (RGCN != null) rg.setSequencingCenter(RGCN);
         if (RGDS != null) rg.setDescription(RGDS);
         if (RGDT != null) rg.setRunDate(RGDT);
+        if (RGPI != null) rg.setPredictedMedianInsertSize(RGPI);
 
         log.info(String.format("Created read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 
