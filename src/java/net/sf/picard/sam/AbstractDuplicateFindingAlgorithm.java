@@ -25,7 +25,9 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
     @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
             "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
-            "The regular expression should contain three capture groups for the three variables, in order.")
+            "The regular expression should contain three capture groups for the three variables, in order. " +
+            "Note that if the default regex is specified, a regex match is not actually done, but instead the read name " +
+            " is split on colon character and the 2nd, 3rd and 4th elements are assumed to be tile, x and y values.")
     public String READ_NAME_REGEX = DEFAULT_READ_NAME_REGEX;
     
     @Option(doc="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
