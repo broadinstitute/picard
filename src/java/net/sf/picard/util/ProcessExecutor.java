@@ -25,6 +25,7 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.*;
 import java.util.concurrent.*;
@@ -117,6 +118,65 @@ public class ProcessExecutor {
         } catch (Throwable t) {
             throw new PicardException("Unexpected exception executing [" + command + "]", t);
         }
+
+    }
+
+    public static class ExitStatusAndOutput {
+        public final int exitStatus;
+        public final String stdout;
+        /** May be null if interleaved */
+        public final String stderr;
+
+        public ExitStatusAndOutput(int exitStatus, String stdout, String stderr) {
+            this.exitStatus = exitStatus;
+            this.stdout = stdout;
+            this.stderr = stderr;
+        }
+    }
+
+    /**
+     * Execute the command and capture stdout and stderr.
+     * @return Exit status of command, and both stderr and stdout interleaved into stdout attribute.
+     */
+    public static ExitStatusAndOutput executeAndReturnInterleavedOutput(final String command) {
+        try {
+            final Process process = Runtime.getRuntime().exec(command);
+            return interleaveProcessOutput(process);
+
+        } catch (Throwable t) {
+            throw new PicardException("Unexpected exception executing [" + command + "]", t);
+        }
+    }
+
+    /**
+     * Execute the command and capture stdout and stderr.
+     * @return Exit status of command, and both stderr and stdout interleaved into stdout attribute.
+     */
+    public static ExitStatusAndOutput executeAndReturnInterleavedOutput(final String[] commandArray) {
+        try {
+            final Process process = Runtime.getRuntime().exec(commandArray);
+            return interleaveProcessOutput(process);
+
+        } catch (Throwable t) {
+            throw new PicardException("Unexpected exception executing [" + StringUtil.join(" ", commandArray) + "]", t);
+        }
+    }
+
+    private static ExitStatusAndOutput interleaveProcessOutput(final Process process) throws InterruptedException, IOException {
+        final BufferedReader stdoutReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        final BufferedReader stderrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        final StringBuilder sb = new StringBuilder();
+
+        String stdoutLine = null;
+        String stderrLine = null;
+        while ((stderrLine = stderrReader.readLine()) != null ||
+                (stdoutLine = stdoutReader.readLine()) != null) {
+            if (stderrLine!= null) sb.append(stderrLine).append('\n');
+            if (stdoutLine!= null) sb.append(stdoutLine).append('\n');
+            stderrLine = null;
+            stdoutLine = null;
+        }
+        return new ExitStatusAndOutput(process.waitFor(), sb.toString(), null);
 
     }
 
