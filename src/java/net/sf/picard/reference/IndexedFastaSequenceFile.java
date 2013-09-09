@@ -29,10 +29,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.SAMSequenceRecord;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
@@ -41,7 +38,7 @@ import java.util.Iterator;
  * A fasta file driven by an index for fast, concurrent lookups.  Supports two interfaces:
  * the ReferenceSequenceFile for old-style, stateful lookups and a direct getter.
  */
-public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
+public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile implements Closeable {
     /**
      * Size of the read buffer.
      */
@@ -257,5 +254,10 @@ public class IndexedFastaSequenceFile extends AbstractFastaSequenceFile {
      */
     public String toString() {
         return this.file.getAbsolutePath();
+    }
+
+    @Override
+    public void close() throws IOException {
+        channel.close();
     }
 }
