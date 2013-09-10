@@ -370,7 +370,8 @@ public class BinaryCodec {
         do {
             final int numRead = readBytesOrFewer(buffer, offset + totalNumRead, length - totalNumRead);
             if (numRead < 0) {
-                throw new RuntimeEOFException(constructErrorMessage("Premature EOF"));
+                String msg = String.format("Premature EOF. Expected %d but only received %d", length, totalNumRead);
+                throw new RuntimeEOFException(constructErrorMessage(msg));
             } else {
                 totalNumRead += numRead;
             }
