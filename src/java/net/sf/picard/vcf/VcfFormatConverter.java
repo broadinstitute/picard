@@ -25,6 +25,7 @@
 
 package net.sf.picard.vcf;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -32,14 +33,21 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
+import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.vcf.VCFFileReader;
+import org.broadinstitute.variant.vcf.VCFHeader;
 
 import java.io.File;
+import java.util.EnumSet;
 
-/** Converts an ASCII VCF file to a binary BCF or vice versa
+/**
+ * Converts an ASCII VCF file to a binary BCF or vice versa
  *
  * @author jgentry@broadinstitute.org
  */
@@ -48,15 +56,23 @@ public class VcfFormatConverter extends CommandLineProgram {
     public static final Log LOG = Log.getInstance(VcfFormatConverter.class);
     
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Convert a VCF file to a BCF file, or BCF to VCF.\n" + "" +
+    public String USAGE = getStandardUsagePreamble() +
+		    "Convert a VCF file to a BCF file, or BCF to VCF.\n" + "" +
             "Input and output formats are determined by file extension.";
 
-    @Option(doc="The BCF or VCF file to parse.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
-    @Option(doc="The BCF or VCF output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) public File OUTPUT;
+    @Option(doc="The BCF or VCF input file. The file format is determined by file extension.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
+    public File INPUT;
+
+    @Option(doc="The BCF or VCF output file. The file format is determined by file extension.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    public File OUTPUT;
 
     public static void main(final String[] argv) {
         new VcfFormatConverter().instanceMainWithExit(argv);
     }
+
+	public VcfFormatConverter() {
+		this.CREATE_INDEX = true;
+	}
 
     @Override
     protected int doWork() {
@@ -65,19 +81,28 @@ public class VcfFormatConverter extends CommandLineProgram {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-        final VariantContextIterator readerIterator = VariantContextIteratorFactory.create(INPUT);
-        final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, null);
+	    final VCFFileReader reader = new VCFFileReader(INPUT);
+	    final VCFHeader header = new VCFHeader(reader.getFileHeader());
+	    final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+	    if (CREATE_INDEX && sequenceDictionary == null) {
+		    throw new PicardException("A sequence dictionary must be available in the input file when creating indexed output.");
+	    }
+	    final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+        final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
 
-        writer.writeHeader(readerIterator.getHeader());
+        writer.writeHeader(header);
 
-        while (readerIterator.hasNext()) {
-            final VariantContext v = readerIterator.next();
-            writer.add(v);
-            progress.record(v.getChr(), v.getStart());
+	    final CloseableIterator<VariantContext> iterator = reader.iterator();
+	    while (iterator.hasNext()) {
+		    final VariantContext context = iterator.next();
+            writer.add(context);
+            progress.record(context.getChr(), context.getStart());
         }
 
-        CloserUtil.close(readerIterator);
-        CloserUtil.close(writer);
+	    CloserUtil.close(iterator);
+	    CloserUtil.close(reader);
+        writer.close();
+
         return 0;
     }
 }

@@ -57,6 +57,16 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         SAMFileReader.defaultValidationStringency = defaultValidationStringency;
     }
 
+	/**
+	 * Returns the SAMSequenceDictionary from the provided FASTA.
+	 */
+	public static SAMSequenceDictionary getSequenceDictionary(final File dictionaryFile) {
+		final SAMFileReader samFileReader = new SAMFileReader(dictionaryFile);
+		final SAMSequenceDictionary dict = samFileReader.getFileHeader().getSequenceDictionary();
+		CloserUtil.close(dictionaryFile);
+		return dict;
+	}
+
     private boolean mIsBinary = false;
     private BAMIndex mIndex = null;
     private SAMRecordFactory samRecordFactory = new DefaultSAMRecordFactory();

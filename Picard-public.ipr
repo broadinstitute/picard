@@ -55,6 +55,7 @@
       <profile version="1.0" is_locked="false">
         <option name="myName" value="Project Default" />
         <option name="myLocal" value="false" />
+        <inspection_tool class="Convert2Diamond" enabled="false" level="WARNING" enabled_by_default="false" />
         <inspection_tool class="FieldMayBeFinal" enabled="true" level="WARNING" enabled_by_default="true" />
         <inspection_tool class="JavaDoc" enabled="false" level="WARNING" enabled_by_default="false">
           <option name="TOP_LEVEL_CLASS_OPTIONS">
@@ -91,6 +92,7 @@
           <option name="REPORT_VARIABLES" value="true" />
           <option name="REPORT_PARAMETERS" value="true" />
         </inspection_tool>
+        <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
         <inspection_tool class="UnusedDeclaration" enabled="false" level="WARNING" enabled_by_default="false">
           <option name="ADD_MAINS_TO_ENTRIES" value="true" />
           <option name="ADD_APPLET_TO_ENTRIES" value="true" />
@@ -262,6 +264,11 @@
     <option name="projectName" value="Picard-public" />
   </component>
   <component name="ProjectDictionaryState">
+    <dictionary name="jrose">
+      <words>
+        <w>ribosomal</w>
+      </words>
+    </dictionary>
     <dictionary name="mccowan">
       <words>
         <w>bgzipped</w>

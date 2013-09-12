@@ -1,18 +1,26 @@
 package net.sf.picard.vcf;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.CloserUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
+import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.broadinstitute.variant.vcf.VCFHeader;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -27,7 +35,7 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF or BCF to emit without per-sample info.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc="Sequence dictionary to use when indexing the VCF.")
+    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc="Sequence dictionary to use when indexing the VCF.", optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private static final Set<String> NO_SAMPLES = Collections.emptySet();
@@ -37,31 +45,45 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
         new MakeSitesOnlyVcf().instanceMainWithExit(args);
     }
 
+	public MakeSitesOnlyVcf() {
+		CREATE_INDEX = true;
+	}
+
     @Override
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-        final VariantContextIterator in = VariantContextIteratorFactory.create(INPUT);
-        final VariantContextWriter out = VariantContextWriterFactory.create(OUTPUT, VariantContextUtils.getSequenceDictionary(SEQUENCE_DICTIONARY));
+	    final VCFFileReader reader = new VCFFileReader(INPUT);
+	    final VCFHeader header = new VCFHeader(reader.getFileHeader());
+	    final SAMSequenceDictionary sequenceDictionary =
+			    SEQUENCE_DICTIONARY != null
+			            ? SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY)
+					    : header.getSequenceDictionary();
+	    if (CREATE_INDEX && sequenceDictionary == null) {
+		    throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+	    }
+	    final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+	    final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
 
-        final VCFHeader header = new VCFHeader(in.getHeader());
-        out.writeHeader(header);
+	    writer.writeHeader(header);
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(MakeSitesOnlyVcf.class), 10000);
 
-        while (in.hasNext()) {
-            final VariantContext ctx = in.next();
-            out.add(ctx.subContextFromSamples(
+	    final CloseableIterator<VariantContext> iterator = reader.iterator();
+	    while (iterator.hasNext()) {
+		    final VariantContext context = iterator.next();
+		    writer.add(context.subContextFromSamples(
                     NO_SAMPLES, 
                     false // Do not re-derive the alleles from the new, subsetted genotypes: our site-only VCF should retain these values.
             ));
-            progress.record(ctx.getChr(), ctx.getStart());
+            progress.record(context.getChr(), context.getStart());
         }
 
-        out.close();
-        in.close();
+	    CloserUtil.close(iterator);
+	    CloserUtil.close(reader);
+	    writer.close();
 
         return 0;
     }

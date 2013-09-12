@@ -26,6 +26,7 @@ package net.sf.picard.vcf;
 import org.broadinstitute.variant.variantcontext.Allele;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
+import org.broadinstitute.variant.variantcontext.VariantContextComparator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

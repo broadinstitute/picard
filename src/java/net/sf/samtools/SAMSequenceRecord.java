@@ -115,7 +115,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
     public int getSequenceIndex() { return mSequenceIndex; }
 
     // Private state used only by SAM implementation.
-    void setSequenceIndex(final int value) { mSequenceIndex = value; }
+    public void setSequenceIndex(final int value) { mSequenceIndex = value; }
 
     /**
      * Looser comparison than equals().  We look only at sequence index, sequence length, and MD5 tag value
