@@ -34,12 +34,17 @@ public class VCFFileReader implements Closeable {
 	}
 
 	public VCFFileReader(final File file) {
+		this(file, true);
+	}
+
+	public VCFFileReader(final File file, boolean requireIndex) {
 		this.reader =
-			AbstractFeatureReader.getFeatureReader(
-				file.getAbsolutePath(),
-				isBCF(file)
-						? new BCF2Codec()
-						: new VCFCodec());
+				AbstractFeatureReader.getFeatureReader(
+						file.getAbsolutePath(),
+						isBCF(file)
+								? new BCF2Codec()
+								: new VCFCodec(),
+						requireIndex);
 	}
 
 	public VCFHeader getFileHeader() {

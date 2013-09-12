@@ -47,7 +47,7 @@ import java.io.File;
 import java.util.EnumSet;
 
 /**
- * Converts an ASCII VCF file to a binary BCF or vice versa
+ * Converts an ASCII VCF file to a binary BCF or vice versa.
  *
  * @author jgentry@broadinstitute.org
  */
@@ -66,6 +66,9 @@ public class VcfFormatConverter extends CommandLineProgram {
     @Option(doc="The BCF or VCF output file. The file format is determined by file extension.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
+	@Option(doc="Fail if an index is not available for the input VCF/BCF")
+	public Boolean REQUIRE_INDEX = true;
+
     public static void main(final String[] argv) {
         new VcfFormatConverter().instanceMainWithExit(argv);
     }
@@ -81,7 +84,7 @@ public class VcfFormatConverter extends CommandLineProgram {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
-	    final VCFFileReader reader = new VCFFileReader(INPUT);
+	    final VCFFileReader reader = new VCFFileReader(INPUT, REQUIRE_INDEX);
 	    final VCFHeader header = new VCFHeader(reader.getFileHeader());
 	    final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
 	    if (CREATE_INDEX && sequenceDictionary == null) {
