@@ -1,6 +1,5 @@
-package net.sf.picard.vcf;
+package org.broadinstitute.variant.variantcontext;
 
-import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.vcf.VCFContigHeaderLine;
 
 import java.util.Collection;

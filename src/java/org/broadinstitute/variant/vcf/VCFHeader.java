@@ -25,11 +25,25 @@
 
 package org.broadinstitute.variant.vcf;
 
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
 import org.broad.tribble.TribbleException;
 import org.broad.tribble.util.ParsingUtils;
 import org.broadinstitute.variant.utils.GeneralUtils;
+import org.broadinstitute.variant.variantcontext.VariantContextComparator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 /**
@@ -105,9 +119,7 @@ public class VCFHeader {
     }
 
     /**
-     * Creates a shallow copy of the meta data in VCF header toCopy
-     *
-     * @param toCopy
+     * Creates a deep copy of the given VCFHeader, duplicating all its metadata.
      */
     public VCFHeader(final VCFHeader toCopy) {
         this(toCopy.mMetaData);
@@ -156,9 +168,9 @@ public class VCFHeader {
 
 
     /**
-     * Adds a header line to the header metadata.
-     *
-     * @param headerLine Line to add to the existing metadata component.
+     * Sets a header line in the header metadata. This is essentially a Set.add call, which means that
+     * equals() and hashCode() are used to determine whether an additional header line is added or an
+     * existing header line is replaced.
      */
     public void addMetaDataLine(final VCFHeaderLine headerLine) {
         mMetaData.add(headerLine);
@@ -172,6 +184,36 @@ public class VCFHeader {
         return Collections.unmodifiableList(contigMetaData);
     }
 
+	/**
+	 * Returns the contigs in this VCF file as a SAMSequenceDictionary. Returns null if contigs lines are
+	 * not present in the header. Throws PicardException if one or more contig lines do not have length
+	 * information.
+	 */
+	public SAMSequenceDictionary getSequenceDictionary() {
+		final List<VCFContigHeaderLine> contigHeaderLines = this.getContigLines();
+		if (contigHeaderLines.isEmpty()) return null;
+
+		final List<SAMSequenceRecord> sequenceRecords = new ArrayList<SAMSequenceRecord>(contigHeaderLines.size());
+		for (final VCFContigHeaderLine contigHeaderLine : contigHeaderLines) {
+			sequenceRecords.add(contigHeaderLine.getSAMSequenceRecord());
+		}
+
+		return new SAMSequenceDictionary(sequenceRecords);
+	}
+
+	/**
+	 * Completely replaces the contig records in this header with those in the given SAMSequenceDictionary.
+	 */
+	public void setSequenceDictionary(final SAMSequenceDictionary dictionary) {
+		this.contigMetaData.clear();
+		for (final SAMSequenceRecord record : dictionary.getSequences()) {
+			this.contigMetaData.add(new VCFContigHeaderLine(record, null));
+		}
+	}
+
+	public VariantContextComparator getVCFRecordComparator() {
+		return new VariantContextComparator(this.getContigLines());
+	}
 
     /**
      * @return all of the VCF FILTER lines in their original file order, or an empty list if none were present
@@ -252,7 +294,7 @@ public class VCFHeader {
      * @param line
      * @param <T>
      */
-    private final <T extends VCFCompoundHeaderLine> void addMetaDataMapBinding(final Map<String, T> map, T line) {
+    private <T extends VCFCompoundHeaderLine> void addMetaDataMapBinding(final Map<String, T> map, final T line) {
         final String key = line.getID();
         if ( map.containsKey(key) ) {
             if ( GeneralUtils.DEBUG_MODE_ENABLED ) {

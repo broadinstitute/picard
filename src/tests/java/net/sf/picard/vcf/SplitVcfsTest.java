@@ -1,9 +1,11 @@
 package net.sf.picard.vcf;
 
+import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContext.Type;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -22,24 +24,24 @@ public class SplitVcfsTest {
 		final File snpOutputFile = new File(TEST_DATA_PATH + "split-vcfs-test-snps-delete-me.vcf");
 		final File input = new File(TEST_DATA_PATH + "CEUTrio-merged-indels-snps.vcf");
 
+		indelOutputFile.deleteOnExit();
+		snpOutputFile.deleteOnExit();
+
 		final SplitVcfs splitVcfs = new SplitVcfs();
 		splitVcfs.SNP_OUTPUT = snpOutputFile;
 		splitVcfs.INDEL_OUTPUT = indelOutputFile;
 		splitVcfs.INPUT = input;
-		splitVcfs.CREATE_INDEX = false;
 
 		final int returnCode = splitVcfs.instanceMain(new String[0]);
 		Assert.assertEquals(returnCode, 0);
 
-		final VariantContextIterator indelIterator = VariantContextIteratorFactory.create(indelOutputFile);
-		final VariantContextIterator snpIterator = VariantContextIteratorFactory.create(snpOutputFile);
+		final Queue<String> indelContigPositions = MergeVcfsTest.loadContigPositions(indelOutputFile);
+		final Queue<String> snpContigPositions = MergeVcfsTest.loadContigPositions(snpOutputFile);
 
-		final Queue<String> indelContigPositions = MergeVcfsTest.getContigPositions(indelIterator);
-		final Queue<String> snpContigPositions = MergeVcfsTest.getContigPositions(snpIterator);
-
-		final VariantContextIterator inputIterator = VariantContextIteratorFactory.create(input);
-		while (inputIterator.hasNext()) {
-			final VariantContext inputContext = inputIterator.next();
+		final VCFFileReader reader = new VCFFileReader(input);
+		final CloseableIterator<VariantContext> iterator = reader.iterator();
+		while (iterator.hasNext()) {
+			final VariantContext inputContext = iterator.next();
 			if (inputContext.isIndel()) Assert.assertEquals(MergeVcfsTest.getContigPosition(inputContext), indelContigPositions.poll());
 			if (inputContext.isSNP()) Assert.assertEquals(MergeVcfsTest.getContigPosition(inputContext), snpContigPositions.poll());
 		}
@@ -47,9 +49,6 @@ public class SplitVcfsTest {
 		// We should have polled everything off the indel (snp) queues
 		Assert.assertEquals(indelContigPositions.size(), 0);
 		Assert.assertEquals(snpContigPositions.size(), 0);
-
-		indelOutputFile.deleteOnExit();
-		snpOutputFile.deleteOnExit();
 	}
 
 	@Test (enabled = false)
@@ -62,18 +61,18 @@ public class SplitVcfsTest {
 		final Map<Type, Integer> inputCounts = new HashMap<Type, Integer>();
 		final Map<Type, Integer> outputCounts = new HashMap<Type, Integer>();
 		final File INPUT = new File("/Volumes/Disko Segundo/splitvcfs/CEUTrio.HiSeq.WGS.b37.snps_and_indels.recalibrated.filtered.phased.CURRENT.vcf.gz");
-		final VariantContextIterator variantContextIterator = VariantContextIteratorFactory.create(INPUT);
+		final VCFFileReader reader = new VCFFileReader(INPUT);
 
 		final VariantContextWriter OUTPUT =
 				VariantContextWriterFactory.create(
 						new File("/Volumes/shm/CEUTrio-REDUCED.vcf"),
 						null,
 						VariantContextWriterFactory.NO_OPTIONS);
-		OUTPUT.writeHeader(variantContextIterator.getHeader());
+		OUTPUT.writeHeader(reader.getFileHeader());
 
-		while (variantContextIterator.hasNext()) {
-			final VariantContext variantContext = variantContextIterator.next();
-
+		final CloseableIterator<VariantContext> iterator = reader.iterator();
+		while (iterator.hasNext()) {
+			final VariantContext variantContext = iterator.next();
 			totalIn++;
 
 			final Integer inputCount = inputCounts.get(variantContext.getType());
@@ -89,7 +88,7 @@ public class SplitVcfsTest {
 			}
 		}
 
-		variantContextIterator.close();
+		reader.close();
 		OUTPUT.close();
 
 		System.out.println("INPUT: " + totalIn + "; OUTPUT: " + totalOut);

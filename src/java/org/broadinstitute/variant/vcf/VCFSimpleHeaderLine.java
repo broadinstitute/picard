@@ -71,6 +71,14 @@ public class VCFSimpleHeaderLine extends VCFHeaderLine implements VCFIDHeaderLin
         initialize(name, mapping);
     }
 
+	/**
+	 * Returns the String value associated with the given key. Returns null if there is no value. Key
+	 * must not be null.
+	 */
+	String getGenericFieldValue(final String key) {
+		return this.genericFields.get(key);
+	}
+
     protected void initialize(String name, Map<String, String> genericFields) {
         if ( name == null || genericFields == null || genericFields.isEmpty() )
             throw new IllegalArgumentException(String.format("Invalid VCFSimpleHeaderLine: key=%s name=%s", super.getKey(), name));

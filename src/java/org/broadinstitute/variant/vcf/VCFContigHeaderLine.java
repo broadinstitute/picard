@@ -25,16 +25,19 @@
 
 package org.broadinstitute.variant.vcf;
 
+import net.sf.samtools.SAMSequenceRecord;
+import org.broad.tribble.TribbleException;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A special class representing a contig VCF header line.  Nows the true contig order and sorts on that
+ * A special class representing a contig VCF header line.  Knows the true contig order and sorts on that
  *
  * @author mdepristo
  */
 public class VCFContigHeaderLine extends VCFSimpleHeaderLine {
     final Integer contigIndex;
-
 
     /**
      * create a VCF contig header line
@@ -43,25 +46,42 @@ public class VCFContigHeaderLine extends VCFSimpleHeaderLine {
      * @param version   the vcf header version
      * @param key            the key for this header line
      */
-    public VCFContigHeaderLine(final String line, final VCFHeaderVersion version, final String key, int contigIndex) {
+    public VCFContigHeaderLine(final String line, final VCFHeaderVersion version, final String key, final int contigIndex) {
         super(line, version, key, null);
+	    if (contigIndex < 0) throw new TribbleException("The contig index is less than zero.");
         this.contigIndex = contigIndex;
     }
 
-    public VCFContigHeaderLine(final Map<String, String> mapping, int contigIndex) {
+    public VCFContigHeaderLine(final Map<String, String> mapping, final int contigIndex) {
         super(VCFHeader.CONTIG_KEY, mapping);
+	    if (contigIndex < 0) throw new TribbleException("The contig index is less than zero.");
         this.contigIndex = contigIndex;
     }
+
+	VCFContigHeaderLine(final SAMSequenceRecord sequenceRecord, final String assembly) {
+		super(sequenceRecord.getId(), new HashMap<String, String>() {{
+			// Now inside an init block in an anon HashMap subclass
+			this.put("ID", sequenceRecord.getSequenceName());
+			this.put("length", Integer.toString(sequenceRecord.getSequenceLength()));
+			if ( assembly != null ) this.put("assembly", assembly);
+		}});
+		this.contigIndex = sequenceRecord.getSequenceIndex();
+	}
 
     public Integer getContigIndex() {
         return contigIndex;
     }
 
+	public SAMSequenceRecord getSAMSequenceRecord() {
+		final String lengthString = this.getGenericFieldValue("length");
+		if (lengthString == null) throw new TribbleException("Contig " + this.getID() + " does not have a length field.");
+		final SAMSequenceRecord record = new SAMSequenceRecord(this.getID(), Integer.valueOf(lengthString));
+		record.setSequenceIndex(this.contigIndex);
+		return record;
+	}
+
     /**
-     * IT IS CRITIAL THAT THIS BE OVERRIDDEN SO WE SORT THE CONTIGS IN THE CORRECT ORDER
-     *
-     * @param other
-     * @return
+     * IT IS CRITICAL THAT THIS BE OVERRIDDEN SO WE SORT THE CONTIGS IN THE CORRECT ORDER
      */
     @Override
     public int compareTo(final Object other) {

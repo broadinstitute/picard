@@ -32,57 +32,54 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Test methods for VcfFormatConverter
- *
- * @author jgentry@broadinstitute.org
- */
 public class VcfFormatConverterTest {
     private static final String TEST_DATA_PATH = "testdata/net/sf/picard/vcf/";
     private static final String TEST_FILE_BASE = "vcfFormatTest";
 
-    private static final File TEST_VCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF_FORMAT.VCF.getExtension());
-    private static final File TEST_BCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF_FORMAT.BCF.getExtension());
+	private static final String VCF = ".vcf";
+	private static final String BCF = ".bcf";
 
+    private static final File TEST_VCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF);
+    private static final File TEST_BCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + BCF);
 
     @Test
     public void testVcfToVcf() {
-        runLikeTest(TEST_VCF, VCF_FORMAT.VCF);
+        runLikeTest(TEST_VCF, VCF);
     }
 
     @Test
     public void testVcfToBcf() {
-        runBackAndForthTest(TEST_VCF, VCF_FORMAT.BCF);
+        runBackAndForthTest(TEST_VCF, BCF);
     }
 
     @Test
     public void testBcfToBcf() {
-        runLikeTest(TEST_BCF, VCF_FORMAT.BCF);
+        runLikeTest(TEST_BCF, BCF);
     }
 
     @Test
     public void testBcfToVcf() {
-        runBackAndForthTest(TEST_BCF, VCF_FORMAT.VCF);
+        runBackAndForthTest(TEST_BCF, VCF);
     }
 
-    private void runLikeTest(final File input, final VCF_FORMAT vcfFormat) {
-        final File outputFile = convertFile(input, "likeTest", vcfFormat);
+    private void runLikeTest(final File input, final String format) {
+        final File outputFile = convertFile(input, "likeTest", format);
         compareFiles(input, outputFile);
     }
 
-    private void runBackAndForthTest(final File input, final VCF_FORMAT vcfFormat) {
+    private void runBackAndForthTest(final File input, final String format) {
         final String tempPrefix = "backAndForth";
 
-        final File backAndForth = convertFile(input, tempPrefix, vcfFormat);
-        final File backAndForthSeries2 = convertFile(backAndForth, tempPrefix, VCF_FORMAT.getOppositeFormat(vcfFormat));
+        final File backAndForth = convertFile(input, tempPrefix, format);
+        final File backAndForthSeries2 = convertFile(backAndForth, tempPrefix, getOppositeFormat(format));
 
         compareFiles(input, backAndForthSeries2);
     }
 
-    private File convertFile(final File input, final String prefix, final VCF_FORMAT vcfFormat) {
+    private File convertFile(final File input, final String prefix, final String format) {
         final File outputFile;
         try {
-            outputFile = File.createTempFile(prefix, vcfFormat.getExtension());
+            outputFile = File.createTempFile(prefix, format);
         } catch (IOException ioe) {
             throw new PicardException("Unable to create temp file!");
         }
@@ -95,7 +92,7 @@ public class VcfFormatConverterTest {
         return outputFile;
     }
 
-   private void compareFiles(final File file1, final File file2) {
+    private void compareFiles(final File file1, final File file2) {
         // Ok, so this isn't exactly comparing md5 checksums or anything, but it should be good enough
         // for our purposes.
         Assert.assertTrue(file1.exists());
@@ -103,26 +100,9 @@ public class VcfFormatConverterTest {
         Assert.assertEquals(file1.length(), file2.length());
     }
 
-    private enum VCF_FORMAT {
-        VCF(".vcf"),
-        BCF(".bcf");
-
-        VCF_FORMAT(final String extension) {
-            this.extension = extension;
-        }
-
-        private final String extension;
-
-        public String getExtension() {
-            return extension;
-        }
-
-        public static VCF_FORMAT getOppositeFormat(final VCF_FORMAT curFormat) {
-            if (curFormat.equals(VCF)) {
-                return BCF;
-            } else {
-                return VCF;
-            }
-        }
-    }
+	public static String getOppositeFormat(final String curFormat) {
+		if (curFormat.equals(VCF)) return BCF;
+		else if (curFormat.equals(BCF)) return VCF;
+		else throw new RuntimeException();
+	}
 }
