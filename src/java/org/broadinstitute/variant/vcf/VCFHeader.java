@@ -119,10 +119,11 @@ public class VCFHeader {
     }
 
     /**
-     * Creates a deep copy of the given VCFHeader, duplicating all its metadata.
+     * Creates a deep copy of the given VCFHeader, duplicating all its metadata and
+     * sample names.
      */
     public VCFHeader(final VCFHeader toCopy) {
-        this(toCopy.mMetaData);
+        this(toCopy.mMetaData, toCopy.mGenotypeSampleNames);
     }
 
     /**
