@@ -534,7 +534,12 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     // Its too expensive to examine the remote file to determine type.
     // Rely on file extension.
     private boolean streamLooksLikeBam(SeekableStream strm) {
-        return strm.getSource() == null || strm.getSource().toLowerCase().endsWith(".bam");
+        String source = strm.getSource();
+        if(source == null) return true;
+        source = source.toLowerCase();
+        //Source will typically be a file path or URL
+        //If it's a URL we require one of the query parameters to be bam file
+        return source.endsWith(".bam") || source.contains(".bam?")|| source.contains(".bam&") || source.contains(".bam%26");
     }
 
     private void init(final InputStream stream, final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
