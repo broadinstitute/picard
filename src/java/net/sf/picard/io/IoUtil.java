@@ -27,13 +27,12 @@ import net.sf.picard.PicardException;
 import net.sf.picard.util.IterableIterator;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.CollectionUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -589,7 +588,21 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         }
     }
 
+    /** Returns all of the untrimmed lines in the provided file. */
+    public static List<String> slurpLines(final File file) throws FileNotFoundException {
+        return slurpLines(new FileInputStream(file));
+    }
 
+    public static List<String> slurpLines(final InputStream is) throws FileNotFoundException {
+        /** See {@link Scanner} source for origin of delimiter used here.  */
+        return tokenSlurp(is, Charset.defaultCharset(), "\r\n|[\n\r\u2028\u2029\u0085]");
+    }
+    
+    /** Convenience overload for {@link #slurp(java.io.InputStream, java.nio.charset.Charset)} using the default charset {@link Charset#defaultCharset()}. */
+    public static String slurp(final File file) throws FileNotFoundException {
+        return slurp(new FileInputStream(file));
+    }
+    
     /** Convenience overload for {@link #slurp(java.io.InputStream, java.nio.charset.Charset)} using the default charset {@link Charset#defaultCharset()}. */
     public static String slurp(final InputStream is) {
         return slurp(is, Charset.defaultCharset());
@@ -597,9 +610,18 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
 
     /** Reads all of the stream into a String, decoding with the provided {@link Charset} then closes the stream quietly. */
     public static String slurp(final InputStream is, final Charset charSet) {
+        return CollectionUtil.getSoleElement(tokenSlurp(is, charSet, "\\A"));
+    }
+
+    /** Tokenizes the provided input stream into memory using the given delimiter. */
+    private static List<String> tokenSlurp(final InputStream is, final Charset charSet, final String delimiterPattern) {
         try {
-            final Scanner s = new Scanner(is, charSet.toString()).useDelimiter("\\A");
-            return s.hasNext() ? s.next() : "";
+            final Scanner s = new Scanner(is, charSet.toString()).useDelimiter(delimiterPattern);
+            final LinkedList<String> tokens = new LinkedList<String>();
+            while (s.hasNext()) {
+                tokens.add(s.next());
+            }
+            return tokens;
         } finally {
             CloserUtil.close(is);
         }

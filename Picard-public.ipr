@@ -282,6 +282,7 @@
         <w>phread</w>
         <w>seekable</w>
         <w>tabix</w>
+        <w>tokenizes</w>
         <w>tribble</w>
       </words>
     </dictionary>
