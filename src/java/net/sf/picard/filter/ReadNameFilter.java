@@ -23,20 +23,18 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.SAMRecord;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Scanner;
 import java.util.Set;
+import net.sf.picard.PicardException;
+import net.sf.picard.io.IoUtil;
+import net.sf.samtools.SAMRecord;
 
 /**
  * Filter by a set of specified readnames
- *
+ * <p/>
  * $Id$
  */
 public class ReadNameFilter implements SamRecordFilter {
@@ -49,25 +47,22 @@ public class ReadNameFilter implements SamRecordFilter {
         IoUtil.assertFileIsReadable(readNameFilterFile);
         IoUtil.assertFileSizeNonZero(readNameFilterFile);
 
-        final BufferedReader is;
-
         try {
-            is = IoUtil.openFileForBufferedReading(readNameFilterFile);
+            final BufferedReader in = IoUtil.openFileForBufferedReading(readNameFilterFile);
+
+            String line = null;
+
+            while ((line = in.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    readNameFilterSet.add(line.split("\\s+")[0]);
+                }
+            }
+
+            in.close();
         } catch (IOException e) {
             throw new PicardException(e.getMessage(), e);
         }
 
-        final Scanner scanner = new Scanner(is);
-
-        while (scanner.hasNext()) {
-            final String line = scanner.nextLine();
-
-            if (!line.trim().isEmpty()) {
-                readNameFilterSet.add(line.split("\\s+")[0]);
-            }
-        }
-
-        scanner.close();
         this.includeReads = includeReads;
     }
 
