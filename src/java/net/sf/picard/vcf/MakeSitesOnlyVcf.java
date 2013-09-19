@@ -52,7 +52,7 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Override
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
+        if (SEQUENCE_DICTIONARY != null) IoUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IoUtil.assertFileIsWritable(OUTPUT);
 
 	    final VCFFileReader reader = new VCFFileReader(INPUT);
