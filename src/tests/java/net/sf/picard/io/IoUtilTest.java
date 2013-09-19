@@ -37,7 +37,7 @@ import java.util.List;
 public class IoUtilTest {
 
     private static final File SLURP_TEST_FILE = new File("testdata/net/sf/picard/io/slurptest.txt");
-    private static final List<String> SLURP_TEST_LINES = Arrays.asList("bacon   and rice   ","for breakfast¨ ¨ ","wont you join me");
+    private static final List<String> SLURP_TEST_LINES = Arrays.asList("bacon   and rice   ","for breakfast  ","wont you join me");
     private static final String SLURP_TEST_LINE_SEPARATOR = "\n";
     private static final String TEST_FILE_PREFIX = "foo";
     private static final String TEST_FILE_EXTENSIONS[] = { ".txt", ".txt.gz", ".txt.bz2" };
