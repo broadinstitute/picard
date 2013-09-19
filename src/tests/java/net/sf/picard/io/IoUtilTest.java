@@ -25,14 +25,20 @@ package net.sf.picard.io;
 
 import net.sf.picard.util.ProcessExecutor;
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.CollectionUtil;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 
 public class IoUtilTest {
 
+    private static final File SLURP_TEST_FILE = new File("testdata/net/sf/picard/io/slurptest.txt");
+    private static final List<String> SLURP_TEST_LINES = Arrays.asList("bacon   and rice   ","for breakfast¨ ¨ ","wont you join me");
+    private static final String SLURP_TEST_LINE_SEPARATOR = "\n";
     private static final String TEST_FILE_PREFIX = "foo";
     private static final String TEST_FILE_EXTENSIONS[] = { ".txt", ".txt.gz", ".txt.bz2" };
     private static final String TEST_STRING = "bar!";
@@ -109,4 +115,13 @@ public class IoUtilTest {
         }
     }
 
+    @Test
+    public void slurpLinesTest() throws FileNotFoundException {
+        Assert.assertEquals(IoUtil.slurpLines(SLURP_TEST_FILE), SLURP_TEST_LINES);
+    }
+    
+    @Test
+    public void slurpTest() throws FileNotFoundException {
+        Assert.assertEquals(IoUtil.slurp(SLURP_TEST_FILE), CollectionUtil.join(SLURP_TEST_LINES, SLURP_TEST_LINE_SEPARATOR));
+    }
 }
