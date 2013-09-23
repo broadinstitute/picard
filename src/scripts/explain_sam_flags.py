@@ -42,7 +42,8 @@ lstFlags = [
     ("second in pair", 0x80),
     ("not primary alignment", 0x100),
     ("read fails platform/vendor quality checks", 0x200),
-    ("read is PCR or optical duplicate", 0x400)
+    ("read is PCR or optical duplicate", 0x400),
+    ("supplementary alignment", 0x800)
     ]
     
 
