@@ -25,16 +25,24 @@ for (i in 1:length(startFinder)) {
         }
 }
 
-data <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine)
+data <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine, check.names=FALSE)
 pdf(outputFile)
 
 # The histogram has a normalized_position and normalized_coverage column for each metric "level"
 # This code parses out the distinct levels so we can output one graph per level
 headers <- sapply(sub(".normalized_coverage","",names(data),fixed=TRUE), "[[" ,1)
-levels <- c()
-for (i in 2:length(headers)) {
-    if (!(headers[i] %in% levels)) {
-        levels[length(levels)+1] <- headers[i]
+
+## Duplicated header names cause this to barf. KT & Yossi report that this is going to be extremely difficult to
+## resolve and it's unlikely that anyone cares anyways. Trap this situation and avoid the PDF so it won't cause
+## the workflow to fail
+if (any(duplicated(headers))) {
+  print(paste("Not creating insert size PDF as there are duplicated header names:", headers[which(duplicated(headers))]))
+} else {
+    levels <- c()
+    for (i in 2:length(headers)) {
+        if (!(headers[i] %in% levels)) {
+            levels[length(levels)+1] <- headers[i]
+        }
     }
 }
 
