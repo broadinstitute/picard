@@ -24,7 +24,7 @@
 package net.sf.picard.io;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.util.IterableIterator;
+import net.sf.picard.util.IterableOnceIterator;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.CollectionUtil;
@@ -558,11 +558,11 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * @param f a file that is to be read in as text
      * @return an iterator over the lines in the text file
      */
-    public static IterableIterator<String> readLines(final File f) {
+    public static IterableOnceIterator<String> readLines(final File f) {
         try {
             final BufferedReader in = IoUtil.openFileForBufferedReading(f);
 
-            return new IterableIterator<String>() {
+            return new IterableOnceIterator<String>() {
                 private String next = in.readLine();
 
                 /** Returns true if there is another line to read or false otherwise. */
@@ -625,6 +625,39 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         } finally {
             CloserUtil.close(is);
         }
+    }
+
+    /**
+     * Go through the files provided and if they have one of the provided file extensions pass the file into the output
+     * otherwise assume that file is a list of filenames and unfold it into the output.
+     */
+    public static List<File> unrollFiles(final Collection<File> inputs, final String... extensions) {
+        if (extensions.length < 1) throw new IllegalArgumentException("Must provide at least one extension.");
+
+        final Stack<File> stack = new Stack<File>();
+        final List<File> output = new ArrayList<File>();
+        stack.addAll(inputs);
+
+        final Set<String> exts = new HashSet<String>();
+        Collections.addAll(exts, extensions);
+
+        while (!stack.empty()) {
+            final File f = stack.pop();
+            final String ext = IoUtil.fileSuffix(f);
+
+            if (exts.contains(ext)) {
+                output.add(f);
+            }
+            else {
+                IoUtil.assertFileIsReadable(f);
+
+                for (final String s : IoUtil.readLines(f)) {
+                    if (!s.trim().isEmpty()) stack.push(new File(s.trim()));
+                }
+            }
+        }
+
+        return output;
     }
 }
 
