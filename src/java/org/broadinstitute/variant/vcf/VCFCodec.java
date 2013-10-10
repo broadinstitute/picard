@@ -121,7 +121,7 @@ public class VCFCodec extends AbstractVCFCodec {
      * @param filterString the string to parse
      * @return a set of the filters applied or null if filters were not applied to the record (e.g. as per the missing value in a VCF)
      */
-    protected List<String> parseFilters(String filterString) {
+    protected List<String> parseFilters(final String filterString) {
         // null for unfiltered
         if ( filterString.equals(VCFConstants.UNFILTERED) )
             return null;
@@ -138,7 +138,7 @@ public class VCFCodec extends AbstractVCFCodec {
             return filterHash.get(filterString);
 
         // empty set for passes filters
-        List<String> fFields = new LinkedList<String>();
+        final List<String> fFields = new LinkedList<String>();
         // otherwise we have to parse and cache the value
         if ( !filterString.contains(VCFConstants.FILTER_CODE_SEPARATOR) )
             fFields.add(filterString);
