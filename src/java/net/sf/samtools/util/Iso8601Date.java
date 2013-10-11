@@ -59,7 +59,7 @@ public class Iso8601Date extends Date {
         long time = getTime();
         long mod = time % 1000;
         if (mod != 0) {
-            setTime(time - mod);
+            super.setTime(time - mod);
         }
     }
 }
