@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * Stores the information in memory as a map of individualId -> Pedigree information for that individual
  */
 public class PedFile extends TreeMap<String,PedTrio> {
-    private final Log log = Log.getInstance(PedFile.class);
+    private static final Log log = Log.getInstance(PedFile.class);
     static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
     /** Adds a trio to the PedFile keyed by the individual id. */
@@ -60,7 +60,7 @@ public class PedFile extends TreeMap<String,PedTrio> {
     /**
      * Attempts to read a pedigree file into memory.
      */
-    public PedFile fromFile(final File file) {
+    public static PedFile fromFile(final File file) {
         final PedFile pedfile = new PedFile();
 
         IoUtil.assertFileIsReadable(file);
@@ -78,7 +78,7 @@ public class PedFile extends TreeMap<String,PedTrio> {
                                              Sex.fromCode(Integer.parseInt(fields[4])),
                                              fields[5].contains(".") ? Double.parseDouble(fields[5]) : Integer.parseInt(fields[5])
                                             );
-            add(trio);
+            pedfile.add(trio);
         }
 
         return pedfile;
