@@ -68,9 +68,15 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             mutex = {"MULTIPLEX_PARAMS"})
     public File OUTPUT_PREFIX;
 
-    @Option(doc = "The barcode of the run.  Prefixed to read names.")
+    @Option(doc = "The barcode of the run.  Prefixed to read names.", optional = false)
     public String RUN_BARCODE;
 
+    @Option(doc = "The name of the machine on which the run was sequenced; required if emitting Casava1.8-style read name headers", optional = true)
+    public String MACHINE_NAME;
+    
+    @Option(doc = "The barcode of the flowcell that was sequenced; required if emitting Casava1.8-style read name headers", optional = true)
+    public String FLOWCELL_BARCODE;
+    
     @Option(doc = ReadStructure.PARAMETER_DOC, shortName = "RS")
     public String READ_STRUCTURE;
 
@@ -117,13 +123,21 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
     public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
+    @Option(doc="The read name header formatting to emit.  Casava1.8 formatting has additional information beyond Illumina, including: " +
+            "the passing-filter flag value for the read, the flowcell name, and the sequencer name.", optional = false)
+    public ReadNameFormat READ_NAME_FORMAT = ReadNameFormat.CASAVA_1_8;
 
+    /** Simple switch to control the read name format to emit. */
+    public enum ReadNameFormat {
+        CASAVA_1_8, ILLUMINA
+    }
+    
     private final Map<String, FastqRecordsWriter> barcodeFastqWriterMap = new HashMap<String, FastqRecordsWriter>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<FastqRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
     private final FastqWriterFactory fastqWriterFactory = new FastqWriterFactory();
-
+    private ReadNameEncoder readNameEncoder;
     private static final Comparator<FastqRecordsForCluster> queryNameComparator = new Comparator<FastqRecordsForCluster>() {
         @Override
         public int compare(final FastqRecordsForCluster r1, final FastqRecordsForCluster r2) {
@@ -131,7 +145,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     r2.templateRecords[0].getReadHeader());
         }
     };
-    private BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
 
     @Override
@@ -143,11 +156,38 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         return 0;
     }
 
+    @Override
+    protected String[] customCommandLineValidation() {
+        final LinkedList<String> errors = new LinkedList<String>();
+        if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && MACHINE_NAME == null) {
+            errors.add("MACHINE_NAME is required when using Casava1.8-style read name headers.");
+        }
+
+        if (READ_NAME_FORMAT == ReadNameFormat.CASAVA_1_8 && FLOWCELL_BARCODE == null) {
+            errors.add("FLOWCELL_BARCODE is required when using Casava1.8-style read name headers.");
+        }
+        
+        if (errors.isEmpty()) {
+            return null;
+        } else {
+            return errors.toArray(new String[errors.size()]);
+        }
+    }
+
     /**
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
-        bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
+        switch (READ_NAME_FORMAT) {
+            case CASAVA_1_8:
+                readNameEncoder = new Casava18ReadNameEncoder(MACHINE_NAME, RUN_BARCODE, FLOWCELL_BARCODE);        
+                break;
+            case ILLUMINA:
+                readNameEncoder = new IlluminaReadNameEncoder(RUN_BARCODE);
+                break;
+        }
+        
+        final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (MULTIPLEX_PARAMS != null) {
             IoUtil.assertFileIsReadable(MULTIPLEX_PARAMS);
@@ -160,7 +200,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             populateWritersFromMultiplexParams();
             demultiplex = true;
         }
-        int readsPerCluster = readStructure.templates.length() + readStructure.barcodes.length();
+        final int readsPerCluster = readStructure.templates.length() + readStructure.barcodes.length();
         basecallsConverter = new IlluminaBasecallsConverter<FastqRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
                 barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE/readsPerCluster, TMP_DIR, NUM_PROCESSORS,
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
@@ -327,26 +367,25 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         @Override
         public FastqRecordsForCluster convertClusterToOutputRecord(final ClusterData cluster) {
-            final FastqRecordsForCluster ret =
-                    new FastqRecordsForCluster(readStructure.templates.length(), readStructure.barcodes.length());
-            final String readName = IlluminaUtil.makeReadName(RUN_BARCODE, cluster.getLane(), cluster.getTile(),
-                    cluster.getX(), cluster.getY());
+            final FastqRecordsForCluster ret = new FastqRecordsForCluster(readStructure.templates.length(), readStructure.barcodes.length());
             final boolean appendReadNumberSuffix = ret.templateRecords.length > 1;
-            makeFastqRecords(ret.templateRecords, templateIndices, readName, cluster, appendReadNumberSuffix);
-            makeFastqRecords(ret.barcodeRecords, barcodeIndices, readName, cluster, false);
+            makeFastqRecords(ret.templateRecords, templateIndices, cluster, appendReadNumberSuffix);
+            makeFastqRecords(ret.barcodeRecords, barcodeIndices, cluster, false);
             return ret;
         }
 
-        private void makeFastqRecords(final FastqRecord[] recs, final int[] indices, final String readName,
+        private void makeFastqRecords(final FastqRecord[] recs, final int[] indices,
                                       final ClusterData cluster, final boolean appendReadNumberSuffix) {
-            for (int i = 0; i < indices.length; ++i) {
+            for (short i = 0; i < indices.length; ++i) {
                 final ReadData readData = cluster.getRead(indices[i]);
                 final String readBases = StringUtil.bytesToString(readData.getBases()).replace('.', 'N');
-                final String readNameForEnd;
-                if (appendReadNumberSuffix) readNameForEnd = readName + "/" + (i+1);
-                else readNameForEnd = readName;
-                recs[i] = new FastqRecord(readNameForEnd, readBases, null,
-                        SAMUtils.phredToFastq(readData.getQualities()));
+                final String readName = readNameEncoder.generateReadName(cluster, appendReadNumberSuffix ? i + 1 : null);
+                recs[i] = new FastqRecord(
+                        readName, 
+                        readBases, 
+                        null,
+                        SAMUtils.phredToFastq(readData.getQualities())
+                );
             }
         }
     }

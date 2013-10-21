@@ -29,7 +29,6 @@ import net.sf.samtools.util.BufferedLineReader;
 import net.sf.samtools.util.LineReader;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.TestUtil;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -58,14 +57,16 @@ public class IlluminaBasecallsToFastqTest {
                 "LANE=" + lane,
                 "READ_STRUCTURE=76T76T",
                 "OUTPUT_PREFIX=" + outputPrefix,
-                "RUN_BARCODE=HiMom"
+                "RUN_BARCODE=HiMom",
+                "MACHINE_NAME=machine1",
+                "FLOWCELL_BARCODE=abcdeACXX"
         });
         IoUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IoUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
     }
 
     @Test
-    public void testMultiplex() throws Exception {
+    public void testMultiplexWithIlluminaReadNameHeaders() throws Exception {
         final File outputDir = File.createTempFile("testMultiplex.", ".dir");
         try {
             outputDir.delete();
@@ -80,7 +81,10 @@ public class IlluminaBasecallsToFastqTest {
                     "LANE=" + 7,
                     "RUN_BARCODE=HiMom",
                     "READ_STRUCTURE=" + "30T8B",
-                    "OUTPUT_PREFIX=" + outputPrefix.getAbsolutePath()
+                    "OUTPUT_PREFIX=" + outputPrefix.getAbsolutePath(),
+                    "MACHINE_NAME=machine1",
+                    "FLOWCELL_BARCODE=abcdeACXX",
+                    "READ_NAME_FORMAT=" + IlluminaBasecallsToFastq.ReadNameFormat.ILLUMINA
             });
 
             final String[] filenames = new String[]{
@@ -148,7 +152,9 @@ public class IlluminaBasecallsToFastqTest {
                     "LANE=" + lane,
                     "RUN_BARCODE=HiMom",
                     "READ_STRUCTURE=" + readStructureString,
-                    "MULTIPLEX_PARAMS=" + libraryParams
+                    "MULTIPLEX_PARAMS=" + libraryParams,
+                    "MACHINE_NAME=machine1",
+                    "FLOWCELL_BARCODE=abcdeACXX"
             });
 
             final ReadStructure readStructure = new ReadStructure(readStructureString);

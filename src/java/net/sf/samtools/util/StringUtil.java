@@ -458,4 +458,9 @@ public class StringUtil {
         return String.valueOf(output);
     }
 
+    /** Returns {@link Object#toString()} of the provided value if it isn't null; "" otherwise. */
+    public static final String EMPTY_STRING = "";
+    public static String asEmptyIfNull(final Object string) {
+        return string == null ? EMPTY_STRING : string.toString();
+    }
 }

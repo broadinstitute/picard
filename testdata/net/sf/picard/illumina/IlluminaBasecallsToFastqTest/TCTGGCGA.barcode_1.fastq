@@ -1,20 +1,20 @@
-@HiMom:7:1:3:1406
+@machine1:HiMom:abcdeACXX:7:1:3:1406 :N:0:TCTGGCGA
 TCTGGCGA
 +
 AA=;5@=@
-@HiMom:7:1:3:1717
+@machine1:HiMom:abcdeACXX:7:1:3:1717 :Y:0:TCTGGCGA
 TCTGGCGA
 +
 AB=11;A@
-@HiMom:7:2:3:2004
+@machine1:HiMom:abcdeACXX:7:2:3:2004 :N:0:TCTGGCGA
 TCTGGCGA
 +
 @?>/>BBB
-@HiMom:7:2:3:695
+@machine1:HiMom:abcdeACXX:7:2:3:695 :Y:0:TCTGGCGA
 TCTGGCGA
 +
 AA?>9=@A
-@HiMom:7:2:3:987
+@machine1:HiMom:abcdeACXX:7:2:3:987 :N:0:TCTGGCGA
 TCTCGCGA
 +
 0<(.(;1@
