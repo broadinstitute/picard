@@ -1,12 +1,12 @@
-@HiMom:7:1:3:389
+@machine1:HiMom:abcdeACXX:7:1:3:389 :N:0:GCACATCT
 NGATGTTCAAACATGCATAACTCTAAGTAT
 +
 ##############################
-@HiMom:7:2:2:1567
+@machine1:HiMom:abcdeACXX:7:2:2:1567 :Y:0:GCACATCT
 NAGACAGCAGTAACCTCTGCAGACTTAAAC
 +
 %,67:720544;4667:62-5667::6877
-@HiMom:7:2:3:1053
+@machine1:HiMom:abcdeACXX:7:2:3:1053 :N:0:GCACATCT
 NTTTGATCATGATTCCATTCGAGACCATTC
 +
 %.;;##########################

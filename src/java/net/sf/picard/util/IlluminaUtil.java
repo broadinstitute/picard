@@ -40,15 +40,6 @@ public class IlluminaUtil {
     public static final String BARCODE_DELIMITER = "-";
 
     /**
-     * Standard Broad algorithm for creating a read name
-     * @return read name in standard Broad format, without end suffix.
-     */
-    public static String makeReadName(final String runBarcode, final int lane, final int tile, final int xCoordinate,
-                                      final int yCoordinate) {
-        return runBarcode + ":" + lane + ":" + tile + ":" + xCoordinate + ":" + yCoordinate;
-    }
-
-    /**
      * Parse the tile # from the read name.
      * If we find that there are other elements needed from the read name, it might be a good idea to put
      * makeReadName() and various get..() methods into a new class.

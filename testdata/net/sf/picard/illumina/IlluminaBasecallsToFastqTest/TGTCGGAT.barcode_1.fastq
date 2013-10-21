@@ -1,16 +1,16 @@
-@HiMom:7:1:2:950
+@machine1:HiMom:abcdeACXX:7:1:2:950 :Y:0:TGTCGGAT
 TGTCGGAT
 +
 @@=A:AAA
-@HiMom:7:2:3:1389
+@machine1:HiMom:abcdeACXX:7:2:3:1389 :Y:0:TGTCGGAT
 TGTCGGAT
 +
 ?2ACA@B<
-@HiMom:7:2:3:143
+@machine1:HiMom:abcdeACXX:7:2:3:143 :Y:0:TGTCGGAT
 TGTCGGAT
 +
 A>AB??=B
-@HiMom:7:2:3:898
+@machine1:HiMom:abcdeACXX:7:2:3:898 :Y:0:TGTCGGAT
 TGTCGGAT
 +
 >8>A@=<@

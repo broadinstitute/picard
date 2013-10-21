@@ -23,6 +23,8 @@
  */
 package net.sf.picard.illumina;
 
+import net.sf.picard.fastq.IlluminaReadNameEncoder;
+import net.sf.picard.fastq.ReadNameEncoder;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.filter.SolexaNoiseFilter;
 import net.sf.picard.illumina.parser.ClusterData;
@@ -56,7 +58,8 @@ public class ClusterDataToSamConverter implements
     private final int [] barcodeIndices;
     private final AdapterPair[] adaptersToCheck;
     private final int outputRecordsPerCluster;
-
+    private final ReadNameEncoder readNameEncoder;  
+    
     /**
      * Constructor
      *
@@ -72,6 +75,8 @@ public class ClusterDataToSamConverter implements
                                      final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
         this.runBarcode  = runBarcode;
         this.readGroupId = readGroupId;
+        
+        this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);
 
         this.isPairedEnd = readStructure.templates.length() == 2;
         this.isBarcoded  = !readStructure.barcodes.isEmpty();
@@ -127,8 +132,7 @@ public class ClusterDataToSamConverter implements
     public IlluminaBasecallsToSam.SAMRecordsForCluster convertClusterToOutputRecord(final ClusterData cluster) {
 
         final IlluminaBasecallsToSam.SAMRecordsForCluster ret = new IlluminaBasecallsToSam.SAMRecordsForCluster(outputRecordsPerCluster);
-
-        final String readName = IlluminaUtil.makeReadName(runBarcode, cluster.getLane(), cluster.getTile(), cluster.getX(), cluster.getY());
+        final String readName = readNameEncoder.generateReadName(cluster, null); // Use null here to prevent /1 or /2 suffixes on read name.
 
         // Get and transform the unmatched barcode, if any, to store with the reads
         String unmatchedBarcode = null;
