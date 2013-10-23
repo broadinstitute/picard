@@ -152,7 +152,10 @@ public class ValidateSamFile extends CommandLineProgram {
             if (VALIDATE_INDEX){
                 validator.setValidateIndex(VALIDATE_INDEX);
             }
-            validator.validateBamFileTermination(INPUT);
+            if (IoUtil.isRegularPath(INPUT)) {
+                // Do not check termination if reading from a stream
+                validator.validateBamFileTermination(INPUT);
+            }
 
             result = false;
 
