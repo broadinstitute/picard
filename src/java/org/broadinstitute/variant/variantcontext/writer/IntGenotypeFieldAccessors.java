@@ -38,7 +38,7 @@ import java.util.HashMap;
  * @author Mark DePristo
  * @since 6/12
  */
-class IntGenotypeFieldAccessors {
+public class IntGenotypeFieldAccessors {
     // initialized once per writer to allow parallel writers to work
     private final HashMap<String, Accessor> intGenotypeFieldEncoders = new HashMap<String, Accessor>();
 

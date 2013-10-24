@@ -208,8 +208,10 @@ public class VCFHeader {
 	public void setSequenceDictionary(final SAMSequenceDictionary dictionary) {
 		this.contigMetaData.clear();
 		for (final SAMSequenceRecord record : dictionary.getSequences()) {
-			this.contigMetaData.add(new VCFContigHeaderLine(record, null));
+			contigMetaData.add(new VCFContigHeaderLine(record, null));
 		}
+
+		this.mMetaData.addAll(contigMetaData);
 	}
 
 	public VariantContextComparator getVCFRecordComparator() {

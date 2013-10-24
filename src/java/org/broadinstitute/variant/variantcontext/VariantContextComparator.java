@@ -1,21 +1,24 @@
 package org.broadinstitute.variant.variantcontext;
 
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
 import org.broadinstitute.variant.vcf.VCFContigHeaderLine;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A Comparator that orders VariantContexts by the ordering of the contigs/chromosomes in the List
  * provided at construction time, then by start position with each contig/chromosome.
  */
 public class VariantContextComparator implements Comparator<VariantContext> {
+
+	public static List<String> getSequenceNameList(final SAMSequenceDictionary dictionary) {
+		final List<String> list = new ArrayList<String>();
+		for (final SAMSequenceRecord record : dictionary.getSequences()) {
+			list.add(record.getSequenceName());
+		}
+		return list;
+	}
 
 	// For fast lookup of the contig's index in the contig list
 	private final Map<String, Integer> contigIndexLookup;
@@ -60,6 +63,10 @@ public class VariantContextComparator implements Comparator<VariantContext> {
 
 		this.contigIndexLookup = Collections.unmodifiableMap(protoContigIndexLookup);
 	}
+
+    public VariantContextComparator(final SAMSequenceDictionary dictionary) {
+	    this(getSequenceNameList(dictionary));
+    }
 
 	@Override
 	public int compare(final VariantContext firstVariantContext, final VariantContext secondVariantContext) {

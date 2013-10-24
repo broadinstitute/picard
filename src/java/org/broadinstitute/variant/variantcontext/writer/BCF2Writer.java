@@ -151,7 +151,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
         fieldManager.setup(header, encoder, stringDictionaryMap);
 
         try {
-            // write out the header into a byte stream, get it's length, and write everything to the file
+            // write out the header into a byte stream, get its length, and write everything to the file
             final ByteArrayOutputStream capture = new ByteArrayOutputStream();
             final OutputStreamWriter writer = new OutputStreamWriter(capture);
             this.header = VCFWriter.writeHeader(header, writer, doNotWriteGenotypes, VCFWriter.getVersionLine(), "BCF2 stream");
@@ -294,9 +294,9 @@ class BCF2Writer extends IndexingVariantContextWriter {
      * @param vc
      * @return
      */
-    private final int getNGenotypeFormatFields(final VariantContext vc) {
+    private int getNGenotypeFormatFields(final VariantContext vc) {
         final BCF2Codec.LazyData lazyData = getLazyData(vc);
-        return lazyData != null ? lazyData.nGenotypeFields : VCFWriter.calcVCFGenotypeKeys(vc, header).size();
+        return lazyData != null ? lazyData.nGenotypeFields : VariantContextUtils.calcVCFGenotypeKeys(vc, header).size();
     }
 
     private void buildID( VariantContext vc ) throws IOException {
@@ -341,7 +341,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
         }
 
         // we have to do work to convert the VC into a BCF2 byte stream
-        final List<String> genotypeFields = VCFWriter.calcVCFGenotypeKeys(vc, header);
+        final List<String> genotypeFields = VariantContextUtils.calcVCFGenotypeKeys(vc, header);
         for ( final String field : genotypeFields ) {
             final BCF2FieldWriter.GenotypesWriter writer = fieldManager.getGenotypeFieldWriter(field);
             if ( writer == null ) errorUnexpectedFieldToWrite(vc, field, "FORMAT");
@@ -367,7 +367,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
      * @param field
      * @param fieldType
      */
-    private final void errorUnexpectedFieldToWrite(final VariantContext vc, final String field, final String fieldType) {
+    private void errorUnexpectedFieldToWrite(final VariantContext vc, final String field, final String fieldType) {
         throw new IllegalStateException("Found field " + field + " in the " + fieldType + " fields of VariantContext at " +
                 vc.getChr() + ":" + vc.getStart() + " from " + vc.getSource() + " but this hasn't been defined in the VCFHeader");
     }
@@ -395,7 +395,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
 
     @Requires("! strings.isEmpty()")
     @Ensures("result.isIntegerType()")
-    private final BCF2Type encodeStringsByRef(final Collection<String> strings) throws IOException {
+    private BCF2Type encodeStringsByRef(final Collection<String> strings) throws IOException {
         final List<Integer> offsets = new ArrayList<Integer>(strings.size());
 
         // iterate over strings until we find one that needs 16 bits, and break
@@ -417,7 +417,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
      * @param contigLines
      */
     @Requires("contigDictionary.isEmpty()")
-    private final void createContigDictionary(final Collection<VCFContigHeaderLine> contigLines) {
+    private void createContigDictionary(final Collection<VCFContigHeaderLine> contigLines) {
         int offset = 0;
         for ( VCFContigHeaderLine contig : contigLines )
             contigDictionary.put(contig.getID(), offset++);
