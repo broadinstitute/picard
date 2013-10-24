@@ -107,11 +107,11 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
         final SeekableStream result;
         if (reuseStreamInQuery()) {
             // if the stream points to an underlying file, only create the underlying seekable stream once
-            if (seekableStream == null) seekableStream = SeekableStreamFactory.getStreamFor(path);
+            if (seekableStream == null) seekableStream = SeekableStreamFactory.getInstance().getStreamFor(path);
             result = seekableStream;
         } else {
             // we are not reusing the stream, so make a fresh copy each time we request it
-            result = SeekableStreamFactory.getStreamFor(path);
+            result = SeekableStreamFactory.getInstance().getStreamFor(path);
         }
 
         return result;

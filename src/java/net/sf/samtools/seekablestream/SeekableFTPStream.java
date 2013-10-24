@@ -92,7 +92,7 @@ public class SeekableFTPStream extends SeekableStream {
         long startPosition = (args.length < 2) ? 0x0b66c78l : Long.parseLong(args[1]);
         int len = (args.length < 3) ? 8 : Integer.parseInt(args[2]);
         int skipLen = (args.length < 4) ? 0x18 : Integer.parseInt(args[3]);
-        SeekableStream s = SeekableStreamFactory.getStreamFor(testURL);
+        SeekableStream s = SeekableStreamFactory.getInstance().getStreamFor(testURL);
         byte[] buffer = new byte[len];
         s.seek(startPosition);
         s.read(buffer, 0, len);
