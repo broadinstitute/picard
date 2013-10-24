@@ -59,7 +59,7 @@ public class VCFContigHeaderLine extends VCFSimpleHeaderLine {
     }
 
 	VCFContigHeaderLine(final SAMSequenceRecord sequenceRecord, final String assembly) {
-		super(sequenceRecord.getId(), new HashMap<String, String>() {{
+		super(VCFHeader.CONTIG_KEY, new HashMap<String, String>() {{
 			// Now inside an init block in an anon HashMap subclass
 			this.put("ID", sequenceRecord.getSequenceName());
 			this.put("length", Integer.toString(sequenceRecord.getSequenceLength()));

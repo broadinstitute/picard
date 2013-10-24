@@ -195,6 +195,21 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         return this.header;
     }
 
+	/**
+	 * Explicitly set the VCFHeader on this codec. This will overwrite the header read from the file
+	 * and the version state stored in this instance; conversely, reading the header from a file will
+	 * overwrite whatever is set here. The returned header may not be identical to the header argument
+	 * since the header lines may be "repaired" (i.e., rewritten) if doOnTheFlyModifications is set.
+	 */
+	public VCFHeader setVCFHeader(final VCFHeader header, final VCFHeaderVersion version) {
+		this.version = version;
+
+		if (this.doOnTheFlyModifications) this.header = VCFStandardHeaderLines.repairStandardHeaderLines(header);
+		else this.header = header;
+
+		return this.header;
+	}
+
     /**
      * the fast decode function
      * @param line the line of text for the record
@@ -213,7 +228,7 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         return decodeLine(line, true);
     }
 
-    private final VariantContext decodeLine(final String line, final boolean includeGenotypes) {
+    private VariantContext decodeLine(final String line, final boolean includeGenotypes) {
         // the same line reader is not used for parsing the header and parsing lines, if we see a #, we've seen a header line
         if (line.startsWith(VCFHeader.HEADER_INDICATOR)) return null;
 
@@ -223,9 +238,10 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         if (parts == null)
             parts = new String[Math.min(header.getColumnCount(), NUM_STANDARD_FIELDS+1)];
 
-        int nParts = ParsingUtils.split(line, parts, VCFConstants.FIELD_SEPARATOR_CHAR, true);
+        final int nParts = ParsingUtils.split(line, parts, VCFConstants.FIELD_SEPARATOR_CHAR, true);
 
-        // if we have don't have a header, or we have a header with no genotyping data check that we have eight columns.  Otherwise check that we have nine (normal colummns + genotyping data)
+        // if we have don't have a header, or we have a header with no genotyping data check that we
+        // have eight columns.  Otherwise check that we have nine (normal columns + genotyping data)
         if (( (header == null || !header.hasGenotypingData()) && nParts != NUM_STANDARD_FIELDS) ||
                 (header != null && header.hasGenotypingData() && nParts != (NUM_STANDARD_FIELDS + 1)) )
             throw new TribbleException("Line " + lineNo + ": there aren't enough columns for line " + line + " (we expected " + (header == null ? NUM_STANDARD_FIELDS : NUM_STANDARD_FIELDS + 1) +
@@ -354,11 +370,11 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         Map<String, Object> attributes = new HashMap<String, Object>();
 
         if ( infoField.length() == 0 )
-            generateException("The VCF specification requires a valid info field");
+            generateException("The VCF specification requires a valid (non-zero length) info field");
 
         if ( !infoField.equals(VCFConstants.EMPTY_INFO_FIELD) ) {
             if ( infoField.indexOf("\t") != -1 || infoField.indexOf(" ") != -1 )
-                generateException("The VCF specification does not allow for whitespace in the INFO field");
+                generateException("The VCF specification does not allow for whitespace in the INFO field. Offending field value was \"" + infoField + "\"");
 
             int infoFieldSplitSize = ParsingUtils.split(infoField, infoFieldArray, VCFConstants.INFO_FIELD_SEPARATOR_CHAR, false);
             for (int i = 0; i < infoFieldSplitSize; i++) {

@@ -30,12 +30,19 @@ import com.google.java.contract.Requires;
 import org.apache.commons.jexl2.Expression;
 import org.apache.commons.jexl2.JexlEngine;
 import org.broad.tribble.TribbleException;
+import org.broad.tribble.util.ParsingUtils;
 import org.broadinstitute.variant.utils.GeneralUtils;
 import org.broadinstitute.variant.vcf.*;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class VariantContextUtils {
+
+	/**
+	 * The encoding used for VCF files: ISO-8859-1
+	 */
+	public static final Charset VCF_CHARSET = Charset.forName("ISO-8859-1");
 
     private static Set<String> MISSING_KEYS_WARNED_ABOUT = new HashSet<String>();
 
@@ -335,12 +342,59 @@ public class VariantContextUtils {
         return vc.getEnd() - vc.getStart() + 1;
     }
 
-    public static final Set<String> genotypeNames(final Collection<Genotype> genotypes) {
+    public static Set<String> genotypeNames(final Collection<Genotype> genotypes) {
         final Set<String> names = new HashSet<String>(genotypes.size());
         for ( final Genotype g : genotypes )
             names.add(g.getSampleName());
         return names;
     }
+
+	/*
+	 * Determine which genotype fields are in use in the genotypes in VC
+	 * @return an ordered list of genotype fields in use in VC.  If vc has genotypes this will always include GT first
+	 */
+	public static List<String> calcVCFGenotypeKeys(final VariantContext vc, final VCFHeader header) {
+		final Set<String> keys = new HashSet<String>();
+
+		boolean sawGoodGT = false;
+		boolean sawGoodQual = false;
+		boolean sawGenotypeFilter = false;
+		boolean sawDP = false;
+		boolean sawAD = false;
+		boolean sawPL = false;
+		for (final Genotype g : vc.getGenotypes()) {
+			keys.addAll(g.getExtendedAttributes().keySet());
+			if ( g.isAvailable() ) sawGoodGT = true;
+			if ( g.hasGQ() ) sawGoodQual = true;
+			if ( g.hasDP() ) sawDP = true;
+			if ( g.hasAD() ) sawAD = true;
+			if ( g.hasPL() ) sawPL = true;
+			if (g.isFiltered()) sawGenotypeFilter = true;
+		}
+
+		if ( sawGoodQual ) keys.add(VCFConstants.GENOTYPE_QUALITY_KEY);
+		if ( sawDP ) keys.add(VCFConstants.DEPTH_KEY);
+		if ( sawAD ) keys.add(VCFConstants.GENOTYPE_ALLELE_DEPTHS);
+		if ( sawPL ) keys.add(VCFConstants.GENOTYPE_PL_KEY);
+		if ( sawGenotypeFilter ) keys.add(VCFConstants.GENOTYPE_FILTER_KEY);
+
+		List<String> sortedList = ParsingUtils.sortList(new ArrayList<String>(keys));
+
+		// make sure the GT is first
+		if (sawGoodGT) {
+			final List<String> newList = new ArrayList<String>(sortedList.size()+1);
+			newList.add(VCFConstants.GENOTYPE_KEY);
+			newList.addAll(sortedList);
+			sortedList = newList;
+		}
+
+		if (sortedList.isEmpty() && header.hasGenotypingData()) {
+			// this needs to be done in case all samples are no-calls
+			return Collections.singletonList(VCFConstants.GENOTYPE_KEY);
+		} else {
+			return sortedList;
+		}
+	}
 
     /**
      * Compute the end position for this VariantContext from the alleles themselves
