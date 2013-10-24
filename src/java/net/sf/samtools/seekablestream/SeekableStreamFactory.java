@@ -28,13 +28,29 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
+ * Singleton class for getting {@link SeekableStream}s from URL/paths
+ * Applications using this library can set their own factory
  * @author jrobinso
  * @date Nov 30, 2009
  */
-public class SeekableStreamFactory {
+public class SeekableStreamFactory{
 
-    public static SeekableStream getStreamFor(URL url) throws IOException{
-        return getStreamFor(url.toExternalForm());
+    private static final ISeekableStreamFactory DEFAULT_FACTORY;
+    private static ISeekableStreamFactory currentFactory;
+
+    static{
+        DEFAULT_FACTORY = new DefaultSeekableStreamFactory();
+        currentFactory = DEFAULT_FACTORY;
+    }
+
+    private SeekableStreamFactory(){}
+
+    public static void setInstance(final ISeekableStreamFactory factory){
+        currentFactory = factory;
+    }
+
+    public static ISeekableStreamFactory getInstance(){
+        return currentFactory;
     }
 
     /**
@@ -46,17 +62,25 @@ public class SeekableStreamFactory {
         return ! ( path.startsWith("http:") || path.startsWith("https:") || path.startsWith("ftp:") );
     }
 
-    public static SeekableStream getStreamFor(String path) throws IOException {
-        // todo -- add support for SeekableBlockInputStream
+    private static class DefaultSeekableStreamFactory implements ISeekableStreamFactory {
 
-        if (path.startsWith("http:") || path.startsWith("https:")) {
-            final URL url = new URL(path);
-            return new SeekableHTTPStream(url);
-        } else if (path.startsWith("ftp:")) {
-            return new SeekableFTPStream(new URL(path));
-        } else {
-            return new SeekableFileStream(new File(path));
+        public SeekableStream getStreamFor(final URL url) throws IOException {
+            return getStreamFor(url.toExternalForm());
         }
+
+        public SeekableStream getStreamFor(final String path) throws IOException {
+            // todo -- add support for SeekableBlockInputStream
+
+            if (path.startsWith("http:") || path.startsWith("https:")) {
+                final URL url = new URL(path);
+                return new SeekableHTTPStream(url);
+            } else if (path.startsWith("ftp:")) {
+                return new SeekableFTPStream(new URL(path));
+            } else {
+                return new SeekableFileStream(new File(path));
+            }
+        }
+
     }
 
 }

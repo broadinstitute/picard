@@ -91,7 +91,7 @@ public class TabixReader {
      * @param fn File name of the data file
      */
     public TabixReader(final String fn) throws IOException {
-        this(fn, SeekableStreamFactory.getStreamFor(fn));
+        this(fn, SeekableStreamFactory.getInstance().getStreamFor(fn));
     }
 
     /**
@@ -202,7 +202,7 @@ public class TabixReader {
      * Read the Tabix index from the default file.
      */
     public void readIndex() throws IOException {
-        readIndex(SeekableStreamFactory.getStreamFor(mFn + ".tbi"));
+        readIndex(SeekableStreamFactory.getInstance().getStreamFor(mFn + ".tbi"));
     }
 
     /**
