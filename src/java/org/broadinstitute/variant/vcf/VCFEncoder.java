@@ -7,10 +7,10 @@ import org.broadinstitute.variant.variantcontext.GenotypeBuilder;
 import org.broadinstitute.variant.variantcontext.GenotypesContext;
 import org.broadinstitute.variant.variantcontext.LazyGenotypesContext;
 import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.VariantContextUtils;
 import org.broadinstitute.variant.variantcontext.writer.IntGenotypeFieldAccessors;
 
 import java.lang.reflect.Array;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +22,11 @@ import java.util.TreeMap;
  */
 public class VCFEncoder {
 
-	private static final String QUAL_FORMAT_STRING = "%.2f";
+    /**
+     * The encoding used for VCF files: ISO-8859-1
+     */
+    public static final Charset VCF_CHARSET = Charset.forName("ISO-8859-1");
+    private static final String QUAL_FORMAT_STRING = "%.2f";
 	private static final String QUAL_FORMAT_EXTENSION_TO_TRIM = ".00";
 
 	private final IntGenotypeFieldAccessors GENOTYPE_FIELD_ACCESSORS = new IntGenotypeFieldAccessors();
@@ -118,7 +122,7 @@ public class VCFEncoder {
 			stringBuilder.append(VCFConstants.FIELD_SEPARATOR);
 			stringBuilder.append(((LazyGenotypesContext) gc).getUnparsedGenotypeData().toString());
 		} else {
-			final List<String> genotypeAttributeKeys = VariantContextUtils.calcVCFGenotypeKeys(context, this.header);
+			final List<String> genotypeAttributeKeys = context.calcVCFGenotypeKeys(this.header);
 			if ( ! genotypeAttributeKeys.isEmpty()) {
 				for (final String format : genotypeAttributeKeys)
 					if ( ! this.header.hasFormatLine(format))

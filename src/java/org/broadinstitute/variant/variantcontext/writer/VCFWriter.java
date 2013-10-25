@@ -28,7 +28,6 @@ package org.broadinstitute.variant.variantcontext.writer;
 import net.sf.samtools.SAMSequenceDictionary;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
-import org.broadinstitute.variant.variantcontext.VariantContextUtils;
 import org.broadinstitute.variant.vcf.VCFConstants;
 import org.broadinstitute.variant.vcf.VCFEncoder;
 import org.broadinstitute.variant.vcf.VCFHeader;
@@ -73,7 +72,7 @@ class VCFWriter extends IndexingVariantContextWriter {
     private static final int INITIAL_BUFFER_SIZE = 1024 * 16;
     private final ByteArrayOutputStream lineBuffer = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
     /* Wrapping in a {@link BufferedWriter} avoids frequent conversions with individual writes to OutputStreamWriter. */
-    private final Writer writer = new BufferedWriter(new OutputStreamWriter(lineBuffer, VariantContextUtils.VCF_CHARSET));
+    private final Writer writer = new BufferedWriter(new OutputStreamWriter(lineBuffer, VCFEncoder.VCF_CHARSET));
 
     public VCFWriter(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
                      final boolean enableOnTheFlyIndexing, final boolean doNotWriteGenotypes,
