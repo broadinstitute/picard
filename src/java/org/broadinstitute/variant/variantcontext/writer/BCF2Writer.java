@@ -296,7 +296,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
      */
     private int getNGenotypeFormatFields(final VariantContext vc) {
         final BCF2Codec.LazyData lazyData = getLazyData(vc);
-        return lazyData != null ? lazyData.nGenotypeFields : VariantContextUtils.calcVCFGenotypeKeys(vc, header).size();
+        return lazyData != null ? lazyData.nGenotypeFields : vc.calcVCFGenotypeKeys(header).size();
     }
 
     private void buildID( VariantContext vc ) throws IOException {
@@ -341,7 +341,7 @@ class BCF2Writer extends IndexingVariantContextWriter {
         }
 
         // we have to do work to convert the VC into a BCF2 byte stream
-        final List<String> genotypeFields = VariantContextUtils.calcVCFGenotypeKeys(vc, header);
+        final List<String> genotypeFields = vc.calcVCFGenotypeKeys(header);
         for ( final String field : genotypeFields ) {
             final BCF2FieldWriter.GenotypesWriter writer = fieldManager.getGenotypeFieldWriter(field);
             if ( writer == null ) errorUnexpectedFieldToWrite(vc, field, "FORMAT");
