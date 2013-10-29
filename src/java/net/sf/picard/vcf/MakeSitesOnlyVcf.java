@@ -56,7 +56,7 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
         IoUtil.assertFileIsWritable(OUTPUT);
 
 	    final VCFFileReader reader = new VCFFileReader(INPUT);
-	    final VCFHeader header = new VCFHeader(reader.getFileHeader());
+	    final VCFHeader header = new VCFHeader(reader.getFileHeader().getMetaDataInInputOrder());
 	    final SAMSequenceDictionary sequenceDictionary =
 			    SEQUENCE_DICTIONARY != null
 			            ? SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY)
