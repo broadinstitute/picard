@@ -37,6 +37,8 @@ import java.util.List;
 public class IoUtilTest {
 
     private static final File SLURP_TEST_FILE = new File("testdata/net/sf/picard/io/slurptest.txt");
+    private static final File EMPTY_FILE = new File("testdata/net/sf/picard/io/empty.txt");;
+    private static final File FIVE_SPACES_THEN_A_NEWLINE_THEN_FIVE_SPACES_FILE = new File("testdata/net/sf/picard/io/5newline5.txt");
     private static final List<String> SLURP_TEST_LINES = Arrays.asList("bacon   and rice   ","for breakfast  ","wont you join me");
     private static final String SLURP_TEST_LINE_SEPARATOR = "\n";
     private static final String TEST_FILE_PREFIX = "foo";
@@ -118,6 +120,16 @@ public class IoUtilTest {
     @Test
     public void slurpLinesTest() throws FileNotFoundException {
         Assert.assertEquals(IoUtil.slurpLines(SLURP_TEST_FILE), SLURP_TEST_LINES);
+    }
+
+    @Test
+    public void slurpWhitespaceOnlyFileTest() throws FileNotFoundException {
+        Assert.assertEquals(IoUtil.slurp(FIVE_SPACES_THEN_A_NEWLINE_THEN_FIVE_SPACES_FILE), "     \n     ");
+    }
+    
+    @Test
+    public void slurpEmptyFileTest() throws FileNotFoundException {
+        Assert.assertEquals(IoUtil.slurp(EMPTY_FILE), "");
     }
     
     @Test
