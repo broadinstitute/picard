@@ -72,7 +72,7 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     /**
      * IlluminaTileMetrics corresponds to a single record in a TileMetricsOut file
      */
-    public class IlluminaTileMetrics {
+    public static class IlluminaTileMetrics {
         private final int laneNumber;
         private final int tileNumber;
         private final int metricCode;
@@ -83,6 +83,13 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
             tileNumber  = UnsignedTypeUtil.uShortToInt(bb.getShort());
             metricCode  = UnsignedTypeUtil.uShortToInt(bb.getShort());
             metricValue = bb.getFloat();
+        }
+
+        public IlluminaTileMetrics(int laneNumber, int tileNumber, int metricCode, float metricValue) {
+            this.laneNumber = laneNumber;
+            this.tileNumber = tileNumber;
+            this.metricCode = metricCode;
+            this.metricValue = metricValue;
         }
 
         public int getLaneNumber() {
