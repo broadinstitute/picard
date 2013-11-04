@@ -26,9 +26,7 @@ package net.sf.picard.io;
 import net.sf.picard.PicardException;
 import net.sf.picard.util.IterableOnceIterator;
 import net.sf.samtools.Defaults;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.samtools.util.RuntimeIOException;
+import net.sf.samtools.util.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -37,7 +35,6 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import net.sf.samtools.util.StringUtil;
 import org.apache.tools.bzip2.CBZip2InputStream;
 import org.apache.tools.bzip2.CBZip2OutputStream;
 
@@ -354,6 +351,10 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
         }
+    }
+
+    public static OutputStream openFileForMd5CalculatingWriting(final File file) {
+        return new Md5CalculatingOutputStream(IoUtil.openFileForWriting(file), new File(file.getAbsolutePath() + ".md5"));
     }
 
     /**

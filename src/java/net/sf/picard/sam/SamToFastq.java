@@ -126,6 +126,7 @@ public class SamToFastq extends CommandLineProgram {
         final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         final Map<String,SAMRecord> firstSeenMates = new HashMap<String,SAMRecord>();
         final FastqWriterFactory factory = new FastqWriterFactory();
+        factory.setCreateMd5(CREATE_MD5_FILE);
         final Map<SAMReadGroupRecord, List<FastqWriter>> writers = getWriters(reader.getFileHeader().getReadGroups(), factory);
 
         final ProgressLogger progress = new ProgressLogger(log);

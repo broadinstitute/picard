@@ -27,6 +27,7 @@ import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 /**
@@ -38,15 +39,19 @@ public class BasicFastqWriter implements FastqWriter {
     private final PrintStream writer;
 
     public BasicFastqWriter(final File file) {
-        this(file, new PrintStream(IoUtil.openFileForWriting(file)));
+        this(file, false);
     }
 
-    private BasicFastqWriter(File file, PrintStream writer) {
+    public BasicFastqWriter(final File file, final boolean createMd5) {
+        this(file, new PrintStream(maybeMd5Wrap(file, createMd5)));
+    }
+
+    private BasicFastqWriter(final File file, final PrintStream writer) {
         this.path = (file != null? file.getAbsolutePath(): "");
         this.writer = writer;
     }
 
-    public BasicFastqWriter(PrintStream writer) {
+    public BasicFastqWriter(final PrintStream writer) {
         this(null, writer);
     }
 
@@ -68,5 +73,13 @@ public class BasicFastqWriter implements FastqWriter {
 
     public void close() {
         writer.close();
+    }
+
+    private static OutputStream maybeMd5Wrap(final File file, final boolean createMd5) {
+        if (createMd5) {
+            return IoUtil.openFileForMd5CalculatingWriting(file);
+        } else {
+            return IoUtil.openFileForWriting(file);
+        }
     }
 }
