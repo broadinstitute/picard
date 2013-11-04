@@ -178,6 +178,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * Prepares loggers, initiates garbage collection thread, parses arguments and initialized variables appropriately/
      */
     private void initialize() {
+        fastqWriterFactory.setCreateMd5(CREATE_MD5_FILE);
         switch (READ_NAME_FORMAT) {
             case CASAVA_1_8:
                 readNameEncoder = new Casava18ReadNameEncoder(MACHINE_NAME, RUN_BARCODE, FLOWCELL_BARCODE);        
