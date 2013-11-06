@@ -28,6 +28,7 @@ package org.broadinstitute.variant.variantcontext.writer;
 import com.google.java.contract.Ensures;
 import com.google.java.contract.Requires;
 import net.sf.samtools.SAMSequenceDictionary;
+import org.broad.tribble.index.IndexCreator;
 import org.broadinstitute.variant.bcf2.BCF2Codec;
 import org.broadinstitute.variant.bcf2.BCF2Type;
 import org.broadinstitute.variant.bcf2.BCF2Utils;
@@ -107,9 +108,17 @@ class BCF2Writer extends IndexingVariantContextWriter {
     private VCFHeader lastVCFHeaderOfUnparsedGenotypes = null;
     private boolean canPassOnUnparsedGenotypeDataForLastVCFHeader = false;
 
-
-    public BCF2Writer(final File location, final OutputStream output, final SAMSequenceDictionary refDict, final boolean enableOnTheFlyIndexing, final boolean doNotWriteGenotypes) {
+    public BCF2Writer(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
+                      final boolean enableOnTheFlyIndexing, final boolean doNotWriteGenotypes) {
         super(writerName(location, output), location, output, refDict, enableOnTheFlyIndexing);
+        this.outputStream = getOutputStream();
+        this.doNotWriteGenotypes = doNotWriteGenotypes;
+    }
+
+    public BCF2Writer(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
+                      final IndexCreator indexCreator,
+                      final boolean enableOnTheFlyIndexing, final boolean doNotWriteGenotypes) {
+        super(writerName(location, output), location, output, refDict, enableOnTheFlyIndexing, indexCreator);
         this.outputStream = getOutputStream();
         this.doNotWriteGenotypes = doNotWriteGenotypes;
     }

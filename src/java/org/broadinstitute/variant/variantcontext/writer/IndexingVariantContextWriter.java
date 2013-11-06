@@ -32,6 +32,7 @@ import net.sf.samtools.SAMSequenceRecord;
 import org.broad.tribble.Tribble;
 import org.broad.tribble.index.DynamicIndexCreator;
 import org.broad.tribble.index.Index;
+import org.broad.tribble.index.IndexCreator;
 import org.broad.tribble.index.IndexFactory;
 import org.broad.tribble.util.LittleEndianOutputStream;
 import org.broadinstitute.variant.vcf.VCFHeader;
@@ -44,35 +45,61 @@ import java.io.*;
  */
 abstract class IndexingVariantContextWriter implements VariantContextWriter {
     private final String name;
+    private final File location;
     private final SAMSequenceDictionary refDict;
 
     private OutputStream outputStream;
     private PositionalOutputStream positionalOutputStream = null;
-    private DynamicIndexCreator indexer = null;
+    private IndexCreator indexer = null;
     private LittleEndianOutputStream idxStream = null;
 
     @Requires({"name != null",
             "! ( location == null && output == null )",
             "! ( enableOnTheFlyIndexing && location == null )"})
-    protected IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict, final boolean enableOnTheFlyIndexing) {
+    protected IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict,
+                                           final boolean enableOnTheFlyIndexing) {
         outputStream = output;
         this.name = name;
+        this.location = location;
         this.refDict = refDict;
 
         if ( enableOnTheFlyIndexing ) {
-            try {
-                idxStream = new LittleEndianOutputStream(new FileOutputStream(Tribble.indexFile(location)));
-                //System.out.println("Creating index on the fly for " + location);
-                indexer = new DynamicIndexCreator(IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME);
-                indexer.initialize(location, indexer.defaultBinSize());
-                positionalOutputStream = new PositionalOutputStream(output);
-                outputStream = positionalOutputStream;
-            } catch ( IOException ex ) {
-                // No matter what we keep going, since we don't care if we can't create the index file
-                idxStream = null;
-                indexer = null;
-                positionalOutputStream = null;
-            }
+            initIndex(output);
+        }
+    }
+
+    @Requires({"name != null",
+            "! ( location == null && output == null )",
+            "! ( enableOnTheFlyIndexing && location == null )"})
+    protected IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict,
+                                           final boolean enableOnTheFlyIndexing, final IndexCreator idxCreator) {
+        outputStream = output;
+        this.name = name;
+        this.location = location;
+        this.refDict = refDict;
+
+        if ( enableOnTheFlyIndexing ) {
+            initIndex(output, idxCreator);
+        }
+    }
+
+    private void initIndex(final OutputStream output) {
+        initIndex(output, new DynamicIndexCreator(IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME));
+    }
+
+    private void initIndex(final OutputStream output, final IndexCreator idxCreator) {
+        try {
+            indexer = idxCreator;
+            idxStream = new LittleEndianOutputStream(new FileOutputStream(Tribble.indexFile(location)));
+            //System.out.println("Creating index on the fly for " + location);
+            indexer.initialize(location, indexer.defaultBinSize());
+            positionalOutputStream = new PositionalOutputStream(output);
+            outputStream = positionalOutputStream;
+        } catch ( IOException ex ) {
+            // No matter what we keep going, since we don't care if we can't create the index file
+            idxStream = null;
+            indexer = null;
+            positionalOutputStream = null;
         }
     }
 

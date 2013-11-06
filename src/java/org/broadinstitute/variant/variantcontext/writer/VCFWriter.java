@@ -26,6 +26,7 @@
 package org.broadinstitute.variant.variantcontext.writer;
 
 import net.sf.samtools.SAMSequenceDictionary;
+import org.broad.tribble.index.IndexCreator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
 import org.broadinstitute.variant.vcf.VCFConstants;
@@ -75,13 +76,20 @@ class VCFWriter extends IndexingVariantContextWriter {
     private final Writer writer = new BufferedWriter(new OutputStreamWriter(lineBuffer, VCFEncoder.VCF_CHARSET));
 
     public VCFWriter(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
-                     final boolean enableOnTheFlyIndexing, final boolean doNotWriteGenotypes,
-                     final boolean allowMissingFieldsInHeader ) {
+                     final boolean enableOnTheFlyIndexing,
+                     final boolean doNotWriteGenotypes, final boolean allowMissingFieldsInHeader ) {
         super(writerName(location, output), location, output, refDict, enableOnTheFlyIndexing);
         this.doNotWriteGenotypes = doNotWriteGenotypes;
 	    this.allowMissingFieldsInHeader = allowMissingFieldsInHeader;
     }
 
+    public VCFWriter(final File location, final OutputStream output, final SAMSequenceDictionary refDict,
+                     final IndexCreator indexCreator, final boolean enableOnTheFlyIndexing,
+                     final boolean doNotWriteGenotypes, final boolean allowMissingFieldsInHeader ) {
+        super(writerName(location, output), location, output, refDict, enableOnTheFlyIndexing, indexCreator);
+        this.doNotWriteGenotypes = doNotWriteGenotypes;
+        this.allowMissingFieldsInHeader = allowMissingFieldsInHeader;
+    }
     // --------------------------------------------------------------------------------
     //
     // VCFWriter interface functions

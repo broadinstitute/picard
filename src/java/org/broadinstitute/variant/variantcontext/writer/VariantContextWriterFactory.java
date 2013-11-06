@@ -25,8 +25,8 @@
 
 package org.broadinstitute.variant.variantcontext.writer;
 
-import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
+import org.broad.tribble.index.IndexCreator;
 
 import java.io.*;
 import java.util.EnumSet;
@@ -76,6 +76,25 @@ public class VariantContextWriterFactory {
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
         else {
             return new VCFWriter(location, output, refDict,
+                    options.contains(Options.INDEX_ON_THE_FLY),
+                    options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                    options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
+        }
+    }
+
+    public static VariantContextWriter create(final File location,
+                                              final OutputStream output,
+                                              final SAMSequenceDictionary refDict,
+                                              final IndexCreator indexCreator,
+                                              final EnumSet<Options> options) {
+        final boolean enableBCF = isBCFOutput(location, options);
+
+        if ( enableBCF )
+            return new BCF2Writer(location, output, refDict, indexCreator,
+                    options.contains(Options.INDEX_ON_THE_FLY),
+                    options.contains(Options.DO_NOT_WRITE_GENOTYPES));
+        else {
+            return new VCFWriter(location, output, refDict, indexCreator,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
