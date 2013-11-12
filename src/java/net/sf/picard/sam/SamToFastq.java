@@ -34,10 +34,7 @@ import net.sf.picard.fastq.FastqWriterFactory;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMUtils;
+import net.sf.samtools.*;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringUtil;
 
@@ -188,7 +185,8 @@ public class SamToFastq extends CommandLineProgram {
         }
 
         if (firstSeenMates.size() > 0) {
-            throw new PicardException("Found " + firstSeenMates.size() + " unpaired mates");
+            SAMUtils.processValidationError(new SAMValidationError(SAMValidationError.Type.MATE_NOT_FOUND,
+                    "Found " + firstSeenMates.size() + " unpaired mates", null), VALIDATION_STRINGENCY);
         }
 
         return 0;
