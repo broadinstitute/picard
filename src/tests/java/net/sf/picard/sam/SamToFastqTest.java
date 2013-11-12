@@ -30,6 +30,7 @@ import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFormatException;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.IOUtil;
 import org.testng.Assert;
@@ -183,7 +184,7 @@ public class SamToFastqTest {
     }
 
 
-    @Test (dataProvider = "badFiles", expectedExceptions= PicardException.class)
+    @Test (dataProvider = "badFiles", expectedExceptions= SAMFormatException.class)
     public void testBadFile(final String samFilename) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final File pair1 = File.createTempFile("tt-pair1.", ".fastq");

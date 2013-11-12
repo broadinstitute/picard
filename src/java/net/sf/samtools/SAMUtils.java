@@ -455,7 +455,7 @@ public final class SAMUtils
         }
     }
 
-    static void processValidationError(final SAMValidationError validationError,
+    public static void processValidationError(final SAMValidationError validationError,
                                        SAMFileReader.ValidationStringency validationStringency) {
         if (validationStringency == SAMFileReader.ValidationStringency.STRICT) {
             throw new SAMFormatException("SAM validation error: " + validationError);
