@@ -53,47 +53,66 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     private IndexCreator indexer = null;
     private LittleEndianOutputStream idxStream = null;
 
+    private IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict) {
+        this.name = name;
+        this.location = location;
+        this.outputStream = output;
+        this.refDict = refDict;
+    }
+
+    /**
+     * Create a VariantContextWriter with an associated index using the default index creator
+     *
+     * @param name  the name of this writer (i.e. the file name or stream)
+     * @param location  the path to the output file
+     * @param output    the output stream to write to
+     * @param refDict   the reference dictionary
+     * @param enableOnTheFlyIndexing    is OTF indexing enabled?
+     */
     @Requires({"name != null",
             "! ( location == null && output == null )",
             "! ( enableOnTheFlyIndexing && location == null )"})
     protected IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict,
                                            final boolean enableOnTheFlyIndexing) {
-        outputStream = output;
-        this.name = name;
-        this.location = location;
-        this.refDict = refDict;
+        this(name, location, output, refDict);
 
         if ( enableOnTheFlyIndexing ) {
-            initIndex(output);
+            final IndexCreator idxCreator = new DynamicIndexCreator(IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME);
+            idxCreator.initialize(location, idxCreator.defaultBinSize());
+            initIndexingWriter(idxCreator);
         }
     }
 
+    /**
+     * Create a VariantContextWriter with an associated index using a custom index creator
+     *
+     * @param name  the name of this writer (i.e. the file name or stream)
+     * @param location  the path to the output file
+     * @param output    the output stream to write to
+     * @param refDict   the reference dictionary
+     * @param enableOnTheFlyIndexing    is OTF indexing enabled?
+     * @param idxCreator    the custom index creator.  NOTE: must be initialized
+     */
     @Requires({"name != null",
             "! ( location == null && output == null )",
-            "! ( enableOnTheFlyIndexing && location == null )"})
+            "! ( enableOnTheFlyIndexing && location == null )",
+            "idxCreator != null"})
     protected IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict,
                                            final boolean enableOnTheFlyIndexing, final IndexCreator idxCreator) {
-        outputStream = output;
-        this.name = name;
-        this.location = location;
-        this.refDict = refDict;
+        this(name, location, output, refDict);
 
         if ( enableOnTheFlyIndexing ) {
-            initIndex(output, idxCreator);
+            initIndexingWriter(idxCreator);
         }
     }
 
-    private void initIndex(final OutputStream output) {
-        initIndex(output, new DynamicIndexCreator(IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME));
-    }
-
-    private void initIndex(final OutputStream output, final IndexCreator idxCreator) {
+    @Requires({"idxCreator != null"})
+    private void initIndexingWriter(final IndexCreator idxCreator) {
         try {
             indexer = idxCreator;
             idxStream = new LittleEndianOutputStream(new FileOutputStream(Tribble.indexFile(location)));
             //System.out.println("Creating index on the fly for " + location);
-            indexer.initialize(location, indexer.defaultBinSize());
-            positionalOutputStream = new PositionalOutputStream(output);
+            positionalOutputStream = new PositionalOutputStream(outputStream);
             outputStream = positionalOutputStream;
         } catch ( IOException ex ) {
             // No matter what we keep going, since we don't care if we can't create the index file
