@@ -81,6 +81,14 @@ public class SeekableStreamFactory{
             }
         }
 
+        public SeekableStream getBufferedStream(SeekableStream stream){
+            return getBufferedStream(stream, SeekableBufferedStream.DEFAULT_BUFFER_SIZE);
+        }
+
+        public SeekableStream getBufferedStream(SeekableStream stream, int bufferSize){
+            return new SeekableBufferedStream(stream, bufferSize);
+        }
+
     }
 
 }

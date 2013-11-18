@@ -29,15 +29,18 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.lang.StringBuffer;
 
+import net.sf.samtools.seekablestream.ISeekableStreamFactory;
 import net.sf.samtools.seekablestream.SeekableStream;
 import net.sf.samtools.util.BlockCompressedInputStream;
 import net.sf.samtools.seekablestream.SeekableStreamFactory;
+import org.broad.tribble.Tribble;
 
 /**
  * @author Heng Li <hengli@broadinstitute.org>
  */
 public class TabixReader {
     private String mFn;
+    private String mIdxFn;
     BlockCompressedInputStream mFp;
 
     private int mPreset;
@@ -91,7 +94,7 @@ public class TabixReader {
      * @param fn File name of the data file
      */
     public TabixReader(final String fn) throws IOException {
-        this(fn, SeekableStreamFactory.getInstance().getStreamFor(fn));
+        this(fn, SeekableStreamFactory.getInstance().getBufferedStream(SeekableStreamFactory.getInstance().getStreamFor(fn)));
     }
 
     /**
@@ -99,8 +102,20 @@ public class TabixReader {
      * @param stream Seekable stream from which the data is read 
      */
     public TabixReader(final String fn, SeekableStream stream) throws IOException {
+        this(fn, null, stream);
+    }
+
+    /**
+     * @param fn File name of the data file  (used for error messages only)
+     * @param idxFn Full path to the index file. Auto-generated if null
+     * @param stream Seekable stream from which the data is read
+     */
+    public TabixReader(final String fn, final String idxFn, SeekableStream stream) throws IOException {
         mFn = fn;
-        mFp = new BlockCompressedInputStream(stream); //  new File(fn));
+        mFp = new BlockCompressedInputStream(stream);
+        if(idxFn == null){
+            mIdxFn = Tribble.appendToPath(fn, ".tbi");
+        }
         readIndex();
     }
 
@@ -202,7 +217,8 @@ public class TabixReader {
      * Read the Tabix index from the default file.
      */
     public void readIndex() throws IOException {
-        readIndex(SeekableStreamFactory.getInstance().getStreamFor(mFn + ".tbi"));
+        ISeekableStreamFactory ssf = SeekableStreamFactory.getInstance();
+        readIndex(ssf.getBufferedStream(ssf.getStreamFor(mIdxFn), 128000));
     }
 
     /**
