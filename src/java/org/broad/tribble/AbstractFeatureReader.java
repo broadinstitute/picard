@@ -41,22 +41,37 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
     protected final FeatureCodec<T, SOURCE> codec;
     protected FeatureCodecHeader header;
 
-    /** Convenience overload which defaults to requiring an index. */
+    private static ComponentMethods methods = new ComponentMethods();
+
+    /**
+     * Calls {@link #getFeatureReader(String, FeatureCodec, boolean)} with {@code requireIndex} = true
+     */
     public static <FEATURE extends Feature, SOURCE> AbstractFeatureReader<FEATURE, SOURCE> getFeatureReader(final String featureFile, final FeatureCodec<FEATURE, SOURCE> codec) throws TribbleException {
         return getFeatureReader(featureFile, codec, true);
     }
 
     /**
-     * factory for unknown file type,  could be ascii, binary, or could be tabix, or something else.
-     *
-     * @param featureResource the feature file to create from
-     * @param codec           the codec to read features with
+     * {@link #getFeatureReader(String, String, FeatureCodec, boolean)} with {@code null} for indexResource
+     * @throws TribbleException
      */
     public static <FEATURE extends Feature, SOURCE> AbstractFeatureReader<FEATURE, SOURCE> getFeatureReader(final String featureResource, final FeatureCodec<FEATURE, SOURCE> codec, final boolean requireIndex) throws TribbleException {
+        return getFeatureReader(featureResource, null, codec, requireIndex);
+    }
+
+    /**
+     *
+     * @param featureResource the feature file to create from
+     * @param indexResource   the index for the feature file. If null, will auto-generate (if necessary)
+     * @param codec
+     * @param requireIndex    whether an index is required for this file
+     * @return
+     * @throws TribbleException
+     */
+    public static <FEATURE extends Feature, SOURCE> AbstractFeatureReader<FEATURE, SOURCE> getFeatureReader(final String featureResource, String indexResource, final FeatureCodec<FEATURE, SOURCE> codec, final boolean requireIndex) throws TribbleException {
 
         try {
             // Test for tabix index
-            if (featureResource.endsWith(".gz") && ParsingUtils.resourceExists(featureResource + ".tbi")) {
+            if (methods.isTabix(featureResource, indexResource)) {
                 if ( ! (codec instanceof AsciiFeatureCodec) )
                     throw new TribbleException("Tabix indexed files only work with ASCII codecs, but received non-Ascii codec " + codec.getClass().getSimpleName());
                 return new TabixFeatureReader<FEATURE, SOURCE>(featureResource, (AsciiFeatureCodec) codec);
@@ -96,6 +111,18 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
         this.codec = codec;
     }
 
+    /**
+     * Whether the reader has an index or not
+     * Default implementation returns false
+     * @return
+     */
+    public boolean hasIndex(){
+        return false;
+    }
+
+    public static void setComponentMethods(ComponentMethods methods){
+        AbstractFeatureReader.methods = methods;
+    }
 
     /**
      * get the header
@@ -112,5 +139,15 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
         public T next() { return null; }
         public void remove() { }
         @Override public void close() { }
+    }
+
+    public static class ComponentMethods{
+
+        public boolean isTabix(String resourcePath, String indexPath) throws IOException{
+            if(indexPath == null){
+                indexPath = Tribble.appendToPath(resourcePath, ".tbi");
+            }
+            return resourcePath.endsWith(".gz") && ParsingUtils.resourceExists(indexPath);
+        }
     }
 }

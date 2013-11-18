@@ -40,7 +40,7 @@ public class Tribble {
      * @return
      */
     public static String indexFile(String filename) {
-        return indexFile(filename, STANDARD_INDEX_EXTENSION);
+        return appendToPath(filename, STANDARD_INDEX_EXTENSION);
     }
 
     /**
@@ -62,7 +62,7 @@ public class Tribble {
      * @param indexExtension
      * @return
      */
-    public static String indexFile(String filepath, String indexExtension) {
+    public static String appendToPath(String filepath, String indexExtension) {
         if(!filepath.contains(":/")){
             return filepath + indexExtension;
         }

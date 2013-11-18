@@ -76,6 +76,11 @@ public class TabixFeatureReader<T extends Feature, SOURCE> extends AbstractFeatu
         }
     }
 
+    @Override
+    public boolean hasIndex(){
+        return true;
+    }
+
 
     public List<String> getSequenceNames() {
         return sequenceNames;

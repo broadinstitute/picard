@@ -78,7 +78,7 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
                 index = IndexFactory.loadIndex(indexFile);
             } else {
                 // See if the index itself is gzipped
-                indexFile = indexFile + ".gz";
+                indexFile = Tribble.appendToPath(indexFile, ".gz");
                 if (ParsingUtils.resourceExists(indexFile)) {
                     index = IndexFactory.loadIndex(indexFile);
                 } else {
@@ -152,6 +152,10 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
         return index == null ? new ArrayList<String>() : new ArrayList<String>(index.getSequenceNames());
     }
 
+    @Override
+    public boolean hasIndex() {
+        return index != null;
+    }
 
     /**
      * read the header from the file
