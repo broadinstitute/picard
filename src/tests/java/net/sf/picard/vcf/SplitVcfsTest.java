@@ -1,5 +1,6 @@
 package net.sf.picard.vcf;
 
+import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContext.Type;
@@ -7,6 +8,7 @@ import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
 import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -16,13 +18,19 @@ import java.util.Queue;
 
 public class SplitVcfsTest {
 
-	private static final String TEST_DATA_PATH = "testdata/net/sf/picard/vcf/";
+	private static final File OUTPUT_DATA_PATH = IoUtil.createTempDir("SplitVcfsTest", null);
+	private static final File TEST_DATA_PATH = new File("testdata/net/sf/picard/vcf/");
+
+	@AfterClass
+	public void teardown() {
+		IoUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
+	}
 
 	@Test
 	public void testSplit() {
-		final File indelOutputFile = new File(TEST_DATA_PATH + "split-vcfs-test-indels-delete-me.vcf");
-		final File snpOutputFile = new File(TEST_DATA_PATH + "split-vcfs-test-snps-delete-me.vcf");
-		final File input = new File(TEST_DATA_PATH + "CEUTrio-merged-indels-snps.vcf");
+		final File indelOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-indels-delete-me.vcf");
+		final File snpOutputFile = new File(OUTPUT_DATA_PATH, "split-vcfs-test-snps-delete-me.vcf");
+		final File input = new File(TEST_DATA_PATH, "CEUTrio-merged-indels-snps.vcf");
 
 		indelOutputFile.deleteOnExit();
 		snpOutputFile.deleteOnExit();
