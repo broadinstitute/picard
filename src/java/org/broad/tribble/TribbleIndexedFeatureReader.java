@@ -78,7 +78,7 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
                 index = IndexFactory.loadIndex(indexFile);
             } else {
                 // See if the index itself is gzipped
-                indexFile = Tribble.appendToPath(indexFile, ".gz");
+                indexFile = ParsingUtils.appendToPath(indexFile, ".gz");
                 if (ParsingUtils.resourceExists(indexFile)) {
                     index = IndexFactory.loadIndex(indexFile);
                 } else {
