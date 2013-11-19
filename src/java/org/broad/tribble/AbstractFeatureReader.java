@@ -145,7 +145,7 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
 
         public boolean isTabix(String resourcePath, String indexPath) throws IOException{
             if(indexPath == null){
-                indexPath = Tribble.appendToPath(resourcePath, ".tbi");
+                indexPath = ParsingUtils.appendToPath(resourcePath, ".tbi");
             }
             return resourcePath.endsWith(".gz") && ParsingUtils.resourceExists(indexPath);
         }

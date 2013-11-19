@@ -23,6 +23,8 @@
  */
 package org.broad.tribble;
 
+import org.broad.tribble.util.ParsingUtils;
+
 import java.io.File;
 
 /**
@@ -40,7 +42,7 @@ public class Tribble {
      * @return
      */
     public static String indexFile(String filename) {
-        return appendToPath(filename, STANDARD_INDEX_EXTENSION);
+        return ParsingUtils.appendToPath(filename, STANDARD_INDEX_EXTENSION);
     }
 
     /**
@@ -53,25 +55,4 @@ public class Tribble {
         return new File(file.getAbsoluteFile() + STANDARD_INDEX_EXTENSION);
     }
 
-    /**
-     * Add the {@code indexExtension} to the {@code filepath}, preserving
-     * query string elements if present. Intended for use where {@code filepath}
-     * is a URL. Will behave correctly on regular file paths (just add the extension
-     * to the end)
-     * @param filepath
-     * @param indexExtension
-     * @return
-     */
-    public static String appendToPath(String filepath, String indexExtension) {
-        if(!filepath.contains(":/")){
-            return filepath + indexExtension;
-        }
-        String[] parts = filepath.split("\\?", 2);
-        String indexFile = parts[0] + indexExtension;
-        String qs = parts.length == 2 ? parts[1] : null;
-        if(qs != null && qs.length() > 0){
-            indexFile += "?" + qs;
-        }
-        return indexFile;
-    }
 }

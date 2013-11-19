@@ -23,6 +23,8 @@
  */
 package org.broad.tribble.util;
 
+import net.sf.samtools.util.HttpUtils;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -414,5 +416,32 @@ public class ParsingUtils {
             //TODO check that it has 1 arg constructor of proper type
         }
         urlHelperClass = helperClass;
+    }
+
+    /**
+     * Add the {@code indexExtension} to the {@code filepath}, preserving
+     * query string elements if present. Intended for use where {@code filepath}
+     * is a URL. Will behave correctly on regular file paths (just add the extension
+     * to the end)
+     * @param filepath
+     * @param indexExtension
+     * @return
+     */
+    public static String appendToPath(String filepath, String indexExtension) {
+        String tabxIndex = null;
+        URL url = null;
+        try{
+            url = new URL(filepath);
+        }catch (MalformedURLException e){
+            //pass
+        }
+        if (url != null) {
+            String path = url.getPath();
+            String indexPath = path + indexExtension;
+            tabxIndex = filepath.replace(path, indexPath);
+        } else {
+            tabxIndex = filepath + indexExtension;
+        }
+        return tabxIndex;
     }
 }

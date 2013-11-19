@@ -34,6 +34,7 @@ import net.sf.samtools.seekablestream.SeekableStream;
 import net.sf.samtools.util.BlockCompressedInputStream;
 import net.sf.samtools.seekablestream.SeekableStreamFactory;
 import org.broad.tribble.Tribble;
+import org.broad.tribble.util.ParsingUtils;
 
 /**
  * @author Heng Li <hengli@broadinstitute.org>
@@ -114,7 +115,7 @@ public class TabixReader {
         mFn = fn;
         mFp = new BlockCompressedInputStream(stream);
         if(idxFn == null){
-            mIdxFn = Tribble.appendToPath(fn, ".tbi");
+            mIdxFn = ParsingUtils.appendToPath(fn, ".tbi");
         }
         readIndex();
     }
