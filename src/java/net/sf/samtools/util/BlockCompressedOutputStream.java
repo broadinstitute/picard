@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.util.zip.DeflaterFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -83,6 +85,8 @@ public class BlockCompressedOutputStream
     // which would attempt to compress up to 64K bytes, and if the resulting compressed block was too large,
     // try compressing fewer input bytes (aka "downshifting').  The problem with downshifting is that
     // getFilePointer might return an inaccurate value.
+    // I assume (AW 29-Oct-2013) that there is no value in using hardware-assisted deflater for no-compression mode,
+    // so just use JDK standard.
     private final Deflater noCompressionDeflater = new Deflater(Deflater.NO_COMPRESSION, true);
     private final CRC32 crc32 = new CRC32();
     private File file = null;
@@ -121,7 +125,7 @@ public class BlockCompressedOutputStream
     public BlockCompressedOutputStream(final File file, final int compressionLevel) {
         this.file = file;
         codec = new BinaryCodec(file, true);
-        deflater = new Deflater(compressionLevel, true);
+        deflater = DeflaterFactory.makeDeflater(compressionLevel, true);
     }
 
     /**
@@ -138,7 +142,7 @@ public class BlockCompressedOutputStream
         if (file != null) {
             codec.setOutputFileName(file.getAbsolutePath());
         }
-        deflater = new Deflater(compressionLevel, true);
+        deflater = DeflaterFactory.makeDeflater(compressionLevel, true);
     }
 
     /**

@@ -40,6 +40,7 @@ import net.sf.samtools.SAMFileWriterImpl;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.BlockCompressedStreamConstants;
 import net.sf.samtools.util.IOUtil;
+import net.sf.samtools.util.zip.DeflaterFactory;
 
 /**
  * Abstract class to facilitate writing command-line programs.
@@ -167,7 +168,8 @@ public abstract class CommandLineProgram {
                                        " on " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
                                        " " + System.getProperty("os.arch") + "; " + System.getProperty("java.vm.name") +
                                        " " + System.getProperty("java.runtime.version") +
-                    "; Picard version: " + commandLineParser.getVersion());
+                                       "; Picard version: " + commandLineParser.getVersion() +
+            " " + (DeflaterFactory.usingIntelDeflater()? "IntelDeflater": "JdkDeflater"));
             }
             catch (Exception e) { /* Unpossible! */ }
         }
