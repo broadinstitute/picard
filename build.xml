@@ -348,6 +348,8 @@
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
+            <!-- distribute libJniDeflater.so in same directory as jarfiles-->
+            <zipfileset dir="${lib}/jni" includes="*" prefix="picard-tools-${picard-version}"/>
         </zip>
     </target>
 
@@ -372,6 +374,8 @@
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/native/Linux/**/*"/>
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/VERSION"/>
                 <fileset dir="${command_tmp}" includes="META-INF/maven/org.xerial.snappy/snappy-java/pom.properties"/>
+                <!-- Force inclusion of IntelDeflater, which is dynamically linked. -->
+                <fileset dir="${command_tmp}" includes="net/sf/samtools/util/zip/*"/>
                 <filesets/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
