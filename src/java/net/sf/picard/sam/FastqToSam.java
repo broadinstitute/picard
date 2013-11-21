@@ -111,6 +111,10 @@ public class FastqToSam extends CommandLineProgram {
     @Option(doc="If true and this is an unpaired fastq any occurance of '/1' will be removed from the end of a read name.")
     public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
 
+
+    @Option(doc="Allow (and ignore) empty lines")
+    public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
+
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
     /** Stock main method. */
@@ -122,11 +126,11 @@ public class FastqToSam extends CommandLineProgram {
     protected int doWork() {
         if (QUALITY_FORMAT == null) {
             final QualityEncodingDetector detector = new QualityEncodingDetector();
-            final FastqReader reader = new FastqReader(FASTQ);
+            final FastqReader reader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
             if (FASTQ2 == null) {
                 detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader);
             } else {
-                final FastqReader reader2 = new FastqReader(FASTQ2);       
+                final FastqReader reader2 = new FastqReader(FASTQ2,ALLOW_AND_IGNORE_EMPTY_LINES);
                 detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader, reader2);
                 reader2.close();
             }
@@ -147,7 +151,7 @@ public class FastqToSam extends CommandLineProgram {
         IoUtil.assertFileIsReadable(FASTQ);
         IoUtil.assertFileIsWritable(OUTPUT);
         
-        final FastqReader freader = new FastqReader(FASTQ);
+        final FastqReader freader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
         final SAMFileHeader header = createFileHeader();
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
 
@@ -171,8 +175,8 @@ public class FastqToSam extends CommandLineProgram {
         IoUtil.assertFileIsReadable(FASTQ2);
         IoUtil.assertFileIsWritable(OUTPUT);
         
-        final FastqReader freader1 = new FastqReader(FASTQ);
-        final FastqReader freader2 = new FastqReader(FASTQ2);
+        final FastqReader freader1 = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
+        final FastqReader freader2 = new FastqReader(FASTQ2,ALLOW_AND_IGNORE_EMPTY_LINES);
         final SAMFileHeader header = createFileHeader() ;
         final SAMFileWriter writer = (new SAMFileWriterFactory()).makeSAMOrBAMWriter(header, false, OUTPUT);
 

@@ -33,6 +33,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tests for FastqToBam
@@ -80,6 +82,22 @@ public class FastqToSamTest {
         };
     }
 
+    // permissive fastq format, i.e. contain blank lines at various places
+    @DataProvider(name = "permissiveFormatFiles")
+    public Object[][] permissiveFormatFiles() {
+        return new Object[][] {
+                {"permissive-format/pair1.txt",          "permissive-format/pair2.txt", FastqQualityFormat.Standard },
+                {"permissive-format/s_1_1_sequence.txt",    "permissive-format/s_1_2_sequence.txt", FastqQualityFormat.Illumina},
+                {"permissive-format/pair1.txt", null, FastqQualityFormat.Standard},
+                {"permissive-format/pair2.txt", null, FastqQualityFormat.Standard},
+                {"permissive-format/s_1_1_sequence.txt", null, FastqQualityFormat.Illumina},
+                {"permissive-format/s_1_2_sequence.txt", null, FastqQualityFormat.Illumina},
+                {"permissive-format/s_1_sequence.txt", null, FastqQualityFormat.Illumina},
+
+        };
+    }
+
+
     // OK paired fastq files
     @DataProvider(name = "okPairedFiles")
     public Object[][] okPairedFiles() {
@@ -102,15 +120,24 @@ public class FastqToSamTest {
         };
     }
 
+    @Test(dataProvider = "permissiveFormatFiles")
+    public void testPermissiveOk(final String filename1, final String filename2, final FastqQualityFormat version) throws IOException {
+        convertFile(filename1,filename2,version,true);
+    }
+
+    @Test(dataProvider = "permissiveFormatFiles",expectedExceptions = PicardException.class)
+    public void testPermissiveFail(final String filename1, final String filename2, final FastqQualityFormat version) throws IOException {
+        convertFile(filename1,filename2,version,false);
+    }
 
     @Test(dataProvider = "okVersionFiles")
     public void testFastqVersionOk(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
-        final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
+        convertFile(fastqVersionFilename, version);
     }
 
     @Test(dataProvider = "badVersionFiles", expectedExceptions= PicardException.class)
     public void testFastqVersionBad(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
-        final File fastqVersionSamFile = convertFile(fastqVersionFilename, version);
+        convertFile(fastqVersionFilename, version);
     }
 
     @Test(dataProvider = "badFormatFiles", expectedExceptions= PicardException.class) 
@@ -132,35 +159,28 @@ public class FastqToSamTest {
         return convertFile(filename, null, version);
     }
 
-    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version) throws IOException {
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version) throws IOException{
+        return convertFile(fastqFilename1, fastqFilename2, version,false);
+    }
+
+    private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version,final boolean permissiveFormat) throws IOException {
         final File fastq1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
         final File samFile = newTempSamFile(fastq1.getName());
 
-        String [] args;
+        final List<String> args =new ArrayList<String>();
 
-        if(fastqFilename2 != null) {
-            args = new String[] {
-                "FASTQ=" + fastq1.getAbsolutePath(),
-                "FASTQ2=" + fastq2.getAbsolutePath(),
-                "OUTPUT=" + samFile.getAbsolutePath(),
-                "QUALITY_FORMAT=" + version,
-                "READ_GROUP_NAME=rg",
-                "SAMPLE_NAME=s1"
-            };
-        } else {
-            args = new String[] {
-                "FASTQ=" + fastq1.getAbsolutePath(),
-                "OUTPUT=" + samFile.getAbsolutePath(),
-                "QUALITY_FORMAT=" + version,
-                "READ_GROUP_NAME=rg",
-                "SAMPLE_NAME=s1"
-            };
+        args.add("FASTQ=" + fastq1.getAbsolutePath());
+        args.add("OUTPUT=" + samFile.getAbsolutePath());
+        args.add("QUALITY_FORMAT=" + version);
+        args.add("READ_GROUP_NAME=rg");
+        args.add("SAMPLE_NAME=s1");
 
-        }
+        if(fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
+        if(permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
 
-        FastqToSam fqToSam = new FastqToSam();
-        Assert.assertEquals(fqToSam.instanceMain(args), 0);
+        final FastqToSam fqToSam = new FastqToSam();
+        Assert.assertEquals(fqToSam.instanceMain(args.toArray(new String[args.size()])), 0);
         return samFile ;
     }
 
@@ -181,13 +201,12 @@ public class FastqToSamTest {
 //  an existing file.
 
     private static final FastqToSam fastqToSam = new FastqToSam();
-    private static File dummyFile ;
     private static FastqReader freader1 ;
     private static FastqReader freader2 ;
 
     @BeforeClass
     public static void beforeClass() throws IOException {
-        dummyFile = newTempFile("dummy");
+        final File dummyFile = newTempFile("dummy");
         freader1 = new FastqReader(dummyFile);
         freader2 = new FastqReader(dummyFile);
     }

@@ -41,9 +41,16 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
     final private File fastqFile;
     final private BufferedReader reader;
     private FastqRecord nextRecord;
-    private int line=1; 
+    private int line=1;
+
+    final private boolean skipBlankLines;
 
     public FastqReader(final File file) {
+        this(file,false);
+    }
+
+    public FastqReader(final File file, final boolean skipBlankLines) {
+        this.skipBlankLines=skipBlankLines;
         try {
             fastqFile = file;
             reader = IoUtil.openFileForBufferedReading(fastqFile);
@@ -54,21 +61,22 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
         }
     }
 
-    public FastqReader(BufferedReader reader) {
+    public FastqReader(final BufferedReader reader) {
         this(null, reader);
     }
 
-    public FastqReader(final File file, BufferedReader reader) {
+    public FastqReader(final File file, final BufferedReader reader) {
         fastqFile = file;
         this.reader = reader;
         nextRecord = readNextRecord();
+        skipBlankLines = false;
     }
 
     private FastqRecord readNextRecord() {
         try {
 
             // Read sequence header
-            final String seqHeader = reader.readLine();
+            final String seqHeader = readLineConditionallySkippingBlanks();
             if (seqHeader == null) return null ;
             if (StringUtil.isBlank(seqHeader)) {
                 throw new PicardException(error("Missing sequence header"));
@@ -78,18 +86,18 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
             }
 
             // Read sequence line
-            final String seqLine = reader.readLine();
+            final String seqLine = readLineConditionallySkippingBlanks();
             checkLine(seqLine,"sequence line");
 
             // Read quality header
-            final String qualHeader = reader.readLine();
+            final String qualHeader = readLineConditionallySkippingBlanks();
             checkLine(qualHeader,"quality header");
             if (!qualHeader.startsWith(FastqConstants.QUALITY_HEADER)) {
                 throw new PicardException(error("Quality header must start with "+ FastqConstants.QUALITY_HEADER+": "+qualHeader));
             }
 
             // Read quality line
-            final String qualLine = reader.readLine();
+            final String qualLine = readLineConditionallySkippingBlanks();
             checkLine(qualLine,"quality line");
 
             // Check sequence and quality lines are same length
@@ -160,4 +168,15 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
         if (fastqFile == null) return "";
         else return fastqFile.getAbsolutePath();
     }
+
+    private String readLineConditionallySkippingBlanks() throws IOException {
+        String line;
+        do {
+            line = reader.readLine();
+            if (line == null) return line;
+        } while(skipBlankLines && StringUtil.isBlank(line));
+        return line;
+    }
+
+
 }
