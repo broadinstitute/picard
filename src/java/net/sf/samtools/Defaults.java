@@ -35,7 +35,7 @@ public class Defaults {
         USE_ASYNC_IO      = getBooleanProperty("use_async_io", false);
         COMPRESSION_LEVEL = getIntProperty("compression_level", 5);
         BUFFER_SIZE       = getIntProperty("buffer_size", 1024 * 128);
-        TRY_USE_INTEL_DEFLATER = getBooleanProperty(";", true);
+        TRY_USE_INTEL_DEFLATER = getBooleanProperty("try_use_intel_deflater", true);
         INTEL_DEFLATER_SHARED_LIBRARY_PATH = getStringProperty("intel_deflater_so_path", null);
     }
 
