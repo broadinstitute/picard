@@ -211,7 +211,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
 
-        basecallsConverter.setConverter(new ClusterToFastqRecordsForClusterConverter());
+        basecallsConverter.setConverter(
+		        new ClusterToFastqRecordsForClusterConverter(
+				        basecallsConverter.getFactory().getOutputReadStructure()));
 
     }
 
@@ -361,9 +363,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         private final int [] templateIndices;
         private final int [] barcodeIndices;
 
-        ClusterToFastqRecordsForClusterConverter() {
-            this.templateIndices = readStructure.templates.getIndices();
-            this.barcodeIndices = readStructure.barcodes.getIndices();
+        ClusterToFastqRecordsForClusterConverter(final ReadStructure outputReadStructure) {
+            this.templateIndices = outputReadStructure.templates.getIndices();
+            this.barcodeIndices = outputReadStructure.barcodes.getIndices();
         }
 
         @Override
