@@ -64,13 +64,19 @@ public class FTPUtils {
     }
 
     public static long getContentLength(URL url) throws IOException {
-        // Use JDK url
-        URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(TIMEOUT);
-        //For reasons beyond my ken, on Java 7 getContentLength
-        //returns -1 without attempting a connection
-        //contentLength = connection.getContentLength();
-        return connection.getInputStream().available();
+        FTPClient ftp = null;
+        try {
+            ftp = FTPUtils.connect(url.getHost(), url.getUserInfo(), null);
+            String sizeString = ftp.executeCommand("size " + url.getPath()).getReplyString();
+            return Integer.parseInt(sizeString);
+        } catch (Exception e) {
+            return -1 ;
+        }
+        finally {
+            if(ftp != null) {
+                ftp.disconnect();
+            }
+        }
     }
 
 
