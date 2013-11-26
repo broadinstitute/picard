@@ -50,6 +50,7 @@ public class SAMSequenceDictionary {
 
     /**
      * Replaces the existing list of SAMSequenceRecords with the given list.
+     *
      * @param list This value is used directly, rather than being copied.
      */
     public void setSequences(final List<SAMSequenceRecord> list) {
@@ -115,6 +116,33 @@ public class SAMSequenceDictionary {
         return mSequences.isEmpty();
     }
 
+    private static String DICT_MISMATCH_TEMPLATE = "SAM dictionaries are not the same: %s.";
+    /**
+     * Non-comprehensive {@link #equals(Object)}-assertion: instead of calling {@link SAMSequenceRecord#equals(Object)} on constituent
+     * {@link SAMSequenceRecord}s in this dictionary against its pair in the target dictionary, in order,  call 
+     * {@link SAMSequenceRecord#isSameSequence(SAMSequenceRecord)}.
+     *
+     * @throws AssertionError When the dictionaries are not the same, with some human-readable information as to why
+     */
+    public void assertSameDictionary(final SAMSequenceDictionary that) {
+        if (this == that) return;
+        
+        final Iterator<SAMSequenceRecord> thatSequences = that.mSequences.iterator();
+        for (final SAMSequenceRecord thisSequence : mSequences) {
+            if (!thatSequences.hasNext())
+                throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thisSequence, " is present in only one dictionary."));
+            else {
+                final SAMSequenceRecord thatSequence = thatSequences.next();
+                if(!thatSequence.isSameSequence(thisSequence))
+                    throw new AssertionError(
+                            String.format(DICT_MISMATCH_TEMPLATE, thatSequence, " was found when ", thisSequence, " was expected.")
+                    );
+            }
+        }
+        if (thatSequences.hasNext())
+            throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thatSequences.next(), " is present in only one dictionary."));
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

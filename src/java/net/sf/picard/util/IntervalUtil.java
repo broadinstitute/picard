@@ -25,6 +25,7 @@ package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
 
 import java.util.Iterator;
 
@@ -33,23 +34,37 @@ import java.util.Iterator;
  */
 public class IntervalUtil {
 
+    /** Return true if the sequence/position lie in the provided interval. */
+    public static boolean contains(final Interval interval, final String sequenceName, final long position) {
+        return interval.getSequence().equals(sequenceName) && (position >= interval.getStart() && position <= interval.getEnd());
+    }
+
+    /** Return true if the sequence/position lie in the provided interval list. */
+    public static boolean contains(final IntervalList intervalList, final String sequenceName, final long position) {
+        for (final Interval interval : intervalList.getUniqueIntervals()) {
+           if (contains(interval, sequenceName, position))
+               return true;
+        }
+        return false;
+    }
+    
     /**
      * Throws RuntimeException if the given intervals are not locus ordered and non-overlapping
      * @param intervals
      * @param sequenceDictionary used to determine order of sequences
      */
-    public static void assertOrderedNonOverlapping(Iterator<Interval> intervals, SAMSequenceDictionary sequenceDictionary) {
+    public static void assertOrderedNonOverlapping(final Iterator<Interval> intervals, final SAMSequenceDictionary sequenceDictionary) {
         if (!intervals.hasNext()) {
             return;
         }
         Interval prevInterval = intervals.next();
         int prevSequenceIndex = sequenceDictionary.getSequenceIndex(prevInterval.getSequence());
         while (intervals.hasNext()) {
-            Interval interval = intervals.next();
+            final Interval interval = intervals.next();
             if (prevInterval.intersects(interval)) {
                 throw new PicardException("Intervals should not overlap: " + prevInterval + "; " + interval);
             }
-            int thisSequenceIndex = sequenceDictionary.getSequenceIndex(interval.getSequence());
+            final int thisSequenceIndex = sequenceDictionary.getSequenceIndex(interval.getSequence());
             if (prevSequenceIndex > thisSequenceIndex ||
                 (prevSequenceIndex == thisSequenceIndex && prevInterval.compareTo(interval) >= 0)) {
                 throw new PicardException("Intervals not in order: " + prevInterval + "; " + interval);
