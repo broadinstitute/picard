@@ -59,7 +59,7 @@ public class VariantJEXLContextUnitTest extends VariantBaseTest {
     @BeforeClass
     public void beforeClass() {
         try {
-            exp = new VariantContextUtils.JexlVCMatchExp("name", VariantContextUtils.engine.createExpression(expression));
+            exp = new VariantContextUtils.JexlVCMatchExp("name", VariantContextUtils.engine.get().createExpression(expression));
         } catch (Exception e) {
             Assert.fail("Unable to create expression" + e.getMessage());
         }

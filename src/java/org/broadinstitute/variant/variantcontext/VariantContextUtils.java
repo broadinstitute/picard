@@ -27,6 +27,7 @@ package org.broadinstitute.variant.variantcontext;
 
 import com.google.java.contract.Ensures;
 import com.google.java.contract.Requires;
+import net.sf.samtools.util.Lazy;
 import org.apache.commons.jexl2.Expression;
 import org.apache.commons.jexl2.JexlEngine;
 import org.broad.tribble.TribbleException;
@@ -38,15 +39,41 @@ import java.util.*;
 public class VariantContextUtils {
     private static Set<String> MISSING_KEYS_WARNED_ABOUT = new HashSet<String>();
 
-    final public static JexlEngine engine = new JexlEngine();
+    /** Use a {@link Lazy} {@link JexlEngine} instance to avoid class-loading issues. (Applications that access this class are otherwise
+     * forced to build a {@link JexlEngine} instance, which depends on some apache logging libraries that mightn't be packaged.) */
+    final public static Lazy<JexlEngine> engine = new Lazy<JexlEngine>(new Lazy.LazyInitializer<JexlEngine>() {
+        @Override
+        public JexlEngine make() {
+            final JexlEngine jexl = new JexlEngine();
+            jexl.setSilent(false); // will throw errors now for selects that don't evaluate properly
+            jexl.setLenient(false);
+            jexl.setDebug(false);
+            return jexl;
+        }
+    });
     private final static boolean ASSUME_MISSING_FIELDS_ARE_STRINGS = false;
-
-    static {
-        engine.setSilent(false); // will throw errors now for selects that don't evaluate properly
-        engine.setLenient(false);
-        engine.setDebug(false);
+    
+    /**
+     * Computes the alternate allele frequency at the provided {@link VariantContext} by dividing its "AN" by its "AC".
+     * @param vc The variant whose alternate allele frequency is computed
+     * @return The alternate allele frequency in [0, 1]
+     * @throws AssertionError When either annotation is missing, or when the compuated frequency is outside the expected range
+     */
+    public static double calculateAltAlleleFrequency(final VariantContext vc) {
+        if (!vc.hasAttribute(VCFConstants.ALLELE_NUMBER_KEY) || !vc.hasAttribute(VCFConstants.ALLELE_COUNT_KEY))
+            throw new AssertionError(String.format(
+                    "Cannot compute the provided variant's alt allele frequency because it does not have both %s and %s annotations: %s",
+                    VCFConstants.ALLELE_NUMBER_KEY,
+                    VCFConstants.ALLELE_COUNT_KEY,
+                    vc));
+        final double altAlleleCount = vc.getAttributeAsInt(VCFConstants.ALLELE_COUNT_KEY, 0);
+        final double totalCount = vc.getAttributeAsInt(VCFConstants.ALLELE_NUMBER_KEY, 0);
+        final double aaf = altAlleleCount / totalCount;
+        if (aaf > 1 || aaf < 0)
+            throw new AssertionError(String.format("Expected a minor allele frequency in the range [0, 1], but got %s. vc=%s", aaf, vc));
+        return aaf;
     }
-
+    
     /**
      * Update the attributes of the attributes map given the VariantContext to reflect the
      * proper chromosome-based VCF tags
@@ -229,7 +256,7 @@ public class VariantContextUtils {
 
             if ( name == null || expStr == null ) throw new IllegalArgumentException("Cannot create null expressions : " + name +  " " + expStr);
             try {
-                Expression exp = engine.createExpression(expStr);
+                Expression exp = engine.get().createExpression(expStr);
                 exps.add(new JexlVCMatchExp(name, exp));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Argument " + name + "has a bad value. Invalid expression used (" + expStr + "). Please see the JEXL docs for correct syntax.") ;
@@ -314,21 +341,6 @@ public class VariantContextUtils {
             r.add(sitesOnlyVariantContext(vc));
         return r;
     }
-
-    //    TODO: remove that after testing
-//    static private void verifyUniqueSampleNames(Collection<VariantContext> unsortedVCs) {
-//        Set<String> names = new HashSet<String>();
-//        for ( VariantContext vc : unsortedVCs ) {
-//            for ( String name : vc.getSampleNames() ) {
-//                //System.out.printf("Checking %s %b%n", name, names.contains(name));
-//                if ( names.contains(name) )
-//                    throw new IllegalStateException("REQUIRE_UNIQUE sample names is true but duplicate names were discovered " + name);
-//            }
-//
-//            names.addAll(vc.getSampleNames());
-//        }
-//    }
-
 
     public static int getSize( VariantContext vc ) {
         return vc.getEnd() - vc.getStart() + 1;

@@ -31,6 +31,14 @@ import java.util.*;
  */
 public class CollectionUtil {
 
+    /** Simple case-insensitive lexical comparator of objects using their {@link Object#toString()} value. */
+    final public static Comparator<Object> OBJECT_TOSTRING_COMPARATOR = new Comparator<Object>() {
+        @Override
+        public int compare(final Object o1, final Object o2) {
+            return o1.toString().compareToIgnoreCase(o2.toString());
+        }
+    };
+
     public static <T> List<T> makeList (final T... list) {
         final List<T> result = new ArrayList<T>();
         Collections.addAll(result, list);
