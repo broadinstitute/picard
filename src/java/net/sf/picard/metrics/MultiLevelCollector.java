@@ -24,6 +24,7 @@
 
 package net.sf.picard.metrics;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.analysis.MetricAccumulationLevel;
 import net.sf.picard.reference.ReferenceSequence;
 import net.sf.samtools.SAMReadGroupRecord;
@@ -59,6 +60,7 @@ import java.util.*;
  */
 public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOGRAM_KEY extends Comparable, ARGTYPE>  {
 
+    public static final String UNKNOWN = "unknown";
     //The collector that will accept all records (allReads is NULL if !calculateAll)
     private PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> allReadCollector;
 
@@ -116,6 +118,8 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         //Make a PerUnitMetricCollector for this given Distributor
         protected abstract PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(final SAMReadGroupRecord rg);
 
+        protected abstract PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector();
+
         public Distributor(final List<SAMReadGroupRecord> rgRecs) {
             collectors = new LinkedHashMap<String, PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE>>();
             for(final SAMReadGroupRecord rg : rgRecs) {
@@ -136,14 +140,22 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         /** Call acceptRecord(args) on the record collector identified by getKey */
         public void acceptRecord(final ARGTYPE args, final SAMReadGroupRecord rg) {
 
-            String key = "unknown";
+            String key = UNKNOWN;
             if(rg != null) {
                 final String computedKey = getKey(rg);
                 if(computedKey != null) {
                     key = computedKey;
                 }
             }
-            collectors.get(key).acceptRecord(args);
+            PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> collector = collectors.get(key);
+            if (collector == null) {
+                if (!UNKNOWN.equals(key)) {
+                    throw new PicardException("Could not find collector for " + key);
+                }
+                collector = makeUnknownCollector();
+                collectors.put(key, collector);
+            }
+            collector.acceptRecord(args);
         }
 
         /** Add all records to the MetricsFile passed in, this will happen in the order they were
@@ -181,6 +193,11 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
+        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+            throw new UnsupportedOperationException("Should not happen");
+        }
+
+        @Override
         public void finish() {
             allReadCollector.finish();
         }
@@ -206,6 +223,11 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeSampleCollector(rg);
         }
+
+        @Override
+        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+            return makeChildCollector(UNKNOWN, null, null);
+        }
     }
 
     //Discriminates between records based on library name, and calls acceptRecord on the appropriate PerUnitMetricCollectors
@@ -223,6 +245,11 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeLibraryCollector(rg);
         }
+
+        @Override
+        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+            return makeChildCollector(UNKNOWN, UNKNOWN, null);
+        }
     }
 
     //Discriminates between records based on read group name, and calls acceptRecord on the appropriate PerUnitMetricCollectors
@@ -239,6 +266,11 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         @Override
         protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeReadGroupCollector(rg);
+        }
+
+        @Override
+        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+            return makeChildCollector(UNKNOWN, UNKNOWN, UNKNOWN);
         }
     }
 
