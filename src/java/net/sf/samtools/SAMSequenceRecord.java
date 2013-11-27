@@ -211,5 +211,15 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
         }
     }
 
+    @Override
+    public String toString() {
+        return String.format(
+                "SAMSequenceRecord(name=%s,length=%s,dict_index=%s,assembly=%s)", 
+                getSequenceName(), 
+                getSequenceLength(), 
+                getSequenceIndex(),
+                getAssembly()
+        );
+    }
 }
 

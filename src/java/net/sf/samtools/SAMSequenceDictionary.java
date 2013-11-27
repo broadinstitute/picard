@@ -130,17 +130,17 @@ public class SAMSequenceDictionary {
         final Iterator<SAMSequenceRecord> thatSequences = that.mSequences.iterator();
         for (final SAMSequenceRecord thisSequence : mSequences) {
             if (!thatSequences.hasNext())
-                throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thisSequence, " is present in only one dictionary."));
+                throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thisSequence + " is present in only one dictionary"));
             else {
                 final SAMSequenceRecord thatSequence = thatSequences.next();
                 if(!thatSequence.isSameSequence(thisSequence))
                     throw new AssertionError(
-                            String.format(DICT_MISMATCH_TEMPLATE, thatSequence, " was found when ", thisSequence, " was expected.")
+                            String.format(DICT_MISMATCH_TEMPLATE, thatSequence + " was found when " + thisSequence + " was expected")
                     );
             }
         }
         if (thatSequences.hasNext())
-            throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thatSequences.next(), " is present in only one dictionary."));
+            throw new AssertionError(String.format(DICT_MISMATCH_TEMPLATE, thatSequences.next() + " is present in only one dictionary"));
     }
     
     @Override
