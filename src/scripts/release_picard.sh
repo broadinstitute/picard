@@ -75,7 +75,8 @@ SVNROOT=svn+ssh://$USERNAME@svn.code.sf.net/p/picard/code
 
 RELEASE_ID=$1
 
-PREV_RELEASE_ID=`svn --username $USERNAME ls $SVNROOT/tags | tail -1 | sed 's/\/$//'`
+# Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
+PREV_RELEASE_ID=`svn --username $USERNAME ls $SVNROOT/tags | egrep '[.]\d\d\d' | tail -1 | sed 's/\/$//'`
 
 if branch_exists $SVNROOT/branches/$RELEASE_ID
 then echo "ERROR: $SVNROOT/branches/$RELEASE_ID already exists.">&2
