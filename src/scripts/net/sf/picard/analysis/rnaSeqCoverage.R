@@ -3,7 +3,7 @@
 # @author Tim Fennell
 
 # Parse the arguments
-args <- commandArgs(trailing=T)
+args <- commandArgs(trailing = TRUE)
 metricsFile  <- args[1]
 outputFile   <- args[2]
 bamName  <- args[3]
@@ -26,7 +26,6 @@ for (i in 1:length(startFinder)) {
 }
 
 data <- read.table(metricsFile, header=T, sep="\t", skip=secondBlankLine, check.names=FALSE)
-pdf(outputFile)
 
 # The histogram has a normalized_position and normalized_coverage column for each metric "level"
 # This code parses out the distinct levels so we can output one graph per level
@@ -38,34 +37,34 @@ headers <- sapply(sub(".normalized_coverage","",names(data),fixed=TRUE), "[[" ,1
 if (any(duplicated(headers))) {
   print(paste("Not creating insert size PDF as there are duplicated header names:", headers[which(duplicated(headers))]))
 } else {
+    pdf(outputFile)
     levels <- c()
     for (i in 2:length(headers)) {
         if (!(headers[i] %in% levels)) {
             levels[length(levels)+1] <- headers[i]
         }
     }
+
+    # Some constants that are used below
+    COLORS = c("royalblue", "#FFAAAA", "palegreen3");
+
+    # For each level, plot of the normalized coverage by GC
+    for (i in 1:length(levels)) {
+
+        # Reconstitutes the histogram column header for this level
+        nc <- paste(levels[i], "normalized_coverage", sep=".")
+
+        plot(x=data$normalized_position, y=as.matrix(data[nc]),
+            type="o",
+            xlab="Normalized Distance Along Transcript",
+            ylab="Normalized Coverage",
+            xlim=c(0, 100),
+            ylim=range(0, max(data[nc])),
+            col="royalblue",
+            main=paste("RNA-Seq Coverage vs. Transcript Position\n", levels[i], " ", ifelse(subtitle=="", "", paste("(", subtitle, ")", sep="")), "\nin file ", bamName,sep=""))
+
+        # Add a horizontal line at coverage=1
+        abline(h=1, col="lightgrey");
+    }
+    dev.off();
 }
-
-# Some constants that are used below
-COLORS = c("royalblue", "#FFAAAA", "palegreen3");
-
-# For each level, plot of the normalized coverage by GC
-for (i in 1:length(levels)) {
-
-    # Reconstitutes the histogram column header for this level
-    nc <- paste(levels[i], "normalized_coverage", sep=".")
-
-    plot(x=data$normalized_position, y=as.matrix(data[nc]),
-        type="o",
-        xlab="Normalized Distance Along Transcript",
-        ylab="Normalized Coverage",
-        xlim=c(0, 100),
-        ylim=range(0, max(data[nc])),
-        col="royalblue",
-        main=paste("RNA-Seq Coverage vs. Transcript Position\n", levels[i], " ", ifelse(subtitle=="", "", paste("(", subtitle, ")", sep="")), "\nin file ", bamName,sep=""))
-
-    # Add a horizontal line at coverage=1
-    abline(h=1, col="lightgrey");
-}
-
-dev.off();
