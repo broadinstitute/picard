@@ -96,7 +96,7 @@ public class IOUtil {
         File f = null;
 
         for (int i=0; i<tmpDirs.length; ++i) {
-            if (tmpDirs[i].getUsableSpace() > minBytesFree || i == tmpDirs.length-1) {
+            if ( i == tmpDirs.length-1 || tmpDirs[i].getUsableSpace() > minBytesFree) {
                 f = File.createTempFile(prefix, suffix, tmpDirs[i]);
                 f.deleteOnExit();
                 break;
