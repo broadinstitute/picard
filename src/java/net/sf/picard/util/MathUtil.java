@@ -109,6 +109,24 @@ public class MathUtil {
         return min;
     }
 
+    /** Mimic's R's seq() function to produce a sequence of equally spaced numbers. */
+    public static double[] seq(final double from, final double to, final double by) {
+        if (from < to && by <= 0) return new double[0];
+        if (from > to && by >= 0) return new double[0];
+        final int values = 1 + (int) Math.floor((to - from) / by);
+        final double[] results = new double[values];
+
+        BigDecimal value = new BigDecimal(from);
+        BigDecimal increment = new BigDecimal(by);
+
+        for (int i=0; i<values; ++i) {
+            results[i] = value.doubleValue();
+            value = value.add(increment);
+        }
+
+        return results;
+    }
+
     /** "Promotes" an int[] into a double array with the same values (or as close as precision allows). */
     public static double[] promote(final int[] is) {
         final double[] ds = new double[is.length];
