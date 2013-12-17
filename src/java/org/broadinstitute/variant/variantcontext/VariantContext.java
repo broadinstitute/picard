@@ -1189,14 +1189,14 @@ public class VariantContext implements Feature { // to enable tribble integratio
             }
 
             if ( getAttribute(VCFConstants.ALLELE_COUNT_KEY) instanceof List ) {
-                Collections.sort(observedACs);
-                List reportedACs = (List)getAttribute(VCFConstants.ALLELE_COUNT_KEY);
-                Collections.sort(reportedACs);
+                final List reportedACs = (List)getAttribute(VCFConstants.ALLELE_COUNT_KEY);
                 if ( observedACs.size() != reportedACs.size() )
                     throw new TribbleException.InternalCodecException(String.format("the Allele Count (AC) tag doesn't have the correct number of values for the record at position %s:%d, %d vs. %d", getChr(), getStart(), reportedACs.size(), observedACs.size()));
                 for (int i = 0; i < observedACs.size(); i++) {
-                    if ( Integer.valueOf(reportedACs.get(i).toString()) != observedACs.get(i) )
-                        throw new TribbleException.InternalCodecException(String.format("the Allele Count (AC) tag is incorrect for the record at position %s:%d, %s vs. %d", getChr(), getStart(), reportedACs.get(i), observedACs.get(i)));
+                    // need to cast to int to make sure we don't have an issue below with object equals (earlier bug) - EB
+                    final int reportedAC = Integer.valueOf(reportedACs.get(i).toString());
+                    if ( reportedAC != observedACs.get(i) )
+                        throw new TribbleException.InternalCodecException(String.format("the Allele Count (AC) tag is incorrect for the record at position %s:%d, %s vs. %d", getChr(), getStart(), reportedAC, observedACs.get(i)));
                 }
             } else {
                 if ( observedACs.size() != 1 )
