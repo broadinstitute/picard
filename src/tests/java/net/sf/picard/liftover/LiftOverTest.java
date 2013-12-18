@@ -23,7 +23,7 @@
  */
 package net.sf.picard.liftover;
 
-import net.sf.picard.util.Interval;
+import net.sf.samtools.Interval;
 import net.sf.picard.util.OverlapDetector;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -32,7 +32,6 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;

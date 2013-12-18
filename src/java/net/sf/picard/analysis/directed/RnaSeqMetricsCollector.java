@@ -10,6 +10,7 @@ import net.sf.picard.metrics.SAMRecordMultiLevelCollector;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.util.*;
 import net.sf.samtools.*;
+import net.sf.samtools.Interval;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.SequenceUtil;
 

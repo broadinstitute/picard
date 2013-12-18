@@ -24,6 +24,8 @@
 
 package net.sf.picard.util;
 
+import net.sf.samtools.Interval;
+
 import java.util.*;
 
 /**

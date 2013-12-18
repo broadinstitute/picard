@@ -25,6 +25,7 @@ package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.filter.*;
+import net.sf.samtools.Interval;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 
