@@ -31,6 +31,7 @@ import net.sf.picard.reference.ReferenceSequence;
 import net.sf.picard.reference.ReferenceSequenceFile;
 import net.sf.picard.util.*;
 import net.sf.samtools.*;
+import net.sf.samtools.Interval;
 import net.sf.samtools.util.*;
 
 import java.io.File;

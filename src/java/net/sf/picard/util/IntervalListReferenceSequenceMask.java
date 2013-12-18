@@ -23,6 +23,7 @@
  */
 package net.sf.picard.util;
 
+import net.sf.samtools.Interval;
 import net.sf.samtools.SAMFileHeader;
 
 import java.util.BitSet;
