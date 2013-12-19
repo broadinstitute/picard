@@ -23,7 +23,7 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.samtools.Interval;
+import net.sf.picard.util.Interval;
 import net.sf.picard.util.IntervalUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;

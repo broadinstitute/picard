@@ -23,11 +23,11 @@
  */
 package net.sf.picard.util;
 
-import net.sf.samtools.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Iterator;
+import java.util.Set;
 
 public class IntervalTreeMapTest {
     @Test

@@ -24,8 +24,8 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.Interval;
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
 
 import java.util.Iterator;
 
