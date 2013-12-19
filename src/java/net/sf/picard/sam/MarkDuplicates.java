@@ -566,7 +566,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * @return an array with an ordered list of indexes into the source file
      */
     private void generateDuplicateIndexes() {
-        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF);
+        // Keep this number from getting too large even if there is a huge heap.
+        final int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF,
+                (double)(Integer.MAX_VALUE - 5));
         log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
         this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
 
