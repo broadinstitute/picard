@@ -30,7 +30,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.Interval;
+import net.sf.picard.util.Interval;
 import net.sf.picard.util.IntervalList;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.SequenceUtil;

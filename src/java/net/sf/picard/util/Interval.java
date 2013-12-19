@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.samtools;
+package net.sf.picard.util;
 
+import net.sf.picard.PicardException;
 import net.sf.samtools.util.CoordMath;
 
 import java.util.Collection;
@@ -187,6 +188,6 @@ public class Interval implements Comparable<Interval>, Cloneable {
     @Override
     public Interval clone() {
         try { return (Interval) super.clone(); }
-        catch (CloneNotSupportedException cnse) { throw new SAMException("That's unpossible", cnse); }
+        catch (CloneNotSupportedException cnse) { throw new PicardException("That's unpossible", cnse); }
     }
 }

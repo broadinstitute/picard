@@ -26,7 +26,6 @@ package net.sf.picard.util;
 import net.sf.picard.filter.FilteringIterator;
 import net.sf.picard.filter.IntervalFilter;
 import net.sf.picard.filter.SamRecordFilter;
-import net.sf.samtools.Interval;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.util.CloseableIterator;

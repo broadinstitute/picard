@@ -5,7 +5,6 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.samtools.Interval;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMProgramRecord;
 import net.sf.samtools.util.SequenceUtil;
