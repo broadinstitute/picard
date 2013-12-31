@@ -40,7 +40,7 @@ import java.util.*;
  *
  * The VariantContext object is a single general class system for representing genetic variation data composed of:
  *
- * * Allele: representing single genetic haplotypes (A, T, ATC, -)
+ * * Allele: representing single genetic haplotypes (A, T, ATC, -) (note that null alleles are used here for illustration; see the Allele class for how to represent indels)
  * * Genotype: an assignment of alleles for each chromosome of a single named sample at a particular locus
  * * VariantContext: an abstract class holding all segregating alleles at a locus as well as genotypes
  *    for multiple individuals containing alleles at that locus
@@ -72,10 +72,10 @@ import java.util.*;
  * A [ref] / T at 10
  * GenomeLoc snpLoc = GenomeLocParser.createGenomeLoc("chr1", 10, 10);
  *
- * - / ATC [ref] from 20-23
+ * A / ATC [ref] from 20-23
  * GenomeLoc delLoc = GenomeLocParser.createGenomeLoc("chr1", 20, 22);
  *
- *  // - [ref] / ATC immediately after 20
+ *  // A [ref] / ATC immediately after 20
  * GenomeLoc insLoc = GenomeLocParser.createGenomeLoc("chr1", 20, 20);
  *
  * === Alleles ===
@@ -86,9 +86,8 @@ import java.util.*;
  *
  * Alleles can be either reference or non-reference
  *
- * Example alleles used here:
+ * Examples of alleles used here:
  *
- *   del = new Allele("-");
  *   A = new Allele("A");
  *   Aref = new Allele("A", true);
  *   T = new Allele("T");
@@ -116,10 +115,8 @@ import java.util.*;
  * VariantContext vc = new VariantContext(name, delLoc, Arrays.asList(ATCref, del));
  * </pre>
  *
- * The only 2 things that distinguishes between a insertion and deletion are the reference allele
- * and the location of the variation.  An insertion has a Null reference allele and at least
- * one non-reference Non-Null allele.  Additionally, the location of the insertion is immediately after
- * a 1-bp GenomeLoc (at say 20).
+ * The only thing that distinguishes between an insertion and deletion is which is the reference allele.
+ * An insertion has a reference allele that is smaller than the non-reference allele, and vice versa for deletions.
  *
  * <pre>
  * VariantContext vc = new VariantContext("name", insLoc, Arrays.asList(delRef, ATC));
