@@ -209,7 +209,7 @@ public class VariantContextBuilder {
     /**
      * Removes key if present in the attributes
      *
-     * @param key
+     * @param key  key to remove
      * @return
      */
     @Requires({"key != null"})
@@ -217,6 +217,21 @@ public class VariantContextBuilder {
     public VariantContextBuilder rmAttribute(final String key) {
         makeAttributesModifiable();
         attributes.remove(key);
+        return this;
+    }
+
+    /**
+     * Removes list of keys if present in the attributes
+     *
+     * @param keys  list of keys to remove
+     * @return
+     */
+    @Requires({"keys != null"})
+    @Ensures({"this.attributes.size() <= old(this.attributes.size())"})
+    public VariantContextBuilder rmAttributes(final List<String> keys) {
+        makeAttributesModifiable();
+        for ( final String key : keys )
+            attributes.remove(key);
         return this;
     }
 
