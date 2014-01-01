@@ -722,8 +722,12 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
     private final static int[] decodeInts(final String string) {
         final int nValues = ParsingUtils.split(string, INT_DECODE_ARRAY, ',');
         final int[] values = new int[nValues];
-        for ( int i = 0; i < nValues; i++ )
-            values[i] = Integer.valueOf(INT_DECODE_ARRAY[i]);
+        try {
+            for ( int i = 0; i < nValues; i++ )
+                values[i] = Integer.valueOf(INT_DECODE_ARRAY[i]);
+        } catch (final NumberFormatException e) {
+            return null;
+        }
         return values;
     }
 
