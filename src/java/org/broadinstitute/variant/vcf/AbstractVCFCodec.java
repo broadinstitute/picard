@@ -523,7 +523,7 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
      */
     private static void checkAllele(String allele, boolean isRef, int lineNo) {
         if ( allele == null || allele.length() == 0 )
-            generateException("Empty alleles are not permitted in VCF records", lineNo);
+            generateException(generateExceptionTextForBadAlleleBases(""), lineNo);
 
         if ( GeneralUtils.DEBUG_MODE_ENABLED && MAX_ALLELE_SIZE_BEFORE_WARNING != -1 && allele.length() > MAX_ALLELE_SIZE_BEFORE_WARNING ) {
             System.err.println(String.format("Allele detected with length %d exceeding max size %d at approximately line %d, likely resulting in degraded VCF processing performance", allele.length(), MAX_ALLELE_SIZE_BEFORE_WARNING, lineNo));
@@ -540,11 +540,25 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
                         " convert your file to VCF4 using VCFTools, available at http://vcftools.sourceforge.net/index.html", lineNo);
 
             if (!Allele.acceptableAlleleBases(allele))
-                generateException("Unparsable vcf record with allele " + allele, lineNo);
+                generateException(generateExceptionTextForBadAlleleBases(allele), lineNo);
 
             if ( isRef && allele.equals(VCFConstants.EMPTY_ALLELE) )
                 generateException("The reference allele cannot be missing", lineNo);
         }
+    }
+
+    /**
+     * Generates the exception text for the case where the allele string contains unacceptable bases.
+     *
+     * @param allele   non-null allele string
+     * @return non-null exception text string
+     */
+    private static String generateExceptionTextForBadAlleleBases(final String allele) {
+        if ( allele.length() == 0 )
+            return "empty alleles are not permitted in VCF records";
+        if ( allele.contains("[") || allele.contains("]") || allele.contains(":") || allele.contains(".") )
+            return "VCF support for complex rearrangements with breakends has not yet been implemented";
+        return "unparsable vcf record with allele " + allele;
     }
 
     /**
