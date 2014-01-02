@@ -150,7 +150,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         try {
             super.mergeAlignment();
         }
-        catch(IllegalStateException e) {
+        catch(final IllegalStateException ise) {
+            log.warn("Exception merging bam alignment - attempting to sort aligned reads and try again: ", ise.getMessage());
             forceSort = true;
             resetRefSeqFileWalker();
             super.mergeAlignment();
@@ -175,7 +176,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                 readers.add(r);
             }
 
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SortOrder.queryname, headers, false);
 
             mergingIterator = new MergingSamRecordIterator(headerMerger, readers, true);
             header = headerMerger.getMergedHeader();
