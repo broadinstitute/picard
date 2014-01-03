@@ -69,7 +69,8 @@ public class MergeBamAlignmentTest {
     @Test
     public void testMergerWithSupplemental() throws Exception {
         final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
-        outputWithSupplemental.deleteOnExit();
+        System.out.println(outputWithSupplemental.getAbsolutePath());
+        // outputWithSupplemental.deleteOnExit();
         final MergeBamAlignment merger = new MergeBamAlignment();
         merger.UNMAPPED_BAM = unmappedBam;
         merger.ALIGNED_BAM = Arrays.asList(supplementalReadAlignedBam);
@@ -99,15 +100,19 @@ public class MergeBamAlignmentTest {
 
             // This tests that we clip both (a) when the adapter is marked in the unmapped BAM file and
             // (b) when the insert size is less than the read length
-            if (sam.getReadName().equals("both_reads_align_clip_adapter") ||
-                    sam.getReadName().equals("both_reads_align_clip_marked")) {
+            if (sam.getReadName().equals("both_reads_align_clip_marked")) {
                 Assert.assertEquals(sam.getReferenceName(), "chr7");
                 if (sam.getReadNegativeStrandFlag()) {
-                    Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " +
-                            sam.getReadName());
+                    Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " + sam.getReadName());
                 } else {
-                    Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " +
-                            sam.getReadName());
+                    Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " + sam.getReadName());
+                }
+            }
+            else if (sam.getReadName().equals("both_reads_align_clip_adapter")) {
+                Assert.assertEquals(sam.getReferenceName(), "chr7");
+                if (!sam.getSupplementaryAlignmentFlag()) {
+                    if (sam.getReadNegativeStrandFlag()) Assert.assertEquals(sam.getCigarString(), "5S96M", "Incorrect CIGAR string for " + sam.getReadName());
+                    else Assert.assertEquals(sam.getCigarString(), "96M5S", "Incorrect CIGAR string for " + sam.getReadName());
                 }
             }
             // This tests that we DON'T clip when we run off the end if there are equal to or more than
@@ -133,7 +138,7 @@ public class MergeBamAlignmentTest {
         }
 
         // Make sure that we have the appropriate primary and supplementary reads in the new file
-        Assert.assertEquals(clipAdapterFlags.size(), foundClipAdapterFlags.size());
+        Assert.assertEquals(foundClipAdapterFlags.size(), clipAdapterFlags.size());
         Collections.sort(clipAdapterFlags);
         Collections.sort(foundClipAdapterFlags);
         for (int i = 0; i < clipAdapterFlags.size(); i++) {

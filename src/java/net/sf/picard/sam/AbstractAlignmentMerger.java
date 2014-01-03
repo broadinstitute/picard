@@ -29,6 +29,7 @@ import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.CigarUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.util.CloseableIterator;
@@ -72,6 +73,8 @@ public abstract class AbstractAlignmentMerger {
     private final NumberFormat FMT = new DecimalFormat("#,###");
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
+    private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Written to sorting collection in queryname order", "records");
+
     private final File unmappedBamFile;
     private final File targetBamFile;
     private final SAMSequenceDictionary sequenceDictionary;
@@ -249,7 +252,8 @@ public abstract class AbstractAlignmentMerger {
             if (nextAligned != null && rec.getReadName().equals(nextAligned.getReadName())) {
                 // If there are multiple alignments for a read (pair), then the unaligned SAMRecord must be cloned
                 // before copying info from the aligned record to the unaligned.
-                final boolean clone = nextAligned.numHits() > 1;
+                final boolean clone = nextAligned.numHits() > 1 || nextAligned.hasSupplementalHits();
+                SAMRecord r1Primary = null, r2Primary = null;
 
                 if (rec.getReadPairedFlag()) {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
@@ -271,6 +275,12 @@ public abstract class AbstractAlignmentMerger {
                             secondToWrite = secondOfPair;
                         }
 
+                        // If these are the primary alignments then stash them for use on any supplemental alignments
+                        if (isPrimaryAlignment) {
+                            r1Primary = firstToWrite;
+                            r2Primary = secondToWrite;
+                        }
+
                         transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned);
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
@@ -286,27 +296,22 @@ public abstract class AbstractAlignmentMerger {
                         }
                     }
 
-                    // This is already being checked at construction, but just to be sure ....
-                    if (nextAligned.getSupplementalFirstOfPairOrFragment().size() != nextAligned.getSupplementalSecondOfPair().size()) {
-                        throw new IllegalStateException("Supplemental first of pairs not the same size as second of pairs!");
-                    }
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
-                    for (int i = 0; i < nextAligned.getSupplementalFirstOfPairOrFragment().size(); i++) {
-                        final SAMRecord firstToWrite = clone(rec);
-                        final SAMRecord secondToWrite = clone(secondOfPair);
-                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite,
-                                nextAligned.getSupplementalFirstOfPairOrFragment().get(i),
-                                nextAligned.getSupplementalSecondOfPair().get(i));
-                        addIfNotFiltered(sorted, firstToWrite);
-                        addIfNotFiltered(sorted, secondToWrite);
+                    for (final boolean isRead1 : new boolean[]{true,false}) {
+                        final List<SAMRecord> supplementals = isRead1 ? nextAligned.getSupplementalFirstOfPairOrFragment() : nextAligned.getSupplementalSecondOfPair();
+                        final SAMRecord sourceRec           = isRead1 ? rec                                                : secondOfPair;
+                        final SAMRecord matePrimary         = isRead1 ? r2Primary                                          : r1Primary;
 
-                        if (!firstToWrite.getReadUnmappedFlag()) ++unmapped;
-                        else ++aligned;
-
-                        if (!secondToWrite.getReadUnmappedFlag()) ++unmapped;
-                        else ++aligned;
+                        for (final SAMRecord supp : supplementals) {
+                            final SAMRecord out = clone(sourceRec);
+                            transferAlignmentInfoToFragment(out, supp);
+                            if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary);
+                            ++aligned;
+                            addIfNotFiltered(sorted, out);
+                        }
                     }
-                } else {
+                }
+                else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
@@ -316,12 +321,10 @@ public abstract class AbstractAlignmentMerger {
                     }
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
                     for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
-                        // always clone supplementals
                         final SAMRecord recToWrite = clone(rec);
                         transferAlignmentInfoToFragment(recToWrite, supplementalRec);
                         addIfNotFiltered(sorted, recToWrite);
-                        if (recToWrite.getReadUnmappedFlag()) ++unmapped;
-                        else ++aligned;
+                        ++aligned;
                     }
                 }
                 nextAligned = nextAligned();
@@ -342,15 +345,10 @@ public abstract class AbstractAlignmentMerger {
                     }
                 }
             }
-
-            if ((aligned + unmapped) % 1000000 == 0) {
-                log.info("Processed " + FMT.format(aligned + unmapped) + " records in query name order.");
-            }
         }
         unmappedIterator.close();
         if (alignedIterator.hasNext()) {
-            throw new IllegalStateException("Reads remaining on alignment iterator: " +
-                    alignedIterator.next().getReadName() + "!");
+            throw new IllegalStateException("Reads remaining on alignment iterator: " + alignedIterator.next().getReadName() + "!");
         }
         alignedIterator.close();
 
@@ -358,23 +356,21 @@ public abstract class AbstractAlignmentMerger {
         header.setSortOrder(this.sortOrder);
         final boolean presorted = this.sortOrder == SortOrder.coordinate;
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, this.targetBamFile);
-        int count = 0;
+        final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
+
         for (final SAMRecord rec : sorted) {
             if (!rec.getReadUnmappedFlag()) {
                 if (refSeq != null) {
                     final byte[] referenceBases = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
-                    rec.setAttribute(SAMTag.NM.name(),
-                        SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
+                    rec.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
+
                     if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
-                        rec.setAttribute(SAMTag.UQ.name(),
-                            SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
+                        rec.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
                     }
                 }
             }
             writer.addAlignment(rec);
-            if (++count % 1000000 == 0) {
-                log.info(FMT.format(count) + " SAMRecords written to " + targetBamFile.getName());
-            }
+            finalProgress.record(rec);
         }
         writer.close();
         sorted.cleanup();
@@ -388,6 +384,7 @@ public abstract class AbstractAlignmentMerger {
     private void addIfNotFiltered(final SortingCollection<SAMRecord> sorted, final SAMRecord rec) {
         if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
             sorted.add(rec);
+            this.progress.record(rec);
         }
     }
 
