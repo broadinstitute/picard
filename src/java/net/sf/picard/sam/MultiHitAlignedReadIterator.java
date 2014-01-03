@@ -28,14 +28,10 @@ import net.sf.picard.filter.FilteringIterator;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordQueryNameComparator;
-import net.sf.samtools.SAMTag;
-import net.sf.samtools.SAMUtils;
+import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
 
-import java.util.Comparator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import static net.sf.picard.sam.HitsForInsert.NumPrimaryAlignmentState;
 
@@ -120,6 +116,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<HitsForInsert> {
         // Accumulate the alignments matching readName.
         do {
             final SAMRecord rec = peekIterator.next();
+            replaceHardWithSoftClips(rec);
             // It is critical to do this here, because SamAlignmentMerger uses this exception to determine
             // if the aligned input needs to be sorted.
             if (peekIterator.hasNext() && queryNameComparator.fileOrderCompare(rec, peekIterator.peek()) > 0) {
@@ -150,12 +147,6 @@ class MultiHitAlignedReadIterator implements CloseableIterator<HitsForInsert> {
             } else throw new PicardException("Read is marked as pair but neither first or second: " + readName);
         } while (peekIterator.hasNext() && peekIterator.peek().getReadName().equals(readName));
 
-        // If we've added to the second of pair supplementals, make sure it is the same size as the first of pairs
-        if (hits.getSupplementalSecondOfPair().size() > 0 &&
-                hits.getSupplementalSecondOfPair().size() != hits.getSupplementalFirstOfPairOrFragment().size()) {
-            throw new PicardException("Number of supplemental second of pairs do not equal the number of supplemental first of pairs");
-        }
-
         // If there is no more than one alignment for each end, no need to do any coordination.
         if (hits.numHits() <= 1) {
             // No HI tags needed if only a single hit
@@ -175,9 +166,44 @@ class MultiHitAlignedReadIterator implements CloseableIterator<HitsForInsert> {
         return hits;
     }
 
+    /** Replaces hard clips with soft clips and fills in bases and qualities with dummy values as needed. */
+    private void replaceHardWithSoftClips(final SAMRecord rec) {
+        if (rec.getReadUnmappedFlag()) return;
+        if (rec.getCigar().isEmpty()) return;
+
+        List<CigarElement> elements = rec.getCigar().getCigarElements();
+        final CigarElement first = elements.get(0);
+        final CigarElement last  = elements.size() == 1 ? null : elements.get(elements.size()-1);
+        final int startHardClip = first.getOperator() == CigarOperator.H ? first.getLength() : 0;
+        final int endHardClip   = (last != null && last.getOperator() == CigarOperator.H) ? last.getLength() : 0;
+
+        if (startHardClip + endHardClip > 0) {
+            final int len = rec.getReadBases().length + startHardClip + endHardClip;
+
+            // Fix the basecalls
+            final byte[] bases = new byte[len];
+            Arrays.fill(bases, (byte) 'N');
+            System.arraycopy(rec.getReadBases(), 0, bases, startHardClip, rec.getReadBases().length);
+
+            // Fix the quality scores
+            final byte[] quals = new byte[len];
+            Arrays.fill(quals, (byte) 2  );
+            System.arraycopy(rec.getBaseQualities(), 0, quals, startHardClip, rec.getBaseQualities().length);
+
+            // Fix the cigar!
+            elements = new ArrayList<CigarElement>(elements); // make it modifiable
+            if (startHardClip > 0) elements.set(0, new CigarElement(first.getLength(), CigarOperator.S));
+            if (endHardClip   > 0) elements.set(elements.size()-1, new CigarElement(last.getLength(), CigarOperator.S));
+
+            // Set the update structures on the new record
+            rec.setReadBases(bases);
+            rec.setBaseQualities(quals);
+            rec.setCigar(new Cigar(elements));
+        }
+   }
+
+    /** Unsupported operation. */
     public void remove() {
         throw new UnsupportedOperationException();
     }
-
-
 }
