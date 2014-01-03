@@ -15,6 +15,7 @@ public class ProgressLogger {
     private final Log log;
     private final int n;
     private final String verb;
+    private final String noun;
     private final long startTime = System.currentTimeMillis();
     
     private final NumberFormat fmt = new DecimalFormat("#,###");
@@ -28,11 +29,23 @@ public class ProgressLogger {
      * @param log the Log object to write outputs to
      * @param n the frequency with which to output (i.e. every N records)
      * @param verb the verb to log, e.g. "Processed, Read, Written".
+     * @param noun the noun to use when logging, e.g. "Records, Variants, Loci"
      */
-    public ProgressLogger(final Log log, final int n, final String verb) {
+    public ProgressLogger(final Log log, final int n, final String verb, final String noun) {
         this.log = log;
         this.n = n;
         this.verb = verb;
+        this.noun = noun;
+    }
+
+    /**
+     * Construct a progress logger.
+     * @param log the Log object to write outputs to
+     * @param n the frequency with which to output (i.e. every N records)
+     * @param verb the verb to log, e.g. "Processed, Read, Written".
+     */
+    public ProgressLogger(final Log log, final int n, final String verb) {
+        this(log, n, verb, "records");
     }
 
     /**
@@ -63,7 +76,7 @@ public class ProgressLogger {
             if (chrom == null) readInfo = "*/*";
             else readInfo = chrom + ":" + fmt.format(pos);
 
-            log.info(this.verb, " ", processed, " records.  Elapsed time: ", elapsed, "s.  Time for last ", fmt.format(this.n),
+            log.info(this.verb, " ", processed, " " + noun + ".  Elapsed time: ", elapsed, "s.  Time for last ", fmt.format(this.n),
                      ": ", period, "s.  Last read position: ", readInfo);
             return true;
         }
