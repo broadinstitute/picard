@@ -35,6 +35,7 @@ import org.broadinstitute.variant.vcf.VCFHeaderLineCount;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -334,8 +335,11 @@ public abstract class BCF2FieldEncoder {
                 return "";
             else if (value instanceof List) {
                 final List<String> l = (List<String>)value;
-                if ( l.isEmpty() ) return "";
-                else return BCF2Utils.collapseStringList(l);
+                return BCF2Utils.collapseStringList(l);
+            } else if ( value.getClass().isArray() ) {
+                final List<String> l = new ArrayList<String>();
+                Collections.addAll(l, (String[])value);
+                return BCF2Utils.collapseStringList(l);
             } else
                 return (String)value;
         }
@@ -507,12 +511,18 @@ public abstract class BCF2FieldEncoder {
      * o is a list => o
      * else => [o]
      *
-     * @param o
+     * @param c  the class of the object
+     * @param o  the object to convert to a Java List
      * @return
      */
     private final static <T> List<T> toList(final Class<T> c, final Object o) {
         if ( o == null ) return Collections.emptyList();
         else if ( o instanceof List ) return (List<T>)o;
+        else if ( o.getClass().isArray() ) {
+            final List<T> l = new ArrayList<T>();
+            Collections.addAll(l, (T[])o);
+            return l;
+        }
         else return Collections.singletonList((T)o);
     }
 }
