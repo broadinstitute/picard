@@ -247,6 +247,21 @@ public class SamPairUtil {
         rec2.setInferredInsertSize(-insertSize);
     }
 
+    /**
+     * Sets mate pair information appropriately on a supplemental SAMRecord (e.g. from a split alignment)
+     * using the primary alignment of the read's mate.
+     * @param supplemental a supplemental alignment for the mate pair of the primary supplied
+     * @param matePrimary the primary alignment of the the mate pair of the supplemental
+     */
+    public static void setMateInformationOnSupplementalAlignment( final SAMRecord supplemental,
+                                                                  final SAMRecord matePrimary) {
+        supplemental.setMateReferenceIndex(matePrimary.getReferenceIndex());
+        supplemental.setMateAlignmentStart(matePrimary.getAlignmentStart());
+        supplemental.setMateNegativeStrandFlag(matePrimary.getReadNegativeStrandFlag());
+        supplemental.setMateUnmappedFlag(matePrimary.getReadUnmappedFlag());
+        supplemental.setInferredInsertSize(-matePrimary.getInferredInsertSize());
+    }
+
     public static void setProperPairAndMateInfo(final SAMRecord rec1, final SAMRecord rec2,
                                                 final SAMFileHeader header,
                                                 final List<PairOrientation> exepectedOrientations) {

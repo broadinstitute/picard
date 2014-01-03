@@ -93,6 +93,11 @@ class HitsForInsert {
         return Math.max(firstOfPairOrFragment.size(), secondOfPair.size());
     }
 
+    /** True if either the first or second of pair has supplementary alignments, otherwise false. */
+    public boolean hasSupplementalHits() {
+        return !(this.supplementalFirstOfPairOrFragment.isEmpty() && this.supplementalSecondOfPair.isEmpty());
+    }
+
     /**
      * @return Returns the ith hit for the first end, or null if the first end is not aligned.
      */
