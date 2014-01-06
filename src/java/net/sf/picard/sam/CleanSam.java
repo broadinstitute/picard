@@ -33,7 +33,6 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.util.List;
@@ -82,9 +81,10 @@ public class CleanSam extends CommandLineProgram {
                 final SAMRecord rec = it.next();
                 if (!rec.getReadUnmappedFlag()) {
                     final SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-                    if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
+                    final int overhang = rec.getAlignmentEnd() - refseq.getSequenceLength();
+                    if (overhang > 0) {
                         // 1-based index of first base in read to clip.
-                        final int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
+                        final int clipFrom = rec.getReadLength() - overhang + 1;
                         final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
                         rec.setCigar(new Cigar(newCigarElements));
                     }
