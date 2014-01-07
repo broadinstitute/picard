@@ -233,10 +233,11 @@ public class SAMFileHeader extends AbstractSAMHeaderRecord
     }
 
     public SortOrder getSortOrder() {
-        if (getAttribute("SO") == null) {
+        final String so = getAttribute("SO");
+        if (so == null || so.equals("unknown")) {
             return SortOrder.unsorted;
         }
-        return SortOrder.valueOf((String)getAttribute("SO"));
+        return SortOrder.valueOf((String) so);
     }
 
     public void setSortOrder(final SortOrder so) {
