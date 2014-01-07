@@ -9,6 +9,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -70,10 +71,11 @@ public class MergeVcfsTest {
 	}
 
 	@Test
-	public void testMergeIndelsSnps() {
+	public void testMergeIndelsSnps() throws IOException {
 		final File indelInputFile = new File(TEST_DATA_PATH + "CEUTrio-indels.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH + "CEUTrio-snps.vcf");
-		final File output = new File(TEST_DATA_PATH + "merge-indels-snps-test-output-delete-me.vcf");
+		final File output = File.createTempFile("merge-indels-snps-test-output.", ".vcf");
+        output.deleteOnExit();
 
 		final Queue<String> indelContigPositions = loadContigPositions(indelInputFile);
 		final Queue<String> snpContigPositions = loadContigPositions(snpInputFile);
@@ -101,6 +103,7 @@ public class MergeVcfsTest {
 			if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) < 0);
 			last = outputContext;
 		}
+        iterator.close();
 
 		// We should have polled everything off the indel (snp) queues
 		Assert.assertEquals(indelContigPositions.size(), 0);
@@ -110,7 +113,7 @@ public class MergeVcfsTest {
 	}
 
 	@Test
-	public void testMergeRandomScatter() {
+	public void testMergeRandomScatter() throws IOException {
 		final File zero = new File(TEST_DATA_PATH, "CEUTrio-random-scatter-0.vcf");
 		final File one = new File(TEST_DATA_PATH, "CEUTrio-random-scatter-1.vcf");
 		final File two = new File(TEST_DATA_PATH, "CEUTrio-random-scatter-2.vcf");
@@ -126,7 +129,7 @@ public class MergeVcfsTest {
 		positionQueues.add(4, loadContigPositions(four));
 		positionQueues.add(5, loadContigPositions(five));
 
-		final File output = new File(TEST_DATA_PATH + "random-scatter-test-output-delete-me.vcf");
+		final File output = File.createTempFile("random-scatter-test-output.", ".vcf");
 		output.deleteOnExit();
 
 		final MergeVcfs mergeVcfs = new MergeVcfs();
@@ -153,6 +156,7 @@ public class MergeVcfsTest {
 			if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) < 0);
 			last = outputContext;
 		}
+        iterator.close();
 
 		for (final Queue<String> positionQueue : positionQueues) {
 			Assert.assertEquals(positionQueue.size(), 0);
