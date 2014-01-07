@@ -65,13 +65,16 @@ import java.util.Set;
  *         This class tests out the ability of the VCF writer to correctly write VCF files
  */
 public class VCFWriterUnitTest extends VariantBaseTest {
-    private Set<VCFHeaderLine> metaData = new HashSet<VCFHeaderLine>();
-    private Set<String> additionalColumns = new HashSet<String>();
-    private File fakeVCFFile = new File("FAKEVCFFILEFORTESTING.vcf");
+    private Set<VCFHeaderLine> metaData;
+    private Set<String> additionalColumns;
 
     /** test, using the writer and reader, that we can output and input a VCF file without problems */
     @Test
-    public void testBasicWriteAndRead() {
+    public void testBasicWriteAndRead() throws IOException {
+        File fakeVCFFile = File.createTempFile("testBasicWriteAndRead.", ".vcf");
+        fakeVCFFile.deleteOnExit();
+        metaData = new HashSet<VCFHeaderLine>();
+        additionalColumns = new HashSet<String>();
         VCFHeader header = createFakeHeader(metaData,additionalColumns);
         final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
         VariantContextWriter writer = VariantContextWriterFactory.create(fakeVCFFile, createArtificialSequenceDictionary(), options);
@@ -171,6 +174,7 @@ public class VCFWriterUnitTest extends VariantBaseTest {
     @Test(enabled=true)
     public void TestWritingLargeVCF() throws FileNotFoundException, InterruptedException {
 
+        Set<VCFHeaderLine> metaData = new HashSet<VCFHeaderLine>();
         final Set<String> Columns = new HashSet<String>();
         for (int i = 0; i < 123; i++) {
 
@@ -202,6 +206,5 @@ public class VCFWriterUnitTest extends VariantBaseTest {
             Assert.assertTrue(vcf.lastModified() <= vcfIndex.lastModified());
         }
     }
-
 }
 
