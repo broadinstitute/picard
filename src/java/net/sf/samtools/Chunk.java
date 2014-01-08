@@ -3,10 +3,7 @@ package net.sf.samtools;
 import net.sf.samtools.util.BlockCompressedFilePointerUtil;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * A [start,stop) file pointer pairing into the BAM file, stored
@@ -86,16 +83,16 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
      * @return True if the chunks overlap.  Returns false if the two chunks abut or are disjoint.
      */
     public boolean overlaps(final Chunk other) {
-        int comparison = this.compareTo(other);
+        final int comparison = this.compareTo(other);
         if(comparison == 0)
             return true;
 
         // "sort" the two chunks using the comparator.
-        Chunk leftMost = comparison==-1 ? this : other;
-        Chunk rightMost = comparison==1 ? this : other;
+        final Chunk leftMost = comparison==-1 ? this : other;
+        final Chunk rightMost = comparison==1 ? this : other;
 
-        long leftMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(leftMost.getChunkEnd());
-        long rightMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(rightMost.getChunkStart());
+        final long leftMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(leftMost.getChunkEnd());
+        final long rightMostBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(rightMost.getChunkStart());
 
         // If the left block's address is after the right block's address, compare the two blocks.
         // If the two blocks are identical, compare the block offsets.
@@ -103,8 +100,8 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
         if(leftMostBlockAddress > rightMostBlockAddress)
             return true;
         else if(leftMostBlockAddress == rightMostBlockAddress) {
-            int leftMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(leftMost.getChunkEnd());
-            int rightMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(rightMost.getChunkStart());
+            final int leftMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(leftMost.getChunkEnd());
+            final int rightMostOffset = BlockCompressedFilePointerUtil.getBlockOffset(rightMost.getChunkStart());
             return leftMostOffset > rightMostOffset;
         }
         else
@@ -135,5 +132,36 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
     @Override
     public String toString() {
         return String.format("%d:%d-%d:%d",mChunkStart >> 16,mChunkStart & 0xFFFF,mChunkEnd >> 16,mChunkEnd & 0xFFFF);
+    }
+
+    /**
+     * @param minimumOffset Discard chunks that end before this file offset.
+     * @return sorted list of chunks in which adjacent chunks are coalesced.
+     */
+    public static List<Chunk> optimizeChunkList(final List<Chunk> chunks, final long minimumOffset) {
+        Chunk lastChunk = null;
+        Collections.sort(chunks);
+        final List<Chunk> result = new ArrayList<Chunk>();
+        for (final Chunk chunk : chunks) {
+            if (chunk.getChunkEnd() <= minimumOffset) {
+                continue;               // linear index optimization
+            }
+            if (result.isEmpty()) {
+                result.add(chunk);
+                lastChunk = chunk;
+                continue;
+            }
+            // Coalesce chunks that are in adjacent file blocks.
+            // This is a performance optimization.
+            if (!lastChunk.overlaps(chunk) && !lastChunk.isAdjacentTo(chunk)) {
+                result.add(chunk);
+                lastChunk = chunk;
+            } else {
+                if (chunk.getChunkEnd() > lastChunk.getChunkEnd()) {
+                    lastChunk.setChunkEnd(chunk.getChunkEnd());
+                }
+            }
+        }
+        return result;
     }
 }

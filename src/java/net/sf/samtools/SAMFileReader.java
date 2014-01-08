@@ -30,7 +30,10 @@ import net.sf.samtools.seekablestream.SeekableHTTPStream;
 import net.sf.samtools.seekablestream.SeekableStream;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.net.URL;
 
@@ -111,6 +114,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         abstract CloseableIterator<SAMRecord>  getIterator(SAMFileSpan fileSpan);
         abstract SAMFileSpan getFilePointerSpanningReads();
         abstract CloseableIterator<SAMRecord> query(String sequence, int start, int end, boolean contained);
+        abstract CloseableIterator<SAMRecord> query(QueryInterval[] intervals, boolean contained);
         abstract CloseableIterator<SAMRecord> queryAlignmentStart(String sequence, int start);
         abstract public CloseableIterator<SAMRecord> queryUnmapped();
         abstract void close();
@@ -301,7 +305,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
      * @throws SAMException if no such index is available.
      */
     public BrowseableBAMIndex getBrowseableIndex() {
-        BAMIndex index = getIndex();
+        final BAMIndex index = getIndex();
         if(!(index instanceof BrowseableBAMIndex))
             throw new SAMException("Cannot return index: index created by BAM is not browseable.");
         return BrowseableBAMIndex.class.cast(index);
@@ -415,6 +419,83 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         return query(sequence, start, end, true);
     }
 
+    /**
+     * Iterate over records that match one of the given intervals.  This may be more efficient than querying
+     * each interval separately, because multiple reads of the same SAMRecords is avoided.
+     * <p/>
+     * Only valid to call this if hasIndex() == true.
+     * <p/>
+     * Only a single open iterator on a given SAMFileReader may be extant at any one time.  If you want to start
+     * a second iteration, the first one must be closed first.  You can use a second SAMFileReader to iterate
+     * in parallel over the same underlying file.
+     * <p/>
+     * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
+     * and then discarded because they do not match an interval of interest.
+     * <p/>
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
+     *
+     * @param intervals  Intervals to be queried.  The intervals must be optimized, i.e. in order, with overlapping
+     *                   and abutting intervals merged.  This can be done with
+     *                   net.sf.samtools.SAMFileReader.QueryInterval#optimizeIntervals(net.sf.samtools.SAMFileReader.QueryInterval[])
+     * @param contained If true, each SAMRecord returned is will have its alignment completely contained in one of the
+     *                  intervals of interest.  If false, the alignment of the returned SAMRecords need only overlap one of
+     *                  the intervals of interest.
+     * @return Iterator over the SAMRecords matching the interval.
+     */
+    public SAMRecordIterator query(final QueryInterval[] intervals, final boolean contained) {
+        return new AssertableIterator(mReader.query(intervals, contained));
+    }
+
+    /**
+     * Iterate over records that overlap any of the given intervals.  This may be more efficient than querying
+     * each interval separately, because multiple reads of the same SAMRecords is avoided.
+     * <p/>
+     * Only valid to call this if hasIndex() == true.
+     * <p/>
+     * Only a single open iterator on a given SAMFileReader may be extant at any one time.  If you want to start
+     * a second iteration, the first one must be closed first.
+     * <p/>
+     * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
+     * and then discarded because they do not match the interval of interest.
+     * <p/>
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
+     *
+     * @param intervals  Intervals to be queried.  The intervals must be optimized, i.e. in order, with overlapping
+     *                   and abutting intervals merged.  This can be done with
+     *                   net.sf.samtools.SAMFileReader.QueryInterval#optimizeIntervals(net.sf.samtools.SAMFileReader.QueryInterval[])
+     * @return Iterator over the SAMRecords overlapping any of the intervals.
+     */
+    public SAMRecordIterator queryOverlapping(final QueryInterval[] intervals) {
+        return query(intervals, false);
+    }
+
+    /**
+     * Iterate over records that are contained in the given interval.  This may be more efficient than querying
+     * each interval separately, because multiple reads of the same SAMRecords is avoided.
+     * <p/>
+     * Only valid to call this if hasIndex() == true.
+     * <p/>
+     * Only a single open iterator on a given SAMFileReader may be extant at any one time.  If you want to start
+     * a second iteration, the first one must be closed first.
+     * <p/>
+     * Note that indexed lookup is not perfectly efficient in terms of disk I/O.  I.e. some SAMRecords may be read
+     * and then discarded because they do not match the interval of interest.
+     * <p/>
+     * Note that an unmapped read will be returned by this call if it has a coordinate for the purpose of sorting that
+     * is in the query region.
+     *
+     * @param intervals  Intervals to be queried.  The intervals must be optimized, i.e. in order, with overlapping
+     *                   and abutting intervals merged.  This can be done with
+     *                   net.sf.samtools.SAMFileReader.QueryInterval#optimizeIntervals(net.sf.samtools.SAMFileReader.QueryInterval[])
+     * @return Iterator over the SAMRecords contained in any of the intervals.
+     */
+    public SAMRecordIterator queryContained(final QueryInterval[] intervals) {
+        return query(intervals, true);
+    }
+
+
     public SAMRecordIterator queryUnmapped() {
         return new AssertableIterator(mReader.queryUnmapped());
     }
@@ -509,7 +590,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             }
             setValidationStringency(validationStringency);
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             throw new RuntimeIOException(e);
         }
     }
@@ -526,14 +607,14 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             }
             setValidationStringency(validationStringency);
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             throw new RuntimeIOException(e);
         }
     }
 
     // Its too expensive to examine the remote file to determine type.
     // Rely on file extension.
-    private boolean streamLooksLikeBam(SeekableStream strm) {
+    private boolean streamLooksLikeBam(final SeekableStream strm) {
         String source = strm.getSource();
         if(source == null) return true;
         source = source.toLowerCase();
@@ -542,13 +623,13 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         return source.endsWith(".bam") || source.contains(".bam?")|| source.contains(".bam&") || source.contains(".bam%26");
     }
 
-    private void init(final InputStream stream, final File file, File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
+    private void init(final InputStream stream, final File file, final File indexFile, final boolean eagerDecode, final ValidationStringency validationStringency) {
         if (stream != null && file != null) throw new IllegalArgumentException("stream and file are mutually exclusive");
         this.samFile = file;
 
         try {
             final BufferedInputStream bufferedStream;
-            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file), IOUtil.STANDARD_BUFFER_SIZE);
+            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
             else bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;
@@ -580,7 +661,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             setValidationStringency(validationStringency);
             mReader.setSAMRecordFactory(this.samRecordFactory);
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             throw new RuntimeIOException(e);
         }
     }
@@ -632,14 +713,14 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             final int ch = gunzip.read();
             return true;
         }
-        catch (IOException ioe) {
+        catch (final IOException ioe) {
             return false;
         }
         finally {
             try {
                 stream.reset();
             }
-            catch (IOException ioe) {
+            catch (final IOException ioe) {
                 throw new IllegalStateException("Could not reset stream.");
             }
         }
@@ -668,11 +749,11 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         private SAMRecord previous = null;
         private SAMRecordComparator comparator = null;
 
-        public AssertableIterator(CloseableIterator<SAMRecord> iterator) {
+        public AssertableIterator(final CloseableIterator<SAMRecord> iterator) {
             wrappedIterator = iterator;
         }
 
-        public SAMRecordIterator assertSorted(SAMFileHeader.SortOrder sortOrder) {
+        public SAMRecordIterator assertSorted(final SAMFileHeader.SortOrder sortOrder) {
 
             if (sortOrder == null || sortOrder == SAMFileHeader.SortOrder.unsorted) {
                 comparator = null;
@@ -684,7 +765,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         }
 
         public SAMRecord next() {
-            SAMRecord result = wrappedIterator.next();
+            final SAMRecord result = wrappedIterator.next();
             if (comparator != null) {
                 if (previous != null) {
                     if (comparator.fileOrderCompare(previous, result) > 0) {
@@ -705,5 +786,121 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         public void remove() { wrappedIterator.remove(); }
     }
 
+
+    /**
+     * Interval relative to a reference, for querying a BAM file.
+     */
+    public static class QueryInterval implements Comparable<QueryInterval> {
+
+        /** Index of reference sequence, based on the sequence dictionary of the BAM file being queried. */
+        public final int referenceIndex;
+        /** 1-based, inclusive */
+        public final int start;
+        /** 1-based, inclusive.  If <= 0, implies that the interval goes to the end of the reference sequence */
+        public final int end;
+
+
+        public QueryInterval(final int referenceIndex, final int start, final int end) {
+            if (referenceIndex < 0) {
+                throw new IllegalArgumentException("Invalid reference index " + referenceIndex);
+            }
+            this.referenceIndex = referenceIndex;
+            this.start = start;
+            this.end = end;
+        }
+
+
+        public int compareTo(final QueryInterval other) {
+            int comp = this.referenceIndex - other.referenceIndex;
+            if (comp != 0) return comp;
+            comp = this.start - other.start;
+            if (comp != 0) return comp;
+            return this.end - other.end;
+        }
+
+        /**
+         * @return true if both are on same reference, and other starts exactly where this ends.
+         */
+        public boolean abuts(final QueryInterval other) {
+            return this.referenceIndex == other.referenceIndex && this.end == other.start;
+        }
+
+        /**
+         * @return true if both are on same reference, and the overlap.
+         */
+        public boolean overlaps(final QueryInterval other) {
+            if (this.referenceIndex != other.referenceIndex) {
+                return false;
+            }
+            final int thisEnd = (this.end == 0? Integer.MAX_VALUE: this.end);
+            final int otherEnd = (other.end == 0? Integer.MAX_VALUE: other.end);
+            return CoordMath.overlaps(this.start, thisEnd, other.start, otherEnd);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%d:%d-%d", referenceIndex, start, end);
+        }
+
+        private static final QueryInterval[] EMPTY_QUERY_INTERVAL_ARRAY = new QueryInterval[0];
+
+        /**
+         *
+         * @param inputIntervals WARNING: This list is modified (sorted) by this method.
+         * @return Ordered list of intervals in which abutting and overlapping intervals are merged.
+         */
+        public static QueryInterval[] optimizeIntervals(final QueryInterval[] inputIntervals) {
+            if (inputIntervals.length == 0) return EMPTY_QUERY_INTERVAL_ARRAY;
+            Arrays.sort(inputIntervals);
+
+            final List<QueryInterval> unique = new ArrayList<QueryInterval>();
+            QueryInterval previous = inputIntervals[0];
+
+
+            for(int i = 1; i < inputIntervals.length; ++i) {
+                final QueryInterval next = inputIntervals[i];
+                if (previous.abuts(next) || previous.overlaps(next)) {
+                    final int newEnd = ((previous.end == 0 || next.end == 0)? 0: Math.max(previous.end, next.end));
+                    previous = new QueryInterval(previous.referenceIndex, previous.start, newEnd);
+                }
+                else {
+                    unique.add(previous);
+                    previous = next;
+                }
+            }
+
+            if (previous != null) unique.add(previous);
+
+            return unique.toArray(EMPTY_QUERY_INTERVAL_ARRAY);
+        }
+    }
+
+    /**
+     * Convenience method to create a QueryInterval
+     * @param sequence sequence of interest, must exist in sequence dictionary
+     * @param start 1-based start position, must be >= 1
+     * @param end 1-based end position.
+     * @throws java.lang.IllegalArgumentException if sequence not found in sequence dictionary, or start position < 1
+     */
+    public QueryInterval makeQueryInterval(final String sequence, int start, int end) {
+        int referenceIndex = getFileHeader().getSequenceIndex(sequence);
+        if (referenceIndex < 0) {
+            throw new IllegalArgumentException(String.format("Sequence '%s' not found in sequence dictionary", sequence));
+        }
+        if (start < 1) {
+            throw new IllegalArgumentException("Start position must be >= 1");
+        }
+        return new QueryInterval(referenceIndex, start, end);
+    }
+
+    /**
+     * Convenience method to create a QueryInterval that goes from start to end of given sequence.
+     * @param sequence sequence of interest, must exist in sequence dictionary
+     * @param start 1-based start position, must be >= 1
+     * @throws java.lang.IllegalArgumentException if sequence not found in sequence dictionary, or start position < 1
+     */
+    public QueryInterval makeQueryInterval(final String sequence, int start) {
+        return makeQueryInterval(sequence, start, 0);
+    }
 
 }

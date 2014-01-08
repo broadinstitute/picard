@@ -35,17 +35,17 @@ import java.util.*;
 class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMIndex
 {
     private Integer mLastReferenceRetrieved = null;
-    private WeakHashMap<Integer,BAMIndexContent> mQueriesByReference = new WeakHashMap<Integer,BAMIndexContent>();
+    private final WeakHashMap<Integer,BAMIndexContent> mQueriesByReference = new WeakHashMap<Integer,BAMIndexContent>();
 
-    public CachingBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
+    public CachingBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
         super(file, dictionary);
     }
 
-    public CachingBAMFileIndex(final SeekableStream stream, SAMSequenceDictionary dictionary) {
+    public CachingBAMFileIndex(final SeekableStream stream, final SAMSequenceDictionary dictionary) {
         super(stream, dictionary);
     }
 
-    public CachingBAMFileIndex(final File file, SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
+    public CachingBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, final boolean useMemoryMapping) {
         super(file, dictionary, useMemoryMapping);
     }
 
@@ -58,16 +58,16 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
      *         in a range that can be scanned to find SAMRecords that overlap the given positions.
      */
     public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
-        BAMIndexContent queryResults = getQueryResults(referenceIndex);
+        final BAMIndexContent queryResults = getQueryResults(referenceIndex);
 
         if(queryResults == null)
             return null;
 
-        BinList overlappingBins = getBinsOverlapping(referenceIndex,startPos,endPos);
+        final BinList overlappingBins = getBinsOverlapping(referenceIndex,startPos,endPos);
 
         // System.out.println("# Sequence target TID: " + referenceIndex);
-        List<Bin> bins = new ArrayList<Bin>();
-        for(Bin bin: queryResults.getBins()) {
+        final List<Bin> bins = new ArrayList<Bin>();
+        for(final Bin bin: queryResults.getBins()) {
             if (overlappingBins.getBins().get(bin.getBinNumber()))
                 bins.add(bin);
         }
@@ -77,8 +77,8 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         }
 
         List<Chunk> chunkList = new ArrayList<Chunk>();
-        for(Bin bin: bins) {
-            for(Chunk chunk: bin.getChunkList())
+        for(final Bin bin: bins) {
+            for(final Chunk chunk: bin.getChunkList())
                 chunkList.add(chunk.clone());
         }
 
@@ -86,7 +86,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
             return null;
         }
 
-        chunkList = optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
+        chunkList = Chunk.optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
         return new BAMFileSpan(chunkList);
     }
 
@@ -115,7 +115,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
             return null;
 
         final int referenceSequence = bin.getReferenceSequence();
-        BAMIndexContent indexQuery = getQueryResults(referenceSequence);
+        final BAMIndexContent indexQuery = getQueryResults(referenceSequence);
 
         if(indexQuery == null)
             return null;
@@ -124,7 +124,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         final int firstLocusInBin = getFirstLocusInBin(bin);
 
         // Add the specified bin to the tree if it exists.
-        List<Bin> binTree = new ArrayList<Bin>();
+        final List<Bin> binTree = new ArrayList<Bin>();
         if(indexQuery.containsBin(bin))
             binTree.add(indexQuery.getBins().getBin(bin.getBinNumber()));
 
@@ -133,19 +133,19 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
             final int binStart = getFirstBinInLevel(currentBinLevel);
             final int binWidth = getMaxAddressibleGenomicLocation()/getLevelSize(currentBinLevel);
             final int binNumber = firstLocusInBin/binWidth + binStart;
-            Bin parentBin = indexQuery.getBins().getBin(binNumber);
+            final Bin parentBin = indexQuery.getBins().getBin(binNumber);
             if(parentBin != null && indexQuery.containsBin(parentBin))
                 binTree.add(parentBin);
         }
 
         List<Chunk> chunkList = new ArrayList<Chunk>();
-        for(Bin coveringBin: binTree) {
-            for(Chunk chunk: coveringBin.getChunkList())
+        for(final Bin coveringBin: binTree) {
+            for(final Chunk chunk: coveringBin.getChunkList())
                 chunkList.add(chunk.clone());
         }
 
         final int start = getFirstLocusInBin(bin);
-        chunkList = optimizeChunkList(chunkList,indexQuery.getLinearIndex().getMinimumOffset(start));
+        chunkList = Chunk.optimizeChunkList(chunkList,indexQuery.getLinearIndex().getMinimumOffset(start));
         return new BAMFileSpan(chunkList);
     }
 

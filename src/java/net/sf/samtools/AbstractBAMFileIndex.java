@@ -68,7 +68,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     private SAMSequenceDictionary mBamDictionary = null;
 
     protected AbstractBAMFileIndex(
-        SeekableStream stream, SAMSequenceDictionary dictionary)
+        final SeekableStream stream, final SAMSequenceDictionary dictionary)
     {
         mBamDictionary = dictionary;
         mIndexBuffer = new IndexStreamBuffer(stream);
@@ -78,7 +78,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         this(file, dictionary, true);
     }
 
-    protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
+    protected AbstractBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, final boolean useMemoryMapping) {
         mBamDictionary = dictionary;
         mIndexBuffer = (useMemoryMapping ? new MemoryMappedFileBuffer(file) : new RandomAccessFileBuffer(file));
 
@@ -213,10 +213,10 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      * @param reference the reference of interest
      * @return meta data for the reference
      */
-    public BAMIndexMetaData getMetaData(int reference) {
+    public BAMIndexMetaData getMetaData(final int reference) {
         seek(4);
 
-        List<Chunk> metaDataChunks = new ArrayList<Chunk>();
+        final List<Chunk> metaDataChunks = new ArrayList<Chunk>();
 
         final int sequenceCount = readInteger();
 
@@ -226,20 +226,16 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
 
         skipToSequence(reference);
 
-        int binCount = readInteger();
+        final int binCount = readInteger();
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
-            // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
-            Chunk lastChunk = null;
             if (indexBin == MAX_BINS) {
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
-                    lastChunk = new Chunk(chunkBegin, chunkEnd);
-                    metaDataChunks.add(lastChunk);
+                    metaDataChunks.add(new Chunk(chunkBegin, chunkEnd));
                 }
-                continue;
             } else {
                 skipBytes(16 * nChunks);
             }
@@ -261,7 +257,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         skipToSequence(sequenceCount);
         try { // in case of old index file without meta data
             return readLong();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return null;
         }
     }
@@ -269,7 +265,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     protected BAMIndexContent query(final int referenceSequence, final int startPos, final int endPos) {
         seek(4);
 
-        List<Chunk> metaDataChunks = new ArrayList<Chunk>();
+        final List<Chunk> metaDataChunks = new ArrayList<Chunk>();
 
         final int sequenceCount = readInteger();
 
@@ -284,13 +280,13 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
 
         skipToSequence(referenceSequence);
 
-        int binCount = readInteger();
+        final int binCount = readInteger();
         boolean metaDataSeen = false;
-        Bin[] bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
+        final Bin[] bins = new Bin[getMaxBinNumberForReference(referenceSequence) +1];
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
-            List<Chunk> chunks = new ArrayList<Chunk>(nChunks);
+            final List<Chunk> chunks = new ArrayList<Chunk>(nChunks);
             // System.out.println("# bin[" + i + "] = " + indexBin + ", nChunks = " + nChunks);
             Chunk lastChunk = null;
             if (regionBins.get(indexBin)) {
@@ -314,7 +310,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             } else {
                 skipBytes(16 * nChunks);
             }
-            Bin bin = new Bin(referenceSequence, indexBin);
+            final Bin bin = new Bin(referenceSequence, indexBin);
             bin.setChunkList(chunks);
             bin.setLastChunk(lastChunk);
             bins[indexBin] = bin;
@@ -348,7 +344,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         try {
             final int sequenceLength = mBamDictionary.getSequence(reference).getSequenceLength();
             return getMaxBinNumberForSequenceLength(sequenceLength);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return MAX_BINS;
         }
     }
@@ -356,7 +352,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     /**
      * The maxiumum bin number for a reference sequence of a given length
      */
-    static int getMaxBinNumberForSequenceLength(int sequenceLength) {
+    static int getMaxBinNumberForSequenceLength(final int sequenceLength) {
         return getFirstBinInLevel(getNumIndexLevels() - 1) + (sequenceLength >> 14);
         // return 4680 + (sequenceLength >> 14); // note 4680 = getFirstBinInLevel(getNumIndexLevels() - 1)
     }
@@ -395,31 +391,11 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         return bitSet;
     }
 
+    /**
+     * @deprecated Invoke net.sf.samtools.Chunk#optimizeChunkList(java.util.List<net.sf.samtools.Chunk>, long) directly.
+     */
     protected List<Chunk> optimizeChunkList(final List<Chunk> chunks, final long minimumOffset) {
-        Chunk lastChunk = null;
-        Collections.sort(chunks);
-        final List<Chunk> result = new ArrayList<Chunk>();
-        for (final Chunk chunk : chunks) {
-            if (chunk.getChunkEnd() <= minimumOffset) {
-                continue;               // linear index optimization
-            }
-            if (result.isEmpty()) {
-                result.add(chunk);
-                lastChunk = chunk;
-                continue;
-            }
-            // Coalesce chunks that are in adjacent file blocks.
-            // This is a performance optimization.
-            if (!lastChunk.overlaps(chunk) && !lastChunk.isAdjacentTo(chunk)) {
-                result.add(chunk);
-                lastChunk = chunk;
-            } else {
-                if (chunk.getChunkEnd() > lastChunk.getChunkEnd()) {
-                    lastChunk.setChunkEnd(chunk.getChunkEnd());
-                }
-            }
-        }
-        return result;
+        return Chunk.optimizeChunkList(chunks, minimumOffset);
     }
 
     private void skipToSequence(final int sequenceIndex) {
@@ -428,7 +404,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             final int nBins = readInteger();
             // System.out.println("# nBins: " + nBins);
             for (int j = 0; j < nBins; j++) {
-                final int bin = readInteger();
+                readInteger(); // bin
                 final int nChunks = readInteger();
                 // System.out.println("# bin[" + j + "] = " + bin + ", nChunks = " + nChunks);
                 skipBytes(16 * nChunks);
@@ -474,16 +450,16 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
     private static class MemoryMappedFileBuffer extends IndexFileBuffer {
         private MappedByteBuffer mFileBuffer;
 
-        MemoryMappedFileBuffer(File file) {
+        MemoryMappedFileBuffer(final File file) {
             try {
                 // Open the file stream.
-                FileInputStream fileStream = new FileInputStream(file);
-                FileChannel fileChannel = fileStream.getChannel();
+                final FileInputStream fileStream = new FileInputStream(file);
+                final FileChannel fileChannel = fileStream.getChannel();
                 mFileBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0L, fileChannel.size());
                 mFileBuffer.order(ByteOrder.LITTLE_ENDIAN);
                 fileChannel.close();
                 fileStream.close();
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new RuntimeIOException(exc.getMessage(), exc);
             }
         }
@@ -530,23 +506,23 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         private static final int PAGE_OFFSET_MASK = PAGE_SIZE-1;
         private static final int PAGE_MASK = ~PAGE_OFFSET_MASK;
         private static final int INVALID_PAGE = 1;
-        private File mFile;
+        private final File mFile;
         private RandomAccessFile mRandomAccessFile;
-        private int mFileLength;
+        private final int mFileLength;
         private int mFilePointer = 0;
         private int mCurrentPage = INVALID_PAGE;
         private final byte[] mBuffer = new byte[PAGE_SIZE];
 
-        RandomAccessFileBuffer(File file) {
+        RandomAccessFileBuffer(final File file) {
             mFile = file;
             try {
                 mRandomAccessFile = new RandomAccessFile(file, "r");
-                long fileLength = mRandomAccessFile.length();
+                final long fileLength = mRandomAccessFile.length();
                 if (fileLength > Integer.MAX_VALUE) {
                     throw new RuntimeException("BAM index file " + mFile + " is too large: " + fileLength);
                 }
                 mFileLength = (int) fileLength;
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new RuntimeIOException(exc.getMessage(), exc);
             }
         }
@@ -582,8 +558,8 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         long readLong() {
             // BAM index files are always 4-byte aligned, but not necessrily 8-byte aligned.
             // So, rather than fooling with complex page logic we simply read the long in two 4-byte chunks.
-            long lower = readInteger();
-            long upper = readInteger();
+            final long lower = readInteger();
+            final long upper = readInteger();
             return ((upper << 32) | (lower & 0xFFFFFFFFL));
         }
 
@@ -601,14 +577,14 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             if (mRandomAccessFile != null) {
                 try {
                     mRandomAccessFile.close();
-                } catch (IOException exc) {
+                } catch (final IOException exc) {
                     throw new RuntimeIOException(exc.getMessage(), exc);
                 }
                 mRandomAccessFile = null;
             }
         }
 
-        private void loadPage(int filePosition) {
+        private void loadPage(final int filePosition) {
             final int page = filePosition & PAGE_MASK;
             if (page == mCurrentPage) {
                 return;
@@ -618,7 +594,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
                 final int readLength = Math.min(mFileLength - page, PAGE_SIZE);
                 mRandomAccessFile.readFully(mBuffer, 0, readLength);
                 mCurrentPage = page;
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new RuntimeIOException("Exception reading BAM index file " + mFile + ": " + exc.getMessage(), exc);
             }
         }
@@ -628,7 +604,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         private final SeekableStream in;
         private final ByteBuffer tmpBuf;
 
-        public IndexStreamBuffer(SeekableStream s) {
+        public IndexStreamBuffer(final SeekableStream s) {
             in = s;
             tmpBuf = ByteBuffer.allocate(8); // Enough to fit a long.
             tmpBuf.order(ByteOrder.LITTLE_ENDIAN);
@@ -636,42 +612,42 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
 
         @Override public void close() {
             try { in.close(); }
-            catch (IOException e) { throw new RuntimeIOException(e); }
+            catch (final IOException e) { throw new RuntimeIOException(e); }
         }
-        @Override public void readBytes(byte[] bytes) {
+        @Override public void readBytes(final byte[] bytes) {
             try { in.read(bytes); }
-            catch (IOException e) { throw new RuntimeIOException(e); }
+            catch (final IOException e) { throw new RuntimeIOException(e); }
         }
-        @Override public void seek(int position) {
+        @Override public void seek(final int position) {
             try { in.seek(position); }
-            catch (IOException e) { throw new RuntimeIOException(e); }
+            catch (final IOException e) { throw new RuntimeIOException(e); }
         }
 
         @Override public int readInteger() {
            try {
-               int r = in.read(tmpBuf.array(), 0, 4);
+               final int r = in.read(tmpBuf.array(), 0, 4);
                if (r != 4)
                    throw new RuntimeIOException("Expected 4 bytes, got " + r);
-           } catch (IOException e) { throw new RuntimeIOException(e); }
+           } catch (final IOException e) { throw new RuntimeIOException(e); }
            return tmpBuf.getInt(0);
         }
         @Override public long readLong() {
             try {
-                int r = in.read(tmpBuf.array(), 0, 8);
+                final int r = in.read(tmpBuf.array(), 0, 8);
                 if (r != 8)
                     throw new RuntimeIOException("Expected 8 bytes, got " + r);
-            } catch (IOException e) { throw new RuntimeIOException(e); }
+            } catch (final IOException e) { throw new RuntimeIOException(e); }
             return tmpBuf.getLong(0);
         }
         @Override public void skipBytes(final int count) {
             try {
                 for (int s = count; s > 0;) {
-                    int skipped = (int)in.skip(s);
+                    final int skipped = (int)in.skip(s);
                     if (skipped <= 0)
                         throw new RuntimeIOException("Failed to skip " + s);
                     s -= skipped;
                 }
-            } catch (IOException e) { throw new RuntimeIOException(e); }
+            } catch (final IOException e) { throw new RuntimeIOException(e); }
         }
     }
 }

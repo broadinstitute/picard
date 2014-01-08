@@ -34,15 +34,15 @@ import java.util.List;
  */
 class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
 {
-    DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary) {
+    DiskBasedBAMFileIndex(final File file, final SAMSequenceDictionary dictionary) {
         super(file, dictionary);
     }
 
-    DiskBasedBAMFileIndex(final SeekableStream stream, SAMSequenceDictionary dictionary) {
+    DiskBasedBAMFileIndex(final SeekableStream stream, final SAMSequenceDictionary dictionary) {
         super(stream, dictionary);
     }
 
-    DiskBasedBAMFileIndex(final File file, SAMSequenceDictionary dictionary, boolean useMemoryMapping) {
+    DiskBasedBAMFileIndex(final File file, final SAMSequenceDictionary dictionary, final boolean useMemoryMapping) {
         super(file, dictionary, useMemoryMapping);
     }
 
@@ -57,19 +57,19 @@ class DiskBasedBAMFileIndex extends AbstractBAMFileIndex
      * the range that may contain the indicated SAMRecords.
      */
     public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
-        BAMIndexContent queryResults = query(referenceIndex,startPos,endPos);
+        final BAMIndexContent queryResults = query(referenceIndex,startPos,endPos);
 
         if(queryResults == null)
             return null;
 
         List<Chunk> chunkList = new ArrayList<Chunk>();
-        for(Chunk chunk: queryResults.getAllChunks())
+        for(final Chunk chunk: queryResults.getAllChunks())
             chunkList.add(chunk.clone());
-        chunkList = optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
+        chunkList = Chunk.optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
         return new BAMFileSpan(chunkList);
     }
 
-     protected BAMIndexContent getQueryResults(int reference){
+     protected BAMIndexContent getQueryResults(final int reference){
          throw new UnsupportedOperationException();
          // todo: there ought to be a way to support this using the first startPos for the reference and the last
          // return query(reference, 1, -1);

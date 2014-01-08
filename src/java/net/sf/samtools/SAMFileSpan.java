@@ -23,10 +23,12 @@
  */
 package net.sf.samtools;
 
-import java.util.List;
+import net.sf.samtools.util.StringUtil;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.io.Serializable;
+import java.util.List;
 
 /**
  * A interface representing a collection of (possibly) discontinuous segments in the
@@ -110,8 +112,8 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
      * @return A copy of the chunk list.
      */
     public BAMFileSpan clone() {
-        BAMFileSpan clone = new BAMFileSpan();
-        for(Chunk chunk: chunks)
+        final BAMFileSpan clone = new BAMFileSpan();
+        for(final Chunk chunk: chunks)
             clone.chunks.add(chunk.clone());
         return clone;
     }
@@ -130,15 +132,15 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
         if(!(fileSpan instanceof BAMFileSpan))
             throw new SAMException("Unable to compare ");
 
-        BAMFileSpan bamFileSpan = (BAMFileSpan)fileSpan;
+        final BAMFileSpan bamFileSpan = (BAMFileSpan)fileSpan;
 
         if(bamFileSpan.isEmpty())
             return clone();
 
         validateSorted();
 
-        BAMFileSpan trimmedChunkList = new BAMFileSpan();
-        for(Chunk chunkToTrim: chunks) {
+        final BAMFileSpan trimmedChunkList = new BAMFileSpan();
+        for(final Chunk chunkToTrim: chunks) {
             if(chunkToTrim.getChunkEnd() > chunkToTrim.getChunkStart()) {
                 if(chunkToTrim.getChunkStart() >= bamFileSpan.chunks.get(0).getChunkStart()) {
                     // This chunk from the list is completely beyond the start of the filtering chunk.
@@ -170,7 +172,7 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
      * @param span - span with chunks to add to this one
      */
     public void add(final BAMFileSpan span) {
-        for (Chunk c : span.chunks) {
+        for (final Chunk c : span.chunks) {
             chunks.add(c);
         }
     }
@@ -206,7 +208,7 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
      * @return The first offset in the span
      */
     protected long getFirstOffset() {
-        long result = 0;
+        final long result = 0;
         if (chunks == null){
             return result;
         }
@@ -243,11 +245,11 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
      * @param coordinateArray List of chunks to convert.
      * @return A list of chunks.
      */
-    protected static SAMFileSpan toChunkList(long[] coordinateArray) {
+    protected static SAMFileSpan toChunkList(final long[] coordinateArray) {
         if(coordinateArray.length % 2 != 0)
             throw new SAMException("Data supplied does not appear to be in coordinate array format.");
 
-        BAMFileSpan chunkList = new BAMFileSpan();
+        final BAMFileSpan chunkList = new BAMFileSpan();
         for(int i = 0; i < coordinateArray.length; i += 2)
             chunkList.add(new Chunk(coordinateArray[i],coordinateArray[i+1]));
 
@@ -271,15 +273,19 @@ class BAMFileSpan implements SAMFileSpan, Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        boolean first = true;
-        for(Chunk chunk: chunks) {
-            if(!first) {
-                builder.append(';');
-                first = false;
-            }
-            builder.append(chunk);
-        }
-        return builder.toString();
+        return StringUtil.join(";", chunks);
+    }
+
+    /**
+     *
+     * @return A single BAMFileSpan that is an intelligent merge of the input spans, i.e. contiguous, overlapping
+     * and contained chunks are intelligently merged, and the chunks are sorted.
+     */
+    public static BAMFileSpan merge(final BAMFileSpan[] spans) {
+        int numInputChunks = 0;
+        for (final BAMFileSpan span : spans) numInputChunks += span.chunks.size();
+        final ArrayList<Chunk> inputChunks = new ArrayList<Chunk>(numInputChunks);
+        for (final BAMFileSpan span : spans) inputChunks.addAll(span.chunks);
+        return new BAMFileSpan(Chunk.optimizeChunkList(inputChunks, 0));
     }
 }

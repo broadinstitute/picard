@@ -55,7 +55,6 @@ public class SamRecordIntervalIteratorFactory {
     public CloseableIterator<SAMRecord> makeSamRecordIntervalIterator(final SAMFileReader samReader,
                                                                final List<Interval> uniqueIntervals,
                                                                final boolean useIndex) {
-        final IntervalFilter intervalFilter = new IntervalFilter(uniqueIntervals, samReader.getFileHeader());
         if (!samReader.hasIndex() || !useIndex) {
             final int stopAfterSequence;
             final int stopAfterPosition;
@@ -67,12 +66,16 @@ public class SamRecordIntervalIteratorFactory {
                 stopAfterSequence = samReader.getFileHeader().getSequenceIndex(lastInterval.getSequence());
                 stopAfterPosition = lastInterval.getEnd();
             }
+            final IntervalFilter intervalFilter = new IntervalFilter(uniqueIntervals, samReader.getFileHeader());
             return new StopAfterFilteringIterator(samReader.iterator(), intervalFilter, stopAfterSequence, stopAfterPosition);
         } else {
-            // Note that SamRecordIntervalIterator may return some records that do not overlap the intervals,
-            // because it merges intervals that are close to one another in order to reduce I/O.  Thus
-            // the IntervalFilter is necessary.
-            return new FilteringIterator(new SamRecordIntervalIterator(samReader, uniqueIntervals), intervalFilter);
+            final SAMFileReader.QueryInterval[] queryIntervals = new SAMFileReader.QueryInterval[uniqueIntervals.size()];
+            for (int i = 0; i < queryIntervals.length; ++i) {
+                final Interval inputInterval = uniqueIntervals.get(i);
+                queryIntervals[i] = samReader.makeQueryInterval(inputInterval.getSequence(),
+                        inputInterval.getStart(), inputInterval.getEnd());
+            }
+            return samReader.queryOverlapping(queryIntervals);
         }
     }
 
