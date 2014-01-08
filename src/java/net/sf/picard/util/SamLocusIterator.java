@@ -168,7 +168,7 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
      * passed in that is not coordinate sorted, it will eventually be coordinated sorted by this class.
      */
     public SamLocusIterator(final SAMFileReader samReader, final IntervalList intervalList) {
-        this(samReader, intervalList, false);
+        this(samReader, intervalList, samReader.hasIndex());
     }
 
     /**
@@ -178,7 +178,8 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
      * @param intervalList Either the list of desired intervals, or null.  Note that if an intervalList is
      * passed in that is not coordinate sorted, it will eventually be coordinated sorted by this class.
      * @param useIndex If true, do indexed lookup to improve performance.  Not relevant if intervalList == null.
-     * This can actually slow performance if the intervals are densely packed.
+     * It is no longer the case the useIndex==true can make performance worse.  It should always perform at least
+     * as well as useIndex==false, and generally will be much faster.
      */
     public SamLocusIterator(final SAMFileReader samReader, final IntervalList intervalList, final boolean useIndex) {
         if (samReader.getFileHeader().getSortOrder() == null || samReader.getFileHeader().getSortOrder() == SAMFileHeader.SortOrder.unsorted) {

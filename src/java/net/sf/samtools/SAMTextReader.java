@@ -168,6 +168,11 @@ class SAMTextReader extends SAMFileReader.ReaderImplementation {
         throw new UnsupportedOperationException("Cannot query SAM text files");
     }
 
+    @Override
+    CloseableIterator<SAMRecord> query(final SAMFileReader.QueryInterval[] intervals, final boolean contained) {
+        throw new UnsupportedOperationException("Cannot query SAM text files");
+    }
+
     /**
      * Unsupported for SAM text files.
      */

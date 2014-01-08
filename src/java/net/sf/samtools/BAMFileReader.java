@@ -24,11 +24,14 @@
 package net.sf.samtools;
 
 
-import net.sf.samtools.util.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.seekablestream.SeekableStream;
+import net.sf.samtools.util.*;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +57,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
 
     private BAMIndex mIndex = null;
     private long mFirstRecordPointer = 0;
+    // If non-null, there is an unclosed iterator extant.
     private CloseableIterator<SAMRecord> mCurrentIterator = null;
 
     // If true, all SAMRecords are fully decoded as they are read.
@@ -283,7 +287,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if (mIsSeekable) {
             try {
                 mCompressedInputStream.seek(mFirstRecordPointer);
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new RuntimeException(exc.getMessage(), exc);
             }
         }
@@ -349,7 +353,45 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if (!mIsSeekable) {
             throw new UnsupportedOperationException("Cannot query stream-based BAM file");
         }
-        mCurrentIterator = createIndexIterator(sequence, start, end, contained? QueryType.CONTAINED: QueryType.OVERLAPPING);
+        final int referenceIndex = mFileHeader.getSequenceIndex(sequence);
+        if (referenceIndex == -1) {
+            mCurrentIterator = new EmptyBamIterator();
+        } else {
+            final SAMFileReader.QueryInterval[] queryIntervals = {new SAMFileReader.QueryInterval(referenceIndex, start, end)};
+            mCurrentIterator = createIndexIterator(queryIntervals, contained);
+        }
+        return mCurrentIterator;
+    }
+
+    /**
+     * Prepare to iterate through the SAMRecords that match any of the given intervals.
+     * Only a single iterator on a BAMFile can be extant at a time.  The previous one must be closed
+     * before calling any of the methods that return an iterator.
+     *
+     * Note that an unmapped SAMRecord may still have a reference name and an alignment start for sorting
+     * purposes (typically this is the coordinate of its mate), and will be found by this method if the coordinate
+     * matches the specified interval.
+     *
+     * Note that this method is not necessarily efficient in terms of disk I/O.  The index does not have perfect
+     * resolution, so some SAMRecords may be read and then discarded because they do not match the specified interval.
+     *
+     * @param intervals list of intervals to be queried.  Must be optimized.
+     * @param contained If true, the alignments for the SAMRecords must be completely contained in the interval
+     * specified by start and end.  If false, the SAMRecords need only overlap the interval.
+     * @return Iterator for the matching SAMRecords
+     * @see net.sf.samtools.SAMFileReader.QueryInterval#optimizeIntervals(net.sf.samtools.SAMFileReader.QueryInterval[])
+     */
+    CloseableIterator<SAMRecord> query(final SAMFileReader.QueryInterval[] intervals, final boolean contained) {
+        if (mStream == null) {
+            throw new IllegalStateException("File reader is closed");
+        }
+        if (mCurrentIterator != null) {
+            throw new IllegalStateException("Iteration in progress");
+        }
+        if (!mIsSeekable) {
+            throw new UnsupportedOperationException("Cannot query stream-based BAM file");
+        }
+        mCurrentIterator = createIndexIterator(intervals, contained);
         return mCurrentIterator;
     }
 
@@ -379,10 +421,22 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         if (!mIsSeekable) {
             throw new UnsupportedOperationException("Cannot query stream-based BAM file");
         }
-        mCurrentIterator = createIndexIterator(sequence, start, -1, QueryType.STARTING_AT);
+        final int referenceIndex = mFileHeader.getSequenceIndex(sequence);
+        if (referenceIndex == -1) {
+            mCurrentIterator = new EmptyBamIterator();
+        } else {
+            mCurrentIterator = createStartingAtIndexIterator(referenceIndex, start);
+        }
         return mCurrentIterator;
     }
 
+    /**
+     * Prepare to iterate through the SAMRecords that are unmapped and do not have a reference name or alignment start.
+     * Only a single iterator on a BAMFile can be extant at a time.  The previous one must be closed
+     * before calling any of the methods that return an iterator.
+     *
+     * @return Iterator for the matching SAMRecords.
+     */
     public CloseableIterator<SAMRecord> queryUnmapped() {
         if (mStream == null) {
             throw new IllegalStateException("File reader is closed");
@@ -403,7 +457,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
             }
             mCurrentIterator = new BAMFileIndexUnmappedIterator();
             return mCurrentIterator;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("IOException seeking to unmapped reads", e);
         }
     }
@@ -475,14 +529,54 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     }
 
     /**
+     * Encapsulates the restriction that only one iterator may be open at a time.
+     */
+    private abstract class AbstractBamIterator implements CloseableIterator<SAMRecord> {
+
+        private boolean isClosed = false;
+
+        public void close() {
+            if (!isClosed) {
+                if (mCurrentIterator != null && this != mCurrentIterator) {
+                    throw new IllegalStateException("Attempt to close non-current iterator");
+                }
+                mCurrentIterator = null;
+                isClosed = true;
+            }
+        }
+
+        protected void assertOpen() {
+            if (isClosed) throw new AssertionError("Iterator has been closed");
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported: remove");
+        }
+
+    }
+
+    private class EmptyBamIterator extends AbstractBamIterator {
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public SAMRecord next() {
+            throw new NoSuchElementException("next called on empty iterator");
+        }
+    }
+
+    /**
+
+    /**
      * Iterator for non-indexed sequential iteration through all SAMRecords in file.
      * Starting point of iteration is wherever current file position is when the iterator is constructed.
      */
-    private class BAMFileIterator implements CloseableIterator<SAMRecord> {
+    private class BAMFileIterator extends AbstractBamIterator {
         private SAMRecord mNextRecord = null;
         private final BAMRecordCodec bamRecordCodec;
         private long samRecordIndex = 0; // Records at what position (counted in records) we are at in the file
-        private boolean isClosed = false;
 
         BAMFileIterator() {
             this(true);
@@ -501,30 +595,16 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
             }
         }
 
-        public void close() {
-            if (!isClosed) {
-                if (mCurrentIterator != null && this != mCurrentIterator) {
-                    throw new IllegalStateException("Attempt to close non-current iterator");
-                }
-                mCurrentIterator = null;
-                isClosed = true;
-            }
-        }
-
         public boolean hasNext() {
-            if (isClosed) throw new IllegalStateException("Iterator has been closed");
+            assertOpen();
             return (mNextRecord != null);
         }
 
         public SAMRecord next() {
-            if (isClosed) throw new IllegalStateException("Iterator has been closed");
+            assertOpen();
             final SAMRecord result = mNextRecord;
             advance();
             return result;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException("Not supported: remove");
         }
 
         void advance() {
@@ -545,7 +625,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
                 if (eagerDecode && mNextRecord != null) {
                     mNextRecord.eagerDecode();
                 }
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new RuntimeException(exc.getMessage(), exc);
             }
         }
@@ -573,25 +653,65 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     }
 
     /**
-     * Prepare to iterate through SAMRecords matching the target interval.
-     * @param sequence Desired reference sequence.
-     * @param start 1-based start of target interval, inclusive.
-     * @param end 1-based end of target interval, inclusive.
-     * @param queryType contained, overlapping, or starting-at query.
+     * Prepare to iterate through SAMRecords in the given reference that start exactly at the given start coordinate.
+     * @param referenceIndex Desired reference sequence.
+     * @param start 1-based alignment start.
      */
-    private CloseableIterator<SAMRecord> createIndexIterator(final String sequence,
-                                                             final int start,
-                                                             final int end,
-                                                             final QueryType queryType) {
-        long[] filePointers = null;
+    private CloseableIterator<SAMRecord> createStartingAtIndexIterator(final int referenceIndex,
+                                                                       final int start) {
 
         // Hit the index to determine the chunk boundaries for the required data.
-        final SAMFileHeader fileHeader = getFileHeader();
-        final int referenceIndex = fileHeader.getSequenceIndex(sequence);
-        if (referenceIndex != -1) {
-            final BAMIndex fileIndex = getIndex();
-            final BAMFileSpan fileSpan = fileIndex.getSpanOverlapping(referenceIndex, start, end);
-            filePointers = fileSpan != null ? fileSpan.toCoordinateArray() : null;
+        final BAMIndex fileIndex = getIndex();
+        final BAMFileSpan fileSpan = fileIndex.getSpanOverlapping(referenceIndex, start, 0);
+        final long[] filePointers = fileSpan != null ? fileSpan.toCoordinateArray() : null;
+
+        // Create an iterator over the above chunk boundaries.
+        final BAMFileIndexIterator iterator = new BAMFileIndexIterator(filePointers);
+
+        // Add some preprocessing filters for edge-case reads that don't fit into this
+        // query type.
+        return new BAMQueryFilteringIterator(iterator,new BAMStartingAtIteratorFilter(referenceIndex,start));
+    }
+
+    /**
+     * @throws java.lang.IllegalArgumentException if the intervals are not optimized
+     * @see net.sf.samtools.SAMFileReader.QueryInterval#optimizeIntervals(net.sf.samtools.SAMFileReader.QueryInterval[])
+     */
+    private void assertIntervalsOptimized(final SAMFileReader.QueryInterval[] intervals) {
+        if (intervals.length == 0) return;
+        for (int i = 1; i < intervals.length; ++i) {
+        final SAMFileReader.QueryInterval prev = intervals[i-1];
+        final SAMFileReader.QueryInterval thisInterval = intervals[i];
+            if (prev.compareTo(thisInterval) >= 0) {
+                throw new IllegalArgumentException(String.format("List of intervals is not sorted: %s >= %s", prev, thisInterval));
+            }
+            if (prev.overlaps(thisInterval)) {
+                throw new IllegalArgumentException(String.format("List of intervals is not optimized: %s intersects %s", prev, thisInterval));
+            }
+            if (prev.abuts(thisInterval)) {
+                throw new IllegalArgumentException(String.format("List of intervals is not optimized: %s abuts %s", prev, thisInterval));
+            }
+        }
+    }
+
+    private CloseableIterator<SAMRecord> createIndexIterator(final SAMFileReader.QueryInterval[] intervals,
+                                                             final boolean contained) {
+
+        assertIntervalsOptimized(intervals);
+
+        // Hit the index to determine the chunk boundaries for the required data.
+        final BAMFileSpan[] inputSpans = new BAMFileSpan[intervals.length];
+        final BAMIndex fileIndex = getIndex();
+        for (int i = 0; i < intervals.length; ++i) {
+            final SAMFileReader.QueryInterval interval = intervals[i];
+            final BAMFileSpan span = fileIndex.getSpanOverlapping(interval.referenceIndex, interval.start, interval.end);
+            inputSpans[i] = span;
+        }
+        final long[] filePointers;
+        if (inputSpans.length > 0) {
+            filePointers = BAMFileSpan.merge(inputSpans).toCoordinateArray();
+        } else {
+            filePointers = null;
         }
 
         // Create an iterator over the above chunk boundaries.
@@ -599,10 +719,11 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
 
         // Add some preprocessing filters for edge-case reads that don't fit into this
         // query type.
-        return new BAMQueryFilteringIterator(iterator,sequence,start,end,queryType);
+        return new BAMQueryFilteringIterator(iterator, new BAMQueryMultipleIntervalsIteratorFilter(intervals, contained));
     }
 
-    enum QueryType {CONTAINED, OVERLAPPING, STARTING_AT}
+
+
 
     /**
      * Look for BAM index file according to standard naming convention.
@@ -630,8 +751,11 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         } else {
             return null;
         }
-    }    
+    }
 
+    /**
+     * Iterate over the SAMRecords defined by the sections of the file described in the ctor argument.
+     */
     private class BAMFileIndexIterator extends BAMFileIterator {
 
         private long[] mFilePointers = null;
@@ -667,37 +791,23 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     }
 
     /**
-     * A decorating iterator that filters out records that are outside the bounds of the
-     * given query parameters.
+     * Pull SAMRecords from a coordinate-sorted iterator, and filter out any that do not match the filter.
      */
-    private class BAMQueryFilteringIterator implements CloseableIterator<SAMRecord> {
+    public class BAMQueryFilteringIterator extends AbstractBamIterator {
         /**
          * The wrapped iterator.
          */
-        private final CloseableIterator<SAMRecord> wrappedIterator;
-
+        protected final CloseableIterator<SAMRecord> wrappedIterator;
         /**
          * The next record to be returned.  Will be null if no such record exists.
          */
-        private SAMRecord mNextRecord;
+        protected SAMRecord mNextRecord;
+        private final BAMIteratorFilter iteratorFilter;
 
-        private final int mReferenceIndex;
-        private final int mRegionStart;
-        private final int mRegionEnd;
-        private final QueryType mQueryType;
-        private boolean isClosed = false;
-
-        public BAMQueryFilteringIterator(final CloseableIterator<SAMRecord> iterator,final String sequence, final int start, final int end, final QueryType queryType) {
+        public BAMQueryFilteringIterator(final CloseableIterator<SAMRecord> iterator,
+                                         final BAMIteratorFilter iteratorFilter) {
             this.wrappedIterator = iterator;
-            final SAMFileHeader fileHeader = getFileHeader();
-            mReferenceIndex = fileHeader.getSequenceIndex(sequence);
-            mRegionStart = start;
-            if (queryType == QueryType.STARTING_AT) {
-                mRegionEnd = mRegionStart;
-            } else {
-                mRegionEnd = (end <= 0) ? Integer.MAX_VALUE : end;
-            }
-            mQueryType = queryType;
+            this.iteratorFilter = iteratorFilter;
             mNextRecord = advance();
         }
 
@@ -705,7 +815,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
          * Returns true if a next element exists; false otherwise.
          */
         public boolean hasNext() {
-            if (isClosed) throw new IllegalStateException("Iterator has been closed");
+            assertOpen();
             return mNextRecord != null;
         }
 
@@ -721,26 +831,6 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
             return currentRead;
         }
 
-        /**
-         * Closes down the existing iterator.
-         */
-        public void close() {
-            if (!isClosed) {
-            if (this != mCurrentIterator) {
-                throw new IllegalStateException("Attempt to close non-current iterator");
-            }
-                mCurrentIterator = null;
-                isClosed = true;
-            }
-        }
-
-        /**
-         * @throws UnsupportedOperationException always.
-         */
-        public void remove() {
-            throw new UnsupportedOperationException("Not supported: remove");
-        }
-
         SAMRecord advance() {
             while (true) {
                 // Pull next record from stream
@@ -748,51 +838,64 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
                     return null;
 
                 final SAMRecord record = wrappedIterator.next();
-                // If beyond the end of this reference sequence, end iteration
-                final int referenceIndex = record.getReferenceIndex();
-                if (referenceIndex != mReferenceIndex) {
-                    if (referenceIndex < 0 ||
-                        referenceIndex > mReferenceIndex) {
-                        return null;
-                    }
-                    // If before this reference sequence, continue
-                    continue;
-                }
-                if (mRegionStart == 0 && mRegionEnd == Integer.MAX_VALUE) {
-                    // Quick exit to avoid expensive alignment end calculation
-                    return record;
-                }
-                final int alignmentStart = record.getAlignmentStart();
-                // If read is unmapped but has a coordinate, return it if the coordinate is within
-                // the query region, regardless of whether the mapped mate will be returned.
-                final int alignmentEnd;
-                if (mQueryType == QueryType.STARTING_AT) {
-                    alignmentEnd = -1;
-                } else {
-                    alignmentEnd = (record.getAlignmentEnd() != SAMRecord.NO_ALIGNMENT_START?
-                            record.getAlignmentEnd(): alignmentStart);
-                }
-
-                if (alignmentStart > mRegionEnd) {
-                    // If scanned beyond target region, end iteration
-                    return null;
-                }
-                // Filter for overlap with region
-                if (mQueryType == QueryType.CONTAINED) {
-                    if (alignmentStart >= mRegionStart && alignmentEnd <= mRegionEnd) {
-                        return record;
-                    }
-                } else if (mQueryType == QueryType.OVERLAPPING) {
-                    if (alignmentEnd >= mRegionStart && alignmentStart <= mRegionEnd) {
-                        return record;
-                    }
-                } else {
-                    if (alignmentStart == mRegionStart) {
-                        return record;
-                    }
+                switch (iteratorFilter.compareToFilter(record)) {
+                    case MATCHES_FILTER: return record;
+                    case STOP_ITERATION: return null;
+                    case CONTINUE_ITERATION: break; // keep looping
+                    default: throw new SAMException("Unexpected return from compareToFilter");
                 }
             }
         }
+    }
+
+    interface BAMIteratorFilter {
+        /**
+         * Determine if given record passes the filter, and if it does not, whether iteration should continue
+         * or if this record is beyond the region(s) of interest.
+         */
+        FilteringIteratorState compareToFilter(final SAMRecord record);
+    }
+
+    /**
+     * A decorating iterator that filters out records that do not match the given reference and start position.
+     */
+    private class BAMStartingAtIteratorFilter implements BAMIteratorFilter {
+
+        private final int mReferenceIndex;
+        private final int mRegionStart;
+
+        public BAMStartingAtIteratorFilter(final int referenceIndex, final int start) {
+            mReferenceIndex = referenceIndex;
+            mRegionStart = start;
+        }
+
+        /**
+         *
+         * @return MATCHES_FILTER if this record matches the filter;
+         * CONTINUE_ITERATION if does not match filter but iteration should continue;
+         * STOP_ITERATION if does not match filter and iteration should end.
+         */
+        @Override
+        public FilteringIteratorState compareToFilter(final SAMRecord record) {
+            // If beyond the end of this reference sequence, end iteration
+            final int referenceIndex = record.getReferenceIndex();
+            if (referenceIndex < 0 || referenceIndex > mReferenceIndex) {
+                return FilteringIteratorState.STOP_ITERATION;
+            } else if (referenceIndex < mReferenceIndex) {
+                // If before this reference sequence, continue
+                return FilteringIteratorState.CONTINUE_ITERATION;
+            }
+            final int alignmentStart = record.getAlignmentStart();
+            if (alignmentStart > mRegionStart) {
+                // If scanned beyond target region, end iteration
+                return FilteringIteratorState.STOP_ITERATION;
+            } else  if (alignmentStart == mRegionStart) {
+                    return FilteringIteratorState.MATCHES_FILTER;
+            } else {
+                return FilteringIteratorState.CONTINUE_ITERATION;
+            }
+        }
+
     }
 
     private class BAMFileIndexUnmappedIterator extends BAMFileIterator  {
@@ -803,4 +906,64 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         }
     }
 
+    /**
+     * Filters out records that do not match any of the given intervals and query type.
+     */
+    private class BAMQueryMultipleIntervalsIteratorFilter implements BAMIteratorFilter {
+        final SAMFileReader.QueryInterval[] intervals;
+        final boolean contained;
+        int intervalIndex = 0;
+
+
+        public BAMQueryMultipleIntervalsIteratorFilter(final SAMFileReader.QueryInterval[] intervals,
+                                                       final boolean contained) {
+            this.contained = contained;
+            this.intervals = intervals;
+        }
+
+        @Override
+        public FilteringIteratorState compareToFilter(final SAMRecord record) {
+            while (intervalIndex < intervals.length) {
+                final IntervalComparison comparison = compareIntervalToRecord(intervals[intervalIndex], record);
+                switch (comparison) {
+                    // Interval is before SAMRecord.  Try next interval;
+                    case BEFORE: ++intervalIndex; break;
+                    // Interval is after SAMRecord.  Keep scanning forward in SAMRecords
+                    case AFTER: return FilteringIteratorState.CONTINUE_ITERATION;
+                    // Found a good record
+                    case CONTAINED: return FilteringIteratorState.MATCHES_FILTER;
+                    // Either found a good record, or else keep scanning SAMRecords
+                    case OVERLAPPING: return
+                            (contained ? FilteringIteratorState.CONTINUE_ITERATION : FilteringIteratorState.MATCHES_FILTER);
+                }
+            }
+            // Went past the last interval
+            return FilteringIteratorState.STOP_ITERATION;
+        }
+
+        private IntervalComparison compareIntervalToRecord(final SAMFileReader.QueryInterval interval, final SAMRecord record) {
+            // interval.end <= 0 implies the end of the reference sequence.
+            final int intervalEnd = (interval.end <= 0? Integer.MAX_VALUE: interval.end);
+
+            if (interval.referenceIndex < record.getReferenceIndex()) return IntervalComparison.BEFORE;
+            else if (interval.referenceIndex > record.getReferenceIndex()) return IntervalComparison.AFTER;
+            else if (intervalEnd < record.getAlignmentStart()) return IntervalComparison.BEFORE;
+            else if (record.getAlignmentEnd() < interval.start) return IntervalComparison.AFTER;
+            else if (CoordMath.encloses(interval.start, intervalEnd, record.getAlignmentStart(), record.getAlignmentEnd())) {
+                return IntervalComparison.CONTAINED;
+            } else return IntervalComparison.OVERLAPPING;
+        }
+    }
+
+    private enum IntervalComparison {
+        BEFORE, AFTER, OVERLAPPING, CONTAINED
+    }
+
+    /**
+     * Type returned by BAMIteratorFilter that tell BAMQueryFilteringIterator how to handle each SAMRecord.
+     */
+    private enum FilteringIteratorState {
+        MATCHES_FILTER, STOP_ITERATION, CONTINUE_ITERATION
+
+    }
 }
