@@ -43,6 +43,8 @@ public class ReferenceSequenceFileFactory {
         add(".fasta.gz");
         add(".fa");
         add(".fa.gz");
+        add(".fna");
+        add(".fna.gz");
         add(".txt");
         add(".txt.gz");
     }};
