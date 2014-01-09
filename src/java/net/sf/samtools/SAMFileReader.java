@@ -815,7 +815,10 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
             if (comp != 0) return comp;
             comp = this.start - other.start;
             if (comp != 0) return comp;
-            return this.end - other.end;
+            else if (this.end == other.end) return 0;
+            else if (this.end == 0) return 1;
+            else if (other.end == 0) return -1;
+            else return this.end - other.end;
         }
 
         /**
