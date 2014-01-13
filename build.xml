@@ -240,7 +240,7 @@
         <javadoc
                 sourcepath="${src}"
                 destdir="javadoc"
-                packagenames="net.sf.samtools.*, net.sf.picard.*"
+                packagenames="net.sf.samtools.*, net.sf.picard.*, org.broadinstitute.variant.*, org.broad.tribble.*"
                 windowtitle="SAM JDK API Documentation"
                 doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
                 author="true"
@@ -248,7 +248,12 @@
                 use="true"
                 version="true"
                 failonerror="true">
-            <classpath location="${java.home}/../lib/tools.jar"/>
+            <classpath>
+                <pathelement location="${java.home}/../lib/tools.jar" />
+                <fileset dir="${lib}">
+                    <include name="**/*.jar" />
+                </fileset>
+            </classpath>
             <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
         </javadoc>
         <mkdir dir="${command-line-html-dir}"/>
