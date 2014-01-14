@@ -184,7 +184,7 @@ public class VCFWriterUnitTest extends VariantBaseTest {
         final VCFHeader header = createFakeHeader(metaData,Columns);
         final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER,Options.INDEX_ON_THE_FLY);
 
-        final File tempDir = TestUtil.getTempDirecory("VCFWriter", "StaleIndex");
+        final File tempDir = TestUtil.getTempDirectory("VCFWriter", "StaleIndex");
 
         tempDir.deleteOnExit();
 
