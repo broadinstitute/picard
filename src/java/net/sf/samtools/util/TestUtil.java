@@ -30,7 +30,7 @@ import java.io.IOException;
 
 public class TestUtil {
 
-    public static File getTempDirecory(final String prefix, final String suffix) {
+    public static File getTempDirectory(final String prefix, final String suffix) {
         final File tempDirectory;
         try {
             tempDirectory = File.createTempFile(prefix, suffix);
@@ -44,13 +44,20 @@ public class TestUtil {
         tempDirectory.deleteOnExit();
         return tempDirectory;
     }
-    
+
     /**
-     * Little test utility to help tests that create multiple levels of subdirectories
-     * clean up after themselves.
-     *
-     * @param directory The directory to be deleted (along with its subdirectories)
+     * @deprecated Use properly spelled method.
      */
+    public static File getTempDirecory(final String prefix, final String suffix) {
+        return getTempDirectory(prefix, suffix);
+    }
+
+        /**
+         * Little test utility to help tests that create multiple levels of subdirectories
+         * clean up after themselves.
+         *
+         * @param directory The directory to be deleted (along with its subdirectories)
+         */
     public static void recursiveDelete(final File directory) {
         for (final File f : directory.listFiles()) {
             if (f.isDirectory()) {
