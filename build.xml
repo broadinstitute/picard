@@ -108,7 +108,7 @@
         <compile-src includes="net/sf/picard/**/*.*"/>
     </target>
 
-    <target name="compile-tribble" depends="init" description="Compile tribble files without cleaning">
+    <target name="compile-tribble" depends="init, compile-sam-jdk" description="Compile tribble files without cleaning">
         <compile-src includes="org/broad/tribble/**/*.*"/>
     </target>
 
