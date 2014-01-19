@@ -91,12 +91,24 @@ public class MathUtil {
 
     /** Returns the largest value stored in the array. */
     public static double max(final double[] nums) {
+        return nums[indexOfMax(nums)];
+    }
+
+    /**
+     * Returns the index of the largest element in the array.  If there are multiple equal maxima then
+     * the earliest one in the array is returned.
+     */
+    public static int indexOfMax(final double[] nums) {
         double max = nums[0];
+        int index  = 0;
         for (int i = 1; i < nums.length; ++i) {
-            if (nums[i] > max) max = nums[i];
+            if (nums[i] > max) {
+                max = nums[i];
+                index = i;
+            }
         }
 
-        return max;
+        return index;
     }
 
     /** Returns the smallest value stored in the array. */
