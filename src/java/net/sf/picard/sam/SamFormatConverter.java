@@ -61,7 +61,7 @@ public class SamFormatConverter extends CommandLineProgram {
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+        final SAMFileReader reader = new SAMFileReader(INPUT);
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
 
         if  (CREATE_INDEX && writer.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate){
