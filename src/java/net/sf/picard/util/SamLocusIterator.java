@@ -229,6 +229,10 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
      * or loci in the target mask that have yet to be covered.
      */
     public boolean hasNext() {
+        if (this.samIterator == null) {
+            iterator();
+        }
+
         while (complete.isEmpty() && ((!accumulator.isEmpty()) || samHasMore() || hasRemainingMaskBases())) {
             final LocusInfo locusInfo = next();
             if (locusInfo != null) {
