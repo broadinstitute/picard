@@ -36,7 +36,8 @@ public class VcfFormatConverterTest {
     private static final String TEST_DATA_PATH = "testdata/net/sf/picard/vcf/";
     private static final String TEST_FILE_BASE = "vcfFormatTest";
 
-	private static final String VCF = ".vcf";
+    private static final String VCF = ".vcf";
+    private static final String VCF_GZ = ".vcf.gz";
 	private static final String BCF = ".bcf";
 
     private static final File TEST_VCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF);
@@ -49,7 +50,12 @@ public class VcfFormatConverterTest {
 
     @Test
     public void testVcfToBcf() {
-        runBackAndForthTest(TEST_VCF, BCF);
+        runBackAndForthTest(TEST_VCF, BCF, VCF);
+    }
+
+    @Test
+    public void testVcfToVcfGz() {
+        runBackAndForthTest(TEST_VCF, VCF_GZ, VCF);
     }
 
     @Test
@@ -59,7 +65,7 @@ public class VcfFormatConverterTest {
 
     @Test
     public void testBcfToVcf() {
-        runBackAndForthTest(TEST_BCF, VCF);
+        runBackAndForthTest(TEST_BCF, VCF, BCF);
     }
 
     private void runLikeTest(final File input, final String format) {
@@ -67,11 +73,11 @@ public class VcfFormatConverterTest {
         compareFiles(input, outputFile);
     }
 
-    private void runBackAndForthTest(final File input, final String format) {
+    private void runBackAndForthTest(final File input, final String format, final String originalFormat) {
         final String tempPrefix = "backAndForth";
 
         final File backAndForth = convertFile(input, tempPrefix, format);
-        final File backAndForthSeries2 = convertFile(backAndForth, tempPrefix, getOppositeFormat(format));
+        final File backAndForthSeries2 = convertFile(backAndForth, tempPrefix, originalFormat);
 
         compareFiles(input, backAndForthSeries2);
     }
@@ -80,15 +86,23 @@ public class VcfFormatConverterTest {
         final File outputFile;
         try {
             outputFile = File.createTempFile(prefix, format);
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new PicardException("Unable to create temp file!");
         }
 
+        outputFile.deleteOnExit();
+        new File(outputFile.getAbsolutePath() + ".idx").deleteOnExit();
         final VcfFormatConverter vcfFormatConverter = new VcfFormatConverter();
         vcfFormatConverter.INPUT = input;
         vcfFormatConverter.OUTPUT = outputFile;
+        if (VCF_GZ.equals(format)) {
+            vcfFormatConverter.CREATE_INDEX = false;
+        }
+        if (input.getName().endsWith(VCF_GZ)) {
+            vcfFormatConverter.REQUIRE_INDEX = false;
+        }
 
-        vcfFormatConverter.instanceMain(new String[0]);
+        Assert.assertEquals(vcfFormatConverter.doWork(), 0);
         return outputFile;
     }
 
@@ -100,9 +114,4 @@ public class VcfFormatConverterTest {
         Assert.assertEquals(file1.length(), file2.length());
     }
 
-	public static String getOppositeFormat(final String curFormat) {
-		if (curFormat.equals(VCF)) return BCF;
-		else if (curFormat.equals(BCF)) return VCF;
-		else throw new RuntimeException();
-	}
 }
