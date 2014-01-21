@@ -26,6 +26,7 @@
 package org.broadinstitute.variant.variantcontext.writer;
 
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.util.BlockCompressedOutputStream;
 import org.broad.tribble.index.IndexCreator;
 
 import java.io.*;
@@ -75,7 +76,7 @@ public class VariantContextWriterFactory {
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
         else {
-            return new VCFWriter(location, output, refDict,
+            return new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
@@ -94,11 +95,25 @@ public class VariantContextWriterFactory {
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
         else {
-            return new VCFWriter(location, output, refDict, indexCreator,
+            return new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict, indexCreator,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
         }
+    }
+
+    private static OutputStream maybeBgzfWrapOutputStream(final File location, OutputStream output,
+                                                          final EnumSet<Options> options) {
+        if (options.contains(Options.INDEX_ON_THE_FLY) &&
+                (isCompressedVcf(location) || output instanceof BlockCompressedOutputStream)) {
+            throw new IllegalArgumentException("VCF index creation not supported for vcf.gz output format.");
+        }
+        if (!(output instanceof BlockCompressedOutputStream)) {
+            if (isCompressedVcf(location)) {
+                output = new BlockCompressedOutputStream(output, location);
+            }
+        }
+        return output;
     }
 
     /**
@@ -115,11 +130,15 @@ public class VariantContextWriterFactory {
         return options.contains(Options.FORCE_BCF) || (location != null && location.getName().contains(".bcf"));
     }
 
-    public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, int maxCachingStartDistance) {
+    public static boolean isCompressedVcf(final File location) {
+        return location != null && location.getName().endsWith(".gz");
+    }
+
+    public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, final int maxCachingStartDistance) {
         return sortOnTheFly(innerWriter, maxCachingStartDistance, false);
     }
 
-    public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, int maxCachingStartDistance, boolean takeOwnershipOfInner) {
+    public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, final int maxCachingStartDistance, final boolean takeOwnershipOfInner) {
         return new SortingVariantContextWriter(innerWriter, maxCachingStartDistance, takeOwnershipOfInner);
     }
 
@@ -131,7 +150,7 @@ public class VariantContextWriterFactory {
     protected static OutputStream openOutputStream(final File location) {
         try {
             return new FileOutputStream(location);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             throw new RuntimeException(location + ": Unable to create VCF writer", e);
         }
     }
