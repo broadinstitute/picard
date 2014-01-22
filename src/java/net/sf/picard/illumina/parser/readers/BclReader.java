@@ -25,6 +25,7 @@ package net.sf.picard.illumina.parser.readers;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.util.UnsignedTypeUtil;
+import net.sf.samtools.Defaults;
 import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
@@ -103,7 +104,7 @@ public class BclReader implements Iterator<BclReader.BclValue> {
         // if necessary
         final BufferedInputStream bufferedInputStream;
         try {
-             bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
+             bufferedInputStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
             inputStream = isGzip ? new GZIPInputStream(bufferedInputStream) : bufferedInputStream;
         } catch (FileNotFoundException fnfe) {
             throw new PicardException("File not found: (" + filePath + ")", fnfe);
