@@ -158,10 +158,8 @@ public abstract class VCFCompoundHeaderLine extends VCFHeaderLine implements VCF
             countType = VCFHeaderLineCount.A;
         } else if ( numberStr.equals(VCFConstants.PER_GENOTYPE_COUNT) ) {
             countType = VCFHeaderLineCount.G;
-        } else if ( ((version == VCFHeaderVersion.VCF4_0 || version == VCFHeaderVersion.VCF4_1) &&
-                     numberStr.equals(VCFConstants.UNBOUNDED_ENCODING_v4)) ||
-                    ((version == VCFHeaderVersion.VCF3_2 || version == VCFHeaderVersion.VCF3_3) &&
-                     numberStr.equals(VCFConstants.UNBOUNDED_ENCODING_v3)) ) {
+        } else if ( (version.isAtLeastAsRecentAs(VCFHeaderVersion.VCF4_0) && numberStr.equals(VCFConstants.UNBOUNDED_ENCODING_v4)) ||
+                    (! version.isAtLeastAsRecentAs(VCFHeaderVersion.VCF4_0) && numberStr.equals(VCFConstants.UNBOUNDED_ENCODING_v3)) ) {
             countType = VCFHeaderLineCount.UNBOUNDED;
         } else {
             countType = VCFHeaderLineCount.INTEGER;
