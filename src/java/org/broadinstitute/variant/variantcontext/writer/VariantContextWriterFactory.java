@@ -25,6 +25,7 @@
 
 package org.broadinstitute.variant.variantcontext.writer;
 
+import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import org.broad.tribble.index.IndexCreator;
@@ -42,6 +43,12 @@ public class VariantContextWriterFactory {
 
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);
     public static final EnumSet<Options> NO_OPTIONS = EnumSet.noneOf(Options.class);
+
+    static {
+        if (Defaults.USE_ASYNC_IO) {
+            DEFAULT_OPTIONS.add(Options.USE_ASYNC_IO);
+        }
+    }
 
     private VariantContextWriterFactory() {}
 
@@ -71,16 +78,19 @@ public class VariantContextWriterFactory {
                                               final EnumSet<Options> options) {
         final boolean enableBCF = isBCFOutput(location, options);
 
+        final VariantContextWriter ret;
         if ( enableBCF )
-            return new BCF2Writer(location, output, refDict,
+            ret = new BCF2Writer(location, output, refDict,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
         else {
-            return new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict,
+            ret =  new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
         }
+        if (options.contains(Options.USE_ASYNC_IO)) return new AsyncVariantContextWriter(ret, AsyncVariantContextWriter.DEFAULT_QUEUE_SIZE);
+        else return ret;
     }
 
     public static VariantContextWriter create(final File location,
@@ -90,16 +100,19 @@ public class VariantContextWriterFactory {
                                               final EnumSet<Options> options) {
         final boolean enableBCF = isBCFOutput(location, options);
 
+        final VariantContextWriter ret;
         if ( enableBCF )
-            return new BCF2Writer(location, output, refDict, indexCreator,
+            ret = new BCF2Writer(location, output, refDict, indexCreator,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
         else {
-            return new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict, indexCreator,
+            ret =  new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict, indexCreator,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
         }
+        if (options.contains(Options.USE_ASYNC_IO)) return new AsyncVariantContextWriter(ret, AsyncVariantContextWriter.DEFAULT_QUEUE_SIZE);
+        else return ret;
     }
 
     private static OutputStream maybeBgzfWrapOutputStream(final File location, OutputStream output,
