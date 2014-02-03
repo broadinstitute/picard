@@ -31,7 +31,7 @@ public class VCFFileReader implements Closeable, Iterable<VariantContext> {
 	 * Returns the SAMSequenceDictionary from the provided VCF file.
 	 */
 	public static SAMSequenceDictionary getSequenceDictionary(final File file) {
-		final SAMSequenceDictionary dict = new VCFFileReader(file).getFileHeader().getSequenceDictionary();
+		final SAMSequenceDictionary dict = new VCFFileReader(file, false).getFileHeader().getSequenceDictionary();
 		CloserUtil.close(file);
 		return dict;
 	}
