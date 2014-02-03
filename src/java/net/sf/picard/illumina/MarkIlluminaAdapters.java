@@ -104,6 +104,16 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
     }
 
     @Override
+    protected String[] customCommandLineValidation() {
+        if ((FIVE_PRIME_ADAPTER != null && THREE_PRIME_ADAPTER == null) || (THREE_PRIME_ADAPTER != null && FIVE_PRIME_ADAPTER == null)) {
+            return new String[] {"Either both or neither of THREE_PRIME_ADAPTER and FIVE_PRIME_ADAPTER must be set."};
+        }
+        else {
+            return null;
+        }
+    }
+
+    @Override
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(METRICS);
