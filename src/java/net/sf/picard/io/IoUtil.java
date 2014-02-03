@@ -44,6 +44,9 @@ import org.apache.tools.bzip2.CBZip2OutputStream;
  * @author Tim Fennell
  */
 public class IoUtil extends net.sf.samtools.util.IOUtil {
+    /** Possible extensions for VCF files and related formats. */
+    public static final String[] VCF_EXTENSIONS = new String[] {".vcf", ".vcf.gz", ".bcf"};
+
     /**
      * Checks that a file is non-null, exists, is not a directory and is readable.  If any
      * condition is false then a runtime exception is thrown.
@@ -642,17 +645,20 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         final List<File> output = new ArrayList<File>();
         stack.addAll(inputs);
 
-        final Set<String> exts = new HashSet<String>();
-        Collections.addAll(exts, extensions);
-
         while (!stack.empty()) {
             final File f = stack.pop();
-            final String ext = IoUtil.fileSuffix(f);
+            final String name = f.getName();
+            boolean matched = false;
 
-            if (exts.contains(ext)) {
-                output.add(f);
+            for (final String ext : extensions) {
+                if (!matched && name.endsWith(ext)) {
+                    output.add(f);
+                    matched = true;
+                }
             }
-            else {
+
+            // If the file didn't match a given extension, treat it as a list of files
+            if (!matched) {
                 IoUtil.assertFileIsReadable(f);
 
                 for (final String s : IoUtil.readLines(f)) {
@@ -660,6 +666,9 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
                 }
             }
         }
+
+        // Preserve input order (since we're using a stack above) for things that care
+        Collections.reverse(output);
 
         return output;
     }
