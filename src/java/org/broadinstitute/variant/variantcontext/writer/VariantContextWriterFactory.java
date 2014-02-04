@@ -43,6 +43,7 @@ public class VariantContextWriterFactory {
 
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);
     public static final EnumSet<Options> NO_OPTIONS = EnumSet.noneOf(Options.class);
+    public static final String[] BLOCK_COMPRESSED_EXTENSIONS = {".gz", ".bgz", ".bgzf"};
 
     static {
         if (Defaults.USE_ASYNC_IO) {
@@ -72,25 +73,111 @@ public class VariantContextWriterFactory {
         return create(null, output, refDict, options);
     }
 
-    public static VariantContextWriter create(final File location,
-                                              final OutputStream output,
-                                              final SAMSequenceDictionary refDict,
-                                              final EnumSet<Options> options) {
-        final boolean enableBCF = isBCFOutput(location, options);
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
+     *                 but does not control where the file is written
+     * @param output This is where the BCF is actually written.
+     */
+    public static VariantContextWriter createBcf2(final File location,
+                                                  final OutputStream output,
+                                                  final SAMSequenceDictionary refDict,
+                                                  final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new BCF2Writer(location, output, refDict,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES)), options);
+    }
 
-        final VariantContextWriter ret;
-        if ( enableBCF )
-            ret = new BCF2Writer(location, output, refDict,
-                    options.contains(Options.INDEX_ON_THE_FLY),
-                    options.contains(Options.DO_NOT_WRITE_GENOTYPES));
-        else {
-            ret =  new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict,
-                    options.contains(Options.INDEX_ON_THE_FLY),
-                    options.contains(Options.DO_NOT_WRITE_GENOTYPES),
-                    options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
+     *                 but does not control where the file is written
+     * @param output This is where the BCF is actually written.
+     */
+    public static VariantContextWriter createBcf2(final File location,
+                                                  final OutputStream output,
+                                                  final SAMSequenceDictionary refDict,
+                                                  final IndexCreator indexCreator,
+                                                  final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new BCF2Writer(location, output, refDict, indexCreator,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES)), options);
+    }
+
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
+     *                 but does not control where the file is written
+     * @param output This is where the VCF is actually written.
+     */
+    public static VariantContextWriter createVcf(final File location,
+                                                 final OutputStream output,
+                                                 final SAMSequenceDictionary refDict,
+                                                 final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, output, refDict,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)), options);
+    }
+
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
+     *                 but does not control where the file is written
+     * @param output This is where the VCF is actually written.
+     */
+    public static VariantContextWriter createVcf(final File location,
+                                                 final OutputStream output,
+                                                 final SAMSequenceDictionary refDict,
+                                                 final IndexCreator indexCreator,
+                                                 final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, output, refDict, indexCreator,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)), options);
+    }
+
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages,
+     *                 but does not control where the file is written
+     * @param output This is where the VCF is actually written.
+     */
+    public static VariantContextWriter createBlockCompressedVcf(final File location,
+                                                                final OutputStream output,
+                                                                final SAMSequenceDictionary refDict,
+                                                                final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options),
+                refDict,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)), options);
+    }
+
+    /**
+     * @param location Note that this parameter is used to producing intelligent log messages,
+     *                 but does not control where the file is written
+     * @param output This is where the VCF is actually written.
+     */
+    public static VariantContextWriter createBlockCompressedVcf(final File location,
+                                                                final OutputStream output,
+                                                                final SAMSequenceDictionary refDict,
+                                                                final IndexCreator indexCreator,
+                                                                final EnumSet<Options> options) {
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options),
+                refDict, indexCreator,
+                options.contains(Options.INDEX_ON_THE_FLY),
+                options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)), options);
+    }
+
+    public static VariantContextWriter create(final File location,
+        final OutputStream output,
+        final SAMSequenceDictionary refDict,
+        final EnumSet<Options> options) {
+
+        if (isBCFOutput(location, options)) {
+            return createBcf2(location, output, refDict, options);
+        } else if (isCompressedVcf(location)) {
+            return createBlockCompressedVcf(location, output, refDict, options);
+        } else {
+            return createVcf(location, output, refDict, options);
         }
-        if (options.contains(Options.USE_ASYNC_IO)) return new AsyncVariantContextWriter(ret, AsyncVariantContextWriter.DEFAULT_QUEUE_SIZE);
-        else return ret;
     }
 
     public static VariantContextWriter create(final File location,
@@ -98,35 +185,33 @@ public class VariantContextWriterFactory {
                                               final SAMSequenceDictionary refDict,
                                               final IndexCreator indexCreator,
                                               final EnumSet<Options> options) {
-        final boolean enableBCF = isBCFOutput(location, options);
 
-        final VariantContextWriter ret;
-        if ( enableBCF )
-            ret = new BCF2Writer(location, output, refDict, indexCreator,
-                    options.contains(Options.INDEX_ON_THE_FLY),
-                    options.contains(Options.DO_NOT_WRITE_GENOTYPES));
-        else {
-            ret =  new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options), refDict, indexCreator,
-                    options.contains(Options.INDEX_ON_THE_FLY),
-                    options.contains(Options.DO_NOT_WRITE_GENOTYPES),
-                    options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
+        if (isBCFOutput(location, options)) {
+            return createBcf2(location, output, refDict, indexCreator, options);
+        } else if (isCompressedVcf(location)) {
+            return createBlockCompressedVcf(location, output, refDict, indexCreator, options);
+        } else {
+            return createVcf(location, output, refDict, indexCreator, options);
         }
-        if (options.contains(Options.USE_ASYNC_IO)) return new AsyncVariantContextWriter(ret, AsyncVariantContextWriter.DEFAULT_QUEUE_SIZE);
-        else return ret;
     }
 
     private static OutputStream maybeBgzfWrapOutputStream(final File location, OutputStream output,
                                                           final EnumSet<Options> options) {
-        if (options.contains(Options.INDEX_ON_THE_FLY) &&
-                (isCompressedVcf(location) || output instanceof BlockCompressedOutputStream)) {
-            throw new IllegalArgumentException("VCF index creation not supported for vcf.gz output format.");
+        if (options.contains(Options.INDEX_ON_THE_FLY)) {
+            throw new IllegalArgumentException("VCF index creation not supported for block-compressed output format.");
         }
         if (!(output instanceof BlockCompressedOutputStream)) {
-            if (isCompressedVcf(location)) {
                 output = new BlockCompressedOutputStream(output, location);
-            }
         }
         return output;
+    }
+
+    private static VariantContextWriter maybeWrapWithAsyncWriter(final VariantContextWriter writer,
+                                                                 final EnumSet<Options> options) {
+        if (options.contains(Options.USE_ASYNC_IO)) {
+            return new AsyncVariantContextWriter(writer, AsyncVariantContextWriter.DEFAULT_QUEUE_SIZE);
+        }
+        else return writer;
     }
 
     /**
@@ -144,7 +229,11 @@ public class VariantContextWriterFactory {
     }
 
     public static boolean isCompressedVcf(final File location) {
-        return location != null && location.getName().endsWith(".gz");
+        if (location == null) return false;
+        for (final String extension : BLOCK_COMPRESSED_EXTENSIONS) {
+            if (location.getName().endsWith(extension)) return true;
+        }
+        return false;
     }
 
     public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, final int maxCachingStartDistance) {
