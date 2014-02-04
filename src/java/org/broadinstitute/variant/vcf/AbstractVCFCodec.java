@@ -717,9 +717,8 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         return new LazyGenotypesContext.LazyData(genotypes, header.getSampleNamesInOrder(), header.getSampleNameToOffset());
     }
 
-
-    private final static String[] INT_DECODE_ARRAY = new String[10000];
-    private final static int[] decodeInts(final String string) {
+    private final String[] INT_DECODE_ARRAY = new String[10000];
+    private final int[] decodeInts(final String string) {
         final int nValues = ParsingUtils.split(string, INT_DECODE_ARRAY, ',');
         final int[] values = new int[nValues];
         try {

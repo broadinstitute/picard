@@ -1362,6 +1362,13 @@ public class VariantContext implements Feature { // to enable tribble integratio
     }
 
     public String toString() {
+        // Note: passing genotypes to String.format() will implicitly decode the genotypes
+        // This may not be desirable, so don't decode by default
+
+        return genotypes.isLazyWithData() ? toStringUnparsedGenotypes() : toStringDecodeGenotypes();
+    }
+
+    public String toStringDecodeGenotypes() {
         return String.format("[VC %s @ %s Q%s of type=%s alleles=%s attr=%s GT=%s",
                 getSource(), contig + ":" + (start - stop == 0 ? start : start + "-" + stop),
                 hasLog10PError() ? String.format("%.2f", getPhredScaledQual()) : ".",
@@ -1369,6 +1376,16 @@ public class VariantContext implements Feature { // to enable tribble integratio
                 ParsingUtils.sortList(this.getAlleles()),
                 ParsingUtils.sortedString(this.getAttributes()),
                 this.getGenotypes());
+    }
+
+    private String toStringUnparsedGenotypes() {
+        return String.format("[VC %s @ %s Q%s of type=%s alleles=%s attr=%s GT=%s",
+                getSource(), contig + ":" + (start - stop == 0 ? start : start + "-" + stop),
+                hasLog10PError() ? String.format("%.2f", getPhredScaledQual()) : ".",
+                this.getType(),
+                ParsingUtils.sortList(this.getAlleles()),
+                ParsingUtils.sortedString(this.getAttributes()),
+                ((LazyGenotypesContext)this.genotypes).getUnparsedGenotypeData());
     }
 
     public String toStringWithoutGenotypes() {
