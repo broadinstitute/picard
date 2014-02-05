@@ -87,9 +87,10 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
      * For a given cycle, return a CycleFileParser.
      * @param file The file to parse
      * @param cycle The cycle that file represents
+     * @param tileNumber For files that contain multiple tiles, need to specify tile of interest.
      * @return A CycleFileParser that will populate the correct position in the IlluminaData object with that cycle's data.
      */
-    protected abstract CycleFileParser<ILLUMINA_DATA> makeCycleFileParser(final File file, final int cycle);
+    protected abstract CycleFileParser<ILLUMINA_DATA> makeCycleFileParser(final File file, final int cycle, final int tileNumber);
 
     /**
      * CycleFileParsers iterate through the clusters of a file and populate an IlluminaData object with a single cycle's
@@ -118,7 +119,7 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         int totalCycles = 0;
         while(filesIterator.hasNext()) {
             final int nextCycle = filesIterator.getNextCycle();
-            cycleFileParsers.add(makeCycleFileParser(filesIterator.next(), nextCycle));
+            cycleFileParsers.add(makeCycleFileParser(filesIterator.next(), nextCycle, tileNumber));
             ++totalCycles;
         }
 

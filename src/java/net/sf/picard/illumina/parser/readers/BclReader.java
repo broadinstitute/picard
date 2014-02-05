@@ -26,6 +26,8 @@ package net.sf.picard.illumina.parser.readers;
 import net.sf.picard.PicardException;
 import net.sf.picard.util.UnsignedTypeUtil;
 import net.sf.samtools.Defaults;
+import net.sf.samtools.util.BlockCompressedInputStream;
+import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
 
 import java.io.*;
@@ -62,7 +64,7 @@ import java.util.zip.GZIPInputStream;
  *
  *  So the output base/quality will be a (T/34)
  */
-public class BclReader implements Iterator<BclReader.BclValue> {
+public class BclReader implements CloseableIterator<BclReader.BclValue> {
     /** The size of the opening header (consisting solely of numClusters*/
     private static final int HEADER_SIZE = 4;
     
@@ -99,13 +101,18 @@ public class BclReader implements Iterator<BclReader.BclValue> {
         
         filePath = file.getAbsolutePath();
         final boolean isGzip = filePath.endsWith(".gz");
+        final boolean isBgzf = filePath.endsWith(".bgzf");
 
         // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
         // if necessary
         final BufferedInputStream bufferedInputStream;
         try {
-             bufferedInputStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
-            inputStream = isGzip ? new GZIPInputStream(bufferedInputStream) : bufferedInputStream;
+            if (isBgzf) {
+                inputStream = new BlockCompressedInputStream(file);
+            } else {
+                bufferedInputStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
+                inputStream = isGzip ? new GZIPInputStream(bufferedInputStream) : bufferedInputStream;
+            }
         } catch (FileNotFoundException fnfe) {
             throw new PicardException("File not found: (" + filePath + ")", fnfe);
         } catch (IOException ioe) {
@@ -118,7 +125,7 @@ public class BclReader implements Iterator<BclReader.BclValue> {
         if (file.length() == 0) {
             throw new PicardException("Zero length BCL file detected: " + filePath);
         }
-        if (!isGzip) {
+        if (!isGzip && !isBgzf) {
             // The file structure checks rely on the file size (as information is stored as individual bytes) but
             // we can't reliably know the number of uncompressed bytes in the file ahead of time for gzip files. Only
             // run the main check
@@ -145,7 +152,7 @@ public class BclReader implements Iterator<BclReader.BclValue> {
         return UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
     }
 
-    private void assertProperFileStructure(final File file) {
+    protected void assertProperFileStructure(final File file) {
         final long elementsInFile = file.length() - HEADER_SIZE;
         if (numClusters != elementsInFile) {
             throw new PicardException("Expected " + numClusters + " in file but found " + elementsInFile);
@@ -210,6 +217,19 @@ public class BclReader implements Iterator<BclReader.BclValue> {
 
     public void close() {
         CloserUtil.close(inputStream);
+    }
+
+    public void seek(final long virtualFilePointer) {
+        if (!(inputStream instanceof BlockCompressedInputStream)) {
+            throw new UnsupportedOperationException("Seeking only allowed on bzgf");
+        } else {
+            final BlockCompressedInputStream bcis = (BlockCompressedInputStream)inputStream;
+            try {
+                ((BlockCompressedInputStream) inputStream).seek(virtualFilePointer);
+            } catch (IOException e) {
+                throw new PicardException("Problem seeking in " + filePath, e);
+            }
+        }
     }
 
     public void remove() {

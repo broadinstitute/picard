@@ -101,8 +101,8 @@ public class AbstractIlluminaPositionFileReaderTest {
     @DataProvider(name="invalidPositions")
     public Object [][] invalidPositions() {
         return new Object[][] {
-            {new float[]{0f, 5f, -1f},    new float[]{1f, 12f, 13f}},
-            {new float[]{-5.05f},         new float[]{19801f}},
+            {new float[]{0f, 5f, -11f},    new float[]{1f, 12f, 13f}},
+            {new float[]{-15.05f},         new float[]{19801f}},
             {new float[]{10.05f, 3f, 8f}, new float[]{-120899.723f, 4f, 9f}},
             {new float[]{9.0f, 2.3f, AbstractIlluminaPositionFileReader.MAX_POS + 1}, new float[]{3.2f, 8.1f, 99.1f}},
             {new float[]{0.01f}, new float[]{AbstractIlluminaPositionFileReader.MAX_POS + 1000}}

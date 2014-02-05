@@ -51,6 +51,7 @@ public class MMapBackedIteratorFactory {
     private static int BYTE_SIZE  = 1;
     private static int INT_SIZE   = 4;
     private static int FLOAT_SIZE = 4;
+    private static int LONG_SIZE = 8;
 
     public static BinaryFileIterator<Integer> getIntegerIterator(final int headerSize, final File binaryFile) {
         checkFactoryVars(headerSize, binaryFile);
@@ -74,6 +75,14 @@ public class MMapBackedIteratorFactory {
         final byte [] header = getHeader(buf, headerSize);
 
         return new FloatMMapIterator(header, binaryFile, buf);
+    }
+
+    public static BinaryFileIterator<Long> getLongIterator(final int headerSize, final File binaryFile) {
+        checkFactoryVars(headerSize, binaryFile);
+        final ByteBuffer buf = getBuffer(binaryFile);
+        final byte [] header = getHeader(buf, headerSize);
+
+        return new LongMMapIterator(header, binaryFile, buf);
     }
 
     public static BinaryFileIterator<ByteBuffer> getByteBufferIterator(final int headerSize, final int elementSize, final File binaryFile) {
@@ -177,6 +186,17 @@ public class MMapBackedIteratorFactory {
         @Override
         protected Float getElement() {
             return buffer.getFloat();
+        }
+    }
+
+    private static class LongMMapIterator extends MMapBackedIterator<Long> {
+        public LongMMapIterator(final byte[] header, final File file, final ByteBuffer buf) {
+            super(header, file, LONG_SIZE, buf);
+        }
+
+        @Override
+        protected Long getElement() {
+            return buffer.getLong();
         }
     }
 

@@ -104,6 +104,10 @@ public class FilterFileReader implements Iterator<Boolean> {
         }
     }
 
+    public void skipRecords(final int numToSkip) {
+        bbIterator.skipElements(numToSkip);
+    }
+
     public void remove() {
         throw new UnsupportedOperationException();
     }

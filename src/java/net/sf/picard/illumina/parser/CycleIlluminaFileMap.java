@@ -66,31 +66,7 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
         File curFile = null;
 
         for (final int tile : expectedTiles) {
-            final CycleFilesIterator cycleFiles = new CycleFilesIterator(get(tile), null); //so as not to expend the iterator
-            int total;
-            for(total = 0; cycleFiles.hasNext(); total++) {
-                if(cycleFiles.getNextCycle() != expectedCycles[total]) {
-                    if(curFile == null) {
-                        curFile = cycleFiles.next();
-                    }
-                    cycleFiles.reset();
-                    throw new PicardException("Cycles in iterator(" + remainingCyclesToString(cycleFiles) +
-                                              ") do not match those expected (" + StringUtil.intValuesToString(expectedCycles) +
-                                              ") Last file checked (" + curFile.getAbsolutePath() + ")");
-                }
-                curFile = cycleFiles.next();
-                if(!curFile.exists()) {
-                    throw new PicardException("Missing cycle file " + curFile.getName() + " in CycledIlluminaFileMap");
-                }
-            }
-            if(total != expectedCycles.length) {
-                String message = "Expected tile " + tile + " of CycledIlluminaFileMap to contain " + expectedCycles + " cycles but " + total + " were found!";
-
-                if(curFile != null) {
-                    message += "Check to see if the following bcl exists: " + incrementCycleCount(curFile).getAbsolutePath();
-                }
-                throw new PicardException(message);
-            }
+            get(tile).assertValid(expectedCycles);
         }
     }
 
@@ -129,10 +105,10 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
  * given file extension while lane/tile stay the same.  Stop if the next file does not exist.
  */
  class CycleFilesIterator implements Iterator<File>, Iterable<File> {
-    private final File parentDir;
-    private final int lane;
+    protected final File parentDir;
+    protected final int lane;
     private final int tile;
-    private final String fileExt;
+    protected final String fileExt;
     protected final int [] cycles;
     protected int nextCycleIndex;
 
@@ -164,11 +140,21 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
             throw new NoSuchElementException(summarizeIterator());
         }
 
-        final File cycleDir = new File(parentDir, "C" + cycles[nextCycleIndex] + ".1");
-        final File curFile  = new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
+        final File curFile = getCurrentFile();
 
         nextCycleIndex++;
         return curFile;
+    }
+
+    /** Allow for overriding */
+    protected File getCurrentFile() {
+        return getFileForCycle(cycles[nextCycleIndex]);
+    }
+
+    /** Allow for overriding */
+    protected File getFileForCycle(final int cycle) {
+        final File cycleDir = new File(parentDir, "C" + cycle + ".1");
+        return new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
     }
 
     public int getNextCycle() {
@@ -197,5 +183,18 @@ class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
     @Override
     public Iterator<File> iterator() {
         return this;
+    }
+
+    public void assertValid(final int[] expectedCycles) {
+        if (!Arrays.equals(cycles, expectedCycles)) {
+            // TODO: Make more informative if necessary
+            throw new PicardException(summarizeIterator() + " does not have expected cycles");
+        }
+        for (final int cycle : expectedCycles) {
+            final File file = getFileForCycle(cycle);
+            if (!file.exists()) {
+                throw new PicardException(file.getAbsolutePath() + " does not exist for " + summarizeIterator());
+            }
+        }
     }
 }

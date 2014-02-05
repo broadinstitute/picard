@@ -28,7 +28,7 @@ import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.StringUtil;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +54,10 @@ public class IlluminaFileUtil {
         Clocs,
         Pos,
         Filter,
-        Barcode
+        Barcode,
+        MultiTileFilter,
+        MultiTileLocs,
+        MultiTileBcl
     }
 
     private final File intensityLaneDir;
@@ -72,6 +75,9 @@ public class IlluminaFileUtil {
     private final PerTileFileUtil clocs;
     private final PerTileFileUtil filter;
     private final PerTileFileUtil barcode;
+    private final MultiTileFilterFileUtil multiTileFilter;
+    private final MultiTileLocsFileUtil multiTileLocs;
+    private final MultiTileBclFileUtil multiTileBcl;
     private final File tileMetricsOut;
     private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils;
 
@@ -114,6 +120,15 @@ public class IlluminaFileUtil {
 
         barcode = new PerTileFileUtil("_barcode.txt", true, basecallDir);
         utils.put(SupportedIlluminaFormat.Barcode, barcode);
+
+        multiTileFilter = new MultiTileFilterFileUtil(basecallLaneDir);
+        utils.put(SupportedIlluminaFormat.MultiTileFilter, multiTileFilter);
+
+        multiTileLocs = new MultiTileLocsFileUtil(new File(intensityDir, basecallLaneDir.getName()), basecallLaneDir);
+        utils.put(SupportedIlluminaFormat.MultiTileLocs, multiTileLocs);
+
+        multiTileBcl = new MultiTileBclFileUtil(basecallLaneDir);
+        utils.put(SupportedIlluminaFormat.MultiTileBcl, multiTileBcl);
 
         tileMetricsOut = new File(interopDir, "TileMetricsOut.bin");
     }
@@ -206,19 +221,31 @@ public class IlluminaFileUtil {
         return barcode;
     }
 
+    public MultiTileFilterFileUtil multiTileFilter() {
+        return multiTileFilter;
+    }
+
+    public MultiTileLocsFileUtil multiTileLocs() {
+        return multiTileLocs;
+    }
+
+    public MultiTileBclFileUtil multiTileBcl() {
+        return multiTileBcl;
+    }
+
     public File tileMetricsOut() {
         return tileMetricsOut;
     }
 
-    public static String UNPARAMETERIZED_PER_TILE_PATTERN = "s_(\\d+)_(\\d{1,4})";
-    public static String UNPARAMETERIZED_QSEQ_PATTERN     = "s_(\\d+)_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
+    public static final String UNPARAMETERIZED_PER_TILE_PATTERN = "s_(\\d+)_(\\d{1,5})";
+    public static final String UNPARAMETERIZED_QSEQ_PATTERN     = "s_(\\d+)_(\\d)_(\\d{4})_qseq\\.txt(\\.gz|\\.bz2)?";
     private static final Pattern CYCLE_SUBDIRECTORY_PATTERN = Pattern.compile("^C(\\d+)\\.1$");
 
     public static String makeParameterizedLaneAndTileRegex(final int lane) {
         if(lane < 0) {
             throw new PicardException("Lane (" + lane + ") cannot be negative");
         }
-        return "s_" + lane + "_(\\d{1,4})";
+        return "s_" + lane + "_(\\d{1,5})";
     }
 
     public static String makeParameterizedQseqRegex(final int lane) {
@@ -434,7 +461,6 @@ public class IlluminaFileUtil {
 
             final File laneDir = base;
             final File[] tempCycleDirs;
-            File firstCycleDir = null;
             tempCycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, CYCLE_SUBDIRECTORY_PATTERN);
             if (tempCycleDirs == null || tempCycleDirs.length == 0) {
                 return cycledMap;
@@ -451,7 +477,7 @@ public class IlluminaFileUtil {
                 }
             }
 
-            firstCycleDir = tempCycleDirs[lowestCycleDirIndex];
+            final File firstCycleDir = tempCycleDirs[lowestCycleDirIndex];
 
             Arrays.sort(cycles);
             detectedCycles = cycles;
@@ -736,6 +762,170 @@ public class IlluminaFileUtil {
         }
     }
 
+    /**
+     * For file types for which there is one file per lane, with fixed record size, and all the tiles in it,
+     * so the s_<lane>.bci file can be used to figure out where each tile starts and ends.
+     */
+    abstract class MultiTileFileUtil<OUTPUT_RECORD extends IlluminaData> extends ParameterizedFileUtil {
+        protected final File bci;
+        protected final TileIndex tileIndex;
+        protected final File dataFile;
+
+        MultiTileFileUtil(final String extension, final File base, final File bciDir) {
+            super(makeLaneRegex(extension), makeLaneRegex(extension, lane), extension, base);
+            bci = new File(bciDir, "s_" + lane + ".bci");
+            if (bci.exists()) {
+                tileIndex = new TileIndex(bci);
+            } else {
+                tileIndex = null;
+            }
+            final File[] filesMatchingRegexp = IoUtil.getFilesMatchingRegexp(base, pattern);
+            if (filesMatchingRegexp == null || filesMatchingRegexp.length == 0) dataFile = null;
+            else if (filesMatchingRegexp.length == 1) dataFile = filesMatchingRegexp[0];
+            else throw new PicardException("More than one filter file found in " + base.getAbsolutePath());
+        }
+
+        @Override
+        public boolean filesAvailable() {
+            return tileIndex != null && dataFile != null && dataFile.exists();
+        }
+
+        @Override
+        public LaneTileEnd fileToLaneTileEnd(final String fileName) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<Integer> getTiles() {
+            if (tileIndex == null) return Collections.EMPTY_LIST;
+            return tileIndex.getTiles();
+        }
+
+        /**
+         * expectedCycles are not checked in this implementation.
+         */
+        @Override
+        public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
+            if (tileIndex == null) {
+                return Collections.singletonList("Tile index(" + bci.getAbsolutePath() + ") does not exist!");
+            }
+            return tileIndex.verify(expectedTiles);
+        }
+
+        abstract IlluminaParser<OUTPUT_RECORD> makeParser(List<Integer> requestedTiles);
+    }
+
+    class MultiTileFilterFileUtil extends MultiTileFileUtil<PfData> {
+
+        /**
+         * @param basecallLaneDir location of .filter file and also .bci file
+         */
+        MultiTileFilterFileUtil(final File basecallLaneDir) {
+            super(".filter", basecallLaneDir, basecallLaneDir);
+        }
+
+        @Override
+        IlluminaParser<PfData> makeParser(final List<Integer> requestedTiles) {
+            return new MultiTileFilterParser(tileIndex, requestedTiles, dataFile);
+        }
+    }
+
+    class MultiTileLocsFileUtil extends MultiTileFileUtil<PositionalData> {
+
+        MultiTileLocsFileUtil(final File basecallLaneDir, final File bciDir) {
+            super(".locs", basecallLaneDir, bciDir);
+        }
+
+        @Override
+        IlluminaParser<PositionalData> makeParser(final List<Integer> requestedTiles) {
+            return new MultiTileLocsParser(tileIndex, requestedTiles, dataFile, lane);
+        }
+    }
+
+    /**
+     * NextSeq-style bcl's have all tiles for a cycle in a single file.
+     */
+    class MultiTileBclFileUtil extends ParameterizedFileUtil {
+        final File basecallLaneDir;
+        final File bci;
+        final TileIndex tileIndex;
+        final SortedMap<Integer, File> cycleFileMap = new TreeMap<Integer, File>();
+
+        MultiTileBclFileUtil(final File basecallLaneDir) {
+            // Since these file names do not contain lane number, first two args to ctor are the same.
+            super("^(\\d{4}).bcl.bgzf$", "^(\\d{4}).bcl.bgzf$", ".bcl.bgzf", basecallLaneDir);
+            this.basecallLaneDir = basecallLaneDir;
+            bci = new File(basecallLaneDir, "s_" + lane + ".bci");
+            // Do this once rather than when deciding if these files exist and again later.
+            final File[] cycleFiles = IoUtil.getFilesMatchingRegexp(base, pattern);
+            if (cycleFiles != null) {
+                for (final File file : cycleFiles) {
+                    final String fileName = file.getName();
+                    final String cycleNum = fileName.substring(0, fileName.indexOf('.'));
+                    cycleFileMap.put(Integer.valueOf(cycleNum), file);
+                }
+            }
+            if (bci.exists()) {
+                tileIndex = new TileIndex(bci);
+            } else {
+                tileIndex = null;
+            }
+
+        }
+
+        public CycleIlluminaFileMap getFiles(final List<Integer> tiles, final int [] cycles) {
+            // Filter input list of cycles according to which actually exist
+            final ArrayList<Integer> goodCycleList = new ArrayList<Integer>(cycles.length);
+            for (final int cycle : cycles) {
+                if (cycleFileMap.containsKey(cycle)) goodCycleList.add(cycle);
+            }
+            // Ensure cycles are sorted.
+            Collections.sort(goodCycleList);
+            final int[] goodCycles = new int[goodCycleList.size()];
+            for (int i = 0; i < goodCycles.length; ++i) goodCycles[i] = goodCycleList.get(i);
+
+            // Create the map.
+            final CycleIlluminaFileMap cycledMap = new CycleIlluminaFileMap();
+            if (goodCycles.length > 0) {
+                for(final int tile : tiles) {
+                    cycledMap.put(tile, new MultiTileBclCycleFilesIterator(basecallLaneDir, lane, tile, goodCycles, extension));
+                }
+            }
+            return cycledMap;
+        }
+
+        @Override
+        public boolean filesAvailable() {
+            return bci.exists() && cycleFileMap.size()> 0;
+        }
+
+        @Override
+        public LaneTileEnd fileToLaneTileEnd(final String fileName) {
+            throw new UnsupportedOperationException();
+        }
+
+
+        @Override
+        public List<Integer> getTiles() {
+            if (tileIndex == null) return Collections.EMPTY_LIST;
+            return tileIndex.getTiles();
+        }
+
+        @Override
+        public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
+            if (tileIndex == null) {
+                return Collections.singletonList("Tile index(" + bci.getAbsolutePath() + ") does not exist!");
+            }
+            final List<String> ret = tileIndex.verify(expectedTiles);
+            for (final int expectedCycle : expectedCycles) {
+                if (!cycleFileMap.containsKey(expectedCycle)) {
+                    ret.add(expectedCycle + ".bcl.bgzf not found in " + base);
+                }
+            }
+            return ret;
+        }
+    }
+
     /** A support class for return lane tile and end information for a given file */
     static class LaneTileEnd {
         public final Integer lane;
@@ -761,6 +951,14 @@ public class IlluminaFileUtil {
     /** Return a regex string for finding Lane and Tile given a file extension pattern */
     private static String makeLTRegex(final String fileNameEndPattern, final int lane) {
         return "^" + makeParameterizedLaneAndTileRegex(lane) + fileNameEndPattern + "$";
+    }
+
+    private static String makeLaneRegex(final String fileNameEndPattern) {
+        return "^s_(\\d+)" + fileNameEndPattern + "$";
+    }
+
+    private static String makeLaneRegex(final String fileNameEndPattern, final int lane) {
+        return "^s_" + lane + fileNameEndPattern + "$";
     }
 
     private static int getCycleFromDir(final File tempCycleDir) {

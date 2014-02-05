@@ -57,7 +57,7 @@ abstract class IlluminaIntensityParser<T extends IlluminaData> extends PerTilePe
      * @return CycleFileParser
      */
     @Override
-    protected CycleFileParser<T> makeCycleFileParser(final File file, final int cycle) {
+    protected CycleFileParser<T> makeCycleFileParser(final File file, final int cycle, final int tileNumber) {
         return new IntensityFileParser(file, cycle);
     }
 

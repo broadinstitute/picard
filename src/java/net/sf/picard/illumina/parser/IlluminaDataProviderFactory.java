@@ -62,11 +62,15 @@ public class IlluminaDataProviderFactory {
         /** For types found in Qseq, we prefer the NON-Qseq file formats first.  However, if we end up using Qseqs then we use Qseqs for EVERY type it provides,
          * see determineFormats
          */
-        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.BaseCalls,     makeList(SupportedIlluminaFormat.Bcl,    SupportedIlluminaFormat.Qseq));
-        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.QualityScores, makeList(SupportedIlluminaFormat.Bcl,    SupportedIlluminaFormat.Qseq));
-        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.PF,            makeList(SupportedIlluminaFormat.Filter, SupportedIlluminaFormat.Qseq));
-        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.Position,      makeList(SupportedIlluminaFormat.Locs,   SupportedIlluminaFormat.Clocs,
-                                                                                    SupportedIlluminaFormat.Pos,    SupportedIlluminaFormat.Qseq));
+        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.BaseCalls,     makeList(
+                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl,    SupportedIlluminaFormat.Qseq));
+        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.QualityScores, makeList(
+                SupportedIlluminaFormat.MultiTileBcl, SupportedIlluminaFormat.Bcl,    SupportedIlluminaFormat.Qseq));
+        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.PF,            makeList(
+                SupportedIlluminaFormat.MultiTileFilter, SupportedIlluminaFormat.Filter, SupportedIlluminaFormat.Qseq));
+        DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.Position,      makeList(
+                SupportedIlluminaFormat.MultiTileLocs, SupportedIlluminaFormat.Locs,   SupportedIlluminaFormat.Clocs,
+                SupportedIlluminaFormat.Pos,         SupportedIlluminaFormat.Qseq));
 
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.Barcodes,       makeList(SupportedIlluminaFormat.Barcode));
         DATA_TYPE_TO_PREFERRED_FORMATS.put(IlluminaDataType.RawIntensities, makeList(SupportedIlluminaFormat.Cif));
@@ -80,13 +84,6 @@ public class IlluminaDataProviderFactory {
 
     //rawIntensity directory is assumed to be the parent of basecallDirectory
     private final File intensitiesDirectory;
-
-    /** The types of data that will be returned by any IlluminaDataProviders created by this factory.
-     *
-     * Note: In previous version, data of types not specified might be returned if a data type was specified
-     * for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
-     * MUST specify all data types that should be returned.*/
-    private final Set<IlluminaDataType> dataTypes;
 
     /**
      * Whether or not to apply EAMSS filtering if parsing BCLs for the bases and quality scores.
@@ -115,17 +112,24 @@ public class IlluminaDataProviderFactory {
      * @param readStructure     The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
      *                          the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
      *                          in a run's QSeq files
-     * @param dataTypes         Which data types to read
+     * @param dataTypesArg         Which data types to read
      */
-    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final IlluminaDataType... dataTypes) {
+    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,
+                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+                                       final IlluminaDataType... dataTypesArg) {
         this.basecallDirectory     = basecallDirectory;
         this.intensitiesDirectory = basecallDirectory.getParentFile();
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         this.lane = lane;
-        this.dataTypes = Collections.unmodifiableSet(new HashSet<IlluminaDataType>(Arrays.asList(dataTypes)));
+        /* The types of data that will be returned by any IlluminaDataProviders created by this factory.
 
-        if (this.dataTypes.isEmpty()) {
+      Note: In previous version, data of types not specified might be returned if a data type was specified
+      for data residing in QSeqs (since QSeqs span multiple data types).  This is no longer the case, you
+      MUST specify all data types that should be returned.*/
+        final Set<IlluminaDataType> dataTypes = Collections.unmodifiableSet(new HashSet<IlluminaDataType>(Arrays.asList(dataTypesArg)));
+
+        if (dataTypes.isEmpty()) {
             throw new PicardException("No data types have been specified for basecall output " + basecallDirectory +
                     ", lane " + lane);
         }
@@ -133,18 +137,15 @@ public class IlluminaDataProviderFactory {
         this.fileUtil = new IlluminaFileUtil(basecallDirectory, lane);
 
         //find what request IlluminaDataTypes we have files for and select the most preferred file format available for that type
-        formatToDataTypes = determineFormats(this.dataTypes, fileUtil);
+        formatToDataTypes = determineFormats(dataTypes, fileUtil);
 
         //find if we have any IlluminaDataType with NO available file formats and, if any exist, throw an exception
-        final Set<IlluminaDataType> unmatchedDataTypes = findUnmatchedTypes(this.dataTypes, formatToDataTypes);
+        final Set<IlluminaDataType> unmatchedDataTypes = findUnmatchedTypes(dataTypes, formatToDataTypes);
         if(unmatchedDataTypes.size() > 0) {
             throw new PicardException("Could not find a format with available files for the following data types: " + StringUtil.join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
         }
 
-        final StringBuilder sb = new StringBuilder(400);
-        sb.append("The following file formats will be used by IlluminaDataProvier: ");
-        sb.append(StringUtil.join("," + formatToDataTypes.keySet()));
-        log.debug(sb.toString());
+        log.debug("The following file formats will be used by IlluminaDataProvider: " + StringUtil.join("," + formatToDataTypes.keySet()));
 
         availableTiles = fileUtil.getActualTiles(new ArrayList<SupportedIlluminaFormat>(formatToDataTypes.keySet()));
         if(availableTiles.isEmpty()) {
@@ -203,10 +204,7 @@ public class IlluminaDataProviderFactory {
             parsersToDataType.put(makeParser(fmToDt.getKey(), requestedTiles), fmToDt.getValue());
         }
 
-        final StringBuilder sb = new StringBuilder(400);
-        sb.append("The following parsers will be used by IlluminaDataProvier: ");
-        sb.append(StringUtil.join("," + parsersToDataType.keySet()));
-        log.debug(sb.toString());
+        log.debug("The following parsers will be used by IlluminaDataProvider: " + StringUtil.join("," + parsersToDataType.keySet()));
 
         return new IlluminaDataProvider(outputMapping, parsersToDataType, basecallDirectory, lane);
     }
@@ -307,11 +305,12 @@ public class IlluminaDataProviderFactory {
                 parser = new BarcodeParser(fileUtil.barcode().getFiles(requestedTiles));
                 break;
 
-            case Bcl:
+            case Bcl: {
                 final CycleIlluminaFileMap bclFileMap = fileUtil.bcl().getFiles(requestedTiles, outputMapping.getOutputCycles());
                 bclFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
                 parser = new BclParser(basecallDirectory, lane, bclFileMap, outputMapping, this.applyEamssFiltering, bclQualityEvaluationStrategy);
                 break;
+            }
 
             case Cif:
                 final CycleIlluminaFileMap cifFileMap = fileUtil.cif().getFiles(requestedTiles, outputMapping.getOutputCycles());
@@ -341,6 +340,22 @@ public class IlluminaDataProviderFactory {
                 final List<IlluminaFileMap> readTileMap = fileUtil.qseq().getFiles(requestedTiles);
                 parser = new QseqParser(lane, readTileMap, outputMapping);
                 break;
+
+            case MultiTileFilter:
+                parser = fileUtil.multiTileFilter().makeParser(requestedTiles);
+                break;
+
+            case MultiTileLocs:
+                parser = fileUtil.multiTileLocs().makeParser(requestedTiles);
+                break;
+
+            case MultiTileBcl: {
+                final CycleIlluminaFileMap bclFileMap = fileUtil.multiTileBcl().getFiles(requestedTiles, outputMapping.getOutputCycles());
+                bclFileMap.assertValid(requestedTiles, outputMapping.getOutputCycles());
+                parser = new MultiTileBclParser(basecallDirectory, lane, bclFileMap, outputMapping,
+                        this.applyEamssFiltering, bclQualityEvaluationStrategy, fileUtil.multiTileBcl().tileIndex);
+                break;
+            }
 
             default:
                 throw new PicardException("Unrecognized data type(" + format + ") found by IlluminaDataProviderFactory!");
