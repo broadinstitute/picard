@@ -48,7 +48,7 @@ public class PerTilePerCycleParserTest {
         }
 
         @Override
-        protected CycleFileParser<MockCycledIlluminaData> makeCycleFileParser(final File file, final int cycle) {
+        protected CycleFileParser<MockCycledIlluminaData> makeCycleFileParser(final File file, final int cycle, final int tileNumber) {
             return new CycleFileParser<MockCycledIlluminaData>() {
                 int currentCluster = 0;
                 final String filePrefix = str_del(file.getName(), cycle);

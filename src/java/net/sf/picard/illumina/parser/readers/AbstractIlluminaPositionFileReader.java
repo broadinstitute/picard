@@ -27,7 +27,6 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +44,12 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractIlluminaPositionFileReader implements CloseableIterator<AbstractIlluminaPositionFileReader.PositionInfo> {
     public static final float MAX_POS = 9999999.99f;
+
+    /**
+     * At least one NextSeq run produced a small negative value for y coordinate (-5), so allow small
+     * negative values and see what happens.
+     */
+    public static final float MIN_POS = -10.0f;
 
     public class PositionInfo {
         /** The x-position as it occurs in the file being read */
@@ -66,12 +71,11 @@ public abstract class AbstractIlluminaPositionFileReader implements CloseableIte
         public final int yQseqCoord;
 
         public PositionInfo(final float x, final float y, final int lane, final int tile) {
-            if(x < 0 || y < 0) {
-                throw new IllegalArgumentException("X and Y position values must be positive (x,y)=(" + x + ", y) lane(" + lane + ") tile(" + tile + ")");
-            }
+            if(x < MIN_POS || y < MIN_POS || x > MAX_POS || y > MAX_POS) {
 
-            if(x > MAX_POS || y > MAX_POS) {
-                throw new IllegalArgumentException("X and Y position values must be less than " + MAX_POS + " (x,y)=(" + x + ", y) lane(" + lane + ") tile(" + tile + ")");
+                throw new IllegalArgumentException(
+                        String.format("Cluster location not in the range %f..%f. x: %f; y: %f; lane: %d; tile: %d",
+                                MIN_POS, MAX_POS, x, y, lane, tile));
             }
 
             this.xPos = x;
@@ -100,7 +104,7 @@ public abstract class AbstractIlluminaPositionFileReader implements CloseableIte
     }
 
     //Note: Perhaps use the IlluminaFileUtil to do this part
-    private static Pattern FileNamePattern = Pattern.compile("^s_(\\d+)_(\\d+)(_pos\\.txt|\\.locs|\\.clocs|_pos\\.txt.gz|_pos\\.txt.bz2)$");
+    private static final Pattern FileNamePattern = Pattern.compile("^s_(\\d+)_(\\d+)(_pos\\.txt|\\.locs|\\.clocs|_pos\\.txt.gz|_pos\\.txt.bz2)$");
 
     private final File file;
     private final int lane;
@@ -109,9 +113,21 @@ public abstract class AbstractIlluminaPositionFileReader implements CloseableIte
     public AbstractIlluminaPositionFileReader(final File file) {
         this.file = file;
 
-        int [] laneAndTile = fileNameToLaneAndTile(file.getName());
+        final int [] laneAndTile = fileNameToLaneAndTile(file.getName());
         lane = laneAndTile[0];
         tile = laneAndTile[1];
+    }
+
+    /**
+     * Use this ctor if lane and tile are not discernible from file name.
+     * @param file
+     * @param lane
+     * @param tile
+     */
+    public AbstractIlluminaPositionFileReader(final File file, final int lane, final int tile) {
+        this.file = file;
+        this.lane = lane;
+        this.tile = tile;
     }
 
     public int getTile() {

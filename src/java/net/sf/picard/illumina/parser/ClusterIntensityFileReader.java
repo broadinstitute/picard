@@ -146,7 +146,7 @@ class ClusterIntensityFileReader {
                     header.firstCycle + "; numCycles=" + header.numCycles);
         }
         if (cluster < 0 || cluster >= header.numClusters) {
-            throw new IllegalArgumentException("Requested cluster (" + cluster + ") number out of range. numClusters=" + header.numClusters);
+            throw new IllegalArgumentException("Requested cluster (" + cluster + ") number out of range. numClustersInTile=" + header.numClusters);
         }
         final int relativeCycle = cycle - header.firstCycle;
         final int position = HEADER_SIZE + relativeCycle * cycleSize + channel.ordinal() * channelSize + cluster * header.elementSize;

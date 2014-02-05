@@ -116,7 +116,11 @@ public abstract class PerTileParser<ILLUMINA_DATA extends IlluminaData> implemen
     }
 
     public boolean hasNext() {
-        return nextTile != null || (currentIterator != null && currentIterator.hasNext());
+        // Skip over empty tiles
+        while ((currentIterator == null || !currentIterator.hasNext()) && nextTile != null) {
+            advanceTile();
+        }
+        return currentIterator != null && currentIterator.hasNext();
     }
 
     public void close() {

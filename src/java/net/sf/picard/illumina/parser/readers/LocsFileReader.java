@@ -56,7 +56,7 @@ public class LocsFileReader extends AbstractIlluminaPositionFileReader {
     private BinaryFileIterator<Float> bbIterator;
 
     /** Total clusters in the file as read in the file header */
-    private final long numClusters;
+    private long numClusters;
 
     /** The index of the next cluster to be returned */
     private int nextCluster;
@@ -64,6 +64,16 @@ public class LocsFileReader extends AbstractIlluminaPositionFileReader {
     public LocsFileReader(final File file) {
         super(file);
 
+        initialize(file);
+    }
+
+    public LocsFileReader(final File file, final int lane, final int tile) {
+        super(file, lane, tile);
+
+        initialize(file);
+    }
+
+    private void initialize(final File file) {
         bbIterator = MMapBackedIteratorFactory.getFloatIterator(HEADER_SIZE, file);
         final ByteBuffer headerBuf = bbIterator.getHeaderBytes();
 
@@ -101,5 +111,9 @@ public class LocsFileReader extends AbstractIlluminaPositionFileReader {
 
     public void close() {
         bbIterator = null;
+    }
+
+    public void skipRecords(final int numToSkip) {
+        bbIterator.skipElements(numToSkip * 2);
     }
 }
