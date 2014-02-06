@@ -32,4 +32,8 @@ public class Lazy<T> {
         /** Returns the desired object instance. */
         T make();
     }
+
+    public boolean isInitialized() {
+        return isInitialized;
+    }
 }

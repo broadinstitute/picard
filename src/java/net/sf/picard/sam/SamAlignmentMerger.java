@@ -41,45 +41,43 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * @param referenceFasta    The reference sequence for the map files. Required.
      * @param programRecord     Program record for taget file SAMRecords created.
      * @param clipAdapters      Whether adapters marked in unmapped BAM file should be marked as
-     *                          soft clipped in the merged bam. Required.
+*                          soft clipped in the merged bam. Required.
      * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
-     *                          NM and UQ tags). Required.
-     * @param pairedRun           Whether the run is a paired-end run. Required.
+*                          NM and UQ tags). Required.
      * @param alignedReadsOnly  Whether to output only those reads that have alignment data
      * @param alignedSamFile      The SAM file(s) with alignment information.  Optional.  If this is
-     *                            not provided, then read1AlignedSamFile and read2AlignedSamFile must be.
+*                            not provided, then read1AlignedSamFile and read2AlignedSamFile must be.
      * @param maxGaps             The maximum number of insertions or deletions permitted in an
-     *                            alignment.  Alignments with more than this many gaps will be ignored.
-     *                            -1 means to allow any number of gaps.
+*                            alignment.  Alignments with more than this many gaps will be ignored.
+*                            -1 means to allow any number of gaps.
      * @param attributesToRetain  private attributes from the alignment record that should be
-     *                          included when merging.  This overrides the exclusion of
-     *                          attributes whose tags start with the reserved characters
-     *                          of X, Y, and Z
+*                          included when merging.  This overrides the exclusion of
+*                          attributes whose tags start with the reserved characters
+*                          of X, Y, and Z
      * @param read1BasesTrimmed The number of bases trimmed from start of read 1 prior to alignment.  Optional.
      * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
      * @param read1AlignedSamFile The alignment records for read1.  Used when the two ends of a read are
-     *                            aligned separately.  This is optional, but must be specified if
-     *                            alignedSamFile is not.
+*                            aligned separately.  This is optional, but must be specified if
+*                            alignedSamFile is not.
      * @param read2AlignedSamFile The alignment records for read1.  Used when the two ends of a read are
-     *                            aligned separately.  This is optional, but must be specified if
-     *                            alignedSamFile is not.
+*                            aligned separately.  This is optional, but must be specified if
+*                            alignedSamFile is not.
      * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
-     *                          aligned pairs.  Used to determine the properPair flag.
+*                          aligned pairs.  Used to determine the properPair flag.
      * @param sortOrder           The order in which the merged records should be output.  If null,
-     *                            output will be coordinate-sorted
+*                            output will be coordinate-sorted
      * @param primaryAlignmentSelectionStrategy How to handle multiple alignments for a fragment or read pair,
-     *                                          in which none are primary, or more than one is marked primary
-     *                                          by the aligner.
+*                                          in which none are primary, or more than one is marked primary
      */
-    public SamAlignmentMerger (final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
-                 final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
-                 final boolean pairedRun, final boolean alignedReadsOnly,
-                 final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
-                 final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
-                 final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
-                 final List<SamPairUtil.PairOrientation> expectedOrientations,
-                 final SortOrder sortOrder,
-                 final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
+    public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
+                              final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
+                              final boolean alignedReadsOnly,
+                              final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                              final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
+                              final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
+                              final List<SamPairUtil.PairOrientation> expectedOrientations,
+                              final SortOrder sortOrder,
+                              final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
               alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
