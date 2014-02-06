@@ -67,7 +67,7 @@ public class MergeBamAlignment extends CommandLineProgram {
 		    doc="SAM or BAM file(s) with alignment data from the first read of a pair.",
 		    mutex={"ALIGNED_BAM"},
 		    optional=true)
-    public List<File> READ1_ALIGNED_BAM;
+    public List<File> READ1_ALIGNED_BAM ;
 
     @Option(shortName="R2_ALIGNED",
 		    doc="SAM or BAM file(s) with alignment data from the second read of a pair.",
@@ -103,8 +103,8 @@ public class MergeBamAlignment extends CommandLineProgram {
 		    optional=true)
     public String PROGRAM_GROUP_NAME;
 
-    @Option(doc="Whether this is a paired-end run.",
-		    shortName="PE")
+    @Deprecated
+    @Option(doc="This argument is ignored and will be removed.", shortName="PE")
     public Boolean PAIRED_RUN;
 
     @Option(doc="The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead",
@@ -224,8 +224,8 @@ public class MergeBamAlignment extends CommandLineProgram {
         }
 
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
-            REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE, PAIRED_RUN,
-            ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
+            REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
+                ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
             READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
             PRIMARY_ALIGNMENT_STRATEGY.newInstance());

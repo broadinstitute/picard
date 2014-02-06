@@ -321,7 +321,7 @@ public class MergeBamAlignmentTest {
         final File target = File.createTempFile("target", "bam");
         target.deleteOnExit();
         final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
-                 true, false, Arrays.asList(aligned), 1, null, null, null, null, null,
+                false, Arrays.asList(aligned), 1, null, null, null, null, null,
                 Arrays.asList(SamPairUtil.PairOrientation.FR), SAMFileHeader.SortOrder.coordinate,
                 new BestMapqPrimaryAlignmentSelectionStrategy());
 
