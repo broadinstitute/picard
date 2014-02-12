@@ -405,8 +405,17 @@ public class VariantContext implements Feature { // to enable tribble integratio
             VariantContextBuilder builder = new VariantContextBuilder(this);
             GenotypesContext newGenotypes = genotypes.subsetToSamples(sampleNames);
 
-            if ( rederiveAllelesFromGenotypes )
-                builder.alleles(allelesOfGenotypes(newGenotypes));
+            if ( rederiveAllelesFromGenotypes ) {
+                Set<Allele> allelesFromGenotypes = allelesOfGenotypes(newGenotypes);
+
+                // ensure original order of genotypes
+                List<Allele> rederivedAlleles = new ArrayList<Allele>(allelesFromGenotypes.size());
+                for (Allele allele : alleles)
+                    if (allelesFromGenotypes.contains(allele))
+                        rederivedAlleles.add(allele);
+
+                builder.alleles(rederivedAlleles);
+            }
             else {
                 builder.alleles(alleles);
             }
