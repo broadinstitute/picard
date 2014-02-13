@@ -30,13 +30,19 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
+import net.sf.picard.util.FormatUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.PeekableIterator;
 import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -77,6 +83,16 @@ public class RevertSam extends CommandLineProgram {
         add("SA"); // Supplementary alignment metadata
     }};
 
+    @Option(doc="WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
+            "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
+            "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
+            "only be enabled if the output sort order is queryname and will always cause sorting to occur.")
+    public boolean SANITIZE = false;
+
+    @Option(doc="If SANITIZE=true and higher than MAX_DISCARD_FRACTION reads are discarded due to sanitization then" +
+            "the program will exit with an Exception instead of exiting cleanly. Output BAM will still be valid.")
+    public double MAX_DISCARD_FRACTION = 0.01;
+
     @Option(doc="The sample alias to use in the reverted output file.  This will override the existing " +
             "sample alias in the file and is used only if all the read groups in the input file have the " +
             "same sample alias ", shortName=StandardOptionDefinitions.SAMPLE_ALIAS_SHORT_NAME, optional=true)
@@ -94,10 +110,22 @@ public class RevertSam extends CommandLineProgram {
         System.exit(new RevertSam().instanceMain(args));
     }
 
+    /**
+     * Enforce that output ordering is queryname when sanitization is turned on since it requires a queryname sort.
+     */
+    @Override protected String[] customCommandLineValidation() {
+        if (SANITIZE && SORT_ORDER != SortOrder.queryname) {
+            return new String[] {"SORT_ORDER must be queryname when sanitization is enabled with SANITIZE=true."};
+        }
+
+        return null;
+    }
+
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
+        final boolean sanitizing = SANITIZE;
         final SAMFileReader in = new SAMFileReader(INPUT, true);
         final SAMFileHeader inHeader = in.getFileHeader();
 
@@ -125,9 +153,10 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
-
+        ////////////////////////////////////////////////////////////////////////////
         // Build the output writer with an appropriate header based on the options
-        final boolean presorted = inHeader.getSortOrder() == SORT_ORDER;
+        ////////////////////////////////////////////////////////////////////////////
+        final boolean presorted = (inHeader.getSortOrder() == SORT_ORDER) || (SORT_ORDER == SortOrder.queryname && SANITIZE);
         final SAMFileHeader outHeader = new SAMFileHeader();
         for (final SAMReadGroupRecord rg : inHeader.getReadGroups()) {
             if (SAMPLE_ALIAS != null) {
@@ -146,62 +175,169 @@ public class RevertSam extends CommandLineProgram {
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
 
+
+        ////////////////////////////////////////////////////////////////////////////
+        // Build a sorting collection to use if we are sanitizing
+        ////////////////////////////////////////////////////////////////////////////
+        final SortingCollection<SAMRecord> sorter;
+        if (sanitizing) {
+            sorter = SortingCollection.newInstance(SAMRecord.class, new BAMRecordCodec(outHeader), new SAMRecordQueryNameComparator(), MAX_RECORDS_IN_RAM);
+        }
+        else {
+            sorter = null;
+        }
+
         final ProgressLogger progress = new ProgressLogger(log, 1000000, "Reverted");
         for (final SAMRecord rec : in) {
+            // Weed out non-primary and supplemental read as we don't want duplicates in the reverted file!
             if (rec.isSecondaryOrSupplementary()) continue;
-            if (RESTORE_ORIGINAL_QUALITIES) {
-                final byte[] oq = rec.getOriginalBaseQualities();
-                if (oq != null) {
-                    rec.setBaseQualities(oq);
-                    rec.setOriginalBaseQualities(null);
-                }
-            }
 
-            if (REMOVE_DUPLICATE_INFORMATION) {
-                rec.setDuplicateReadFlag(false);
-            }
+            // Actually to the reverting of the remaining records
+            revertSamRecord(rec);
 
-            if (REMOVE_ALIGNMENT_INFORMATION) {
-                if (rec.getReadNegativeStrandFlag()) {
-                    SAMRecordUtil.reverseComplement(rec);
-                    rec.setReadNegativeStrandFlag(false);
-                }
-
-                // Remove all alignment based information about the read itself
-                rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-                rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-                rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
-
-                if (!rec.getReadUnmappedFlag()) {
-                    rec.setInferredInsertSize(0);
-                    rec.setNotPrimaryAlignmentFlag(false);
-                    rec.setProperPairFlag(false);
-                    rec.setReadUnmappedFlag(true);
-
-                }
-
-                // Then remove any mate flags and info related to alignment
-                if (rec.getReadPairedFlag()) {
-                    rec.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-                    rec.setMateNegativeStrandFlag(false);
-                    rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
-                    rec.setMateUnmappedFlag(true);
-                }
-
-                // And then remove any tags that are calculated from the alignment
-                for (final String tag : ATTRIBUTE_TO_CLEAR) {
-                    rec.setAttribute(tag, null);
-                }
-
-            }
-
-            out.addAlignment(rec);
+            if (sanitizing) sorter.add(rec);
+            else out.addAlignment(rec);
             progress.record(rec);
         }
 
-        out.close();
+        ////////////////////////////////////////////////////////////////////////////
+        // Now if we're sanitizing, clean up the records and write them to the output
+        ////////////////////////////////////////////////////////////////////////////
+        if (!sanitizing) {
+            out.close();
+        }
+        else {
+            long total = 0, discarded = 0;
+            final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+            final ProgressLogger sanitizerProgress = new ProgressLogger(log, 1000000, "Sanitized");
+
+            readNameLoop: while (iterator.hasNext()) {
+                final List<SAMRecord> recs = fetchByReadName(iterator);
+                total += recs.size();
+
+                // Check that all the reads have bases and qualities of the same length
+                for (final SAMRecord rec : recs) {
+                    if (rec.getReadBases().length != rec.getBaseQualities().length) {
+                        log.debug("Discarding " + recs.size() + " reads with name " + rec.getReadName() + " for mismatching bases and quals length.");
+                        discarded += recs.size();
+                        continue readNameLoop;
+                    }
+                }
+
+                // Check that if the first read is marked as unpaired that there is in fact only one read
+                if (!recs.get(0).getReadPairedFlag() && recs.size() > 1) {
+                    log.debug("Discarding " + recs.size() + " reads with name " + recs.get(0).getReadName() + " because they claim to be unpaired.");
+                    discarded += recs.size();
+                    continue readNameLoop;
+                }
+
+                // Check that if we have paired reads there is exactly one first of pair and one second of pair
+                if (recs.get(0).getReadPairedFlag()) {
+                    int firsts=0, seconds=0, unpaired=0;
+                    for (final SAMRecord rec : recs) {
+                        if (!rec.getReadPairedFlag())  ++unpaired;
+                        if (rec.getFirstOfPairFlag())  ++firsts;
+                        if (rec.getSecondOfPairFlag()) ++seconds;
+                    }
+
+                    if (unpaired > 0 || firsts != 1 || seconds != 1) {
+                        log.debug("Discarding " + recs.size() + " reads with name " + recs.get(0).getReadName() + " because pairing information in corrupt.");
+                        discarded += recs.size();
+                        continue readNameLoop;
+                    }
+                }
+
+                // If we've made it this far spit the records into the output!
+                for (final SAMRecord rec : recs) {
+                    out.addAlignment(rec);
+                    sanitizerProgress.record(rec);
+                }
+            }
+
+            out.close();
+
+            final double discardRate = discarded / (double) total;
+            final NumberFormat fmt = new DecimalFormat("0.000%");
+            log.info("Discarded " + discarded + " out of " + total + " (" + fmt.format(discardRate) + ") reads in order to sanitize output.");
+
+            if (discarded / (double) total > MAX_DISCARD_FRACTION) {
+                throw new PicardException("Discarded " + fmt.format(discardRate) + " which is above MAX_DISCARD_FRACTION of " + fmt.format(MAX_DISCARD_FRACTION));
+            }
+        }
 
         return 0;
     }
+
+    /**
+     * Generates a list by consuming from the iterator in order starting with the first available
+     * read and continuing while subsequent reads share the same read name. If there are no reads
+     * remaining returns an empty list.
+     */
+    private List<SAMRecord> fetchByReadName(final PeekableIterator<SAMRecord> iterator) {
+        final List<SAMRecord> out = new LinkedList<SAMRecord>();
+
+        if (iterator.hasNext()) {
+            final SAMRecord first = iterator.next();
+            out.add(first);
+
+            while (iterator.hasNext() && iterator.peek().getReadName().equals(first.getReadName())) {
+                out.add(iterator.next());
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Takes an individual SAMRecord and applies the set of changes/reversions to it that
+     * have been requested by program level options.
+     */
+    public void revertSamRecord(final SAMRecord rec) {
+        if (RESTORE_ORIGINAL_QUALITIES) {
+            final byte[] oq = rec.getOriginalBaseQualities();
+            if (oq != null) {
+                rec.setBaseQualities(oq);
+                rec.setOriginalBaseQualities(null);
+            }
+        }
+
+        if (REMOVE_DUPLICATE_INFORMATION) {
+            rec.setDuplicateReadFlag(false);
+        }
+
+        if (REMOVE_ALIGNMENT_INFORMATION) {
+            if (rec.getReadNegativeStrandFlag()) {
+                SAMRecordUtil.reverseComplement(rec);
+                rec.setReadNegativeStrandFlag(false);
+            }
+
+            // Remove all alignment based information about the read itself
+            rec.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+            rec.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+            rec.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+            rec.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
+
+            if (!rec.getReadUnmappedFlag()) {
+                rec.setInferredInsertSize(0);
+                rec.setNotPrimaryAlignmentFlag(false);
+                rec.setProperPairFlag(false);
+                rec.setReadUnmappedFlag(true);
+
+            }
+
+            // Then remove any mate flags and info related to alignment
+            if (rec.getReadPairedFlag()) {
+                rec.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+                rec.setMateNegativeStrandFlag(false);
+                rec.setMateReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
+                rec.setMateUnmappedFlag(true);
+            }
+
+            // And then remove any tags that are calculated from the alignment
+            for (final String tag : ATTRIBUTE_TO_CLEAR) {
+                rec.setAttribute(tag, null);
+            }
+        }
+    }
+
 }
