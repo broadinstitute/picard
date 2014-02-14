@@ -111,6 +111,8 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
         public String toString() {
             return referenceSequence.getSequenceName() + ":" + position;
         }
+
+        public int getSequenceLength(){return referenceSequence.getSequenceLength();}
     }
 
 
