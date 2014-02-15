@@ -90,12 +90,14 @@ public class VcfFormatConverter extends CommandLineProgram {
 	    if (CREATE_INDEX && sequenceDictionary == null) {
 		    throw new PicardException("A sequence dictionary must be available in the input file when creating indexed output.");
 	    }
-	    final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+
+        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
+        if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
+
         final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
-
         writer.writeHeader(header);
-
 	    final CloseableIterator<VariantContext> iterator = reader.iterator();
+
 	    while (iterator.hasNext()) {
 		    final VariantContext context = iterator.next();
             writer.add(context);
