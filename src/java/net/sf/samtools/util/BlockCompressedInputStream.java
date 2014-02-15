@@ -63,7 +63,20 @@ public class BlockCompressedInputStream extends InputStream {
      * Note that seek() is not supported if this ctor is used.
      */
     public BlockCompressedInputStream(final InputStream stream) {
-        mStream = IOUtil.toBufferedStream(stream);
+        this(stream, true);
+    }
+
+    /**
+     * Note that seek() is not supported if this ctor is used.
+     */
+    public BlockCompressedInputStream(final InputStream stream, final boolean allowBuffering) {
+        if (allowBuffering) {
+            mStream = IOUtil.toBufferedStream(stream);
+        }
+        else {
+            mStream = stream;
+        }
+
         mFile = null;
     }
 
