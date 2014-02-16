@@ -4,6 +4,7 @@ import net.sf.picard.PicardException;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
+import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
@@ -29,13 +30,19 @@ import java.util.Set;
  * @author Tim Fennell
  */
 public class MakeSitesOnlyVcf extends CommandLineProgram {
+    @Usage
+    public final String usage = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
+            "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
+            "any support variant format including .vcf, .vcf.gz or .bcf.";
+
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF")
     public File INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF or BCF to emit without per-sample info.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, doc="Sequence dictionary to use when indexing the VCF.", optional = true)
+    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME,
+            doc="Sequence dictionary to use when indexing the VCF if the VCF header does not contain contig information.", optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private static final Set<String> NO_SAMPLES = Collections.emptySet();
@@ -61,23 +68,22 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 			    SEQUENCE_DICTIONARY != null
 			            ? SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY)
 					    : header.getSequenceDictionary();
+
 	    if (CREATE_INDEX && sequenceDictionary == null) {
 		    throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
 	    }
-	    final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
-	    final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
-
-	    writer.writeHeader(header);
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(MakeSitesOnlyVcf.class), 10000);
+        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
+        if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
 
-	    final CloseableIterator<VariantContext> iterator = reader.iterator();
+	    final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
+	    writer.writeHeader(header);
+        final CloseableIterator<VariantContext> iterator = reader.iterator();
+
 	    while (iterator.hasNext()) {
 		    final VariantContext context = iterator.next();
-		    writer.add(context.subContextFromSamples(
-                    NO_SAMPLES, 
-                    false // Do not re-derive the alleles from the new, subsetted genotypes: our site-only VCF should retain these values.
-            ));
+		    writer.add(context.subContextFromSamples(NO_SAMPLES, false)); // Do not re-derive the alleles from the new, subsetted genotypes: our site-only VCF should retain these values.
             progress.record(context.getChr(), context.getStart());
         }
 
