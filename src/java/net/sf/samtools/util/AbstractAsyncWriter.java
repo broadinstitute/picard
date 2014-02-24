@@ -112,6 +112,9 @@ public abstract class AbstractAsyncWriter<T> {
             }
             catch (Throwable t) {
                 ex.compareAndSet(null, t);
+                // In case a writer was blocking on a full queue before ex has been set, clear the queue
+                // so that the writer will no longer be blocked so that it can see the exception.
+                queue.clear();
             }
         }
     }
