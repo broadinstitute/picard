@@ -27,7 +27,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="One or more interval lists. If multiple interval lists are provided the output is the" +
-                "result of merging the inputs.")
+                "result of merging the inputs.", minElements = 1)
     public List<File> INPUT;
 
     @Option(doc="The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
