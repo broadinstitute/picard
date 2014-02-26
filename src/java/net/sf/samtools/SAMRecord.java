@@ -628,9 +628,6 @@ public class SAMRecord implements Cloneable
      * @return Mate Cigar String, or null if there is none.
      */
     public String getMateCigarString() {
-        if (getMateUnmappedFlag()) {
-            throw new RuntimeException("getMateCigarString called on an unmapped mate.");
-        }
         return getStringAttribute(SAMTag.MC.name());
     }
 
