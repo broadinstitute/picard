@@ -505,7 +505,7 @@ public class SAMRecord implements Cloneable
             }
         }
 
-        return pos;               
+        return pos;
     }
 
     /**
@@ -621,6 +621,64 @@ public class SAMRecord implements Cloneable
         initializeCigar(cigar);
         // Change to cigar could change alignmentEnd, and thus indexing bin
         setIndexingBin(null);
+    }
+
+    /**
+     * Returns the Mate Cigar String as stored in the attribute 'MC'.
+     * @return Mate Cigar String, or null if there is none.
+     */
+    public String getMateCigarString() {
+        if (getMateUnmappedFlag()) {
+            throw new RuntimeException("getMateCigarString called on an unmapped mate.");
+        }
+        return getStringAttribute(SAMTag.MC.name());
+    }
+
+    /**
+     * Sets the Mate Cigar String as stored in the attribute 'MC'.
+     * Setting to null will clear the attribute
+     */
+    public void setMateCigarString(final String value) {
+        setAttribute(SAMTag.MC.name(), value);
+    }
+
+    /**
+     * Do not modify the value returned by this method.  If you want to change the Mate Cigar, create a new
+     * Cigar and call setMateCigar() or call setMateCigarString()
+     * @return Cigar object for the read's mate, or null if there is none.
+     */
+    public Cigar getMateCigar() {
+        Cigar mateCigar = null;
+        final String mateCigarString = getMateCigarString();
+        if (mateCigarString != null) {
+            mateCigar = TextCigarCodec.getSingleton().decode(mateCigarString);
+            // TODO - can I validate the mateCigar here like we do the read's CIGAR?  (I don't think so)
+            if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT) {
+                //validateCigar function for mate needed
+                //		    SAMUtils.processValidationErrors(validateCigar(-1L), -1L, getValidationStringency());
+            }
+        } else {
+            // TODO - Mishali throws this exception, that means that MC is required
+//            throw new SAMException("Tag MC for mate cigar not found.");
+        }
+        return mateCigar;
+    }
+
+    /**
+     * This method is preferred over getMateCigar().getNumElements(), because for BAMRecord it may be faster.
+     * @return number of cigar elements (number + operator) in the mate cigar string.
+     */
+    public int getMateCigarLength() {
+        final Cigar mateCigar = getMateCigar();
+        return (mateCigar != null) ? mateCigar.numCigarElements() : 0;
+    }
+
+    public void setMateCigar(final Cigar mateCigar) {
+        String mateCigarString = null;
+        if (mateCigar != null) {
+            mateCigarString = TextCigarCodec.getSingleton().encode(mateCigar);
+        }
+        setMateCigarString(mateCigarString);
     }
 
     /**
@@ -763,8 +821,8 @@ public class SAMRecord implements Cloneable
      */
     public boolean getSupplementaryAlignmentFlag() {
         return (mFlags & SUPPLEMENTARY_ALIGNMENT_FLAG) != 0;
-    }    
-    
+    }
+
     /**
      * the read fails platform/vendor quality checks.
      */
@@ -881,7 +939,7 @@ public class SAMRecord implements Cloneable
     public boolean isSecondaryOrSupplementary() {
         return getNotPrimaryAlignmentFlag() || getSupplementaryAlignmentFlag();
     }
-    
+
     private void setFlag(final boolean flag, final int bit) {
         if (flag) {
             mFlags |= bit;
@@ -1160,8 +1218,8 @@ public class SAMRecord implements Cloneable
     protected void setAttribute(final short tag, final Object value, final boolean isUnsignedArray) {
         if (value != null &&
                 !(value instanceof Byte || value instanceof Short || value instanceof Integer ||
-                value instanceof String || value instanceof Character || value instanceof Float ||
-                value instanceof byte[] || value instanceof short[] || value instanceof int[] ||
+                        value instanceof String || value instanceof Character || value instanceof Float ||
+                        value instanceof byte[] || value instanceof short[] || value instanceof int[] ||
                         value instanceof float[])) {
             throw new SAMException("Attribute type " + value.getClass() + " not supported. Tag: " +
                     SAMTagUtil.getSingleton().makeStringTag(tag));
@@ -1345,7 +1403,7 @@ public class SAMRecord implements Cloneable
         if (value == null || value instanceof String) {
             return tagString + ":Z:" + value;
         } else if (value instanceof Integer || value instanceof Long ||
-                   value instanceof Short || value instanceof Byte) {
+                value instanceof Short || value instanceof Byte) {
             return tagString + ":i:" + value;
         } else if (value instanceof Character) {
             return tagString + ":A:" + value;
@@ -1355,7 +1413,7 @@ public class SAMRecord implements Cloneable
             return tagString + ":H:" + StringUtil.bytesToHexString((byte[]) value);
         } else {
             throw new RuntimeException("Unexpected value type for tag " + tagString +
-                                       ": " + value + " of class " + value.getClass().getName());
+                    ": " + value + " of class " + value.getClass().getName());
         }
     }
 
@@ -1637,7 +1695,7 @@ public class SAMRecord implements Cloneable
             ret.addAll(errors);
         }
         // TODO(mccowan): Is this asking "is this the primary alignment"?
-        if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {  
+        if (this.getReadLength() == 0 && !this.getNotPrimaryAlignmentFlag()) {
             final Object fz = getAttribute(SAMTagUtil.getSingleton().FZ);
             if (fz == null) {
                 final String cq = (String)getAttribute(SAMTagUtil.getSingleton().CQ);
@@ -1701,7 +1759,7 @@ public class SAMRecord implements Cloneable
     }
 
     private List<SAMValidationError> isValidReferenceIndexAndPosition(final Integer referenceIndex, final String referenceName,
-                                                          final int alignmentStart, final boolean isMate) {
+                                                                      final int alignmentStart, final boolean isMate) {
         final boolean hasReference = hasReferenceName(referenceIndex, referenceName);
 
         // ret is only instantiate if there are errors to report, in order to reduce GC in the typical case
@@ -1735,7 +1793,7 @@ public class SAMRecord implements Cloneable
         }
         return ret;
     }
-    
+
     private String buildMessage(final String baseMessage, final boolean isMate) {
         return isMate ? "Mate " + baseMessage : baseMessage;
     }
@@ -1784,11 +1842,11 @@ public class SAMRecord implements Cloneable
     }
 
     /**
-	Returns the record in the SAM line-based text format.  Fields are
-	separated by '\t' characters, and the String is terminated by '\n'.
-    */
+     Returns the record in the SAM line-based text format.  Fields are
+     separated by '\t' characters, and the String is terminated by '\n'.
+     */
     public String getSAMString() {
-	return SAMTextWriter.getSAMString(this);
+        return SAMTextWriter.getSAMString(this);
     }
 }
 

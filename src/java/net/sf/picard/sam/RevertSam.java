@@ -81,6 +81,7 @@ public class RevertSam extends CommandLineProgram {
         add("MD");
         add("MQ");
         add("SA"); // Supplementary alignment metadata
+        add(SAMTag.MC.name());      // Mate Cigar
     }};
 
     @Option(doc="WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
