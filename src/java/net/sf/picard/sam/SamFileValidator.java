@@ -536,11 +536,13 @@ public class SamFileValidator {
         private final int readReferenceIndex;
         private final boolean readNegStrandFlag;
         private final boolean readUnmappedFlag;
+        private final String readCigarString;
 
         private final int mateAlignmentStart;
         private final int mateReferenceIndex;
         private final boolean mateNegStrandFlag;
         private final boolean mateUnmappedFlag;
+        private final String mateCigarString;
 
         private final boolean firstOfPairFlag;
 
@@ -553,26 +555,33 @@ public class SamFileValidator {
             this.readNegStrandFlag = record.getReadNegativeStrandFlag();
             this.readReferenceIndex = record.getReferenceIndex();
             this.readUnmappedFlag = record.getReadUnmappedFlag();
+            this.readCigarString = record.getCigarString();
 
             this.mateAlignmentStart = record.getMateAlignmentStart();
             this.mateNegStrandFlag = record.getMateNegativeStrandFlag();
             this.mateReferenceIndex = record.getMateReferenceIndex();
             this.mateUnmappedFlag = record.getMateUnmappedFlag();
+            final Object mcs = record.getAttribute(SAMTag.MC.name());
+            this.mateCigarString = (mcs != null) ? (String) mcs : null;
 
             this.firstOfPairFlag = record.getFirstOfPairFlag();
         }
 
         private PairEndInfo(int readAlignmentStart, int readReferenceIndex, boolean readNegStrandFlag, boolean readUnmappedFlag,
+                            String readCigarString,
                             int mateAlignmentStart, int mateReferenceIndex, boolean mateNegStrandFlag, boolean mateUnmappedFlag,
+                            String mateCigarString,
                             boolean firstOfPairFlag, long recordNumber) {
             this.readAlignmentStart = readAlignmentStart;
             this.readReferenceIndex = readReferenceIndex;
             this.readNegStrandFlag = readNegStrandFlag;
             this.readUnmappedFlag = readUnmappedFlag;
+            this.readCigarString = readCigarString;
             this.mateAlignmentStart = mateAlignmentStart;
             this.mateReferenceIndex = mateReferenceIndex;
             this.mateNegStrandFlag = mateNegStrandFlag;
             this.mateUnmappedFlag = mateUnmappedFlag;
+            this.mateCigarString = mateCigarString;
             this.firstOfPairFlag = firstOfPairFlag;
             this.recordNumber = recordNumber;
         }
@@ -620,6 +629,14 @@ public class SamFileValidator {
                 errors.add(new SAMValidationError(
                         Type.MISMATCH_FLAG_MATE_UNMAPPED,
                         "Mate unmapped flag does not match read unmapped flag of mate",
+                        readName,
+                        end1.recordNumber));
+            }
+            // TODO - should I validate that it *should* be there - i.e. if primary and both mapped?
+            if ((end1.mateCigarString != null) && (!end1.mateCigarString.equals(end2.readCigarString))) {
+                errors.add(new SAMValidationError(
+                        Type.MISMATCH_MATE_CIGAR_STRING,
+                        "Mate CIGAR string does not match CIGAR string of mate",
                         readName,
                         end1.recordNumber));
             }
@@ -678,10 +695,12 @@ public class SamFileValidator {
                     out.writeInt(record.readReferenceIndex);
                     out.writeBoolean(record.readNegStrandFlag);
                     out.writeBoolean(record.readUnmappedFlag);
+                    out.writeBytes(record.readCigarString);
                     out.writeInt(record.mateAlignmentStart);
                     out.writeInt(record.mateReferenceIndex);
                     out.writeBoolean(record.mateNegStrandFlag);
                     out.writeBoolean(record.mateUnmappedFlag);
+                    out.writeBytes(record.mateCigarString);
                     out.writeBoolean(record.firstOfPairFlag);
                     out.writeLong(record.recordNumber);
                 } catch (IOException e) {
@@ -696,17 +715,20 @@ public class SamFileValidator {
                     final int readReferenceIndex = in.readInt();
                     final boolean readNegStrandFlag = in.readBoolean();
                     final boolean readUnmappedFlag = in.readBoolean();
+                    final String readCigarString = in.readUTF();
 
                     final int mateAlignmentStart = in.readInt();
                     final int mateReferenceIndex = in.readInt();
                     final boolean mateNegStrandFlag = in.readBoolean();
                     final boolean mateUnmappedFlag = in.readBoolean();
+                    final String mateCigarString = in.readUTF();
 
                     final boolean firstOfPairFlag = in.readBoolean();
 
                     final long recordNumber = in.readLong();
                     final PairEndInfo rec = new PairEndInfo(readAlignmentStart, readReferenceIndex, readNegStrandFlag,
-                            readUnmappedFlag, mateAlignmentStart, mateReferenceIndex, mateNegStrandFlag, mateUnmappedFlag,
+                            readUnmappedFlag, readCigarString, mateAlignmentStart, mateReferenceIndex, mateNegStrandFlag,
+                            mateUnmappedFlag, mateCigarString,
                             firstOfPairFlag, recordNumber);
                     return new AbstractMap.SimpleEntry(key, rec);
                 } catch (IOException e) {

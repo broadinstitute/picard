@@ -23,8 +23,11 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.StringUtil;
 import net.sf.samtools.util.SequenceUtil;
+
+import java.util.List;
 
 /**
  * @author alecw@broadinstitute.org
@@ -77,6 +80,93 @@ public class SAMRecordUtil {
             array[i] = array[j];
             array[j] = tmp;
         }
+    }
+
+    /** Mishali
+     *
+     * @return Cigar object for the mate read, or null if there is none.
+     */
+    public static Cigar getMateCigar(final SAMRecord rec) {
+        if (!rec.getMateUnmappedFlag()) {
+            final String cigarString = (String)rec.getAttribute(SAMTagUtil.getSingleton().MC);
+            if (cigarString == null)
+                throw new SAMException("Tag MC for mate cigar not found.");
+            else {
+                final Cigar cigar = TextCigarCodec.getSingleton().decode(cigarString);
+                if (rec.getValidationStringency() != SAMFileReader.ValidationStringency.SILENT && !rec.getMateUnmappedFlag()) {
+                    //validateCigar function for mate needed
+                    //		    SAMUtils.processValidationErrors(validateCigar(-1L), -1L, getValidationStringency());
+                }
+                return cigar;
+            }
+        } else
+            throw new RuntimeException("getMateCigar called on an unmapped mate.");
+    }
+
+
+    /** Mishali
+     * @return 1-based inclusive rightmost position of the clipped mate sequence, or 0 read if unmapped.
+     */
+    public static int getMateAlignmentEnd(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag()) {
+            throw new RuntimeException("getMateAlignmentEnd called on an unmapped mate.");
+        }
+        //int mateAlignmentEnd = rec.getMateAlignmentStart();
+        //	mateAlignmentEnd = mateAlignmentEnd + getMateCigar(rec).getReferenceLength() - 1;
+        return CoordMath.getEnd(rec.getMateAlignmentStart(), getMateCigar(rec).getReferenceLength());
+    }
+
+    /** Mishali
+     * @return the mate alignment start (1-based, inclusive) adjusted for clipped bases.  For example if the read
+     * has an alignment start of 100 but the first 4 bases were clipped (hard or soft clipped)
+     * then this method will return 96.
+     *
+     * Invalid to call on an unmapped read.
+     */
+    public static int getMateUnclippedStart(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag())
+            throw new RuntimeException("getMateUnclippedStart called on an unmapped mate.");
+        int pos = rec.getMateAlignmentStart();
+
+        for (final CigarElement cig : getMateCigar(rec).getCigarElements()) {
+            final CigarOperator op = cig.getOperator();
+            if (op == CigarOperator.SOFT_CLIP || op == CigarOperator.HARD_CLIP) {
+                pos -= cig.getLength();
+            }
+            else {
+                break;
+            }
+        }
+
+        return pos;
+    }
+
+    /** Mishali
+     * @return the alignment end (1-based, inclusive) adjusted for clipped bases.  For example if the read
+     * has an alignment end of 100 but the last 7 bases were clipped (hard or soft clipped)
+     * then this method will return 107.
+     *
+     * Invalid to call on an unmapped read.
+     */
+    public static int getMateUnclippedEnd(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag())
+            throw new RuntimeException("getMateUnclippedEnd called on an unmapped mate.");
+
+        int pos = getMateAlignmentEnd(rec);
+        final List<CigarElement> cigs = getMateCigar(rec).getCigarElements();
+        for (int i=cigs.size() - 1; i>=0; --i) {
+            final CigarElement cig = cigs.get(i);
+            final CigarOperator op = cig.getOperator();
+
+            if (op == CigarOperator.SOFT_CLIP || op == CigarOperator.HARD_CLIP) {
+                pos += cig.getLength();
+            }
+            else {
+                break;
+            }
+        }
+
+        return pos;
     }
 
 }

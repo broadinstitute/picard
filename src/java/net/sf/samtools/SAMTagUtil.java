@@ -68,6 +68,7 @@ public class SAMTagUtil {
     public final short U2 = makeBinaryTag("U2");
     public final short OQ = makeBinaryTag("OQ");
     public final short FZ = makeBinaryTag("FZ");
+    public final short MC = makeBinaryTag(SAMTag.MC.name());
 
     private static SAMTagUtil singleton;
 
