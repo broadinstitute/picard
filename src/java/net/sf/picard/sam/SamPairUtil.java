@@ -236,12 +236,14 @@ public class SamPairUtil {
             mapped.setMateAlignmentStart(unmapped.getAlignmentStart());
             mapped.setMateNegativeStrandFlag(unmapped.getReadNegativeStrandFlag());
             mapped.setMateUnmappedFlag(true);
+            mapped.setMateCigarString(null);
             mapped.setInferredInsertSize(0);
 
             unmapped.setMateReferenceIndex(mapped.getReferenceIndex());
             unmapped.setMateAlignmentStart(mapped.getAlignmentStart());
             unmapped.setMateNegativeStrandFlag(mapped.getReadNegativeStrandFlag());
             unmapped.setMateUnmappedFlag(false);
+            unmapped.setMateCigarString(null);
             unmapped.setInferredInsertSize(0);
         }
 
