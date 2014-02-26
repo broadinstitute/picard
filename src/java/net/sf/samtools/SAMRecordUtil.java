@@ -86,7 +86,7 @@ public class SAMRecordUtil {
      *
      * @return Cigar object for the mate read, or null if there is none.
      */
-    public static Cigar getMateCigar(final SAMRecord rec) {
+    public static Cigar getMateCigarMishali(final SAMRecord rec) {
         if (!rec.getMateUnmappedFlag()) {
             final String cigarString = (String)rec.getAttribute(SAMTagUtil.getSingleton().MC);
             if (cigarString == null)
@@ -101,6 +101,16 @@ public class SAMRecordUtil {
             }
         } else
             throw new RuntimeException("getMateCigar called on an unmapped mate.");
+    }
+
+    /** ggrant
+     * Replacing Mishali's method with one that doesn't throw Exceptions if MC not found..
+     * TODO - verify that this doesn't break her methods
+     *
+     * @return Cigar object for the mate read, or null if there is none.
+     */
+    public static Cigar getMateCigar(final SAMRecord rec) {
+        return rec.getMateCigar();
     }
 
 

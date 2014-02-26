@@ -688,19 +688,20 @@ public class SamFileValidator {
                 this.in = new DataInputStream(is);
             }
 
-            public void encode(String key, PairEndInfo record) {
+            public void encode(final String key, final PairEndInfo record) {
                 try {
                     out.writeUTF(key);
                     out.writeInt(record.readAlignmentStart);
                     out.writeInt(record.readReferenceIndex);
                     out.writeBoolean(record.readNegStrandFlag);
                     out.writeBoolean(record.readUnmappedFlag);
-                    out.writeBytes(record.readCigarString);
+                    out.writeUTF(record.readCigarString);
                     out.writeInt(record.mateAlignmentStart);
                     out.writeInt(record.mateReferenceIndex);
                     out.writeBoolean(record.mateNegStrandFlag);
                     out.writeBoolean(record.mateUnmappedFlag);
-                    out.writeBytes(record.mateCigarString);
+                    // writeUTF can't take null, so store a null mateCigarString as an empty string
+                    out.writeUTF(record.mateCigarString != null ? record.mateCigarString : "");
                     out.writeBoolean(record.firstOfPairFlag);
                     out.writeLong(record.recordNumber);
                 } catch (IOException e) {
@@ -721,7 +722,10 @@ public class SamFileValidator {
                     final int mateReferenceIndex = in.readInt();
                     final boolean mateNegStrandFlag = in.readBoolean();
                     final boolean mateUnmappedFlag = in.readBoolean();
-                    final String mateCigarString = in.readUTF();
+
+                    // read mateCigarString - note that null value is stored as an empty string
+                    final String mcs = in.readUTF();
+                    final String mateCigarString = !mcs.isEmpty() ? mcs : null;
 
                     final boolean firstOfPairFlag = in.readBoolean();
 
