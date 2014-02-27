@@ -632,7 +632,6 @@ public class SamFileValidator {
                         readName,
                         end1.recordNumber));
             }
-            // TODO - should I validate that it *should* be there - i.e. if primary and both mapped?
             if ((end1.mateCigarString != null) && (!end1.mateCigarString.equals(end2.readCigarString))) {
                 errors.add(new SAMValidationError(
                         Type.MISMATCH_MATE_CIGAR_STRING,
@@ -640,6 +639,8 @@ public class SamFileValidator {
                         readName,
                         end1.recordNumber));
             }
+            // Note - don't need to validate that the mateCigarString is a valid cigar string, since this
+            // will be validated by validateCigar on the mate's record itself.
         }
     }
 
