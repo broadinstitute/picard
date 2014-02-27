@@ -366,6 +366,30 @@ public class SamFileValidator {
         return valid;
     }
 
+    private boolean validateMateCigar(final SAMRecord record, final long recordNumber) {
+        if ((record.getReadUnmappedFlag() || (record.getMateUnmappedFlag()))) {
+            // Mate Cigar string will exist only if both read and mate are mapped
+            return true;
+        }
+        if (record.getMateCigarString() == null) {      // Is not populated.
+            return true;
+        }
+        final ValidationStringency savedStringency = record.getValidationStringency();
+        record.setValidationStringency(ValidationStringency.LENIENT);
+        final List<SAMValidationError> errors = record.validateMateCigar(recordNumber);
+        record.setValidationStringency(savedStringency);
+        if (errors == null) {
+            return true;
+        }
+        boolean valid = true;
+        for (final SAMValidationError error : errors) {
+            addError(error);
+            valid = false;
+        }
+        return valid;
+    }
+
+
     private void validateSortOrder(final SAMRecord record, final long recordNumber) {
         final SAMRecord prev = orderChecker.getPreviousRecord();
         if (!orderChecker.isSorted(record)) {
@@ -429,6 +453,7 @@ public class SamFileValidator {
         if (!record.getReadPairedFlag() || record.isSecondaryOrSupplementary()) {
             return;
         }
+        validateMateCigar(record, recordNumber);
 
         final PairEndInfo pairEndInfo = pairEndInfoByName.remove(record.getReferenceIndex(), record.getReadName());
         if (pairEndInfo == null) {

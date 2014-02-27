@@ -157,6 +157,7 @@ public class SAMRecord implements Cloneable
     private String mCigarString = NO_ALIGNMENT_CIGAR;
     private Cigar mCigar = null;
     private List<AlignmentBlock> mAlignmentBlocks = null;
+    private List<AlignmentBlock> mMateAlignmentBlocks = null;
     private int mFlags = 0;
     private String mMateReferenceName = NO_ALIGNMENT_REFERENCE_NAME;
     private int mMateAlignmentStart = 0;
@@ -165,6 +166,8 @@ public class SAMRecord implements Cloneable
     protected Integer mReferenceIndex = null;
     protected Integer mMateReferenceIndex = null;
     private Integer mIndexingBin = null;
+
+    private Cigar mMateCigar = null;
 
     /**
      * Some attributes (e.g. CIGAR) are not decoded immediately.  Use this to decide how to validate when decoded.
@@ -637,6 +640,8 @@ public class SAMRecord implements Cloneable
      */
     public void setMateCigarString(final String value) {
         setAttribute(SAMTag.MC.name(), value);
+        mMateCigar = null;
+        mMateAlignmentBlocks = null;
     }
 
     /**
@@ -645,20 +650,14 @@ public class SAMRecord implements Cloneable
      * @return Cigar object for the read's mate, or null if there is none.
      */
     public Cigar getMateCigar() {
-        Cigar mateCigar = null;
         final String mateCigarString = getMateCigarString();
-        if (mateCigarString != null) {
-            mateCigar = TextCigarCodec.getSingleton().decode(mateCigarString);
-            // TODO - can I validate the mateCigar here like we do the read's CIGAR?  (I don't think so)
+        if ((mMateCigar == null) && (mateCigarString != null)) {
+            mMateCigar = TextCigarCodec.getSingleton().decode(mateCigarString);
             if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT) {
-                //validateCigar function for mate needed
-                //		    SAMUtils.processValidationErrors(validateCigar(-1L), -1L, getValidationStringency());
+                SAMUtils.processValidationErrors(validateMateCigar(-1L), -1L, getValidationStringency());
             }
-        } else {
-            // TODO - Mishali throws this exception, that means that MC is required
-//            throw new SAMException("Tag MC for mate cigar not found.");
         }
-        return mateCigar;
+        return mMateCigar;
     }
 
     /**
@@ -675,6 +674,7 @@ public class SAMRecord implements Cloneable
         if (mateCigar != null) {
             mateCigarString = TextCigarCodec.getSingleton().encode(mateCigar);
         }
+        mMateAlignmentBlocks = null;
         setMateCigarString(mateCigarString);
     }
 
@@ -1440,14 +1440,36 @@ public class SAMRecord implements Cloneable
      */
     public List<AlignmentBlock> getAlignmentBlocks() {
         if (this.mAlignmentBlocks != null) return this.mAlignmentBlocks;
+        this.mAlignmentBlocks = getAlignmentBlocks(getCigar(), getAlignmentStart());
+        return this.mAlignmentBlocks;
+    }
 
-        final Cigar cigar = getCigar();
+    /**
+     * Returns blocks of the mate sequence that have been aligned directly to the
+     * reference sequence. Note that clipped portions of the mate and inserted and
+     * deleted bases (vs. the reference) are not represented in the alignment blocks.
+     */
+    public List<AlignmentBlock> getMateAlignmentBlocks() {
+        if (this.mMateAlignmentBlocks != null) return this.mMateAlignmentBlocks;
+        this.mMateAlignmentBlocks = getAlignmentBlocks(getMateCigar(), getMateAlignmentStart());
+        return this.mMateAlignmentBlocks;
+    }
+
+    /**
+     * Given a Cigar, Returns blocks of the sequence that have been aligned directly to the
+     * reference sequence. Note that clipped portions, and inserted and deleted bases (vs. the reference)
+     * are not represented in the alignment blocks.
+     *
+     * @param cigar The cigar containing the alignment information
+     * @param alignmentStart The start (1-based) of the alignment
+     * @return List of alignment blocks
+     */
+    private List<AlignmentBlock> getAlignmentBlocks(final Cigar cigar, final int alignmentStart) {
         if (cigar == null) return Collections.emptyList();
-
 
         final List<AlignmentBlock> alignmentBlocks = new ArrayList<AlignmentBlock>();
         int readBase = 1;
-        int refBase  = getAlignmentStart();
+        int refBase  = alignmentStart;
 
         for (final CigarElement e : cigar.getCigarElements()) {
             switch (e.getOperator()) {
@@ -1468,10 +1490,9 @@ public class SAMRecord implements Cloneable
                 default : throw new IllegalStateException("Case statement didn't deal with cigar op: " + e.getOperator());
             }
         }
-        this.mAlignmentBlocks = Collections.unmodifiableList(alignmentBlocks);
-
-        return this.mAlignmentBlocks;
+        return Collections.unmodifiableList(alignmentBlocks);
     }
+
 
     /**
      * Run all validations of CIGAR.  These include validation that the CIGAR makes sense independent of
@@ -1500,6 +1521,38 @@ public class SAMRecord implements Cloneable
         }
         return ret;
     }
+
+    /**
+     * Run all validations of the mate's CIGAR.  These include validation that the CIGAR makes sense independent of
+     * placement, plus validation that CIGAR + placement yields all bases with M operator within the range of the reference.
+     * @param recordNumber For error reporting.  -1 if not known.
+     * @return List of errors, or null if no errors.
+     */
+    public List<SAMValidationError> validateMateCigar(final long recordNumber) {
+        List<SAMValidationError> ret = null;
+
+        // The mateCigar will only be defined if BOTH the read and the mate are mapped
+        if (getValidationStringency() != SAMFileReader.ValidationStringency.SILENT && !this.getMateUnmappedFlag() && !this.getReadUnmappedFlag()) {
+            if (getMateCigarString() != null) {
+                // Don't know line number, and don't want to force read name to be decoded.
+                ret = getMateCigar().isValid(getReadName(), recordNumber);
+                if ((getReferenceIndex() != NO_ALIGNMENT_REFERENCE_INDEX) && (getMateReferenceIndex() != NO_ALIGNMENT_REFERENCE_INDEX)) {
+                    final SAMSequenceRecord sequence = getHeader().getSequence(getMateReferenceIndex());
+                    final int referenceSequenceLength = sequence.getSequenceLength();
+                    for (final AlignmentBlock alignmentBlock : getMateAlignmentBlocks()) {
+                        if (alignmentBlock.getReferenceStart() + alignmentBlock.getLength() - 1 > referenceSequenceLength) {
+                            if (ret == null) ret = new ArrayList<SAMValidationError>();
+                            ret.add(new SAMValidationError(SAMValidationError.Type.MATE_CIGAR_MAPS_OFF_REFERENCE,
+                                    "Mate CIGAR M operator maps off end of reference", getReadName(), recordNumber));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
 
     @Override
     public boolean equals(final Object o) {

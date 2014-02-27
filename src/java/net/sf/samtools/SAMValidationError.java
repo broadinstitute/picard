@@ -192,7 +192,12 @@ public class SAMValidationError {
         MATES_ARE_SAME_END,
 
         /** The Cigar String for the mate does not match the read's. */
-        MISMATCH_MATE_CIGAR_STRING;
+        MISMATCH_MATE_CIGAR_STRING,
+
+        /**
+         * Bases corresponding to M operator in mate CIGAR are beyond the end of the reference.
+         */
+        MATE_CIGAR_MAPS_OFF_REFERENCE;
 
         public final Severity severity;
 
