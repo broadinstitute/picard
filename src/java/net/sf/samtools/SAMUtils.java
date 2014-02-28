@@ -25,8 +25,16 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.StringUtil;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 /**
@@ -466,6 +474,58 @@ public final class SAMUtils
         
     }
 
+	private static final SAMHeaderRecordComparator<SAMReadGroupRecord> HEADER_RECORD_COMPARATOR =
+			new SAMHeaderRecordComparator<SAMReadGroupRecord>(
+					SAMReadGroupRecord.PLATFORM_UNIT_TAG,
+					SAMReadGroupRecord.LIBRARY_TAG,
+					SAMReadGroupRecord.DATE_RUN_PRODUCED_TAG,
+					SAMReadGroupRecord.READ_GROUP_SAMPLE_TAG,
+					SAMReadGroupRecord.SEQUENCING_CENTER_TAG,
+					SAMReadGroupRecord.PLATFORM_TAG,
+					SAMReadGroupRecord.DESCRIPTION_TAG,
+					SAMReadGroupRecord.READ_GROUP_ID_TAG    // We don't actually want to compare with ID but it's suitable
+					// "just in case" since it's the only one that's actually required
+			);
+
+	public static String calculateChecksum(final File input) {
+		final String ENCODING = "UTF-8";
+
+		final MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+		} catch (final NoSuchAlgorithmException nsae) {
+			throw new Error("No MD5 algorithm was available in a Java JDK? Unheard-of!");
+		}
+
+		// Sort the read group records by their first
+		final SAMFileReader reader = new SAMFileReader(input);
+		final List<SAMReadGroupRecord> sortedRecords = new ArrayList<SAMReadGroupRecord>(reader.getFileHeader().getReadGroups());
+		Collections.sort(sortedRecords, HEADER_RECORD_COMPARATOR);
+
+		for (final SAMReadGroupRecord rgRecord : sortedRecords) {
+			final TreeMap<String, String> sortedAttributes = new TreeMap<String, String>();
+			for (final Map.Entry<String, String> attributeEntry : rgRecord.getAttributes()) {
+				sortedAttributes.put(attributeEntry.getKey(), attributeEntry.getValue());
+			}
+
+			try {
+				for (final Map.Entry<String, String> sortedEntry : sortedAttributes.entrySet()) {
+					if ( ! sortedEntry.getKey().equals(SAMReadGroupRecord.READ_GROUP_ID_TAG)) { // Redundant check, safety first
+						digest.update(sortedEntry.getKey().getBytes(ENCODING));
+						digest.update(sortedEntry.getValue().getBytes(ENCODING));
+					}
+				}
+			} catch (final UnsupportedEncodingException uee) {
+				throw new Error("No " + ENCODING + "!? WTH?");
+			}
+		}
+
+		// Convert to a String and pad to get the full 32 chars.
+		final StringBuilder hashText = new StringBuilder((new BigInteger(1, digest.digest())).toString(16));
+		while (hashText.length() < 32 ) hashText.insert(0, "0");
+
+		return hashText.toString();
+	}
 
     /**
      * Chains <code>program</code> in front of the first "head" item in the list of
