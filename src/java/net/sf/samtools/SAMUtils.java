@@ -487,7 +487,12 @@ public final class SAMUtils
 					// "just in case" since it's the only one that's actually required
 			);
 
-	public static String calculateChecksum(final File input) {
+	/**
+	 * Calculate a hash code from identifying information in the RG (read group) records in a SAM file's
+	 * header. This hash code changes any time read groups are added or removed. Comparing one file's
+	 * hash code to another's tells you if the read groups in the BAM files are different.
+	 */
+	public static String calculateReadGroupRecordChecksum(final File input) {
 		final String ENCODING = "UTF-8";
 
 		final MessageDigest digest;
