@@ -78,5 +78,4 @@ public class SAMRecordUtil {
             array[j] = tmp;
         }
     }
-
 }

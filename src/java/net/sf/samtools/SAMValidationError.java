@@ -37,7 +37,7 @@ public class SAMValidationError {
     public enum Type {
         /** quality encodings out of range; appear to be Solexa or Illumina when Phread expected */
         INVALID_QUALITY_FORMAT(Severity.WARNING),
-        
+
         /** proper pair flag set for unpaired read */
         INVALID_FLAG_PROPER_PAIR,
 
@@ -46,7 +46,7 @@ public class SAMValidationError {
 
         /** mate unmapped flag does not match read unmapped flag of mate */
         MISMATCH_FLAG_MATE_UNMAPPED,
-        
+
         /** mate negative strand flag set for unpaired read */
         INVALID_FLAG_MATE_NEG_STRAND,
 
@@ -67,11 +67,11 @@ public class SAMValidationError {
 
         /** supplementary alignment flag set for unmapped read */
         INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT,
-        
+
         /** mapped read flat not set for mapped read */
         INVALID_FLAG_READ_UNMAPPED,
 
-        /** 
+        /**
          * inferred insert size is out of range
          * @see SAMRecord#MAX_INSERT_SIZE
          */
@@ -86,10 +86,10 @@ public class SAMValidationError {
         /** CIGAR string contains I followed by D, or vice versa */
         ADJACENT_INDEL_IN_CIGAR(Severity.WARNING),
 
-        /** mate reference index (MRNM) set for unpaired read */    
+        /** mate reference index (MRNM) set for unpaired read */
         INVALID_MATE_REF_INDEX,
 
-        /** mate reference index (MRNM) does not match reference index of mate */    
+        /** mate reference index (MRNM) does not match reference index of mate */
         MISMATCH_MATE_REF_INDEX,
 
         /** reference index not found in sequence dictionary */
@@ -97,31 +97,31 @@ public class SAMValidationError {
 
         /** alignment start is can not be correct */
         INVALID_ALIGNMENT_START,
-        
+
         /** mate alignment does not match alignment start of mate */
         MISMATCH_MATE_ALIGNMENT_START,
-        
+
         /** the record's mate fields do not match the corresponding fields of the mate */
         MATE_FIELD_MISMATCH,
-        
+
         /** the NM tag (nucleotide differences) is incorrect */
         INVALID_TAG_NM,
-        
+
         /** the NM tag (nucleotide differences) is missing */
         MISSING_TAG_NM(Severity.WARNING),
-        
+
         /** the sam/bam file is missing the header */
         MISSING_HEADER,
-        
+
         /** there is no sequence dictionary in the header */
         MISSING_SEQUENCE_DICTIONARY,
-        
+
         /** the header is missing read group information */
         MISSING_READ_GROUP,
 
         /** the record is out of order */
         RECORD_OUT_OF_ORDER,
-        
+
         /** A read group ID on a SAMRecord is not found in the header */
         READ_GROUP_NOT_FOUND,
 
@@ -189,7 +189,13 @@ public class SAMValidationError {
         MATE_NOT_FOUND,
 
         /** Both mates are marked as first of pair, or both mates are marked as second of pair. */
-        MATES_ARE_SAME_END;
+        MATES_ARE_SAME_END,
+
+        /** The Cigar String in the MC Tag does not match the Cigar String for the mate of this read. */
+        MISMATCH_MATE_CIGAR_STRING,
+
+        /** There is a Cigar String (stored in the MC Tag) for a read whose mate is NOT mapped. */
+        MATE_CIGAR_STRING_INVALID_PRESENCE;
 
         public final Severity severity;
 
@@ -226,7 +232,7 @@ public class SAMValidationError {
         this.message = message;
         this.readName = readName;
     }
-    
+
     /**
      * Construct a SAMValidationError with possibly-known record number.
      * @param type
@@ -254,13 +260,13 @@ public class SAMValidationError {
         }
         return builder.append(message).toString();
     }
-    
+
     public Type getType() { return type; }
     public String getMessage() { return message; }
 
     /** may be null */
     public String getReadName() { return readName; }
-    
+
     /** 1-based.  -1 if not known. */
     public long getRecordNumber() { return recordNumber; }
 

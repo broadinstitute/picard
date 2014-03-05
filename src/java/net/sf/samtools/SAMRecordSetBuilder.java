@@ -51,10 +51,10 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private static final String SAMPLE = "FREE_SAMPLE";
     private final Random random = new Random();
 
-    private SAMFileHeader header;
-    private Collection<SAMRecord> records;
+    private final SAMFileHeader header;
+    private final Collection<SAMRecord> records;
 
-    private int readLength = 36 ;
+    private final int readLength = 36 ;
 
     private SAMProgramRecord programRecord = null;
     private SAMReadGroupRecord readGroup = null; 
@@ -77,7 +77,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder) {
         this(sortForMe, sortOrder, true) ;
     }
-    public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, boolean addReadGroup) {
+    public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, final boolean addReadGroup) {
         final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>();
         for (final String chrom : chroms) {
             final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, 1000000);
@@ -210,6 +210,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end1.setReadPairedFlag(true);
         end1.setProperPairFlag(true);
         end1.setMateReferenceIndex(contig);
+        end1.setAttribute(SAMTag.MC.name(), readLength + "M");
         end1.setMateAlignmentStart(start2);
         end1.setMateNegativeStrandFlag(true);
         end1.setFirstOfPairFlag(end1IsFirstOfPair);
@@ -233,6 +234,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setReadPairedFlag(true);
         end2.setProperPairFlag(true);
         end2.setMateReferenceIndex(contig);
+        end2.setAttribute(SAMTag.MC.name(), readLength + "M");
         end2.setMateAlignmentStart(start1);
         end2.setMateNegativeStrandFlag(false);
         end2.setFirstOfPairFlag(!end1IsFirstOfPair);
@@ -260,6 +262,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end1.setReadName(name);
         end1.setReadPairedFlag(false);
         end1.setReadUnmappedFlag(true);
+        end1.setAttribute(SAMTag.MC.name(), null);
         end1.setProperPairFlag(false);
         end1.setFirstOfPairFlag(end1IsFirstOfPair);
         end1.setSecondOfPairFlag(!end1IsFirstOfPair);
@@ -272,6 +275,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setReadName(name);
         end2.setReadPairedFlag(false);
         end2.setReadUnmappedFlag(true);
+        end2.setAttribute(SAMTag.MC.name(), null);
         end2.setProperPairFlag(false);
         end2.setFirstOfPairFlag(!end1IsFirstOfPair);
         end2.setSecondOfPairFlag(end1IsFirstOfPair);
@@ -313,7 +317,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
 
         try {
             tempFile = File.createTempFile("temp", ".sam");
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeIOException("problems creating tempfile", e);
         }
 

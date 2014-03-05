@@ -30,7 +30,6 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.FormatUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.picard.util.ProgressLogger;
@@ -75,12 +74,13 @@ public class RevertSam extends CommandLineProgram {
 
     @Option(doc="When removing alignment information, the set of optional tags to remove.")
     public List<String> ATTRIBUTE_TO_CLEAR = new ArrayList<String>() {{
-        add("NM");
-        add("UQ");
-        add("PG");
-        add("MD");
-        add("MQ");
-        add("SA"); // Supplementary alignment metadata
+        add(SAMTag.NM.name());
+        add(SAMTag.UQ.name());
+        add(SAMTag.PG.name());
+        add(SAMTag.MD.name());
+        add(SAMTag.MQ.name());
+        add(SAMTag.SA.name()); // Supplementary alignment metadata
+        add(SAMTag.MC.name());      // Mate Cigar
     }};
 
     @Option(doc="WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
