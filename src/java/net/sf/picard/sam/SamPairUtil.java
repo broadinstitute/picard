@@ -236,14 +236,16 @@ public class SamPairUtil {
             mapped.setMateAlignmentStart(unmapped.getAlignmentStart());
             mapped.setMateNegativeStrandFlag(unmapped.getReadNegativeStrandFlag());
             mapped.setMateUnmappedFlag(true);
-            mapped.setMateCigarString(null);
+            // For the mapped read, set it's mateCigar to null, since the other read must be unmapped
+            mapped.setAttribute(SAMTag.MC.name(), null);
             mapped.setInferredInsertSize(0);
 
             unmapped.setMateReferenceIndex(mapped.getReferenceIndex());
             unmapped.setMateAlignmentStart(mapped.getAlignmentStart());
             unmapped.setMateNegativeStrandFlag(mapped.getReadNegativeStrandFlag());
             unmapped.setMateUnmappedFlag(false);
-            unmapped.setMateCigarString(null);
+            // For the unmapped read, set it's mateCigar to the mate's Cigar, since the mate must be mapped
+            unmapped.setAttribute(SAMTag.MC.name(), mapped.getCigarString());
             unmapped.setInferredInsertSize(0);
         }
 

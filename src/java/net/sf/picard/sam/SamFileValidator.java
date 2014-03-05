@@ -351,32 +351,17 @@ public class SamFileValidator {
         if (record.getReadUnmappedFlag()) {
             return true;
         }
-        final ValidationStringency savedStringency = record.getValidationStringency();
-        record.setValidationStringency(ValidationStringency.LENIENT);
-        final List<SAMValidationError> errors = record.validateCigar(recordNumber);
-        record.setValidationStringency(savedStringency);
-        if (errors == null) {
-            return true;
-        }
-        boolean valid = true;
-        for (final SAMValidationError error : errors) {
-            addError(error);
-            valid = false;
-        }
-        return valid;
+        return validateCigar(record, recordNumber, true);
     }
 
     private boolean validateMateCigar(final SAMRecord record, final long recordNumber) {
-        if ((record.getReadUnmappedFlag() || (record.getMateUnmappedFlag()))) {
-            // Mate Cigar string will exist only if both read and mate are mapped
-            return true;
-        }
-        if (record.getMateCigarString() == null) {      // Is not populated.
-            return true;
-        }
+        return validateCigar(record, recordNumber, false);
+    }
+
+    private boolean validateCigar(final SAMRecord record, final long recordNumber, final boolean isReadCigar) {
         final ValidationStringency savedStringency = record.getValidationStringency();
         record.setValidationStringency(ValidationStringency.LENIENT);
-        final List<SAMValidationError> errors = record.validateMateCigar(recordNumber);
+        final List<SAMValidationError> errors = isReadCigar ? record.validateCigar(recordNumber) : record.validateMateCigar(recordNumber);
         record.setValidationStringency(savedStringency);
         if (errors == null) {
             return true;

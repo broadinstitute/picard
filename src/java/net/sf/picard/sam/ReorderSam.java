@@ -166,7 +166,7 @@ public class ReorderSam extends CommandLineProgram {
             if ( oldMateIndex != -1 && newMateIndex == -1 ) { // becoming unmapped
                 read.setMateAlignmentStart(0);
                 read.setMateUnmappedFlag(true);
-                read.setMateCigarString(null);
+                read.setAttribute(SAMTag.MC.name(), null);      // Set the Mate Cigar String to null
             }
             read.setMateReferenceIndex(newMateIndex);
 

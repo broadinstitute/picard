@@ -191,13 +191,11 @@ public class SAMValidationError {
         /** Both mates are marked as first of pair, or both mates are marked as second of pair. */
         MATES_ARE_SAME_END,
 
-        /** The Cigar String for the mate does not match the read's. */
+        /** The Cigar String in the MC Tag does not match the Cigar String for the mate of this read. */
         MISMATCH_MATE_CIGAR_STRING,
 
-        /**
-         * Bases corresponding to M operator in mate CIGAR are beyond the end of the reference.
-         */
-        MATE_CIGAR_MAPS_OFF_REFERENCE;
+        /** There is a Cigar String (stored in the MC Tag) for a read whose mate is NOT mapped. */
+        MATE_CIGAR_STRING_INVALID_PRESENCE;
 
         public final Severity severity;
 
