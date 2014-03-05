@@ -63,6 +63,8 @@ public class SortSam extends CommandLineProgram {
         final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
         reader.getFileHeader().setSortOrder(SORT_ORDER);
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
+	    writer.setProgressLogger(
+			    new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
         for (final SAMRecord rec: reader) {

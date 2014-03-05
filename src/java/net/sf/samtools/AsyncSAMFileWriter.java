@@ -1,12 +1,7 @@
 package net.sf.samtools;
 
 import net.sf.samtools.util.AbstractAsyncWriter;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import net.sf.samtools.util.ProgressLoggerInterface;
 
 /**
  * SAMFileWriter that can be wrapped around an underlying SAMFileWriter to provide asynchronous output. Records
@@ -19,6 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Tim Fennell
  */
 class AsyncSAMFileWriter extends AbstractAsyncWriter<SAMRecord> implements SAMFileWriter {
+
     private final SAMFileWriter underlyingWriter;
 
     /**
@@ -42,6 +38,11 @@ class AsyncSAMFileWriter extends AbstractAsyncWriter<SAMRecord> implements SAMFi
     @Override protected void synchronouslyClose() { this.underlyingWriter.close();  }
 
     @Override protected final String getThreadNamePrefix() { return "SAMFileWriterThread-"; }
+
+	@Override
+	public void setProgressLogger(final ProgressLoggerInterface progress) {
+		this.underlyingWriter.setProgressLogger(progress);
+	}
 
     /**
      * Adds an alignment to the queue to be written.  Will re-throw any exception that was received when

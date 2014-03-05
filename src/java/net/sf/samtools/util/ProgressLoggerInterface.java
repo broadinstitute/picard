@@ -1,18 +1,20 @@
-/*
+package net.sf.samtools.util;
+
+/**
  * The MIT License
- *
- * Copyright (c) 2009 The Broad Institute
- *
+ * <p/>
+ * Copyright (c) 2014 The Broad Institute
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p/>
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,28 +23,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.samtools;
 
-import net.sf.samtools.util.ProgressLoggerInterface;
+import net.sf.samtools.SAMRecord;
 
 /**
- * Interface for SAMText and BAM file writers.  Clients need not care which they write to,
- * once the object is constructed.
+ * An interface defining the record() methods of the Picard-public ProgressLogger implementation.
  */
-public interface SAMFileWriter {
+public interface ProgressLoggerInterface {
 
-	void addAlignment(SAMRecord alignment);
+	public boolean record(final String chrom, final int pos);
+	public boolean record(final SAMRecord rec);
+	public boolean record(final SAMRecord... recs);
 
-    SAMFileHeader getFileHeader();
-
-	/**
-	 * Sets a ProgressLogger on this writer. This is useful when pulling, for instance, from a
-	 * SortingCollection.
-	 */
-	void setProgressLogger(final ProgressLoggerInterface progress);
-
-    /**
-     * Must be called to flush or file will likely be defective. 
-     */
-    void close();
 }

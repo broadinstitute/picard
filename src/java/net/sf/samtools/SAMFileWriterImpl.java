@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.ProgressLoggerInterface;
 import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
@@ -42,6 +43,7 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
     private SAMFileHeader header;
     private SortingCollection<SAMRecord> alignmentSorter;
     private File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+	private ProgressLoggerInterface progressLogger = null;
 
     // If true, records passed to addAlignment are already in the order specified by sortOrder
     private boolean presorted;
@@ -67,8 +69,15 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
     public static int getDefaultMaxRecordsInRam() {
     	return DEAFULT_MAX_RECORDS_IN_RAM;	
     }
-    
-    
+
+	/**
+	 * Sets the progress logger used by this implementation. Setting this lets this writer emit log
+	 * messages as SAM records in a SortingCollection are being written to disk.
+	 */
+    public void setProgressLogger(final ProgressLoggerInterface progress) {
+	    this.progressLogger = progress;
+    }
+
     /**
      * Must be called before calling setHeader().  SortOrder value in the header passed
      * to setHeader() is ignored.  If setSortOrder is not called, default is SortOrder.unsorted.
@@ -189,6 +198,7 @@ public abstract class SAMFileWriterImpl implements SAMFileWriter
         if (alignmentSorter != null) {
             for (final SAMRecord alignment : alignmentSorter) {
                 writeAlignment(alignment);
+	            if (progressLogger != null) progressLogger.record(alignment);
             }
             alignmentSorter.cleanup();
         }
