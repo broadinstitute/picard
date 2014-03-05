@@ -212,6 +212,9 @@ public class BAMFileIndexTest
         Assert.assertNotNull(mate);
         Assert.assertEquals(mate.getReadName(), rec.getReadName());
         Assert.assertEquals(mate.getReferenceIndex(), rec.getMateReferenceIndex());
+        if (rec.getMateCigarString() != null) {
+            Assert.assertEquals(mate.getCigarString(), rec.getMateCigarString());
+        }
         Assert.assertEquals(mate.getAlignmentStart(), rec.getMateAlignmentStart());
         Assert.assertFalse(mate.getFirstOfPairFlag() == rec.getFirstOfPairFlag());
     }
