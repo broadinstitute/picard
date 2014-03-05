@@ -238,12 +238,22 @@ public class ValidateSamFileTest {
         Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_TAG_NM.getHistogramString()).getValue(), 1.0);
     }
 
-    @Test
-    public void testInvalidMateCigarString() throws IOException {
-        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, "invalid_mate_cigar_string.sam"));
+    @Test(dataProvider = "testMateCigarScenarios")
+    public void testMateCigarScenarios(final String scenario, final String inputFile, final SAMValidationError.Type expectedError)
+            throws Exception {
+        final SAMFileReader reader = new SAMFileReader(new File(TEST_DATA_DIR, inputFile));
         final Histogram<String> results = executeValidation(reader, null);
-        Assert.assertTrue(!results.isEmpty());      // We expect to find one validation error.
-        Assert.assertEquals(results.get(SAMValidationError.Type.MISMATCH_MATE_CIGAR_STRING.getHistogramString()).getValue(), 1.0);
+        Assert.assertNotNull(results.get(expectedError.getHistogramString()));
+        Assert.assertEquals(results.get(expectedError.getHistogramString()).getValue(), 1.0);
+    }
+
+
+    @DataProvider(name = "testMateCigarScenarios")
+    public Object[][] testMateCigarScenarios() {
+        return new Object[][] {
+                {"invalid mate cigar", "invalid_mate_cigar_string.sam", SAMValidationError.Type.MISMATCH_MATE_CIGAR_STRING},
+                {"inappropriate mate cigar", "inappropriate_mate_cigar_string.sam", SAMValidationError.Type.MATE_CIGAR_STRING_INVALID_PRESENCE}
+        };
     }
 
     @Test(dataProvider = "testTruncatedScenarios")

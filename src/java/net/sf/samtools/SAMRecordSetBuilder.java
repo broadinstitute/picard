@@ -210,7 +210,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end1.setReadPairedFlag(true);
         end1.setProperPairFlag(true);
         end1.setMateReferenceIndex(contig);
-        end1.setMateCigarString(readLength + "M");
+        end1.setAttribute(SAMTag.MC.name(), readLength + "M");
         end1.setMateAlignmentStart(start2);
         end1.setMateNegativeStrandFlag(true);
         end1.setFirstOfPairFlag(end1IsFirstOfPair);
@@ -234,7 +234,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setReadPairedFlag(true);
         end2.setProperPairFlag(true);
         end2.setMateReferenceIndex(contig);
-        end2.setMateCigarString(readLength + "M");
+        end2.setAttribute(SAMTag.MC.name(), readLength + "M");
         end2.setMateAlignmentStart(start1);
         end2.setMateNegativeStrandFlag(false);
         end2.setFirstOfPairFlag(!end1IsFirstOfPair);
@@ -262,7 +262,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end1.setReadName(name);
         end1.setReadPairedFlag(false);
         end1.setReadUnmappedFlag(true);
-        end1.setMateCigarString(null);
+        end1.setAttribute(SAMTag.MC.name(), null);
         end1.setProperPairFlag(false);
         end1.setFirstOfPairFlag(end1IsFirstOfPair);
         end1.setSecondOfPairFlag(!end1IsFirstOfPair);
@@ -275,7 +275,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setReadName(name);
         end2.setReadPairedFlag(false);
         end2.setReadUnmappedFlag(true);
-        end2.setMateCigarString(null);
+        end2.setAttribute(SAMTag.MC.name(), null);
         end2.setProperPairFlag(false);
         end2.setFirstOfPairFlag(!end1IsFirstOfPair);
         end2.setSecondOfPairFlag(end1IsFirstOfPair);
