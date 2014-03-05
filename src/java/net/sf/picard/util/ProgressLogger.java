@@ -1,6 +1,7 @@
 package net.sf.picard.util;
 
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.util.ProgressLoggerInterface;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -11,7 +12,7 @@ import java.text.NumberFormat;
  *
  * @author Tim Fennell
  */
-public class ProgressLogger {
+public class ProgressLogger implements ProgressLoggerInterface {
     private final Log log;
     private final int n;
     private final String verb;
@@ -22,7 +23,9 @@ public class ProgressLogger {
     private final NumberFormat timeFmt = new DecimalFormat("00");
     
     private long processed = 0;
-    private long lastStartTime = startTime;
+
+	// Set to -1 until the first record is added
+    private long lastStartTime = -1;
 
     /**
      * Construct a progress logger.
@@ -62,7 +65,8 @@ public class ProgressLogger {
     public ProgressLogger(final Log log) { this(log, 1000000); }
 
     public synchronized boolean record(final String chrom, final int pos) {
-        if (++this.processed % this.n == 0) {
+	    if (this.lastStartTime == -1) this.lastStartTime = System.currentTimeMillis();
+	    if (++this.processed % this.n == 0) {
             final long now = System.currentTimeMillis();
             final long lastPeriodSeconds = (now - this.lastStartTime) / 1000;
             this.lastStartTime = now;
