@@ -107,7 +107,7 @@ public class RevertSam extends CommandLineProgram {
 
     /** Default main method impl. */
     public static void main(final String[] args) {
-        System.exit(new RevertSam().instanceMain(args));
+        new RevertSam().instanceMainWithExit(args);
     }
 
     /**
