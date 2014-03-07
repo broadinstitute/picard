@@ -327,6 +327,7 @@
         <package-and-document-command title="ReorderSam" id=""               main-class="net.sf.picard.sam.ReorderSam"/>
         <package-and-document-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
         <package-and-document-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
+        <package-and-document-command title="RevertOriginalBaseQualitiesAndAddMateCigar" main-class="net.sf.picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
         <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
         <package-and-document-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
         <package-and-document-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
