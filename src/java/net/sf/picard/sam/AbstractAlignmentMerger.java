@@ -521,17 +521,57 @@ public abstract class AbstractAlignmentMerger {
 
     }
 
-    protected void updateCigarForTrimmedOrClippedBases(final SAMRecord rec, final SAMRecord alignment) {
+    private static Cigar createNewCigarIfMapsOffEndOfReference(SAMFileHeader header,
+                                                              boolean isUnmapped,
+                                                              int referenceIndex,
+                                                              int alignmentEnd,
+                                                              int readLength,
+                                                              Cigar oldCigar) {
+        Cigar newCigar = null;
+        if (!isUnmapped) {
+            final SAMSequenceRecord refseq = header.getSequence(referenceIndex);
+            final int overhang = alignmentEnd - refseq.getSequenceLength();
+            if (overhang > 0) {
+                // 1-based index of first base in read to clip.
+                final int clipFrom = readLength - overhang + 1;
+                final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, oldCigar.getCigarElements());
+                newCigar = new Cigar(newCigarElements);
+            }
+        }
+        return newCigar;
 
+    }
+
+    /**
+     * Soft-clip an alignment that hangs off the end of its reference sequence.  Checks both the read and its mate,
+     * if available.
+     * @param rec
+     */
+    public static void createNewCigarsIfMapsOffEndOfReference(final SAMRecord rec) {
         // If the read maps off the end of the alignment, clip it
-        final SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-        if (rec.getAlignmentEnd() > refseq.getSequenceLength()) {
-            // 1-based index of first base in read to clip.
-            final int clipFrom = refseq.getSequenceLength() - rec.getAlignmentStart() + 1;
-            final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
-            rec.setCigar(new Cigar(newCigarElements));
+        if (!rec.getReadUnmappedFlag()) {
+            final Cigar readCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
+                    rec.getReadUnmappedFlag(),
+                    rec.getReferenceIndex(),
+                    rec.getAlignmentEnd(),
+                    rec.getReadLength(),
+                    rec.getCigar());
+            if (null != readCigar) rec.setCigar(readCigar);
         }
 
+        // If the read's mate maps off the end of the alignment, clip it
+        if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag() && null != rec.getMateCigar()) {
+            final Cigar mateCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
+                    rec.getMateUnmappedFlag(),
+                    rec.getMateReferenceIndex(),
+                    rec.getMateAlignmentEnd(),
+                    rec.getMateCigar().getReadLength(),
+                    rec.getMateCigar());
+            if (null != mateCigar) rec.setAttribute(SAMTag.MC.name(), mateCigar);
+        }
+    }
+
+    protected void updateCigarForTrimmedOrClippedBases(final SAMRecord rec, final SAMRecord alignment) {
         // If the read was trimmed or not all the bases were sent for alignment, clip it
         final int alignmentReadLength = alignment.getReadLength();
         final int originalReadLength = rec.getReadLength();
@@ -539,6 +579,9 @@ public abstract class AbstractAlignmentMerger {
                 ? this.read1BasesTrimmed != null ? this.read1BasesTrimmed : 0
                 : this.read2BasesTrimmed != null ? this.read2BasesTrimmed : 0;
         final int notWritten = originalReadLength - (alignmentReadLength + trimmed);
+
+        // Update cigar if the mate maps off the reference
+        createNewCigarsIfMapsOffEndOfReference(rec);
 
         rec.setCigar(CigarUtil.addSoftClippedBasesToEndsOfCigar(
             rec.getCigar(), rec.getReadNegativeStrandFlag(), notWritten, trimmed));
