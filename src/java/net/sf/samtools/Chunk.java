@@ -15,7 +15,7 @@ import java.util.*;
  *
  * See the SAM/BAM spec for more details.
  */
-class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
+public class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -40,7 +40,7 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
         return new Chunk(mChunkStart,mChunkEnd);
     }
 
-    protected long getChunkStart() {
+    public long getChunkStart() {
         return mChunkStart;
     }
 
@@ -48,7 +48,7 @@ class Chunk implements Cloneable, Serializable,Comparable<Chunk> {
         mChunkStart = value;
     }
 
-    protected long getChunkEnd() {
+    public long getChunkEnd() {
         return mChunkEnd;
     }
 

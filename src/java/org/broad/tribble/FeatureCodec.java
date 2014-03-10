@@ -18,7 +18,7 @@
 
 package org.broad.tribble;
 
-import org.broad.tribble.readers.LocationAware;
+import net.sf.samtools.util.LocationAware;
 
 import java.io.IOException;
 import java.io.InputStream;

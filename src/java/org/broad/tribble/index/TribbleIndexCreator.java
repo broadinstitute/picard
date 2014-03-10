@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013 The Broad Institute
+ * Copyright (c) 2014 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,15 @@
  */
 package org.broad.tribble.index;
 
-import org.broad.tribble.Feature;
+import java.util.LinkedHashMap;
 
 /**
- *
- * An interface for creating indexes
- *
- * @author jrobinso
- */                                                                           
-public interface IndexCreator {
-    /**
-     * Add a feature to the index
-     * @param feature the feature, of which start, end, and contig must be filled in
-     * @param filePosition the current file position, at the beginning of the specified feature
-     */
-    public void addFeature(Feature feature, long filePosition);
+ * Base class for Tribble-specific index creators.
+ */
+public abstract class TribbleIndexCreator implements IndexCreator {
+    protected LinkedHashMap<String, String> properties = new LinkedHashMap<String, String>();
 
-    /**
-     * Create the index, given the stream of features passed in to this point
-     * @param finalFilePosition the final file position, for indexes that have to close out with the final position
-     * @return an index object
-     */
-    public Index finalizeIndex(long finalFilePosition);
+    public void addProperty(final String key, final String value) {
+        properties.put(key, value);
+    }
 }
-
-

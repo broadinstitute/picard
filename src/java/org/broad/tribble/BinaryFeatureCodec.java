@@ -1,7 +1,7 @@
 package org.broad.tribble;
 
 import net.sf.samtools.util.CloserUtil;
-import org.broad.tribble.readers.LocationAware;
+import net.sf.samtools.util.LocationAware;
 import org.broad.tribble.readers.PositionalBufferedStream;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ abstract public class BinaryFeatureCodec<T extends Feature> implements FeatureCo
     public boolean isDone(final PositionalBufferedStream source) {
         try {
             return source.isDone();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("Failure reading from stream.", e);
         }
     }

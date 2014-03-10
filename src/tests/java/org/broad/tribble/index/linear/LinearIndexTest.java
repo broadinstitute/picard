@@ -60,25 +60,25 @@ public class LinearIndexTest {
     // chr2 (0, 100]
     // chr2 (100, 200]
     private static LinearIndex createTestIndex() {
-        LinearIndex.ChrIndex chr1 = new LinearIndex.ChrIndex("chr1", 10);
+        final LinearIndex.ChrIndex chr1 = new LinearIndex.ChrIndex("chr1", 10);
         chr1.addBlock(CHR1_B1);
         chr1.addBlock(CHR1_B2);
         chr1.addBlock(CHR1_B3);
         chr1.updateLongestFeature(1);
 
-        LinearIndex.ChrIndex chr2 = new LinearIndex.ChrIndex("chr2", 100);
+        final LinearIndex.ChrIndex chr2 = new LinearIndex.ChrIndex("chr2", 100);
         chr2.addBlock(CHR2_B1);
         chr2.addBlock(CHR2_B2);
         chr2.updateLongestFeature(50);
 
-        List<LinearIndex.ChrIndex> indices = Arrays.asList(chr1, chr2);
+        final List<LinearIndex.ChrIndex> indices = Arrays.asList(chr1, chr2);
         return new LinearIndex(indices, RANDOM_FILE);
     }
 
     @Test()
     public void testBasicFeatures() {
         Assert.assertEquals(idx.getChrIndexClass(), LinearIndex.ChrIndex.class);
-        Assert.assertEquals(idx.getType(), IndexFactory.IndexType.LINEAR.getHeaderValue());
+        Assert.assertEquals(idx.getType(), LinearIndex.INDEX_TYPE);
         Assert.assertFalse(idx.hasFileSize());
         Assert.assertFalse(idx.hasTimestamp());
         Assert.assertFalse(idx.hasMD5());
@@ -103,7 +103,7 @@ public class LinearIndexTest {
 
     @Test()
     public void testEquals() {
-        LinearIndex idx2 = createTestIndex();
+        final LinearIndex idx2 = createTestIndex();
 
         Assert.assertEquals(idx, idx, "Identical indices are equal");
         Assert.assertTrue(idx.equalsIgnoreProperties(idx), "Identical indices are equalIgnoreTimeStamp");
@@ -147,9 +147,9 @@ public class LinearIndexTest {
         testQuery("chr2", 251, 251); // just escaping the 50 bp longest event
     }
 
-    private final void testQuery(String chr, int start, int stop, Block... expectedBlocksArray) {
-        List<Block> qBlocks = idx.getBlocks(chr, start, stop);
-        List<Block> eBlocks = Arrays.asList(expectedBlocksArray);
+    private final void testQuery(final String chr, final int start, final int stop, final Block... expectedBlocksArray) {
+        final List<Block> qBlocks = idx.getBlocks(chr, start, stop);
+        final List<Block> eBlocks = Arrays.asList(expectedBlocksArray);
 
         Assert.assertEquals(qBlocks.size(), eBlocks.size(),
                 String.format("Query %s:%d-%d returned %d blocks but we only expected %d.", chr, start, stop, qBlocks.size(), eBlocks.size()));
@@ -161,19 +161,19 @@ public class LinearIndexTest {
 
     @Test
     public void oneEntryFirstChr() {
-        BEDCodec code = new BEDCodec();
-        Index index = IndexFactory.createLinearIndex(fakeBed, code);
-        AbstractFeatureReader reader = AbstractFeatureReader.getFeatureReader(fakeBed.getAbsolutePath(), code, index);
+        final BEDCodec code = new BEDCodec();
+        final Index index = IndexFactory.createLinearIndex(fakeBed, code);
+        final AbstractFeatureReader reader = AbstractFeatureReader.getFeatureReader(fakeBed.getAbsolutePath(), code, index);
 
         try {
-            CloseableTribbleIterator it = reader.iterator();
+            final CloseableTribbleIterator it = reader.iterator();
             int count = 0;
             while (it.hasNext()) {
                 it.next();
                 count++;
             }
             Assert.assertEquals(51, count);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Assert.fail("Unable to get iterator due to " + e.getMessage());
         }
     }
@@ -194,26 +194,26 @@ public class LinearIndexTest {
     public void testOverlappingFeatures() throws Exception {
         //chr2:179,222,066-179,262,059<- CONTAINS TTN
 
-        Set<String> names = new HashSet<String>(Arrays.asList("Hs.134602", "Hs.620337", "Hs.609465", "Hs.623987",
+        final Set<String> names = new HashSet<String>(Arrays.asList("Hs.134602", "Hs.620337", "Hs.609465", "Hs.623987",
                 "Hs.594545", "LONG_FEATURE"));
 
-        String bedFile = TestUtils.DATA_DIR + "bed/Unigene.sample.bed";
-        String chr = "chr2";
-        int start = 179266309;
-        int end = 179303488;
-        int expectedCount = 6;
+        final String bedFile = TestUtils.DATA_DIR + "bed/Unigene.sample.bed";
+        final String chr = "chr2";
+        final int start = 179266309;
+        final int end = 179303488;
+        final int expectedCount = 6;
 
 
         // Linear binned index
         LinearIndex.enableAdaptiveIndexing = false;
-        int binSize = 1000;
+        final int binSize = 1000;
         Index idx = IndexFactory.createLinearIndex(new File(bedFile), new BEDCodec(), binSize);
 
         FeatureReader<BEDFeature> bfr = AbstractFeatureReader.getFeatureReader(bedFile, new BEDCodec(), idx);
         CloseableTribbleIterator<BEDFeature> iter = bfr.query(chr, start, end);
         int countInterval = 0;
         while (iter.hasNext()) {
-            BEDFeature feature = iter.next();
+            final BEDFeature feature = iter.next();
             Assert.assertTrue(feature.getEnd() >= start && feature.getStart() <= end);
             Assert.assertTrue(names.contains(feature.getName()));
             countInterval++;
@@ -229,7 +229,7 @@ public class LinearIndexTest {
         iter = bfr.query(chr, start, end);
         countInterval = 0;
         while (iter.hasNext()) {
-            BEDFeature feature = iter.next();
+            final BEDFeature feature = iter.next();
             Assert.assertTrue(feature.getEnd() >= start && feature.getStart() <= end);
             Assert.assertTrue(names.contains(feature.getName()));
             countInterval++;

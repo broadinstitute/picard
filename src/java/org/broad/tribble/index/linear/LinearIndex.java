@@ -18,15 +18,16 @@
 
 package org.broad.tribble.index.linear;
 
+import org.broad.tribble.TribbleException;
 import org.broad.tribble.index.AbstractIndex;
 import org.broad.tribble.index.Block;
 import org.broad.tribble.index.Index;
-import org.broad.tribble.index.IndexFactory;
 import org.broad.tribble.util.LittleEndianInputStream;
 import org.broad.tribble.util.LittleEndianOutputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -49,10 +50,11 @@ import java.util.*;
  * ------  LINEAR INDEX
  * nChromosomes     integer
  */
-public class LinearIndex extends AbstractIndex implements Index {
+public class LinearIndex extends AbstractIndex {
 
     // NOTE: To debug uncomment the System.getProperty and recompile.
     public static final double MAX_FEATURES_PER_BIN = Double.valueOf(System.getProperty("MAX_FEATURES_PER_BIN", "100"));
+    public static final int INDEX_TYPE = IndexType.LINEAR.fileHeaderTypeIdentifier;
 
     private final static int MAX_BIN_WIDTH = 1 * 1000 * 1000 * 1000; //  widths must be less than 1 billion
 
@@ -62,24 +64,19 @@ public class LinearIndex extends AbstractIndex implements Index {
     public static boolean enableAdaptiveIndexing = true;
 
     /**
-     * Default constructor -- used by factory methods.  Do not remove.
-     */
-    public LinearIndex() {}
-
-    /**
      * Initialize using the specified {@code indices}
      * @param indices
      * @param featureFile
      */
-    public LinearIndex(List<ChrIndex> indices, File featureFile) {
+    public LinearIndex(final List<ChrIndex> indices, final File featureFile) {
         super(featureFile.getAbsolutePath());
-        for (ChrIndex index : indices)
+        for (final ChrIndex index : indices)
             chrIndices.put(index.getName(), index);
     }
 
-    private LinearIndex(LinearIndex parent, List<ChrIndex> indices) {
+    private LinearIndex(final LinearIndex parent, final List<ChrIndex> indices) {
         super(parent);
-        for (ChrIndex index : indices)
+        for (final ChrIndex index : indices)
             chrIndices.put(index.getName(), index);
     }
 
@@ -87,16 +84,25 @@ public class LinearIndex extends AbstractIndex implements Index {
      * Initialize with default parameters
      * @param featureFile File for which this is an index
      */
-    public LinearIndex(String featureFile) {
+    public LinearIndex(final String featureFile) {
         super(featureFile);
     }
 
+    /**
+     * Load from file.
+     * @param inputStream This method assumes that the input stream is already buffered as appropriate.
+     */
+    public LinearIndex(final InputStream inputStream) throws IOException {
+        final LittleEndianInputStream dis = new LittleEndianInputStream(inputStream);
+        validateIndexHeader(INDEX_TYPE, dis);
+        read(dis);
+    }
 
     public boolean isCurrentVersion() {
         if (!super.isCurrentVersion()) return false;
 
         // todo fixme nasty hack to determine if this is an old style V3 linear index (without nFeaturesPerBin)
-        for (org.broad.tribble.index.ChrIndex chrIndex : chrIndices.values())
+        for (final org.broad.tribble.index.ChrIndex chrIndex : chrIndices.values())
             if (((ChrIndex) chrIndex).OLD_V3_INDEX)
                 return false;
 
@@ -105,11 +111,12 @@ public class LinearIndex extends AbstractIndex implements Index {
 
     @Override
     protected int getType() {
-        return IndexFactory.IndexType.LINEAR.getHeaderValue();
+        return INDEX_TYPE;
     }
 
-    public LinkedHashSet<String> getSequenceNames() {
-        return (chrIndices == null ? new LinkedHashSet<String>() : new LinkedHashSet<String>(chrIndices.keySet()));
+    public List<String> getSequenceNames() {
+        return (chrIndices == null ? Collections.EMPTY_LIST :
+                Collections.unmodifiableList(new ArrayList<String>(chrIndices.keySet())));
     }
 
     @Override
@@ -154,7 +161,7 @@ public class LinearIndex extends AbstractIndex implements Index {
 
         }
 
-        ChrIndex(String name, int binWidth) {
+        ChrIndex(final String name, final int binWidth) {
             this.name = name;
             this.binWidth = binWidth;
             this.blocks = new ArrayList<Block>(100);
@@ -167,7 +174,7 @@ public class LinearIndex extends AbstractIndex implements Index {
             return name;
         }
 
-        void addBlock(Block block) {
+        void addBlock(final Block block) {
             blocks.add(block);
             //largestBlockSize = Math.max(largestBlockSize, block.getSize());
         }
@@ -180,28 +187,28 @@ public class LinearIndex extends AbstractIndex implements Index {
             return blocks;
         }
 
-        public List<Block> getBlocks(int start, int end) {
+        public List<Block> getBlocks(final int start, final int end) {
             if (blocks.isEmpty()) {
                 return Collections.emptyList();
             } else {
                 // Adjust position for the longest feature in this chromosome.  This insures we get
                 // features that start before the bin but extend into it
-                int adjustedPosition = Math.max(start - longestFeature, 0);
-                int startBinNumber = adjustedPosition / binWidth;
+                final int adjustedPosition = Math.max(start - longestFeature, 0);
+                final int startBinNumber = adjustedPosition / binWidth;
                 if (startBinNumber >= blocks.size()) // are we off the end of the bin list, so return nothing
                     return Collections.emptyList();
                 else {
-                    int endBinNumber = Math.min((end - 1) / binWidth, blocks.size() - 1);
+                    final int endBinNumber = Math.min((end - 1) / binWidth, blocks.size() - 1);
 
                     // By definition blocks are adjacent for the liner index.  Combine them into one merged block
 
-                    long startPos = blocks.get(startBinNumber).getStartPosition();
-                    long endPos = blocks.get(endBinNumber).getStartPosition() + blocks.get(endBinNumber).getSize();
-                    long size = endPos - startPos;
+                    final long startPos = blocks.get(startBinNumber).getStartPosition();
+                    final long endPos = blocks.get(endBinNumber).getStartPosition() + blocks.get(endBinNumber).getSize();
+                    final long size = endPos - startPos;
                     if (size == 0) {
                         return Collections.EMPTY_LIST;
                     } else {
-                        Block mergedBlock = new Block(startPos, size);
+                        final Block mergedBlock = new Block(startPos, size);
                         return Arrays.asList(mergedBlock);
                     }
                 }
@@ -209,7 +216,7 @@ public class LinearIndex extends AbstractIndex implements Index {
         }
 
 
-        public void updateLongestFeature(int featureLength) {
+        public void updateLongestFeature(final int featureLength) {
             longestFeature = Math.max(longestFeature, featureLength);
         }
 
@@ -221,7 +228,7 @@ public class LinearIndex extends AbstractIndex implements Index {
             this.nFeatures++;
         }
 
-        public void write(LittleEndianOutputStream dos) throws IOException {
+        public void write(final LittleEndianOutputStream dos) throws IOException {
 
             // Chr name, binSize,  # bins,  longest feature
             dos.writeString(name);
@@ -234,7 +241,7 @@ public class LinearIndex extends AbstractIndex implements Index {
 
             long pos = 0;
             long size = 0;
-            for (Block block : blocks) {
+            for (final Block block : blocks) {
                 pos = block.getStartPosition();
                 size = block.getSize();
                 dos.writeLong(pos);
@@ -243,10 +250,10 @@ public class LinearIndex extends AbstractIndex implements Index {
             dos.writeLong(pos + size);
         }
 
-        public void read(LittleEndianInputStream dis) throws IOException {
+        public void read(final LittleEndianInputStream dis) throws IOException {
             name = dis.readString();
             binWidth = dis.readInt();
-            int nBins = dis.readInt();
+            final int nBins = dis.readInt();
             longestFeature = dis.readInt();
             //largestBlockSize = dis.readInt();
             // largestBlockSize and totalBlockSize are old V3 index values.  largest block size should be 0 for
@@ -258,17 +265,17 @@ public class LinearIndex extends AbstractIndex implements Index {
             blocks = new ArrayList<Block>(nBins);
             long pos = dis.readLong();
             for (int binNumber = 0; binNumber < nBins; binNumber++) {
-                long nextPos = dis.readLong();
-                long size = nextPos - pos;
+                final long nextPos = dis.readLong();
+                final long size = nextPos - pos;
                 blocks.add(new Block(pos, size));
                 pos = nextPos;
             }
         }
 
-        public boolean equals(Object obj) {
+        public boolean equals(final Object obj) {
             if (this == obj) return true;
             if (!(obj instanceof ChrIndex)) return false;
-            ChrIndex other = (ChrIndex) obj;
+            final ChrIndex other = (ChrIndex) obj;
             return binWidth == other.binWidth
                     && longestFeature == other.longestFeature
                     //&& largestBlockSize == other.largestBlockSize
@@ -282,7 +289,7 @@ public class LinearIndex extends AbstractIndex implements Index {
          */
         public long getTotalSize() {
             long n = 0;
-            for (Block b : getBlocks())
+            for (final Block b : getBlocks())
                 n += b.getSize();
             return n;
         }
@@ -295,10 +302,10 @@ public class LinearIndex extends AbstractIndex implements Index {
             return (1.0 * getNFeatures()) / getNBlocks();
         }
 
-        private double getNFeaturesOfMostDenseBlock(double featureSize) {
+        private double getNFeaturesOfMostDenseBlock(final double featureSize) {
             double m = -1;
-            for (Block b : getBlocks()) {
-                double n = b.getSize() / featureSize;
+            for (final Block b : getBlocks()) {
+                final double n = b.getSize() / featureSize;
                 if (m == -1 || n > m) m = n;
             }
             return m;
@@ -308,11 +315,11 @@ public class LinearIndex extends AbstractIndex implements Index {
             return getNFeaturesOfMostDenseBlock(getAverageFeatureSize());
         }
 
-        public ChrIndex optimize(double threshold) {
+        public ChrIndex optimize(final double threshold) {
             return optimize(this, threshold, 0);
         }
 
-        private static boolean badBinWidth(ChrIndex idx) {
+        private static boolean badBinWidth(final ChrIndex idx) {
             if (idx.binWidth > MAX_BIN_WIDTH || idx.binWidth < 0) // an overflow occurred
                 return true;
             else if (MAX_BIN_WIDTH_FOR_OCCUPIED_CHR_INDEX != 0 && idx.getNFeatures() > 1 && idx.binWidth > MAX_BIN_WIDTH_FOR_OCCUPIED_CHR_INDEX) {
@@ -322,11 +329,11 @@ public class LinearIndex extends AbstractIndex implements Index {
             }
         }
 
-        private static ChrIndex optimize(ChrIndex idx, double threshold, int level) {
+        private static ChrIndex optimize(ChrIndex idx, final double threshold, int level) {
             ChrIndex best = idx;
 
             while (true) {
-                double score = idx.optimizeScore();
+                final double score = idx.optimizeScore();
 
                 if (score > threshold || idx.getNBlocks() == 1 || badBinWidth(idx))
                     break;
@@ -344,19 +351,19 @@ public class LinearIndex extends AbstractIndex implements Index {
             return best;
         }
 
-        private static ChrIndex mergeBlocks(ChrIndex idx) {
-            ChrIndex merged = new ChrIndex(idx.name, idx.binWidth * 2); // increasing width by 2 each time
+        private static ChrIndex mergeBlocks(final ChrIndex idx) {
+            final ChrIndex merged = new ChrIndex(idx.name, idx.binWidth * 2); // increasing width by 2 each time
             merged.longestFeature = idx.longestFeature;
             merged.nFeatures = idx.nFeatures;
 
-            Iterator<Block> blocks = idx.getBlocks().iterator();
+            final Iterator<Block> blocks = idx.getBlocks().iterator();
             if (!blocks.hasNext())
                 throw new IllegalStateException("Block iterator cannot be empty at the start for " + idx.getName());
 
             // extremely simple merging algorithm.  Walk left to right, joining up blocks adjacent blocks.
             while (blocks.hasNext()) {
-                Block b1 = blocks.next();
-                Block b2 = blocks.hasNext() ? blocks.next() : null;
+                final Block b1 = blocks.next();
+                final Block b2 = blocks.hasNext() ? blocks.next() : null;
 
                 if (b2 == null)
                     merged.addBlock(b1);
@@ -368,8 +375,8 @@ public class LinearIndex extends AbstractIndex implements Index {
             return merged;
         }
 
-        private static String dupString(char c, int nCopies) {
-            char[] chars = new char[nCopies];
+        private static String dupString(final char c, final int nCopies) {
+            final char[] chars = new char[nCopies];
             Arrays.fill(chars, c);
             return new String(chars);
         }
@@ -380,13 +387,13 @@ public class LinearIndex extends AbstractIndex implements Index {
      * @param threshold threshold to use for optimizing each constituent {@code chrIndex}
      * @return The new optimized index
      */
-    public Index optimize(double threshold) {
+    public Index optimize(final double threshold) {
         if (enableAdaptiveIndexing) {
 
-            List<ChrIndex> newIndices = new ArrayList<ChrIndex>(this.chrIndices.size());
-            for (String name : chrIndices.keySet()) {
-                LinearIndex.ChrIndex oldIdx = (LinearIndex.ChrIndex) chrIndices.get(name);
-                LinearIndex.ChrIndex newIdx = oldIdx.optimize(threshold);
+            final List<ChrIndex> newIndices = new ArrayList<ChrIndex>(this.chrIndices.size());
+            for (final String name : chrIndices.keySet()) {
+                final LinearIndex.ChrIndex oldIdx = (LinearIndex.ChrIndex) chrIndices.get(name);
+                final LinearIndex.ChrIndex newIdx = oldIdx.optimize(threshold);
                 newIndices.add(newIdx);
             }
             return new LinearIndex(this, newIndices);
@@ -403,12 +410,12 @@ public class LinearIndex extends AbstractIndex implements Index {
      * Code to convert linear index to a text table for analysis
      * @param out Stream to which to write out table to
      */
-    public void writeTable(PrintStream out) {
+    public void writeTable(final PrintStream out) {
         out.printf("chr binWidth avg.feature.size nFeatures.total block.id start.pos size nFeatures%n");
-        for (String name : chrIndices.keySet()) {
-            LinearIndex.ChrIndex chrIdx = (LinearIndex.ChrIndex) chrIndices.get(name);
+        for (final String name : chrIndices.keySet()) {
+            final LinearIndex.ChrIndex chrIdx = (LinearIndex.ChrIndex) chrIndices.get(name);
             int blockCount = 0;
-            for (Block b : chrIdx.getBlocks()) {
+            for (final Block b : chrIdx.getBlocks()) {
                 out.printf("%s %d %.2f %d %d %d %d %d%n", name, chrIdx.binWidth, chrIdx.getAverageFeatureSize(), chrIdx.getNFeatures(), blockCount,
                         blockCount * chrIdx.binWidth, b.getSize(), (int) (b.getSize() / chrIdx.getAverageFeatureSize()));
                 blockCount++;
@@ -417,7 +424,7 @@ public class LinearIndex extends AbstractIndex implements Index {
     }
 
     // purely for testing purposes
-    protected final void setTS(long ts) {
+    protected final void setTS(final long ts) {
         this.indexedFileTS = ts;
     }
 }

@@ -51,7 +51,7 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
         try {
             codec = new BinaryCodec(output, true);
             writeHeader();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new SAMException("Exception opening output file " + output, e);
         }
     }
@@ -68,7 +68,7 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
         try {
             codec = new BinaryCodec(output);
             writeHeader();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new SAMException("Exception opening output stream", e);
         }
     }
@@ -102,12 +102,12 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
 
         //final List<Chunk> chunks = content.getMetaData() == null ? null
         //        : content.getMetaData().getMetaDataChunks();
-        BAMIndexMetaData metaData = content.getMetaData();
+        final BAMIndexMetaData metaData = content.getMetaData();
 
         codec.writeInt(size + ((metaData != null)? 1 : 0 ));
         // codec.writeInt(size);
-        for (Bin bin : bins) {   // note, bins will always be sorted
-            if (bin.getBinNumber() == AbstractBAMFileIndex.MAX_BINS)
+        for (final Bin bin : bins) {   // note, bins will always be sorted
+            if (bin.getBinNumber() == GenomicIndexUtil.MAX_BINS)
                 continue;
             writeBin(bin);
         }
@@ -135,7 +135,7 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
         }
         try {
             codec.getOutputStream().flush();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new SAMException("IOException in BinaryBAMIndexWriter reference " + content.getReferenceSequence(), e);
         }
     }
@@ -156,9 +156,9 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
         codec.close();
     }
 
-    private void writeBin(Bin bin) {
+    private void writeBin(final Bin bin) {
         final int binNumber = bin.getBinNumber();
-        if (binNumber >= AbstractBAMFileIndex.MAX_BINS){
+        if (binNumber >= GenomicIndexUtil.MAX_BINS){
             throw new SAMException("Unexpected bin number when writing bam index " + binNumber);
         }
         
@@ -181,8 +181,8 @@ class BinaryBAMIndexWriter implements BAMIndexWriter {
      *
      * @param metaData information describing numAligned records, numUnAligned, etc
      */
-    private void writeChunkMetaData(BAMIndexMetaData metaData) {
-        codec.writeInt(AbstractBAMFileIndex.MAX_BINS);
+    private void writeChunkMetaData(final BAMIndexMetaData metaData) {
+        codec.writeInt(GenomicIndexUtil.MAX_BINS);
         final int nChunk = 2;
         codec.writeInt(nChunk);
         codec.writeLong(metaData.getFirstOffset());

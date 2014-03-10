@@ -23,6 +23,8 @@
  */
 package org.broad.tribble.readers;
 
+import net.sf.samtools.util.LocationAware;
+
 import java.io.IOException;
 
 /**

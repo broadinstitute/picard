@@ -423,18 +423,11 @@ public final class SAMUtils
      * Copied from SAM spec.
      * @param beg 0-based start of read (inclusive)
      * @param end 0-based end of read (exclusive)
+     * @deprecated Use GenomicIndexUtil.reg2bin
      */
-    static int reg2bin(final int beg, int end)
+    static int reg2bin(final int beg, final int end)
     {
-
-        --end;
-
-        if (beg>>14 == end>>14) return ((1<<15)-1)/7 + (beg>>14);
-        if (beg>>17 == end>>17) return ((1<<12)-1)/7 + (beg>>17);
-        if (beg>>20 == end>>20) return  ((1<<9)-1)/7 + (beg>>20);
-        if (beg>>23 == end>>23) return  ((1<<6)-1)/7 + (beg>>23);
-        if (beg>>26 == end>>26) return  ((1<<3)-1)/7 + (beg>>26);
-        return 0;
+        return GenomicIndexUtil.reg2bin(beg, end);
     }
 
     /**
@@ -464,7 +457,7 @@ public final class SAMUtils
     }
 
     public static void processValidationError(final SAMValidationError validationError,
-                                       SAMFileReader.ValidationStringency validationStringency) {
+                                       final SAMFileReader.ValidationStringency validationStringency) {
         if (validationStringency == SAMFileReader.ValidationStringency.STRICT) {
             throw new SAMFormatException("SAM validation error: " + validationError);
         }
@@ -541,17 +534,17 @@ public final class SAMUtils
      * it can be used whether creating a SAMProgramRecord with a constructor or when
      * calling SAMFileHeader.createProgramRecord().
      */
-    public static void chainSAMProgramRecord(SAMFileHeader header, SAMProgramRecord program) {
+    public static void chainSAMProgramRecord(final SAMFileHeader header, final SAMProgramRecord program) {
 
-        List<SAMProgramRecord> pgs = header.getProgramRecords();
+        final List<SAMProgramRecord> pgs = header.getProgramRecords();
         if (pgs.size() > 0) {
-            List<String> referencedIds = new ArrayList<String>();
-            for (SAMProgramRecord pg : pgs) {
+            final List<String> referencedIds = new ArrayList<String>();
+            for (final SAMProgramRecord pg : pgs) {
                 if (pg.getPreviousProgramGroupId() != null) {
                     referencedIds.add(pg.getPreviousProgramGroupId());
                 }
             }
-            for (SAMProgramRecord pg : pgs) {
+            for (final SAMProgramRecord pg : pgs) {
                 // if record being chained has already been added, ignore it
                 if (pg.getProgramGroupId().equals(program.getProgramGroupId())) {
                     continue;
@@ -564,7 +557,7 @@ public final class SAMUtils
         }
     }
 
-    public static void makeReadUnmapped(SAMRecord rec) {
+    public static void makeReadUnmapped(final SAMRecord rec) {
         if (rec.getReadNegativeStrandFlag()) {
             SAMRecordUtil.reverseComplement(rec);
             rec.setReadNegativeStrandFlag(false);

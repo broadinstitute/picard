@@ -48,6 +48,7 @@ import java.util.zip.Deflater;
  */
 public class BlockCompressedOutputStream
         extends OutputStream
+        implements LocationAware
 {
     private static int defaultCompressionLevel = BlockCompressedStreamConstants.DEFAULT_COMPRESSION_LEVEL;
 
@@ -132,7 +133,7 @@ public class BlockCompressedOutputStream
      * Constructors that take output streams
      * file may be null
      */
-    public BlockCompressedOutputStream(final OutputStream os, File file) {
+    public BlockCompressedOutputStream(final OutputStream os, final File file) {
         this(os, file, defaultCompressionLevel);
     }
 
@@ -143,6 +144,21 @@ public class BlockCompressedOutputStream
             codec.setOutputFileName(file.getAbsolutePath());
         }
         deflater = DeflaterFactory.makeDeflater(compressionLevel, true);
+    }
+
+    /**
+     *
+     * @param location May be null.  Used for error messages, and for checking file termination.
+     * @param output May or not already be a BlockCompressedOutputStream.
+     * @return A BlockCompressedOutputStream, either by wrapping the given OutputStream, or by casting if it already
+     *         is a BCOS.
+     */
+    public static BlockCompressedOutputStream maybeBgzfWrapOutputStream(final File location, OutputStream output) {
+        if (!(output instanceof BlockCompressedOutputStream)) {
+                return new BlockCompressedOutputStream(output, location);
+        } else {
+        return (BlockCompressedOutputStream)output;
+        }
     }
 
     /**
@@ -237,6 +253,11 @@ public class BlockCompressedOutputStream
         return BlockCompressedFilePointerUtil.makeFilePointer(mBlockAddress, numUncompressedBytes);
     }
 
+    @Override
+    public long getPosition() {
+        return getFilePointer();
+    }
+
     /**
      * Attempt to write the data in uncompressedBuffer to the underlying file in a gzip block.
      * If the entire uncompressedBuffer does not fit in the maximum allowed size, reduce the amount
@@ -248,7 +269,7 @@ public class BlockCompressedOutputStream
         if (numUncompressedBytes == 0) {
             return 0;
         }
-        int bytesToCompress = numUncompressedBytes;
+        final int bytesToCompress = numUncompressedBytes;
         // Compress the input
         deflater.reset();
         deflater.setInput(uncompressedBuffer, 0, bytesToCompress);

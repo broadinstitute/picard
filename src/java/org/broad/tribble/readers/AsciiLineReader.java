@@ -17,6 +17,7 @@
  */
 package org.broad.tribble.readers;
 
+import net.sf.samtools.util.LocationAware;
 import org.broad.tribble.TribbleException;
 
 import java.io.*;
@@ -25,7 +26,7 @@ import java.io.*;
  * A simple class that provides {@link #readLine()} functionality around a PositionalBufferedStream
  *
  * {@link BufferedReader} and its {@link java.io.BufferedReader#readLine()} method should be used in preference to this class (when the
- * {@link LocationAware} functionality is not required) because it offers greater performance.
+ * {@link net.sf.samtools.util.LocationAware} functionality is not required) because it offers greater performance.
  * 
  * @author jrobinso
  */
@@ -37,11 +38,11 @@ public class AsciiLineReader implements LineReader, LocationAware {
     PositionalBufferedStream is;
     char[] lineBuffer;
 
-    public AsciiLineReader(InputStream is){
+    public AsciiLineReader(final InputStream is){
         this(new PositionalBufferedStream(is));
     }
 
-    public AsciiLineReader(PositionalBufferedStream is) {
+    public AsciiLineReader(final PositionalBufferedStream is) {
         this.is = is;
         // Allocate this only once, even though it is essentially a local variable of
         // readLine.  This makes a huge difference in performance
@@ -94,7 +95,7 @@ public class AsciiLineReader implements LineReader, LocationAware {
                 // for potential line-terminators in return string
 
                 if (linePosition > (lineBuffer.length - 3)) {
-                    char[] temp = new char[BUFFER_OVERFLOW_INCREASE_FACTOR * lineBuffer.length];
+                    final char[] temp = new char[BUFFER_OVERFLOW_INCREASE_FACTOR * lineBuffer.length];
                     System.arraycopy(lineBuffer, 0, temp, 0, lineBuffer.length);
                     lineBuffer = temp;
                 }
@@ -122,8 +123,8 @@ public class AsciiLineReader implements LineReader, LocationAware {
         lineBuffer = null;
     }
 
-    public static void main(String[] args) throws Exception {
-        File testFile = new File(args[0]);
+    public static void main(final String[] args) throws Exception {
+        final File testFile = new File(args[0]);
         final int iterations = Integer.valueOf(args[1]);
         final boolean includeBufferedReader = Boolean.valueOf(args[2]);
         long t0, lineCount, dt;
@@ -132,7 +133,7 @@ public class AsciiLineReader implements LineReader, LocationAware {
         System.out.printf("Testing %s%n", args[0]);
         for (int i = 0; i < iterations; i++) {
             if ( includeBufferedReader ) {
-                BufferedReader reader2 = new BufferedReader(new FileReader(testFile));
+                final BufferedReader reader2 = new BufferedReader(new FileReader(testFile));
                 t0 = System.currentTimeMillis();
                 lineCount = 0;
                 while (reader2.readLine() != null) {
@@ -145,7 +146,7 @@ public class AsciiLineReader implements LineReader, LocationAware {
             }
 
             if ( includeBufferedReader ) {
-                LongLineBufferedReader longLineBufferedReader = new LongLineBufferedReader(new BufferedReader(new FileReader(testFile)));
+                final LongLineBufferedReader longLineBufferedReader = new LongLineBufferedReader(new BufferedReader(new FileReader(testFile)));
                 t0 = System.currentTimeMillis();
                 lineCount = 0;
                 while (longLineBufferedReader.readLine() != null) {
@@ -157,8 +158,8 @@ public class AsciiLineReader implements LineReader, LocationAware {
                 longLineBufferedReader.close();
             }
             
-            PositionalBufferedStream pbs = new PositionalBufferedStream(new FileInputStream(testFile));
-            LineReader reader = new AsciiLineReader(pbs);
+            final PositionalBufferedStream pbs = new PositionalBufferedStream(new FileInputStream(testFile));
+            final LineReader reader = new AsciiLineReader(pbs);
             t0 = System.currentTimeMillis();
             lineCount = 0;
             while (reader.readLine() != null) {
@@ -171,7 +172,7 @@ public class AsciiLineReader implements LineReader, LocationAware {
         }
     }
 
-    private static final void printStatus(final String name, long lineCount, double rate, long dt) {
+    private static final void printStatus(final String name, final long lineCount, final double rate, final long dt) {
         System.out.printf("%30s: %d lines read.  Rate = %.2e lines per second.  DT = %d%n", name, lineCount, rate, dt);
         System.out.flush();
     }

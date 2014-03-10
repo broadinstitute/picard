@@ -7,7 +7,7 @@ import org.broad.tribble.example.ExampleBinaryCodec;
 import org.broad.tribble.index.Block;
 import org.broad.tribble.index.Index;
 import org.broad.tribble.index.IndexFactory;
-import org.broad.tribble.readers.LocationAware;
+import net.sf.samtools.util.LocationAware;
 import org.broad.tribble.util.ParsingUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
