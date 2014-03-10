@@ -76,19 +76,15 @@ public class CleanSam extends CommandLineProgram {
             final CloseableIterator<SAMRecord> it = reader.iterator();
             final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
 
-            // If the read maps off the end of the alignment, clip it
+            // If the read (or its mate) maps off the end of the alignment, clip it
             while(it.hasNext()) {
                 final SAMRecord rec = it.next();
-                if (!rec.getReadUnmappedFlag()) {
-                    final SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
-                    final int overhang = rec.getAlignmentEnd() - refseq.getSequenceLength();
-                    if (overhang > 0) {
-                        // 1-based index of first base in read to clip.
-                        final int clipFrom = rec.getReadLength() - overhang + 1;
-                        final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
-                        rec.setCigar(new Cigar(newCigarElements));
-                    }
-                } else if (rec.getMappingQuality() != 0) {
+
+                // If the read (or its mate) maps off the end of the alignment, clip it
+                AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(rec);
+
+                // check the read's mapping quality
+                if (rec.getReadUnmappedFlag() && 0 != rec.getMappingQuality()) {
                     rec.setMappingQuality(0);
                 }
 
@@ -104,5 +100,4 @@ public class CleanSam extends CommandLineProgram {
         }
         return 0;
     }
-
 }

@@ -88,6 +88,9 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         final ProgressLogger revertingProgress = new ProgressLogger(log, 1000000, " reverted OQs");
         int numOriginalQualitiesRestored = 0;
         for (final SAMRecord record : in) {
+            // Clean up reads that map off the end of the reference
+            AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(record);
+
             if (RESTORE_ORIGINAL_QUALITIES && null != record.getOriginalBaseQualities()) {
                 // revert the original base qualities
                 record.setBaseQualities(record.getOriginalBaseQualities());
