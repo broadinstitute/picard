@@ -28,10 +28,7 @@ import net.sf.samtools.util.IOUtil;
 import net.sf.samtools.util.Md5CalculatingOutputStream;
 import net.sf.samtools.util.RuntimeIOException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * Create a SAMFileWriter for writing SAM or BAM.
@@ -43,6 +40,7 @@ public class SAMFileWriterFactory {
     private boolean createMd5File = defaultCreateMd5File;
     private boolean useAsyncIo = Defaults.USE_ASYNC_IO;
     private int asyncOutputBufferSize = AsyncSAMFileWriter.DEFAULT_QUEUE_SIZE;
+    private int bufferSize = Defaults.BUFFER_SIZE;
     private File tmpDir;
 
 
@@ -96,7 +94,7 @@ public class SAMFileWriterFactory {
      * @param maxRecordsInRam Number of records to store in RAM before spilling to temporary file when
      * creating a sorted SAM or BAM file.
      */
-    public SAMFileWriterFactory setMaxRecordsInRam(int maxRecordsInRam) {
+    public SAMFileWriterFactory setMaxRecordsInRam(final int maxRecordsInRam) {
         this.maxRecordsInRam = maxRecordsInRam;
         return this;
     }
@@ -105,18 +103,30 @@ public class SAMFileWriterFactory {
      * Turn on or off the use of asynchronous IO for writing output SAM and BAM files.  If true then
      * each SAMFileWriter creates a dedicated thread which is used for compression and IO activities.
      */
-    public void setUseAsyncIo(final boolean useAsyncIo) {
+    public SAMFileWriterFactory setUseAsyncIo(final boolean useAsyncIo) {
         this.useAsyncIo = useAsyncIo;
+        return this;
     }
 
     /**
      * If and only if using asynchronous IO then sets the maximum number of records that can be buffered per
      * SAMFileWriter before producers will block when trying to write another SAMRecord.
      */
-    public void setAsyncOutputBufferSize(final int asyncOutputBufferSize) {
+    public SAMFileWriterFactory setAsyncOutputBufferSize(final int asyncOutputBufferSize) {
         this.asyncOutputBufferSize = asyncOutputBufferSize;
+        return this;
     }
-    
+
+    /**
+     * Controls size of write buffer.
+     * Default value: [[net.sf.samtools.Defaults#BUFFER_SIZE]]
+     *
+     */
+    public SAMFileWriterFactory setBufferSize(final int bufferSize) {
+        this.bufferSize = bufferSize;
+        return this;
+    }
+
     /**
      * Set the temporary directory to use when sort data.
      * @param tmpDir Path to the temporary directory
@@ -147,15 +157,15 @@ public class SAMFileWriterFactory {
     public SAMFileWriter makeBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile,
                                        final int compressionLevel) {
         try {
-            boolean createMd5File = this.createMd5File && IOUtil.isRegularPath(outputFile);
+            final boolean createMd5File = this.createMd5File && IOUtil.isRegularPath(outputFile);
             if (this.createMd5File && !createMd5File) {
                 System.err.println("Cannot create MD5 file for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
             }
-            final BAMFileWriter ret = createMd5File
-                    ? new BAMFileWriter(new Md5CalculatingOutputStream(new FileOutputStream(outputFile, false),
-                        new File(outputFile.getAbsolutePath() + ".md5")), outputFile, compressionLevel)
-                    : new BAMFileWriter(outputFile, compressionLevel);
-            boolean createIndex = this.createIndex && IOUtil.isRegularPath(outputFile);
+            OutputStream os = new FileOutputStream(outputFile, false);
+            if (bufferSize > 0) os = new BufferedOutputStream(os, bufferSize);
+            if (createMd5File) os = new Md5CalculatingOutputStream(os, new File(outputFile.getAbsolutePath() + ".md5"));
+            final BAMFileWriter ret = new BAMFileWriter(os, outputFile, compressionLevel);
+            final boolean createIndex = this.createIndex && IOUtil.isRegularPath(outputFile);
             if (this.createIndex && !createIndex) {
                 System.err.println("Cannot create index for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
             }
@@ -165,7 +175,7 @@ public class SAMFileWriterFactory {
             if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
             else return ret;
         }
-        catch (IOException ioe) {
+        catch (final IOException ioe) {
             throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
         }
     }
@@ -202,7 +212,7 @@ public class SAMFileWriterFactory {
             if (this.useAsyncIo) return new AsyncSAMFileWriter(ret, this.asyncOutputBufferSize);
             else return ret;
         }
-        catch (IOException ioe) {
+        catch (final IOException ioe) {
             throw new RuntimeIOException("Error opening file: " + outputFile.getAbsolutePath());
         }
     }
