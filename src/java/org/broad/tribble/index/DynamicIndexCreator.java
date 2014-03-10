@@ -39,11 +39,12 @@ import java.util.TreeMap;
 
 /**
  * A DynamicIndexCreator creates the proper index based on an {@link IndexFactory.IndexBalanceApproach} and
- * the characteristics of the file.
+ * the characteristics of the file.  Ultimately this is either a LinearIndex or an IntervalTreeIndex, with index
+ * parameters based on whether seek time or file size is to be minimized.
  */
-public class DynamicIndexCreator implements IndexCreator {
+public class DynamicIndexCreator extends TribbleIndexCreator {
     IndexFactory.IndexBalanceApproach iba;
-    Map<IndexFactory.IndexType,IndexCreator> creators;
+    Map<IndexFactory.IndexType,TribbleIndexCreator> creators;
 
     /**
      * we're interested in two stats:
@@ -57,38 +58,33 @@ public class DynamicIndexCreator implements IndexCreator {
     Feature lastFeature = null;
     File inputFile;
 
-    public DynamicIndexCreator(IndexFactory.IndexBalanceApproach iba) {
+    public DynamicIndexCreator(final File inputFile, final IndexFactory.IndexBalanceApproach iba) {
         this.iba = iba;
-    }
-
-    public void initialize(File inputFile, int binSize) {
         // get a list of index creators
         this.inputFile = inputFile;
         creators = getIndexCreators(inputFile,iba);
     }
 
-    public int defaultBinSize() { return -1; }
-    public int getBinSize() { return -1; }
-
-    public Index finalizeIndex(long finalFilePosition) {
+    public Index finalizeIndex(final long finalFilePosition) {
         // finalize all of the indexes
         // return the score of the indexes we've generated
-        Map<Double,IndexCreator> mapping = scoreIndexes((double)featureCount/(double)basesSeen, creators, longestFeatureLength, iba);
-        IndexCreator creator = getMinIndex(mapping, this.iba);
+        final Map<Double,TribbleIndexCreator> mapping = scoreIndexes((double)featureCount/(double)basesSeen, creators, longestFeatureLength, iba);
+        final TribbleIndexCreator creator = getMinIndex(mapping, this.iba);
 
-        // Now let's finalize and create the index itself
-        Index idx = creator.finalizeIndex(finalFilePosition);
-        idx.finalizeIndex();
+        for (final Map.Entry<String, String> entry : properties.entrySet()) {
+            creator.addProperty(entry.getKey(), entry.getValue());
+        }
 
         // add our statistics to the file
-        idx.addProperty("FEATURE_LENGTH_MEAN",String.valueOf(stats.mean()));
-        idx.addProperty("FEATURE_LENGTH_STD_DEV",String.valueOf(stats.standardDeviation()));
-        idx.addProperty("MEAN_FEATURE_VARIANCE",String.valueOf(stats.variance()));
+        creator.addProperty("FEATURE_LENGTH_MEAN",String.valueOf(stats.mean()));
+        creator.addProperty("FEATURE_LENGTH_STD_DEV",String.valueOf(stats.standardDeviation()));
+        creator.addProperty("MEAN_FEATURE_VARIANCE",String.valueOf(stats.variance()));
 
         // add the feature count
-        idx.addProperty("FEATURE_COUNT",String.valueOf(featureCount));
+        creator.addProperty("FEATURE_COUNT",String.valueOf(featureCount));
 
-        return idx;
+        // Now let's finalize and create the index itself
+        return creator.finalizeIndex(finalFilePosition);
     }
 
     /**
@@ -96,18 +92,16 @@ public class DynamicIndexCreator implements IndexCreator {
      * @param inputFile the input file to use to create the indexes
      * @return a map of index type to the best index for that balancing approach
      */
-    private Map<IndexFactory.IndexType,IndexCreator> getIndexCreators(File inputFile, IndexFactory.IndexBalanceApproach iba) {
-        Map<IndexFactory.IndexType,IndexCreator> creators = new HashMap<IndexFactory.IndexType,IndexCreator>();
+    private Map<IndexFactory.IndexType,TribbleIndexCreator> getIndexCreators(final File inputFile, final IndexFactory.IndexBalanceApproach iba) {
+        final Map<IndexFactory.IndexType,TribbleIndexCreator> creators = new HashMap<IndexFactory.IndexType,TribbleIndexCreator>();
 
         if (iba == IndexFactory.IndexBalanceApproach.FOR_SIZE) {
             // add a linear index with the default bin size
-            LinearIndexCreator linearNormal = new LinearIndexCreator();
-            linearNormal.initialize(inputFile, linearNormal.defaultBinSize());
+            final LinearIndexCreator linearNormal = new LinearIndexCreator(inputFile, LinearIndexCreator.DEFAULT_BIN_WIDTH);
             creators.put(IndexFactory.IndexType.LINEAR,linearNormal);
 
             // create a tree index with the default size
-            IntervalIndexCreator treeNormal = new IntervalIndexCreator();
-            treeNormal.initialize(inputFile, treeNormal.defaultBinSize());
+            final IntervalIndexCreator treeNormal = new IntervalIndexCreator(inputFile, IntervalIndexCreator.DEFAULT_FEATURE_COUNT);
             creators.put(IndexFactory.IndexType.INTERVAL_TREE,treeNormal);
         }
 
@@ -115,13 +109,13 @@ public class DynamicIndexCreator implements IndexCreator {
         // values were determined experimentally
         if (iba == IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME) {
             // create a linear index with a small bin size
-            LinearIndexCreator linearSmallBin = new LinearIndexCreator();
-            linearSmallBin.initialize(inputFile, Math.max(200, linearSmallBin.defaultBinSize() / 4));
+            final LinearIndexCreator linearSmallBin =
+                    new LinearIndexCreator(inputFile, Math.max(200, LinearIndexCreator.DEFAULT_BIN_WIDTH / 4));
             creators.put(IndexFactory.IndexType.LINEAR,linearSmallBin);
 
             // create a tree index with a small index size
-            IntervalIndexCreator treeSmallBin = new IntervalIndexCreator();
-            treeSmallBin.initialize(inputFile, Math.max(20, treeSmallBin.defaultBinSize() / 8));
+            final IntervalIndexCreator treeSmallBin =
+                    new IntervalIndexCreator(inputFile, Math.max(20, IntervalIndexCreator.DEFAULT_FEATURE_COUNT / 8));
             creators.put(IndexFactory.IndexType.INTERVAL_TREE,treeSmallBin);
         }
 
@@ -129,7 +123,7 @@ public class DynamicIndexCreator implements IndexCreator {
     }
 
 
-    public void addFeature(Feature f, long filePosition) {
+    public void addFeature(final Feature f, final long filePosition) {
         // protected static Map<Double,Index> createIndex(FileBasedFeatureIterator<Feature> iterator, Map<IndexType,IndexCreator> creators, IndexBalanceApproach iba) {
         // feed each feature to the indexes we've created
         // first take care of the stats
@@ -145,7 +139,7 @@ public class DynamicIndexCreator implements IndexCreator {
         stats.push(longestFeatureLength);
 
         // now feed the feature to each of our creators
-        for (IndexCreator creator : creators.values()) {
+        for (final IndexCreator creator : creators.values()) {
             creator.addFeature(f,filePosition);
         }
 
@@ -173,18 +167,18 @@ public class DynamicIndexCreator implements IndexCreator {
      * @param iba the index balancing approach
      * @return the best index available for the target indexes
      */
-    protected static LinkedHashMap<Double,IndexCreator> scoreIndexes(double densityOfFeatures, Map<IndexFactory.IndexType,IndexCreator> indexes, int longestFeature, IndexFactory.IndexBalanceApproach iba) {
+    protected static LinkedHashMap<Double,TribbleIndexCreator> scoreIndexes(final double densityOfFeatures, final Map<IndexFactory.IndexType,TribbleIndexCreator> indexes, final int longestFeature, final IndexFactory.IndexBalanceApproach iba) {
         if (indexes.size() < 1) throw new IllegalArgumentException("Please specify at least one index to evaluate");
 
-        LinkedHashMap<Double,IndexCreator> scores = new LinkedHashMap<Double,IndexCreator>();
+        final LinkedHashMap<Double,TribbleIndexCreator> scores = new LinkedHashMap<Double,TribbleIndexCreator>();
 
-        for (Map.Entry<IndexFactory.IndexType,IndexCreator> entry : indexes.entrySet()) {
+        for (final Map.Entry<IndexFactory.IndexType,TribbleIndexCreator> entry : indexes.entrySet()) {
             // we have different scoring
             if (entry.getValue() instanceof LinearIndexCreator) {
-                double binSize = entry.getValue().getBinSize();
+                final double binSize = ((LinearIndexCreator)(entry.getValue())).getBinSize();
                 scores.put(binSize * densityOfFeatures * Math.ceil((double) longestFeature / binSize), entry.getValue());
             } else if (entry.getValue() instanceof IntervalIndexCreator) {
-                scores.put((double) entry.getValue().getBinSize(), entry.getValue());
+                scores.put((double) ((IntervalIndexCreator)entry.getValue()).getFeaturesPerInterval(), entry.getValue());
             } else {
                 throw new TribbleException.UnableToCreateCorrectIndexType("Unknown index type, we don't have a scoring method for " + entry.getValue().getClass());
             }
@@ -197,12 +191,19 @@ public class DynamicIndexCreator implements IndexCreator {
      * @param scores the list of scaled features/bin scores for each index type
      * @return the best score <b>index value</b>
      */
-    private IndexCreator getMinIndex(Map<Double,IndexCreator> scores, IndexFactory.IndexBalanceApproach iba) {
-        TreeMap<Double,IndexCreator> map = new TreeMap<Double,IndexCreator>();
+    private TribbleIndexCreator getMinIndex(final Map<Double,TribbleIndexCreator> scores, final IndexFactory.IndexBalanceApproach iba) {
+        final TreeMap<Double,TribbleIndexCreator> map = new TreeMap<Double,TribbleIndexCreator>();
         map.putAll(scores);
         
         // if we are optimizing for seek time, choose the lowest score (adjusted features/bin value), if for storage size, choose the opposite
-        IndexCreator idx = (iba != IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME) ? map.get(map.lastKey()) : map.get(map.firstKey());
+        final TribbleIndexCreator idx = (iba != IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME) ? map.get(map.lastKey()) : map.get(map.firstKey());
         return idx;
+    }
+
+    @Override
+    public void addProperty(final String key, final String value) {
+        for (final TribbleIndexCreator creator : creators.values()) {
+            creator.addProperty(key, value);
+        }
     }
 }

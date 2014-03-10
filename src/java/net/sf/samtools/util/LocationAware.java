@@ -1,4 +1,4 @@
-package org.broad.tribble.readers;
+package net.sf.samtools.util;
 
 /**
  * Describes API for getting current position in a stream, writer, or underlying file.
@@ -9,7 +9,7 @@ package org.broad.tribble.readers;
  * 
  * In the context of an iterator or any producer-like object that doesn't map directly to a byte stream, {@link #getPosition()} should
  * return the position (in the underlying stream being read/written to) of the most-recently read/written element.  For example, if you
- * are reading lines from a file with a {@link AsciiLineReaderIterator}, calling {@link #getPosition()} should return the byte position 
+ * are reading lines from a file with a {@link org.broad.tribble.readers.AsciiLineReaderIterator}, calling {@link #getPosition()} should return the byte position
  * of the start of the most recent line returned by {@link org.broad.tribble.readers.AsciiLineReaderIterator#next()}.
  * 
  * @author mccowan
@@ -19,6 +19,8 @@ public interface LocationAware {
      * The current offset, in bytes, of this stream/writer/file.  Or, if this is an iterator/producer, the offset (in bytes) of the
      * END of the most recently returned record (since a produced record corresponds to something that has been read already). See class
      * javadoc for more.
+     *
+     * Note that for BGZF files, this does not represent an actually file position, but a virtual file pointer.
      */
     public long getPosition();
 }

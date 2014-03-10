@@ -28,14 +28,14 @@ package org.broad.tribble.index;
 */
 public class Block {
 
-    private long startPosition;
+    private final long startPosition;
     private long size;
 
     /**
      * @param startPosition  in bytes
      * @param size in bytes
      */
-    public Block(long startPosition, long size) {
+    public Block(final long startPosition, final long size) {
         this.startPosition = startPosition;
         this.size = size;
     }
@@ -56,7 +56,7 @@ public class Block {
      * Sets the size based on the provided {@code endPosition}
      * @param endPosition Where the block ends, in bytes
      */
-    public void setEndPosition(long endPosition) {
+    public void setEndPosition(final long endPosition) {
         if(endPosition < startPosition)
             throw new IllegalArgumentException("Attempting to set block end position to " +
                                                                            endPosition + " which is before the start of " + startPosition);
@@ -65,16 +65,18 @@ public class Block {
     }
 
     /**
-     * @return the # of bytes in this block
+     * @return the # of bytes in this block.  Note that for block-compressed files, this is not truly the
+     * size of the block in the file.  getEndPosition should be used to determine the virtual file offset
+     * of the end of the region of interest.
      */
     public long getSize() {
         return size;
     }
 
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if ( this == obj ) return true;
         if ( ! (obj instanceof Block) ) return false;
-        Block otherBlock = (Block)obj;
+        final Block otherBlock = (Block)obj;
         return this.startPosition == otherBlock.startPosition && this.size == otherBlock.size;
     }
 }

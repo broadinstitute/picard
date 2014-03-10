@@ -23,6 +23,8 @@
  */
 package net.sf.samtools;
 
+import java.util.Arrays;
+
 /**
  * The linear index associated with a given reference in a BAM index.
  *
@@ -31,7 +33,7 @@ package net.sf.samtools;
  */
 public class LinearIndex {
 
-    public static final int MAX_LINEAR_INDEX_SIZE = AbstractBAMFileIndex.MAX_LINEAR_INDEX_SIZE;
+    public static final int MAX_LINEAR_INDEX_SIZE = GenomicIndexUtil.MAX_LINEAR_INDEX_SIZE;
 
     public static final int BAM_LIDX_SHIFT = 14;
 
@@ -92,11 +94,33 @@ public class LinearIndex {
      * Direct access to the array.  Be careful!
      * @return The elements of the linear index.
      */
-    protected long[] getIndexEntries() {
+    public long[] getIndexEntries() {
         return mIndexEntries;
     }
 
-     protected int getIndexStart() {
+    public int getIndexStart() {
         return mIndexStart;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final LinearIndex that = (LinearIndex) o;
+
+        if (mIndexStart != that.mIndexStart) return false;
+        if (mReferenceSequence != that.mReferenceSequence) return false;
+        if (!Arrays.equals(mIndexEntries, that.mIndexEntries)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mReferenceSequence;
+        result = 31 * result + mIndexStart;
+        result = 31 * result + Arrays.hashCode(mIndexEntries);
+        return result;
     }
 }

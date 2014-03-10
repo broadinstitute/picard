@@ -19,11 +19,12 @@
 package org.broad.tribble.index.interval;
 
 import org.broad.tribble.Feature;
-import org.broad.tribble.index.interval.IntervalTreeIndex.ChrIndex;
 import org.broad.tribble.index.Block;
 import org.broad.tribble.index.Index;
-import org.broad.tribble.index.IndexCreator;
-import java.io.*;
+import org.broad.tribble.index.TribbleIndexCreator;
+import org.broad.tribble.index.interval.IntervalTreeIndex.ChrIndex;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -31,7 +32,7 @@ import java.util.LinkedList;
  * Creates interval indexes from a stream of features
  * @author jrobinso
  */
-public class IntervalIndexCreator implements IndexCreator {
+public class IntervalIndexCreator extends TribbleIndexCreator {
 
     public static int DEFAULT_FEATURE_COUNT = 600;
 
@@ -41,23 +42,27 @@ public class IntervalIndexCreator implements IndexCreator {
      */
     private int featuresPerInterval = DEFAULT_FEATURE_COUNT;
 
-    private LinkedList<ChrIndex> chrList = new LinkedList<ChrIndex>();
+    private final LinkedList<ChrIndex> chrList = new LinkedList<ChrIndex>();
 
     /**
      * Instance variable for the number of features we currently are storing in the interval
      */
     private int featureCount = 0;
 
-    private ArrayList<MutableInterval> intervals = new ArrayList<MutableInterval>();
+    private final ArrayList<MutableInterval> intervals = new ArrayList<MutableInterval>();
 
     File inputFile;
 
-    public void initialize(File inputFile, int binSize) {
+    public IntervalIndexCreator(final File inputFile, final int featuresPerInterval) {
         this.inputFile = inputFile;
-        this.featuresPerInterval = binSize;
+        this.featuresPerInterval = featuresPerInterval;
     }
 
-    public void addFeature(Feature feature, long filePosition) {
+    public IntervalIndexCreator(final File inputFile) {
+        this(inputFile, DEFAULT_FEATURE_COUNT);
+    }
+
+    public void addFeature(final Feature feature, final long filePosition) {
         // if we don't have a chrIndex yet, or if the last one was for the previous contig, create a new one
         if (chrList.size() == 0 || !chrList.getLast().getName().equals(feature.getChr())) {
             // if we're creating a new chrIndex (not the first), make sure to dump the intervals to the old chrIndex
@@ -71,7 +76,7 @@ public class IntervalIndexCreator implements IndexCreator {
 
         // if we're about to overflow the current bin, make a new one
         if (featureCount >= featuresPerInterval || intervals.size() == 0) {
-            MutableInterval i = new MutableInterval();
+            final MutableInterval i = new MutableInterval();
             i.setStart(feature.getStart());
             i.setStartFilePosition(filePosition);
             if( intervals.size() > 0) intervals.get(intervals.size()-1).setEndFilePosition(filePosition);
@@ -88,7 +93,7 @@ public class IntervalIndexCreator implements IndexCreator {
      * dump the intervals we have stored to the last chrList entry
      * @param currentPos the current position, for the last entry in the interval list
      */
-    private void addIntervalsToLastChr(long currentPos) {
+    private void addIntervalsToLastChr(final long currentPos) {
         for (int x = 0; x < intervals.size(); x++) {
             if (x == intervals.size()-1) intervals.get(x).setEndFilePosition(currentPos);
             chrList.getLast().insert(intervals.get(x).toInterval());
@@ -100,20 +105,17 @@ public class IntervalIndexCreator implements IndexCreator {
      * @param finalFilePosition the final file position, for indexes that have to close out with the final position
      * @return a Tree Index
      */
-    public Index finalizeIndex(long finalFilePosition) {
-        IntervalTreeIndex featureIndex = new IntervalTreeIndex(inputFile.getAbsolutePath());
+    public Index finalizeIndex(final long finalFilePosition) {
+        final IntervalTreeIndex featureIndex = new IntervalTreeIndex(inputFile.getAbsolutePath());
         // dump the remaining bins to the index
         addIntervalsToLastChr(finalFilePosition);
         featureIndex.setChrIndex(chrList);
+        featureIndex.addProperties(properties);
         featureIndex.finalizeIndex();
         return featureIndex;
     }
 
-    public int defaultBinSize() {
-        return DEFAULT_FEATURE_COUNT;
-    }
-
-    public int getBinSize() {
+    public int getFeaturesPerInterval() {
         return featuresPerInterval;
     }
 }
@@ -129,21 +131,21 @@ class MutableInterval {
     private long startFilePosition;
     private long endFilePosition;
 
-    public void setStart(int start) {
+    public void setStart(final int start) {
         if (start < 0) throw new IllegalArgumentException("Start must be greater than 0!");
         this.start = start;
     }
 
-    public void setStop(int stop) {
+    public void setStop(final int stop) {
         if (stop < 0) throw new IllegalArgumentException("Start must be greater than 0!");
         this.stop = stop;
     }
 
-    public void setStartFilePosition(long startFilePosition) {
+    public void setStartFilePosition(final long startFilePosition) {
         this.startFilePosition = startFilePosition;
     }
 
-    public void setEndFilePosition(long endFilePosition) {
+    public void setEndFilePosition(final long endFilePosition) {
         this.endFilePosition = endFilePosition;
     }
 

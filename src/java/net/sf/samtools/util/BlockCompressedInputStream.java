@@ -48,7 +48,7 @@ import net.sf.samtools.seekablestream.SeekableStream;
  *
  * c.f. http://samtools.sourceforge.net/SAM1.pdf for details of BGZF format
  */
-public class BlockCompressedInputStream extends InputStream {
+public class BlockCompressedInputStream extends InputStream implements LocationAware {
     private InputStream mStream = null;
     private SeekableStream mFile = null;
     private byte[] mFileBuffer = null;
@@ -320,6 +320,11 @@ public class BlockCompressedInputStream extends InputStream {
         return BlockCompressedFilePointerUtil.makeFilePointer(mBlockAddress, mCurrentOffset);
     }
 
+    @Override
+    public long getPosition() {
+        return getFilePointer();
+    }
+
     public static long getFileBlock(final long bgzfOffset) {
         return BlockCompressedFilePointerUtil.getBlockAddress(bgzfOffset);
     }
@@ -389,7 +394,7 @@ public class BlockCompressedInputStream extends InputStream {
         if (buffer == null || buffer.length != uncompressedLength) {
             try {
                 buffer = new byte[uncompressedLength];
-            } catch (NegativeArraySizeException e) {
+            } catch (final NegativeArraySizeException e) {
                 throw new RuntimeException("BGZF file has invalid uncompressedLength: " + uncompressedLength, e);
             }
         }

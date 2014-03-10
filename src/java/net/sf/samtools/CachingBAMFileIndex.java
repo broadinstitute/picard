@@ -56,6 +56,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
      * @param endPos 1-based end of the desired interval, inclusive
      * @return the virtual file position.  Each pair is the first and last virtual file position
      *         in a range that can be scanned to find SAMRecords that overlap the given positions.
+     *         May return null if there is no content overlapping the region.
      */
     public BAMFileSpan getSpanOverlapping(final int referenceIndex, final int startPos, final int endPos) {
         final BAMIndexContent queryResults = getQueryResults(referenceIndex);
@@ -63,30 +64,9 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
         if(queryResults == null)
             return null;
 
-        final BinList overlappingBins = getBinsOverlapping(referenceIndex,startPos,endPos);
+        final List<Chunk> chunkList = queryResults.getChunksOverlapping(startPos, endPos);
+        if (chunkList == null) return null;
 
-        // System.out.println("# Sequence target TID: " + referenceIndex);
-        final List<Bin> bins = new ArrayList<Bin>();
-        for(final Bin bin: queryResults.getBins()) {
-            if (overlappingBins.getBins().get(bin.getBinNumber()))
-                bins.add(bin);
-        }
-
-        if (bins.isEmpty()) {
-            return null;
-        }
-
-        List<Chunk> chunkList = new ArrayList<Chunk>();
-        for(final Bin bin: bins) {
-            for(final Chunk chunk: bin.getChunkList())
-                chunkList.add(chunk.clone());
-        }
-
-        if (chunkList.isEmpty()) {
-            return null;
-        }
-
-        chunkList = Chunk.optimizeChunkList(chunkList,queryResults.getLinearIndex().getMinimumOffset(startPos));
         return new BAMFileSpan(chunkList);
     }
 
@@ -98,7 +78,7 @@ class CachingBAMFileIndex extends AbstractBAMFileIndex implements BrowseableBAMI
      * @return a list of bins that contain relevant data.
      */
     public BinList getBinsOverlapping(final int referenceIndex, final int startPos, final int endPos) {
-        final BitSet regionBins = regionToBins(startPos,endPos);
+        final BitSet regionBins = GenomicIndexUtil.regionToBins(startPos, endPos);
         if (regionBins == null) {
             return null;
         }

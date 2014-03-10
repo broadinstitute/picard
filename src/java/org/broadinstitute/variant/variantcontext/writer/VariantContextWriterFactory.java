@@ -29,6 +29,8 @@ import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import org.broad.tribble.index.IndexCreator;
+import org.broad.tribble.index.tabix.TabixFormat;
+import org.broad.tribble.index.tabix.TabixIndexCreator;
 
 import java.io.*;
 import java.util.EnumSet;
@@ -142,8 +144,14 @@ public class VariantContextWriterFactory {
                                                                 final OutputStream output,
                                                                 final SAMSequenceDictionary refDict,
                                                                 final EnumSet<Options> options) {
-        return maybeWrapWithAsyncWriter(new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options),
-                refDict,
+        final TabixIndexCreator indexCreator;
+        if (options.contains(Options.INDEX_ON_THE_FLY)) {
+            indexCreator = new TabixIndexCreator(refDict, TabixFormat.VCF);
+        } else {
+            indexCreator = null;
+        }
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, BlockCompressedOutputStream.maybeBgzfWrapOutputStream(location, output),
+                refDict, indexCreator,
                 options.contains(Options.INDEX_ON_THE_FLY),
                 options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                 options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)), options);
@@ -159,7 +167,7 @@ public class VariantContextWriterFactory {
                                                                 final SAMSequenceDictionary refDict,
                                                                 final IndexCreator indexCreator,
                                                                 final EnumSet<Options> options) {
-        return maybeWrapWithAsyncWriter(new VCFWriter(location, maybeBgzfWrapOutputStream(location, output, options),
+        return maybeWrapWithAsyncWriter(new VCFWriter(location, BlockCompressedOutputStream.maybeBgzfWrapOutputStream(location, output),
                 refDict, indexCreator,
                 options.contains(Options.INDEX_ON_THE_FLY),
                 options.contains(Options.DO_NOT_WRITE_GENOTYPES),
@@ -193,17 +201,6 @@ public class VariantContextWriterFactory {
         } else {
             return createVcf(location, output, refDict, indexCreator, options);
         }
-    }
-
-    private static OutputStream maybeBgzfWrapOutputStream(final File location, OutputStream output,
-                                                          final EnumSet<Options> options) {
-        if (options.contains(Options.INDEX_ON_THE_FLY)) {
-            throw new IllegalArgumentException("VCF index creation not supported for block-compressed output format.");
-        }
-        if (!(output instanceof BlockCompressedOutputStream)) {
-                output = new BlockCompressedOutputStream(output, location);
-        }
-        return output;
     }
 
     private static VariantContextWriter maybeWrapWithAsyncWriter(final VariantContextWriter writer,

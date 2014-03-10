@@ -30,31 +30,18 @@ import net.sf.samtools.util.TestUtil;
 import org.broad.tribble.AbstractFeatureReader;
 import org.broad.tribble.FeatureReader;
 import org.broad.tribble.Tribble;
+import org.broad.tribble.util.TabixUtils;
 import org.broadinstitute.variant.VariantBaseTest;
-import org.broadinstitute.variant.variantcontext.Allele;
-import org.broadinstitute.variant.variantcontext.Genotype;
-import org.broadinstitute.variant.variantcontext.GenotypeBuilder;
-import org.broadinstitute.variant.variantcontext.GenotypesContext;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
-import org.broadinstitute.variant.vcf.VCFCodec;
-import org.broadinstitute.variant.vcf.VCFHeader;
-import org.broadinstitute.variant.vcf.VCFHeaderLine;
-import org.broadinstitute.variant.vcf.VCFHeaderVersion;
+import org.broadinstitute.variant.variantcontext.*;
+import org.broadinstitute.variant.vcf.*;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -69,40 +56,39 @@ public class VCFWriterUnitTest extends VariantBaseTest {
     private Set<String> additionalColumns;
 
     /** test, using the writer and reader, that we can output and input a VCF file without problems */
-    @Test
-    public void testBasicWriteAndRead() throws IOException {
-        File fakeVCFFile = File.createTempFile("testBasicWriteAndRead.", ".vcf");
+    @Test(dataProvider = "vcfExtensionsDataProvider")
+    public void testBasicWriteAndRead(final String extension) throws IOException {
+        final File fakeVCFFile = File.createTempFile("testBasicWriteAndRead.", extension);
         fakeVCFFile.deleteOnExit();
+        Tribble.indexFile(fakeVCFFile).deleteOnExit();
         metaData = new HashSet<VCFHeaderLine>();
         additionalColumns = new HashSet<String>();
-        VCFHeader header = createFakeHeader(metaData,additionalColumns);
-        final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
-        VariantContextWriter writer = VariantContextWriterFactory.create(fakeVCFFile, createArtificialSequenceDictionary(), options);
+        final SAMSequenceDictionary sequenceDict = createArtificialSequenceDictionary();
+        final VCFHeader header = createFakeHeader(metaData, additionalColumns, sequenceDict);
+        final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER, Options.INDEX_ON_THE_FLY);
+        final VariantContextWriter writer = VariantContextWriterFactory.create(fakeVCFFile, sequenceDict, options);
         writer.writeHeader(header);
         writer.add(createVC(header));
         writer.add(createVC(header));
         writer.close();
-        VCFCodec codec = new VCFCodec();
-        VCFHeader headerFromFile = null;
-        FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(fakeVCFFile.getAbsolutePath(), codec, false);
-        headerFromFile = (VCFHeader)reader.getHeader();
+        final VCFCodec codec = new VCFCodec();
+        final FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(fakeVCFFile.getAbsolutePath(), codec, false);
+        final VCFHeader headerFromFile = (VCFHeader)reader.getHeader();
 
         int counter = 0;
 
         // validate what we're reading in
-        validateHeader(headerFromFile);
+        validateHeader(headerFromFile, sequenceDict);
         
         try {
-            Iterator<VariantContext> it = reader.iterator();
+            final Iterator<VariantContext> it = reader.iterator();
             while(it.hasNext()) {
-                VariantContext vc = it.next();
+                it.next();
                 counter++;
             }
             Assert.assertEquals(counter, 2);
-            Tribble.indexFile(fakeVCFFile).delete();
-            fakeVCFFile.delete();
         }
-        catch (IOException e ) {
+        catch (final IOException e ) {
             throw new RuntimeException(e.getMessage());
         }
 
@@ -114,12 +100,15 @@ public class VCFWriterUnitTest extends VariantBaseTest {
      * @param additionalColumns  the additional column names
      * @return a fake VCF header
      */
-    public static VCFHeader createFakeHeader(Set<VCFHeaderLine> metaData, Set<String> additionalColumns) {
+    public static VCFHeader createFakeHeader(final Set<VCFHeaderLine> metaData, final Set<String> additionalColumns,
+                                             final SAMSequenceDictionary sequenceDict) {
         metaData.add(new VCFHeaderLine(VCFHeaderVersion.VCF4_0.getFormatString(), VCFHeaderVersion.VCF4_0.getVersionString()));
         metaData.add(new VCFHeaderLine("two", "2"));
         additionalColumns.add("extra1");
         additionalColumns.add("extra2");
-        return new VCFHeader(metaData, additionalColumns);
+        final VCFHeader ret = new VCFHeader(metaData, additionalColumns);
+        ret.setSequenceDictionary(sequenceDict);
+        return ret;
     }
 
     /**
@@ -127,23 +116,22 @@ public class VCFWriterUnitTest extends VariantBaseTest {
      * @param header the VCF header
      * @return a VCFRecord
      */
-    private VariantContext createVC(VCFHeader header) {
+    private VariantContext createVC(final VCFHeader header) {
 
-       return createVCGeneral(header,"chr1",1);
+       return createVCGeneral(header,"1",1);
     }
 
-    private VariantContext createVCGeneral(VCFHeader header,String chrom, int position) {
-        List<Allele> alleles = new ArrayList<Allele>();
-        Set<String> filters = null;
-        Map<String, Object> attributes = new HashMap<String,Object>();
-        GenotypesContext genotypes = GenotypesContext.create(header.getGenotypeSamples().size());
+    private VariantContext createVCGeneral(final VCFHeader header, final String chrom, final int position) {
+        final List<Allele> alleles = new ArrayList<Allele>();
+        final Map<String, Object> attributes = new HashMap<String,Object>();
+        final GenotypesContext genotypes = GenotypesContext.create(header.getGenotypeSamples().size());
 
         alleles.add(Allele.create("A",true));
         alleles.add(Allele.create("ACC",false));
 
         attributes.put("DP","50");
-        for (String name : header.getGenotypeSamples()) {
-            Genotype gt = new GenotypeBuilder(name,alleles.subList(1,2)).GQ(0).attribute("BB", "1").phased(true).make();
+        for (final String name : header.getGenotypeSamples()) {
+            final Genotype gt = new GenotypeBuilder(name,alleles.subList(1,2)).GQ(0).attribute("BB", "1").phased(true).make();
             genotypes.add(gt);
         }
         return new VariantContextBuilder("RANDOM", chrom, position, position, alleles)
@@ -155,42 +143,48 @@ public class VCFWriterUnitTest extends VariantBaseTest {
      * validate a VCF header
      * @param header the header to validate
      */
-    public void validateHeader(VCFHeader header) {
+    public void validateHeader(final VCFHeader header, final SAMSequenceDictionary sequenceDictionary) {
         // check the fields
         int index = 0;
-        for (VCFHeader.HEADER_FIELDS field : header.getHeaderFields()) {
+        for (final VCFHeader.HEADER_FIELDS field : header.getHeaderFields()) {
             Assert.assertEquals(VCFHeader.HEADER_FIELDS.values()[index], field);
             index++;
         }
-        Assert.assertEquals(header.getMetaDataInSortedOrder().size(), metaData.size());
+        Assert.assertEquals(header.getMetaDataInSortedOrder().size(), metaData.size() + sequenceDictionary.size());
         index = 0;
-        for (String key : header.getGenotypeSamples()) {
+        for (final String key : header.getGenotypeSamples()) {
             Assert.assertTrue(additionalColumns.contains(key));
             index++;
         }
         Assert.assertEquals(index, additionalColumns.size());
     }
 
-    @Test(enabled=true)
-    public void TestWritingLargeVCF() throws FileNotFoundException, InterruptedException {
+    @Test(dataProvider = "vcfExtensionsDataProvider")
+    public void TestWritingLargeVCF(final String extension) throws FileNotFoundException, InterruptedException {
 
-        Set<VCFHeaderLine> metaData = new HashSet<VCFHeaderLine>();
+        final Set<VCFHeaderLine> metaData = new HashSet<VCFHeaderLine>();
         final Set<String> Columns = new HashSet<String>();
         for (int i = 0; i < 123; i++) {
 
             Columns.add(String.format("SAMPLE_%d", i));
         }
 
-        final VCFHeader header = createFakeHeader(metaData,Columns);
+        final SAMSequenceDictionary dict = createArtificialSequenceDictionary();
+        final VCFHeader header = createFakeHeader(metaData,Columns, dict);
         final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER,Options.INDEX_ON_THE_FLY);
 
         final File tempDir = TestUtil.getTempDirectory("VCFWriter", "StaleIndex");
 
         tempDir.deleteOnExit();
 
-        final File vcf = new File(tempDir, "test.vcf");
-        final File vcfIndex = new File(tempDir, "test.vcf.idx");
-        final SAMSequenceDictionary dict=createArtificialSequenceDictionary();
+        final File vcf = new File(tempDir, "test" + extension);
+        final String indexExtension;
+        if (extension.equals(".vcf.gz")) {
+            indexExtension = TabixUtils.STANDARD_INDEX_EXTENSION;
+        } else {
+            indexExtension = ".idx";
+        }
+        final File vcfIndex = new File(vcf.getAbsolutePath() + indexExtension);
 
         for(int count=1;count<2; count++){
             final VariantContextWriter writer = VariantContextWriterFactory.create(vcf, dict, options);
@@ -198,13 +192,23 @@ public class VCFWriterUnitTest extends VariantBaseTest {
 
             for (int i = 1; i < 17 ; i++) { // write 17 chromosomes
                 for (int j = 1; j < 10; j++) { //10 records each
-                    writer.add(createVCGeneral(header, String.format("chr%d", i), j * 100));
+                    writer.add(createVCGeneral(header, String.format("%d", i), j * 100));
                 }
             }
             writer.close();
 
             Assert.assertTrue(vcf.lastModified() <= vcfIndex.lastModified());
         }
+    }
+
+    @DataProvider(name = "vcfExtensionsDataProvider")
+    public Object[][]vcfExtensionsDataProvider() {
+        return new Object[][] {
+                // TODO: BCF doesn't work because header is not properly constructed.
+                // {".bcf"},
+                {".vcf"},
+                {".vcf.gz"}
+        };
     }
 }
 

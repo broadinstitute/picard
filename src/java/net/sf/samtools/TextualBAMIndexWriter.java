@@ -52,7 +52,7 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
         this.nRef = nRef;
         try {
             pw = new PrintWriter(output);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             throw new SAMException("Can't find output file " + output, e);
         }
         writeHeader();
@@ -93,13 +93,13 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
 
         //final List<Chunk> chunks = content.getMetaData() == null ? null
         //        : content.getMetaData().getMetaDataChunks();
-        BAMIndexMetaData metaData = content.getMetaData();
+        final BAMIndexMetaData metaData = content.getMetaData();
 
         pw.println("Reference " + reference + " has n_bin= " + Integer.toString(size + (metaData != null? 1 : 0)));
 
         // chunks
-        for (Bin bin : bins) {   // note, bins will always be sorted
-            if (bin.getBinNumber() == AbstractBAMFileIndex.MAX_BINS)  break;
+        for (final Bin bin : bins) {   // note, bins will always be sorted
+            if (bin.getBinNumber() == GenomicIndexUtil.MAX_BINS)  break;
             if (bin.getChunkList() == null) {
                 pw.println("  Ref " + reference + " bin " + bin.getBinNumber() + " has no binArray");  // remove?
                 continue;
@@ -146,7 +146,7 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
      *
      * @param metaData information describing numAligned records, numUnAligned, etc
      */
-    private void writeChunkMetaData(int reference, BAMIndexMetaData metaData) {
+    private void writeChunkMetaData(final int reference, final BAMIndexMetaData metaData) {
         final int nChunks = metaData == null ? 0 : 2;
         pw.print("  Ref " + reference + " bin 37450 has n_chunk= " + nChunks);
         if (nChunks == 0) {
@@ -162,7 +162,7 @@ class TextualBAMIndexWriter implements BAMIndexWriter {
 
     }
        
-    private void writeNullContent(int reference) {
+    private void writeNullContent(final int reference) {
         pw.println("Reference " + reference + " has n_bin=0");
         pw.println("Reference " + reference + " has n_intv=0");
     }

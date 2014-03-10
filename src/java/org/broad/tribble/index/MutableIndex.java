@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013 The Broad Institute
+ * Copyright (c) 2014 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,14 @@
  */
 package org.broad.tribble.index;
 
-import org.broad.tribble.Feature;
+import java.util.Map;
 
 /**
- *
- * An interface for creating indexes
- *
- * @author jrobinso
- */                                                                           
-public interface IndexCreator {
-    /**
-     * Add a feature to the index
-     * @param feature the feature, of which start, end, and contig must be filled in
-     * @param filePosition the current file position, at the beginning of the specified feature
-     */
-    public void addFeature(Feature feature, long filePosition);
+ * Some Index implementations can be modified in memory.  Also, properties do not make sense for all index types.
+ * Only the relevant index implementations implement this interface.
+ */
+public interface MutableIndex extends Index {
+    void addProperty(String key, String value);
 
-    /**
-     * Create the index, given the stream of features passed in to this point
-     * @param finalFilePosition the final file position, for indexes that have to close out with the final position
-     * @return an index object
-     */
-    public Index finalizeIndex(long finalFilePosition);
+    void addProperties(Map<String, String> properties);
 }
-
-

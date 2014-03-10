@@ -23,11 +23,10 @@
  */
 package org.broad.tribble.index;
 
-import org.broad.tribble.util.LittleEndianInputStream;
 import org.broad.tribble.util.LittleEndianOutputStream;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +37,7 @@ import java.util.Map;
  */
 public interface Index {
     /**
-     * 
+     * Query the index.
      * @param chr the chromosome
      * @param start the start position
      * @param end the end position
@@ -53,10 +52,9 @@ public interface Index {
     public boolean isCurrentVersion();
 
     /**
-     * get a list of the sequence names we've seen during indexing, in order
-     * @return a LinkedHashSet, which guarantees the ordering
+     * @return a list of the sequence names we've seen during indexing, in order
      */
-    LinkedHashSet<String> getSequenceNames();
+    List<String> getSequenceNames();
 
     /**
      * @param chr the chromosome (or contig) name
@@ -65,35 +63,21 @@ public interface Index {
     public boolean containsChromosome(final String chr);
 
     /**
-     * read in the index
-     * @param stream an input stream to read from
-     * @throws IOException if we have problems reading the index from the stream
-     */
-    public void read(LittleEndianInputStream stream)  throws IOException;
-
-    /**
      * all indexes are writable to disk
-     * @param stream the stream to write the index to
+     * @param stream the stream to write the index to.  Caller must close after invocation.
      * @throws IOException if the index is unable to write to the specified location
      */
     public void write(LittleEndianOutputStream stream) throws IOException;
 
     /**
-     * this method allows properties to added to the index; warning: if you don't write out the index
-     * to disk you'll lose these changes.
-     * @param key the key
-     * @param value the value, stored as a string, though it may represent an different underlying type
+     * Write an appropriately named and located Index file based on the name and location of the featureFile.
+     * If featureFile is not a normal file, the index will silently not be written.
+     * @param featureFile
      */
-    public void addProperty(String key, String value);
+    public void writeBasedOnFeatureFile(File featureFile) throws IOException;
 
     /**
-     * To be called after the index has been created and is ready to be used.  Filling in final metadata or
-     * otherwise optimizes the index given that no more records will be added
-     */
-    public void finalizeIndex();
-
-    /**
-     * @return get the list of properties for this index
+     * @return get the list of properties for this index.  Returns null if no properties.
      */
     public Map<String,String> getProperties();
 

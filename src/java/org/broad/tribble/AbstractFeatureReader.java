@@ -20,6 +20,7 @@ package org.broad.tribble;
 
 import org.broad.tribble.index.Index;
 import org.broad.tribble.util.ParsingUtils;
+import org.broad.tribble.util.TabixUtils;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -145,7 +146,7 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
 
         public boolean isTabix(String resourcePath, String indexPath) throws IOException{
             if(indexPath == null){
-                indexPath = ParsingUtils.appendToPath(resourcePath, ".tbi");
+                indexPath = ParsingUtils.appendToPath(resourcePath, TabixUtils.STANDARD_INDEX_EXTENSION);
             }
             return resourcePath.endsWith(".gz") && ParsingUtils.resourceExists(indexPath);
         }

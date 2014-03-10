@@ -18,13 +18,14 @@
 
 package org.broad.tribble.index.interval;
 
+import org.broad.tribble.TribbleException;
 import org.broad.tribble.index.AbstractIndex;
 import org.broad.tribble.index.Block;
-import org.broad.tribble.index.IndexFactory;
 import org.broad.tribble.util.LittleEndianInputStream;
 import org.broad.tribble.util.LittleEndianOutputStream;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -37,19 +38,24 @@ import java.util.List;
  * @date Jul 9, 2010
  */
 public class IntervalTreeIndex extends AbstractIndex {
+    public static final int INDEX_TYPE = IndexType.INTERVAL_TREE.fileHeaderTypeIdentifier;
 
     /**
-     * Default constructor -- used by factory methods.  Do not remove.
+     * Load from file.
+     * @param inputStream This method assumes that the input stream is already buffered as appropriate.  Caller
+     *                    should close after this object is constructed.
      */
-    public IntervalTreeIndex() {
-
+    public IntervalTreeIndex(final InputStream inputStream) throws IOException {
+        final LittleEndianInputStream dis = new LittleEndianInputStream(inputStream);
+        validateIndexHeader(INDEX_TYPE, dis);
+        read(dis);
     }
 
     /**
-     *
+     * Prepare to build an index.
      * @param featureFile File which we are indexing
      */
-    public IntervalTreeIndex(String featureFile) {
+    public IntervalTreeIndex(final String featureFile) {
         super(featureFile);
     }
 
@@ -60,7 +66,7 @@ public class IntervalTreeIndex extends AbstractIndex {
 
     @Override
     protected int getType() {
-        return IndexFactory.IndexType.INTERVAL_TREE.getHeaderValue();
+        return INDEX_TYPE;
     }
 
     /**
@@ -68,7 +74,7 @@ public class IntervalTreeIndex extends AbstractIndex {
      * @param chr  Chromosome
      * @param interval
      */
-    public void insert(String chr, Interval interval) {
+    public void insert(final String chr, final Interval interval) {
         ChrIndex chrIdx = (ChrIndex) chrIndices.get(chr);
         if (chrIdx == null) {
             chrIdx = new ChrIndex(chr);
@@ -77,17 +83,17 @@ public class IntervalTreeIndex extends AbstractIndex {
         chrIdx.insert(interval);
     }
 
-    protected void setChrIndex(List<ChrIndex> indicies) {
-        for (ChrIndex index : indicies) {
+    protected void setChrIndex(final List<ChrIndex> indicies) {
+        for (final ChrIndex index : indicies) {
             chrIndices.put(index.getName(), index);
         }
     }
 
     public void printTree() {
 
-        for (String chr : chrIndices.keySet()) {
+        for (final String chr : chrIndices.keySet()) {
             System.out.println(chr + ":");
-            ChrIndex chrIdx = (ChrIndex) chrIndices.get(chr);
+            final ChrIndex chrIdx = (ChrIndex) chrIndices.get(chr);
             chrIdx.printTree();
             System.out.println();
         }
@@ -105,7 +111,7 @@ public class IntervalTreeIndex extends AbstractIndex {
 
         }
 
-        public ChrIndex(String name) {
+        public ChrIndex(final String name) {
             this.name = name;
             tree = new IntervalTree();
         }
@@ -114,7 +120,7 @@ public class IntervalTreeIndex extends AbstractIndex {
             return name;
         }
 
-        public void insert(Interval iv) {
+        public void insert(final Interval iv) {
             tree.insert(iv);
         }
 
@@ -123,34 +129,34 @@ public class IntervalTreeIndex extends AbstractIndex {
         }
 
 
-        public List<Block> getBlocks(int start, int end) {
+        public List<Block> getBlocks(final int start, final int end) {
 
             // Get intervals and build blocks list
-            List<Interval> intervals = tree.findOverlapping(new Interval(start, end));
+            final List<Interval> intervals = tree.findOverlapping(new Interval(start, end));
 
             // save time (and save throwing an exception) if the blocks are empty, return now
             if (intervals == null || intervals.size() == 0) return new ArrayList<Block>();
 
-            Block[] blocks = new Block[intervals.size()];
+            final Block[] blocks = new Block[intervals.size()];
             int idx = 0;
-            for (Interval iv : intervals) {
+            for (final Interval iv : intervals) {
                 blocks[idx++] = iv.getBlock();
             }
 
             // Sort blocks by start position
             Arrays.sort(blocks, new Comparator<Block>() {
-                public int compare(Block b1, Block b2) {
+                public int compare(final Block b1, final Block b2) {
                     // this is a little cryptic because the normal method (b1.getStartPosition() - b2.getStartPosition()) wraps in int space and we incorrectly sort the blocks in extreme cases
                     return b1.getStartPosition() - b2.getStartPosition() < 1 ? -1 : (b1.getStartPosition() - b2.getStartPosition() > 1 ? 1 : 0);
                 }
             });
 
             // Consolidate blocks  that are close together
-            List<Block> consolidatedBlocks = new ArrayList(blocks.length);
+            final List<Block> consolidatedBlocks = new ArrayList(blocks.length);
             Block lastBlock = blocks[0];
             consolidatedBlocks.add(lastBlock);
             for (int i = 1; i < blocks.length; i++) {
-                Block block = blocks[i];
+                final Block block = blocks[i];
                 if (block.getStartPosition() < (lastBlock.getEndPosition() + 1000)) {
                     lastBlock.setEndPosition(block.getEndPosition());
                 } else {
@@ -166,13 +172,13 @@ public class IntervalTreeIndex extends AbstractIndex {
             System.out.println(tree.toString());
         }
 
-        public void write(LittleEndianOutputStream dos) throws IOException {
+        public void write(final LittleEndianOutputStream dos) throws IOException {
 
             dos.writeString(name);
-            List<Interval> intervals = tree.getIntervals();
+            final List<Interval> intervals = tree.getIntervals();
 
             dos.writeInt(intervals.size());
-            for (Interval interval : intervals) {
+            for (final Interval interval : intervals) {
                 dos.writeInt(interval.start);
                 dos.writeInt(interval.end);
                 dos.writeLong(interval.getBlock().getStartPosition());
@@ -181,7 +187,7 @@ public class IntervalTreeIndex extends AbstractIndex {
 
         }
 
-        public void read(LittleEndianInputStream dis) throws IOException {
+        public void read(final LittleEndianInputStream dis) throws IOException {
 
             tree = new IntervalTree();
 
@@ -189,12 +195,12 @@ public class IntervalTreeIndex extends AbstractIndex {
             int nIntervals = dis.readInt();
             while (nIntervals-- > 0) {
 
-                int start = dis.readInt();
-                int end = dis.readInt();
-                long pos = dis.readLong();
-                int size = dis.readInt();
+                final int start = dis.readInt();
+                final int end = dis.readInt();
+                final long pos = dis.readLong();
+                final int size = dis.readInt();
 
-                Interval iv = new Interval(start, end, new Block(pos, size));
+                final Interval iv = new Interval(start, end, new Block(pos, size));
                 tree.insert(iv);
             }
 

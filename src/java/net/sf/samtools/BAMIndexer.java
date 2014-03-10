@@ -23,13 +23,8 @@
  */
 package net.sf.samtools;
 
-import net.sf.samtools.util.BlockCompressedFilePointerUtil;
-
-import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-
-import static net.sf.samtools.AbstractBAMFileIndex.MAX_BINS;
+import java.io.File;
+import java.io.OutputStream;
 
 /**
  * Class for both constructing BAM index content and writing it out.
@@ -56,10 +51,10 @@ public class BAMIndexer {
      * @param output     binary BAM Index (.bai) file
      * @param fileHeader header for the corresponding bam file
      */
-    public BAMIndexer(final File output, SAMFileHeader fileHeader) {
+    public BAMIndexer(final File output, final SAMFileHeader fileHeader) {
 
         numReferences = fileHeader.getSequenceDictionary().size();
-        indexBuilder = new BAMIndexBuilder(fileHeader);
+        indexBuilder = new BAMIndexBuilder(fileHeader.getSequenceDictionary());
         outputWriter = new BinaryBAMIndexWriter(numReferences, output);
     }
 
@@ -68,10 +63,10 @@ public class BAMIndexer {
      * @param output Index will be written here.  output will be closed when finish() method is called.
      * @param fileHeader header for the corresponding bam file.
      */
-    public BAMIndexer(final OutputStream output, SAMFileHeader fileHeader) {
+    public BAMIndexer(final OutputStream output, final SAMFileHeader fileHeader) {
 
         numReferences = fileHeader.getSequenceDictionary().size();
-        indexBuilder = new BAMIndexBuilder(fileHeader);
+        indexBuilder = new BAMIndexBuilder(fileHeader.getSequenceDictionary());
         outputWriter = new BinaryBAMIndexWriter(numReferences, output);
     }
 
@@ -90,7 +85,7 @@ public class BAMIndexer {
                 advanceToReference(reference);
             }
             indexBuilder.processAlignment(rec);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new SAMException("Exception creating BAM index for record " + rec, e);
         }
     }
@@ -107,12 +102,14 @@ public class BAMIndexer {
     }
 
     /** write out any references between the currentReference and the nextReference */
-    private void advanceToReference(int nextReference) {
+    private void advanceToReference(final int nextReference) {
         while (currentReference < nextReference) {
-            BAMIndexContent content = indexBuilder.processReference(currentReference);
+            final BAMIndexContent content = indexBuilder.processReference(currentReference);
             outputWriter.writeReference(content);
             currentReference++;
-            indexBuilder.startNewReference();
+            if (currentReference < numReferences) {
+                indexBuilder.startNewReference();
+            }
         }
     }
 
@@ -144,7 +141,7 @@ public class BAMIndexer {
             outputWriter.writeNoCoordinateRecordCount(existingIndex.getNoCoordinateCount());
             outputWriter.close();
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new SAMException("Exception creating BAM index", e);
         }
     }
@@ -157,24 +154,18 @@ public class BAMIndexer {
      */
     private class BAMIndexBuilder {
 
-        private final SAMFileHeader bamHeader;
+        private final SAMSequenceDictionary sequenceDictionary;
 
-        // the bins for the current reference
-        private Bin[] bins; // made only as big as needed for each reference
-        private int binsSeen = 0;
+        private BinningIndexBuilder binningIndexBuilder;
 
-        // linear index for the current reference
-        private final long[] index = new long[LinearIndex.MAX_LINEAR_INDEX_SIZE];
-        private int largestIndexSeen = -1;
+        private int currentReference = -1;
 
         // information in meta data
-        private BAMIndexMetaData indexStats = new BAMIndexMetaData();
+        private final BAMIndexMetaData indexStats = new BAMIndexMetaData();
 
-        /**
-         * @param header SAMFileheader used for reference name (in index stats) and for max bin number
-         */
-        BAMIndexBuilder(SAMFileHeader header) {
-            this.bamHeader = header;
+        BAMIndexBuilder(final SAMSequenceDictionary sequenceDictionary) {
+            this.sequenceDictionary = sequenceDictionary;
+            if (!sequenceDictionary.isEmpty()) startNewReference();
         }
 
         /**
@@ -187,8 +178,7 @@ public class BAMIndexer {
             // metadata
             indexStats.recordMetaData(rec);
 
-            final int alignmentStart = rec.getAlignmentStart();
-            if (alignmentStart == SAMRecord.NO_ALIGNMENT_START) {
+            if (rec.getAlignmentStart() == SAMRecord.NO_ALIGNMENT_START) {
                 return; // do nothing for records without coordinates, but count them
             }
 
@@ -199,121 +189,52 @@ public class BAMIndexer {
                         " when constructing index for " + currentReference + " for record " + rec);
             }
 
-            // process bins
-
-            final Integer binNumber = rec.getIndexingBin();
-            final int binNum = binNumber == null ? rec.computeIndexingBin() : binNumber;
-
-            // has the bins array been allocated? If not, do so
-            if (bins == null) {
-                final SAMSequenceRecord seq = bamHeader.getSequence(reference);
-                if (seq == null) {
-                    bins = new Bin[MAX_BINS + 1];
-                } else {
-                    bins = new Bin[AbstractBAMFileIndex.getMaxBinNumberForSequenceLength(seq.getSequenceLength()) + 1];
+            binningIndexBuilder.processFeature(new BinningIndexBuilder.FeatureToBeIndexed() {
+                @Override
+                public int getStart() {
+                    return rec.getAlignmentStart();
                 }
-            }
 
-            // is there a bin already represented for this index?  if not, add one
-            final Bin bin;
-            if (bins[binNum] != null) {
-                bin = bins[binNum];
-            } else {
-                bin = new Bin(reference, binNum);
-                bins[binNum] = bin;
-                binsSeen++;
-            }
-
-            // process chunks
-
-            final SAMFileSource source = rec.getFileSource();
-            if (source == null) {
-                throw new SAMException("No source (virtual file offsets); needed for indexing on BAM Record " + rec);
-            }
-            final Chunk newChunk = ((BAMFileSpan) source.getFilePointer()).getSingleChunk();
-            final long chunkStart = newChunk.getChunkStart();
-            final long chunkEnd = newChunk.getChunkEnd();
-
-            final List<Chunk> oldChunks = bin.getChunkList();
-            if (!bin.containsChunks()) {
-                bin.addInitialChunk(newChunk);
-
-            } else {
-                final Chunk lastChunk = bin.getLastChunk();
-
-                // Coalesce chunks that are in the same or adjacent file blocks.
-                // Similar to AbstractBAMFileIndex.optimizeChunkList,
-                // but no need to copy the list, no minimumOffset, and maintain bin.lastChunk
-                if (BlockCompressedFilePointerUtil.areInSameOrAdjacentBlocks(lastChunk.getChunkEnd(),chunkStart)) {
-                    lastChunk.setChunkEnd(chunkEnd);  // coalesced
-                } else {
-                    oldChunks.add(newChunk);
-                    bin.setLastChunk(newChunk);
+                @Override
+                public int getEnd() {
+                    return rec.getAlignmentEnd();
                 }
-            }
 
-            // process linear index
+                @Override
+                public Integer getIndexingBin() {
+                    final Integer binNumber = rec.getIndexingBin();
+                    return (binNumber == null ? rec.computeIndexingBin() : binNumber);
 
-            // the smallest file offset that appears in the 16k window for this bin
-            final int alignmentEnd = rec.getAlignmentEnd();
-            int startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart); // the 16k window
-            final int endWindow;
-
-            if (alignmentEnd == SAMRecord.NO_ALIGNMENT_START) {   // assume alignment uses one position
-                // Next line for C (samtools index) compatibility. Differs only when on a window boundary
-                startWindow = LinearIndex.convertToLinearIndexOffset(alignmentStart - 1);
-                endWindow = startWindow;
-            } else {
-                endWindow = LinearIndex.convertToLinearIndexOffset(alignmentEnd);
-            }
-
-            if (endWindow > largestIndexSeen) {
-                largestIndexSeen = endWindow;
-            }
-
-            // set linear index at every 16K window that this alignment overlaps
-            for (int win = startWindow; win <= endWindow; win++) {
-                if (index[win] == 0 || chunkStart < index[win]) {
-                    index[win] = chunkStart;
                 }
-            }
+
+                @Override
+                public Chunk getChunk() {
+                    final SAMFileSource source = rec.getFileSource();
+                    if (source == null) {
+                        throw new SAMException("No source (virtual file offsets); needed for indexing on BAM Record " + rec);
+                    }
+                    return ((BAMFileSpan) source.getFilePointer()).getSingleChunk();
+                }
+            });
+
         }
 
         /**
          * Creates the BAMIndexContent for this reference.
          * Requires all alignments of the reference have already been processed.
+         * @return Null if there are no features for this reference.
          */
-        public BAMIndexContent processReference(int reference) {
+        public BAMIndexContent processReference(final int reference) {
 
             if (reference != currentReference) {
                 throw new SAMException("Unexpected reference " + reference + " when constructing index for " + currentReference);
             }
 
-            // process bins
-            if (binsSeen == 0) return null;  // no bins for this reference
+            final BinningIndexContent indexContent = binningIndexBuilder.generateIndexContent();
+            if (indexContent == null) return null;
+            return new BAMIndexContent(indexContent.getReferenceSequence(), indexContent.getBins(),
+                    indexStats, indexContent.getLinearIndex());
 
-            // process chunks
-            // nothing needed
-
-            // process linear index
-            // linear index will only be as long as the largest index seen
-            final long[] newIndex = new long[largestIndexSeen + 1]; // in java1.6 Arrays.copyOf(index, largestIndexSeen + 1);
-
-            // C (samtools index) also fills in intermediate 0's with values.  This seems unnecessary, but safe
-            long lastNonZeroOffset = 0;
-            for (int i = 0; i <= largestIndexSeen; i++) {
-                if (index[i] == 0) {
-                    index[i] = lastNonZeroOffset; // not necessary, but C (samtools index) does this
-                    // note, if you remove the above line BAMIndexWriterTest.compareTextual and compareBinary will have to change
-                } else {
-                    lastNonZeroOffset = index[i];
-                }
-                newIndex[i] = index[i];
-            }
-
-            final LinearIndex linearIndex = new LinearIndex(reference, 0, newIndex);
-
-            return new BAMIndexContent(reference, bins, binsSeen, indexStats, linearIndex);
         }
 
         /**
@@ -327,13 +248,12 @@ public class BAMIndexer {
          * reinitialize all data structures when the reference changes
          */
         void startNewReference() {
-            bins = null;
-            if (binsSeen > 0) {
-                Arrays.fill(index, 0);
-            }
-            binsSeen = 0;
-            largestIndexSeen = -1;
+            ++currentReference;
+            // I'm not crazy about recycling this object, but that is the way it was originally written and
+            // it helps keep track of no-coordinate read count (which shouldn't be stored in this class anyway).
             indexStats.newReference();
+            binningIndexBuilder = new BinningIndexBuilder(currentReference,
+                    sequenceDictionary.getSequence(currentReference).getSequenceLength());
         }
     }
 }

@@ -46,23 +46,6 @@ import java.util.*;
  */
 public abstract class AbstractBAMFileIndex implements BAMIndex {
 
-    /**
-     * Reports the total amount of genomic data that any bin can index.
-     */
-    protected static final int BIN_GENOMIC_SPAN = 512*1024*1024;
-
-    /**
-     * What is the starting bin for each level?
-     */
-    private static final int[] LEVEL_STARTS = {0,1,9,73,585,4681};
-
-    /**
-     * Reports the maximum number of bins that can appear in a BAM file.
-     */
-    public static final int MAX_BINS = 37450;   // =(8^6-1)/7+1
-    
-    public static final int MAX_LINEAR_INDEX_SIZE = MAX_BINS+1-LEVEL_STARTS[LEVEL_STARTS.length-1];
-
     private final IndexFileBuffer mIndexBuffer;
 
     private SAMSequenceDictionary mBamDictionary = null;
@@ -104,7 +87,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return Number of levels in this index.
      */
     public static int getNumIndexLevels() {
-        return LEVEL_STARTS.length;
+        return GenomicIndexUtil.LEVEL_STARTS.length;
     }
 
     /**
@@ -113,7 +96,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return The first bin in this level.
      */
     public static int getFirstBinInLevel(final int levelNumber) {
-        return LEVEL_STARTS[levelNumber];
+        return GenomicIndexUtil.LEVEL_STARTS[levelNumber];
     }
 
     /**
@@ -123,9 +106,9 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      */
     public int getLevelSize(final int levelNumber) {
         if(levelNumber == getNumIndexLevels())
-            return MAX_BINS+1-LEVEL_STARTS[levelNumber];
+            return GenomicIndexUtil.MAX_BINS+1-GenomicIndexUtil.LEVEL_STARTS[levelNumber];
         else
-            return LEVEL_STARTS[levelNumber+1]-LEVEL_STARTS[levelNumber];
+            return GenomicIndexUtil.LEVEL_STARTS[levelNumber+1]-GenomicIndexUtil.LEVEL_STARTS[levelNumber];
     }
 
     /**
@@ -134,10 +117,10 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return the level associated with the given bin number.
      */
     public int getLevelForBin(final Bin bin) {
-        if(bin.getBinNumber() >= MAX_BINS)
+        if(bin.getBinNumber() >= GenomicIndexUtil.MAX_BINS)
             throw new SAMException("Tried to get level for invalid bin.");
         for(int i = getNumIndexLevels()-1; i >= 0; i--) {
-            if(bin.getBinNumber() >= LEVEL_STARTS[i])
+            if(bin.getBinNumber() >= GenomicIndexUtil.LEVEL_STARTS[i])
                 return i;
         }
         throw new SAMException("Unable to find correct bin for bin "+bin);
@@ -150,9 +133,9 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      */
     public int getFirstLocusInBin(final Bin bin) {
         final int level = getLevelForBin(bin);
-        final int levelStart = LEVEL_STARTS[level];
-        final int levelSize = ((level==getNumIndexLevels()-1) ? MAX_BINS-1 : LEVEL_STARTS[level+1]) - levelStart;
-        return (bin.getBinNumber() - levelStart)*(BIN_GENOMIC_SPAN /levelSize)+1;
+        final int levelStart = GenomicIndexUtil.LEVEL_STARTS[level];
+        final int levelSize = ((level==getNumIndexLevels()-1) ? GenomicIndexUtil.MAX_BINS-1 : GenomicIndexUtil.LEVEL_STARTS[level+1]) - levelStart;
+        return (bin.getBinNumber() - levelStart)*(GenomicIndexUtil.BIN_GENOMIC_SPAN /levelSize)+1;
     }
 
     /**
@@ -162,9 +145,9 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      */
     public int getLastLocusInBin(final Bin bin) {
         final int level = getLevelForBin(bin);
-        final int levelStart = LEVEL_STARTS[level];
-        final int levelSize = ((level==getNumIndexLevels()-1) ? MAX_BINS-1 : LEVEL_STARTS[level+1]) - levelStart;
-        return (bin.getBinNumber()-levelStart+1)*(BIN_GENOMIC_SPAN /levelSize);
+        final int levelStart = GenomicIndexUtil.LEVEL_STARTS[level];
+        final int levelSize = ((level==getNumIndexLevels()-1) ? GenomicIndexUtil.MAX_BINS-1 : GenomicIndexUtil.LEVEL_STARTS[level+1]) - levelStart;
+        return (bin.getBinNumber()-levelStart+1)*(GenomicIndexUtil.BIN_GENOMIC_SPAN /levelSize);
     }
 
     public int getNumberOfReferences() {
@@ -230,7 +213,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
         for (int binNumber = 0; binNumber < binCount; binNumber++) {
             final int indexBin = readInteger();
             final int nChunks = readInteger();
-            if (indexBin == MAX_BINS) {
+            if (indexBin == GenomicIndexUtil.MAX_BINS) {
                 for (int ci = 0; ci < nChunks; ci++) {
                     final long chunkBegin = readLong();
                     final long chunkEnd = readLong();
@@ -273,7 +256,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             return null;
         }
 
-        final BitSet regionBins = regionToBins(startPos, endPos);
+        final BitSet regionBins = GenomicIndexUtil.regionToBins(startPos, endPos);
         if (regionBins == null) {
             return null;
         }
@@ -296,7 +279,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
                     lastChunk = new Chunk(chunkBegin, chunkEnd);
                     chunks.add(lastChunk);
                 }
-            } else if (indexBin == MAX_BINS) {
+            } else if (indexBin == GenomicIndexUtil.MAX_BINS) {
                 // meta data - build the bin so that the count of bins is correct;
                 // but don't attach meta chunks to the bin, or normal queries will be off
                 for (int ci = 0; ci < nChunks; ci++) {
@@ -345,7 +328,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             final int sequenceLength = mBamDictionary.getSequence(reference).getSequenceLength();
             return getMaxBinNumberForSequenceLength(sequenceLength);
         } catch (final Exception e) {
-            return MAX_BINS;
+            return GenomicIndexUtil.MAX_BINS;
         }
     }
 
@@ -364,7 +347,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
      * @return How many bins could possibly be used according to this indexing scheme to index a single contig.
      */
     protected int getMaxAddressibleGenomicLocation() {
-        return BIN_GENOMIC_SPAN;
+        return GenomicIndexUtil.BIN_GENOMIC_SPAN;
     }
 
     /**
@@ -381,7 +364,7 @@ public abstract class AbstractBAMFileIndex implements BAMIndex {
             return null;
         }
         int k;
-        final BitSet bitSet = new BitSet(MAX_BINS);
+        final BitSet bitSet = new BitSet(GenomicIndexUtil.MAX_BINS);
         bitSet.set(0);
         for (k =    1 + (start>>26); k <=    1 + (end>>26); ++k) bitSet.set(k);
         for (k =    9 + (start>>23); k <=    9 + (end>>23); ++k) bitSet.set(k);

@@ -113,7 +113,7 @@ public class SAMRecord implements Cloneable
     /**
      * If a read has reference name "*", it will have this value for position.
      */
-    public static final int NO_ALIGNMENT_START = 0;
+    public static final int NO_ALIGNMENT_START = GenomicIndexUtil.UNSET_GENOMIC_LOCATION;
 
     /**
      * This should rarely be used, since a read with no sequence doesn't make much sense.
@@ -1376,7 +1376,7 @@ public class SAMRecord implements Cloneable
             // then treat this as a one base alignment for indexing purposes.
             alignmentEnd = alignmentStart + 1;
         }
-        return SAMUtils.reg2bin(alignmentStart, alignmentEnd);
+        return GenomicIndexUtil.reg2bin(alignmentStart, alignmentEnd);
     }
 
     public SAMFileHeader getHeader() {

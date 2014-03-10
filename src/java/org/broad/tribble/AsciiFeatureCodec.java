@@ -19,6 +19,7 @@
 package org.broad.tribble;
 
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.LocationAware;
 import org.broad.tribble.readers.*;
 
 import java.io.IOException;

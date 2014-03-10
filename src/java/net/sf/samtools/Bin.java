@@ -64,7 +64,7 @@ public class Bin implements Comparable<Bin> {
         return referenceSequence;
     }
 
-    protected int getBinNumber() {
+    public int getBinNumber() {
         return binNumber;
     }
 
@@ -75,11 +75,11 @@ public class Bin implements Comparable<Bin> {
      * @return True if the two bins are equal.  False otherwise.
      */
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(final Object other) {
         if(other == null) return false;
         if(!(other instanceof Bin)) return false;
 
-        Bin otherBin = (Bin)other;
+        final Bin otherBin = (Bin)other;
         return this.referenceSequence == otherBin.referenceSequence && this.binNumber == otherBin.binNumber;
     }
 
@@ -105,7 +105,7 @@ public class Bin implements Comparable<Bin> {
      * @param other Other bin to which this bin should be compared.
      * @return -1 if this < other, 0 if this == other, 1 if this > other.
      */
-    public int compareTo(Bin other) {
+    public int compareTo(final Bin other) {
         if(other == null)
             throw new ClassCastException("Cannot compare to a null object");
 
@@ -120,8 +120,8 @@ public class Bin implements Comparable<Bin> {
     /**
      * Adds the first chunk to the bin
      */
-    public void addInitialChunk(Chunk newChunk){
-        List<Chunk> oldChunks = new ArrayList<Chunk>();
+    public void addInitialChunk(final Chunk newChunk){
+        final List<Chunk> oldChunks = new ArrayList<Chunk>();
         setChunkList(oldChunks);
         setLastChunk(newChunk);
         oldChunks.add(newChunk);
@@ -130,7 +130,7 @@ public class Bin implements Comparable<Bin> {
     /**
      * Sets the chunks associated with this bin
      */
-    public void setChunkList(List<Chunk> list){
+    public void setChunkList(final List<Chunk> list){
         chunkList = list;
     }
 
@@ -147,7 +147,7 @@ public class Bin implements Comparable<Bin> {
     /**
      * Optimization to keep lastChunk instead of iterating over all chunks repeatedly
      */
-    public void setLastChunk(Chunk c){
+    public void setLastChunk(final Chunk c){
         lastChunk = c;
     }
 

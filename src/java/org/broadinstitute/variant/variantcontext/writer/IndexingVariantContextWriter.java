@@ -29,16 +29,14 @@ import com.google.java.contract.Ensures;
 import com.google.java.contract.Requires;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.SAMSequenceRecord;
-import org.broad.tribble.Tribble;
-import org.broad.tribble.index.DynamicIndexCreator;
-import org.broad.tribble.index.Index;
-import org.broad.tribble.index.IndexCreator;
-import org.broad.tribble.index.IndexFactory;
-import org.broad.tribble.util.LittleEndianOutputStream;
-import org.broadinstitute.variant.vcf.VCFHeader;
+import net.sf.samtools.util.LocationAware;
+import org.broad.tribble.index.*;
 import org.broadinstitute.variant.variantcontext.VariantContext;
+import org.broadinstitute.variant.vcf.VCFHeader;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * this class writes VCF files
@@ -49,9 +47,8 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     private final SAMSequenceDictionary refDict;
 
     private OutputStream outputStream;
-    private PositionalOutputStream positionalOutputStream = null;
+    private LocationAware locationSource = null;
     private IndexCreator indexer = null;
-    private LittleEndianOutputStream idxStream = null;
 
     private IndexingVariantContextWriter(final String name, final File location, final OutputStream output, final SAMSequenceDictionary refDict) {
         this.name = name;
@@ -77,9 +74,7 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
         this(name, location, output, refDict);
 
         if ( enableOnTheFlyIndexing ) {
-            final IndexCreator idxCreator = new DynamicIndexCreator(IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME);
-            idxCreator.initialize(location, idxCreator.defaultBinSize());
-            initIndexingWriter(idxCreator);
+            initIndexingWriter(new DynamicIndexCreator(location, IndexFactory.IndexBalanceApproach.FOR_SEEK_TIME));
         }
     }
 
@@ -102,23 +97,20 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
         this(name, location, output, refDict);
 
         if ( enableOnTheFlyIndexing ) {
+            // TODO: Handle non-Tribble IndexCreators
             initIndexingWriter(idxCreator);
         }
     }
 
     @Requires({"idxCreator != null"})
     private void initIndexingWriter(final IndexCreator idxCreator) {
-        try {
-            indexer = idxCreator;
-            idxStream = new LittleEndianOutputStream(new FileOutputStream(Tribble.indexFile(location)));
-            //System.out.println("Creating index on the fly for " + location);
-            positionalOutputStream = new PositionalOutputStream(outputStream);
+        indexer = idxCreator;
+        if (outputStream instanceof LocationAware) {
+            locationSource = (LocationAware)outputStream;
+        } else {
+            final PositionalOutputStream positionalOutputStream = new PositionalOutputStream(outputStream);
+            locationSource = positionalOutputStream;
             outputStream = positionalOutputStream;
-        } catch ( IOException ex ) {
-            // No matter what we keep going, since we don't care if we can't create the index file
-            idxStream = null;
-            indexer = null;
-            positionalOutputStream = null;
         }
     }
 
@@ -144,14 +136,15 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
 
             // close the index stream (keep it separate to help debugging efforts)
             if (indexer != null) {
-                final Index index = indexer.finalizeIndex(positionalOutputStream.getPosition());
-                setIndexSequenceDictionary(index, refDict);
-                index.write(idxStream);
-                idxStream.close();
+                if (indexer instanceof TribbleIndexCreator) {
+                    setIndexSequenceDictionary((TribbleIndexCreator)indexer, refDict);
+                }
+                final Index index = indexer.finalizeIndex(locationSource.getPosition());
+                index.writeBasedOnFeatureFile(location);
             }
 
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("Unable to close index for " + getStreamName(), e);
         }
     }
@@ -171,7 +164,7 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     public void add(final VariantContext vc) {
         // if we are doing on the fly indexing, add the record ***before*** we write any bytes
         if ( indexer != null )
-            indexer.addFeature(vc, positionalOutputStream.getPosition());
+            indexer.addFeature(vc, locationSource.getPosition());
     }
 
     /**
@@ -188,11 +181,11 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
     // a constant we use for marking sequence dictionary entries in the Tribble index property list
     private static final String SequenceDictionaryPropertyPredicate = "DICT:";
 
-    private static void setIndexSequenceDictionary(final Index index, final SAMSequenceDictionary dict) {
+    private static void setIndexSequenceDictionary(final TribbleIndexCreator indexCreator, final SAMSequenceDictionary dict) {
         for (final SAMSequenceRecord seq : dict.getSequences()) {
             final String contig = SequenceDictionaryPropertyPredicate + seq.getSequenceName();
             final String length = String.valueOf(seq.getSequenceLength());
-            index.addProperty(contig,length);
+            indexCreator.addProperty(contig,length);
         }
     }
 }
@@ -201,7 +194,8 @@ abstract class IndexingVariantContextWriter implements VariantContextWriter {
  * Wraps output stream in a manner which keeps track of the position within the file and allowing writes
  * at arbitrary points
  */
-final class PositionalOutputStream extends OutputStream {
+final class PositionalOutputStream extends OutputStream implements LocationAware
+{
     private final OutputStream out;
     private long position = 0;
 
@@ -218,7 +212,7 @@ final class PositionalOutputStream extends OutputStream {
         out.write(bytes, startIndex, numBytes);
     }
 
-    public final void write(int c)  throws IOException {
+    public final void write(final int c)  throws IOException {
         position++;
         out.write(c);
     }
