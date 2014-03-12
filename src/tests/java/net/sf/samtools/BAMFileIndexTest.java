@@ -25,12 +25,14 @@ package net.sf.samtools;
 
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.StopWatch;
+import net.sf.samtools.util.StringUtil;
 import org.testng.Assert;
 import static org.testng.Assert.*;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.*;
 
@@ -258,6 +260,38 @@ public class BAMFileIndexTest
         return new Object[][]{{true}, {false}};
     }
 
+    @Test
+    public void testUnmappedMateWithCoordinate() throws Exception {
+        // TODO: Use SAMRecordSetBuilder when it is able to create a pair with one end unmapped
+        final String samText = "@HD\tVN:1.0\tSO:coordinate\n" +
+                "@SQ\tSN:chr1\tLN:101\n" +
+                "@SQ\tSN:chr2\tLN:101\n" +
+                "@SQ\tSN:chr3\tLN:101\n" +
+                "@SQ\tSN:chr4\tLN:101\n" +
+                "@SQ\tSN:chr5\tLN:101\n" +
+                "@SQ\tSN:chr6\tLN:101\n" +
+                "@SQ\tSN:chr7\tLN:404\n" +
+                "@SQ\tSN:chr8\tLN:202\n" +
+                "@RG\tID:0\tSM:Hi,Mom!\n" +
+                "@PG\tID:1\tPN:Hey!\tVN:2.0\n" +
+                "one_end_mapped\t73\tchr7\t100\t255\t101M\t*\t0\t0\tCAACAGAAGCNGGNATCTGTGTTTGTGTTTCGGATTTCCTGCTGAANNGNTTNTCGNNTCNNNNNNNNATCCCGATTTCNTTCCGCAGCTNACCTCCCAAN\t)'.*.+2,))&&'&*/)-&*-)&.-)&)&),/-&&..)./.,.).*&&,&.&&-)&&&0*&&&&&&&&/32/,01460&&/6/*0*/2/283//36868/&\tRG:Z:0\n" +
+                "one_end_mapped\t133\tchr7\t100\t0\t*\t=\t100\t0\tNCGCGGCATCNCGATTTCTTTCCGCAGCTAACCTCCCGACAGATCGGCAGCGCGTCGTGTAGGTTATTATGGTACATCTTGTCGTGCGGCNAGAGCATACA\t&/15445666651/566666553+2/14/&/555512+3/)-'/-&-'*+))*''13+3)'//++''/'))/3+&*5++)&'2+&+/*&-&&*)&-./1'1\tRG:Z:0\n";
+        final ByteArrayInputStream bis = new ByteArrayInputStream(StringUtil.stringToBytes(samText));
+        final File bamFile = File.createTempFile("BAMFileIndexTest.", ".bam");
+        bamFile.deleteOnExit();
+        final SAMFileReader textReader = new SAMFileReader(bis);
+        SAMFileWriterFactory samFileWriterFactory = new SAMFileWriterFactory();
+        samFileWriterFactory.setCreateIndex(true);
+        final SAMFileWriter writer = samFileWriterFactory.makeBAMWriter(textReader.getFileHeader(), true, bamFile);
+        for (final SAMRecord rec : textReader) {
+            writer.addAlignment(rec);
+        }
+        writer.close();
+        final SAMFileReader bamReader = new SAMFileReader(bamFile);
+        Assert.assertEquals(countElements(bamReader.queryContained("chr7", 100, 100)), 1);
+        Assert.assertEquals(countElements(bamReader.queryOverlapping("chr7", 100, 100)), 2);
+    }
+
     private <E> void consumeAll(final Collection<E> collection, final CloseableIterator<E> iterator) {
         while (iterator.hasNext()) {
             collection.add(iterator.next());
@@ -279,6 +313,7 @@ public class BAMFileIndexTest
         int num;
         for (num = 0; it.hasNext(); ++num, it.next()) {
         }
+        it.close();
         return num;
     }
 
