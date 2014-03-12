@@ -944,12 +944,19 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         private IntervalComparison compareIntervalToRecord(final SAMFileReader.QueryInterval interval, final SAMRecord record) {
             // interval.end <= 0 implies the end of the reference sequence.
             final int intervalEnd = (interval.end <= 0? Integer.MAX_VALUE: interval.end);
+            final int alignmentEnd;
+            if (record.getReadUnmappedFlag() && record.getAlignmentStart() != SAMRecord.NO_ALIGNMENT_START) {
+                // Unmapped read with coordinate of mate.
+                alignmentEnd = record.getAlignmentStart();
+            } else {
+                alignmentEnd = record.getAlignmentEnd();
+            }
 
             if (interval.referenceIndex < record.getReferenceIndex()) return IntervalComparison.BEFORE;
             else if (interval.referenceIndex > record.getReferenceIndex()) return IntervalComparison.AFTER;
             else if (intervalEnd < record.getAlignmentStart()) return IntervalComparison.BEFORE;
-            else if (record.getAlignmentEnd() < interval.start) return IntervalComparison.AFTER;
-            else if (CoordMath.encloses(interval.start, intervalEnd, record.getAlignmentStart(), record.getAlignmentEnd())) {
+            else if (alignmentEnd < interval.start) return IntervalComparison.AFTER;
+            else if (CoordMath.encloses(interval.start, intervalEnd, record.getAlignmentStart(), alignmentEnd)) {
                 return IntervalComparison.CONTAINED;
             } else return IntervalComparison.OVERLAPPING;
         }
