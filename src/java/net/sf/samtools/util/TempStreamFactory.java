@@ -51,16 +51,15 @@ public class TempStreamFactory {
      * Otherwise inputStream is returned.
      */
     public InputStream wrapTempInputStream(final InputStream inputStream, final int bufferSize) {
+        InputStream is = IOUtil.maybeBufferInputStream(inputStream, bufferSize);
         if (getSnappyLoader().SnappyAvailable) {
             try {
-                return getSnappyLoader().wrapInputStream(inputStream);
+                return getSnappyLoader().wrapInputStream(is);
             } catch (Exception e) {
                 throw new SAMException("Error creating SnappyInputStream", e);
             }
-        } else if (bufferSize > 0) {
-            return new BufferedInputStream(inputStream, bufferSize);
         } else {
-            return inputStream;
+            return is;
         }
     }
 

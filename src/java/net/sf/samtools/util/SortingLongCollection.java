@@ -156,7 +156,7 @@ public class SortingLongCollection {
             DataOutputStream os = null;
             try {
                 final long numBytes = this.numValuesInRam * SIZEOF;
-                os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f), Defaults.BUFFER_SIZE));
+                os = new DataOutputStream(IOUtil.maybeBufferOutputStream(new FileOutputStream(f)));
                 f.deleteOnExit();
                 for (int i = 0; i < this.numValuesInRam; ++i) {
                     os.writeLong(ramValues[i]);
@@ -243,7 +243,7 @@ public class SortingLongCollection {
         FileValueIterator(final File file) {
             this.file = file;
             try {
-                is = new DataInputStream(new BufferedInputStream(new FileInputStream(file),Defaults.BUFFER_SIZE));
+                is = new DataInputStream(IOUtil.maybeBufferInputStream(new FileInputStream(file)));
                 next();
             }
             catch (FileNotFoundException e) {

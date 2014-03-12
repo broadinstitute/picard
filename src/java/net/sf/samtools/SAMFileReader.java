@@ -154,7 +154,7 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
     /**
      * Read a SAM or BAM file.  Indexed lookup not allowed because reading from InputStream.
      *
-     * @param stream input SAM or BAM.
+     * @param stream input SAM or BAM.  This is buffered internally so caller need not buffer.
      * @param eagerDecode if true, decode SAM record entirely when reading it.
      */
     public SAMFileReader(final InputStream stream, final boolean eagerDecode) {
@@ -209,6 +209,10 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
         init(strm, indexFile, eagerDecode, defaultValidationStringency);
     }
 
+    /**
+     * @param strm BAM -- If the stream is not buffered, caller should wrap in SeekableBufferedStream for
+     * better performance.
+     */
     public SAMFileReader(final SeekableStream strm, final SeekableStream indexStream, final boolean eagerDecode) {
         init(strm, indexStream, eagerDecode, defaultValidationStringency);
     }
@@ -629,7 +633,9 @@ public class SAMFileReader implements Iterable<SAMRecord>, Closeable {
 
         try {
             final BufferedInputStream bufferedStream;
-            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
+            // Buffering is required because mark() and reset() are called on the input stream.
+            final int bufferSize = Math.max(Defaults.BUFFER_SIZE, BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE);
+            if (file != null) bufferedStream = new BufferedInputStream(new FileInputStream(file), bufferSize);
             else bufferedStream = IOUtil.toBufferedStream(stream);
             if (isBAMFile(bufferedStream)) {
                 mIsBinary = true;

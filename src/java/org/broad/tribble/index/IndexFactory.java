@@ -158,7 +158,8 @@ public class IndexFactory {
             if (indexFile.endsWith(".gz")) {
                 inputStream = new GZIPInputStream(inputStream);
             }
-            bufferedInputStream = new BufferedInputStream(inputStream, Defaults.BUFFER_SIZE);
+            // Must be buffered, because getIndexType uses mark and reset
+            bufferedInputStream = new BufferedInputStream(inputStream, Defaults.NON_ZERO_BUFFER_SIZE);
             final Class indexClass = IndexType.getIndexType(bufferedInputStream).getIndexType();
 
             final Constructor ctor = indexClass.getConstructor(InputStream.class);

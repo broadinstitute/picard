@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.Defaults;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +47,7 @@ public class BufferedLineReader implements LineReader {
     private String peekedLine;
 
     public BufferedLineReader(final InputStream is) {
-        this(is, IOUtil.STANDARD_BUFFER_SIZE);
+        this(is, Defaults.NON_ZERO_BUFFER_SIZE);
     }
 
     public BufferedLineReader(final InputStream is, final int bufferSize) {

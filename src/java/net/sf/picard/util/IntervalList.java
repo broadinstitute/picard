@@ -166,7 +166,7 @@ public class IntervalList implements Iterable<Interval> {
      * @return an IntervalList object that contains the headers and intervals from the file
      */
     public static IntervalList fromFile(final File file) {
-        return fromReader(new BufferedReader(new InputStreamReader(IoUtil.openFileForReading(file)), IoUtil.STANDARD_BUFFER_SIZE));
+        return fromReader(IoUtil.openFileForBufferedReading(file));
     }
 
     /**
@@ -248,7 +248,7 @@ public class IntervalList implements Iterable<Interval> {
      */
     public void write(final File file) {
         try {
-            final BufferedWriter out = new BufferedWriter(new OutputStreamWriter(IoUtil.openFileForWriting(file)), IoUtil.STANDARD_BUFFER_SIZE);
+            final BufferedWriter out = IoUtil.openFileForBufferedWriting(file);
             final FormatUtil format = new FormatUtil();
 
             // Write out the header

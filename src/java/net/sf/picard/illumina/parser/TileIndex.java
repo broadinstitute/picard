@@ -26,6 +26,7 @@ package net.sf.picard.illumina.parser;
 import net.sf.picard.PicardException;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.IOUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -45,7 +46,7 @@ class TileIndex implements Iterable<TileIndex.TileIndexRecord> {
     TileIndex(final File tileIndexFile) {
         try {
             this.tileIndexFile = tileIndexFile;
-            final InputStream is = new BufferedInputStream(new FileInputStream(tileIndexFile), Defaults.BUFFER_SIZE);
+            final InputStream is = IOUtil.maybeBufferInputStream(new FileInputStream(tileIndexFile));
             final ByteBuffer buf = ByteBuffer.allocate(8);
             buf.order(ByteOrder.LITTLE_ENDIAN);
             int absoluteRecordIndex = 0;

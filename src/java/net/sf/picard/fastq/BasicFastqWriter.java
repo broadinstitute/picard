@@ -26,6 +26,7 @@ package net.sf.picard.fastq;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.Defaults;
+import net.sf.samtools.util.IOUtil;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -45,7 +46,7 @@ public class BasicFastqWriter implements FastqWriter {
     }
 
     public BasicFastqWriter(final File file, final boolean createMd5) {
-        this(file, new PrintStream(new BufferedOutputStream(maybeMd5Wrap(file, createMd5), Defaults.BUFFER_SIZE)));
+        this(file, new PrintStream(IOUtil.maybeBufferOutputStream(maybeMd5Wrap(file, createMd5))));
     }
 
     private BasicFastqWriter(final File file, final PrintStream writer) {

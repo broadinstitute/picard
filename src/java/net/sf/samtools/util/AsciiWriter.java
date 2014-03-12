@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.Defaults;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -34,7 +36,7 @@ public class AsciiWriter extends Writer {
 
     private final OutputStream os;
     // Buffer size has not been tuned.
-    private final byte[] buffer = new byte[IOUtil.STANDARD_BUFFER_SIZE];
+    private final byte[] buffer = new byte[Defaults.NON_ZERO_BUFFER_SIZE];
     private int numBytes;
 
     /**

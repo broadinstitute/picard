@@ -51,14 +51,9 @@ public class FastqReader implements Iterator<FastqRecord>, Iterable<FastqRecord>
 
     public FastqReader(final File file, final boolean skipBlankLines) {
         this.skipBlankLines=skipBlankLines;
-        try {
-            fastqFile = file;
-            reader = IoUtil.openFileForBufferedReading(fastqFile);
-            nextRecord = readNextRecord();
-        }
-        catch (IOException ioe) {
-            throw new RuntimeIOException(ioe);
-        }
+        fastqFile = file;
+        reader = IoUtil.openFileForBufferedReading(fastqFile);
+        nextRecord = readNextRecord();
     }
 
     public FastqReader(final BufferedReader reader) {
