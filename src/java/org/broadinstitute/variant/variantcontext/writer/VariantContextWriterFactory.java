@@ -28,6 +28,7 @@ package org.broadinstitute.variant.variantcontext.writer;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.BlockCompressedOutputStream;
+import net.sf.samtools.util.IOUtil;
 import org.broad.tribble.index.IndexCreator;
 import org.broad.tribble.index.tabix.TabixFormat;
 import org.broad.tribble.index.tabix.TabixIndexCreator;
@@ -63,12 +64,18 @@ public class VariantContextWriterFactory {
         return create(location, openOutputStream(location), refDict, options);
     }
 
+    /**
+     * @param output If buffered writing is desired, caller must provide some kind of buffered OutputStream.
+     */
     public static VariantContextWriter create(final File location,
                                               final OutputStream output,
                                               final SAMSequenceDictionary refDict) {
         return create(location, output, refDict, DEFAULT_OPTIONS);
     }
 
+    /**
+     * @param output If buffered writing is desired, caller must provide some kind of buffered OutputStream.
+     */
     public static VariantContextWriter create(final OutputStream output,
                                               final SAMSequenceDictionary refDict,
                                               final EnumSet<Options> options) {
@@ -78,7 +85,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
      *                 but does not control where the file is written
-     * @param output This is where the BCF is actually written.
+     * @param output This is where the BCF is actually written. If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createBcf2(final File location,
                                                   final OutputStream output,
@@ -92,7 +100,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
      *                 but does not control where the file is written
-     * @param output This is where the BCF is actually written.
+     * @param output This is where the BCF is actually written.  If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createBcf2(final File location,
                                                   final OutputStream output,
@@ -107,7 +116,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
      *                 but does not control where the file is written
-     * @param output This is where the VCF is actually written.
+     * @param output This is where the VCF is actually written. If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createVcf(final File location,
                                                  final OutputStream output,
@@ -122,7 +132,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages, and for naming the index,
      *                 but does not control where the file is written
-     * @param output This is where the VCF is actually written.
+     * @param output This is where the VCF is actually written.  If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createVcf(final File location,
                                                  final OutputStream output,
@@ -138,7 +149,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages,
      *                 but does not control where the file is written
-     * @param output This is where the VCF is actually written.
+     * @param output This is where the VCF is actually written.  If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createBlockCompressedVcf(final File location,
                                                                 final OutputStream output,
@@ -160,7 +172,8 @@ public class VariantContextWriterFactory {
     /**
      * @param location Note that this parameter is used to producing intelligent log messages,
      *                 but does not control where the file is written
-     * @param output This is where the VCF is actually written.
+     * @param output This is where the VCF is actually written. If buffered writing is desired, caller must provide
+     *               some kind of buffered OutputStream.
      */
     public static VariantContextWriter createBlockCompressedVcf(final File location,
                                                                 final OutputStream output,
@@ -188,6 +201,9 @@ public class VariantContextWriterFactory {
         }
     }
 
+    /**
+     * @param output If buffered writing is desired, caller must provide some kind of buffered OutputStream.
+     */
     public static VariantContextWriter create(final File location,
                                               final OutputStream output,
                                               final SAMSequenceDictionary refDict,
@@ -248,7 +264,7 @@ public class VariantContextWriterFactory {
      */
     protected static OutputStream openOutputStream(final File location) {
         try {
-            return new FileOutputStream(location);
+            return IOUtil.maybeBufferOutputStream(new FileOutputStream(location));
         } catch (final FileNotFoundException e) {
             throw new RuntimeException(location + ": Unable to create VCF writer", e);
         }

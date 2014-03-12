@@ -161,8 +161,7 @@ public class SAMFileWriterFactory {
             if (this.createMd5File && !createMd5File) {
                 System.err.println("Cannot create MD5 file for BAM because output file is not a regular file: " + outputFile.getAbsolutePath());
             }
-            OutputStream os = new FileOutputStream(outputFile, false);
-            if (bufferSize > 0) os = new BufferedOutputStream(os, bufferSize);
+            OutputStream os = IOUtil.maybeBufferOutputStream(new FileOutputStream(outputFile, false), bufferSize);
             if (createMd5File) os = new Md5CalculatingOutputStream(os, new File(outputFile.getAbsolutePath() + ".md5"));
             final BAMFileWriter ret = new BAMFileWriter(os, outputFile, compressionLevel);
             final boolean createIndex = this.createIndex && IOUtil.isRegularPath(outputFile);
@@ -223,7 +222,8 @@ public class SAMFileWriterFactory {
      * 
      * @param header entire header. Sort order is determined by the sortOrder property of this arg.
      * @param presorted if true, SAMRecords must be added to the SAMFileWriter in order that agrees with header.sortOrder.
-     * @param stream the stream to write records to.
+     * @param stream the stream to write records to.  Note that this method does not buffer the stream, so the
+     *               caller must buffer if desired.  Note that PrintStream is buffered.
      */
     public SAMFileWriter makeSAMWriter(final SAMFileHeader header, final boolean presorted, final OutputStream stream) {
         final SAMTextWriter ret = new SAMTextWriter(stream);

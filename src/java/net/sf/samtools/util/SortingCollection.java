@@ -23,6 +23,8 @@
  */
 package net.sf.samtools.util;
 
+import net.sf.samtools.Defaults;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -204,7 +206,7 @@ public class SortingCollection<T> implements Iterable<T> {
             final File f = newTempFile();
             OutputStream os = null;
             try {
-                os = tempStreamFactory.wrapTempOutputStream(new FileOutputStream(f), IOUtil.STANDARD_BUFFER_SIZE);
+                os = tempStreamFactory.wrapTempOutputStream(new FileOutputStream(f), Defaults.BUFFER_SIZE);
                 this.codec.setOutputStream(os);
                 for (int i = 0; i < this.numRecordsInRam; ++i) {
                     this.codec.encode(ramRecords[i]);
@@ -440,7 +442,7 @@ public class SortingCollection<T> implements Iterable<T> {
             try {
                 this.is = new FileInputStream(file);
                 this.codec = SortingCollection.this.codec.clone();
-                this.codec.setInputStream(tempStreamFactory.wrapTempInputStream(this.is, IOUtil.STANDARD_BUFFER_SIZE));
+                this.codec.setInputStream(tempStreamFactory.wrapTempInputStream(this.is, Defaults.BUFFER_SIZE));
                 advance();
             }
             catch (FileNotFoundException e) {

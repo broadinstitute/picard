@@ -22,6 +22,12 @@ public class Defaults {
     /** Buffer size, in bytes, used whenever reading/writing files or streams.  Default = 128k. */
     public static final int BUFFER_SIZE;
 
+    /**
+     * Even if BUFFER_SIZE is 0, this is guaranteed to be non-zero.  If BUFFER_SIZE is non-zero,
+     * this == BUFFER_SIZE
+     */
+    public static final int NON_ZERO_BUFFER_SIZE;
+
     /** Should BlockCompressedOutputStream attempt to load libIntelDeflater? */
     public static final boolean TRY_USE_INTEL_DEFLATER;
 
@@ -37,6 +43,11 @@ public class Defaults {
         BUFFER_SIZE       = getIntProperty("buffer_size", 1024 * 128);
         TRY_USE_INTEL_DEFLATER = getBooleanProperty("try_use_intel_deflater", true);
         INTEL_DEFLATER_SHARED_LIBRARY_PATH = getStringProperty("intel_deflater_so_path", null);
+        if (BUFFER_SIZE == 0) {
+            NON_ZERO_BUFFER_SIZE = 1024 * 128;
+        } else {
+            NON_ZERO_BUFFER_SIZE = BUFFER_SIZE;
+        }
     }
 
     /** Gets a string system property, prefixed with "samjdk." using the default if the property does not exist.*/

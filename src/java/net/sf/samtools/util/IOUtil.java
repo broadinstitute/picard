@@ -26,19 +26,16 @@ package net.sf.samtools.util;
 
 import net.sf.samtools.Defaults;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.File;
+import java.io.*;
 
 /**
  * Miscellaneous stateless static IO-oriented methods.
  */
 public class IOUtil {
     /**
-     * @deprecated Use Defaults.BUFFER_SIZE instead.
+     * @deprecated Use Defaults.NON_ZERO_BUFFER_SIZE instead.
      */
-    @Deprecated public static final int STANDARD_BUFFER_SIZE = Defaults.BUFFER_SIZE;
+    @Deprecated public static final int STANDARD_BUFFER_SIZE = Defaults.NON_ZERO_BUFFER_SIZE;
 
     public static final long ONE_GB   = 1024 * 1024 * 1024;
     public static final long TWO_GBS  = 2 * ONE_GB;
@@ -53,9 +50,58 @@ public class IOUtil {
         if (stream instanceof BufferedInputStream) {
             return (BufferedInputStream) stream;
         } else {
-            return new BufferedInputStream(stream, STANDARD_BUFFER_SIZE);
+            return new BufferedInputStream(stream, Defaults.NON_ZERO_BUFFER_SIZE);
         }
     }
+
+    /**
+     * @return If Defaults.BUFFER_SIZE > 0, wrap os in BufferedOutputStream, else return os itself.
+     */
+    public static OutputStream maybeBufferOutputStream(final OutputStream os) {
+        return maybeBufferOutputStream(os, Defaults.BUFFER_SIZE);
+    }
+
+    /**
+     * @return If bufferSize > 0, wrap os in BufferedOutputStream, else return os itself.
+     */
+    public static OutputStream maybeBufferOutputStream(final OutputStream os, final int bufferSize) {
+        if (bufferSize > 0) return new BufferedOutputStream(os, bufferSize);
+        else return os;
+    }
+
+    /**
+     * @return If Defaults.BUFFER_SIZE > 0, wrap is in BufferedInputStream, else return is itself.
+     */
+    public static InputStream maybeBufferInputStream(final InputStream is) {
+        return maybeBufferInputStream(is, Defaults.BUFFER_SIZE);
+    }
+
+    /**
+     * @return If bufferSize > 0, wrap is in BufferedInputStream, else return is itself.
+     */
+    public static InputStream maybeBufferInputStream(final InputStream is, final int bufferSize) {
+        if (bufferSize > 0) return new BufferedInputStream(is, bufferSize);
+        else return is;
+    }
+
+    public static Reader maybeBufferReader(Reader reader, final int bufferSize) {
+        if (bufferSize > 0) reader = new BufferedReader(reader, bufferSize);
+        return reader;
+    }
+
+    public static Reader maybeBufferReader(final Reader reader) {
+        return maybeBufferReader(reader, Defaults.BUFFER_SIZE);
+    }
+
+    public static Writer maybeBufferWriter(Writer writer, final int bufferSize) {
+        if (bufferSize > 0) writer = new BufferedWriter(writer, bufferSize);
+        return writer;
+    }
+
+    public static Writer maybeBufferWriter(final Writer writer) {
+        return maybeBufferWriter(writer, Defaults.BUFFER_SIZE);
+    }
+
 
     /**
      * Delete a list of files, and write a warning message if one could not be deleted.

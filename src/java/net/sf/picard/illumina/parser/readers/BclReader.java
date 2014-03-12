@@ -29,6 +29,7 @@ import net.sf.samtools.Defaults;
 import net.sf.samtools.util.BlockCompressedInputStream;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.IOUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -103,16 +104,17 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
         final boolean isGzip = filePath.endsWith(".gz");
         final boolean isBgzf = filePath.endsWith(".bgzf");
 
-        // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
-        // if necessary
-        final BufferedInputStream bufferedInputStream;
         try {
+
+            // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
+            // if necessary
+            InputStream is =  IOUtil.maybeBufferInputStream(new FileInputStream(file));
             if (isBgzf) {
-                inputStream = new BlockCompressedInputStream(file);
-            } else {
-                bufferedInputStream = new BufferedInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE);
-                inputStream = isGzip ? new GZIPInputStream(bufferedInputStream) : bufferedInputStream;
+                is = new BlockCompressedInputStream(is);
+            } else if (isGzip) {
+                is = new GZIPInputStream(is);
             }
+            inputStream = is;
         } catch (FileNotFoundException fnfe) {
             throw new PicardException("File not found: (" + filePath + ")", fnfe);
         } catch (IOException ioe) {

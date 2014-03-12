@@ -288,7 +288,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
      */
     public static BufferedWriter openFileForBufferedWriting(final File file, final boolean append) {
-        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file, append)), Defaults.BUFFER_SIZE);
+        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file, append)), Defaults.NON_ZERO_BUFFER_SIZE);
     }
 
     /**
@@ -302,8 +302,8 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      * Preferred over PrintStream and PrintWriter because an exception is thrown on I/O error
      */
     public static BufferedWriter openFileForBufferedUtf8Writing(final File file) {
-        return new BufferedWriter(new OutputStreamWriter(
-            openFileForWriting(file), Charset.forName("UTF-8")), Defaults.BUFFER_SIZE);
+        return new BufferedWriter(new OutputStreamWriter(openFileForWriting(file), Charset.forName("UTF-8")),
+                Defaults.NON_ZERO_BUFFER_SIZE);
     }
 
     /**
@@ -326,9 +326,13 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     public static OutputStream openGzipFileForWriting(final File file, final boolean append) {
 
         try {
+            if (Defaults.BUFFER_SIZE > 0) {
             return new CustomGzipOutputStream(new FileOutputStream(file, append),
                                               Defaults.BUFFER_SIZE,
                                               Defaults.COMPRESSION_LEVEL);
+            } else {
+                return new CustomGzipOutputStream(new FileOutputStream(file, append), Defaults.COMPRESSION_LEVEL);
+            }
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
@@ -349,7 +353,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
             final FileOutputStream fos = new FileOutputStream(file, append);
             fos.write(66); //write magic number 'BZ' because CBZip2OutputStream does not do it for you
             fos.write(90);
-            return new BufferedOutputStream(new CBZip2OutputStream(fos), Defaults.BUFFER_SIZE);
+            return IOUtil.maybeBufferOutputStream(new CBZip2OutputStream(fos));
         }
         catch (IOException ioe) {
             throw new PicardException("Error opening file for writing: " + file.getName(), ioe);
@@ -369,7 +373,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static void copyStream(final InputStream input, final OutputStream output) {
         try {
-            final byte[] buffer = new byte[Defaults.BUFFER_SIZE];
+            final byte[] buffer = new byte[Defaults.NON_ZERO_BUFFER_SIZE];
             int bytesRead = 0;
             while((bytesRead = input.read(buffer)) > 0) {
                 output.write(buffer, 0, bytesRead);
@@ -487,8 +491,8 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /** Checks that a file exists and is readable, and then returns a buffered reader for it. */
-    public static BufferedReader openFileForBufferedReading(final File file) throws IOException {
-        return new BufferedReader(new InputStreamReader(openFileForReading(file)), Defaults.BUFFER_SIZE);
+    public static BufferedReader openFileForBufferedReading(final File file) {
+        return new BufferedReader(new InputStreamReader(openFileForReading(file)), Defaults.NON_ZERO_BUFFER_SIZE);
 	}
 
     /** Takes a string and replaces any characters that are not safe for filenames with an underscore */
@@ -541,7 +545,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
      */
     public static String readFully(final InputStream in) {
         try {
-            final BufferedReader r = new BufferedReader(new InputStreamReader(in), Defaults.BUFFER_SIZE);
+            final BufferedReader r = new BufferedReader(new InputStreamReader(in), Defaults.NON_ZERO_BUFFER_SIZE);
             final StringBuilder builder = new StringBuilder(512);
             String line = null;
 
@@ -683,6 +687,11 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
 class CustomGzipOutputStream extends GZIPOutputStream {
     CustomGzipOutputStream(final OutputStream outputStream, final int bufferSize, final int compressionLevel) throws IOException {
         super(outputStream, bufferSize);
+        this.def.setLevel(compressionLevel);
+    }
+
+    CustomGzipOutputStream(OutputStream outputStream, final int compressionLevel) throws IOException {
+        super(outputStream);
         this.def.setLevel(compressionLevel);
     }
 }
