@@ -60,7 +60,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         new RevertOriginalBaseQualitiesAndAddMateCigar().instanceMainWithExit(args);
     }
 
-    protected int doWork() {
+    public int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
         IoUtil.assertFileIsWritable(OUTPUT);
 
