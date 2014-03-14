@@ -1609,12 +1609,15 @@ public class SAMRecord implements Cloneable
      * @return
      */
 
-    private List<SAMValidationError> validateCigar(final Cigar cigar, final Integer referenceIndex, final List<AlignmentBlock> alignmentBlocks,
-                                                   final long recordNumber, final String cigarTypeName) {
+    private List<SAMValidationError> validateCigar(final Cigar cigar,
+                                                   final Integer referenceIndex,
+                                                   final List<AlignmentBlock> alignmentBlocks,
+                                                   final long recordNumber,
+                                                   final String cigarTypeName) {
         // Don't know line number, and don't want to force read name to be decoded.
         List<SAMValidationError> ret = cigar.isValid(getReadName(), recordNumber);
         if (referenceIndex != NO_ALIGNMENT_REFERENCE_INDEX) {
-            final SAMSequenceRecord sequence = getHeader().getSequence(getReferenceIndex());
+            final SAMSequenceRecord sequence = getHeader().getSequence(referenceIndex);
             final int referenceSequenceLength = sequence.getSequenceLength();
             for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
                 if (alignmentBlock.getReferenceStart() + alignmentBlock.getLength() - 1 > referenceSequenceLength) {
