@@ -194,14 +194,16 @@ public class SamPairUtil {
             rec1.setMateNegativeStrandFlag(rec2.getReadNegativeStrandFlag());
             rec1.setMateUnmappedFlag(false);
             rec1.setAttribute(SAMTag.MQ.name(), rec2.getMappingQuality());
-            rec1.setAttribute(SAMTag.MC.name(), rec2.getCigarString());
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // rec1.setAttribute(SAMTag.MC.name(), rec2.getCigarString());
 
             rec2.setMateReferenceIndex(rec1.getReferenceIndex());
             rec2.setMateAlignmentStart(rec1.getAlignmentStart());
             rec2.setMateNegativeStrandFlag(rec1.getReadNegativeStrandFlag());
             rec2.setMateUnmappedFlag(false);
             rec2.setAttribute(SAMTag.MQ.name(), rec1.getMappingQuality());
-            rec2.setAttribute(SAMTag.MC.name(), rec1.getCigarString());
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // rec2.setAttribute(SAMTag.MC.name(), rec1.getCigarString());
         }
         // Else if they're both unmapped set that straight
         else if (rec1.getReadUnmappedFlag() && rec2.getReadUnmappedFlag()) {
@@ -212,7 +214,8 @@ public class SamPairUtil {
             rec1.setMateNegativeStrandFlag(rec2.getReadNegativeStrandFlag());
             rec1.setMateUnmappedFlag(true);
             rec1.setAttribute(SAMTag.MQ.name(), null);
-            rec1.setAttribute(SAMTag.MC.name(), null);
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // rec1.setAttribute(SAMTag.MC.name(), null);
             rec1.setInferredInsertSize(0);
 
             rec2.setReferenceIndex(SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX);
@@ -222,7 +225,8 @@ public class SamPairUtil {
             rec2.setMateNegativeStrandFlag(rec1.getReadNegativeStrandFlag());
             rec2.setMateUnmappedFlag(true);
             rec2.setAttribute(SAMTag.MQ.name(), null);
-            rec2.setAttribute(SAMTag.MC.name(), null);
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // rec2.setAttribute(SAMTag.MC.name(), null);
             rec2.setInferredInsertSize(0);
         }
         // And if only one is mapped copy it's coordinate information to the mate
@@ -237,7 +241,8 @@ public class SamPairUtil {
             mapped.setMateNegativeStrandFlag(unmapped.getReadNegativeStrandFlag());
             mapped.setMateUnmappedFlag(true);
             // For the mapped read, set it's mateCigar to null, since the other read must be unmapped
-            mapped.setAttribute(SAMTag.MC.name(), null);
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // mapped.setAttribute(SAMTag.MC.name(), null);
             mapped.setInferredInsertSize(0);
 
             unmapped.setMateReferenceIndex(mapped.getReferenceIndex());
@@ -245,7 +250,8 @@ public class SamPairUtil {
             unmapped.setMateNegativeStrandFlag(mapped.getReadNegativeStrandFlag());
             unmapped.setMateUnmappedFlag(false);
             // For the unmapped read, set it's mateCigar to the mate's Cigar, since the mate must be mapped
-            unmapped.setAttribute(SAMTag.MC.name(), mapped.getCigarString());
+            // TODO: Consider re-enabling when mate cigar issues are resolved
+            // unmapped.setAttribute(SAMTag.MC.name(), mapped.getCigarString());
             unmapped.setInferredInsertSize(0);
         }
 
