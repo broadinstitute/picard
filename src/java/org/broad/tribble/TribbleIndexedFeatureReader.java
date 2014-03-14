@@ -72,19 +72,19 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
 
         super(featurePath, codec);
 
-        if (requireIndex) {
-            String indexFile = Tribble.indexFile(featurePath);
+        String indexFile = Tribble.indexFile(featurePath);
+        if (ParsingUtils.resourceExists(indexFile)) {
+            index = IndexFactory.loadIndex(indexFile);
+        } else {
+            // See if the index itself is gzipped
+            indexFile = ParsingUtils.appendToPath(indexFile, ".gz");
             if (ParsingUtils.resourceExists(indexFile)) {
                 index = IndexFactory.loadIndex(indexFile);
-            } else {
-                // See if the index itself is gzipped
-                indexFile = ParsingUtils.appendToPath(indexFile, ".gz");
-                if (ParsingUtils.resourceExists(indexFile)) {
-                    index = IndexFactory.loadIndex(indexFile);
-                } else {
-                    throw new TribbleException("An index is required, but none found.");
-                }
             }
+        }
+
+        if (requireIndex && !this.hasIndex()) {
+            throw new TribbleException("An index is required, but none found.");
         }
 
         // does path point to a regular file?
