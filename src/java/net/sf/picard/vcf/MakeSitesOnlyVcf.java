@@ -12,17 +12,17 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
+import org.broadinstitute.variant.variantcontext.Allele;
+import org.broadinstitute.variant.variantcontext.GenotypesContext;
 import org.broadinstitute.variant.variantcontext.VariantContext;
+import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
-import org.broadinstitute.variant.vcf.VCFFileReader;
-import org.broadinstitute.variant.vcf.VCFHeader;
+import org.broadinstitute.variant.vcf.*;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Writes out a VCF that contains all the site-level information for all records in the input VCF and no per-sample information.
@@ -41,12 +41,9 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF or BCF to emit without per-sample info.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME,
-            doc="Sequence dictionary to use when indexing the VCF if the VCF header does not contain contig information.", optional = true)
-    public File SEQUENCE_DICTIONARY;
+    @Option(shortName="S", doc="Optionally one or more samples to retain when building the 'sites-only' VCF.", optional=true)
+    public Set<String> SAMPLE = new TreeSet<String>();
 
-    private static final Set<String> NO_SAMPLES = Collections.emptySet();
-    
     // Stock main method
     public static void main(final String[] args) {
         new MakeSitesOnlyVcf().instanceMainWithExit(args);
@@ -59,15 +56,11 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Override
     protected int doWork() {
         IoUtil.assertFileIsReadable(INPUT);
-        if (SEQUENCE_DICTIONARY != null) IoUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IoUtil.assertFileIsWritable(OUTPUT);
 
 	    final VCFFileReader reader = new VCFFileReader(INPUT, false);
-	    final VCFHeader header = new VCFHeader(reader.getFileHeader().getMetaDataInInputOrder());
-	    final SAMSequenceDictionary sequenceDictionary =
-			    SEQUENCE_DICTIONARY != null
-			            ? SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY)
-					    : header.getSequenceDictionary();
+	    final VCFHeader inputVcfHeader = new VCFHeader(reader.getFileHeader().getMetaDataInInputOrder());
+	    final SAMSequenceDictionary sequenceDictionary = inputVcfHeader.getSequenceDictionary();
 
 	    if (CREATE_INDEX && sequenceDictionary == null) {
 		    throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
@@ -77,14 +70,18 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
         final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
         if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
 
+        // Setup the site-only file writer
 	    final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
-	    writer.writeHeader(header);
-        final CloseableIterator<VariantContext> iterator = reader.iterator();
+        final VCFHeader header = new VCFHeader(inputVcfHeader.getMetaDataInInputOrder(), SAMPLE);
+        writer.writeHeader(header);
 
+        // Go through the input, strip the records and write them to the output
+        final CloseableIterator<VariantContext> iterator = reader.iterator();
 	    while (iterator.hasNext()) {
-		    final VariantContext context = iterator.next();
-		    writer.add(context.subContextFromSamples(NO_SAMPLES, false)); // Do not re-derive the alleles from the new, subsetted genotypes: our site-only VCF should retain these values.
-            progress.record(context.getChr(), context.getStart());
+		    final VariantContext full = iterator.next();
+            final VariantContext site = subsetToSamplesWithOriginalAnnotations(full, SAMPLE);
+            writer.add(site);
+            progress.record(site.getChr(), site.getStart());
         }
 
 	    CloserUtil.close(iterator);
@@ -92,5 +89,13 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 	    writer.close();
 
         return 0;
+    }
+
+    /** Makes a new VariantContext with only the desired samples. */
+    private static VariantContext subsetToSamplesWithOriginalAnnotations(final VariantContext ctx, final Set<String> samples) {
+        final VariantContextBuilder builder = new VariantContextBuilder(ctx);
+        final GenotypesContext newGenotypes = ctx.getGenotypes().subsetToSamples(samples);
+        builder.alleles(ctx.getAlleles());
+        return builder.genotypes(newGenotypes).make();
     }
 }
