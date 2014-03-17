@@ -588,6 +588,14 @@ public final class SAMUtils
     }
 
     /**
+     * Tests if the provided record is mapped entirely beyond the end of the reference (i.e., the alignment start is greater than the
+     * length of the sequence to which the record is mapped).
+     */
+    public static boolean recordMapsEntirelyBeyondEndOfReference(final SAMRecord record) {
+        return record.getHeader().getSequence(record.getReferenceIndex()).getSequenceLength() < record.getAlignmentStart();
+    }
+    
+    /**
      *
      * @return negative if mapq1 < mapq2, etc.
      * Note that MAPQ(0) < MAPQ(255) < MAPQ(1)

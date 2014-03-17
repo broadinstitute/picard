@@ -434,6 +434,9 @@ public abstract class AbstractAlignmentMerger {
         updateCigarForTrimmedOrClippedBases(unaligned, aligned);
         if (SAMUtils.cigarMapsNoBasesToRef(unaligned.getCigar())) {
             SAMUtils.makeReadUnmapped(unaligned);
+        } else if (SAMUtils.recordMapsEntirelyBeyondEndOfReference(aligned)) {
+            log.warn("Record mapped off end of reference; making unmapped: " + aligned);
+            SAMUtils.makeReadUnmapped(unaligned);
         }
     }
 
@@ -596,7 +599,7 @@ public abstract class AbstractAlignmentMerger {
                 ? this.read1BasesTrimmed != null ? this.read1BasesTrimmed : 0
                 : this.read2BasesTrimmed != null ? this.read2BasesTrimmed : 0;
         final int notWritten = originalReadLength - (alignmentReadLength + trimmed);
-
+       
         // Update cigar if the mate maps off the reference
         createNewCigarsIfMapsOffEndOfReference(rec);
 
