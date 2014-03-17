@@ -71,7 +71,7 @@ class BclParser extends PerTilePerCycleParser<BclData>{
      * Allow for overriding in derived classes.
      */
     protected CloseableIterator<BclReader.BclValue> makeReader(final File file, final int cycle, final int tileNumber) {
-        return new BclReader(file, bclQualityEvaluationStrategy);
+        return BclReader.make(file, bclQualityEvaluationStrategy);
     }
 
     /** Create a Bcl parser for an individual cycle and wrap it with the CycleFileParser interface which populates

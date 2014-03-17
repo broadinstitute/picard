@@ -25,6 +25,9 @@ package net.sf.samtools.util;
 
 
 import net.sf.samtools.Defaults;
+import net.sf.samtools.seekablestream.SeekableBufferedStream;
+import net.sf.samtools.seekablestream.SeekableFileStream;
+import net.sf.samtools.seekablestream.SeekableStream;
 
 import java.io.*;
 
@@ -69,13 +72,29 @@ public class IOUtil {
         else return os;
     }
 
+    public static SeekableStream maybeBufferedSeekableStream(final SeekableStream stream, final int bufferSize) {
+        return bufferSize > 0 ? new SeekableBufferedStream(stream, bufferSize) : stream; 
+    }
+    
+    public static SeekableStream maybeBufferedSeekableStream(final SeekableStream stream) {
+        return maybeBufferedSeekableStream(stream, Defaults.BUFFER_SIZE);
+    }
+    
+    public static SeekableStream maybeBufferedSeekableStream(final File file) {
+        try {
+            return maybeBufferedSeekableStream(new SeekableFileStream(file));
+        } catch (final FileNotFoundException e) {
+            throw new RuntimeIOException(e);
+        }
+    }
+    
     /**
      * @return If Defaults.BUFFER_SIZE > 0, wrap is in BufferedInputStream, else return is itself.
      */
     public static InputStream maybeBufferInputStream(final InputStream is) {
         return maybeBufferInputStream(is, Defaults.BUFFER_SIZE);
     }
-
+    
     /**
      * @return If bufferSize > 0, wrap is in BufferedInputStream, else return is itself.
      */
