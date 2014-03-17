@@ -20,8 +20,8 @@ public enum IlluminaMetricsCode {
 
     /**
      * Phasing codes are between 200 and 299 (inclusive). Phasing codes are defined as being
-     * (200 + ((N – 1) * 2)) for (a 0-based) read descriptor N (i.e., 200, 202, 204, etc.) Prephasing codes are defined
-     * as being (201 + ((N – 1) * 2)) for read descriptor N (i.e., 201, 203, 205, etc.). So for a 101T8B101T read
+     * (200 + ((N - 1) * 2)) for (a 0-based) read descriptor N (i.e., 200, 202, 204, etc.) Prephasing codes are defined
+     * as being (201 + ((N - 1) * 2)) for read descriptor N (i.e., 201, 203, 205, etc.). So for a 101T8B101T read
      * structure, there will be phasing codes of 200, 202 and 204 and prephasing codes of 201, 203, 205.
      */
     public static int getPhasingCode(final int readDescriptorIndex, final IlluminaMetricsCode phasingType) {
