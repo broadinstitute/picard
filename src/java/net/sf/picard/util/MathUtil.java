@@ -25,6 +25,7 @@
 package net.sf.picard.util;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import static java.lang.Math.pow;
 
@@ -64,6 +65,18 @@ public class MathUtil {
 
     public static int compare(final int v1, final int v2) {
         return (v1 < v2 ? -1 : (v1 == v2 ? 0 : 1));
+    }
+
+    /** Calculate the median of an array of doubles. Assumes that the input is sorted */
+    public static double median(final double... in) {
+        if (in.length == 0) {
+            throw new IllegalArgumentException("Attempting to find the median of an empty array");
+        }
+
+        final double[] data = Arrays.copyOf(in, in.length);
+        Arrays.sort(data);
+        final int middle = data.length / 2;
+        return data.length % 2 == 1 ? data[middle] : (data[middle - 1] + data[middle]) / 2.0;
     }
 
     /**
