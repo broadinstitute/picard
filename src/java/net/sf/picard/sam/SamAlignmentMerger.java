@@ -54,6 +54,9 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 *                          included when merging.  This overrides the exclusion of
 *                          attributes whose tags start with the reserved characters
 *                          of X, Y, and Z
+     * @param attributesToRetain  attributes from the alignment record that should be
+     *                          removed when merging.  This overrides attributesToRetain if they share
+     *                           common tags.
      * @param read1BasesTrimmed The number of bases trimmed from start of read 1 prior to alignment.  Optional.
      * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
      * @param read1AlignedSamFile The alignment records for read1.  Used when the two ends of a read are
@@ -73,6 +76,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
                               final boolean alignedReadsOnly,
                               final List<File> alignedSamFile, final int maxGaps, final List<String> attributesToRetain,
+                              final List<String> attributesToRemove,
                               final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                               final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
                               final List<SamPairUtil.PairOrientation> expectedOrientations,
@@ -80,7 +84,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
-              alignedReadsOnly, programRecord, attributesToRetain, read1BasesTrimmed,
+              alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
               read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&

@@ -85,6 +85,7 @@ public abstract class AbstractAlignmentMerger {
     private final boolean alignedReadsOnly;
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<String>();
+    private final List<String> attributesToRemove = new ArrayList<String>();
     private final File referenceFasta;
     private final Integer read1BasesTrimmed;
     private final Integer read2BasesTrimmed;
@@ -127,6 +128,9 @@ public abstract class AbstractAlignmentMerger {
      *                          included when merging.  This overrides the exclusion of
      *                          attributes whose tags start with the reserved characters
      *                          of X, Y, and Z
+     * @param attributesToRemove  attributes from the alignment record that should be
+     *                          removed when merging.  This overrides attributesToRetain if they share
+     *                           common tags.
      * @param read1BasesTrimmed The number of bases trimmed from start of read 1 prior to alignment.  Optional.
      * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
      * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
@@ -140,6 +144,7 @@ public abstract class AbstractAlignmentMerger {
                                    final File referenceFasta, final boolean clipAdapters,
                                    final boolean bisulfiteSequence, final boolean alignedReadsOnly,
                                    final SAMProgramRecord programRecord, final List<String> attributesToRetain,
+                                   final List<String> attributesToRemove,
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
                                    final SAMFileHeader.SortOrder sortOrder,
@@ -172,6 +177,18 @@ public abstract class AbstractAlignmentMerger {
         header.setSequenceDictionary(this.sequenceDictionary);
         if (attributesToRetain != null) {
             this.attributesToRetain.addAll(attributesToRetain);
+        }
+        if (attributesToRemove != null) {
+            this.attributesToRemove.addAll(attributesToRemove);
+            // attributesToRemove overrides attributesToRetain
+            if (!this.attributesToRetain.isEmpty()) {
+                for (String attribute : this.attributesToRemove) {
+                    if (this.attributesToRetain.contains(attribute)) {
+                        log.info("Overriding retaining the " + attribute + " tag since remove overrides retain.");
+                        this.attributesToRetain.remove(attribute);
+                    }
+                }
+            }
         }
         this.read1BasesTrimmed = read1BasesTrimmed;
         this.read2BasesTrimmed = read2BasesTrimmed;
@@ -487,9 +504,9 @@ public abstract class AbstractAlignmentMerger {
      */
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment) {
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
-            // Copy over any non-reserved attributes.
-            if (!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) {
-                rec.setAttribute(attr.tag, attr.value);
+            // Copy over any non-reserved attributes.  attributesToRemove overrides attributesToRetain.
+            if ((!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) && !this.attributesToRemove.contains(attr.tag)) {
+               rec.setAttribute(attr.tag, attr.value);
             }
         }
         rec.setReadUnmappedFlag(alignment.getReadUnmappedFlag());

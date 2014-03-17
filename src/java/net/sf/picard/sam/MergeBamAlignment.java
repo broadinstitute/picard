@@ -132,6 +132,10 @@ public class MergeBamAlignment extends CommandLineProgram {
             "brought over from the alignment data when merging.")
     public List<String> ATTRIBUTES_TO_RETAIN = new ArrayList<String>();
 
+    @Option(doc="Attributes from the alignment record that should be removed when merging." +
+            "  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.")
+    public List<String> ATTRIBUTES_TO_REMOVE = new ArrayList<String>();
+
     @Option(shortName="R1_TRIM",
 		    doc="The number of bases trimmed from the beginning of read 1 prior to alignment")
     public int READ1_TRIM = 0;
@@ -226,7 +230,7 @@ public class MergeBamAlignment extends CommandLineProgram {
         final SamAlignmentMerger merger = new SamAlignmentMerger(UNMAPPED_BAM, OUTPUT,
             REFERENCE_SEQUENCE, prod, CLIP_ADAPTERS, IS_BISULFITE_SEQUENCE,
                 ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
-            ATTRIBUTES_TO_RETAIN, READ1_TRIM, READ2_TRIM,
+            ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
             READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
             PRIMARY_ALIGNMENT_STRATEGY.newInstance());
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
