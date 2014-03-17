@@ -66,7 +66,7 @@ public class MultiTileBclParser extends BclParser {
                     tileIndex.getFile().getAbsolutePath(), tileIndex.getNumTiles(), bclIndexReader.getBciFile().getAbsolutePath(), bclIndexReader.getNumTiles()));
         }
 
-        final BclReader bclReader = new BclReader(file, bclQualityEvaluationStrategy);
+        final BclReader bclReader = BclReader.makeSeekable(file, bclQualityEvaluationStrategy);
         bclReader.seek(bclIndexReader.get(tileIndexRecord.zeroBasedTileNumber));
 
         return new CountLimitedIterator(bclReader, tileIndexRecord.numClustersInTile);

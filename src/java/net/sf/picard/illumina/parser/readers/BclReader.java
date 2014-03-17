@@ -23,19 +23,17 @@
  */
 package net.sf.picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.util.UnsignedTypeUtil;
-import net.sf.samtools.Defaults;
-import net.sf.samtools.util.BlockCompressedInputStream;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.IOUtil;
+ import net.sf.picard.PicardException;
+ import net.sf.picard.util.UnsignedTypeUtil;
+ import net.sf.samtools.util.BlockCompressedInputStream;
+ import net.sf.samtools.util.CloseableIterator;
+ import net.sf.samtools.util.CloserUtil;
+ import net.sf.samtools.util.IOUtil;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Iterator;
-import java.util.zip.GZIPInputStream;
+ import java.io.*;
+ import java.nio.ByteBuffer;
+ import java.nio.ByteOrder;
+ import java.util.zip.GZIPInputStream;
 
 /**
  * BCL Files are base call and quality score binary files containing a (base,quality) pair for successive clusters.
@@ -97,24 +95,47 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
         }
     }
 
-    public BclReader(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+    public static BclReader make(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+        return new BclReader(file, bclQualityEvaluationStrategy, false);    
+    }
+
+    /** 
+     * Produces a {@link net.sf.picard.illumina.parser.readers.BclReader} appropriate for when the consumer intends to call 
+     * {@link net.sf.picard.illumina.parser.readers.BclReader#seek(long)}.  If this functionality is not required, call
+     * {@link net.sf.picard.illumina.parser.readers.BclReader#make(java.io.File, BclQualityEvaluationStrategy)}.
+     */
+    public static BclReader makeSeekable(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
+        return new BclReader(file, bclQualityEvaluationStrategy, true);
+    }
+
+    BclReader(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean requiresSeekability) {
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-        
+
         filePath = file.getAbsolutePath();
         final boolean isGzip = filePath.endsWith(".gz");
         final boolean isBgzf = filePath.endsWith(".bgzf");
 
         try {
-
             // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
             // if necessary
-            InputStream is =  IOUtil.maybeBufferInputStream(new FileInputStream(file));
             if (isBgzf) {
-                is = new BlockCompressedInputStream(is);
+                // Only BlockCompressedInputStreams can seek, and only if they are fed a SeekableStream.
+                inputStream = new BlockCompressedInputStream(IOUtil.maybeBufferedSeekableStream(file));
             } else if (isGzip) {
-                is = new GZIPInputStream(is);
+                if (requiresSeekability) { 
+                    throw new IllegalArgumentException(
+                        String.format("Cannot create a seekable reader for gzip bcl: %s.", filePath)
+                    );
+                }
+                inputStream = new GZIPInputStream(IOUtil.maybeBufferInputStream(new FileInputStream(file)));
+            } else {
+                if (requiresSeekability) {
+                    throw new IllegalArgumentException(
+                        String.format("Cannot create a seekable reader for provided bcl: %s.", filePath)
+                    );
+                }
+                inputStream = IOUtil.maybeBufferInputStream(new FileInputStream(file));
             }
-            inputStream = is;
         } catch (FileNotFoundException fnfe) {
             throw new PicardException("File not found: (" + filePath + ")", fnfe);
         } catch (IOException ioe) {

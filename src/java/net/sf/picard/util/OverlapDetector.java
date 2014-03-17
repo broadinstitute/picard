@@ -83,6 +83,18 @@ public class OverlapDetector<T> {
         }
     }
 
+    /** Gets all the objects that could be returned by the overlap detector. */
+    public Collection<T> getAll() {
+        Collection<T> all = new HashSet<T>();
+        for (IntervalTree<Set<T>> tree : this.cache.values()) {
+            for (IntervalTree.Node<Set<T>> node : tree) {
+                all.addAll(node.getValue());
+            }
+        }
+
+        return all;
+    }
+
     /** Gets the collection of objects that overlap the provided mapping. */
     public Collection<T> getOverlaps(Interval rhs)  {
         Collection<T> matches = new ArrayList<T>();
@@ -103,17 +115,5 @@ public class OverlapDetector<T> {
         }
 
         return matches;
-    }
-
-    /** Gets all the objects that could be returned by the overlap detector. */
-    public Collection<T> getAll() {
-        Collection<T> all = new HashSet<T>();
-        for (IntervalTree<Set<T>> tree : this.cache.values()) {
-            for (IntervalTree.Node<Set<T>> node : tree) {
-                all.addAll(node.getValue());
-            }
-        }
-
-        return all;
     }
 }

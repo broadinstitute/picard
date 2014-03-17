@@ -52,7 +52,7 @@ public class BclReaderTest {
     @Test
     public void readValidFile() {
         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
-        final BclReader reader = new BclReader(PASSING_BCL_FILE, bclQualityEvaluationStrategy);
+        final BclReader reader = BclReader.make(PASSING_BCL_FILE, bclQualityEvaluationStrategy);
         final byte[] quals = qualsAsBytes();
 
         Assert.assertEquals(reader.numClusters, expectedBases.length);
@@ -81,7 +81,7 @@ public class BclReaderTest {
     @Test(expectedExceptions = PicardException.class, dataProvider = "failingFiles")
     public void failingFileTest(final File failingFile) {
         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
-        final BclReader reader = new BclReader(failingFile, bclQualityEvaluationStrategy);
+        final BclReader reader = BclReader.make(failingFile, bclQualityEvaluationStrategy);
         Assert.assertEquals(reader.numClusters, expectedBases.length);
         while (reader.hasNext()) {
             reader.next();
@@ -104,7 +104,7 @@ public class BclReaderTest {
             callables.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    final BclReader reader = new BclReader(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
+                    final BclReader reader = BclReader.make(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
                     Assert.assertEquals(reader.numClusters, expectedBases.length);
                     while (reader.hasNext()) {
                         reader.next();
@@ -137,7 +137,7 @@ public class BclReaderTest {
             callables.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    final BclReader reader = new BclReader(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
+                    final BclReader reader = BclReader.make(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
                     Assert.assertEquals(reader.numClusters, expectedBases.length);
                     while (reader.hasNext()) {
                         reader.next();

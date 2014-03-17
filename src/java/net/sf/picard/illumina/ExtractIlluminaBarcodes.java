@@ -170,9 +170,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         LOG.info("Processing with " + numProcessors + " PerTileBarcodeExtractor(s).");
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
+        // TODO: This is terribly inefficient; we're opening a huge number of files via the extractor constructor and we never close them.
         final List<PerTileBarcodeExtractor> extractors = new ArrayList<PerTileBarcodeExtractor>(factory.getAvailableTiles().size());
         for (final int tile : factory.getAvailableTiles()) {
-
             final PerTileBarcodeExtractor extractor = new PerTileBarcodeExtractor(
                     tile,
                     getBarcodeFile(tile),
@@ -184,11 +184,13 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     MAX_MISMATCHES,
                     MIN_MISMATCH_DELTA
             );
-            pool.submit(extractor);
             extractors.add(extractor);
         }
-        pool.shutdown();
         try {
+            for (final PerTileBarcodeExtractor extractor : extractors) {
+                pool.submit(extractor);    
+            }
+            pool.shutdown();
             // Wait a while for existing tasks to terminate
             if (!pool.awaitTermination(6, TimeUnit.HOURS)) {
                 pool.shutdownNow(); // Cancel any still-executing tasks
@@ -197,8 +199,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     LOG.error("Pool did not terminate");
                 return 1;
             }
-        } catch (InterruptedException ie) {
+        } catch (final Throwable e) {
             // (Re-)Cancel if current thread also interrupted
+            LOG.error(e, "Parent thread encountered problem submitting extractors to thread pool or awaiting shutdown of threadpool.  Attempting to kill threadpool.");
             pool.shutdownNow();
             return 2;
         }
