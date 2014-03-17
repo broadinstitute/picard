@@ -63,6 +63,12 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
     private SeekableStream seekableStream = null;
 
     /**
+     * We lazy-load the index but it might not even exist
+     * Don't want to keep checking if that's the case
+     */
+    private boolean needCheckForIndex = true;
+
+    /**
      * @param featurePath  - path to the feature file, can be a local file path, http url, or ftp url
      * @param codec        - codec to decode the features
      * @param requireIndex - true if the reader will be queries for specific ranges.  An index (idx) file must exist
@@ -72,7 +78,39 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
 
         super(featurePath, codec);
 
-        String indexFile = Tribble.indexFile(featurePath);
+        if (requireIndex) {
+            this.loadIndex();
+            if(!this.hasIndex()){
+                throw new TribbleException("An index is required, but none found.");
+            }
+        }
+
+        // does path point to a regular file?
+        this.pathIsRegularFile = SeekableStreamFactory.isFilePath(path);
+
+        readHeader();
+    }
+
+    /**
+     * @param featureFile - path to the feature file, can be a local file path, http url, or ftp url
+     * @param codec       - codec to decode the features
+     * @param index       - a tribble Index object
+     * @throws IOException
+     */
+    public TribbleIndexedFeatureReader(final String featureFile, final FeatureCodec<T, SOURCE> codec, final Index index) throws IOException {
+        this(featureFile, codec, false); // required to read the header
+        this.index = index;
+        this.needCheckForIndex = false;
+    }
+
+    /**
+     * Attempt to load the index for the specified {@link #path}.
+     * If the {@link #path} has no available index file,
+     * does nothing
+     * @throws IOException
+     */
+    private void loadIndex() throws IOException{
+        String indexFile = Tribble.indexFile(this.path);
         if (ParsingUtils.resourceExists(indexFile)) {
             index = IndexFactory.loadIndex(indexFile);
         } else {
@@ -82,15 +120,7 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
                 index = IndexFactory.loadIndex(indexFile);
             }
         }
-
-        if (requireIndex && !this.hasIndex()) {
-            throw new TribbleException("An index is required, but none found.");
-        }
-
-        // does path point to a regular file?
-        this.pathIsRegularFile = SeekableStreamFactory.isFilePath(path);
-
-        readHeader();
+        this.needCheckForIndex = false;
     }
 
     /**
@@ -126,18 +156,6 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
         return pathIsRegularFile;
     }
 
-    /**
-     * @param featureFile - path to the feature file, can be a local file path, http url, or ftp url
-     * @param codec       - codec to decode the features
-     * @param index       - a tribble Index object
-     * @throws IOException
-     */
-    public TribbleIndexedFeatureReader(final String featureFile, final FeatureCodec<T, SOURCE> codec, final Index index) throws IOException {
-        this(featureFile, codec, false); // required to read the header
-        this.index = index;
-    }
-
-
     public void close() throws IOException {
         // close the seekable stream if that's necessary
         if (seekableStream != null) seekableStream.close();
@@ -149,11 +167,18 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
      * @return list of strings of the contig names
      */
     public List<String> getSequenceNames() {
-        return index == null ? new ArrayList<String>() : new ArrayList<String>(index.getSequenceNames());
+        return !this.hasIndex() ? new ArrayList<String>() : new ArrayList<String>(index.getSequenceNames());
     }
 
     @Override
     public boolean hasIndex() {
+        if(index == null && this.needCheckForIndex){
+            try {
+                this.loadIndex();
+            } catch (IOException e) {
+                throw new TribbleException("Error loading index file: " + e.getMessage(), e);
+            }
+        }
         return index != null;
     }
 
@@ -202,7 +227,7 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
      */
     public CloseableTribbleIterator<T> query(final String chr, final int start, final int end) throws IOException {
 
-        if (index == null) {
+        if (this.hasIndex()) {
             throw new TribbleException("Index not found for: " + path);
         }
 
