@@ -1,8 +1,33 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2014 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
 import net.sf.picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
+import net.sf.picard.util.IterableAdapter;
 import net.sf.samtools.util.CollectionUtil;
 
 import java.io.File;
@@ -15,9 +40,6 @@ import java.util.*;
  * @author mccowan
  */
 public class TileMetricsUtil {
-    private final static Integer DENSITY_ID_CODE = 100;
-    private final static Integer CLUSTER_ID_CODE = 102;
-
     /** The path to the directory containing the tile metrics file relative to the basecalling directory. */
     public static String INTEROP_SUBDIRECTORY_NAME = "InterOp";
     
@@ -30,79 +52,103 @@ public class TileMetricsUtil {
     }
     
     /**
-     * Returns an unmodifiable collection of tile data read from the provided file.
+     * Returns an unmodifiable collection of tile data read from the provided file. For each tile we will extract:
+     *     - lane number
+     *     - tile number
+     *     - density
+     *     - cluster ID
+     *     - Phasing & Prephasing for first template read (if available)
+     *     - Phasing & Prephasing for second template read (if available)
      */
-    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile) throws FileNotFoundException {
+    public static Collection<Tile> parseTileMetrics(final File tileMetricsOutFile, final ReadStructure readStructure) throws FileNotFoundException {
+        // Get the tile metrics lines from TileMetricsOut, keeping only the last value for any Lane/Tile/Code combination
+        final Collection<IlluminaTileMetrics> tileMetrics = determineLastValueForLaneTileMetricsCode(new TileMetricsOutReader
+                (tileMetricsOutFile));
 
-        // Discard duplicate tile data entries (which has caused problems) via Set. 
-        final Set<IlluminaTileMetrics> metrics = 
-                new HashSet<IlluminaTileMetrics>(CollectionUtil.makeCollection(new TileMetricsOutReader(tileMetricsOutFile)));
-        final Map<String, Collection<IlluminaTileMetrics>> locationToMetricsMap = CollectionUtil.partition(metrics, new CollectionUtil.Partitioner<IlluminaTileMetrics, String>() {
-            @Override
-            public String getPartition(final IlluminaTileMetrics metric) {
-                return renderMetricLocationKey(metric);
-            }
-        });
-
+        // Collect the tiles by lane & tile, and then collect the metrics by lane
+        final Map<String, Collection<IlluminaTileMetrics>> locationToMetricsMap = partitionTileMetricsByLocation(tileMetrics);
         final Collection<Tile> tiles = new LinkedList<Tile>();
         for (final Map.Entry<String, Collection<IlluminaTileMetrics>> entry : locationToMetricsMap.entrySet()) {
             final Collection<IlluminaTileMetrics> tileRecords = entry.getValue();
-            final Map<Integer, Collection<IlluminaTileMetrics>> codeMetricsMap = CollectionUtil.partition(tileRecords, new CollectionUtil.Partitioner<IlluminaTileMetrics, Integer>() {
-                @Override
-                public Integer getPartition(final IlluminaTileMetrics metric) {
-                    return metric.getMetricCode();
-                }
-            });
-            final Set<Integer> observedCodes = codeMetricsMap.keySet();
-            if (!(observedCodes.contains(DENSITY_ID_CODE) && observedCodes.contains(CLUSTER_ID_CODE)))
-                throw new PicardException(String.format("Expected to find cluster and density record codes (%s and %s) in records read for tile location %s (lane:tile), but found only %s.", CLUSTER_ID_CODE, DENSITY_ID_CODE, entry.getKey(), observedCodes));
 
-            final IlluminaTileMetrics densityRecord = CollectionUtil.getSoleElement(codeMetricsMap.get(DENSITY_ID_CODE));
-            final IlluminaTileMetrics clusterRecord = CollectionUtil.getSoleElement(codeMetricsMap.get(CLUSTER_ID_CODE));
-            tiles.add(new Tile(densityRecord.getLaneNumber(), densityRecord.getTileNumber(), densityRecord.getMetricValue(), clusterRecord.getMetricValue()));
+            // Get a mapping from metric code number to the corresponding IlluminaTileMetrics
+            final Map<Integer, Collection<IlluminaTileMetrics>> codeMetricsMap = partitionTileMetricsByCode(tileRecords);
+
+            final Set<Integer> observedCodes = codeMetricsMap.keySet();
+            if (!(observedCodes.contains(IlluminaMetricsCode.DENSITY_ID.getMetricsCode()) && observedCodes.contains(IlluminaMetricsCode.CLUSTER_ID.getMetricsCode())))
+                throw new PicardException(String.format("Expected to find cluster and density record codes (%s and %s) in records read for tile location %s (lane:tile), but found only %s.",
+                        IlluminaMetricsCode.CLUSTER_ID.getMetricsCode(), IlluminaMetricsCode.DENSITY_ID.getMetricsCode(), entry.getKey(), observedCodes));
+
+            final IlluminaTileMetrics densityRecord = CollectionUtil.getSoleElement(codeMetricsMap.get(IlluminaMetricsCode.DENSITY_ID.getMetricsCode()));
+            final IlluminaTileMetrics clusterRecord = CollectionUtil.getSoleElement(codeMetricsMap.get(IlluminaMetricsCode.CLUSTER_ID.getMetricsCode()));
+
+            // Snag the phasing data for each read in the read structure. For both types of phasing values, this is the median of all of the individual values seen
+            final Collection<TilePhasingValue> tilePhasingValues = getTilePhasingValues(codeMetricsMap, readStructure);
+
+            tiles.add(new Tile(densityRecord.getLaneNumber(), densityRecord.getTileNumber(), densityRecord.getMetricValue(), clusterRecord.getMetricValue(),
+                tilePhasingValues.toArray(new TilePhasingValue[tilePhasingValues.size()])));
         }
 
         return Collections.unmodifiableCollection(tiles);
     }
 
-    
-    
+    /** Pulls out the phasing & prephasing value for the template reads and returns a collection of TilePhasingValues representing these */
+    private static Collection<TilePhasingValue> getTilePhasingValues(final Map<Integer, Collection<IlluminaTileMetrics>> codeMetricsMap, final ReadStructure readStructure) {
+        boolean isFirstRead = true;
+        final Collection<TilePhasingValue> tilePhasingValues = new ArrayList<TilePhasingValue>();
+        for (int descriptorIndex = 0; descriptorIndex < readStructure.descriptors.size(); descriptorIndex++) {
+            if (readStructure.descriptors.get(descriptorIndex).type == ReadType.Template) {
+                final TileTemplateRead tileTemplateRead = isFirstRead ? TileTemplateRead.FIRST : TileTemplateRead.SECOND;
+                // For both phasing & prephasing, pull out the value and create a TilePhasingValue for further processing
+                final int phasingCode = IlluminaMetricsCode.getPhasingCode(descriptorIndex, IlluminaMetricsCode.PHASING_BASE);
+                final int prePhasingCode = IlluminaMetricsCode.getPhasingCode(descriptorIndex, IlluminaMetricsCode.PREPHASING_BASE);
+
+                if (!(codeMetricsMap.containsKey(phasingCode) && codeMetricsMap.containsKey(prePhasingCode))) {
+                    throw new PicardException("Don't have both phasing and prephasing values for tile");
+                }
+
+                tilePhasingValues.add(new TilePhasingValue(tileTemplateRead,
+                        CollectionUtil.getSoleElement(codeMetricsMap.get(phasingCode)).getMetricValue(),
+                        CollectionUtil.getSoleElement(codeMetricsMap.get(prePhasingCode)).getMetricValue()));
+                isFirstRead = false;
+            }
+        }
+
+        return tilePhasingValues;
+    }
+
+    /** According to Illumina, for every lane/tile/code combination they will only use the last value. Filter out the previous values */
+    private static Collection<IlluminaTileMetrics> determineLastValueForLaneTileMetricsCode(final Iterator<IlluminaTileMetrics>
+                                                                                                    tileMetricsIterator) {
+        final Map<TileMetricsOutReader.IlluminaLaneTileCode, IlluminaTileMetrics> filteredTileMetrics = new HashMap<TileMetricsOutReader.IlluminaLaneTileCode, IlluminaTileMetrics>();
+        for (final IlluminaTileMetrics illuminaTileMetrics : new IterableAdapter<IlluminaTileMetrics>(tileMetricsIterator)) {
+            filteredTileMetrics.put(illuminaTileMetrics.getLaneTileCode(), illuminaTileMetrics);
+        }
+
+        return filteredTileMetrics.values();
+    }
+
     private static String renderMetricLocationKey(final IlluminaTileMetrics metric) {
         return String.format("%s:%s", metric.getLaneNumber(), metric.getTileNumber());
     }
 
-    /**
-     * Describes a tile.
-     */
-    public static class Tile {
-        private final int lane, tile;
-        private final float density, clusters;
+    // Wrapper around CollectionUtil.Partitioner, purely to de-bulk the actual methods
+    private static Map<Integer, Collection<IlluminaTileMetrics>> partitionTileMetricsByCode(final Collection<IlluminaTileMetrics> tileMetrics) {
+        return CollectionUtil.partition(tileMetrics, new CollectionUtil.Partitioner<IlluminaTileMetrics, Integer>() {
+            @Override
+            public Integer getPartition(final IlluminaTileMetrics metric) {
+                return metric.getMetricCode();
+            }
+        });
+    }
 
-        protected Tile(final int lane, final int tile, final float density, final float clusters) {
-            this.lane = lane;
-            this.tile = tile;
-            this.density = density;
-            this.clusters = clusters;
-        }
-
-        /** Returns the number of this tile's parent lane. */
-        public int getLaneNumber() {
-            return lane;
-        }
-
-        /** Returns the number/name of this tile. */
-        public int getTileNumber() {
-            return tile;
-        }
-
-        /** Returns the cluster density of this tile, in units of [cluster/mm^2]. */
-        public float getClusterDensity() {
-            return density;
-        }
-
-        /** Returns the number of on this tile. */
-        public float getClusterCount() {
-            return clusters;
-        }
+    // Wrapper around CollectionUtil.Partitioner, purely to de-bulk the actual methods
+    private static Map<String, Collection<IlluminaTileMetrics>> partitionTileMetricsByLocation(final Collection<IlluminaTileMetrics> tileMetrics) {
+        return CollectionUtil.partition(tileMetrics, new CollectionUtil.Partitioner<IlluminaTileMetrics, String>() {
+            @Override
+            public String getPartition(final IlluminaTileMetrics metric) {
+                return renderMetricLocationKey(metric);
+            }
+        });
     }
 }

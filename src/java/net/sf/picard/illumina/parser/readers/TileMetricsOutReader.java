@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
  * byte 0 (unsigned byte) = The version number which MUST be 2 or an exception will be thrown
  * byte 1 (unsigned byte) = The record size which must be 10 or an exception will be thrown
  * bytes 3 + (current_record * 10) to (current_record * 10 + 10) (TileMetrics Record) = The actual records each of size 10 that
- *          get converted into IlluminaTileMetrics objects
+ *          get converted into IlluminaPhasingMetrics objects
  *
  * TileMetrics Record Format:
  * Each 10 byte record is of the following format:
@@ -70,26 +70,68 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
     }
 
     /**
-     * IlluminaTileMetrics corresponds to a single record in a TileMetricsOut file
+     * IlluminaPhasingMetrics corresponds to a single record in a TileMetricsOut file
      */
     public static class IlluminaTileMetrics {
-        private final int laneNumber;
-        private final int tileNumber;
-        private final int metricCode;
+        private final IlluminaLaneTileCode laneTileCode;
         private final float metricValue;
 
         public IlluminaTileMetrics(final ByteBuffer bb) {
-            laneNumber  = UnsignedTypeUtil.uShortToInt(bb.getShort());
-            tileNumber  = UnsignedTypeUtil.uShortToInt(bb.getShort());
-            metricCode  = UnsignedTypeUtil.uShortToInt(bb.getShort());
-            metricValue = bb.getFloat();
+            this(UnsignedTypeUtil.uShortToInt(bb.getShort()), UnsignedTypeUtil.uShortToInt(bb.getShort()),
+                    UnsignedTypeUtil.uShortToInt(bb.getShort()), bb.getFloat());
         }
 
-        public IlluminaTileMetrics(int laneNumber, int tileNumber, int metricCode, float metricValue) {
+        public IlluminaTileMetrics(final int laneNumber, final int tileNumber, final int metricCode, final float metricValue) {
+            this.laneTileCode = new IlluminaLaneTileCode(laneNumber, tileNumber, metricCode);
+            this.metricValue = metricValue;
+        }
+
+        public int getLaneNumber() {
+            return laneTileCode.getLaneNumber();
+        }
+
+        public int getTileNumber() {
+            return laneTileCode.getTileNumber();
+        }
+
+        public int getMetricCode() {
+            return laneTileCode.getMetricCode();
+        }
+
+        public float getMetricValue() {
+            return metricValue;
+        }
+
+        public IlluminaLaneTileCode getLaneTileCode() {
+            return laneTileCode;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (o instanceof IlluminaTileMetrics) {
+                final IlluminaTileMetrics that = (IlluminaTileMetrics) o;
+                return laneTileCode == that.laneTileCode && metricValue == that.metricValue; // Identical tile data should render exactly the same float.
+            } else {
+                return false;
+            }
+        }
+        
+        @Override
+        public int hashCode() {
+            return String.format("%s:%s:%s:%s", laneTileCode.getLaneNumber(), laneTileCode.getTileNumber(), laneTileCode.getMetricCode(), metricValue).hashCode(); // Slow but adequate.
+        }
+    }
+
+    /** Helper class which captures the combination of a lane, tile & metric code */
+    public static class IlluminaLaneTileCode {
+        private final int laneNumber;
+        private final int tileNumber;
+        private final int metricCode;
+
+        public IlluminaLaneTileCode(final int laneNumber, final int tileNumber, final int metricCode) {
             this.laneNumber = laneNumber;
             this.tileNumber = tileNumber;
             this.metricCode = metricCode;
-            this.metricValue = metricValue;
         }
 
         public int getLaneNumber() {
@@ -104,26 +146,22 @@ public class TileMetricsOutReader implements Iterator<TileMetricsOutReader.Illum
             return metricCode;
         }
 
-        public float getMetricValue() {
-            return metricValue;
-        }
-        
         @Override
         public boolean equals(final Object o) {
-            if (o instanceof IlluminaTileMetrics) {
-                final IlluminaTileMetrics that = (IlluminaTileMetrics) o;
-                return laneNumber == that.laneNumber 
-                        && tileNumber == that.tileNumber 
-                        && metricCode == that.metricCode
-                        && metricValue == that.metricValue; // Identical tile data should render exactly the same float.
+            if (o instanceof IlluminaLaneTileCode) {
+                final IlluminaLaneTileCode that = (IlluminaLaneTileCode) o;
+                return laneNumber == that.laneNumber && tileNumber == that.tileNumber && metricCode == that.metricCode;
             } else {
                 return false;
             }
         }
-        
+
         @Override
         public int hashCode() {
-            return String.format("%s:%s:%s:%s", laneNumber, tileNumber, metricCode, metricValue).hashCode(); // Slow but adequate.
+            int result = laneNumber;
+            result = 31 * result + tileNumber;
+            result = 31 * result + metricCode;
+            return result;
         }
     }
 }
