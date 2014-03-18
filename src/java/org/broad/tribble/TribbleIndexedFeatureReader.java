@@ -227,7 +227,7 @@ public class TribbleIndexedFeatureReader<T extends Feature, SOURCE> extends Abst
      */
     public CloseableTribbleIterator<T> query(final String chr, final int start, final int end) throws IOException {
 
-        if (this.hasIndex()) {
+        if (!this.hasIndex()) {
             throw new TribbleException("Index not found for: " + path);
         }
 
