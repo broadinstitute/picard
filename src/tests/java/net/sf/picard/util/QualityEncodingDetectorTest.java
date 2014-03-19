@@ -1,7 +1,9 @@
 package net.sf.picard.util;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.fastq.FastqReader;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMRecordSetBuilder;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -33,7 +35,7 @@ public class QualityEncodingDetectorTest {
             new Testcase(new File("./testdata/net/sf/samtools/BAMFileIndexTest/index_test.bam"), FastqQualityFormat.Standard),
             new Testcase(new File("./testdata/net/sf/picard/util/QualityEncodingDetectorTest/solexa-as-standard.bam"), FastqQualityFormat.Solexa),
             new Testcase(new File("./testdata/net/sf/picard/util/QualityEncodingDetectorTest/illumina-as-standard.bam"), FastqQualityFormat.Illumina)
-            
+
     );
 
     Object[][] renderObjectArrayArray(final List<Testcase> testcaseList) {
@@ -67,5 +69,41 @@ public class QualityEncodingDetectorTest {
         final SAMFileReader reader = new SAMFileReader(input);
         Assert.assertEquals(QualityEncodingDetector.detect(reader), expectedQualityFormat);
         reader.close();
+    }
+
+    @Test
+    public void testSmallBamForDetectorFailure() {
+        final SAMRecordSetBuilder samRecordSetBuilder = createSmallUnmappedSam();
+        Assert.assertNotSame(QualityEncodingDetector.detect(samRecordSetBuilder.getSamReader(),
+                null), FastqQualityFormat.Standard);
+    }
+
+    @Test
+    public void testSmallBamWithExpectedQuality() {
+        final SAMRecordSetBuilder samRecordSetBuilder = createSmallUnmappedSam();
+        Assert.assertEquals(QualityEncodingDetector.detect(samRecordSetBuilder.getSamReader(),
+                FastqQualityFormat.Standard), FastqQualityFormat.Standard);
+    }
+
+    @Test (expectedExceptions = PicardException.class)
+    public void testQualitySanity() {
+        final SAMRecordSetBuilder samRecordSetBuilder = createSmallUnmappedSam();
+        QualityEncodingDetector.detect(samRecordSetBuilder.getSamReader(),
+                FastqQualityFormat.Illumina);
+    }
+
+    private SAMRecordSetBuilder createSmallUnmappedSam() {
+        final SAMRecordSetBuilder samRecordSetBuilder = new SAMRecordSetBuilder();
+        samRecordSetBuilder.setReadLength(25);
+        samRecordSetBuilder.addFrag("READ0", -1, -1, false, true, null, "@@@FFFFFHHHHHJIJIIJIIJJJJ", -1);
+        samRecordSetBuilder.addFrag("READ1", -1, -1, false, true, null, "@@@FFFFFHHHHHJIJIIJIIJJJJ", -1);
+        samRecordSetBuilder.addFrag("READ2", -1, -1, false, true, null, "@CCFDFEDHHHFFHIIII@GH<FFH", -1);
+        samRecordSetBuilder.addFrag("READ3", -1, -1, false, true, null, "@@?DFFDFHFFHDHIIHIIEIIJGG", -1);
+        samRecordSetBuilder.addFrag("READ4", -1, -1, false, true, null, "@CCFFDDFHHHHHIIJJHFJJJJJH", -1);
+        samRecordSetBuilder.addFrag("READ5", -1, -1, false, true, null, "BCCFFFFFHHHHHJJJJJIJJJJJJ", -1);
+        samRecordSetBuilder.addFrag("READ6", -1, -1, false, true, null, "@@CDFFFFHHHFHHIJJJJJJJIJJ", -1);
+        samRecordSetBuilder.addFrag("READ7", -1, -1, false, true, null, "CCCFFFFFHHHHHJJJJIJJJJHII", -1);
+        samRecordSetBuilder.addFrag("READ8", -1, -1, false, true, null, "CCCFFFFFHHHHHJJJJJJJJJJJJ", -1);
+        return samRecordSetBuilder;
     }
 }
