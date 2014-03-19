@@ -26,6 +26,7 @@ package net.sf.picard.sam;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.*;
 import net.sf.samtools.util.TestUtil;
+import net.sf.picard.sam.testers.MarkDuplicatesTester;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -135,5 +136,175 @@ public class MarkDuplicatesTest {
                 { false, withPgMap},
                 { true, suppressPgMap}
         };
+    }
+
+
+    @Test
+    public void testSingleUnmappedFragment() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addUnmappedFragment(-1, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testSingleUnmappedPair() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addUnmappedPair(-1, 50);
+        tester.runTest();
+    }
+
+
+    @Test
+    public void testSingleMappedFragment() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedFragment(1, 1, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testSingleMappedPair() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testSingleMappedFragmentAndSingleMappedPair() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedFragment(1, 1, true, 30); // duplicate!!!
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairs() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.addMappedPair(1, 1, 100, true, true, 30); // duplicate!!!
+        tester.runTest();
+    }
+
+    @Test
+    public void testThreeMappedPairs() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.addMappedPair(1, 1, 100, true, true, 30); // duplicate!!!
+        tester.addMappedPair(1, 1, 100, true, true, 30); // duplicate!!!
+        tester.runTest();
+    }
+
+    @Test
+    public void testSingleMappedFragmentAndTwoMappedPairs() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedFragment(1, 1, true, 30); // duplicate!!!
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.addMappedPair(1, 1, 100, true, true, 30); // duplicate!!!
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsMatesSoftClipped() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 10022, 10051, false, false, "76M", "8S68M", false, true, false, 50);
+        tester.addMappedPair(1, 10022, 10063, false, false, "76M", "5S71M", false, true, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsWithSoftClipping() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        // NB: no duplicates
+        // 5'1: 2, 5'2:46+73M=118
+        // 5'1: 2, 5'2:51+68M=118
+        tester.addMappedPair(1, 2, 46, false, false, "6S42M28S", "3S73M", false, 50);
+        tester.addMappedPair(1, 2, 51, true, true, "6S42M28S", "8S68M", false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsWithSoftClippingFirstOfPairOnlyNoMateCigar() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.setNoMateCigars(true);
+        // NB: no duplicates
+        // 5'1: 2, 5'2:46+73M=118
+        // 5'1: 2, 5'2:51+68M=118
+        tester.addMappedPair(1, 12, 46, false, false, "6S42M28S", null, true, 50); // only add the first one
+        tester.addMappedPair(1, 12, 51, false, false, "6S42M28S", null, true, 50); // only add the first one
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsWithSoftClippingBoth() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 10046, 10002, false, false, "3S73M", "6S42M28S", true, false, false, 50);
+        tester.addMappedPair(1, 10051, 10002, true, true, "8S68M", "6S48M22S", true, false, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testMatePairFirstUnmapped() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMatePair(1, 10049, 10049, false, true, false, false, "11M2I63M", null, false, false, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testMatePairSecondUnmapped() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMatePair(1, 10056, 10056, true, false, false, false, null, "54M22S", false, false, false, 50);
+        tester.runTest();
+    }
+
+    @Test
+    public void testMappedFragmentAndMatePairOneUnmapped() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMatePair(1, 10049, 10049, false, true, false, false, "11M2I63M", null, false, false, false, 50);
+        tester.addMappedFragment(1, 10049, true, 30); // duplicate
+        tester.runTest();
+    }
+
+    @Test
+    public void testMappedPairAndMatePairOneUnmapped() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMatePair(1, 10040, 10040, false, true, true, false, "76M", null, false, false, false, 30); // first a duplicate,
+        // second end unmapped
+        tester.addMappedPair(1, 10189, 10040, false, false, "41S35M", "65M11S", true, false, false, 50); // mapped OK
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsWithOppositeOrientations() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 10182, 10038, false, false, "32S44M", "66M10S", true, false, false, 50); // -/+
+        tester.addMappedPair(1, 10038, 10182, true, true, "70M6S", "32S44M", false, true, false, 50); // +/-, both are duplicates
+        tester.runTest();
+    }
+
+    @Test
+    public void testTwoMappedPairsWithOppositeOrientationsNumberTwo() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 10038, 10182, false, false, "70M6S", "32S44M", false, true, false, 50); // +/-, both are duplicates
+        tester.addMappedPair(1, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, 50); // -/+
+        tester.runTest();
+    }
+
+    @Test
+    public void testThreeMappedPairsWithMatchingSecondMate() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        // Read0 and Read2 are duplicates
+        // 10181+35=10216, 10058
+        tester.addMappedPair(1, 10181, 10058, false, false, "41S35M", "47M29S", true, false, false, 50); // -/+
+        // 10181+37=10218, 10058
+        tester.addMappedPair(1, 10181, 10058, false, false, "37S39M", "44M32S", true, false, false, 50); // -/+
+        // 10180+36=10216, 10058
+        tester.addMappedPair(1, 10180, 10058, true, true, "36S40M", "50M26S", true, false, false, 50); // -/+, both are duplicates
+        tester.runTest();
+    }
+
+    @Test
+    public void testMappedPairWithSamePosition() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addMappedPair(1, 4914, 4914, false, false, "37M39S", "73M3S", false, false, false, 50); // +/+
+        tester.runTest();
     }
 }
