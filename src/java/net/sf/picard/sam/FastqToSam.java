@@ -124,7 +124,6 @@ public class FastqToSam extends CommandLineProgram {
 
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
-        if (QUALITY_FORMAT == null) {
             final QualityEncodingDetector detector = new QualityEncodingDetector();
             final FastqReader reader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
             if (FASTQ2 == null) {
@@ -136,11 +135,11 @@ public class FastqToSam extends CommandLineProgram {
             }
             reader.close();
             
-            QUALITY_FORMAT = detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ);
+            QUALITY_FORMAT = detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, QUALITY_FORMAT);
             if (detector.isDeterminationAmbiguous())
                 LOG.warn("Making ambiguous determination about fastq's quality encoding; more than one format possible based on observed qualities.");
             LOG.info(String.format("Auto-detected quality format as: %s.", QUALITY_FORMAT));
-        }
+
         final int readCount = (FASTQ2 == null) ?  doUnpaired() : doPaired();
         LOG.info("Processed " + readCount + " fastq reads");
         return 0;

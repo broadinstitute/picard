@@ -23,10 +23,10 @@
  */
 package net.sf.picard.sam;
 
+import net.sf.picard.sam.testers.CleanSamTester;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMValidationError;
-import net.sf.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -35,11 +35,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Collection;
 
 public class CleanSamTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/CleanSam");
+    private static final String qualityScore = "&/,&-.1/6/&&)&).)/,&0768)&/.,/874,&.4137572)&/&&,&1-&.0/&&*,&&&&&&&&&&18775799,&16:8775-56256/69::;0";
 
     @Test(dataProvider = "testCleanSamDataProvider")
     public void testCleanSam(final String samFile, final String expectedCigar) throws IOException {
@@ -59,7 +59,7 @@ public class CleanSamTest {
         samReader.close();
         Assert.assertEquals(rec.getCigarString(), expectedCigar);
         samReader = new SAMFileReader(cleanedFile);
-        final boolean validated = validator.validateSamFileVerbose(samReader, null);
+        final boolean validated = validator.validateSamFileVerbose(samReader, null, null);
         samReader.close();
         Assert.assertTrue(validated, "ValidateSamFile failed");
     }
@@ -73,6 +73,26 @@ public class CleanSamTest {
                 {"overhang_with_deletion.sam", "91M2D8M1S"},
                 {"trailing_insertion.sam", "99M1I"},
                 {"long_trailing_insertion.sam", "90M10I"},
+        };
+    }
+
+    //identical test case using the SamFileTester to generate that SAM file on the fly
+    @Test(dataProvider = "testCleanSamTesterDataProvider")
+    public void testCleanSamTester(final String expectedCigar, final int length, final int alignStart) throws IOException {
+        final CleanSamTester cleanSamTester = new CleanSamTester(expectedCigar, length);
+        cleanSamTester.addMappedFragment(0, alignStart, false, expectedCigar, qualityScore, -1);
+        cleanSamTester.runTest();
+    }
+
+    @DataProvider(name = "testCleanSamTesterDataProvider")
+    public Object[][] testCleanSamTesterDataProvider() {
+        return new Object[][]{
+                {"100M", 101, 2},
+                {"99M1S", 101, 3},
+                {"91M2D9M", 102, 1},
+                {"91M2D8M1S", 101, 1},
+                {"99M1I", 101, 3},
+                {"90M10I", 101, 3},
         };
     }
 }

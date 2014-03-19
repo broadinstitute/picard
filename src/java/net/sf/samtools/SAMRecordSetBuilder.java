@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.picard.sam.SamPairUtil;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.RuntimeIOException;
@@ -54,10 +55,10 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private final SAMFileHeader header;
     private final Collection<SAMRecord> records;
 
-    private final int readLength = 36 ;
+    private int readLength = 36 ;
 
     private SAMProgramRecord programRecord = null;
-    private SAMReadGroupRecord readGroup = null; 
+    private SAMReadGroupRecord readGroup = null;
 
 
     /**
@@ -129,7 +130,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         }
     }
 
-    public void setReadGroup(final SAMReadGroupRecord readGroup) { 
+    public void setReadGroup(final SAMReadGroupRecord readGroup) {
         this.readGroup = readGroup;
         if (readGroup != null) {
             this.header.addReadGroup(readGroup);
@@ -155,41 +156,85 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
      * contig start and strand information.
      */
     public void addFrag(final String name, final int contig, final int start, final boolean negativeStrand) {
+        addFrag(name, contig, start, negativeStrand, false, null, null, -1);
+    }
+
+    /**
+     * Adds a fragment record (mapped or unmapped) to the set using the provided contig start and optionally the strand,
+     * cigar string, quality string or default quality score.
+     */
+    public SAMRecord addFrag(final String name, final int contig, final int start, final boolean negativeStrand,
+                             final boolean recordUnmapped, final String cigar, final String qualityString,
+                             final int defaultQuality) {
         final SAMRecord rec = new SAMRecord(this.header);
         rec.setReadName(name);
-        rec.setReferenceIndex(contig);
-        rec.setReferenceName(chroms[contig]);
-        rec.setAlignmentStart(start);
-        rec.setReadNegativeStrandFlag(negativeStrand);
-        rec.setCigarString(readLength + "M");
-        rec.setMappingQuality(255);
+        if (!recordUnmapped) {
+            rec.setReferenceIndex(contig);
+            rec.setReferenceName(chroms[contig]);
+            rec.setAlignmentStart(start);
+            rec.setReadNegativeStrandFlag(negativeStrand);
+            if (null != cigar) {
+                rec.setCigarString(cigar);
+                readLength = rec.getCigar().getReadLength();
+            } else if (!rec.getReadUnmappedFlag()) {
+                rec.setCigarString(readLength + "M");
+            }
+            rec.setMappingQuality(255);
+        } else {
+            rec.setReadUnmappedFlag(true);
+        }
         rec.setAttribute(SAMTag.RG.name(), READ_GROUP_ID);
+
         if (programRecord != null) {
             rec.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
         }
+
         if (readGroup != null) {
-            rec.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId()); 
+            rec.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId());
         }
 
-        fillInBasesAndQualities(rec);
+        fillInBasesAndQualities(rec, qualityString, defaultQuality);
+
         this.records.add(rec);
+        return rec;
     }
 
-    /** Adds an unmapped fragment read to the builder. */
+    /**
+     * Fills in the bases and qualities for the given record. Quality data is randomly generated if the defaultQuality
+     * is set to -1. Otherwise all qualities will be set to defaultQuality. If a quality string is provided that string
+     * will be used instead of the defaultQuality.
+     */
+    private void fillInBasesAndQualities(final SAMRecord rec, final String qualityString, final int defaultQuality) {
+
+        if (null == qualityString) {
+            fillInBasesAndQualities(rec, defaultQuality);
+        } else {
+            fillInBases(rec);
+            rec.setBaseQualityString(qualityString);
+        }
+    }
+
+    /**
+     * Randomly fills in the bases for the given record.
+     */
+    private void fillInBases(final SAMRecord rec){
+        final int length = this.readLength;
+        final byte[] bases = new byte[length];
+
+        for (int i = 0; i < length; ++i) {
+            bases[i] = BASES[this.random.nextInt(BASES.length)];
+        }
+
+        rec.setReadBases(bases);
+    }
+
+    /**
+     * Adds an unmapped fragment read to the builder.
+     */
     public void addUnmappedFragment(final String name) {
-        final SAMRecord rec = new SAMRecord(this.header);
-        rec.setReadName(name);
-        rec.setReadUnmappedFlag(true);
-        rec.setAttribute(SAMTag.RG.name(), READ_GROUP_ID);
-        if (programRecord != null) {
-            rec.setAttribute(SAMTag.PG.name(), programRecord.getProgramGroupId());
-        }
-        if (readGroup != null) {
-            rec.setAttribute(SAMTag.RG.name(), readGroup.getReadGroupId()); 
-        }
-        fillInBasesAndQualities(rec);
-        this.records.add(rec);
+        addFrag(name, -1, -1, false, true, null, null, -1);
     }
+
 
     /**
      * Adds a skeletal pair of records to the set using the provided
@@ -253,7 +298,39 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         this.records.add(end2);
     }
 
-    /** Adds a pair with both ends unmapped to the builder. */
+    /**
+     * Adds a pair of records (mapped or unmmapped) to the set using the provided contig starts.
+     * The pair is assumed to be a well formed pair sitting on a single contig.
+     */
+    public List<SAMRecord> addPair(final String name, final int contig, final int start1, final int start2,
+                                   final boolean record1Unmapped, final boolean record2Unmapped, final String cigar1,
+                                   final String cigar2, final boolean strand1, final boolean strand2, final int defaultQuality) {
+        final List<SAMRecord> records = new LinkedList<SAMRecord>();
+        final SAMRecord end1 = addFrag(name, contig, start1, strand1, record1Unmapped, cigar1, null, defaultQuality);
+        final SAMRecord end2 = addFrag(name, contig, start2, strand2, record2Unmapped, cigar2, null, defaultQuality);
+
+        end1.setReadPairedFlag(true);
+        end1.setFirstOfPairFlag(true);
+
+        if (!record1Unmapped && !record2Unmapped) {
+            end1.setProperPairFlag(true);
+            end2.setProperPairFlag(true);
+        }
+        end2.setReadPairedFlag(true);
+        end2.setSecondOfPairFlag(true);
+
+        // set mate info
+        SamPairUtil.setMateInfo(end1, end2, header);
+
+        records.add(end1);
+        records.add(end2);
+
+        return records;
+    }
+
+    /**
+     * Adds a pair with both ends unmapped to the builder.
+     */
     public void addUnmappedPair(final String name) {
         final SAMRecord end1 = new SAMRecord(this.header);
         final SAMRecord end2 = new SAMRecord(this.header);
@@ -294,22 +371,32 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
      * Relies on the alignment start and end having been set to get read length.
      */
     private void fillInBasesAndQualities(final SAMRecord rec) {
+        fillInBasesAndQualities(rec, -1);
+    }
+
+    /**
+     * Fills in bases and qualities with a set default quality. If the defaultQuality is set to -1 quality scores will
+     * be randomly generated.
+     * Relies on the alignment start and end having been set to get read length.
+     */
+    private void fillInBasesAndQualities(final SAMRecord rec, final int defaultQuality) {
         final int length = this.readLength;
-        final byte[] bases = new byte[length];
         final byte[] quals = new byte[length];
 
-        for (int i=0; i<length; ++i) {
-            bases[i] = BASES[this.random.nextInt(BASES.length)];
-            quals[i] = (byte) this.random.nextInt(50);
+        if (-1 != defaultQuality) {
+            Arrays.fill(quals, (byte) defaultQuality);
+        } else {
+            for (int i = 0; i < length; ++i) {
+                quals[i] = (byte) this.random.nextInt(50);
+            }
         }
-
-        rec.setReadBases(bases);
         rec.setBaseQualities(quals);
+        fillInBases(rec);
     }
 
     /**
      * Creates samFileReader from the data in instance of this class
-     * @return SAMFileReader 
+     * @return SAMFileReader
      */
     public SAMFileReader getSamReader() {
 
@@ -341,4 +428,6 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public SAMFileHeader getHeader() {
         return header;
     }
+    public void setReadLength(final int readLength) { this.readLength = readLength; }
+
 }
