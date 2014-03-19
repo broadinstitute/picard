@@ -146,7 +146,7 @@ public class QualityEncodingDetector {
             while (iterator.hasNext() && recordCount++ != maxRecords) {
                 this.add(iterator.next());
             }
-            
+
             return recordCount;
         } finally {
             iterator.close();
@@ -174,7 +174,7 @@ public class QualityEncodingDetector {
      * @return True if more than one format is possible after exclusions; false otherwise
      */
     public boolean isDeterminationAmbiguous() {
-        return this.generateCandidateQualities().size() > 1;
+        return this.generateCandidateQualities(true).size() > 1;
     }
 
     /**
@@ -183,9 +183,10 @@ public class QualityEncodingDetector {
      * Specifically, for each format's known range of possible values (its "quality scheme"), exclude formats if any
      * observed values fall outside of that range.  Additionally, exclude formats for which we expect to see at
      * least one quality in a range of values, but do not.  (For example, for Phred, we expect to eventually see
-     * a value below 58.  If we never see such a value, we exclude Phred as a possible format.)
+     * a value below 58.  If we never see such a value, we exclude Phred as a possible format unless the checkExpected
+     * flag is set to false in which case we leave Phred as a possible quality format.)
      */
-    public EnumSet<FastqQualityFormat> generateCandidateQualities() {
+    public EnumSet<FastqQualityFormat> generateCandidateQualities(final boolean checkExpected) {
         final EnumSet<FastqQualityFormat> candidateFormats = EnumSet.allOf(FastqQualityFormat.class);
         final Set<Integer> observedAsciiQualities = this.qualityAggregator.getObservedAsciiQualities();
         if (observedAsciiQualities.isEmpty())
@@ -209,52 +210,16 @@ public class QualityEncodingDetector {
             }
 
             /**
-             * We remove elements from this list as we observe values in the corresponding range; if the list isn't 
+             * We remove elements from this list as we observe values in the corresponding range; if the list isn't
              * empty, we haven't seen a value in that range.  In other words, we haven't seen a value we expected.
              * Consequently, we remove the corresponding format from the running possibilities.
              */
-            if (!remainingExpectedValueRanges.isEmpty()) {
+            if (!remainingExpectedValueRanges.isEmpty() && checkExpected) {
                 candidateFormats.remove(scheme.qualityFormat);
             }
         }
 
         return candidateFormats;
-    }
-
-    /**
-     * Based on the quality scores accumulated in the detector as well as the context in which this guess applies (a BAM
-     * or fastq), determines the best guess as to the quality format.
-     * <p/>
-     * This method does not exclude any quality formats based on observed quality values; even if there remain multiple
-     * candidate qualities (see generateCandidateQualities()), picks a single one based on a high-level logic.
-     *
-     * @param context The type of file for which the guess is being made, Fastq or Bam
-     */
-    public FastqQualityFormat generateBestGuess(final FileContext context) {
-        final EnumSet<FastqQualityFormat> possibleFormats = this.generateCandidateQualities();
-        switch (possibleFormats.size()) {
-            case 1:
-                return possibleFormats.iterator().next();
-            case 2:
-                if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Illumina, FastqQualityFormat.Solexa))) {
-                    return FastqQualityFormat.Illumina;
-                } else if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Illumina, FastqQualityFormat.Standard))) {
-                    switch (context) {
-                        case FASTQ:
-                            return FastqQualityFormat.Illumina;
-                        case SAM:
-                            return FastqQualityFormat.Standard;
-                    }
-                } else if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Standard, FastqQualityFormat.Solexa))) {
-                    throw new PicardException("The quality format cannot be determined: both Phred and Solexa formats are possible; this application's logic does not handle this scenario.");
-                } else throw new PicardException("Unreachable code.");
-            case 3:
-                throw new PicardException("The quality format cannot be determined: no formats were excluded.");
-            case 0:
-                throw new PicardException("The quality format cannot be determined: all formats were excluded.");
-            default:
-                throw new PicardException("Unreachable code.");
-        }
     }
 
     /**
@@ -308,7 +273,7 @@ public class QualityEncodingDetector {
         final QualityEncodingDetector detector = new QualityEncodingDetector();
         final long recordCount = detector.add(maxRecords, readers);
         log.debug(String.format("Read %s records from %s.", recordCount, Arrays.toString(readers)));
-        return detector.generateBestGuess(FileContext.FASTQ);
+        return detector.generateBestGuess(FileContext.FASTQ, null);
     }
 
     public static FastqQualityFormat detect(final FastqReader... readers) {
@@ -328,10 +293,67 @@ public class QualityEncodingDetector {
         final QualityEncodingDetector detector = new QualityEncodingDetector();
         final long recordCount = detector.add(maxRecords, reader);
         log.debug(String.format("Read %s records from %s.", recordCount, reader));
-        return detector.generateBestGuess(FileContext.SAM);
+        return detector.generateBestGuess(FileContext.SAM, null);
     }
 
     public static FastqQualityFormat detect(final SAMFileReader reader) {
         return detect(DEFAULT_MAX_RECORDS_TO_ITERATE, reader);
+    }
+
+    /**
+     * Reads through the records in the provided SAM reader and uses their quality scores to sanity check the expected
+     * quality passed in. If the expected quality format is sane we just hand this back otherwise we throw a
+     * {@link PicardException}.
+     */
+    public static FastqQualityFormat detect(final SAMFileReader reader, final FastqQualityFormat expectedQualityFormat) {
+        //sanity check expectedQuality
+        final QualityEncodingDetector detector = new QualityEncodingDetector();
+        final long recordCount = detector.add(DEFAULT_MAX_RECORDS_TO_ITERATE, reader);
+        log.debug(String.format("Read %s records from %s.", recordCount, reader));
+        return detector.generateBestGuess(FileContext.SAM, expectedQualityFormat);
+    }
+
+    /**
+     * Make the best guess at the quality format. If an expected quality is passed in the values are sanity checked
+     * (ignoring expected range) and if they are deemed acceptable the expected quality is passed back. Otherwise we use
+     * a set of heuristics to make our best guess.
+     */
+    public FastqQualityFormat generateBestGuess(final FileContext context, final FastqQualityFormat expectedQuality) {
+        final EnumSet<FastqQualityFormat> possibleFormats;
+        if (null != expectedQuality) {
+            possibleFormats = this.generateCandidateQualities(false);
+            if (possibleFormats.contains(expectedQuality)) {
+                return expectedQuality;
+            } else {
+                throw new PicardException(
+                        String.format("The quality values do not fall in the range appropriate for the expected quality of %s.",
+                                expectedQuality.name()));
+            }
+        } else {
+            possibleFormats = this.generateCandidateQualities(true);
+            switch (possibleFormats.size()) {
+                case 1:
+                    return possibleFormats.iterator().next();
+                case 2:
+                    if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Illumina, FastqQualityFormat.Solexa))) {
+                        return FastqQualityFormat.Illumina;
+                    } else if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Illumina, FastqQualityFormat.Standard))) {
+                        switch (context) {
+                            case FASTQ:
+                                return FastqQualityFormat.Illumina;
+                            case SAM:
+                                return FastqQualityFormat.Standard;
+                        }
+                    } else if (possibleFormats.equals(EnumSet.of(FastqQualityFormat.Standard, FastqQualityFormat.Solexa))) {
+                        return FastqQualityFormat.Standard;
+                    } else throw new PicardException("Unreachable code.");
+                case 3:
+                    throw new PicardException("The quality format cannot be determined: no formats were excluded.");
+                case 0:
+                    throw new PicardException("The quality format cannot be determined: all formats were excluded.");
+                default:
+                    throw new PicardException("Unreachable code.");
+            }
+        }
     }
 }
