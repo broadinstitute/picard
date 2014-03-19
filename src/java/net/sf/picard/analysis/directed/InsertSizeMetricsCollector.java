@@ -6,7 +6,7 @@ import net.sf.picard.metrics.MultiLevelCollector;
 import net.sf.picard.metrics.PerUnitMetricCollector;
 import net.sf.picard.metrics.MetricsFile;
 import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.sam.SamPairUtil;
+import net.sf.samtools.SamPairUtil;
 import net.sf.picard.util.Histogram;
 import net.sf.samtools.SAMReadGroupRecord;
 import net.sf.samtools.SAMRecord;

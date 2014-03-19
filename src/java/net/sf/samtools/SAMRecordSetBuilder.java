@@ -23,7 +23,6 @@
  */
 package net.sf.samtools;
 
-import net.sf.picard.sam.SamPairUtil;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.RuntimeIOException;

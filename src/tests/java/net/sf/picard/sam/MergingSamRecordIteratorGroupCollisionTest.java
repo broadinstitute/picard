@@ -25,17 +25,9 @@ package net.sf.picard.sam;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
-import net.sf.samtools.AbstractSAMHeaderRecord;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordSetBuilder;
-import net.sf.samtools.SAMTag;
+import net.sf.samtools.*;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;

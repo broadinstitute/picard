@@ -30,8 +30,6 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
-import net.sf.samtools.*;
-
 /**
  * Test that BAM writing doesn't blow up.  For presorted writing, the resulting BAM file is read and contents are
  * compared with the original SAM file. 

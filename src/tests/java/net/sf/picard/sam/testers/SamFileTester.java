@@ -2,6 +2,7 @@ package net.sf.picard.sam.testers;
 
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.io.IoUtil;
+import net.sf.samtools.SAMRecordSetBuilder;
 import net.sf.samtools.*;
 import org.testng.Assert;
 
