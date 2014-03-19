@@ -20,13 +20,14 @@ public class AsynchronousLineReader implements LineReader {
     private final LongLineBufferedReader bufferedReader;
     private final BlockingQueue<String> lineQueue;
     private final Thread worker;
-    private volatile Exception workerException = null;
+    private volatile Throwable workerException = null;
     private volatile boolean eofReached = false;
 
     public AsynchronousLineReader(final Reader reader, final int lineReadAheadSize) {
         bufferedReader = new LongLineBufferedReader(reader);
         lineQueue = new LinkedBlockingQueue<String>(lineReadAheadSize);
         worker = new Thread(new Worker());
+        worker.setDaemon(true);
         worker.start();
     }
 
@@ -50,7 +51,7 @@ public class AsynchronousLineReader implements LineReader {
                     return pollResult;
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new TribbleException("Line polling interrupted.", e);
         }
     }
@@ -78,7 +79,7 @@ public class AsynchronousLineReader implements LineReader {
                     } else {
                         try {
                             lineQueue.put(line);
-                        } catch (InterruptedException e) {
+                        } catch (final InterruptedException e) {
                             /**
                              * A thread interruption is not an exceptional state: it means a {@link AsynchronousLineReader#close();} has 
                              * been called, so shut down gracefully.
@@ -87,7 +88,7 @@ public class AsynchronousLineReader implements LineReader {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (final Throwable e) {
                 AsynchronousLineReader.this.workerException = e;
             } finally {
                 CloserUtil.close(AsynchronousLineReader.this.bufferedReader);
