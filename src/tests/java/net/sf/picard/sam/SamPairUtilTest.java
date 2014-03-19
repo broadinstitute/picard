@@ -26,11 +26,10 @@ package net.sf.picard.sam;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMSequenceRecord;
+import net.sf.samtools.SamPairUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
 
 public class SamPairUtilTest {
 

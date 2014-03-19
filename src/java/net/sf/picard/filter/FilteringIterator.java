@@ -23,7 +23,7 @@
  */
 package net.sf.picard.filter;
 
-import net.sf.picard.sam.SamPairUtil;
+import net.sf.samtools.SamPairUtil;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMRecord;

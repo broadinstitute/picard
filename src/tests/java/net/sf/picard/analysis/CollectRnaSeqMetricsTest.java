@@ -25,6 +25,7 @@ package net.sf.picard.analysis;
 
 import net.sf.picard.annotation.RefFlatReader.RefFlatColumns;
 import net.sf.picard.metrics.MetricsFile;
+import net.sf.samtools.SAMRecordSetBuilder;
 import net.sf.picard.util.Interval;
 import net.sf.picard.util.IntervalList;
 import net.sf.samtools.*;

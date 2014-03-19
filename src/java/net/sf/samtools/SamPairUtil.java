@@ -22,12 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
-
-import net.sf.picard.PicardException;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMTag;
+package net.sf.samtools;
 
 import java.util.Iterator;
 import java.util.List;
@@ -116,25 +111,25 @@ public class SamPairUtil {
         // Validate paired reads arrive as first of pair, then second of pair
 
         if (firstOfPair == null) {
-            throw new PicardException(
+            throw new SAMException(
                     "First record does not exist - cannot perform mate assertion!");
         } else if (secondOfPair == null) {
-            throw new PicardException(
+            throw new SAMException(
                     firstOfPair.toString() + " is missing its mate");
         } else if (!firstOfPair.getReadPairedFlag()) {
-            throw new PicardException(
+            throw new SAMException(
                     "First record is not marked as paired: " + firstOfPair.toString());
         } else if (!secondOfPair.getReadPairedFlag()) {
-            throw new PicardException(
+            throw new SAMException(
                     "Second record is not marked as paired: " + secondOfPair.toString());
         } else if (!firstOfPair.getFirstOfPairFlag()) {
-            throw new PicardException(
+            throw new SAMException(
                     "First record is not marked as first of pair: " + firstOfPair.toString());
         } else if (!secondOfPair.getSecondOfPairFlag()) {
-            throw new PicardException(
+            throw new SAMException(
                     "Second record is not marked as second of pair: " + secondOfPair.toString());
         } else if (!firstOfPair.getReadName().equals(secondOfPair.getReadName())) {
-            throw new PicardException(
+            throw new SAMException(
                     "First [" + firstOfPair.getReadName() + "] and Second [" +
                             secondOfPair.getReadName() + "] readnames do not match!");
         }
@@ -147,7 +142,7 @@ public class SamPairUtil {
      * next element in the iteration
      * @param firstOfPair the firstOfPair SAMRecord
      * @return the secondOfPair SAMRecord
-     * @throws PicardException when the secondOfPair mate cannot be obtained due to assertion failures
+     * @throws SAMException when the secondOfPair mate cannot be obtained due to assertion failures
      */
     public static SAMRecord obtainAssertedMate(final Iterator<SAMRecord> samRecordIterator,
                                                final SAMRecord firstOfPair) {
@@ -156,7 +151,7 @@ public class SamPairUtil {
             assertMate(firstOfPair, secondOfPair);
             return secondOfPair;
         } else {
-            throw new PicardException(
+            throw new SAMException(
                     "Second record does not exist: " + firstOfPair.getReadName());
         }
     }

@@ -24,7 +24,7 @@
 
 package net.sf.picard.analysis;
 
-import net.sf.picard.sam.SamPairUtil.PairOrientation;
+import net.sf.samtools.SamPairUtil.PairOrientation;
 import net.sf.picard.metrics.MultilevelMetrics;
 
 /**
