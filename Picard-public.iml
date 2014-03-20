@@ -33,7 +33,7 @@
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$USER_HOME$/snappy/snappy-java/snappy-java-1.0.3-rc3-sources" />
+          <root url="file://$MODULE_DIR$/../../snappy/snappy-java/snappy-java-1.0.3-rc3-sources" />
         </SOURCES>
       </library>
     </orderEntry>
