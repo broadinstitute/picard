@@ -85,6 +85,11 @@ public abstract class SamFileTester {
     }
 
     public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+                                  final int defaultQualityScore) {
+        addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, null, defaultQualityScore);
+    }
+
+    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
                                   final String qualityString,
                                   final int defaultQualityScore) {
         addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore);
@@ -149,7 +154,6 @@ public abstract class SamFileTester {
                             final boolean strand2,
                             final boolean firstOnly,
                             final int defaultQuality) {
-
         final List<SAMRecord> samRecordList = samRecordSetBuilder.addPair("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart1, alignmentStart2,
                 record1Unmapped, record2Unmapped, cigar1, cigar2, strand1, strand2, defaultQuality);
 
@@ -182,7 +186,7 @@ public abstract class SamFileTester {
             if(deleteOnExit){
                 outputDir.deleteOnExit();
             }
-            final File input = createInputFile(getProgram().getClass().getSimpleName());
+            final File input = createInputFile();
 
             output = new File(outputDir, "output.sam");
             args.add("INPUT=" + input.getAbsoluteFile());
@@ -192,10 +196,9 @@ public abstract class SamFileTester {
         test();
     }
 
-
-    private File createInputFile(final String dataDirName) {
+    private File createInputFile() {
         // Create the input file
-        final File input = new File(TEST_DATA_BASE_DIR + dataDirName, "input.sam");
+        final File input = new File(outputDir, "input.sam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(samRecordSetBuilder.getHeader(), true, input);
         for (final SAMRecord record : samRecordSetBuilder.getRecords()) {
             writer.addAlignment(record);
