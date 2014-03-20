@@ -100,7 +100,7 @@ public class ValidateSamFile extends CommandLineProgram {
     @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq. Either Solexa for" +
             " pre-pipeline 1.3 style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard " +
             "for phred scaled " +
-            "scores with a character shift of 33.  If this value is not specified, the quality format will be detected " +
+            "scores with a character shift of 33.  If this value is not specified, the quality format will be detected " +
             "automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
