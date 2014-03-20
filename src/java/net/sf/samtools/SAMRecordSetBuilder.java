@@ -30,7 +30,6 @@ import net.sf.samtools.util.RuntimeIOException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
 /**
  * Factory class for creating SAMRecords for testing purposes. Various methods can be called
  * to add new SAM records (or pairs of records) to a list which can then be returned at
@@ -42,9 +41,9 @@ import java.util.*;
  */
 public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private static final String[] chroms = {
-            "chrM", "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10",
+            "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10",
             "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20",
-            "chr21", "chr22", "chrX", "chrY"
+            "chr21", "chr22", "chrX", "chrY", "chrM"
     };
     private static final byte[] BASES = {'A','C','G','T'};
     private static final String READ_GROUP_ID = "1";
@@ -59,6 +58,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     private SAMProgramRecord programRecord = null;
     private SAMReadGroupRecord readGroup = null;
 
+    private static final int DEFAULT_CHROMOSOME_LENGTH = 100000000;
 
     /**
      * Constructs a new SAMRecordSetBuilder with all the data needed to keep the records
@@ -80,7 +80,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, final boolean addReadGroup) {
         final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>();
         for (final String chrom : chroms) {
-            final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, 1000000);
+            final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, DEFAULT_CHROMOSOME_LENGTH);
             sequences.add(sequenceRecord);
         }
 
@@ -151,26 +151,24 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     }
 
     /**
-     * Adds a skeletal fragment (non-PE) record to the set using the provided
-     * contig start and strand information.
-     */
-    public void addFrag(final String name, final int contig, final int start, final boolean negativeStrand) {
-        addFrag(name, contig, start, negativeStrand, false, null, null, -1);
-    }
-
-    /**
      * Adds a fragment record (mapped or unmapped) to the set using the provided contig start and optionally the strand,
-     * cigar string, quality string or default quality score.
+     * cigar string, quality string or default quality score.  This does not modify the flag field, which should be updated
+     * if desired before adding the return to the list of records.
      */
-    public SAMRecord addFrag(final String name, final int contig, final int start, final boolean negativeStrand,
-                             final boolean recordUnmapped, final String cigar, final String qualityString,
-                             final int defaultQuality) {
+    private SAMRecord createReadNoFlag(final String name, final int contig, final int start, final boolean negativeStrand,
+                                       final boolean recordUnmapped, final String cigar, final String qualityString,
+                                       final int defaultQuality) throws SAMException {
         final SAMRecord rec = new SAMRecord(this.header);
         rec.setReadName(name);
-        if (!recordUnmapped) {
+        if (chroms.length <= contig) {
+            throw new SAMException("Contig too big [" + chroms.length + " < " + contig);
+        }
+        if (0 <= contig) {
             rec.setReferenceIndex(contig);
             rec.setReferenceName(chroms[contig]);
             rec.setAlignmentStart(start);
+        }
+        if (!recordUnmapped) {
             rec.setReadNegativeStrandFlag(negativeStrand);
             if (null != cigar) {
                 rec.setCigarString(cigar);
@@ -194,6 +192,25 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
 
         fillInBasesAndQualities(rec, qualityString, defaultQuality);
 
+        return rec;
+    }
+
+    /**
+     * Adds a skeletal fragment (non-PE) record to the set using the provided
+     * contig start and strand information.
+     */
+    public void addFrag(final String name, final int contig, final int start, final boolean negativeStrand) {
+        addFrag(name, contig, start, negativeStrand, false, null, null, -1);
+    }
+
+    /**
+     * Adds a fragment record (mapped or unmapped) to the set using the provided contig start and optionally the strand,
+     * cigar string, quality string or default quality score.
+     */
+    public SAMRecord addFrag(final String name, final int contig, final int start, final boolean negativeStrand,
+                             final boolean recordUnmapped, final String cigar, final String qualityString,
+                             final int defaultQuality) throws SAMException {
+        final SAMRecord rec = createReadNoFlag(name, contig, start, negativeStrand, recordUnmapped, cigar, qualityString, defaultQuality);
         this.records.add(rec);
         return rec;
     }
@@ -304,9 +321,10 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public List<SAMRecord> addPair(final String name, final int contig, final int start1, final int start2,
                                    final boolean record1Unmapped, final boolean record2Unmapped, final String cigar1,
                                    final String cigar2, final boolean strand1, final boolean strand2, final int defaultQuality) {
-        final List<SAMRecord> records = new LinkedList<SAMRecord>();
-        final SAMRecord end1 = addFrag(name, contig, start1, strand1, record1Unmapped, cigar1, null, defaultQuality);
-        final SAMRecord end2 = addFrag(name, contig, start2, strand2, record2Unmapped, cigar2, null, defaultQuality);
+        final List<SAMRecord> recordsList = new LinkedList<SAMRecord>();
+
+        final SAMRecord end1 = createReadNoFlag(name, contig, start1, strand1, record1Unmapped, cigar1, null, defaultQuality);
+        final SAMRecord end2 = createReadNoFlag(name, contig, start2, strand2, record2Unmapped, cigar2, null, defaultQuality);
 
         end1.setReadPairedFlag(true);
         end1.setFirstOfPairFlag(true);
@@ -321,10 +339,13 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         // set mate info
         SamPairUtil.setMateInfo(end1, end2, header);
 
+        recordsList.add(end1);
+        recordsList.add(end2);
+
         records.add(end1);
         records.add(end2);
 
-        return records;
+        return recordsList;
     }
 
     /**
