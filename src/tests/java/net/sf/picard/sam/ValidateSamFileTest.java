@@ -73,7 +73,7 @@ public class ValidateSamFileTest {
         validator.setVerbose(true, 10);
         validator.validateSamFileVerbose(
                 samBuilder.getSamReader(),
-                null);
+                null, null);
 
         final int lineCount = results.toString().split("\n").length;
         Assert.assertEquals(lineCount, 11);
@@ -367,7 +367,7 @@ public class ValidateSamFileTest {
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
-        new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference);
+        new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference, null);
         final LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
         if (reader.readLine().equals("No errors found")) {
             return new Histogram<String>();

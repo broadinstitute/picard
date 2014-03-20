@@ -96,17 +96,6 @@ public class SamFileValidator {
      *
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
-     * @return boolean  true if there are no validation errors, otherwise false
-     */
-    public boolean validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
-        return validateSamFileSummary(samReader, reference, null);
-    }
-
-    /**
-     * Outputs validation summary report to out.
-     *
-     * @param samReader records to validate
-     * @param reference if null, NM tag validation is skipped
      * @param expectedQualityFormat the expected base quality format
      * @return boolean  true if there are no validation errors, otherwise false
      */
@@ -132,18 +121,6 @@ public class SamFileValidator {
         }
         cleanup();
         return result;
-    }
-
-    /**
-     * Outputs validation error details to out.
-     *
-     * @param samReader records to validate
-     * @param reference if null, NM tag validation is skipped
-     *                  processing will stop after this threshold has been reached
-     * @return boolean  true if there are no validation errors, otherwise false
-     */
-    public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
-        return validateSamFileVerbose(samReader, reference, null);
     }
 
     /**
