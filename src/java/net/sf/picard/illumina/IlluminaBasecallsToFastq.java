@@ -123,6 +123,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
     public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
+    @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true)
+    public boolean INCLUDE_NON_PF_READS = true;
+
     @Option(doc="The read name header formatting to emit.  Casava1.8 formatting has additional information beyond Illumina, including: " +
             "the passing-filter flag value for the read, the flowcell name, and the sequencer name.", optional = false)
     public ReadNameFormat READ_NAME_FORMAT = ReadNameFormat.CASAVA_1_8;
@@ -207,7 +210,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
                 readStructure.barcodes.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
-                this.APPLY_EAMSS_FILTER);
+                this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
 

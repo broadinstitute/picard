@@ -112,6 +112,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     // ends, but for unit testing it is desirable to stop the task when done with this instance.
     private final TimerTask gcTimerTask;
     private List<Integer> tiles;
+    private boolean includeNonPfReads;
     private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     // Annoying that we need this.
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
@@ -133,6 +134,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param outputRecordComparator For sorting output records within a single tile.
      * @param codecPrototype For spilling output records to disk.
      * @param outputRecordClass Inconveniently needed to create SortingCollections.
+     * @param includeNonPfReads If true, will include ALL reads (including those which do not have PF set)
      */
     public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
                                       final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
@@ -145,7 +147,9 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                       final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                      final boolean applyEamssFiltering) {
+                                      final boolean applyEamssFiltering,
+                                      final boolean includeNonPfReads
+    ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.demultiplex = demultiplex;
         this.maxReadsInRamPerTile = maxReadsInRamPerTile;
@@ -154,6 +158,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.codecPrototype = codecPrototype;
         this.outputRecordClass = outputRecordClass;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
+        this.includeNonPfReads = includeNonPfReads;
 
         // If we're forcing garbage collection, collect every 5 minutes in a daemon thread.
         if (forceGc) {
@@ -470,9 +475,12 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
             while (dataProvider.hasNext()) {
                 final ClusterData cluster = dataProvider.next();
-                final String barcode = (demultiplex? cluster.getMatchedBarcode(): null);
                 readProgressLogger.record(null, 0);
-                this.processingRecord.addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
+                // If this cluster is passing, or we do NOT want to ONLY emit passing reads, then add it to the next
+                if (cluster.isPf() || includeNonPfReads) {
+                    final String barcode = (demultiplex? cluster.getMatchedBarcode(): null);
+                    this.processingRecord.addRecord(barcode, converter.convertClusterToOutputRecord(cluster));
+                }
             }
 
             this.handler.completeTile(this.tile);
