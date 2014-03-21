@@ -176,6 +176,8 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             "The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.")
     public int MINIMUM_QUALITY = BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY;
 
+    @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true)
+    public boolean INCLUDE_NON_PF_READS = true;
 
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
@@ -195,7 +197,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      */
     private void initialize() {
         this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
-        
+
         if (OUTPUT != null) {
             IoUtil.assertFileIsWritable(OUTPUT);
         }
@@ -217,7 +219,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, LANE, readStructure,
                 barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE/numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                 FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER);
+                bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS);
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 
@@ -439,7 +441,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         @Override
         public void write(final SAMRecordsForCluster records) {
             for (final SAMRecord rec : records.records) {
-            writer.addAlignment(rec);
+                writer.addAlignment(rec);
             }
         }
 
