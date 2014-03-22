@@ -145,7 +145,9 @@ abstract class PerTilePerCycleParser<ILLUMINA_DATA extends IlluminaData> impleme
         }
 
         final ILLUMINA_DATA data = makeData(outputMapping.getOutputReadLengths());
-        for(int i = 0; i < outputMapping.getTotalOutputCycles(); i++) {
+        final int totalOutputCycles = outputMapping.getTotalOutputCycles();
+
+        for(int i = 0; i < totalOutputCycles; ++i) {
             cycleFileParsers.get(i).next(data);
         }
 
