@@ -86,6 +86,9 @@ class BclParser extends PerTilePerCycleParser<BclData>{
             final OutputMapping.TwoDIndex cycleOutputIndex = outputMapping.getOutputIndexForCycle(cycle);
             final CloseableIterator<BclReader.BclValue> reader = makeReader(file, cycle, tileNumber);
 
+            final int majorIndex = cycleOutputIndex.majorIndex;
+            final int minorIndex = cycleOutputIndex.minorIndex;
+
             @Override
             public void close() {
                 reader.close();
@@ -98,8 +101,8 @@ class BclParser extends PerTilePerCycleParser<BclData>{
                 }
 
                 final BclReader.BclValue value = reader.next();
-                ild.getBases()    [cycleOutputIndex.majorIndex][cycleOutputIndex.minorIndex] = value.base;
-                ild.getQualities()[cycleOutputIndex.majorIndex][cycleOutputIndex.minorIndex] = value.quality;
+                ild.bases[majorIndex][minorIndex] = value.base;
+                ild.qualities[majorIndex][minorIndex] = value.quality;
             }
 
             @Override
