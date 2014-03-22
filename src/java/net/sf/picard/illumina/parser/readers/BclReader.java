@@ -182,8 +182,8 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
         }
     }
 
-    public boolean hasNext() {
-        return nextCluster < numClusters;
+    public final boolean hasNext() {
+        return this.nextCluster < this.numClusters;
     }
 
     public BclValue next() {

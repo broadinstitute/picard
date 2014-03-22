@@ -84,7 +84,7 @@ class BclParser extends PerTilePerCycleParser<BclData>{
     protected CycleFileParser<BclData> makeCycleFileParser(final File file, final int cycle, final int tileNumber) {
         return new CycleFileParser<BclData>(){
             final OutputMapping.TwoDIndex cycleOutputIndex = outputMapping.getOutputIndexForCycle(cycle);
-            CloseableIterator<BclReader.BclValue> reader = makeReader(file, cycle, tileNumber);
+            final CloseableIterator<BclReader.BclValue> reader = makeReader(file, cycle, tileNumber);
 
             @Override
             public void close() {
@@ -104,7 +104,8 @@ class BclParser extends PerTilePerCycleParser<BclData>{
 
             @Override
             public boolean hasNext() {
-                return reader != null && reader.hasNext();
+                try { return reader.hasNext(); }
+                catch (final NullPointerException npe) { return false; }
             }
         };
     }
