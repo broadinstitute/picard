@@ -24,18 +24,34 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.filter.FilteringIterator;
 import net.sf.picard.filter.SamRecordFilter;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.reference.ReferenceSequenceFileWalker;
 import net.sf.picard.util.CigarUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
+import net.sf.samtools.BAMRecordCodec;
+import net.sf.samtools.Cigar;
+import net.sf.samtools.CigarElement;
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileWriter;
+import net.sf.samtools.SAMFileWriterFactory;
+import net.sf.samtools.SAMProgramRecord;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMRecordCoordinateComparator;
+import net.sf.samtools.SAMRecordQueryNameComparator;
+import net.sf.samtools.SAMRecordUtil;
+import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
+import net.sf.samtools.SAMTag;
+import net.sf.samtools.SAMUtils;
+import net.sf.samtools.SamPairUtil;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
-import net.sf.picard.filter.FilteringIterator;
 
 import java.io.File;
 import java.text.DecimalFormat;

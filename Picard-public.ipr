@@ -260,6 +260,24 @@
       </item>
     </group>
   </component>
+  <component name="ProjectCodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS">
+      <value>
+        <option name="GENERATE_FINAL_LOCALS" value="true" />
+        <option name="GENERATE_FINAL_PARAMETERS" value="true" />
+        <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+        <option name="RIGHT_MARGIN" value="140" />
+        <option name="JD_DO_NOT_WRAP_ONE_LINE_COMMENTS" value="true" />
+        <XML>
+          <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+        </XML>
+        <codeStyleSettings language="JAVA">
+          <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
+        </codeStyleSettings>
+      </value>
+    </option>
+    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+  </component>
   <component name="ProjectDetails">
     <option name="projectName" value="Picard-public" />
   </component>
