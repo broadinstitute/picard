@@ -279,11 +279,29 @@ public class IlluminaDataProviderFactory {
      * @param fileUtil Util for the lane/directory in which we will find data
      * @return The file format that is "most preferred" (i.e. fastest to parse/smallest in memory)
      */
-    public static SupportedIlluminaFormat findPreferredAvailableFormat(final IlluminaDataType dt, final IlluminaFileUtil fileUtil) {
+    private static SupportedIlluminaFormat findPreferredAvailableFormat(final IlluminaDataType dt, final IlluminaFileUtil fileUtil) {
+        return findPreferredFormat(dt, fileUtil, true);
+    }
+
+    /**
+     * Given a data type find the most preferred file format even if files are not available
+     * @param dt Type of desired data
+     * @param fileUtil Util for the lane/directory in which we will find data
+     * @return The file format that is "most preferred" (i.e. fastest to parse/smallest in memory)
+     */
+    public static SupportedIlluminaFormat findPreferredFormat(final IlluminaDataType dt, final IlluminaFileUtil fileUtil){
+        return findPreferredFormat(dt, fileUtil, false);
+    }
+
+    private static SupportedIlluminaFormat findPreferredFormat(final IlluminaDataType dt, final IlluminaFileUtil fileUtil,
+                                                               final boolean checkAvailable){
         final List<SupportedIlluminaFormat> preferredFormats = DATA_TYPE_TO_PREFERRED_FORMATS.get(dt);
         SupportedIlluminaFormat format = null;
         for(int i = 0; i < preferredFormats.size() && format == null; i++) {
-            if(fileUtil.getUtil(preferredFormats.get(i)).filesAvailable()) {
+            if(checkAvailable && fileUtil.getUtil(preferredFormats.get(i)).filesAvailable()) {
+                format = preferredFormats.get(i);
+            }
+            else if(!checkAvailable){
                 format = preferredFormats.get(i);
             }
         }
