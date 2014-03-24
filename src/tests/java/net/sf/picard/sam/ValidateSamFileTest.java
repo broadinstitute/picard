@@ -71,9 +71,7 @@ public class ValidateSamFileTest {
         final StringWriter results = new StringWriter();
         final SamFileValidator validator = new SamFileValidator(new PrintWriter(results), 8000);
         validator.setVerbose(true, 10);
-        validator.validateSamFileVerbose(
-                samBuilder.getSamReader(),
-                null, null);
+        validator.validateSamFileVerbose(samBuilder.getSamReader(), null);
 
         final int lineCount = results.toString().split("\n").length;
         Assert.assertEquals(lineCount, 11);
@@ -301,11 +299,13 @@ public class ValidateSamFileTest {
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_VERSION_NUMBER.getHistogramString()).getValue(), 1.0);
     }
 
-    @Test
+    @Test(enabled=false, description="File is actually valid for Standard quality scores so this test fails with an NPE.")
     public void testQualityFormatValidation() throws Exception {
         final SAMFileReader samReader = new SAMFileReader(new File("./testdata/net/sf/picard/util/QualityEncodingDetectorTest/illumina-as-standard.bam"));
         final Histogram<String> results = executeValidation(samReader, null);
-        Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_QUALITY_FORMAT.getHistogramString()).getValue(), 1.0);
+        final Histogram<String>.Bin bin = results.get(SAMValidationError.Type.INVALID_QUALITY_FORMAT.getHistogramString());
+        final double value = bin.getValue();
+        Assert.assertEquals(value, 1.0);
     }
 
     @Test
@@ -367,7 +367,7 @@ public class ValidateSamFileTest {
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
         final PrintWriter out = new PrintWriter(outFile);
-        new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference, null);
+        new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference);
         final LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
         if (reader.readLine().equals("No errors found")) {
             return new Histogram<String>();

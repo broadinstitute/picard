@@ -59,7 +59,7 @@ public class CleanSamTest {
         samReader.close();
         Assert.assertEquals(rec.getCigarString(), expectedCigar);
         samReader = new SAMFileReader(cleanedFile);
-        final boolean validated = validator.validateSamFileVerbose(samReader, null, null);
+        final boolean validated = validator.validateSamFileVerbose(samReader, null);
         samReader.close();
         Assert.assertTrue(validated, "ValidateSamFile failed");
     }
