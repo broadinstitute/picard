@@ -1,11 +1,19 @@
 package net.sf.picard.sam;
 
+import net.sf.samtools.BAMRecordCodec;
+import net.sf.samtools.CigarElement;
+import net.sf.samtools.CigarOperator;
+import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMRecordQueryNameComparator;
+import net.sf.samtools.SamPairUtil;
 import net.sf.picard.PicardException;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMProgramRecord;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.DelegatingIterator;
 import net.sf.samtools.util.SortingCollection;

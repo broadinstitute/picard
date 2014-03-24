@@ -29,8 +29,9 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.util.Log;
-import net.sf.samtools.*;
 import net.sf.samtools.SAMFileHeader.SortOrder;
+import net.sf.samtools.SAMProgramRecord;
+import net.sf.samtools.SamPairUtil;
 
 import java.io.File;
 import java.util.ArrayList;
