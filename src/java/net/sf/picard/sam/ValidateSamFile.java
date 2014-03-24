@@ -97,14 +97,6 @@ public class ValidateSamFile extends CommandLineProgram {
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
 
-    @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq. Either Solexa for" +
-            " pre-pipeline 1.3 style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard " +
-            "for phred scaled " +
-            "scores with a character shift of 33.  If this value is not specified, the quality format will be detected " +
-            "automatically.", optional = true)
-    public FastqQualityFormat QUALITY_FORMAT;
-
-
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));
     }
@@ -170,10 +162,10 @@ public class ValidateSamFile extends CommandLineProgram {
 
             switch (MODE) {
                 case SUMMARY:
-                    result = validator.validateSamFileSummary(samReader, reference, QUALITY_FORMAT);
+                    result = validator.validateSamFileSummary(samReader, reference);
                     break;
                 case VERBOSE:
-                    result = validator.validateSamFileVerbose(samReader, reference, QUALITY_FORMAT);
+                    result = validator.validateSamFileVerbose(samReader, reference);
                     break;
             }
             out.flush();

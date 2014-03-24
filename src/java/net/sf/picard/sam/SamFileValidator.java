@@ -96,14 +96,12 @@ public class SamFileValidator {
      *
      * @param samReader records to validate
      * @param reference if null, NM tag validation is skipped
-     * @param expectedQualityFormat the expected base quality format
      * @return boolean  true if there are no validation errors, otherwise false
      */
-    public boolean validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference,
-                                          final FastqQualityFormat expectedQualityFormat) {
+    public boolean validateSamFileSummary(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
         init(reference, samReader.getFileHeader());
 
-        validateSamFile(samReader, out, expectedQualityFormat);
+        validateSamFile(samReader, out);
 
         boolean result = errorsByType.isEmpty();
 
@@ -131,12 +129,11 @@ public class SamFileValidator {
      *                  processing will stop after this threshold has been reached
      * @return boolean  true if there are no validation errors, otherwise false
      */
-    public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference,
-                                          final FastqQualityFormat expectedQualityFormat) {
+    public boolean validateSamFileVerbose(final SAMFileReader samReader, final ReferenceSequenceFile reference) {
         init(reference, samReader.getFileHeader());
 
         try {
-            validateSamFile(samReader, out, expectedQualityFormat);
+            validateSamFile(samReader, out);
         } catch (MaxOutputExceededException e) {
             out.println("Maximum output of [" + maxVerboseOutput + "] errors reached.");
         }
@@ -172,12 +169,12 @@ public class SamFileValidator {
         }
     }
 
-    private void validateSamFile(final SAMFileReader samReader, final PrintWriter out, final FastqQualityFormat expectedQualityFormat) {
+    private void validateSamFile(final SAMFileReader samReader, final PrintWriter out) {
         try {
             samReader.setValidationStringency(ValidationStringency.SILENT);
             validateHeader(samReader.getFileHeader());
             orderChecker = new SAMSortOrderChecker(samReader.getFileHeader().getSortOrder());
-            validateSamRecordsAndQualityFormat(samReader, samReader.getFileHeader(), expectedQualityFormat);
+            validateSamRecordsAndQualityFormat(samReader, samReader.getFileHeader());
             validateUnmatchedPairs();
             if (validateIndex) {
                 try {
@@ -235,9 +232,8 @@ public class SamFileValidator {
      * in only a single pass of the SamRecords (because a SamReader's iterator() method may not return the same
      * records on a subsequent call).
      */
-    private void validateSamRecordsAndQualityFormat(final Iterable<SAMRecord> samRecords, final SAMFileHeader header,
-                                                    FastqQualityFormat expectedQualityFormat) {
-        SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
+    private void validateSamRecordsAndQualityFormat(final Iterable<SAMRecord> samRecords, final SAMFileHeader header) {
+        final SAMRecordIterator iter = (SAMRecordIterator) samRecords.iterator();
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Validated Read");
         final QualityEncodingDetector qualityDetector = new QualityEncodingDetector();
         try {
@@ -274,7 +270,7 @@ public class SamFileValidator {
 
             try {
                 if (progress.getCount() > 0) { // Avoid exception being thrown as a result of no qualities being read
-                    final FastqQualityFormat format = qualityDetector.generateBestGuess(QualityEncodingDetector.FileContext.SAM, expectedQualityFormat);
+                    final FastqQualityFormat format = qualityDetector.generateBestGuess(QualityEncodingDetector.FileContext.SAM, FastqQualityFormat.Standard);
                     if (format != FastqQualityFormat.Standard) {
                         addError(new SAMValidationError(Type.INVALID_QUALITY_FORMAT, String.format("Detected %s quality score encoding, but expected %s.", format, FastqQualityFormat.Standard), null));
                     }
