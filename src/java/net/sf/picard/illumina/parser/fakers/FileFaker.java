@@ -66,7 +66,6 @@ public abstract class FileFaker {
         buffer.flip();
 
         channel.write(buffer);
-        channel.force(true);
 
         CloserUtil.close(channel);
         CloserUtil.close(fileOutputStream);
