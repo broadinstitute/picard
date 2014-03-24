@@ -5,13 +5,22 @@ import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.*;
+import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
+import net.sf.picard.illumina.parser.IlluminaDataType;
+import net.sf.picard.illumina.parser.IlluminaFileUtil;
+import net.sf.picard.illumina.parser.OutputMapping;
+import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
@@ -23,30 +32,50 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage
     public String USAGE = getStandardUsagePreamble() +
-            "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
-            "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
+                          "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  "
+                          +
+                          "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. "
+                          +
+                          "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
 
-    @Option(doc="The basecalls output directory. ", shortName="B")
+    @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(doc="The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those " +
-            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on" +
-            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option " +
-            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the " +
-			"individual records of the files themselves are spurious. ",
-            shortName="DT",
-            optional=true)
+    @Option(doc =
+            "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those "
+            +
+            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on"
+            +
+            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option "
+            +
+            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the "
+            +
+            "individual records of the files themselves are spurious. ",
+            shortName = "DT",
+            optional = true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
 
-    @Option(doc= ReadStructure.PARAMETER_DOC + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes " +
-            "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.", shortName="RS")
+    @Option(doc = ReadStructure.PARAMETER_DOC
+                  + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes "
+                  +
+                  "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.",
+            shortName = "RS")
     public String READ_STRUCTURE;
 
-    @Option(doc="The number of the lane(s) to check. ", shortName= StandardOptionDefinitions.LANE_SHORT_NAME, minElements = 1)
+    @Option(doc = "The number of the lane(s) to check. ", shortName = StandardOptionDefinitions.LANE_SHORT_NAME,
+            minElements = 1)
     public List<Integer> LANES;
 
-    /** Required main method implementation. */
+    @Option(doc = "The number(s) of the tile(s) to check. ", shortName = "T", optional = true)
+    public List<Integer> TILE_NUMBERS;
+
+    @Option(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
+            optional = true)
+    public Boolean FAKE_FILES = false;
+
+    /**
+     * Required main method implementation.
+     */
     public static void main(final String[] argv) {
         new CheckIlluminaDirectory().instanceMainWithExit(argv);
     }
@@ -55,27 +84,31 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Override
     protected int doWork() {
         final ReadStructure readStructure = new ReadStructure(READ_STRUCTURE);
-        if(DATA_TYPES.size() == 0) {
+        if (DATA_TYPES.isEmpty()) {
             DATA_TYPES.addAll(Arrays.asList(IlluminaBasecallsConverter.DATA_TYPES_NO_BARCODE));
         }
 
         final List<Integer> failingLanes = new ArrayList<Integer>();
         int totalFailures = 0;
 
-        final int [] expectedCycles = new OutputMapping(readStructure).getOutputCycles();
-        log.info("Checking lanes(" + StringUtil.join(",", LANES) + " in basecalls directory (" + BASECALLS_DIR.getAbsolutePath() + ")\n");
+        final int[] expectedCycles = new OutputMapping(readStructure).getOutputCycles();
+        log.info("Checking lanes(" + StringUtil.join(",", LANES) + " in basecalls directory (" + BASECALLS_DIR
+                .getAbsolutePath() + ")\n");
         log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
 
-        for(final Integer lane : LANES) {
-            final IlluminaFileUtil fileUtil   = new IlluminaFileUtil(BASECALLS_DIR, lane);
-            final List<Integer> expectedTiles  = fileUtil.getExpectedTiles();
+        for (final Integer lane : LANES) {
+            final IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+            final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
+            if (!TILE_NUMBERS.isEmpty()) {
+                expectedTiles.retainAll(TILE_NUMBERS);
+            }
 
             log.info("Checking lane " + lane);
-            log.info("Expected tiles: "  + StringUtil.join(", ", expectedTiles));
+            log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
 
-            final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES);
+            final int numFailures = verifyLane(fileUtil, expectedTiles, expectedCycles, DATA_TYPES, FAKE_FILES);
 
-            if(numFailures > 0) {
+            if (numFailures > 0) {
                 log.info("Lane " + lane + " FAILED " + " Total Errors: " + numFailures);
                 failingLanes.add(lane);
                 totalFailures += numFailures;
@@ -85,50 +118,75 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         }
 
         int status = 0;
-        if(totalFailures == 0) {
+        if (totalFailures == 0) {
             log.info("SUCCEEDED!  All required files are present and non-empty.");
         } else {
             status = totalFailures;
-            log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil.join(", ", failingLanes));
+            log.info("FAILED! There were " + totalFailures + " in the following lanes: " + StringUtil
+                    .join(", ", failingLanes));
         }
 
         return status;
     }
 
     /**
-     * Use fileUtil to find the data types that would be used by IlluminaDataProvider.  Verify that for the expected tiles/cycles/data types that all
-     * the files needed to provide their data is present.  This method logs every error that is found and returns the number of errors found
-     * @param fileUtil A file util paramterized with the directory/lane to check
+     * Use fileUtil to find the data types that would be used by IlluminaDataProvider.  Verify that for the expected
+     * tiles/cycles/data types that all the files needed to provide their data is present.  This method logs every
+     * error that is found (excluding file faking errors) and returns the number of errors found
+     *
+     * @param fileUtil      A file util paramterized with the directory/lane to check
      * @param expectedTiles The tiles we expect to be available/well-formed
-     * @param cycles The cycles we expect to be available/well-formed
-     * @param dataTypes The data types we expect to be available/well-formed
+     * @param cycles        The cycles we expect to be available/well-formed
+     * @param dataTypes     The data types we expect to be available/well-formed
+     *
      * @return The number of errors found/logged for this directory/lane
      */
-    private static final int verifyLane(final IlluminaFileUtil fileUtil, final List<Integer> expectedTiles, final int[] cycles, final Set<IlluminaDataType> dataTypes) {
-        if(expectedTiles.size() == 0) {
-            throw new PicardException("0 input tiles were specified!  Check to make sure this lane is in the InterOp file!");
+    private static final int verifyLane(final IlluminaFileUtil fileUtil, final List<Integer> expectedTiles,
+                                        final int[] cycles,
+                                        final Set<IlluminaDataType> dataTypes, final boolean fakeFiles) {
+        if (expectedTiles.isEmpty()) {
+            throw new PicardException(
+                    "0 input tiles were specified!  Check to make sure this lane is in the InterOp file!");
         }
 
-        if(cycles.length == 0) {
+        if (cycles.length == 0) {
             throw new PicardException("0 output cycles were specified!");
         }
 
         int numFailures = 0;
 
         //find what request IlluminaDataTypes we have files for and select the most preferred file format available for that type
-        final Map<IlluminaFileUtil.SupportedIlluminaFormat, Set<IlluminaDataType>> formatToDataTypes = IlluminaDataProviderFactory.determineFormats(dataTypes, fileUtil);
+        final Map<IlluminaFileUtil.SupportedIlluminaFormat, Set<IlluminaDataType>> formatToDataTypes =
+                IlluminaDataProviderFactory.determineFormats(dataTypes, fileUtil);
 
-        //find if we have any IlluminaDataType with NO available file formats and, if any exist, throw an exception
-        final Set<IlluminaDataType> unmatchedDataTypes = IlluminaDataProviderFactory.findUnmatchedTypes(dataTypes, formatToDataTypes);
-        if(unmatchedDataTypes.size() > 0) {
-            log.info("Could not find a format with available files for the following data types: " + StringUtil.join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
+        //find if we have any IlluminaDataType with NO available file formats and, if any exist, increase the error count
+        final Set<IlluminaDataType> unmatchedDataTypes =
+                IlluminaDataProviderFactory.findUnmatchedTypes(dataTypes, formatToDataTypes);
+        if (!unmatchedDataTypes.isEmpty()) {
+            if (fakeFiles) {
+                for (final IlluminaDataType dataType : unmatchedDataTypes) {
+                    final IlluminaFileUtil.SupportedIlluminaFormat format =
+                            IlluminaDataProviderFactory.findPreferredFormat(dataType, fileUtil);
+                    fileUtil.getUtil(format).fakeFiles(expectedTiles, cycles, format);
+
+                }
+            }
+            log.info("Could not find a format with available files for the following data types: " + StringUtil
+                    .join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
             numFailures += unmatchedDataTypes.size();
         }
 
-        for(final IlluminaFileUtil.SupportedIlluminaFormat format : formatToDataTypes.keySet()) {
-            final List<String> failures = fileUtil.getUtil(format).verify(expectedTiles, cycles);
+        for (final IlluminaFileUtil.SupportedIlluminaFormat format : formatToDataTypes.keySet()) {
+            final IlluminaFileUtil.ParameterizedFileUtil util = fileUtil.getUtil(format);
+            final List<String> failures = util.verify(expectedTiles, cycles);
+            //if we have failures and we want to fake files then fake them now.
+            if (!failures.isEmpty() && fakeFiles) {
+                //fake files
+                util.fakeFiles(expectedTiles, cycles, format);
+
+            }
             numFailures += failures.size();
-            for(final String failure : failures) {
+            for (final String failure : failures) {
                 log.info(failure);
             }
         }
@@ -136,19 +194,20 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         return numFailures;
     }
 
-
+    @Override
     protected String[] customCommandLineValidation() {
         IoUtil.assertDirectoryIsReadable(BASECALLS_DIR);
         final List<String> errors = new ArrayList<String>();
 
-        for(final Integer lane : LANES) {
-            if(lane < 1) {
-                errors.add("LANES must be greater than or equal to 1.  LANES passed in " + StringUtil.join(", ", LANES));
+        for (final Integer lane : LANES) {
+            if (lane < 1) {
+                errors.add(
+                        "LANES must be greater than or equal to 1.  LANES passed in " + StringUtil.join(", ", LANES));
                 break;
             }
         }
 
-        if(errors.size() == 0) {
+        if (errors.isEmpty()) {
             return null;
         } else {
             return errors.toArray(new String[errors.size()]);

@@ -183,7 +183,7 @@ public class IOUtil {
         final String user = System.getProperty("user.name");
         final String tmp = System.getProperty("java.io.tmpdir");
 
-        if (tmp.endsWith("/" + user)) return new File(tmp);
+        if (tmp.endsWith(File.separatorChar + user)) return new File(tmp);
         else return new File(tmp, user);
     }
 }
