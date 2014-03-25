@@ -1063,7 +1063,10 @@ public class CommandLineParser {
                 if( isCollection && ((Collection) defaultValue).isEmpty()) {
                     //treat empty collections the same as uninitialized primitive types
                     this.defaultValue = "null";
-                } else {
+                } else if(defaultValue.getClass().isEnum()){
+                    this.defaultValue = ((Enum) defaultValue).name();
+                }
+                else {
                     //this is an intialized primitive type or a non-empty collection
                     this.defaultValue = defaultValue.toString();
                 }

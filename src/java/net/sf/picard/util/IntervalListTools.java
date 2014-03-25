@@ -1,19 +1,17 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.util.SequenceUtil;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.*;
-
-import net.sf.picard.cmdline.CommandLineProgram;
 
 /**
  * Little class to aid working with interval lists.
@@ -22,7 +20,7 @@ import net.sf.picard.cmdline.CommandLineProgram;
  */
 public class IntervalListTools extends CommandLineProgram {
     @Usage public final String USAGE = getStandardUsagePreamble() + " General tool for manipulating interval lists, " +
-            "including sorting, merging, padding, uniqueifying. Default operation if given one or more inputs is to " +
+            "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
             "merge and sort them.  Other options are controlled by arguments.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -31,11 +29,11 @@ public class IntervalListTools extends CommandLineProgram {
     public List<File> INPUT;
 
     @Option(doc="The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
-            "to write the scattered interval sub-directories (if SCATTER_COUNT > 1)", shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true)
+            "to write the scattered interval sub-directories (if SCATTER_COUNT > 1)", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true)
     public File OUTPUT;
 
     @Option(doc="The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed " +
-            "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed.", optional=true)
+            "and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.", optional=true)
     public int PADDING = 0;
 
     @Option(doc="If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true")
@@ -44,13 +42,40 @@ public class IntervalListTools extends CommandLineProgram {
     @Option(doc="If true, sort the resulting interval list by coordinate.")
     public boolean SORT = true;
 
-    @Option(doc="One or more lines of comment to add to the header of the output file.", optional=true)
+    @Option(doc = "Action to take on inputs.")
+    public Action ACTION = Action.CONCATENATE;
+
+    @Option(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
+    public List<File> SECOND_INPUT;
+
+    @Option(doc="One or more lines of comment to add to the header of the output file.", optional = true)
     public List<String> COMMENT = null;
 
     @Option(doc="The number of files into which to scatter the resulting list by locus.")
     public int SCATTER_COUNT = 1;
 
+    @Option(doc = "Produce the inverse list", optional = true)
+    public boolean INVERT = false;
+
     private final Log log = Log.getInstance(IntervalListTools.class);
+
+    public enum Action{
+        CONCATENATE("The concatenation of all the intervals, no sorting or merging of overlapping/abutting intervals implied. Will result in unsorted list unless requested otherwise)"),
+        UNION ("like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all loci"),
+        INTERSECTION ("Same as UNION but with intersection instead of union. Loci must be in all inputs to appear in the output"),
+        SUBTRACT ("Subtracts SECOND_INPUT from INPUT" ),
+        DIFFERENCE ("Find loci that are in INPUT or SECOND_INPUT but not both" );
+
+        String helpdoc;
+        Action(final String helpdoc){
+            this.helpdoc=helpdoc;
+        }
+
+        @Override
+        public String toString() {
+            return "\n" + super.toString()+ " (" + helpdoc+ ")";
+        }
+    }
 
     // Stock main method
     public static void main(final String[] args) {
@@ -61,6 +86,8 @@ public class IntervalListTools extends CommandLineProgram {
     protected int doWork() {
         // Check inputs
         for (final File f : INPUT) IoUtil.assertFileIsReadable(f);
+        for (final File f : SECOND_INPUT) IoUtil.assertFileIsReadable(f);
+
         if (OUTPUT != null) {
             if (SCATTER_COUNT == 1) {
                 IoUtil.assertFileIsWritable(OUTPUT);
@@ -69,6 +96,9 @@ public class IntervalListTools extends CommandLineProgram {
                 IoUtil.assertDirectoryIsWritable(OUTPUT);
             }
         }
+
+
+
 
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = new ArrayList<IntervalList>();
@@ -92,32 +122,80 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
+
+        // same for the second list
+        final List<IntervalList> secondLists = new ArrayList<IntervalList>();
+        for (final File f : SECOND_INPUT) {
+            final IntervalList list = IntervalList.fromFile(f);
+            if (PADDING != 0) {
+                final IntervalList out = new IntervalList(list.getHeader());
+                for (final Interval i : list) {
+                    final int start = i.getStart() - PADDING;
+                    final int end   = i.getEnd()   + PADDING;
+                    if (start <= end) {
+                        final Interval i2 = new Interval(i.getSequence(), start, end, i.isNegativeStrand(), i.getName());
+                        out.add(i2);
+                    }
+                }
+
+                secondLists.add(out);
+            }
+            else {
+                secondLists.add(list);
+            }
+        }
+
+
         if (UNIQUE && !SORT ) {
             log.warn("UNIQUE=true requires sorting but SORT=false was specified.  Sorting anyway!");
             SORT = true;
         }
 
-        // Ensure that all the sequence dictionaries agree and merge the lists
-        IntervalList merged= null;
-        for (final IntervalList in : lists) {
-            if (merged == null) {
-                merged = in;
-            }
-            else {
-                SequenceUtil.assertSequenceDictionariesEqual(merged.getHeader().getSequenceDictionary(),
-                                                             in.getHeader().getSequenceDictionary());
-
-                for (final Interval i : in) {
-                    merged.add(i);
-                }
-            }
+        if(!secondLists.isEmpty() && (
+                ACTION == Action.UNION ||
+                ACTION == Action.CONCATENATE ||
+                ACTION == Action.INTERSECTION )){
+            log.warn(String.format("Second List found when action was %s. Ignoring second list",ACTION.name()));
         }
 
-        if (SORT) merged.sort();
-        final List<Interval> finalIntervals = UNIQUE ? merged.getUniqueIntervals() : merged.getIntervals();
+
+        final IntervalList result;
+
+        switch (ACTION){
+            case UNION:
+                result=IntervalList.union(lists);
+                break;
+            case CONCATENATE:
+                result=IntervalList.concatenate(lists);
+                break;
+            case INTERSECTION:
+                result=IntervalList.intersection(lists);
+                break;
+            case SUBTRACT:
+                result=IntervalList.subtract(lists, secondLists);
+                break;
+            case DIFFERENCE:
+                result=IntervalList.difference(lists, secondLists);
+                break;
+            default:
+                throw new PicardException("Confused. this should not happen!");
+        }
+
+
+        if(INVERT){
+            SORT=false; // no need to sort, since return will be sorted by definition.
+            UNIQUE=false; //no need to unique since invert will already return a unique list.
+        }
+
+        final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
+        final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult):possiblySortedResult;
+
+        //only get unique if this has been asked unless inverting (since the invert will return a unique list)
+        final List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+
 
         // Decide on a PG ID and make a program group
-        final SAMFileHeader header = merged.getHeader();
+        final SAMFileHeader header = result.getHeader();
         final Set<String> pgs = new HashSet<String>();
         for (final SAMProgramRecord pg : header.getProgramRecords()) pgs.add(pg.getId());
         for (int i=1; i<Integer.MAX_VALUE; ++i) {
@@ -189,11 +267,12 @@ public class IntervalListTools extends CommandLineProgram {
         //      push both pieces onto locs, continue
         // The last split is special -- when you have only one split left, it gets all of the remaining locs
         // to deal with rounding issues
-        final long idealSplitLength = Math.max((long)Math.floor(list.getUniqueBaseCount() / (1.0*SCATTER_COUNT)), 1);
+        final IntervalList uniquedList=list.uniqued();
+        final long idealSplitLength = Math.max((long)Math.floor(uniquedList.getBaseCount() / (1.0*SCATTER_COUNT)), 1);
         int splitLength = 0;
-        IntervalList split = new IntervalList(list.getHeader());
+        IntervalList split = new IntervalList(uniquedList.getHeader());
         int index = 1;   // The index of the next split file to write
-        final Iterator<Interval> it = list.iterator();
+        final Iterator<Interval> it = uniquedList.iterator();
         int totalIntervals = 0;
         final DecimalFormat format = new DecimalFormat("0000");
 
@@ -209,7 +288,7 @@ public class IntervalListTools extends CommandLineProgram {
                 split.add(interval);
                 totalIntervals++;
                 split.write(createDirectoryAndGetScatterFile(format.format(index++)));
-                split = new IntervalList(list.getHeader());
+                split = new IntervalList(uniquedList.getHeader());
                 splitLength = 0;
             }
             else {
@@ -221,7 +300,7 @@ public class IntervalListTools extends CommandLineProgram {
                     split.add(partial);
                     totalIntervals++;
                     split.write(createDirectoryAndGetScatterFile(format.format(index++)));
-                    split = new IntervalList(list.getHeader());
+                    split = new IntervalList(uniquedList.getHeader());
 
                     consumed += amountToConsume;
                     splitLength = 0;
