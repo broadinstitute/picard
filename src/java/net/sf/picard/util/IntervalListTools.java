@@ -1,6 +1,7 @@
 package net.sf.picard.util;
 
 import net.sf.picard.PicardException;
+import net.sf.picard.cmdline.CommandLineParser;
 import net.sf.picard.cmdline.CommandLineProgram;
 import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
@@ -59,12 +60,12 @@ public class IntervalListTools extends CommandLineProgram {
 
     private final Log log = Log.getInstance(IntervalListTools.class);
 
-    public enum Action{
-        CONCATENATE("The concatenation of all the intervals, no sorting or merging of overlapping/abutting intervals implied. Will result in unsorted list unless requested otherwise)"),
-        UNION ("like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all loci"),
-        INTERSECTION ("Same as UNION but with intersection instead of union. Loci must be in all inputs to appear in the output"),
-        SUBTRACT ("Subtracts SECOND_INPUT from INPUT" ),
-        DIFFERENCE ("Find loci that are in INPUT or SECOND_INPUT but not both" );
+    public enum Action implements CommandLineParser.ClpEnum{
+        CONCATENATE("The concatenation of all the intervals, no sorting or merging of overlapping/abutting intervals implied. Will result in unsorted list unless requested otherwise."),
+        UNION ("like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all loci."),
+        INTERSECTION ("Same as UNION but with intersection instead of union. Loci must be in all inputs to appear in the output."),
+        SUBTRACT ("Subtracts SECOND_INPUT from INPUT." ),
+        DIFFERENCE ("Find loci that are in INPUT or SECOND_INPUT but not both." );
 
         String helpdoc;
         Action(final String helpdoc){
@@ -72,8 +73,8 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         @Override
-        public String toString() {
-            return "\n" + super.toString()+ " (" + helpdoc+ ")";
+        public String getHelpDoc() {
+            return helpdoc;
         }
     }
 

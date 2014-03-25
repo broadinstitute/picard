@@ -755,13 +755,22 @@ public class CommandLineParser {
         if (enumConstants == null && getUnderlyingType(optionDefinition.field) == Boolean.class) {
             enumConstants = TRUE_FALSE_VALUES;
         }
+
         if (enumConstants != null) {
+            final Boolean isClpEnum=enumConstants.length>0 && (enumConstants[0] instanceof ClpEnum) ;
+
             sb.append("Possible values: {");
+            if(isClpEnum) sb.append("\n");
+
             for (int i = 0; i < enumConstants.length; ++i) {
-                if (i > 0) {
+                if (i > 0 && ! isClpEnum) {
                     sb.append(", ");
                 }
                 sb.append(enumConstants[i].toString());
+
+                if(isClpEnum){
+                    sb.append(" (" + ((ClpEnum)enumConstants[i]).getHelpDoc() + ")\n");
+                }
             }
             sb.append("} ");
         }
@@ -1031,6 +1040,10 @@ public class CommandLineParser {
         return argv;
     }
 
+    public interface ClpEnum{
+        String getHelpDoc();
+    }
+
     protected static class OptionDefinition {
         final Field field;
         final String name;
@@ -1063,8 +1076,6 @@ public class CommandLineParser {
                 if( isCollection && ((Collection) defaultValue).isEmpty()) {
                     //treat empty collections the same as uninitialized primitive types
                     this.defaultValue = "null";
-                } else if(defaultValue.getClass().isEnum()){
-                    this.defaultValue = ((Enum) defaultValue).name();
                 }
                 else {
                     //this is an intialized primitive type or a non-empty collection
