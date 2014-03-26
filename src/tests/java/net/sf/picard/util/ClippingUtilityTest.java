@@ -41,15 +41,15 @@ import java.util.Map;
  */
 public class ClippingUtilityTest {
 
-   @Test(dataProvider="clipTestData")
-   public void testBasicClip(final String testName, final String read, final String clip, final int minMatch, final double errRate, final int expected) {
-       final byte[] r = (read == null) ? null : StringUtil.stringToBytes(read);
-       final byte[] c = (clip == null) ? null : StringUtil.stringToBytes(clip);
+    @Test(dataProvider="clipTestData")
+    public void testBasicClip(final String testName, final String read, final String clip, final int minMatch, final double errRate, final int expected) {
+        final byte[] r = (read == null) ? null : StringUtil.stringToBytes(read);
+        final byte[] c = (clip == null) ? null : StringUtil.stringToBytes(clip);
 
-       final int result = ClippingUtility.findIndexOfClipSequence(r, c, minMatch, errRate);
-       Assert.assertEquals(result, expected, testName);
+        final int result = ClippingUtility.findIndexOfClipSequence(r, c, minMatch, errRate);
+        Assert.assertEquals(result, expected, testName);
 
-   }
+    }
 
 
 
@@ -98,25 +98,25 @@ public class ClippingUtilityTest {
 
     }
 
-   @Test(dataProvider="clipPairedTestData")
-   public void testPairedEndClip(final String testName, final String read1, final String read2, final AdapterPair expected) {
+    @Test(dataProvider="clipPairedTestData")
+    public void testPairedEndClip(final String testName, final String read1, final String read2, final AdapterPair expected) {
 
-       final SAMRecord rec1 = new SAMRecord(new SAMFileHeader());
-       rec1.setReadString(read1);
-       rec1.setFirstOfPairFlag(true);
-       final SAMRecord rec2 = new SAMRecord(new SAMFileHeader());
-       rec2.setReadString(read2);
-       rec2.setSecondOfPairFlag(true);
+        final SAMRecord rec1 = new SAMRecord(new SAMFileHeader());
+        rec1.setReadString(read1);
+        rec1.setFirstOfPairFlag(true);
+        final SAMRecord rec2 = new SAMRecord(new SAMFileHeader());
+        rec2.setReadString(read2);
+        rec2.setSecondOfPairFlag(true);
 
-       final AdapterPair result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2,
-               IlluminaAdapterPair.INDEXED, IlluminaAdapterPair.PAIRED_END);
-       if (result != null) {
-           Assert.assertEquals(result.getName(), expected.getName(), testName);
-       }
-       else {
-           Assert.assertNull(expected, testName);
-       }
-   }
+        final AdapterPair result = ClippingUtility.adapterTrimIlluminaPairedReads(rec1, rec2,
+                IlluminaAdapterPair.INDEXED, IlluminaAdapterPair.PAIRED_END);
+        if (result != null) {
+            Assert.assertEquals(result.getName(), expected.getName(), testName);
+        }
+        else {
+            Assert.assertNull(expected, testName);
+        }
+    }
 
     @Test
     public void testOneSidedMatchSupersededByTwoSidedMatch() {
@@ -168,26 +168,26 @@ public class ClippingUtilityTest {
         final String FORWARD = IlluminaAdapterPair.PAIRED_END.get3PrimeAdapter();
         final String SE_FORWARD = IlluminaAdapterPair.SINGLE_END.get3PrimeAdapter();
         final String REVERSE = IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterInReadOrder();
-        return new Object[][] { 
-            {"Simple test 1", "AAAAACCCCCAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 10},
-            {"Simple test 2", "AAAAACCCCCGGGGGAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 15},
-            {"No adapter", "AAAAACCCCCGGGGGTTTTT", "AGATCGGAAGAGCG", 6, 0.15, -1},
-            {"Partial adapter", "AAAAACCCCCTGATCGGAA", "AGATCGGAAGAGCG", 9, 0.15, 10},
+        return new Object[][] {
+                {"Simple test 1", "AAAAACCCCCAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 10},
+                {"Simple test 2", "AAAAACCCCCGGGGGAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 15},
+                {"No adapter", "AAAAACCCCCGGGGGTTTTT", "AGATCGGAAGAGCG", 6, 0.15, -1},
+                {"Partial adapter", "AAAAACCCCCTGATCGGAA", "AGATCGGAAGAGCG", 9, 0.15, 10},
 // no longer support clips in middle of read
 //          {"Adapter+Primer", "AAAAACCCCCAGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCG", 6, 0.15, 10},
-            {"No sequence", null, "AGATCGGAAGAGCG", 6, 0.15, -1},
-            {"Read too short", "AGATCGGAAG", "AGATCGGAAGAGCG", 11, 0.15, -1},
-            {"All No Calls", "AAACCCNNNNNNNNNNNNNNNNNNNN", "AGATCGGAAGAGCG", 6, 0.15, -1},
-            {"From Test Data1", "CGGCATTCCTGCTGAACCGAGATCGGAAGAGCGTCGTGTAGGGAAAGGGGGTGGATCTCGGTGGGCGGCGTGTTGT", REVERSE, 57, 0.15, 19},
-            {"From Test Data2a", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCCGAA", REVERSE, 9, 0.14, 27},  // XT:i:28
-            {"From Test Data2b", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCGGAA", REVERSE, 10, 0.14, -1},  // only matches 9
-            {"From PE Test Data1", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", FORWARD, 17, 0.14, 19},
-            {"From PE Test Data2", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", REVERSE, 5, 0.14, -1},
-            new Object[] {"From Test 8-clipped", "TGGGGTGGTTATTGTTGATTTTTGTTTGTGTGTTAGGTTGTTTGTGTTAGTTTTTTATTTTATTTTCGAGATCGAA", FORWARD, 8, 0.14, 68},
-            {"50% can be bad", "AAAAACCCCCAGGTCGGAAGAGCG", "AGATCGGAAGAGCG", 5, 0.5, 18},        // 18?
+                {"No sequence", null, "AGATCGGAAGAGCG", 6, 0.15, -1},
+                {"Read too short", "AGATCGGAAG", "AGATCGGAAGAGCG", 11, 0.15, -1},
+                {"All No Calls", "AAACCCNNNNNNNNNNNNNNNNNNNN", "AGATCGGAAGAGCG", 6, 0.15, -1},
+                {"From Test Data1", "CGGCATTCCTGCTGAACCGAGATCGGAAGAGCGTCGTGTAGGGAAAGGGGGTGGATCTCGGTGGGCGGCGTGTTGT", REVERSE, 57, 0.15, 19},
+                {"From Test Data2a", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCCGAA", REVERSE, 9, 0.14, 27},  // XT:i:28
+                {"From Test Data2b", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCGGAA", REVERSE, 10, 0.14, -1},  // only matches 9
+                {"From PE Test Data1", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", FORWARD, 17, 0.14, 19},
+                {"From PE Test Data2", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", REVERSE, 5, 0.14, -1},
+                new Object[] {"From Test 8-clipped", "TGGGGTGGTTATTGTTGATTTTTGTTTGTGTGTTAGGTTGTTTGTGTTAGTTTTTTATTTTATTTTCGAGATCGAA", FORWARD, 8, 0.14, 68},
+                {"50% can be bad", "AAAAACCCCCAGGTCGGAAGAGCG", "AGATCGGAAGAGCG", 5, 0.5, 18},        // 18?
 
-            {"From 30E54AAXX.5.a", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 34, 0.14, 0},  // 0!? From KT test case
-            {"From 30E54AAXX.5.b", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", SE_FORWARD, 34, 0.14, 0},  // 1?? From KT test case
+                {"From 30E54AAXX.5.a", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 34, 0.14, 0},  // 0!? From KT test case
+                {"From 30E54AAXX.5.b", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", SE_FORWARD, 34, 0.14, 0},  // 1?? From KT test case
         };
     }
 
