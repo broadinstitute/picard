@@ -32,6 +32,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Very basic test for scatter functionality in IntervalListTools
@@ -142,5 +145,23 @@ public class IntervalListToolsTest {
             result[i] = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, scatterCount, format.format(i+1)));
         }
         return result;
+    }
+
+    @Test
+    public void testMerges() {
+        SortedSet<Interval> intervals = new TreeSet<Interval>() {{
+            add(new Interval("1", 500, 600, false, "foo"));
+            add(new Interval("1", 550, 650, false, "bar"));
+            add(new Interval("1", 625, 699, false, "splat"));
+        }};
+
+        Interval out = IntervalList.merge(intervals, false);
+        Assert.assertEquals(out.getStart(), 500);
+        Assert.assertEquals(out.getEnd(), 699);
+
+        intervals.add(new Interval("1", 626, 629, false, "whee"));
+        out = IntervalList.merge(intervals, false);
+        Assert.assertEquals(out.getStart(), 500);
+        Assert.assertEquals(out.getEnd(), 699);
     }
 }

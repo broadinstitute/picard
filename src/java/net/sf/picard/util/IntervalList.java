@@ -31,6 +31,7 @@ import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.StringLineReader;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.vcf.VCFFileReader;
+import net.sf.samtools.util.StringUtil;
 
 import java.io.*;
 import java.util.*;
@@ -159,41 +160,39 @@ public class IntervalList implements Iterable<Interval> {
      */
     public static List<Interval> getUniqueIntervals(final IntervalList list, final boolean concatenateNames) {
 
-        final ListIterator<Interval> iterator;
+        final List<Interval> intervals;
         if (list.getHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            iterator = list.sorted().intervals.listIterator();
+            intervals = list.sorted().intervals;
         }
         else {
-            iterator = list.intervals.listIterator();
+            intervals = list.intervals;
         }
 
         final List<Interval> unique = new ArrayList<Interval>();
-        Interval previous=null;
+        final TreeSet<Interval> toBeMerged = new TreeSet<Interval>();
+        Interval current = null;
 
-        while (iterator.hasNext()) {
-            if(previous == null){
-                previous = iterator.next();
+        for (final Interval next : intervals) {
+            if (current == null) {
+                toBeMerged.add(next);
+                current = next;
             }
-            else{
-                final Interval next = iterator.next();
-                if (previous.intersects(next) || previous.abuts(next)) {
-                    final String intervalName = (concatenateNames ? previous.getName() + "|" + next.getName() : previous.getName());
-                    previous = new Interval(previous.getSequence(),
-                            previous.getStart(),
-                            Math.max(previous.getEnd(), next.getEnd()),
-                            previous.isNegativeStrand(),
-                            intervalName);
-                }
-                else {
-                    unique.add(previous);
-                    previous = next;
-                }
+            else if (current.intersects(next) || current.abuts(next)) {
+                toBeMerged.add(next);
+                current = new Interval(current.getSequence(), current.getStart(), Math.max(current.getEnd(), next.getEnd()), false , "");
             }
+            else {
+                // Emit merged/unique interval
+                unique.add(merge(toBeMerged, concatenateNames));
 
+                // Set current == next for next iteration
+                toBeMerged.clear();
+                current = next;
+                toBeMerged.add(current);
+            }
         }
 
-        if (previous != null) unique.add(previous);
-
+        if (toBeMerged.size() > 0) unique.add(merge(toBeMerged, concatenateNames));
         return unique;
     }
 
@@ -202,37 +201,37 @@ public class IntervalList implements Iterable<Interval> {
      * @param concatenateNames If false, the merged interval has the name of the earlier interval.  This keeps name shorter.
      */
     @Deprecated //use uniqued(concatenateNames).getIntervals() or the static version instead to avoid changing the underlying object.
+    /**
+     * Merges list of intervals and reduces them like net.sf.picard.util.IntervalList#getUniqueIntervals()
+     * @param concatenateNames If false, the merged interval has the name of the earlier interval.  This keeps name shorter.
+     */
     public List<Interval> getUniqueIntervals(final boolean concatenateNames) {
         if (getHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             sort();
         }
-        final List<Interval> unique = new ArrayList<Interval>();
-        final ListIterator<Interval> iterator = this.intervals.listIterator();
-        Interval previous = iterator.next();
 
-        while (iterator.hasNext()) {
-            if(previous == null){
-                previous = iterator.next();
-            }
-            else{
-                final Interval next = iterator.next();
-                if (previous.intersects(next) || previous.abuts(next)) {
-                    final String intervalName = (concatenateNames? previous.getName() + "|" + next.getName(): previous.getName());
-                    previous = new Interval(previous.getSequence(),
-                                            previous.getStart(),
-                                            Math.max(previous.getEnd(), next.getEnd()),
-                                            previous.isNegativeStrand(),
-                                            intervalName);
-                }
-                else {
-                    unique.add(previous);
-                    previous = next;
-                }
-            }
+        return getUniqueIntervals(this, concatenateNames);
+    }
+
+    /** Merges a sorted collection of intervals and optionally concatenates unique names or takes the first name. */
+    static Interval merge(final SortedSet<Interval> intervals, final boolean concatenateNames) {
+        final String chrom = intervals.first().getSequence();
+        int start = intervals.first().getStart();
+        int end   = intervals.last().getEnd();
+        final boolean neg  = intervals.first().isNegativeStrand();
+        final LinkedHashSet<String> names = new LinkedHashSet<String>();
+        final String name;
+
+        for (final Interval i : intervals) {
+            if (i.getName() != null) names.add(i.getName());
+            start = Math.min(start, i.getStart());
+            end   = Math.max(end, i.getEnd());
         }
-        if (previous != null) unique.add(previous);
 
-        return unique;
+        if (concatenateNames) { name = StringUtil.join("|", names); }
+        else { name = names.iterator().next(); }
+
+        return new Interval(chrom, start, end, neg, name);
     }
 
     /** Gets the (potentially redundant) sum of the length of the intervals in the list. */
