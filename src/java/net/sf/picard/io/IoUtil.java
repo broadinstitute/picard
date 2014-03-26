@@ -384,6 +384,26 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /**
+     * Transfers from the input stream to the output stream using stream operations and a buffer.
+     */
+    public static void transferByStream(final InputStream in, final OutputStream out, final long bytes) {
+        final byte[] buffer = new byte[Defaults.NON_ZERO_BUFFER_SIZE];
+        long remaining = bytes;
+
+        try {
+            while (remaining > 0) {
+                final int read = in.read(buffer, 0, (int) Math.min(buffer.length, remaining));
+                out.write(buffer, 0, read);
+                remaining -= read;
+            }
+        }
+        catch (final IOException ioe) {
+            throw new RuntimeIOException(ioe);
+        }
+    }
+
+
+    /**
      * Copy input to output, overwriting output if it already exists.
      */
     public static void copyFile(final File input, final File output) {

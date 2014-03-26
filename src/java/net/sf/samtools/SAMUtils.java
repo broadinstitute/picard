@@ -23,9 +23,11 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.RuntimeEOFException;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -626,5 +628,14 @@ public final class SAMUtils
 
         return m1 + m2;
 
+    }
+
+    /**
+     * Returns the virtual file offset of the first record in a BAM file - i.e. the virtual file
+     * offset after skipping over the text header and the sequence records.
+     */
+    public static long findVirtualOffsetOfFirstRecordInBam(final File bamFile) {
+        try { return BAMFileReader.findVirtualOffsetOfFirstRecord(bamFile); }
+        catch (final IOException ioe) { throw new RuntimeEOFException(ioe); }
     }
 }

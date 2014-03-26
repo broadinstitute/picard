@@ -181,6 +181,14 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }
 
+    /** Reads through the header and sequence records to find the virtual file offset of the first record in the BAM file. */
+    static long findVirtualOffsetOfFirstRecord(final File bam) throws IOException {
+        final BAMFileReader reader = new BAMFileReader(bam, null, false, ValidationStringency.SILENT, new DefaultSAMRecordFactory());
+        final long offset = reader.mFirstRecordPointer;
+        reader.close();
+        return offset;
+    }
+
     /**
      * If true, writes the source of every read into the source SAMRecords.
      * @param enabled true to write source information into each SAMRecord.
