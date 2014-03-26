@@ -308,7 +308,7 @@ public class IntervalList implements Iterable<Interval> {
      */
     public static IntervalList fromFile(final File file) {
         final BufferedReader reader=IoUtil.openFileForBufferedReading(file);
-        final IntervalList list = fromReader(IoUtil.openFileForBufferedReading(file));
+        final IntervalList list = fromReader(reader);
         try {
             reader.close();
         } catch (final IOException e) {
