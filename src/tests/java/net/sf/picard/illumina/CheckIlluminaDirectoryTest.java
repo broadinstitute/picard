@@ -29,11 +29,7 @@ import java.util.Map;
 import static net.sf.picard.illumina.parser.IlluminaDataType.BaseCalls;
 import static net.sf.picard.illumina.parser.IlluminaDataType.Noise;
 import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.Bcl;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.Filter;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.Locs;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.Pos;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.Qseq;
+import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
 import static net.sf.samtools.util.CollectionUtil.makeList;
 
 
@@ -84,20 +80,21 @@ public class CheckIlluminaDirectoryTest {
 
     public String[] makeCheckerArgs(final File basecallDir, final int lane, final String readStructure,
                                     final IlluminaDataType[] dataTypes, final List<Integer> filterTiles,
-                                    final boolean makeFakeFiles) {
-        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 4];
+                                    final boolean makeFakeFiles, final boolean createSymLinks) {
+        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 5];
 
         dataTypeArgs[0] = "B=" + basecallDir;
         dataTypeArgs[1] = StandardOptionDefinitions.LANE_SHORT_NAME + "=" + lane;
         dataTypeArgs[2] = "RS=" + readStructure;
         dataTypeArgs[3] = "F=" + makeFakeFiles;
+        dataTypeArgs[4] = "X=" + createSymLinks;
 
         for (int i = 0; i < dataTypes.length; i++) {
-            dataTypeArgs[i + 4] = "DT=" + dataTypes[i];
+            dataTypeArgs[i + 5] = "DT=" + dataTypes[i];
         }
 
         if (filterTiles.size() > 0) {
-            final int start = dataTypes.length + 4;
+            final int start = dataTypes.length + 5;
             for (int i = start; i < dataTypeArgs.length; i++) {
                 dataTypeArgs[i] = "T=" + filterTiles.get(i - start);
             }
@@ -228,7 +225,7 @@ public class CheckIlluminaDirectoryTest {
         writeTileMetricsOutFile(makeMap(makeList(lane - 1, lane + 1, lane),
                 makeList(makeList(1, 2, 3), tiles, tiles)));
 
-        final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, false);
+        final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, false, false);
         final int result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(result, 0);
     }
@@ -293,7 +290,8 @@ public class CheckIlluminaDirectoryTest {
         IlluminaFileUtilTest.emptyRelativeFiles(intensityDir, filesToEmpty);
         writeTileMetricsOutFile(makeMap(makeList(lane - 1, lane + 1, lane), makeList(makeList(1, 2, 3), tiles, tiles)));
 
-        final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles);
+        final String[] args =
+                makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles, false);
         int result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(expectedNumErrors, result);
         //if we previously faked files make sure CheckIlluminaDirectory returns with no failures
@@ -337,7 +335,8 @@ public class CheckIlluminaDirectoryTest {
         final File cycleDir = new File(basecallDir, "L005/C9.1");
         writeFileOfSize(new File(cycleDir, "s_5_3.bcl"), 222);
 
-        final String[] args = makeCheckerArgs(basecallDir, lane, "50T", dataTypes, new ArrayList<Integer>(), false);
+        final String[] args =
+                makeCheckerArgs(basecallDir, lane, "50T", dataTypes, new ArrayList<Integer>(), false, false);
         final int result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(1, result);
     }
@@ -346,7 +345,7 @@ public class CheckIlluminaDirectoryTest {
     public void basedirDoesntExistTest() {
         final String[] args = makeCheckerArgs(new File("a_made_up_file/in_some_weird_location"), 1, "76T76T",
                 new IlluminaDataType[]{IlluminaDataType.Position},
-                new ArrayList<Integer>(), false);
+                new ArrayList<Integer>(), false, false);
 
         final int result = new CheckIlluminaDirectory().instanceMain(args);
     }
@@ -363,18 +362,55 @@ public class CheckIlluminaDirectoryTest {
         writeTileMetricsOutFile(makeMap(makeList(lane), makeList(tiles)));
 
         String[] args = makeCheckerArgs(basecallDir, lane, "76T76T", dataTypes, new ArrayList<Integer>(),
-                false);
+                false, false);
         int result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(result, 0);
 
-        args = makeCheckerArgs(basecallDir, lane, "76T77T", dataTypes, new ArrayList<Integer>(), false);
+        args = makeCheckerArgs(basecallDir, lane, "76T77T", dataTypes, new ArrayList<Integer>(), false, false);
         result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(result, 1);
 
         IlluminaFileUtilTest.deleteRelativeFiles(basecallDir, makeList("s_4_1_0002_qseq.txt"));
 
-        args = makeCheckerArgs(basecallDir, lane, "76T76T", dataTypes, new ArrayList<Integer>(), false);
+        args = makeCheckerArgs(basecallDir, lane, "76T76T", dataTypes, new ArrayList<Integer>(), false, false);
         result = new CheckIlluminaDirectory().instanceMain(args);
         Assert.assertEquals(result, 1);
+    }
+
+    @Test
+    public void symlinkLocsTest() {
+        final List<Integer> tileList = makeList(1101, 1102, 1103, 2101, 2102, 2103);
+        final int lane = 5;
+        makeFiles(new SupportedIlluminaFormat[]{Bcl}, lane, tileList, IlluminaFileUtilTest.cycleRange(1, 50));
+        String[] args =
+                makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{BaseCalls}, new ArrayList<Integer>(),
+                        false,
+                        true);
+        writeTileMetricsOutFile(makeMap(makeList(lane), makeList(tileList)));
+
+        createSingleLocsFile();
+        final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
+        intensityLaneDir.mkdirs();
+        int result = new CheckIlluminaDirectory().instanceMain(args);
+        Assert.assertEquals(result, 0);
+        //now that we have created the loc files lets test to make sure they are there
+        args = makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{IlluminaDataType.Position},
+                new ArrayList<Integer>(), false,
+                true);
+
+        result = new CheckIlluminaDirectory().instanceMain(args);
+        Assert.assertEquals(result, 0);
+    }
+
+    private void createSingleLocsFile() {
+        try {
+            final File singleLocsFile = new File(intensityDir, "s.locs");
+            final FileWriter writer = new FileWriter(singleLocsFile);
+            writer.write("This is a test string.");
+            writer.close();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

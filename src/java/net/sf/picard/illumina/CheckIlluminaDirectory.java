@@ -12,6 +12,7 @@ import net.sf.picard.illumina.parser.OutputMapping;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
+import net.sf.picard.util.ProcessExecutor;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
@@ -32,33 +33,33 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage
     public String USAGE = getStandardUsagePreamble() +
-                          "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  "
-                          +
-                          "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. "
-                          +
-                          "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
+            "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  "
+            +
+            "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. "
+            +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
 
     @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
     @Option(doc =
             "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those "
-            +
-            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on"
-            +
-            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option "
-            +
-            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the "
-            +
-            "individual records of the files themselves are spurious. ",
+                    +
+                    "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on"
+                    +
+                    "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option "
+                    +
+                    "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the "
+                    +
+                    "individual records of the files themselves are spurious. ",
             shortName = "DT",
             optional = true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
 
     @Option(doc = ReadStructure.PARAMETER_DOC
-                  + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes "
-                  +
-                  "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.",
+            + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes "
+            +
+            "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.",
             shortName = "RS")
     public String READ_STRUCTURE;
 
@@ -72,6 +73,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Option(doc = "A flag to determine whether or not to create fake versions of the missing files.", shortName = "F",
             optional = true)
     public Boolean FAKE_FILES = false;
+
+    @Option(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
+            optional = true)
+    public Boolean LINK_LOCS = false;
 
     /**
      * Required main method implementation.
@@ -103,6 +108,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 expectedTiles.retainAll(TILE_NUMBERS);
             }
 
+            if (LINK_LOCS) {
+                createLocFileSymlinks(fileUtil, lane);
+            }
+
             log.info("Checking lane " + lane);
             log.info("Expected tiles: " + StringUtil.join(", ", expectedTiles));
 
@@ -129,6 +138,26 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         return status;
     }
 
+    private void createLocFileSymlinks(final IlluminaFileUtil fileUtil, final int lane) {
+        final File baseFile = new File(BASECALLS_DIR.getParentFile().getAbsolutePath() + File.separator + "s.locs");
+        final String newFileBase = baseFile.getParent() + File.separator + IlluminaFileUtil
+                .longLaneStr(lane) + File.separator;
+        if (baseFile.exists()) {
+            for (final Integer tile : fileUtil.getExpectedTiles()) {
+                final String newName =
+                        newFileBase + String.format("s_%d_%d.locs", lane, tile);
+                final ProcessExecutor.ExitStatusAndOutput output =
+                        ProcessExecutor.executeAndReturnInterleavedOutput(new String[]{"ln", "-fs", baseFile.getAbsolutePath(), newName});
+                if (output.exitStatus != 0) {
+                    throw new PicardException("Could not create symlink: " + output.stdout);
+                }
+            }
+        } else {
+            throw new PicardException(String.format("Locations file %s does not exist.", baseFile.getAbsolutePath()));
+        }
+
+    }
+
     /**
      * Use fileUtil to find the data types that would be used by IlluminaDataProvider.  Verify that for the expected
      * tiles/cycles/data types that all the files needed to provide their data is present.  This method logs every
@@ -138,7 +167,6 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
      * @param expectedTiles The tiles we expect to be available/well-formed
      * @param cycles        The cycles we expect to be available/well-formed
      * @param dataTypes     The data types we expect to be available/well-formed
-     *
      * @return The number of errors found/logged for this directory/lane
      */
     private static final int verifyLane(final IlluminaFileUtil fileUtil, final List<Integer> expectedTiles,

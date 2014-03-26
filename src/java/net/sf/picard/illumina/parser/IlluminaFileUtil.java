@@ -1334,7 +1334,7 @@ public class IlluminaFileUtil {
      *
      * @return A long string representation of the name
      */
-    private static String longLaneStr(final int lane) {
+    public static String longLaneStr(final int lane) {
         String lstr = String.valueOf(lane);
         final int zerosToAdd = 3 - lstr.length();
 
@@ -1371,7 +1371,7 @@ public class IlluminaFileUtil {
             IoUtil.assertDirectoryIsReadable(baseDirectory);
             final File[] files = IoUtil.getFilesMatchingRegexp(baseDirectory, pattern);
             for (final File file : files) {
-                if (file.length() > 0) {
+                if ( file.length() > 0) {
                     final LaneTileEnd lt = ift.fileToLaneTileEnd(file.getName());
                     fileMap.put(lt.tile, file);
                 }
