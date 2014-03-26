@@ -23,10 +23,12 @@
  */
 package net.sf.samtools.util;
 
+import java.io.Closeable;
+
 /**
  * Interface allows for implementations that read lines from a String, an ASCII file, or somewhere else.
  */
-public interface LineReader {
+public interface LineReader extends Closeable{
 
     /**
      * Read a line and remove the line terminator
