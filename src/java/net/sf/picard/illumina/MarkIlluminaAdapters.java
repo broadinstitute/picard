@@ -96,6 +96,19 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
     @Option(doc="For specifying adapters other than standard Illumina", optional=true)
     public String THREE_PRIME_ADAPTER;
 
+    @Option(doc="Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.")
+    public int ADAPTER_TRUNCATION_LENGTH = AdapterMarker.DEFAULT_ADAPTER_LENGTH;
+
+    @Option(doc="If looking for multiple adapter sequences, then after having seen this many adapters, shorten the list of sequences. " +
+            "Keep the adapters that were found most frequently in the input so far. " +
+            "Set to -1 if the input has a heterogeneous mix of adapters so shortening is undesirable.",
+    shortName = "APT")
+    public int PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN = AdapterMarker.DEFAULT_PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN;
+
+    @Option(doc="If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that " +
+            "were tied with the adapters being kept).")
+    public int NUM_ADAPTERS_TO_KEEP = AdapterMarker.DEFAULT_NUM_ADAPTERS_TO_KEEP;
+
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 
     // Stock main method
@@ -145,6 +158,12 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, 1000000, "Read");
         final SAMRecordIterator iterator = in.iterator();
 
+        final AdapterMarker adapterMarker = new AdapterMarker(ADAPTER_TRUNCATION_LENGTH, adapters).
+                setMaxPairErrorRate(MAX_ERROR_RATE_PE).setMinPairMatchBases(MIN_MATCH_BASES_PE).
+                setMaxSingleEndErrorRate(MAX_ERROR_RATE_SE).setMinSingleEndMatchBases(MIN_MATCH_BASES_SE).
+                setNumAdaptersToKeep(NUM_ADAPTERS_TO_KEEP).
+                setThresholdForSelectingAdaptersToKeep(PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN);
+
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
             final SAMRecord rec2 = rec.getReadPairedFlag() && iterator.hasNext() ? iterator.next() : null;
@@ -181,10 +200,10 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
                     throw new PicardException("Two reads with same name but not correctly marked as 1st/2nd of pair: " + rec.getReadName());
                 }
 
-                ClippingUtility.adapterTrimIlluminaPairedReads(first, second, MIN_MATCH_BASES_PE, MAX_ERROR_RATE_PE, adapters);
+                adapterMarker.adapterTrimIlluminaPairedReads(first, second);
             }
             else {
-                ClippingUtility.adapterTrimIlluminaSingleRead(rec, MIN_MATCH_BASES_SE, MAX_ERROR_RATE_SE, adapters);
+                adapterMarker.adapterTrimIlluminaSingleRead(rec);
             }
 
             // Then output the records, update progress and metrics

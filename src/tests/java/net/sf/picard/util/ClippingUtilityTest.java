@@ -141,21 +141,40 @@ public class ClippingUtilityTest {
     @Test(dataProvider = "testAdapterInAllReadPositionsDataProvider")
     public void testAdapterInAllReadPositions(final int readLength) {
         final int minAdapterLength = 6;
-        for (int adapterPosition = 0; adapterPosition < readLength; ++adapterPosition) {
-            final String adapterString = IlluminaAdapterPair.PAIRED_END.get3PrimeAdapterInReadOrder();
-            final int replacementLength = Math.min(adapterString.length(), readLength - adapterPosition);
-            final String adapterSubstring = adapterString.substring(0, replacementLength);
-            final String readBases = replaceSubstring(makeBogusReadString(readLength), adapterSubstring, adapterPosition, adapterSubstring.length());
-            final SAMRecord rec = new SAMRecord(null);  rec.setReadString(readBases);
-            final AdapterPair matchedAdapter = ClippingUtility.adapterTrimIlluminaSingleRead(rec, minAdapterLength, 0.1, IlluminaAdapterPair.PAIRED_END);
-            if (adapterPosition <= readLength - minAdapterLength) {
-                Assert.assertEquals(matchedAdapter, IlluminaAdapterPair.PAIRED_END, "Failed at position " + adapterPosition);
-                Assert.assertEquals(rec.getIntegerAttribute(ReservedTagConstants.XT), Integer.valueOf(adapterPosition + 1));
-            } else {
-                Assert.assertNull(matchedAdapter);
-                Assert.assertNull(rec.getAttribute(ReservedTagConstants.XT));
+        for (final IlluminaAdapterPair adapterPair : IlluminaAdapterPair.values()) {
+            final AdapterMarker marker = new AdapterMarker(adapterPair);
+            for (int adapterPosition = 0; adapterPosition < readLength; ++adapterPosition) {
+                final SAMRecord rec = createSamRecordWithAdapterSequence(readLength, adapterPair, adapterPosition);
+                final AdapterPair matchedAdapter = ClippingUtility.adapterTrimIlluminaSingleRead(rec, minAdapterLength, 0.1, adapterPair);
+                final Object xt = rec.getAttribute(ReservedTagConstants.XT);
+
+                rec.setAttribute(ReservedTagConstants.XT, null);
+                final AdapterPair truncatedAdapter = marker.adapterTrimIlluminaSingleRead(rec, minAdapterLength, 0.1);
+                final Object xtFromMarker = rec.getAttribute(ReservedTagConstants.XT);
+
+                if (adapterPosition <= readLength - minAdapterLength) {
+                    Assert.assertEquals(matchedAdapter, adapterPair, "Failed at position " + adapterPosition);
+                    Assert.assertEquals((Integer)xt, Integer.valueOf(adapterPosition + 1));
+                    Assert.assertNotNull(truncatedAdapter);
+                    Assert.assertEquals((Integer)xtFromMarker, Integer.valueOf(adapterPosition + 1));
+                } else {
+                    Assert.assertNull(matchedAdapter);
+                    Assert.assertNull(xt);
+                    Assert.assertNull(truncatedAdapter);
+                    Assert.assertNull(xtFromMarker);
+                }
             }
         }
+    }
+
+    private SAMRecord createSamRecordWithAdapterSequence(final int readLength, final IlluminaAdapterPair adapterPair, final int adapterPosition) {
+        final String adapterString = adapterPair.get3PrimeAdapterInReadOrder();
+        final int replacementLength = Math.min(adapterString.length(), readLength - adapterPosition);
+        final String adapterSubstring = adapterString.substring(0, replacementLength);
+        final String readBases = replaceSubstring(makeBogusReadString(readLength), adapterSubstring, adapterPosition, adapterSubstring.length());
+        final SAMRecord rec = new SAMRecord(null);
+        rec.setReadString(readBases);
+        return rec;
     }
 
     @DataProvider(name="testAdapterInAllReadPositionsDataProvider")
@@ -288,5 +307,74 @@ public class ClippingUtilityTest {
         final StringBuilder sb = new StringBuilder(s);
         sb.replace(position, position + charsToReplace, replacement);
         return sb.toString();
+    }
+
+
+    @Test
+    public void testAdapterTruncation() {
+        final AdapterMarker marker = new AdapterMarker(30,
+                IlluminaUtil.IlluminaAdapterPair.INDEXED,
+                IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
+                IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
+                IlluminaUtil.IlluminaAdapterPair.FLUIDIGM);
+        // INDEXED and DUAL_INDEXED should collapse at length 30
+        Assert.assertTrue(marker.getAdapters().length < 4, "Did not collapse: " + marker.getAdapters().length);
+    }
+
+    /**
+     * Confirm that after the requisite number of sightings of adapter, the list is trimmed
+     */
+    @Test(dataProvider = "testAdapterListTruncationDataProvider")
+    public void testAdapterListTruncation(final IlluminaAdapterPair adapterPair) {
+        final int thresholdForTruncatingAdapterList = 20;
+        final int readLength = 100;
+
+        // Throw all the adapter pairs into the marker.  There is some danger in doing this because
+        // IlluminaAdapterPair.ALTERNATIVE_SINGLE_END has 3' that is a substring of some of the others.  In the enum it appears
+        // last so it is tested last.
+        final AdapterMarker marker =
+                new AdapterMarker(IlluminaUtil.IlluminaAdapterPair.values()).
+                        setThresholdForSelectingAdaptersToKeep(thresholdForTruncatingAdapterList);
+        int adapterPosition = 1;
+
+        Assert.assertTrue(adapterPosition + thresholdForTruncatingAdapterList < readLength - ClippingUtility.MIN_MATCH_BASES,
+                "Test is configured improperly -- eventually will not be enough adapter bases in read.");
+
+        int originalNumberOfAdapters = marker.getAdapters().length;
+        for (int i = 0; i < thresholdForTruncatingAdapterList; ++i) {
+
+            // First, a read with no adapter in it.
+            SAMRecord rec = new SAMRecord(null);
+            rec.setReadString(makeBogusReadString(readLength));
+            AdapterPair matchedPair = marker.adapterTrimIlluminaSingleRead(rec);
+            Assert.assertNull(matchedPair);
+            Assert.assertNull(rec.getAttribute(ReservedTagConstants.XT));
+
+            // Adapter list should not be truncated yet
+            Assert.assertEquals(marker.getAdapters().length, originalNumberOfAdapters);
+
+            // Then, a record with some adapter sequence in it.
+            rec = createSamRecordWithAdapterSequence(readLength, adapterPair, adapterPosition);
+            matchedPair = marker.adapterTrimIlluminaSingleRead(rec);
+            Assert.assertNotNull(matchedPair);
+            Assert.assertEquals(rec.getIntegerAttribute(ReservedTagConstants.XT).intValue(), adapterPosition + 1,
+                    rec.getReadString() + " matched " + matchedPair);
+
+            // Put adapter in different place next time.
+            adapterPosition++;
+        }
+
+        Assert.assertEquals(marker.getAdapters().length, 1, "Did not truncate adapter list to 1 element");
+        Assert.assertTrue(marker.getAdapters()[0].getName().contains(adapterPair.getName()),
+                String.format("Expected '%s' to contain '%s'", marker.getAdapters()[0].getName(), adapterPair.getName()));
+    }
+
+    @DataProvider(name="testAdapterListTruncationDataProvider")
+    public Object[][] testAdapterListTruncationDataProvider() {
+        Object[][] ret = new Object[IlluminaAdapterPair.values().length][];
+        for (int i = 0; i < ret.length; ++i) {
+            ret[i] = new Object[]{IlluminaAdapterPair.values()[i]};
+        }
+        return ret;
     }
 }

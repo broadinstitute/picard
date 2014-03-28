@@ -31,10 +31,11 @@ import net.sf.picard.illumina.parser.ClusterData;
 import net.sf.picard.illumina.parser.ReadData;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.sam.ReservedTagConstants;
+import net.sf.picard.util.AdapterMarker;
 import net.sf.picard.util.AdapterPair;
-import net.sf.picard.util.ClippingUtility;
 import net.sf.picard.util.IlluminaUtil;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMTag;
 
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class ClusterDataToSamConverter implements
     private final boolean isBarcoded;
     private final int [] templateIndices;
     private final int [] barcodeIndices;
-    private final AdapterPair[] adaptersToCheck;
+    private final AdapterMarker adapterMarker;
     private final int outputRecordsPerCluster;
     private final ReadNameEncoder readNameEncoder;  
     
@@ -81,8 +82,11 @@ public class ClusterDataToSamConverter implements
         this.isPairedEnd = readStructure.templates.length() == 2;
         this.isBarcoded  = !readStructure.barcodes.isEmpty();
 
-        this.adaptersToCheck = new AdapterPair[adapters.size()];
-        for (int i = 0; i < adapters.size(); i++) adaptersToCheck[i] = adapters.get(i);
+        if (adapters.isEmpty()) {
+            this.adapterMarker = null;
+        } else {
+            this.adapterMarker = new AdapterMarker(adapters.toArray(new AdapterPair[adapters.size()]));
+        }
 
         this.templateIndices = readStructure.templates.getIndices();
         this.barcodeIndices = readStructure.barcodes.getIndices();
@@ -114,13 +118,13 @@ public class ClusterDataToSamConverter implements
         }
 
         if (this.readGroupId != null) {
-            sam.setAttribute("RG", readGroupId);
+            sam.setAttribute(SAMTag.RG.name(), readGroupId);
         }
 
         // If it's a barcoded run and the read isn't assigned to a barcode, then add the barcode
         // that was read as an optional tag
         if (unmatchedBarcode != null) {
-            sam.setAttribute("BC", unmatchedBarcode);
+            sam.setAttribute(SAMTag.BC.name(), unmatchedBarcode);
         }
 
         return sam;
@@ -156,13 +160,13 @@ public class ClusterDataToSamConverter implements
             ret.records[1] = secondOfPair;
         }
 
-        if (adaptersToCheck.length > 0) {
+        if (adapterMarker != null) {
             // Clip the read
             if (isPairedEnd) {
-                ClippingUtility.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair, adaptersToCheck);
+                adapterMarker.adapterTrimIlluminaPairedReads(firstOfPair, secondOfPair);
             }
             else {
-                ClippingUtility.adapterTrimIlluminaSingleRead(firstOfPair, adaptersToCheck);
+                adapterMarker.adapterTrimIlluminaSingleRead(firstOfPair);
             }
         }
         return ret;
