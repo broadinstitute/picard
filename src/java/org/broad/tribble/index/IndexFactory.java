@@ -25,6 +25,7 @@ package org.broad.tribble.index;
 
 import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.util.BlockCompressedInputStream;
 import org.broad.tribble.*;
 import org.broad.tribble.index.interval.IntervalIndexCreator;
 import org.broad.tribble.index.interval.IntervalTreeIndex;
@@ -157,6 +158,9 @@ public class IndexFactory {
             InputStream  inputStream = ParsingUtils.openInputStream(indexFile);
             if (indexFile.endsWith(".gz")) {
                 inputStream = new GZIPInputStream(inputStream);
+            }
+            else if (indexFile.endsWith(".tbi")) {
+                inputStream = new BlockCompressedInputStream(inputStream);
             }
             // Must be buffered, because getIndexType uses mark and reset
             bufferedInputStream = new BufferedInputStream(inputStream, Defaults.NON_ZERO_BUFFER_SIZE);
