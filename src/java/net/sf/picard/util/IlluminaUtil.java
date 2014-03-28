@@ -31,7 +31,7 @@ import java.io.Closeable;
 import java.util.List;
 
 /**
- * Misc utilities for working with Illuina specific files and data
+ * Misc utilities for working with Illumina specific files and data
  *
  * @author jburke@broadinstitute.org
  */
@@ -137,9 +137,6 @@ public class IlluminaUtil {
         SINGLE_END (           "AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT",
                                                     "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG"),
 
-        ALTERNATIVE_SINGLE_END("AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGACGATC",
-                                                                 "TCGTATGCCGTCTTCTGCTTG"),
-
         NEXTERA_V1(            "AATGATACGGCGACCACCGAGATCTACACGCCTCCCTCGCGCCATCAGAGATGTGTATAAGAGACAG",
           "CTGTCTCTTATACACATCTCTGAGCGGGCTGGCAAGGCAGACCGNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG"),
 
@@ -153,8 +150,15 @@ public class IlluminaUtil {
                               "AGACCAAGTCTCTGCTACCGTANNNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG"),
 
         TRUSEQ_SMALLRNA(       "AATGATACGGCGACCACCGAGATCTACACGTTCAGAGTTCTACAGTCCGACGATC",
-                       "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG")
-        ;
+                       "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG"),
+
+        // This one is at the end of the list because its 3' is a subset of several of the 3's above.
+        // There are unit tests that try all AdapterPairs, and this one should go at the end os
+        // it is checked last.
+        ALTERNATIVE_SINGLE_END("AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGACGATC",
+                                       "TCGTATGCCGTCTTCTGCTTG"),
+
+                ;
 
         final String fivePrime, threePrime, fivePrimeReadOrder;
         final byte[]  fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;
