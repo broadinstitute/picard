@@ -60,7 +60,7 @@ public class AdapterMarker {
 
     // This is AtomicReference because one thread could be matching adapters while the threshold has been crossed in another
     // thread and the array is being replaced.
-    private final AtomicReference<AdapterPair[]> adapters;
+    private final AtomicReference<AdapterPair[]> adapters = new AtomicReference<AdapterPair[]>();
 
     // All the members below are only accessed within a synchronized block.
     private boolean thresholdReached = false;
@@ -92,7 +92,7 @@ public class AdapterMarker {
                 matchingAdapter.setName(matchingAdapter.getName() + "|" + adapter.getName());
             }
         }
-        adapters = new AtomicReference<AdapterPair[]>(truncatedAdapters.toArray(new AdapterPair[truncatedAdapters.size()]));
+        adapters.set(truncatedAdapters.toArray(new AdapterPair[truncatedAdapters.size()]));
     }
 
     public int getNumAdaptersToKeep() {
