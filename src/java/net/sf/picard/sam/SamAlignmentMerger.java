@@ -79,6 +79,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 *                            output will be coordinate-sorted
      * @param primaryAlignmentSelectionStrategy How to handle multiple alignments for a fragment or read pair,
 *                                          in which none are primary, or more than one is marked primary
+     * @param addMateCigar      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
      */
     public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -89,11 +90,12 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final List<File> read1AlignedSamFile, final List<File> read2AlignedSamFile,
                               final List<SamPairUtil.PairOrientation> expectedOrientations,
                               final SortOrder sortOrder,
-                              final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
+                              final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
+                              final boolean addMateCigar) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
               alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
-              read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy);
+              read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&
             (read1AlignedSamFile == null || read1AlignedSamFile.size() == 0 ||

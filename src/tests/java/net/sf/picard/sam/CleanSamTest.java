@@ -78,21 +78,22 @@ public class CleanSamTest {
 
     //identical test case using the SamFileTester to generate that SAM file on the fly
     @Test(dataProvider = "testCleanSamTesterDataProvider")
-    public void testCleanSamTester(final String expectedCigar, final int length, final int alignStart) throws IOException {
-        final CleanSamTester cleanSamTester = new CleanSamTester(expectedCigar, length);
-        cleanSamTester.addMappedFragment(0, alignStart, false, expectedCigar, qualityScore, -1);
+    public void testCleanSamTester(final String originalCigar, final String expectedCigar, final int defaultChromosomeLength, final int alignStart) throws IOException {
+        final CleanSamTester cleanSamTester = new CleanSamTester(expectedCigar, 100, defaultChromosomeLength);
+        // NB: this will add in the mate cigar, when enabled in SamPairUtil, for additional validation
+        cleanSamTester.addMappedPair(0, alignStart, alignStart, false, false, originalCigar, originalCigar, false, 50);
         cleanSamTester.runTest();
     }
 
     @DataProvider(name = "testCleanSamTesterDataProvider")
     public Object[][] testCleanSamTesterDataProvider() {
         return new Object[][]{
-                {"100M", 101, 2},
-                {"99M1S", 101, 3},
-                {"91M2D9M", 102, 1},
-                {"91M2D8M1S", 101, 1},
-                {"99M1I", 101, 3},
-                {"90M10I", 101, 3},
+                {"100M", "100M", 101, 2}, // simple_filts.sam
+                {"100M", "99M1S", 101, 3}, // simple_overhang.sam
+                {"91M2D9M", "91M2D9M", 102, 1}, // fits_with_deletion.sam
+                {"91M2D9M", "91M2D8M1S", 101, 1}, // overhang_with_deletion.sam
+                {"99M1I", "99M1I", 101, 3}, // trailing_insertion.sam
+                {"90M10I", "90M10I", 101, 3} // long_trailing_insertion.sam
         };
     }
 }

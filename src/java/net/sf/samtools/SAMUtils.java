@@ -23,6 +23,7 @@
  */
 package net.sf.samtools;
 
+import net.sf.samtools.util.CoordMath;
 import net.sf.samtools.util.RuntimeEOFException;
 import net.sf.samtools.util.StringUtil;
 
@@ -637,5 +638,288 @@ public final class SAMUtils
     public static long findVirtualOffsetOfFirstRecordInBam(final File bamFile) {
         try { return BAMFileReader.findVirtualOffsetOfFirstRecord(bamFile); }
         catch (final IOException ioe) { throw new RuntimeEOFException(ioe); }
+    }
+
+    /**
+     * Given a Cigar, Returns blocks of the sequence that have been aligned directly to the
+     * reference sequence. Note that clipped portions, and inserted and deleted bases (vs. the reference)
+     * are not represented in the alignment blocks.
+     *
+     * @param cigar The cigar containing the alignment information
+     * @param alignmentStart The start (1-based) of the alignment
+     * @param cigarTypeName The type of cigar passed - for error logging.
+     * @return List of alignment blocks
+     */
+    public static List<AlignmentBlock> getAlignmentBlocks(final Cigar cigar, final int alignmentStart, final String cigarTypeName) {
+        if (cigar == null) return Collections.emptyList();
+
+        final List<AlignmentBlock> alignmentBlocks = new ArrayList<AlignmentBlock>();
+        int readBase = 1;
+        int refBase  = alignmentStart;
+
+        for (final CigarElement e : cigar.getCigarElements()) {
+            switch (e.getOperator()) {
+                case H : break; // ignore hard clips
+                case P : break; // ignore pads
+                case S : readBase += e.getLength(); break; // soft clip read bases
+                case N : refBase += e.getLength(); break;  // reference skip
+                case D : refBase += e.getLength(); break;
+                case I : readBase += e.getLength(); break;
+                case M :
+                case EQ :
+                case X :
+                    final int length = e.getLength();
+                    alignmentBlocks.add(new AlignmentBlock(readBase, refBase, length));
+                    readBase += length;
+                    refBase  += length;
+                    break;
+                default : throw new IllegalStateException("Case statement didn't deal with " + cigarTypeName + " op: " + e.getOperator());
+            }
+        }
+        return Collections.unmodifiableList(alignmentBlocks);
+    }
+
+    /**
+     * @param alignmentStart The start (1-based) of the alignment
+     * @param cigar The cigar containing the alignment information
+     * @return the alignment start (1-based, inclusive) adjusted for clipped bases.  For example if the read
+     * has an alignment start of 100 but the first 4 bases were clipped (hard or soft clipped)
+     * then this method will return 96.
+     *
+     * Invalid to call on an unmapped read.
+     * Invalid to call with cigar = null
+     */
+    public static int getUnclippedStart(final int alignmentStart, final Cigar cigar) {
+        int unClippedStart = alignmentStart;
+        for (final CigarElement cig : cigar.getCigarElements()) {
+            final CigarOperator op = cig.getOperator();
+            if (op == CigarOperator.SOFT_CLIP || op == CigarOperator.HARD_CLIP) {
+                unClippedStart -= cig.getLength();
+            }
+            else {
+                break;
+            }
+        }
+
+        return unClippedStart;
+    }
+
+    /**
+     * @param alignmentEnd The end (1-based) of the alignment
+     * @param cigar The cigar containing the alignment information
+     * @return the alignment end (1-based, inclusive) adjusted for clipped bases.  For example if the read
+     * has an alignment end of 100 but the last 7 bases were clipped (hard or soft clipped)
+     * then this method will return 107.
+     *
+     * Invalid to call on an unmapped read.
+     * Invalid to call with cigar = null
+     */
+    public static int getUnclippedEnd(final int alignmentEnd, final Cigar cigar) {
+        int unClippedEnd = alignmentEnd;
+        final List<CigarElement> cigs = cigar.getCigarElements();
+        for (int i=cigs.size() - 1; i>=0; --i) {
+            final CigarElement cig = cigs.get(i);
+            final CigarOperator op = cig.getOperator();
+
+            if (op == CigarOperator.SOFT_CLIP || op == CigarOperator.HARD_CLIP) {
+                unClippedEnd += cig.getLength();
+            }
+            else {
+                break;
+            }
+        }
+
+        return unClippedEnd;
+    }
+
+    /**
+     * Returns the Mate Cigar String as stored in the attribute 'MC'.
+     * @param rec the SAM record
+     * @return Mate Cigar String, or null if there is none.
+     */
+    public static String getMateCigarString(final SAMRecord rec) {
+        return rec.getStringAttribute(SAMTag.MC.name());
+    }
+
+    /**
+     * Returns the Mate Cigar or null if there is none.
+     * @param rec the SAM record
+     * @param withValidation true if we are to validate the mate cigar before returning, false otherwise.
+     * @return Cigar object for the read's mate, or null if there is none.
+     */
+    public static Cigar getMateCigar(final SAMRecord rec, final boolean withValidation) {
+        final String mateCigarString = getMateCigarString(rec);
+        Cigar mateCigar = null;
+        if (mateCigarString != null) {
+            mateCigar = TextCigarCodec.getSingleton().decode(mateCigarString);
+            if (withValidation && rec.getValidationStringency() != SAMFileReader.ValidationStringency.SILENT) {
+                final List<AlignmentBlock> alignmentBlocks = getAlignmentBlocks(mateCigar, rec.getMateAlignmentStart(), "mate cigar");
+                SAMUtils.processValidationErrors(validateCigar(rec, mateCigar, rec.getMateReferenceIndex(), alignmentBlocks, -1, "Mate CIGAR"), -1L, rec.getValidationStringency());
+            }
+        }
+        return mateCigar;
+    }
+
+    /**
+     * Returns the Mate Cigar or null if there is none.  No validation is done on the returned cigar.
+     * @param rec the SAM record
+     * @return Cigar object for the read's mate, or null if there is none.
+     */
+    public static Cigar getMateCigar(final SAMRecord rec) {
+        return getMateCigar(rec, false);
+    }
+
+    /**
+     * @param rec the SAM record
+     * @return number of cigar elements (number + operator) in the mate cigar string.
+     */
+    public static int getMateCigarLength(final SAMRecord rec) {
+        final Cigar mateCigar = getMateCigar(rec);
+        return (mateCigar != null) ? mateCigar.numCigarElements() : 0;
+    }
+
+    /**
+     * This method uses the MateCigar value as determined from the attribute MC.  It must be non-null.
+     * @param rec the SAM record
+     * @return 1-based inclusive rightmost position of the clipped mate sequence, or 0 read if unmapped.
+     */
+    public static int getMateAlignmentEnd(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag()) {
+            throw new RuntimeException("getMateAlignmentEnd called on an unmapped mate.");
+        }
+        final Cigar mateCigar = SAMUtils.getMateCigar(rec);
+        if (mateCigar == null) {
+            throw new SAMException("Mate CIGAR (Tag MC) not found.");
+        }
+        return CoordMath.getEnd(rec.getMateAlignmentStart(), mateCigar.getReferenceLength());
+    }
+
+    /**
+     * @param rec the SAM record
+     * @return the mate alignment start (1-based, inclusive) adjusted for clipped bases.  For example if the mate
+     * has an alignment start of 100 but the first 4 bases were clipped (hard or soft clipped)
+     * then this method will return 96.
+     *
+     * Invalid to call on an unmapped read.
+     */
+    public static int getMateUnclippedStart(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag())
+            throw new RuntimeException("getMateUnclippedStart called on an unmapped mate.");
+        final Cigar mateCigar = getMateCigar(rec);
+        if (mateCigar == null) {
+            throw new SAMException("Mate CIGAR (Tag MC) not found.");
+        }
+        return SAMUtils.getUnclippedStart(rec.getMateAlignmentStart(), mateCigar);
+    }
+
+
+    /**
+     * @param rec the SAM record
+     * @return the mate alignment end (1-based, inclusive) adjusted for clipped bases.  For example if the mate
+     * has an alignment end of 100 but the last 7 bases were clipped (hard or soft clipped)
+     * then this method will return 107.
+     *
+     * Invalid to call on an unmapped read.
+     */
+    public static int getMateUnclippedEnd(final SAMRecord rec) {
+        if (rec.getMateUnmappedFlag()) {
+            throw new RuntimeException("getMateUnclippedEnd called on an unmapped mate.");
+        }
+        final Cigar mateCigar = SAMUtils.getMateCigar(rec);
+        if (mateCigar == null) {
+            throw new SAMException("Mate CIGAR (Tag MC) not found.");
+        }
+        return SAMUtils.getUnclippedEnd(getMateAlignmentEnd(rec), mateCigar);
+    }
+
+    /**
+     * @param rec the SAM record
+     * Returns blocks of the mate sequence that have been aligned directly to the
+     * reference sequence. Note that clipped portions of the mate and inserted and
+     * deleted bases (vs. the reference) are not represented in the alignment blocks.
+     */
+    public static List<AlignmentBlock> getMateAlignmentBlocks(final SAMRecord rec) {
+        return getAlignmentBlocks(getMateCigar(rec), rec.getMateAlignmentStart(), "mate cigar");
+    }
+
+    /**
+     * Run all validations of the mate's CIGAR.  These include validation that the CIGAR makes sense independent of
+     * placement, plus validation that CIGAR + placement yields all bases with M operator within the range of the reference.
+     * @param rec the SAM record
+     * @param cigar The cigar containing the alignment information
+     * @param referenceIndex The reference index
+     * @param alignmentBlocks The alignment blocks (parsed from the cigar)
+     * @param recordNumber For error reporting.  -1 if not known.
+     * @param cigarTypeName For error reporting.  "Read CIGAR" or "Mate Cigar"
+     * @return List of errors, or null if no errors.
+     */
+
+    public static List<SAMValidationError> validateCigar(final SAMRecord rec,
+                                                  final Cigar cigar,
+                                                   final Integer referenceIndex,
+                                                   final List<AlignmentBlock> alignmentBlocks,
+                                                   final long recordNumber,
+                                                   final String cigarTypeName) {
+        // Don't know line number, and don't want to force read name to be decoded.
+        List<SAMValidationError> ret = cigar.isValid(rec.getReadName(), recordNumber);
+        if (referenceIndex != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            final SAMSequenceRecord sequence = rec.getHeader().getSequence(referenceIndex);
+            final int referenceSequenceLength = sequence.getSequenceLength();
+            for (final AlignmentBlock alignmentBlock : alignmentBlocks) {
+                if (alignmentBlock.getReferenceStart() + alignmentBlock.getLength() - 1 > referenceSequenceLength) {
+                    if (ret == null) ret = new ArrayList<SAMValidationError>();
+                    ret.add(new SAMValidationError(SAMValidationError.Type.CIGAR_MAPS_OFF_REFERENCE,
+                            cigarTypeName + " M operator maps off end of reference", rec.getReadName(), recordNumber));
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Run all validations of the mate's CIGAR.  These include validation that the CIGAR makes sense independent of
+     * placement, plus validation that CIGAR + placement yields all bases with M operator within the range of the reference.
+     * @param rec the SAM record
+     * @param recordNumber For error reporting.  -1 if not known.
+     * @return List of errors, or null if no errors.
+     */
+    public static List<SAMValidationError> validateMateCigar(final SAMRecord rec, final long recordNumber) {
+        List<SAMValidationError> ret = null;
+
+        if (rec.getValidationStringency() != SAMFileReader.ValidationStringency.SILENT) {
+            if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {      // The mateCigar will be defined if the mate is mapped
+                if (getMateCigarString(rec) != null) {
+                    ret = SAMUtils.validateCigar(rec, getMateCigar(rec), rec.getMateReferenceIndex(), getMateAlignmentBlocks(rec), recordNumber, "Mate CIGAR");
+                }
+            } else {
+                if (getMateCigarString(rec) != null) {
+                    ret = new ArrayList<SAMValidationError>();
+                    if (rec.getMateUnmappedFlag()) {
+                        // If the Mate is unmapped, and the Mate Cigar String (MC Attribute) exists, that is a validation error.
+                        ret.add(new SAMValidationError(SAMValidationError.Type.MATE_CIGAR_STRING_INVALID_PRESENCE,
+                                "Mate CIGAR String (MC Attribute) present for a read whose mate is unmapped", rec.getReadName(), recordNumber));
+                    }
+                    else {
+                        // If the Mate is not paired, and the Mate Cigar String (MC Attribute) exists, that is a validation error.
+                        ret.add(new SAMValidationError(SAMValidationError.Type.MATE_CIGAR_STRING_INVALID_PRESENCE,
+                                "Mate CIGAR String (MC Attribute) present for a read that is not paired", rec.getReadName(), recordNumber));
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Checks to see if it is valid for this record to have a mate CIGAR (MC) and then if there is a mate CIGAR available.  This is done by
+     * checking that this record is paired, its mate is mapped, and that it returns a non-null mate CIGAR.
+     * @param rec
+     * @return
+     */
+    public static boolean hasMateCigar(SAMRecord rec) {
+        // NB: use getMateCigarString rather than getMateCigar to avoid validation.
+        return (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag() && null != SAMUtils.getMateCigarString(rec));
     }
 }

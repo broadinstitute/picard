@@ -361,7 +361,7 @@ public class SamFileValidator {
     private boolean validateCigar(final SAMRecord record, final long recordNumber, final boolean isReadCigar) {
         final ValidationStringency savedStringency = record.getValidationStringency();
         record.setValidationStringency(ValidationStringency.LENIENT);
-        final List<SAMValidationError> errors = isReadCigar ? record.validateCigar(recordNumber) : record.validateMateCigar(recordNumber);
+        final List<SAMValidationError> errors = isReadCigar ? record.validateCigar(recordNumber) : SAMUtils.validateMateCigar(record, recordNumber);
         record.setValidationStringency(savedStringency);
         if (errors == null) {
             return true;

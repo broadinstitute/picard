@@ -18,8 +18,8 @@ public class CleanSamTester extends SamFileTester {
     private final String expectedCigar;
     private final CleanSam program = new CleanSam();
 
-    public CleanSamTester(final String expectedCigar, final int length) {
-        super(length, true);
+    public CleanSamTester(final String expectedCigar, final int readLength, final int defaultChromosomeLength) {
+        super(readLength, true, defaultChromosomeLength);
         this.expectedCigar = expectedCigar;
     }
 
@@ -27,14 +27,24 @@ public class CleanSamTester extends SamFileTester {
     protected void test() {
         try {
             final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 8000);
+
+            // Validate it has the expected cigar
             validator.setIgnoreWarnings(true);
             validator.setVerbose(true, 1000);
             validator.setErrorsToIgnore(Arrays.asList(SAMValidationError.Type.MISSING_READ_GROUP));
             SAMFileReader samReader = new SAMFileReader(getOutput());
             samReader.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
-            final SAMRecord rec = samReader.iterator().next();
+            final SAMRecordIterator iterator = samReader.iterator();
+            while (iterator.hasNext()) {
+                final SAMRecord rec = iterator.next();
+                Assert.assertEquals(rec.getCigarString(), expectedCigar);
+                if (SAMUtils.hasMateCigar(rec)) {
+                    Assert.assertEquals(SAMUtils.getMateCigarString(rec), expectedCigar);
+                }
+            }
             samReader.close();
-            Assert.assertEquals(rec.getCigarString(), expectedCigar);
+
+            // Run validation on the output file
             samReader = new SAMFileReader(getOutput());
             final boolean validated = validator.validateSamFileVerbose(samReader, null);
             samReader.close();

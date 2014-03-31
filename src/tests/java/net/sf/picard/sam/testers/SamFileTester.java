@@ -18,7 +18,7 @@ import java.util.Map;
 public abstract class SamFileTester {
 
     public static final String TEST_DATA_BASE_DIR = "testdata/net/sf/picard/sam/";
-    private final SAMRecordSetBuilder samRecordSetBuilder = new SAMRecordSetBuilder();
+    private final SAMRecordSetBuilder samRecordSetBuilder;
     protected final Map<String, Boolean> duplicateFlags = new HashMap<String, Boolean>();
     private File outputDir;
     private File output;
@@ -27,11 +27,17 @@ public abstract class SamFileTester {
     private boolean deleteOnExit = true;
     private final ArrayList<String> args = new ArrayList<String>();
 
-    public SamFileTester(final int length, final boolean deleteOnExit) {
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength) {
         this.deleteOnExit = deleteOnExit;
-        samRecordSetBuilder.setReadLength(length);
+        this.samRecordSetBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, defaultChromosomeLength);
+        samRecordSetBuilder.setReadLength(readLength);
     }
 
+    public SamFileTester(final int readLength, final boolean deleteOnExit) {
+        this.deleteOnExit = deleteOnExit;
+        this.samRecordSetBuilder = new SAMRecordSetBuilder();
+        samRecordSetBuilder.setReadLength(readLength);
+    }
 
     public File getOutput() {
         return output;
