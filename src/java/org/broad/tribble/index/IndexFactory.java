@@ -39,6 +39,7 @@ import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broad.tribble.util.LittleEndianInputStream;
 import org.broad.tribble.util.LittleEndianOutputStream;
 import org.broad.tribble.util.ParsingUtils;
+import org.broad.tribble.util.TabixUtils;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
@@ -159,7 +160,7 @@ public class IndexFactory {
             if (indexFile.endsWith(".gz")) {
                 inputStream = new GZIPInputStream(inputStream);
             }
-            else if (indexFile.endsWith(".tbi")) {
+            else if (indexFile.endsWith(TabixUtils.STANDARD_INDEX_EXTENSION)) {
                 inputStream = new BlockCompressedInputStream(inputStream);
             }
             // Must be buffered, because getIndexType uses mark and reset

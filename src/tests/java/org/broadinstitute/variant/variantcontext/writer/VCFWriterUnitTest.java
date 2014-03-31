@@ -182,7 +182,7 @@ public class VCFWriterUnitTest extends VariantBaseTest {
         if (extension.equals(".vcf.gz")) {
             indexExtension = TabixUtils.STANDARD_INDEX_EXTENSION;
         } else {
-            indexExtension = ".idx";
+            indexExtension = Tribble.STANDARD_INDEX_EXTENSION;
         }
         final File vcfIndex = new File(vcf.getAbsolutePath() + indexExtension);
 

@@ -26,6 +26,7 @@
 package net.sf.picard.vcf;
 
 import net.sf.picard.PicardException;
+import org.broad.tribble.Tribble;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -91,7 +92,7 @@ public class VcfFormatConverterTest {
         }
 
         outputFile.deleteOnExit();
-        new File(outputFile.getAbsolutePath() + ".idx").deleteOnExit();
+        new File(outputFile.getAbsolutePath() + Tribble.STANDARD_INDEX_EXTENSION).deleteOnExit();
         final VcfFormatConverter vcfFormatConverter = new VcfFormatConverter();
         vcfFormatConverter.INPUT = input;
         vcfFormatConverter.OUTPUT = outputFile;
