@@ -93,7 +93,8 @@ then echo "$TMPDIR/Picard-public already exists.  Please remove or specify a dif
         exit 1
 fi
 
-svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/branches/$RELEASE_ID
+# NB: do not copy the trunk to branches, as we already are copying it to tags.
+#svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/branches/$RELEASE_ID
 svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/tags/$RELEASE_ID
 
 cd $TMPDIR
