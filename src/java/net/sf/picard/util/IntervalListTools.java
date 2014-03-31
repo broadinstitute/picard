@@ -44,7 +44,7 @@ public class IntervalListTools extends CommandLineProgram {
     public boolean SORT = true;
 
     @Option(doc = "Action to take on inputs.")
-    public Action ACTION = Action.CONCATENATE;
+    public Action ACTION = Action.CONCAT;
 
     @Option(shortName = "SI", doc = "Second set of intervals for SUBTRACT and DIFFERENCE operations.", optional = true)
     public List<File> SECOND_INPUT;
@@ -58,14 +58,45 @@ public class IntervalListTools extends CommandLineProgram {
     @Option(doc = "Produce the inverse list", optional = true)
     public boolean INVERT = false;
 
-    private final Log log = Log.getInstance(IntervalListTools.class);
+    private static final Log log = Log.getInstance(IntervalListTools.class);
 
     public enum Action implements CommandLineParser.ClpEnum{
-        CONCATENATE("The concatenation of all the intervals, no sorting or merging of overlapping/abutting intervals implied. Will result in unsorted list unless requested otherwise."),
-        UNION ("like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all loci."),
-        INTERSECTION ("Same as UNION but with intersection instead of union. Loci must be in all inputs to appear in the output."),
-        SUBTRACT ("Subtracts SECOND_INPUT from INPUT." ),
-        DIFFERENCE ("Find loci that are in INPUT or SECOND_INPUT but not both." );
+
+        CONCAT("The concatenation of all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in an unsorted list unless requested otherwise.") {
+            @Override
+            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
+                if(!unused.isEmpty()) throw new IllegalArgumentException(String.format("Second List found when action was %s. Ignoring second list.",this.name()));
+                return IntervalList.concatenate(list);
+            }
+        },
+        UNION ("Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS.") {
+            @Override
+            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
+                if(!unused.isEmpty()) throw new IllegalArgumentException(String.format("Second List found when action was %s. Ignoring second list.",this.name()));
+                return IntervalList.union(list);
+            }
+        },
+        INTERSECT ("The sorted, uniqued set of all loci that are contained in all of the INPUTs.") {
+            @Override
+            IntervalList act(final List<IntervalList> list, final List<IntervalList> unused) {
+                if(!unused.isEmpty()) throw new IllegalArgumentException(String.format("Second List found when action was %s. Ignoring second list.",this.name()));
+                return IntervalList.intersection(list);
+            }
+        },
+       SUBTRACT ("Subtracts SECOND_INPUT from INPUT. The resulting loci are there in INPUT that are not in SECOND_INPUT") {
+            @Override
+            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+                return IntervalList.subtract(list1, list2);
+
+                }
+        },
+        SYMDIFF ("Find loci that are in INPUT or SECOND_INPUT but are not in both." ) {
+            @Override
+            IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2) {
+                return IntervalList.difference(list1, list2);
+            }
+        };
+
 
         String helpdoc;
         Action(final String helpdoc){
@@ -76,6 +107,8 @@ public class IntervalListTools extends CommandLineProgram {
         public String getHelpDoc() {
             return helpdoc;
         }
+        abstract IntervalList act(final List<IntervalList> list1, final List<IntervalList> list2);
+
     }
 
     // Stock main method
@@ -97,9 +130,6 @@ public class IntervalListTools extends CommandLineProgram {
                 IoUtil.assertDirectoryIsWritable(OUTPUT);
             }
         }
-
-
-
 
         // Read in the interval lists and apply any padding
         final List<IntervalList> lists = new ArrayList<IntervalList>();
@@ -123,7 +153,6 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
-
         // same for the second list
         final List<IntervalList> secondLists = new ArrayList<IntervalList>();
         for (final File f : SECOND_INPUT) {
@@ -146,42 +175,11 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
 
-
         if (UNIQUE && !SORT ) {
-            log.warn("UNIQUE=true requires sorting but SORT=false was specified.  Sorting anyway!");
-            SORT = true;
+            log.warn("UNIQUE=true requires sorting but SORT=false was specified.  Results will be sorted!");
         }
 
-        if(!secondLists.isEmpty() && (
-                ACTION == Action.UNION ||
-                ACTION == Action.CONCATENATE ||
-                ACTION == Action.INTERSECTION )){
-            log.warn(String.format("Second List found when action was %s. Ignoring second list",ACTION.name()));
-        }
-
-
-        final IntervalList result;
-
-        switch (ACTION){
-            case UNION:
-                result=IntervalList.union(lists);
-                break;
-            case CONCATENATE:
-                result=IntervalList.concatenate(lists);
-                break;
-            case INTERSECTION:
-                result=IntervalList.intersection(lists);
-                break;
-            case SUBTRACT:
-                result=IntervalList.subtract(lists, secondLists);
-                break;
-            case DIFFERENCE:
-                result=IntervalList.difference(lists, secondLists);
-                break;
-            default:
-                throw new PicardException("Confused. this should not happen!");
-        }
-
+        final IntervalList result = ACTION.act(lists, secondLists);
 
         if(INVERT){
             SORT=false; // no need to sort, since return will be sorted by definition.
@@ -189,7 +187,7 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
-        final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult):possiblySortedResult;
+        final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
         final List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
@@ -199,7 +197,7 @@ public class IntervalListTools extends CommandLineProgram {
         final SAMFileHeader header = result.getHeader();
         final Set<String> pgs = new HashSet<String>();
         for (final SAMProgramRecord pg : header.getProgramRecords()) pgs.add(pg.getId());
-        for (int i=1; i<Integer.MAX_VALUE; ++i) {
+        for (int i = 1; i < Integer.MAX_VALUE; ++i) {
             if (!pgs.contains(String.valueOf(i))) {
                 final SAMProgramRecord pg = new SAMProgramRecord(String.valueOf(i));
                 pg.setCommandLine(getCommandLine());
