@@ -23,6 +23,7 @@
  */
 package net.sf.samtools.util;
 
+import java.io.Closeable;
 import java.util.Iterator;
 
 /**
@@ -31,15 +32,14 @@ import java.util.Iterator;
  * The consumer of a CloseableIterator should ensure that the close() method is always called,
  * for example by putting such a call in a finally block.  Two conventions should be followed
  * by all implementors of CloseableIterator:
- * 1) The close() method should be idempotent.  Calling close() twice should have no effect.
+ * 1) The close() method should be idempotent: calling close() twice should have no effect.
  * 2) When hasNext() returns false, the iterator implementation should automatically close itself.
  *    The latter makes it somewhat safer for consumers to use the for loop syntax for iteration:
  *    for (Type obj : getCloseableIterator()) { ... }
  * 
  * We do not inherit from java.io.Closeable because IOExceptions are a pain to deal with.
  */
-public interface CloseableIterator<T>
-    extends Iterator<T> {
+public interface CloseableIterator<T> extends Iterator<T>, Closeable {
 
     public void close();
 }
