@@ -46,7 +46,7 @@ public class VariantContextWriterFactory {
 
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);
     public static final EnumSet<Options> NO_OPTIONS = EnumSet.noneOf(Options.class);
-    public static final String[] BLOCK_COMPRESSED_EXTENSIONS = {".gz", ".bgz", ".bgzf"};
+    public static final String[] BLOCK_COMPRESSED_EXTENSIONS = {".gz", ".gzip", ".bgz", ".bgzf"};
 
     static {
         if (Defaults.USE_ASYNC_IO) {
