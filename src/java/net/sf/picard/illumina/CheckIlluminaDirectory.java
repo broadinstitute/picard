@@ -140,17 +140,26 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
     private void createLocFileSymlinks(final IlluminaFileUtil fileUtil, final int lane) {
         final File baseFile = new File(BASECALLS_DIR.getParentFile().getAbsolutePath() + File.separator + "s.locs");
-        final String newFileBase = baseFile.getParent() + File.separator + IlluminaFileUtil
-                .longLaneStr(lane) + File.separator;
+        final File newFileBase = new File(baseFile.getParent() + File.separator + IlluminaFileUtil
+                .longLaneStr(lane) + File.separator);
         if (baseFile.exists()) {
-            for (final Integer tile : fileUtil.getExpectedTiles()) {
-                final String newName =
-                        newFileBase + String.format("s_%d_%d.locs", lane, tile);
-                final ProcessExecutor.ExitStatusAndOutput output =
-                        ProcessExecutor.executeAndReturnInterleavedOutput(new String[]{"ln", "-fs", baseFile.getAbsolutePath(), newName});
-                if (output.exitStatus != 0) {
-                    throw new PicardException("Could not create symlink: " + output.stdout);
+            boolean success = true;
+            if(!newFileBase.exists()){
+                success = newFileBase.mkdirs();
+            }
+            if(success) {
+                for (final Integer tile : fileUtil.getExpectedTiles()) {
+                    final String newName =
+                            newFileBase + File.separator + String.format("s_%d_%d.locs", lane, tile);
+                    final ProcessExecutor.ExitStatusAndOutput output =
+                            ProcessExecutor.executeAndReturnInterleavedOutput(new String[]{"ln", "-fs", baseFile.getAbsolutePath(), newName});
+                    if (output.exitStatus != 0) {
+                        throw new PicardException("Could not create symlink: " + output.stdout);
+                    }
                 }
+            }
+            else{
+                throw new PicardException(String.format("Could not create lane directory: %s.", newFileBase.getAbsolutePath()));
             }
         } else {
             throw new PicardException(String.format("Locations file %s does not exist.", baseFile.getAbsolutePath()));
