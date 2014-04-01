@@ -112,6 +112,7 @@ public abstract class AbstractAlignmentMerger {
     private int maxRecordsInRam = MAX_RECORDS_IN_RAM;
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
+    private boolean addMateCigar = false;
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(final SAMRecord record) {
@@ -155,6 +156,7 @@ public abstract class AbstractAlignmentMerger {
      *                            output will be coordinate-sorted
      * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
      *                                          alignments but none primary, for a read or read pair.
+     * @param addMateCigar      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
@@ -164,7 +166,8 @@ public abstract class AbstractAlignmentMerger {
                                    final Integer read1BasesTrimmed, final Integer read2BasesTrimmed,
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
                                    final SAMFileHeader.SortOrder sortOrder,
-                                   final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy) {
+                                   final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
+                                   final boolean addMateCigar) {
         IoUtil.assertFileIsReadable(unmappedBamFile);
         IoUtil.assertFileIsWritable(targetBamFile);
         IoUtil.assertFileIsReadable(referenceFasta);
@@ -211,6 +214,8 @@ public abstract class AbstractAlignmentMerger {
         this.expectedOrientations = expectedOrientations;
 
         this.primaryAlignmentSelectionStrategy = primaryAlignmentSelectionStrategy;
+
+        this.addMateCigar = addMateCigar;
     }
 
     /** Allows the caller to override the maximum records in RAM. */
@@ -467,7 +472,7 @@ public abstract class AbstractAlignmentMerger {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
         if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
-        SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, header);
+        SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, header, addMateCigar);
         if (!keepAlignerProperPairFlags) {
             SamPairUtil.setProperPairFlags(secondUnaligned, firstUnaligned, expectedOrientations);
         }
@@ -596,14 +601,15 @@ public abstract class AbstractAlignmentMerger {
         }
 
         // If the read's mate maps off the end of the alignment, clip it
-        if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag() && null != rec.getMateCigar()) {
-            final Cigar mateCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
+        if (SAMUtils.hasMateCigar(rec)) {
+            Cigar mateCigar = SAMUtils.getMateCigar(rec);
+            mateCigar = createNewCigarIfMapsOffEndOfReference(rec.getHeader(),
                     rec.getMateUnmappedFlag(),
                     rec.getMateReferenceIndex(),
-                    rec.getMateAlignmentEnd(),
-                    rec.getMateCigar().getReadLength(),
-                    rec.getMateCigar());
-            if (null != mateCigar) rec.setAttribute(SAMTag.MC.name(), mateCigar);
+                    SAMUtils.getMateAlignmentEnd(rec), // NB: this could be computed without another call to getMateCigar
+                    mateCigar.getReadLength(),
+                    mateCigar);
+            if (null != mateCigar) rec.setAttribute(SAMTag.MC.name(), mateCigar.toString());
         }
     }
 

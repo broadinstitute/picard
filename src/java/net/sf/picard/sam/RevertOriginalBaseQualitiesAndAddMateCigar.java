@@ -145,7 +145,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
             // we must find both records, and then always update the mate cigar
             if (null != firstRecord && null != secondRecord) {
                 // Update mate info
-                SamPairUtil.setMateInfo(firstRecord, secondRecord, outHeader);
+                SamPairUtil.setMateInfo(firstRecord, secondRecord, outHeader, true);
                 numMateCigarsAdded+=2;
             }
 
@@ -207,7 +207,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
 
             // check if mate pair and its mate is mapped
             if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
-                if (null == record.getMateCigar()) {
+                if (null == SAMUtils.getMateCigar(record)) {
                     // has no MC, break and return case #2
                     returnType = CanSkipSamFile.CANNOT_SKIP_FOUND_NO_MC;
                     break;

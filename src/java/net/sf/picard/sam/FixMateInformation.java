@@ -68,6 +68,9 @@ public class FixMateInformation extends CommandLineProgram {
     doc="Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.")
     public SortOrder SORT_ORDER;
 
+    @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
+    public Boolean ADD_MATE_CIGAR = false;
+
     private static final Log log = Log.getInstance(FixMateInformation.class);
 
     protected SAMFileWriter out;
@@ -197,7 +200,7 @@ public class FixMateInformation extends CommandLineProgram {
 
             if (rec2 != null && rec1.getReadName().equals(rec2.getReadName())) {
                 iterator.next(); // consume the peeked record
-                SamPairUtil.setMateInfo(rec1, rec2, header);
+                SamPairUtil.setMateInfo(rec1, rec2, header, ADD_MATE_CIGAR);
                 writeAlignment(rec1);
                 writeAlignment(rec2);
                 progress.record(rec1, rec2);

@@ -341,7 +341,7 @@ public class MergeBamAlignmentTest {
         final SamAlignmentMerger merger = new SamAlignmentMerger(unmapped,  target, fasta, null, true, false,
                 false, Arrays.asList(aligned), 1, null, null, null, null, null, null,
                 Arrays.asList(SamPairUtil.PairOrientation.FR), SAMFileHeader.SortOrder.coordinate,
-                new BestMapqPrimaryAlignmentSelectionStrategy());
+                new BestMapqPrimaryAlignmentSelectionStrategy(), false);
 
         merger.mergeAlignment();
         Assert.assertEquals(sorted, !merger.getForceSort());

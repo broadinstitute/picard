@@ -179,6 +179,9 @@ public class MergeBamAlignment extends CommandLineProgram {
     @Option(doc="If false, do not write secondary alignments to output.")
     public boolean INCLUDE_SECONDARY_ALIGNMENTS = true;
 
+    @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
+    public Boolean ADD_MATE_CIGAR = false;
+
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
     /**
@@ -233,7 +236,7 @@ public class MergeBamAlignment extends CommandLineProgram {
                 ALIGNED_READS_ONLY, ALIGNED_BAM, MAX_INSERTIONS_OR_DELETIONS,
             ATTRIBUTES_TO_RETAIN, ATTRIBUTES_TO_REMOVE, READ1_TRIM, READ2_TRIM,
             READ1_ALIGNED_BAM, READ2_ALIGNED_BAM, EXPECTED_ORIENTATIONS, SORT_ORDER,
-            PRIMARY_ALIGNMENT_STRATEGY.newInstance());
+            PRIMARY_ALIGNMENT_STRATEGY.newInstance(), ADD_MATE_CIGAR);
         merger.setClipOverlappingReads(CLIP_OVERLAPPING_READS);
         merger.setMaxRecordsInRam(MAX_RECORDS_IN_RAM);
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);

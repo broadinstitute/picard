@@ -77,10 +77,15 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder) {
         this(sortForMe, sortOrder, true) ;
     }
+
     public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, final boolean addReadGroup) {
+        this(sortForMe, sortOrder, addReadGroup, DEFAULT_CHROMOSOME_LENGTH);
+    }
+
+    public SAMRecordSetBuilder(final boolean sortForMe, final SAMFileHeader.SortOrder sortOrder, final boolean addReadGroup, final int defaultChromosomeLength) {
         final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>();
         for (final String chrom : chroms) {
-            final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, DEFAULT_CHROMOSOME_LENGTH);
+            final SAMSequenceRecord sequenceRecord = new SAMSequenceRecord(chrom, defaultChromosomeLength);
             sequences.add(sequenceRecord);
         }
 
@@ -337,7 +342,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         end2.setSecondOfPairFlag(true);
 
         // set mate info
-        SamPairUtil.setMateInfo(end1, end2, header);
+        SamPairUtil.setMateInfo(end1, end2, header, true);
 
         recordsList.add(end1);
         recordsList.add(end2);
