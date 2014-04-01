@@ -102,7 +102,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         log.info("Expected cycles: " + StringUtil.intValuesToString(expectedCycles));
 
         for (final Integer lane : LANES) {
-            final IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
+            IlluminaFileUtil fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
             final List<Integer> expectedTiles = fileUtil.getExpectedTiles();
             if (!TILE_NUMBERS.isEmpty()) {
                 expectedTiles.retainAll(TILE_NUMBERS);
@@ -110,6 +110,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
             if (LINK_LOCS) {
                 createLocFileSymlinks(fileUtil, lane);
+                //we need to create a new file util because it stores a cache to the files it found on
+                //construction and this doesn't inclue the recently created symlinks
+                fileUtil = new IlluminaFileUtil(BASECALLS_DIR, lane);
             }
 
             log.info("Checking lane " + lane);
