@@ -74,7 +74,7 @@ public class CheckIlluminaDirectoryTest {
     public void makeFiles(final SupportedIlluminaFormat[] formats, final int lane, final List<Integer> tiles,
                           final int[] cycles) {
         for (final IlluminaFileUtil.SupportedIlluminaFormat format : formats) {
-            IlluminaFileUtilTest.makeFiles(format, intensityDir, lane, tiles, cycles);
+            IlluminaFileUtilTest.makeFiles(format, intensityDir, lane, tiles, cycles, 0);
         }
     }
 
