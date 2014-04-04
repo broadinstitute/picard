@@ -69,7 +69,7 @@ public class FixMateInformation extends CommandLineProgram {
     public SortOrder SORT_ORDER;
 
     @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
-    public Boolean ADD_MATE_CIGAR = false;
+    public Boolean ADD_MATE_CIGAR = true;
 
     private static final Log log = Log.getInstance(FixMateInformation.class);
 

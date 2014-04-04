@@ -180,7 +180,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     public boolean INCLUDE_SECONDARY_ALIGNMENTS = true;
 
     @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
-    public Boolean ADD_MATE_CIGAR = false;
+    public Boolean ADD_MATE_CIGAR = true;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 
