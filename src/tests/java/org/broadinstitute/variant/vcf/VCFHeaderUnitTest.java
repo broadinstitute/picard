@@ -25,10 +25,14 @@
 
 package org.broadinstitute.variant.vcf;
 
+import org.broad.tribble.TribbleException;
+import org.broad.tribble.readers.AsciiLineReader;
+import org.broad.tribble.readers.AsciiLineReaderIterator;
 import org.broad.tribble.readers.LineIteratorImpl;
 import org.broad.tribble.readers.LineReaderUtil;
 import org.broad.tribble.readers.PositionalBufferedStream;
 import org.broadinstitute.variant.VariantBaseTest;
+import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -63,6 +67,42 @@ public class VCFHeaderUnitTest extends VariantBaseTest {
     public void testVCF4ToVCF4_alternate() {
         VCFHeader header = createHeader(VCF4headerStrings_with_negativeOne);
         checkMD5ofHeaderFile(header, "b1d71cc94261053131f8d239d65a8c9f");
+    }
+
+    @Test
+    public void testVCFHeaderSampleRenamingSingleSampleVCF() throws Exception {
+        final VCFCodec codec = new VCFCodec();
+        codec.setRemappedSampleName("FOOSAMPLE");
+        final AsciiLineReaderIterator vcfIterator = new AsciiLineReaderIterator(new AsciiLineReader(new FileInputStream(variantTestDataRoot + "HiSeq.10000.vcf")));
+        final VCFHeader header = (VCFHeader)codec.readHeader(vcfIterator).getHeaderValue();
+
+        Assert.assertEquals(header.getNGenotypeSamples(), 1, "Wrong number of samples in remapped header");
+        Assert.assertEquals(header.getGenotypeSamples().get(0), "FOOSAMPLE", "Sample name in remapped header has incorrect value");
+
+        int recordCount = 0;
+        while ( vcfIterator.hasNext() && recordCount < 10) {
+            recordCount++;
+            final VariantContext vcfRecord = codec.decode(vcfIterator.next());
+
+            Assert.assertEquals(vcfRecord.getSampleNames().size(), 1, "Wrong number of samples in vcf record after remapping");
+            Assert.assertEquals(vcfRecord.getSampleNames().iterator().next(), "FOOSAMPLE", "Wrong sample in vcf record after remapping");
+        }
+    }
+
+    @Test(expectedExceptions = TribbleException.class)
+    public void testVCFHeaderSampleRenamingMultiSampleVCF() throws Exception {
+        final VCFCodec codec = new VCFCodec();
+        codec.setRemappedSampleName("FOOSAMPLE");
+        final AsciiLineReaderIterator vcfIterator = new AsciiLineReaderIterator(new AsciiLineReader(new FileInputStream(variantTestDataRoot + "ex2.vcf")));
+        final VCFHeader header = (VCFHeader)codec.readHeader(vcfIterator).getHeaderValue();
+    }
+
+    @Test(expectedExceptions = TribbleException.class)
+    public void testVCFHeaderSampleRenamingSitesOnlyVCF() throws Exception {
+        final VCFCodec codec = new VCFCodec();
+        codec.setRemappedSampleName("FOOSAMPLE");
+        final AsciiLineReaderIterator vcfIterator = new AsciiLineReaderIterator(new AsciiLineReader(new FileInputStream(variantTestDataRoot + "dbsnp_135.b37.1000.vcf")));
+        final VCFHeader header = (VCFHeader)codec.readHeader(vcfIterator).getHeaderValue();
     }
 
         /**

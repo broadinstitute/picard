@@ -34,6 +34,7 @@ import org.broad.tribble.util.ParsingUtils;
 import org.broadinstitute.variant.utils.GeneralUtils;
 import org.broadinstitute.variant.variantcontext.*;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -85,6 +86,12 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
      * If true, then we'll magically fix up VCF headers on the fly when we read them in
      */
     protected boolean doOnTheFlyModifications = true;
+
+    /**
+     * If non-null, we will replace the sample name read from the VCF header with this sample name. This feature works
+     * only for single-sample VCFs.
+     */
+    protected String remappedSampleName = null;
 
     protected AbstractVCFCodec() {
         super(VariantContext.class);
@@ -164,6 +171,20 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
 
                 if ( sawFormatTag && sampleNames.size() == 0 )
                     throw new TribbleException.InvalidHeader("The FORMAT field was provided but there is no genotype/sample data");
+
+                // If we're performing sample name remapping and there is exactly one sample specified in the header, replace
+                // it with the remappedSampleName. Throw an error if there are 0 or multiple samples and remapping was requested
+                // for this file.
+                if ( remappedSampleName != null ) {
+                    // We currently only support on-the-fly sample name remapping for single-sample VCFs
+                    if ( sampleNames.isEmpty() || sampleNames.size() > 1 ) {
+                        throw new TribbleException(String.format("Cannot remap sample name to %s because %s samples are specified in the VCF header, and on-the-fly sample name remapping is only supported for single-sample VCFs",
+                                                                 remappedSampleName, sampleNames.isEmpty() ? "no" : "multiple"));
+                    }
+
+                    sampleNames.clear();
+                    sampleNames.add(remappedSampleName);
+                }
 
             } else {
                 if ( str.startsWith(VCFConstants.INFO_HEADER_START) ) {
@@ -739,6 +760,16 @@ public abstract class AbstractVCFCodec extends AsciiFeatureCodec<VariantContext>
         doOnTheFlyModifications = false;
     }
 
+    /**
+     * Replaces the sample name read from the VCF header with the remappedSampleName. Works
+     * only for single-sample VCFs -- attempting to perform sample name remapping for multi-sample
+     * VCFs will produce an Exception.
+     *
+     * @param remappedSampleName replacement sample name for the sample specified in the VCF header
+     */
+    public void setRemappedSampleName( final String remappedSampleName ) {
+        this.remappedSampleName = remappedSampleName;
+    }
 
     protected void generateException(String message) {
         throw new TribbleException(String.format("The provided VCF file is malformed at approximately line number %d: %s", lineNo, message));
