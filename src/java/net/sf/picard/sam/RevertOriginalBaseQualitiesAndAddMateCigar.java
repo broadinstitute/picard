@@ -12,6 +12,7 @@ import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.*;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.SortingCollection;
+import net.sf.samtools.SamPairUtil;
 
 import java.io.File;
 import java.util.Iterator;

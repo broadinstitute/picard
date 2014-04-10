@@ -44,6 +44,7 @@ import net.sf.picard.cmdline.Option;
 import net.sf.picard.cmdline.StandardOptionDefinitions;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.SortingCollection;
+import net.sf.samtools.SamPairUtil;
 
 /**
  * Class to fix mate pair information for all reads in a SAM file.  Will run in fairly limited
