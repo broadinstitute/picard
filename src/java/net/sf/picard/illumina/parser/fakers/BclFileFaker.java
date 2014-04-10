@@ -9,10 +9,15 @@ public class BclFileFaker extends FileFaker {
 
     @Override
     public void fakeFile(final ByteBuffer buffer) {
-        buffer.putInt(1);
+
+        // Write the number of elements to the header. There's one element per byte in the file,
+        // minus the size of the header. Thus we remove four bytes from the size and THEN write
+        // its value.
         size -= 4;
+        buffer.putInt(size);
+
         while (size > 0) {
-            //fill the file with no calls
+            // Fill the file with no calls
             buffer.put((byte) 0);
             size--;
         }
