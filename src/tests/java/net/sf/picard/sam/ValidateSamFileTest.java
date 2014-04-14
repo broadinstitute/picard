@@ -357,7 +357,7 @@ public class ValidateSamFileTest {
         try {
             final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "missing_platform_unit.sam"));
             final Histogram<String> results = executeValidation(samReader, null);
-            Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_PLATFORM.getHistogramString()).getValue(), 1.0);
+            Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_PLATFORM_VALUE.getHistogramString()).getValue(), 1.0);
         } finally {
             SAMFileReader.setDefaultValidationStringency(saveStringency);
         }
