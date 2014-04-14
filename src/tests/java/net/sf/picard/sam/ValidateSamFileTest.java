@@ -351,6 +351,45 @@ public class ValidateSamFileTest {
     }
 
     @Test
+    public void testPlatformMissing() throws Exception {
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "missing_platform_unit.sam"));
+            final Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertEquals(results.get(SAMValidationError.Type.MISSING_PLATFORM.getHistogramString()).getValue(), 1.0);
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
+
+    @Test
+    public void testPlatformInvalid() throws Exception {
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "invalid_platform_unit.sam"));
+            final Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_PLATFORM_VALUE.getHistogramString()).getValue(), 1.0);
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
+
+    @Test
+    public void testDuplicateRGIDs() throws Exception {
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "duplicate_rg.sam"));
+            final Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertEquals(results.get(SAMValidationError.Type.DUPLICATE_READ_GROUP_ID.getHistogramString()).getValue(), 1.0);
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
+
+    @Test
     public void testIndexFileValidation() throws Exception {
         final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);

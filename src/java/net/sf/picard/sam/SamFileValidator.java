@@ -73,6 +73,11 @@ public class SamFileValidator {
 
     private final static Log log = Log.getInstance(SamFileValidator.class);
 
+    private static final Set<String> PLATFORM_VALUES = new HashSet<String>();
+    static {
+        for (final PlatformValues value : PlatformValues.values()) PLATFORM_VALUES.add(value.toString());
+    }
+
     public SamFileValidator(final PrintWriter out, final int maxTempFiles) {
         this.out = out;
         this.maxTempFiles = maxTempFiles;
@@ -292,7 +297,7 @@ public class SamFileValidator {
     }
 
     private void validateReadGroup(final SAMRecord record, final SAMFileHeader header) {
-        SAMReadGroupRecord rg = record.getReadGroup();
+        final SAMReadGroupRecord rg = record.getReadGroup();
         if (rg == null) {
             addError(new SAMValidationError(Type.RECORD_MISSING_READ_GROUP,
                     "A record is missing a read group", record.getReadName()));
@@ -470,7 +475,7 @@ public class SamFileValidator {
         if (fileHeader.getReadGroups().isEmpty()) {
             addError(new SAMValidationError(Type.MISSING_READ_GROUP, "Read groups is empty", null));
         }
-        List<SAMProgramRecord> pgs = fileHeader.getProgramRecords();
+        final List<SAMProgramRecord> pgs = fileHeader.getProgramRecords();
         for (int i = 0; i < pgs.size() - 1; i++) {
             for (int j = i + 1; j < pgs.size(); j++) {
                 if (pgs.get(i).getProgramGroupId().equals(pgs.get(j).getProgramGroupId())) {
@@ -480,13 +485,27 @@ public class SamFileValidator {
             }
         }
 
-        List<SAMReadGroupRecord> rgs = fileHeader.getReadGroups();
-        for (int i = 0; i < rgs.size() - 1; i++) {
-            for (int j = i + 1; j < rgs.size(); j++) {
-                if (rgs.get(i).getReadGroupId().equals(rgs.get(j).getReadGroupId())) {
-                    addError(new SAMValidationError(Type.DUPLICATE_READ_GROUP_ID, "Duplicate " +
-                            "read group id: " + rgs.get(i).getReadGroupId(), null));
-                }
+        final List<SAMReadGroupRecord> rgs = fileHeader.getReadGroups();
+        final Set<String> readGroupIDs = new HashSet<String>();
+
+        for (final SAMReadGroupRecord record : rgs) {
+            final String readGroupID = record.getReadGroupId();
+            if (readGroupIDs.contains(readGroupID)) {
+                addError(new SAMValidationError(Type.DUPLICATE_READ_GROUP_ID, "Duplicate " +
+                        "read group id: " + readGroupID, null));
+            } else {
+                readGroupIDs.add(readGroupID);
+            }
+
+            final String platformValue = record.getPlatform();
+            if (platformValue == null || "".equals(platformValue)) {
+                addError(new SAMValidationError(Type.MISSING_PLATFORM_VALUE,
+                        "A platform unit (PL) value was not found for read group ",
+                        readGroupID));
+            } else if (!PLATFORM_VALUES.contains(platformValue)) {
+                addError(new SAMValidationError(Type.INVALID_PLATFORM_VALUE,
+                        "An invalid platform unit (PL) value (" + platformValue + ") was found for read group ",
+                        readGroupID));
             }
         }
 

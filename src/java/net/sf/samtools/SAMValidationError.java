@@ -173,7 +173,7 @@ public class SAMValidationError {
         /** Unsigned integer tag value is deprecated in BAM. */
         TAG_VALUE_TOO_LARGE,
 
-        /** Invalide virtualFilePointer in index */
+        /** Invalid virtualFilePointer in index */
         INVALID_INDEX_FILE_POINTER,
 
         /** PI tag value is not numeric. */
@@ -181,6 +181,12 @@ public class SAMValidationError {
 
         /** Same read group id appears more than once */
         DUPLICATE_READ_GROUP_ID,
+
+        /** The read group is missing its PL (platform unit) field */
+        MISSING_PLATFORM_VALUE,
+
+        /** The read group has an invalid value set for its PL field */
+        INVALID_PLATFORM_VALUE,
 
         /** Same program group id appears more than once */
         DUPLICATE_PROGRAM_GROUP_ID,
