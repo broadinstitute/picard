@@ -178,7 +178,7 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
     protected void assertProperFileStructure(final File file) {
         final long elementsInFile = file.length() - HEADER_SIZE;
         if (numClusters != elementsInFile) {
-            throw new PicardException("Expected " + numClusters + " in file but found " + elementsInFile);
+            throw new PicardException("Expected " + numClusters + " in file " + filePath + " but found " + elementsInFile);
         }
     }
 
