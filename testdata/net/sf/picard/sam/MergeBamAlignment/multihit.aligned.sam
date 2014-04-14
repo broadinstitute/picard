@@ -7,7 +7,7 @@
 @SQ	SN:chr6	LN:101	UR:file:testdata/net/sf/picard/sam/merger.fasta	M5:7be2f5e7ee39e60a6c3b5b6a41178c6d
 @SQ	SN:chr7	LN:404	UR:file:testdata/net/sf/picard/sam/merger.fasta	M5:da488fc432cdaf2c20c96da473a7b630
 @SQ	SN:chr8	LN:202	UR:file:testdata/net/sf/picard/sam/merger.fasta	M5:d339678efce576d5546e88b49a487b63
-@RG	ID:0	SM:Hi,Mom!
+@RG	ID:0	SM:Hi,Mom!	PL:ILLUMINA
 @CO	frag_hit: Single alignment
 @CO	frag_multihit: chr2 is primary alignment
 @CO	pair_both_multihit: chr8 is primary alignment

@@ -29,7 +29,14 @@ import net.sf.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.TreeSet;
 /**
  * Factory class for creating SAMRecords for testing purposes. Various methods can be called
  * to add new SAM records (or pairs of records) to a list which can then be returned at
@@ -107,6 +114,7 @@ public class SAMRecordSetBuilder implements Iterable<SAMRecord> {
         if (addReadGroup) {
             final SAMReadGroupRecord readGroupRecord = new SAMReadGroupRecord(READ_GROUP_ID);
             readGroupRecord.setSample(SAMPLE);
+            readGroupRecord.setPlatform("ILLUMINA");
             final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
             readGroups.add(readGroupRecord);
             this.header.setReadGroups(readGroups);
