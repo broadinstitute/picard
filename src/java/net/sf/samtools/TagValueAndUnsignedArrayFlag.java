@@ -26,7 +26,7 @@ package net.sf.samtools;
 /**
  * CVO to use as a method return value.
  */
-class TagValueAndUnsignedArrayFlag {
+public class TagValueAndUnsignedArrayFlag {
     public final Object value;
     public final boolean isUnsignedArray;
 

@@ -39,7 +39,7 @@ import java.text.ParseException;
  * variables in order to reduce object creation, but it should not ever be the case that the same
  * instance is used in multiple threads.
  */
-class TextTagCodec {
+public class TextTagCodec {
     private static final int NUM_TAG_FIELDS = 3;
 
     /**
@@ -53,7 +53,7 @@ class TextTagCodec {
      * @param value Tag value as approriate Object subclass.
      * @return SAM text String representation, i.e. name:type:value
      */
-    String encode(final String tagName, Object value) {
+    public String encode(final String tagName, Object value) {
         final StringBuilder sb = new StringBuilder(tagName);
         sb.append(':');
         char tagType = BinaryTagCodec.getTagValueType(value);
@@ -130,13 +130,13 @@ class TextTagCodec {
     }
 
     /**
-     * Encode a standard tag, which should not have a type field.
+     * Encode a standard header tag, which should not have a type field.
      * @param tagName 2-character String.
      * @param value Not necessarily a String.  Some of these are integers but the type is implied by
      * the tagName.  Converted to String with toString().
      * @return Colon-separated text representation suitable for a SAM header, i.e. name:value.
      */
-    String encodeUntypedTag(final String tagName, final Object value) {
+    public String encodeUntypedTag(final String tagName, final Object value) {
         final StringBuilder sb = new StringBuilder(tagName);
         sb.append(':');
         sb.append(value.toString());
@@ -149,7 +149,7 @@ class TextTagCodec {
      * @return Tag name as 2-character String, and tag value in appropriate class based on tag type.
      * If value is an unsigned array, then the value is a TagValueAndUnsignedArrayFlag object.
      */
-    Map.Entry<String, Object> decode(final String tag) {
+    public Map.Entry<String, Object> decode(final String tag) {
         final int numFields = StringUtil.splitConcatenateExcessTokens(tag, fields, ':');
         if (numFields != TextTagCodec.NUM_TAG_FIELDS) {
             throw new SAMFormatException("Not enough fields in tag '" + tag + "'");
