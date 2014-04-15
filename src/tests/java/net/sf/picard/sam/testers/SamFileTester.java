@@ -31,12 +31,14 @@ public abstract class SamFileTester {
         this.deleteOnExit = deleteOnExit;
         this.samRecordSetBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, defaultChromosomeLength);
         samRecordSetBuilder.setReadLength(readLength);
+        setOutputDir();
     }
 
     public SamFileTester(final int readLength, final boolean deleteOnExit) {
         this.deleteOnExit = deleteOnExit;
         this.samRecordSetBuilder = new SAMRecordSetBuilder();
         samRecordSetBuilder.setReadLength(readLength);
+        setOutputDir();
     }
 
     public File getOutput() {
@@ -49,6 +51,13 @@ public abstract class SamFileTester {
 
     public File getOutputDir() {
         return outputDir;
+    }
+
+    private void setOutputDir() {
+        this.outputDir = IoUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
+        if(deleteOnExit){
+            outputDir.deleteOnExit();
+        }
     }
 
     public void setNoMateCigars(final boolean value) {
@@ -188,10 +197,6 @@ public abstract class SamFileTester {
      */
     public void runTest() {
         if (getProgram() != null) {
-            outputDir = IoUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
-            if(deleteOnExit){
-                outputDir.deleteOnExit();
-            }
             final File input = createInputFile();
 
             output = new File(outputDir, "output.sam");
