@@ -29,6 +29,7 @@ import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.IOUtil;
+import org.broad.tribble.AbstractFeatureReader;
 import org.broad.tribble.index.IndexCreator;
 import org.broad.tribble.index.tabix.TabixFormat;
 import org.broad.tribble.index.tabix.TabixIndexCreator;
@@ -46,7 +47,6 @@ public class VariantContextWriterFactory {
 
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);
     public static final EnumSet<Options> NO_OPTIONS = EnumSet.noneOf(Options.class);
-    public static final String[] BLOCK_COMPRESSED_EXTENSIONS = {".gz", ".gzip", ".bgz", ".bgzf"};
 
     static {
         if (Defaults.USE_ASYNC_IO) {
@@ -242,11 +242,10 @@ public class VariantContextWriterFactory {
     }
 
     public static boolean isCompressedVcf(final File location) {
-        if (location == null) return false;
-        for (final String extension : BLOCK_COMPRESSED_EXTENSIONS) {
-            if (location.getName().endsWith(extension)) return true;
-        }
-        return false;
+        if (location == null)
+            return false;
+
+        return AbstractFeatureReader.hasBlockCompressedExtension(location);
     }
 
     public static VariantContextWriter sortOnTheFly(final VariantContextWriter innerWriter, final int maxCachingStartDistance) {

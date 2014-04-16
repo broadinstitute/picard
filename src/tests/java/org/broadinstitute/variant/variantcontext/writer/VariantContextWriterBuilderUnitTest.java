@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 import net.sf.samtools.Defaults;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.BlockCompressedOutputStream;
+import org.broad.tribble.AbstractFeatureReader;
 import org.broadinstitute.variant.VariantBaseTest;
 
 public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
@@ -70,7 +71,7 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputFile VCF File");
         Assert.assertFalse(((VCFWriter)writer).getOutputStream() instanceof BlockCompressedOutputStream, "testSetOutputFile VCF File was compressed");
 
-        for (final String extension : VariantContextWriterBuilder.BLOCK_COMPRESSED_EXTENSIONS) {
+        for (final String extension : AbstractFeatureReader.BLOCK_COMPRESSED_EXTENSIONS) {
             final String filename = "test.vcf" + extension;
             final File file = new File(filename);
             file.deleteOnExit();

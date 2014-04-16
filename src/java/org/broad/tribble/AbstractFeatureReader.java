@@ -22,8 +22,13 @@ import org.broad.tribble.index.Index;
 import org.broad.tribble.util.ParsingUtils;
 import org.broad.tribble.util.TabixUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * jrobinso
@@ -43,6 +48,8 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
     protected FeatureCodecHeader header;
 
     private static ComponentMethods methods = new ComponentMethods();
+
+    public static final Set<String> BLOCK_COMPRESSED_EXTENSIONS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(".gz", ".gzip", ".bgz", ".bgzf")));
 
     /**
      * Calls {@link #getFeatureReader(String, FeatureCodec, boolean)} with {@code requireIndex} = true
@@ -126,6 +133,28 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
     }
 
     /**
+     * Whether a filename ends in one of the BLOCK_COMPRESSED_EXTENSIONS
+     * @param fileName
+     * @return
+     */
+    public static boolean hasBlockCompressedExtension (final String fileName) {
+        for (final String extension : BLOCK_COMPRESSED_EXTENSIONS) {
+            if (fileName.toLowerCase().endsWith(extension))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether the name of a file ends in one of the BLOCK_COMPRESSED_EXTENSIONS
+     * @param file
+     * @return
+     */
+    public static boolean hasBlockCompressedExtension (final File file) {
+        return hasBlockCompressedExtension(file.getName());
+    }
+
+    /**
      * get the header
      *
      * @return the header object we've read-in
@@ -148,7 +177,7 @@ public abstract class AbstractFeatureReader<T extends Feature, SOURCE> implement
             if(indexPath == null){
                 indexPath = ParsingUtils.appendToPath(resourcePath, TabixUtils.STANDARD_INDEX_EXTENSION);
             }
-            return resourcePath.endsWith(".gz") && ParsingUtils.resourceExists(indexPath);
+            return hasBlockCompressedExtension(resourcePath) && ParsingUtils.resourceExists(indexPath);
         }
     }
 }

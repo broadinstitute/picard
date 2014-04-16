@@ -31,9 +31,9 @@ import net.sf.samtools.util.BlockCompressedOutputStream;
 import net.sf.samtools.util.IOUtil;
 import net.sf.samtools.util.Md5CalculatingOutputStream;
 import net.sf.samtools.util.RuntimeIOException;
+import org.broad.tribble.AbstractFeatureReader;
 import org.broad.tribble.index.IndexCreator;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -91,7 +91,6 @@ import java.util.EnumSet;
 public class VariantContextWriterBuilder {
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);
     public static final EnumSet<Options> NO_OPTIONS = EnumSet.noneOf(Options.class);
-    public static final String[] BLOCK_COMPRESSED_EXTENSIONS = {".gz", ".gzip", ".bgz", ".bgzf"};
 
     public enum OutputType {
         UNSPECIFIED,
@@ -421,11 +420,7 @@ public class VariantContextWriterBuilder {
         if (outFile == null)
             return false;
 
-        for (final String extension : BLOCK_COMPRESSED_EXTENSIONS)
-            if (outFile.getName().endsWith(extension))
-                return true;
-
-        return false;
+        return AbstractFeatureReader.hasBlockCompressedExtension(outFile);
     }
 
     private VariantContextWriter createVCFWriter(final File writerFile, final OutputStream writerStream) {
