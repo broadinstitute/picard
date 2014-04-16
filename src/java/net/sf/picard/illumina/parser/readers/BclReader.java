@@ -85,6 +85,14 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
     /** The index to the next cluster that will be returned by this reader */
     private long nextCluster;
 
+    public static boolean isGzipped(final File file) {
+        return file.getAbsolutePath().endsWith(".gz");
+    }
+
+    public static boolean isBlockGzipped(final File file) {
+        return file.getAbsolutePath().endsWith(".bgzf");
+    }
+
     public class BclValue {
         public final byte base;
         public final byte quality;
@@ -112,8 +120,8 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         filePath = file.getAbsolutePath();
-        final boolean isGzip = filePath.endsWith(".gz");
-        final boolean isBgzf = filePath.endsWith(".bgzf");
+        final boolean isGzip = BclReader.isGzipped(file);
+        final boolean isBgzf = BclReader.isBlockGzipped(file);
 
         try {
             // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream

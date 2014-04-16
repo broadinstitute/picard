@@ -1,15 +1,19 @@
 package net.sf.picard.illumina.parser.fakers;
 
-import net.sf.samtools.util.CloserUtil;
+import net.sf.picard.illumina.parser.readers.BclReader;
+import net.sf.samtools.util.BlockCompressedOutputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by jcarey on 3/13/14.
@@ -56,8 +60,13 @@ public abstract class FileFaker {
             size = 1;
         }
         this.size = size;
-        final FileOutputStream fileOutputStream = new FileOutputStream(cycleFile);
-        final FileChannel channel = fileOutputStream.getChannel();
+
+        final OutputStream outputStream;
+        if (BclReader.isGzipped(cycleFile)) outputStream = new GZIPOutputStream(new FileOutputStream(cycleFile));
+        else if (BclReader.isBlockGzipped(cycleFile)) outputStream = new BlockCompressedOutputStream(cycleFile);
+        else outputStream = new FileOutputStream(cycleFile);
+
+        final WritableByteChannel channel = Channels.newChannel(outputStream);
         final ByteBuffer buffer = ByteBuffer.allocate(size);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -67,7 +76,7 @@ public abstract class FileFaker {
 
         channel.write(buffer);
 
-        CloserUtil.close(channel);
-        CloserUtil.close(fileOutputStream);
+        channel.close();
+        outputStream.close();
     }
 }

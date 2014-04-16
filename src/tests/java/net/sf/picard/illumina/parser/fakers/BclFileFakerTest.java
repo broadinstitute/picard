@@ -42,4 +42,15 @@ public class BclFileFakerTest {
             fakeFile,
             new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
     }
+
+    @Test
+    public void testGZFileIsActuallyGZipped() throws Exception {
+        final File fakeFile = File.createTempFile("BclFileFakerTest", ".bcl.gz");
+        fakeFile.deleteOnExit();
+
+        new BclFileFaker().fakeFile(fakeFile, 100000);
+        BclReader.make(
+                fakeFile,
+                new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
+    }
 }
