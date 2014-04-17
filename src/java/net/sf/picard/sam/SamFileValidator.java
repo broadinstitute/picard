@@ -73,11 +73,6 @@ public class SamFileValidator {
 
     private final static Log log = Log.getInstance(SamFileValidator.class);
 
-    private static final Set<String> PLATFORM_VALUES = new HashSet<String>();
-    static {
-        for (final PlatformValues value : PlatformValues.values()) PLATFORM_VALUES.add(value.toString());
-    }
-
     public SamFileValidator(final PrintWriter out, final int maxTempFiles) {
         this.out = out;
         this.maxTempFiles = maxTempFiles;
@@ -500,11 +495,7 @@ public class SamFileValidator {
             final String platformValue = record.getPlatform();
             if (platformValue == null || "".equals(platformValue)) {
                 addError(new SAMValidationError(Type.MISSING_PLATFORM_VALUE,
-                        "A platform unit (PL) value was not found for read group ",
-                        readGroupID));
-            } else if (!PLATFORM_VALUES.contains(platformValue)) {
-                addError(new SAMValidationError(Type.INVALID_PLATFORM_VALUE,
-                        "An invalid platform unit (PL) value (" + platformValue + ") was found for read group ",
+                        "A platform (PL) attribute was not found for read group ",
                         readGroupID));
             }
         }

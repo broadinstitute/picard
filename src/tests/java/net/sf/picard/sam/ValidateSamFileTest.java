@@ -50,6 +50,19 @@ public class ValidateSamFileTest {
     private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/ValidateSamFileTest");
 
     @Test
+    public void testValidSamFile() throws Exception {
+        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        try {
+            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "valid.sam"));
+            final Histogram<String> results = executeValidation(samReader, null);
+            Assert.assertTrue(results.isEmpty());
+        } finally {
+            SAMFileReader.setDefaultValidationStringency(saveStringency);
+        }
+    }
+
+    @Test
     public void testSortOrder() throws IOException {
         Histogram<String> results = executeValidation(new SAMFileReader(new File(TEST_DATA_DIR, "invalid_coord_sort_order.sam")), null);
         Assert.assertEquals(results.get(SAMValidationError.Type.RECORD_OUT_OF_ORDER.getHistogramString()).getValue(), 1.0);
@@ -364,19 +377,6 @@ public class ValidateSamFileTest {
     }
 
     @Test
-    public void testPlatformInvalid() throws Exception {
-        final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
-        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-        try {
-            final SAMFileReader samReader = new SAMFileReader(new File(TEST_DATA_DIR, "invalid_platform_unit.sam"));
-            final Histogram<String> results = executeValidation(samReader, null);
-            Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_PLATFORM_VALUE.getHistogramString()).getValue(), 1.0);
-        } finally {
-            SAMFileReader.setDefaultValidationStringency(saveStringency);
-        }
-    }
-
-    @Test
     public void testDuplicateRGIDs() throws Exception {
         final SAMFileReader.ValidationStringency saveStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
@@ -405,6 +405,7 @@ public class ValidateSamFileTest {
 
     private Histogram<String> executeValidation(final SAMFileReader samReader, final ReferenceSequenceFile reference) throws IOException {
         final File outFile = File.createTempFile("validation", ".txt");
+        outFile.deleteOnExit();
         final PrintWriter out = new PrintWriter(outFile);
         new SamFileValidator(out, 8000).setValidateIndex(true).validateSamFileSummary(samReader, reference);
         final LineNumberReader reader = new LineNumberReader(new FileReader(outFile));
