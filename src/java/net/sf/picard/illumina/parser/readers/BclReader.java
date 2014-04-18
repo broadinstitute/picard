@@ -30,7 +30,12 @@ package net.sf.picard.illumina.parser.readers;
  import net.sf.samtools.util.CloserUtil;
  import net.sf.samtools.util.IOUtil;
 
- import java.io.*;
+ import java.io.EOFException;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+ import java.io.IOException;
+ import java.io.InputStream;
  import java.nio.ByteBuffer;
  import java.nio.ByteOrder;
  import java.util.zip.GZIPInputStream;
@@ -91,6 +96,39 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
 
     public static boolean isBlockGzipped(final File file) {
         return file.getAbsolutePath().endsWith(".bgzf");
+    }
+
+    public static long getNumberOfClusters(final File file) {
+        InputStream stream = null;
+        try {
+            if (isBlockGzipped(file)) stream = new BlockCompressedInputStream(IOUtil.maybeBufferedSeekableStream(file));
+            else if (isGzipped(file)) stream = new GZIPInputStream(IOUtil.maybeBufferInputStream(new FileInputStream(file)));
+            else stream = IOUtil.maybeBufferInputStream(new FileInputStream(file));
+
+            return getNumberOfClusters(file.getAbsolutePath(), stream);
+
+        } catch (final IOException ioe) {
+            throw new PicardException("Could not open file " + file.getAbsolutePath() + " to get its cluster count: " + ioe.getMessage(), ioe);
+        } finally {
+            CloserUtil.close(stream);
+        }
+    }
+
+    private static long getNumberOfClusters(final String filePath, final InputStream inputStream) {
+        final byte[] header = new byte[HEADER_SIZE];
+
+        try {
+            final int headerBytesRead = inputStream.read(header);
+            if (headerBytesRead != HEADER_SIZE) {
+                throw new PicardException("Malformed file, expected header of size " + HEADER_SIZE + " but received " + headerBytesRead);
+            }
+        } catch (IOException ioe) {
+            throw new PicardException("Unable to read header for file (" + filePath + ")", ioe);
+        }
+
+        final ByteBuffer headerBuf = ByteBuffer.wrap(header);
+        headerBuf.order(ByteOrder.LITTLE_ENDIAN);
+        return UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
     }
 
     public class BclValue {
@@ -167,20 +205,7 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
     }
 
     private long getNumClusters() {
-        final byte[] header = new byte[HEADER_SIZE];
-
-        try {
-            final int headerBytesRead = inputStream.read(header);
-            if (headerBytesRead != HEADER_SIZE) {
-                throw new PicardException("Malformed file, expected header of size " + HEADER_SIZE + " but received " + headerBytesRead);
-            }
-        } catch (IOException ioe) {
-            throw new PicardException("Unable to read header for file (" + filePath + ")", ioe);
-        }
-
-        final ByteBuffer headerBuf = ByteBuffer.wrap(header);
-        headerBuf.order(ByteOrder.LITTLE_ENDIAN);
-        return UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
+        return getNumberOfClusters(filePath, inputStream);
     }
 
     protected void assertProperFileStructure(final File file) {

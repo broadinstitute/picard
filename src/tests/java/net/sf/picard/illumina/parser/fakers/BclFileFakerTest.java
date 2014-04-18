@@ -2,6 +2,7 @@ package net.sf.picard.illumina.parser.fakers;
 
 import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.illumina.parser.readers.BclReader;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -38,9 +39,11 @@ public class BclFileFakerTest {
 
         new BclFileFaker().fakeFile(fakeFile, 100000);
         // .make() has a number of checks for the file
-        BclReader.make(
+        final BclReader bclReader = BclReader.make(
             fakeFile,
             new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
+        Assert.assertEquals(100000, bclReader.numClusters);
+        Assert.assertEquals(bclReader.numClusters, fakeFile.length() - 4);
     }
 
     @Test

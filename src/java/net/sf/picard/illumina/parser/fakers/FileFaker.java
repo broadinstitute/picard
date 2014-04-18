@@ -67,7 +67,7 @@ public abstract class FileFaker {
         else outputStream = new FileOutputStream(cycleFile);
 
         final WritableByteChannel channel = Channels.newChannel(outputStream);
-        final ByteBuffer buffer = ByteBuffer.allocate(size);
+        final ByteBuffer buffer = ByteBuffer.allocate(this.bufferSize());
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         fakeFile(buffer);

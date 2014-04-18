@@ -37,6 +37,7 @@ import net.sf.picard.illumina.parser.fakers.MultiTileBclFileFaker;
 import net.sf.picard.illumina.parser.fakers.MultiTileLocsFileFaker;
 import net.sf.picard.illumina.parser.fakers.PosFileFaker;
 import net.sf.picard.illumina.parser.fakers.QSeqFileFaker;
+import net.sf.picard.illumina.parser.readers.BclReader;
 import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.CloserUtil;
@@ -820,7 +821,9 @@ public class IlluminaFileUtil {
                             final File cycleFile = cfIterator.next();
 
                             if (cycleSize == null) {
-                                cycleSize = cycleFile.length();
+                                // TODO: Assumes that the first file encountered is a valid BCL
+                                // TODO: file. This isn't always true.
+                                cycleSize = BclReader.getNumberOfClusters(cycleFile);
                             }
 
                             if (!cycleFile.exists() || cycleFile.length() == 0) {
