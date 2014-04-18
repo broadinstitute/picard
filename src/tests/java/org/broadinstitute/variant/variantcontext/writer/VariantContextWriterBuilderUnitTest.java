@@ -26,7 +26,12 @@
 package org.broadinstitute.variant.variantcontext.writer;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.broad.tribble.Tribble;
+import org.broad.tribble.index.tabix.TabixIndex;
+import org.broad.tribble.util.TabixUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -41,11 +46,14 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
     private SAMSequenceDictionary dictionary;
 
     private final File vcf = new File("test.vcf");
-    private final File vcfIdx = new File("test.vcf.idx");
+    private final File vcfIdx = new File("test.vcf" + Tribble.STANDARD_INDEX_EXTENSION);
     private final File vcfMD5 = new File("test.vcf.md5");
     private final File bcf = new File("test.bcf");
-    private final File bcfIdx = new File("test.bcf.idx");
+    private final File bcfIdx = new File("test.bcf" + Tribble.STANDARD_INDEX_EXTENSION);
     private final File unknown = new File("test.unknown");
+
+    private List<File> blockCompressedVCFs;
+    private List<File> blockCompressedIndices;
 
     @BeforeSuite
     public void before() throws IOException {
@@ -56,6 +64,18 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         bcf.deleteOnExit();
         bcfIdx.deleteOnExit();
         unknown.deleteOnExit();
+
+        blockCompressedVCFs = new ArrayList<File>();
+        blockCompressedIndices = new ArrayList<File>();
+        for (final String extension : AbstractFeatureReader.BLOCK_COMPRESSED_EXTENSIONS) {
+            final File blockCompressed = new File("test.vcf" + extension);
+            blockCompressed.deleteOnExit();
+            blockCompressedVCFs.add(blockCompressed);
+
+            final File index = new File("test.vcf" + extension + TabixUtils.STANDARD_INDEX_EXTENSION);
+            index.deleteOnExit();
+            blockCompressedIndices.add(index);
+        }
     }
 
     @Test
@@ -102,6 +122,17 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputFileType VCF");
         Assert.assertFalse(((VCFWriter) writer).getOutputStream() instanceof BlockCompressedOutputStream, "testSetOutputFileType VCF was compressed");
 
+        writer = builder.setOption(Options.FORCE_BCF).build();
+        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputFileType FORCE_BCF set -> expected BCF, was VCF");
+
+        // test that FORCE_BCF remains in effect, overriding the explicit setting of VCF
+        writer = builder.setOutputFileType(VariantContextWriterBuilder.OutputType.VCF).build();
+        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputFileType FORCE_BCF set 2 -> expected BCF, was VCF");
+
+        writer = builder.unsetOption(Options.FORCE_BCF).build();
+        Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputFileType FORCE_BCF unset -> expected VCF, was BCF");
+        Assert.assertFalse(((VCFWriter) writer).getOutputStream() instanceof BlockCompressedOutputStream, "testSetOutputFileType FORCE_BCF unset was compressed");
+
         writer = builder.setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF).build();
         Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputFile BLOCK_COMPRESSED_VCF");
         Assert.assertTrue(((VCFWriter) writer).getOutputStream() instanceof BlockCompressedOutputStream, "testSetOutputFileType BLOCK_COMPRESSED_VCF was not compressed");
@@ -123,16 +154,20 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputStream default");
 
         writer = builder.setOption(Options.FORCE_BCF).build();
-        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputStream FORCE_BCF");
+        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputStream FORCE_BCF set -> expected BCF stream, was VCF stream");
 
+        // test that FORCE_BCF remains in effect, overriding the explicit setting of VCF
         writer = builder.setOutputVCFStream(stream).build();
-        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputStream FORCE_BCF 2");
+        Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputStream FORCE_BCF set 2 -> expected BCF stream, was VCF stream");
 
         writer = builder.unsetOption(Options.FORCE_BCF).build();
-        Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputStream VCF");
+        Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputStream FORCE_BCF unset -> expected VCF stream, was BCF stream");
 
         writer = builder.setOutputBCFStream(stream).build();
         Assert.assertTrue(writer instanceof BCF2Writer, "testSetOutputStream BCF");
+
+        writer = builder.setOutputVCFStream(stream).build();
+        Assert.assertTrue(writer instanceof VCFWriter, "testSetOutputStream VCF");
     }
 
     @Test
@@ -159,7 +194,7 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
                 .unsetOption(Options.INDEX_ON_THE_FLY);     // so the potential BufferedOutputStream is not wrapped in a PositionalOutputStream
 
         VariantContextWriter writer = builder.build();
-        Assert.assertTrue(((VCFWriter)writer).getOutputStream() instanceof BufferedOutputStream, "testBuffering was not buffered by default");
+        Assert.assertTrue(((VCFWriter) writer).getOutputStream() instanceof BufferedOutputStream, "testBuffering was not buffered by default");
 
         writer = builder.unsetBuffering().build();
         Assert.assertFalse(((VCFWriter) writer).getOutputStream() instanceof BufferedOutputStream, "testBuffering was buffered when unset");
@@ -198,6 +233,35 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         writer.close();
         Assert.assertTrue(vcfMD5.exists(), "MD5 not created when requested via boolean parameter");
         vcfMD5.delete();
+    }
+
+    @Test
+    public void testIndexingOnTheFly() {
+        final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                .setReferenceDictionary(dictionary)
+                .setOption(Options.INDEX_ON_THE_FLY);
+
+        if (vcfIdx.exists())
+            vcfIdx.delete();
+        VariantContextWriter writer = builder.setOutputFile(vcf).build();
+        writer.close();
+        Assert.assertTrue(vcfIdx.exists(), String.format("VCF index not created for %s / %s", vcf, vcfIdx));
+
+        if (bcfIdx.exists())
+            bcfIdx.delete();
+        writer = builder.setOutputFile(bcf).build();
+        writer.close();
+        Assert.assertTrue(bcfIdx.exists(), String.format("BCF index not created for %s / %s", bcf, bcfIdx));
+
+        for (int i = 0; i < blockCompressedVCFs.size(); i++) {
+            final File blockCompressed = blockCompressedVCFs.get(i);
+            final File index = blockCompressedIndices.get(i);
+            if (index.exists())
+                index.delete();
+            writer = builder.setOutputFile(blockCompressed).build();
+            writer.close();
+            Assert.assertTrue(index.exists(), String.format("Block-compressed index not created for %s / %s", blockCompressed, index));
+        }
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

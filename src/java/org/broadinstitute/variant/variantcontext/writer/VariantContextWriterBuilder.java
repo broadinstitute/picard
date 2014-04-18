@@ -33,6 +33,8 @@ import net.sf.samtools.util.Md5CalculatingOutputStream;
 import net.sf.samtools.util.RuntimeIOException;
 import org.broad.tribble.AbstractFeatureReader;
 import org.broad.tribble.index.IndexCreator;
+import org.broad.tribble.index.tabix.TabixFormat;
+import org.broad.tribble.index.tabix.TabixIndexCreator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -370,6 +372,11 @@ public class VariantContextWriterBuilder {
                 writer = createVCFWriter(outFile, outStreamFromFile);
                 break;
             case BLOCK_COMPRESSED_VCF:
+                if (refDict == null)
+                    idxCreator = new TabixIndexCreator(TabixFormat.VCF);
+                else
+                    idxCreator = new TabixIndexCreator(refDict, TabixFormat.VCF);
+
                 writer = createVCFWriter(outFile, new BlockCompressedOutputStream(outStreamFromFile, outFile));
                 break;
             case BCF:
