@@ -8,9 +8,12 @@ import org.testng.annotations.*;
 
 import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -823,10 +826,12 @@ public class IlluminaFileUtilTest {
 
     private static void writeNonEmptyFile(final File file) {
         try {
-            final FileWriter fw = new FileWriter(file);
-            fw.write("This is just so that the file doesn't appear to be of 0 length");
-            fw.flush();
-            fw.close();
+            final OutputStream outputStream = new DataOutputStream(new FileOutputStream(file));
+            final int expectedLength = 10;
+            outputStream.write(expectedLength);
+            // The negative beginning index is to accommodate the header. Fancy. Ever so fancy.
+            for (int i = -3; i < expectedLength; i++) outputStream.write(0x0);
+            outputStream.close();
         } catch (IOException e) {
             throw new RuntimeException("Exception trying to create non-empty file!", e);
         }
