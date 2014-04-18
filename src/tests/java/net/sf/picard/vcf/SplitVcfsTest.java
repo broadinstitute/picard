@@ -5,7 +5,7 @@ import net.sf.samtools.util.CloseableIterator;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContext.Type;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -71,11 +71,10 @@ public class SplitVcfsTest {
 		final File INPUT = new File("/Volumes/Disko Segundo/splitvcfs/CEUTrio.HiSeq.WGS.b37.snps_and_indels.recalibrated.filtered.phased.CURRENT.vcf.gz");
 		final VCFFileReader reader = new VCFFileReader(INPUT);
 
-		final VariantContextWriter OUTPUT =
-				VariantContextWriterFactory.create(
-						new File("/Volumes/shm/CEUTrio-REDUCED.vcf"),
-						null,
-						VariantContextWriterFactory.NO_OPTIONS);
+		final VariantContextWriter OUTPUT = new VariantContextWriterBuilder()
+                .setOutputFile("/Volumes/shm/CEUTrio-REDUCED.vcf")
+                .clearOptions()
+                .build();
 		OUTPUT.writeHeader(reader.getFileHeader());
 
 		final CloseableIterator<VariantContext> iterator = reader.iterator();

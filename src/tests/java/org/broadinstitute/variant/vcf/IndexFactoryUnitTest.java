@@ -35,7 +35,7 @@ import org.broadinstitute.variant.VariantBaseTest;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -75,8 +75,11 @@ public class IndexFactoryUnitTest extends VariantBaseTest {
             final AbstractFeatureReader source = AbstractFeatureReader.getFeatureReader(inputFile.getAbsolutePath(), new VCFCodec(), indexFromInputFile);
 
             int counter = 0;
-            final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
-            VariantContextWriter writer = VariantContextWriterFactory.create(outputFile, dict, options);
+            VariantContextWriter writer = new VariantContextWriterBuilder()
+                    .setOutputFile(outputFile)
+                    .setReferenceDictionary(dict)
+                    .setOptions(EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER))
+                    .build();
             writer.writeHeader((VCFHeader)source.getHeader());
             CloseableTribbleIterator<VariantContext> it = source.iterator();
             while (it.hasNext() && (counter++ < maxRecords || maxRecords == -1) ) {

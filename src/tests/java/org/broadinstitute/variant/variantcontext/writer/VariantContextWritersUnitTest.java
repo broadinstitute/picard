@@ -94,7 +94,11 @@ public class VariantContextWritersUnitTest extends VariantBaseTest {
 
         @Override
         public VariantContextWriter makeWriter(final File file, final EnumSet<Options> baseOptions) {
-            return VariantContextWriterFactory.create(file, dictionary, baseOptions);
+            return new VariantContextWriterBuilder()
+                    .setOutputFile(file)
+                    .setReferenceDictionary(dictionary)
+                    .setOptions(baseOptions)
+                    .build();
         }
 
         @Override
@@ -143,7 +147,11 @@ public class VariantContextWritersUnitTest extends VariantBaseTest {
 
         @Override
         public VariantContextWriter makeWriter(final File file, final EnumSet<Options> baseOptions) {
-            return VariantContextWriterFactory.create(file, dictionary, baseOptions);
+            return new VariantContextWriterBuilder()
+                    .setOutputFile(file)
+                    .setReferenceDictionary(dictionary)
+                    .setOptions(baseOptions)
+                    .build();
         }
 
         @Override

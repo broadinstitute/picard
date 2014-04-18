@@ -8,17 +8,15 @@ import net.sf.picard.cmdline.Usage;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
 import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMSequenceDictionary;
 import net.sf.samtools.util.CloseableIterator;
 import net.sf.samtools.util.CloserUtil;
-import org.broadinstitute.variant.variantcontext.Allele;
 import org.broadinstitute.variant.variantcontext.GenotypesContext;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextBuilder;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.variant.vcf.*;
 
 import java.io.File;
@@ -67,11 +65,17 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 	    }
 
         final ProgressLogger progress = new ProgressLogger(Log.getInstance(MakeSitesOnlyVcf.class), 10000);
-        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
-        if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
 
         // Setup the site-only file writer
-	    final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
+        final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                .setOutputFile(OUTPUT)
+                .setReferenceDictionary(sequenceDictionary);
+        if (CREATE_INDEX)
+            builder.setOption(Options.INDEX_ON_THE_FLY);
+        else
+            builder.unsetOption(Options.INDEX_ON_THE_FLY);
+        final VariantContextWriter writer = builder.build();
+
         final VCFHeader header = new VCFHeader(inputVcfHeader.getMetaDataInInputOrder(), SAMPLE);
         writer.writeHeader(header);
 

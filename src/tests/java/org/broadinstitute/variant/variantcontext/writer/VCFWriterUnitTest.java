@@ -43,7 +43,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-
 /**
  * @author aaron
  *         <p/>
@@ -65,8 +64,11 @@ public class VCFWriterUnitTest extends VariantBaseTest {
         additionalColumns = new HashSet<String>();
         final SAMSequenceDictionary sequenceDict = createArtificialSequenceDictionary();
         final VCFHeader header = createFakeHeader(metaData, additionalColumns, sequenceDict);
-        final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER, Options.INDEX_ON_THE_FLY);
-        final VariantContextWriter writer = VariantContextWriterFactory.create(fakeVCFFile, sequenceDict, options);
+        final VariantContextWriter writer = new VariantContextWriterBuilder()
+                .setOutputFile(fakeVCFFile)
+                .setReferenceDictionary(sequenceDict)
+                .setOptions(EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER, Options.INDEX_ON_THE_FLY))
+                .build();
         writer.writeHeader(header);
         writer.add(createVC(header));
         writer.add(createVC(header));
@@ -171,7 +173,6 @@ public class VCFWriterUnitTest extends VariantBaseTest {
 
         final SAMSequenceDictionary dict = createArtificialSequenceDictionary();
         final VCFHeader header = createFakeHeader(metaData,Columns, dict);
-        final EnumSet<Options> options = EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER,Options.INDEX_ON_THE_FLY);
 
         final File tempDir = TestUtil.getTempDirectory("VCFWriter", "StaleIndex");
 
@@ -187,7 +188,11 @@ public class VCFWriterUnitTest extends VariantBaseTest {
         final File vcfIndex = new File(vcf.getAbsolutePath() + indexExtension);
 
         for(int count=1;count<2; count++){
-            final VariantContextWriter writer = VariantContextWriterFactory.create(vcf, dict, options);
+            final VariantContextWriter writer =  new VariantContextWriterBuilder()
+                    .setOutputFile(vcf)
+                    .setReferenceDictionary(dict)
+                    .setOptions(EnumSet.of(Options.ALLOW_MISSING_FIELDS_IN_HEADER, Options.INDEX_ON_THE_FLY))
+                    .build();
             writer.writeHeader(header);
 
             for (int i = 1; i < 17 ; i++) { // write 17 chromosomes

@@ -16,7 +16,7 @@ import net.sf.samtools.util.CloserUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.broadinstitute.variant.vcf.VCFHeader;
 
@@ -80,10 +80,14 @@ public class SplitVcfs extends CommandLineProgram {
 			throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
 		}
 
-		final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
+        final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                .setReferenceDictionary(sequenceDictionary)
+                .clearOptions();
+        if (CREATE_INDEX)
+            builder.setOption(Options.INDEX_ON_THE_FLY);
 
-		final VariantContextWriter snpWriter = VariantContextWriterFactory.create(SNP_OUTPUT, sequenceDictionary, options);
-		final VariantContextWriter indelWriter = VariantContextWriterFactory.create(INDEL_OUTPUT, sequenceDictionary, options);
+		final VariantContextWriter snpWriter = builder.setOutputFile(SNP_OUTPUT).build();
+		final VariantContextWriter indelWriter = builder.setOutputFile(INDEL_OUTPUT).build();
 		snpWriter.writeHeader(fileHeader);
 		indelWriter.writeHeader(fileHeader);
 

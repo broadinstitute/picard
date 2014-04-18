@@ -41,7 +41,7 @@ import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.VariantContextComparator;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.broadinstitute.variant.vcf.VCFHeader;
 import org.broadinstitute.variant.vcf.VCFUtils;
@@ -134,8 +134,14 @@ public class MergeVcfs extends CommandLineProgram {
 		if (CREATE_INDEX && sequenceDictionary == null) {
 			throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
 		}
-		final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
-		final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
+
+        final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                .setOutputFile(OUTPUT)
+                .setReferenceDictionary(sequenceDictionary)
+                .clearOptions();
+        if (CREATE_INDEX)
+            builder.setOption(Options.INDEX_ON_THE_FLY);
+        final VariantContextWriter writer = builder.build();
 
 		writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
 

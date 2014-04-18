@@ -34,7 +34,6 @@ import org.broadinstitute.variant.vcf.VCFHeader;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.EnumSet;
 
 public class TabixOnTheFlyIndexCreationTest {
@@ -48,10 +47,11 @@ public class TabixOnTheFlyIndexCreationTest {
         final File tabix = new File(vcf.getAbsolutePath() + TabixUtils.STANDARD_INDEX_EXTENSION);
         vcf.deleteOnExit();
         tabix.deleteOnExit();
-        final FileOutputStream os = new FileOutputStream(vcf);
-        final VariantContextWriter vcfWriter =
-                VariantContextWriterFactory.createBlockCompressedVcf(vcf, os, headerFromFile.getSequenceDictionary(),
-                        EnumSet.of(Options.INDEX_ON_THE_FLY, Options.ALLOW_MISSING_FIELDS_IN_HEADER));
+        final VariantContextWriter vcfWriter = new VariantContextWriterBuilder()
+                .setOutputFile(vcf)
+                .setReferenceDictionary(headerFromFile.getSequenceDictionary())
+                .setOptions(EnumSet.of(Options.INDEX_ON_THE_FLY, Options.ALLOW_MISSING_FIELDS_IN_HEADER))
+                .build();
         vcfWriter.writeHeader(headerFromFile);
         final CloseableTribbleIterator<VariantContext> it = reader.iterator();
         while (it.hasNext()) {

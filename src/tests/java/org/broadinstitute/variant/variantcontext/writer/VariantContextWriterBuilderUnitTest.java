@@ -233,6 +233,16 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
         writer.close();
         Assert.assertTrue(vcfMD5.exists(), "MD5 not created when requested via boolean parameter");
         vcfMD5.delete();
+
+        for (final File blockCompressed : blockCompressedVCFs) {
+            final File md5 = new File(blockCompressed + ".md5");
+            if (md5.exists())
+                md5.delete();
+            md5.deleteOnExit();
+            writer = builder.setOutputFile(blockCompressed).build();
+            writer.close();
+            Assert.assertTrue(md5.exists(), "MD5 digest not created for " + blockCompressed);
+        }
     }
 
     @Test

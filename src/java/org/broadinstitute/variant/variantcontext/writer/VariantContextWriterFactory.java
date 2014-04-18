@@ -42,7 +42,10 @@ import java.util.EnumSet;
  *
  * @author depristo
  * @since 5/12
+ *
+ * @deprecated Replaced by {@link org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder}
  */
+@Deprecated
 public class VariantContextWriterFactory {
 
     public static final EnumSet<Options> DEFAULT_OPTIONS = EnumSet.of(Options.INDEX_ON_THE_FLY);

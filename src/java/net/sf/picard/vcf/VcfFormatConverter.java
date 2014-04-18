@@ -39,7 +39,7 @@ import net.sf.samtools.util.CloserUtil;
 import org.broadinstitute.variant.variantcontext.VariantContext;
 import org.broadinstitute.variant.variantcontext.writer.Options;
 import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterFactory;
+import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
 import org.broadinstitute.variant.vcf.VCFFileReader;
 import org.broadinstitute.variant.vcf.VCFHeader;
 
@@ -91,10 +91,14 @@ public class VcfFormatConverter extends CommandLineProgram {
 		    throw new PicardException("A sequence dictionary must be available in the input file when creating indexed output.");
 	    }
 
-        final EnumSet<Options> options = EnumSet.copyOf(VariantContextWriterFactory.DEFAULT_OPTIONS);
-        if (CREATE_INDEX) options.add(Options.INDEX_ON_THE_FLY); else options.remove(Options.INDEX_ON_THE_FLY);
-
-        final VariantContextWriter writer = VariantContextWriterFactory.create(OUTPUT, sequenceDictionary, options);
+        final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
+                .setOutputFile(OUTPUT)
+                .setReferenceDictionary(sequenceDictionary);
+        if (CREATE_INDEX)
+            builder.setOption(Options.INDEX_ON_THE_FLY);
+        else
+            builder.unsetOption(Options.INDEX_ON_THE_FLY);
+        final VariantContextWriter writer = builder.build();
         writer.writeHeader(header);
 	    final CloseableIterator<VariantContext> iterator = reader.iterator();
 
