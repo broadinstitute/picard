@@ -133,8 +133,8 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
     private final LinkedList<LocusInfo> accumulator = new LinkedList<LocusInfo>();
 
     private int qualityScoreCutoff = Integer.MIN_VALUE;
-
     private int mappingQualityScoreCutoff = Integer.MIN_VALUE;
+    private boolean includeNonPfReads = true;
 
     /**
      * If true, emit a LocusInfo for every locus in the target map, or if no target map,
@@ -277,7 +277,9 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
 
             }
             // Skip over an unaligned read that has been forced to be sorted with the aligned reads
-            if (rec.getReadUnmappedFlag()) {
+            if (rec.getReadUnmappedFlag()
+                    || rec.getMappingQuality() < this.mappingQualityScoreCutoff
+                    || (!this.includeNonPfReads && rec.getReadFailsVendorQualityCheckFlag())) {
                 samIterator.next();
                 continue;
             }
@@ -361,8 +363,7 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
                             rec.getAlignmentStart() + j));
                 }
                 // if the quality score cutoff is met, accumulate the base info
-                if (rec.getBaseQualities()[readOffset] >= getQualityScoreCutoff() &&
-                        rec.getMappingQuality() >= getMappingQualityScoreCutoff()) {
+                if (rec.getBaseQualities()[readOffset] >= getQualityScoreCutoff()) {
                     accumulator.get(refOffset).add(rec, readOffset);
                 }
             }
@@ -483,15 +484,14 @@ public class SamLocusIterator implements Iterable<SamLocusIterator.LocusInfo>, C
     public int getMappingQualityScoreCutoff() {
         return mappingQualityScoreCutoff;
     }
+    public void setMappingQualityScoreCutoff(final int mappingQualityScoreCutoff) { this.mappingQualityScoreCutoff = mappingQualityScoreCutoff; }
 
-    public void setMappingQualityScoreCutoff(final int mappingQualityScoreCutoff) {
-        this.mappingQualityScoreCutoff = mappingQualityScoreCutoff;
-    }
+    public boolean isIncludeNonPfReads() { return includeNonPfReads; }
+    public void setIncludeNonPfReads(final boolean includeNonPfReads) { this.includeNonPfReads = includeNonPfReads; }
 
     public boolean isEmitUncoveredLoci() {
         return emitUncoveredLoci;
     }
-
     public void setEmitUncoveredLoci(final boolean emitUncoveredLoci) {
         this.emitUncoveredLoci = emitUncoveredLoci;
     }
