@@ -268,7 +268,15 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
             final File index = blockCompressedIndices.get(i);
             if (index.exists())
                 index.delete();
-            writer = builder.setOutputFile(blockCompressed).build();
+            writer = builder.setOutputFile(blockCompressed).setReferenceDictionary(dictionary).build();
+            writer.close();
+            Assert.assertTrue(index.exists(), String.format("Block-compressed index not created for %s / %s", blockCompressed, index));
+
+            // Tabix does not require a reference dictionary.
+            // Tribble does: see tests testRefDictRequiredForVCFIndexOnTheFly / testRefDictRequiredForBCFIndexOnTheFly
+
+            index.delete();
+            writer = builder.setReferenceDictionary(null).build();
             writer.close();
             Assert.assertTrue(index.exists(), String.format("Block-compressed index not created for %s / %s", blockCompressed, index));
         }
@@ -317,4 +325,19 @@ public class VariantContextWriterBuilderUnitTest extends VariantBaseTest {
                 .build();
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRefDictRequiredForVCFIndexOnTheFly() {
+        new VariantContextWriterBuilder()
+                .setOutputFile(vcf)
+                .setOption(Options.INDEX_ON_THE_FLY)
+                .build();
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRefDictRequiredForBCFIndexOnTheFly() {
+        new VariantContextWriterBuilder()
+                .setOutputFile(bcf)
+                .setOption(Options.INDEX_ON_THE_FLY)
+                .build();
+    }
 }

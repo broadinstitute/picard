@@ -369,6 +369,9 @@ public class VariantContextWriterBuilder {
             case UNSPECIFIED:
                 throw new IllegalArgumentException("Must specify file or stream output type.");
             case VCF:
+                if ((refDict == null) && (options.contains(Options.INDEX_ON_THE_FLY)))
+                    throw new IllegalArgumentException("A reference dictionary is required for creating Tribble indices on the fly");
+
                 writer = createVCFWriter(outFile, outStreamFromFile);
                 break;
             case BLOCK_COMPRESSED_VCF:
@@ -380,6 +383,9 @@ public class VariantContextWriterBuilder {
                 writer = createVCFWriter(outFile, new BlockCompressedOutputStream(outStreamFromFile, outFile));
                 break;
             case BCF:
+                if ((refDict == null) && (options.contains(Options.INDEX_ON_THE_FLY)))
+                    throw new IllegalArgumentException("A reference dictionary is required for creating Tribble indices on the fly");
+
                 writer = createBCFWriter(outFile, outStreamFromFile);
                 break;
             case VCF_STREAM:
