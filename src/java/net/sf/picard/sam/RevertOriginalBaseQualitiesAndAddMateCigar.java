@@ -75,7 +75,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         boolean foundPairedMappedReads = false;
 
         // Check if we can skip this file since it does not have OQ tags and the mate cigar tag is already there.
-        final CanSkipSamFile skipSamFile = RevertOriginalBaseQualitiesAndAddMateCigar.canSkipSAMFile(INPUT, MAX_RECORDS_TO_EXAMINE);
+        final CanSkipSamFile skipSamFile = RevertOriginalBaseQualitiesAndAddMateCigar.canSkipSAMFile(INPUT, MAX_RECORDS_TO_EXAMINE, RESTORE_ORIGINAL_QUALITIES);
         log.info(skipSamFile.getMessage(MAX_RECORDS_TO_EXAMINE));
         if (skipSamFile.canSkip()) return 0;
 
@@ -196,9 +196,10 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
      * Checks if we can skip the SAM/BAM file when reverting origin base qualities and adding mate cigars.
      * @param inputFile the SAM/BAM input file
      * @param maxRecordsToExamine the maximum number of records to examine before quitting
+     * @param revertOriginalBaseQualities true if we are to revert original base qualities, false otherwise
      * @return whether we can skip or not, and the explanation why.
      */
-    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine)  {
+    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine, boolean revertOriginalBaseQualities)  {
         final SAMFileReader in = new SAMFileReader(inputFile, true);
         final Iterator<SAMRecord> iterator = in.iterator();
         int numRecordsExamined = 0;
@@ -207,7 +208,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         while (iterator.hasNext() && numRecordsExamined < maxRecordsToExamine) {
             final SAMRecord record = iterator.next();
 
-            if (null != record.getOriginalBaseQualities()) {
+            if (revertOriginalBaseQualities && null != record.getOriginalBaseQualities()) {
                 // has OQ, break and return case #2
                 returnType = CanSkipSamFile.CANNOT_SKIP_FOUND_OQ;
                 break;
