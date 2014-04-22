@@ -297,6 +297,7 @@
         <package-and-document-command title="CollectMultipleMetrics"         main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
         <package-and-document-command title="CollectTargetedPcrMetrics"      main-class="net.sf.picard.analysis.directed.CollectTargetedPcrMetrics"/>
         <package-and-document-command title="CollectRnaSeqMetrics"           main-class="net.sf.picard.analysis.CollectRnaSeqMetrics"/>
+        <package-and-document-command title="CollectWgsMetrics"              main-class="net.sf.picard.analysis.CollectWgsMetrics"/>
         <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
         <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
         <package-and-document-command title="DownsampleSam"                  main-class="net.sf.picard.sam.DownsampleSam"/>

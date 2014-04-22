@@ -207,7 +207,16 @@ public class MathUtil {
         for (final double next : arr) result += next;
         return result;
     }
-    
+
+    /** Returns the sum of the elements in the array starting with start and ending before stop. */
+    public static long sum(final long[] arr, final int start, final int stop) {
+        long result = 0;
+        for (int i=start; i<stop; ++i) {
+            result += arr[i];
+        }
+        return result;
+    }
+
     public static final LogMath LOG_2_MATH = new LogMath(2);
     public static final LogMath NATURAL_LOG_MATH = new LogMath(Math.exp(1)) {
         @Override
