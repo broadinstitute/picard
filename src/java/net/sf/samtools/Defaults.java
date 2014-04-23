@@ -1,8 +1,5 @@
 package net.sf.samtools;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.IOUtil;
-
 import java.io.File;
 
 /**
