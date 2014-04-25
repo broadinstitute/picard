@@ -247,7 +247,7 @@ public class VCFEncoder {
 	/*
 	 * Add the genotype data
 	 */
-	private void addGenotypeData(final VariantContext vc, final Map<Allele, String> alleleMap, final List<String> genotypeFormatKeys, final StringBuilder builder) {
+	public void addGenotypeData(final VariantContext vc, final Map<Allele, String> alleleMap, final List<String> genotypeFormatKeys, final StringBuilder builder) {
 		final int ploidy = vc.getMaxPloidy(2);
 
 		for (final String sample : this.header.getGenotypeSamples()) {
@@ -360,7 +360,7 @@ public class VCFEncoder {
 		}
 	}
 
-	private Map<Allele, String> buildAlleleStrings(final VariantContext vc) {
+	public Map<Allele, String> buildAlleleStrings(final VariantContext vc) {
 		final Map<Allele, String> alleleMap = new HashMap<Allele, String>(vc.getAlleles().size()+1);
 		alleleMap.put(Allele.NO_CALL, VCFConstants.EMPTY_ALLELE); // convenience for lookup
 
