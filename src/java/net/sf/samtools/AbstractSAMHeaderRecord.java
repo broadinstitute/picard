@@ -101,4 +101,9 @@ public abstract class AbstractSAMHeaderRecord {
      * @return list of predefined tags for the concrete SAMHeader record type.
      */
     abstract Set<String> getStandardTags();
+
+    /** Simple to String that outputs the concrete class name and the set of attributes stored. */
+    @Override public String toString() {
+        return getClass().getSimpleName() + this.mAttributes.toString();
+    }
 }
