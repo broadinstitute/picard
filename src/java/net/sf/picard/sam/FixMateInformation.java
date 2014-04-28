@@ -34,6 +34,7 @@ import net.sf.picard.util.Log;
 import net.sf.picard.util.PeekableIterator;
 import net.sf.picard.util.ProgressLogger;
 import net.sf.samtools.BAMRecordCodec;
+import net.sf.samtools.BamFileIoUtils;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileHeader.SortOrder;
 import net.sf.samtools.SAMFileReader;
@@ -113,7 +114,7 @@ public class FixMateInformation extends CommandLineProgram {
             try {
                 IoUtil.assertFileIsWritable(soleInput);
                 IoUtil.assertDirectoryIsWritable(dir);
-                OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", ".bam", dir);
+                OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", BamFileIoUtils.BAM_FILE_EXTENSION, dir);
             }
             catch (IOException ioe) {
                 throw new RuntimeIOException("Could not create tmp file in " + dir.getAbsolutePath());

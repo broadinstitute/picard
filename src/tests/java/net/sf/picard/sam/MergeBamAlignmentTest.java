@@ -24,6 +24,7 @@
 package net.sf.picard.sam;
 
 import net.sf.picard.PicardException;
+import net.sf.samtools.BamFileIoUtils;
 import net.sf.samtools.Cigar;
 import net.sf.samtools.CigarElement;
 import net.sf.samtools.CigarOperator;
@@ -448,7 +449,7 @@ public class MergeBamAlignmentTest {
     @Test(expectedExceptions = {IllegalStateException.class, PicardException.class})
     public void testOldQuerynameSortFails() throws IOException {
 
-        final File merged = File.createTempFile("merged", ".bam");
+        final File merged = File.createTempFile("merged", BamFileIoUtils.BAM_FILE_EXTENSION);
         merged.deleteOnExit();
 
         final MergeBamAlignment merger = new MergeBamAlignment();

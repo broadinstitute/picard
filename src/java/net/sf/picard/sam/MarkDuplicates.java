@@ -68,7 +68,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     public List<File> INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-		    doc="The output file to right marked records to")
+		    doc="The output file to write marked records to")
     public File OUTPUT;
 
     @Option(shortName="M",

@@ -18,6 +18,7 @@ import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordQueryNameComparator;
 import net.sf.samtools.SAMUtils;
 import net.sf.samtools.SamPairUtil;
+import net.sf.samtools.SamPairUtil;
 import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.SortingCollection;
 

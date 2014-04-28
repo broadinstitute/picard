@@ -87,7 +87,7 @@ public class BuildBamIndex extends CommandLineProgram {
                 baseFileName = inputFile.getAbsolutePath();
             }
 
-            if (baseFileName.endsWith(".bam")) {
+            if (baseFileName.endsWith(BamFileIoUtils.BAM_FILE_EXTENSION)) {
 
                 final int index = baseFileName.lastIndexOf(".");
                 OUTPUT = new File(baseFileName.substring(0, index) + BAMIndex.BAMIndexSuffix);

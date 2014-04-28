@@ -23,6 +23,7 @@
  */
 package net.sf.picard.sam;
 
+import net.sf.samtools.BamFileIoUtils;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import org.testng.Assert;
@@ -39,7 +40,7 @@ public class MergeSamFilesTest {
     @Test
     public void unsortedInputSortedOutputTest() throws Exception {
         File unsortedInputTestDataDir = new File(TEST_DATA_DIR, "unsorted_input");
-        File mergedOutput = File.createTempFile("unsortedInputSortedOutputTest.", ".bam");
+        File mergedOutput = File.createTempFile("unsortedInputSortedOutputTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
         mergedOutput.deleteOnExit();
         String[] args = {
                 "I=" + new File(unsortedInputTestDataDir, "1.sam").getAbsolutePath(),

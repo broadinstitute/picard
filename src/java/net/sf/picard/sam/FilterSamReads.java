@@ -43,6 +43,7 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.util.IOUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -148,7 +149,7 @@ public class FilterSamReads extends CommandLineProgram {
     private void writeReadsFile(final File samOrBamFile) throws IOException {
         final SAMFileReader reader = new SAMFileReader(samOrBamFile);
         final File readsFile =
-            new File(OUTPUT.getParentFile(), IoUtil.basename(samOrBamFile) + ".reads");
+            new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
         IoUtil.assertFileIsWritable(readsFile);
         final BufferedWriter bw = IoUtil.openFileForBufferedWriting(readsFile, false);
 

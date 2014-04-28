@@ -384,26 +384,6 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
     }
 
     /**
-     * Transfers from the input stream to the output stream using stream operations and a buffer.
-     */
-    public static void transferByStream(final InputStream in, final OutputStream out, final long bytes) {
-        final byte[] buffer = new byte[Defaults.NON_ZERO_BUFFER_SIZE];
-        long remaining = bytes;
-
-        try {
-            while (remaining > 0) {
-                final int read = in.read(buffer, 0, (int) Math.min(buffer.length, remaining));
-                out.write(buffer, 0, read);
-                remaining -= read;
-            }
-        }
-        catch (final IOException ioe) {
-            throw new RuntimeIOException(ioe);
-        }
-    }
-
-
-    /**
      * Copy input to output, overwriting output if it already exists.
      */
     public static void copyFile(final File input, final File output) {
@@ -520,18 +500,6 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
         return str.trim().replaceAll("[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]", "_");
     }
 
-    /** Returns the name of the file minus the extension (i.e. text after the last "." in the filename). */
-    public static String basename(final File f) {
-        final String full = f.getName();
-        final int index = full.lastIndexOf(".");
-        if (index > 0  && index > full.lastIndexOf(File.separator)) {
-            return full.substring(0, index);
-        }
-        else {
-            return full;
-        }
-    }
-
     /** Returns the name of the file extension (i.e. text after the last "." in the filename) including the . */
     public static String fileSuffix(final File f) {
         final String full = f.getName();
@@ -554,7 +522,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
                 if (f != null) f = f.getCanonicalFile();
             }
             return canonicalPath;
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new RuntimeException("Error getting full canonical path for " +
                     file + ": " + ioe.getMessage(), ioe);
         }
@@ -576,7 +544,7 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
 
             return builder.toString();
         }
-        catch (IOException ioe) {
+        catch (final IOException ioe) {
             throw new RuntimeIOException("Error reading stream", ioe);
         }
     }
@@ -606,14 +574,14 @@ public class IoUtil extends net.sf.samtools.util.IOUtil {
                         if (next == null) in.close();
                         return tmp;
                     }
-                    catch (IOException ioe) { throw new RuntimeIOException(ioe); }
+                    catch (final IOException ioe) { throw new RuntimeIOException(ioe); }
                 }
 
                 /** Closes the underlying input stream. Not required if end of stream has already been hit. */
                 @Override public void close() throws IOException { CloserUtil.close(in); }
             };
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             throw new RuntimeIOException(e);
         }
     }
@@ -710,7 +678,7 @@ class CustomGzipOutputStream extends GZIPOutputStream {
         this.def.setLevel(compressionLevel);
     }
 
-    CustomGzipOutputStream(OutputStream outputStream, final int compressionLevel) throws IOException {
+    CustomGzipOutputStream(final OutputStream outputStream, final int compressionLevel) throws IOException {
         super(outputStream);
         this.def.setLevel(compressionLevel);
     }

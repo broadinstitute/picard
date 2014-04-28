@@ -58,6 +58,25 @@ public class IOUtil {
     }
 
     /**
+     * Transfers from the input stream to the output stream using stream operations and a buffer.
+     */
+    public static void transferByStream(final InputStream in, final OutputStream out, final long bytes) {
+        final byte[] buffer = new byte[Defaults.NON_ZERO_BUFFER_SIZE];
+        long remaining = bytes;
+
+        try {
+            while (remaining > 0) {
+                final int read = in.read(buffer, 0, (int) Math.min(buffer.length, remaining));
+                out.write(buffer, 0, read);
+                remaining -= read;
+            }
+        }
+        catch (final IOException ioe) {
+            throw new RuntimeIOException(ioe);
+        }
+    }
+
+    /**
      * @return If Defaults.BUFFER_SIZE > 0, wrap os in BufferedOutputStream, else return os itself.
      */
     public static OutputStream maybeBufferOutputStream(final OutputStream os) {
@@ -185,5 +204,17 @@ public class IOUtil {
 
         if (tmp.endsWith(File.separatorChar + user)) return new File(tmp);
         else return new File(tmp, user);
+    }
+
+    /** Returns the name of the file minus the extension (i.e. text after the last "." in the filename). */
+    public static String basename(final File f) {
+        final String full = f.getName();
+        final int index = full.lastIndexOf(".");
+        if (index > 0  && index > full.lastIndexOf(File.separator)) {
+            return full.substring(0, index);
+        }
+        else {
+            return full;
+        }
     }
 }

@@ -63,7 +63,7 @@ public class IupacTest {
     @DataProvider(name = "basidDataProvider")
     public Object[][] basicDataProvider() {
         return new Object[][] {
-                {".bam"},
+                {BamFileIoUtils.BAM_FILE_EXTENSION},
                 {".sam"}
         };
     }

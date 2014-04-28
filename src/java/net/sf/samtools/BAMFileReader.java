@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Internal class for reading and querying BAM files.
+ * Class for reading and querying BAM files.
  */
 class BAMFileReader extends SAMFileReader.ReaderImplementation {
     // True if reading from a File rather than an InputStream
@@ -103,7 +103,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this.eagerDecode = eagerDecode;
         this.mValidationStringency = validationStringency;
         this.samRecordFactory = factory;
-        readHeader(null);
+        this.mFileHeader = readHeader(this.mStream, this.mValidationStringency, null);
     }
 
     /**
@@ -159,7 +159,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this.eagerDecode = eagerDecode;
         this.mValidationStringency = validationStringency;
         this.samRecordFactory = factory;
-        readHeader(source);
+        this.mFileHeader = readHeader(this.mStream, this.mValidationStringency, source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }    
 
@@ -177,7 +177,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         this.eagerDecode = eagerDecode;
         this.mValidationStringency = validationStringency;
         this.samRecordFactory = factory;
-        readHeader(source);
+        this.mFileHeader = readHeader(this.mStream, this.mValidationStringency, source);
         mFirstRecordPointer = mCompressedInputStream.getFilePointer();
     }
 
@@ -201,7 +201,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * If true, uses the caching version of the index reader.
      * @param enabled true to write source information into each SAMRecord.
      */
-    public void enableIndexCaching(final boolean enabled) {
+    protected void enableIndexCaching(final boolean enabled) {
         if(mIndex != null)
             throw new SAMException("Unable to turn on index caching; index file has already been loaded.");
         this.mEnableIndexCaching = enabled;
@@ -212,7 +212,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * This is slower but more scalable when accessing large numbers of BAM files sequentially.
      * @param enabled True to use memory mapping, false to use regular I/O.
      */
-    public void enableIndexMemoryMapping(final boolean enabled) {
+    protected void enableIndexMemoryMapping(final boolean enabled) {
         if (mIndex != null) {
             throw new SAMException("Unable to change index memory mapping; index file has already been loaded.");
         }
@@ -228,7 +228,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     /**
      * @return true if ths is a BAM file, and has an index
      */
-    public boolean hasIndex() {
+    protected boolean hasIndex() {
         return (mIndexFile != null) || (mIndexStream != null);
     }
 
@@ -236,7 +236,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      * Retrieves the index for the given file type.  Ensure that the index is of the specified type.
      * @return An index of the given type.
      */
-    public BAMIndex getIndex() {
+    protected BAMIndex getIndex() {
         if(!hasIndex())
             throw new SAMException("No index is available for this BAM file.");
         if(mIndex == null) {
@@ -471,36 +471,38 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
     }
 
     /**
-     * Reads the header from the file or stream
+     * Reads the header of a BAM file from a stream
+     * @param stream A BinaryCodec to read the header from
+     * @param validationStringency Determines how stringent to be when validating the sam
      * @param source Note that this is used only for reporting errors.
      */
-    private void readHeader(final String source)
+    protected static SAMFileHeader readHeader(final BinaryCodec stream, final ValidationStringency validationStringency, final String source)
         throws IOException {
 
         final byte[] buffer = new byte[4];
-        mStream.readBytes(buffer);
+        stream.readBytes(buffer);
         if (!Arrays.equals(buffer, BAMFileConstants.BAM_MAGIC)) {
             throw new IOException("Invalid BAM file header");
         }
 
-        final int headerTextLength = mStream.readInt();
-        final String textHeader = mStream.readString(headerTextLength);
+        final int headerTextLength = stream.readInt();
+        final String textHeader = stream.readString(headerTextLength);
         final SAMTextHeaderCodec headerCodec = new SAMTextHeaderCodec();
-        headerCodec.setValidationStringency(mValidationStringency);
-        mFileHeader = headerCodec.decode(new StringLineReader(textHeader),
+        headerCodec.setValidationStringency(validationStringency);
+        final SAMFileHeader samFileHeader = headerCodec.decode(new StringLineReader(textHeader),
                 source);
 
-        final int sequenceCount = mStream.readInt();
-        if (mFileHeader.getSequenceDictionary().size() > 0) {
+        final int sequenceCount = stream.readInt();
+        if (samFileHeader.getSequenceDictionary().size() > 0) {
             // It is allowed to have binary sequences but no text sequences, so only validate if both are present
-            if (sequenceCount != mFileHeader.getSequenceDictionary().size()) {
+            if (sequenceCount != samFileHeader.getSequenceDictionary().size()) {
                 throw new SAMFormatException("Number of sequences in text header (" +
-                        mFileHeader.getSequenceDictionary().size() +
+                        samFileHeader.getSequenceDictionary().size() +
                         ") != number of sequences in binary header (" + sequenceCount + ") for file " + source);
             }
             for (int i = 0; i < sequenceCount; i++) {
-                final SAMSequenceRecord binarySequenceRecord = readSequenceRecord(source);
-                final SAMSequenceRecord sequenceRecord = mFileHeader.getSequence(i);
+                final SAMSequenceRecord binarySequenceRecord = readSequenceRecord(stream, source);
+                final SAMSequenceRecord sequenceRecord = samFileHeader.getSequence(i);
                 if (!sequenceRecord.getSequenceName().equals(binarySequenceRecord.getSequenceName())) {
                     throw new SAMFormatException("For sequence " + i + ", text and binary have different names in file " +
                             source);
@@ -511,28 +513,30 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
                 }
             }
         } else {
-            // If only binary sequences are present, copy them into mFileHeader
+            // If only binary sequences are present, copy them into samFileHeader
             final List<SAMSequenceRecord> sequences = new ArrayList<SAMSequenceRecord>(sequenceCount);
             for (int i = 0; i < sequenceCount; i++) {
-                sequences.add(readSequenceRecord(source));
+                sequences.add(readSequenceRecord(stream, source));
             }
-            mFileHeader.setSequenceDictionary(new SAMSequenceDictionary(sequences));
+            samFileHeader.setSequenceDictionary(new SAMSequenceDictionary(sequences));
         }
+
+        return samFileHeader;
     }
 
     /**
      * Reads a single binary sequence record from the file or stream
      * @param source Note that this is used only for reporting errors.
      */
-    private SAMSequenceRecord readSequenceRecord(final String source) {
-        final int nameLength = mStream.readInt();
+    private static SAMSequenceRecord readSequenceRecord(final BinaryCodec stream, final String source) {
+        final int nameLength = stream.readInt();
         if (nameLength <= 1) {
             throw new SAMFormatException("Invalid BAM file header: missing sequence name in file " + source);
         }
-        final String sequenceName = mStream.readString(nameLength - 1);
+        final String sequenceName = stream.readString(nameLength - 1);
         // Skip the null terminator
-        mStream.readByte();
-        final int sequenceLength = mStream.readInt();
+        stream.readByte();
+        final int sequenceLength = stream.readInt();
         return new SAMSequenceRecord(SAMSequenceRecord.truncateSequenceName(sequenceName), sequenceLength);
     }
 
@@ -741,11 +745,10 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
      */
     private static File findIndexFile(final File dataFile) {
         // If input is foo.bam, look for foo.bai
-        final String bamExtension = ".bam";
         File indexFile;
         final String fileName = dataFile.getName();
-        if (fileName.endsWith(bamExtension)) {
-            final String bai = fileName.substring(0, fileName.length() - bamExtension.length()) + BAMIndex.BAMIndexSuffix;
+        if (fileName.endsWith(BamFileIoUtils.BAM_FILE_EXTENSION)) {
+            final String bai = fileName.substring(0, fileName.length() - BamFileIoUtils.BAM_FILE_EXTENSION.length()) + BAMIndex.BAMIndexSuffix;
             indexFile = new File(dataFile.getParent(), bai);
             if (indexFile.exists()) {
                 return indexFile;
@@ -753,7 +756,7 @@ class BAMFileReader extends SAMFileReader.ReaderImplementation {
         }
 
         // If foo.bai doesn't exist look for foo.bam.bai
-        indexFile = new File(dataFile.getParent(), dataFile.getName() + ".bai");
+        indexFile = new File(dataFile.getParent(), dataFile.getName() + BAMIndex.BAMIndexSuffix);
         if (indexFile.exists()) {
             return indexFile;
         } else {

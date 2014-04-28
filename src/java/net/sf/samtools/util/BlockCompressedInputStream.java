@@ -35,6 +35,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import net.sf.samtools.FileTruncatedException;
+import net.sf.samtools.SAMException;
 import net.sf.samtools.seekablestream.SeekableBufferedStream;
 import net.sf.samtools.seekablestream.SeekableFileStream;
 import net.sf.samtools.seekablestream.SeekableHTTPStream;
@@ -489,6 +490,12 @@ public class BlockCompressedInputStream extends InputStream implements LocationA
             return FileTermination.DEFECTIVE;
         } finally {
             raFile.close();
+        }
+    }
+
+    public static void assertNonDefectiveFile(final File file) throws IOException {
+        if (checkTermination(file) == FileTermination.DEFECTIVE) {
+            throw new SAMException(file.getAbsolutePath() + " does not have a valid GZIP block at the end of the file.");
         }
     }
 

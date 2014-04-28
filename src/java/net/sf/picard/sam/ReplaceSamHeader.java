@@ -57,6 +57,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
     public static void main(final String[] argv) {
         new ReplaceSamHeader().instanceMainWithExit(argv);
     }
+
     /**
      * Do the work after command line has been parsed.
      * RuntimeException may be thrown by this method, and are reported appropriately.
@@ -65,34 +66,49 @@ public class ReplaceSamHeader extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
+        IoUtil.assertFileIsReadable(INPUT);
+        IoUtil.assertFileIsReadable(HEADER);
+        IoUtil.assertFileIsWritable(OUTPUT);
+
+        final SAMFileReader headerReader = new SAMFileReader(HEADER);
+        final SAMFileHeader replacementHeader = headerReader.getFileHeader();
+        headerReader.close();
+
         final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+
         try {
-            IoUtil.assertFileIsReadable(INPUT);
-            IoUtil.assertFileIsReadable(HEADER);
-            IoUtil.assertFileIsWritable(OUTPUT);
-            final SAMFileReader headerReader = new SAMFileReader(HEADER);
-            final SAMFileHeader replacementHeader = headerReader.getFileHeader();
-            final SAMFileReader recordReader = new SAMFileReader(INPUT);
-            if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
-                throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
-                ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
+            if (BamFileIoUtils.isBamFile(INPUT)) {
+                blockCopyReheader(replacementHeader);
+            } else {
+                standardReheader(replacementHeader);
             }
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
-            
-            final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
-            for (final SAMRecord rec : recordReader) {
-                rec.setHeader(replacementHeader);
-                writer.addAlignment(rec);
-                progress.record(rec);
-            }
-            writer.close();
-            headerReader.close();
-            recordReader.close();
-        }
-        finally {
+        } finally {
             SAMFileReader.setDefaultValidationStringency(originalStringency);
         }
+
         return 0;
+    }
+
+    private void standardReheader(final SAMFileHeader replacementHeader) {
+        final SAMFileReader recordReader = new SAMFileReader(INPUT);
+        if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
+            throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
+            ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
+        }
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
+
+        final ProgressLogger progress = new ProgressLogger(Log.getInstance(ReplaceSamHeader.class));
+        for (final SAMRecord rec : recordReader) {
+            rec.setHeader(replacementHeader);
+            writer.addAlignment(rec);
+            progress.record(rec);
+        }
+        writer.close();
+        recordReader.close();
+    }
+
+    private void blockCopyReheader(final SAMFileHeader replacementHeader) {
+        BamFileIoUtils.reheaderBamFile(replacementHeader, INPUT, OUTPUT, CREATE_MD5_FILE, CREATE_INDEX);
     }
 }

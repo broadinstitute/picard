@@ -38,12 +38,12 @@ public class SAMFileWriterFactoryTest {
 
     @Test
     public void ordinaryFileWriterTest() throws Exception {
-        final File outputFile = File.createTempFile("tmp.", ".bam");
+        final File outputFile = File.createTempFile("tmp.", BamFileIoUtils.BAM_FILE_EXTENSION);
         outputFile.delete();
         outputFile.deleteOnExit();
         String basename = outputFile.getName();
         basename = basename.substring(0, basename.lastIndexOf("."));
-        final File indexFile = new File(outputFile.getParent(), basename + ".bai");
+        final File indexFile = new File(outputFile.getParent(), basename + BAMIndex.BAMIndexSuffix);
         indexFile.deleteOnExit();
         final File md5File = new File(outputFile.getParent(), outputFile.getName() + ".md5");
         md5File.deleteOnExit();
@@ -53,7 +53,7 @@ public class SAMFileWriterFactoryTest {
         Assert.assertTrue(md5File.length() > 0);
     }
 
-    private void createSmallBam(File outputFile) {
+    private void createSmallBam(final File outputFile) {
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
         factory.setCreateIndex(true);
         factory.setCreateMd5File(true);

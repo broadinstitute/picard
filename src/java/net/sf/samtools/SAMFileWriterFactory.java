@@ -247,7 +247,7 @@ public class SAMFileWriterFactory {
      */
     public SAMFileWriter makeSAMOrBAMWriter(final SAMFileHeader header, final boolean presorted, final File outputFile) {
         final String filename = outputFile.getName();
-        if (filename.endsWith(".bam")) {
+        if (filename.endsWith(BamFileIoUtils.BAM_FILE_EXTENSION)) {
             return makeBAMWriter(header, presorted, outputFile);
         }
         if (filename.endsWith(".sam")) {
