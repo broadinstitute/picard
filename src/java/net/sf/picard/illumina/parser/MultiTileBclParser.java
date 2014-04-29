@@ -23,13 +23,13 @@
  */
 package net.sf.picard.illumina.parser;
 
+import net.sf.picard.PicardException;
 import net.sf.picard.illumina.parser.readers.BclIndexReader;
 import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import net.sf.picard.illumina.parser.readers.BclReader;
 import net.sf.samtools.util.CloseableIterator;
 
 import java.io.File;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -38,67 +38,57 @@ import java.util.NoSuchElementException;
  */
 public class MultiTileBclParser extends BclParser {
     private final TileIndex tileIndex;
-    private MultiTileBclDataCycleFileParser cycleFileParser = null;
     public MultiTileBclParser(final File directory, final int lane, final CycleIlluminaFileMap tilesToCycleFiles,
                               final OutputMapping outputMapping, final boolean applyEamssFilter,
                               final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
                               final TileIndex tileIndex) {
         super(directory, lane, tilesToCycleFiles, outputMapping, applyEamssFilter, bclQualityEvaluationStrategy);
         this.tileIndex = tileIndex;
-        this.initialize();
+        super.initialize();
+    }
+
+    /**
+     * Defer initialization until after this class is fully constructed.  This is necessary because superclass
+     * ctor calls makeReader, which is overridden below, and the override requires that this.tileIndex is initialized,
+     * and that doesn't happen until after superclass has been constructed.
+     */
+    @Override
+    protected void initialize() {
     }
 
     @Override
-    public void initialize(){
-        if(tileIndex != null){
-            seekToTile(currentTile);
-        }
-    }
+    protected CloseableIterator<BclReader.BclValue> makeReader(final File file, final int cycle, final int tileNumber) {
+        final TileIndex.TileIndexRecord tileIndexRecord = tileIndex.findTile(tileNumber);
 
-    private CountLimitedIterator makeReader(final List<File> files) {
-        if(tileIndex != null) {
-            final BclReader bclReader = BclReader.makeSeekable(files, bclQualityEvaluationStrategy, outputMapping.getOutputReadLengths());
-            final int numClustersInTile = bclReader.seek(files, tileIndex, currentTile);
-            return new CountLimitedIterator(bclReader, numClustersInTile);
+        final BclIndexReader bclIndexReader = new BclIndexReader(file);
+        if (tileIndex.getNumTiles() != bclIndexReader.getNumTiles()) {
+            throw new PicardException(String.format("%s.getNumTiles(%d) != %s.getNumTiles(%d)",
+                    tileIndex.getFile().getAbsolutePath(), tileIndex.getNumTiles(), bclIndexReader.getBciFile().getAbsolutePath(), bclIndexReader.getNumTiles()));
         }
-        else{
-            return null;
-        }
-    }
 
-    @Override
-    protected CycleFilesParser<BclData> makeCycleFileParser(final List<File> files) {
-        if (cycleFileParser == null) {
-            cycleFileParser = new MultiTileBclDataCycleFileParser(files, currentTile);
-        } else {
-            final int numClustersInTile = cycleFileParser.getReader().seek(files, tileIndex, currentTile);
-            cycleFileParser.setCurrentTile(currentTile);
-            cycleFileParser.resetClusterLimit(numClustersInTile);
-        }
-        return cycleFileParser;
+        final BclReader bclReader = BclReader.makeSeekable(file, bclQualityEvaluationStrategy);
+        bclReader.seek(bclIndexReader.get(tileIndexRecord.zeroBasedTileNumber));
+
+        return new CountLimitedIterator(bclReader, tileIndexRecord.numClustersInTile);
     }
 
     /**
      * An iterator wrapper that stops when it has return a pre-determined number of records even if the underlying
      * iterator still had more records.
      */
-    static class CountLimitedIterator implements CloseableIterator<BclData> {
-        public BclReader getUnderlyingIterator() {
-            return underlyingIterator;
-        }
-
-        private final BclReader underlyingIterator;
-        private int recordLimit;
+    static class CountLimitedIterator implements CloseableIterator<BclReader.BclValue> {
+        private final CloseableIterator<BclReader.BclValue> underlyingIterator;
+        private final int recordLimit;
         private int numRecordsRead = 0;
 
-        CountLimitedIterator(final BclReader underlyingIterator, final int recordLimit) {
+        CountLimitedIterator(final CloseableIterator<BclReader.BclValue> underlyingIterator, final int recordLimit) {
             this.underlyingIterator = underlyingIterator;
             this.recordLimit = recordLimit;
         }
 
         @Override
         public void close() {
-            //underlyingIterator.close();
+            underlyingIterator.close();
         }
 
         @Override
@@ -107,7 +97,7 @@ public class MultiTileBclParser extends BclParser {
         }
 
         @Override
-        public BclData next() {
+        public BclReader.BclValue next() {
             if (!hasNext()) throw new NoSuchElementException();
             ++numRecordsRead;
             return underlyingIterator.next();
@@ -116,56 +106,6 @@ public class MultiTileBclParser extends BclParser {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
-        }
-    }
-
-
-    private class MultiTileBclDataCycleFileParser implements CycleFilesParser<BclData> {
-        final CountLimitedIterator reader;
-        int currentTile;
-
-        public MultiTileBclDataCycleFileParser(final List<File> files, final int currentTile) {
-            this.currentTile = currentTile;
-            reader = makeReader(files);
-        }
-
-        @Override
-        public void close() {
-            reader.close();
-        }
-
-        @Override
-        public BclData next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return reader.next();
-        }
-
-        @Override
-        public boolean hasNext() {
-            try {
-                return reader.hasNext();
-            } catch (final NullPointerException npe) {
-                return false;
-            }
-        }
-
-        public int getCurrentTile(){
-            return currentTile;
-        }
-
-        public BclReader getReader() {
-            return reader.getUnderlyingIterator();
-        }
-
-        public void resetClusterLimit(final int numClustersInTile) {
-            reader.recordLimit = numClustersInTile;
-            reader.numRecordsRead = 0;
-        }
-
-        public void setCurrentTile(final int currentTile) {
-            this.currentTile = currentTile;
         }
     }
 }

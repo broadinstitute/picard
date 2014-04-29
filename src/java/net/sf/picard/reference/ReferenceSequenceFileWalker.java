@@ -27,7 +27,6 @@ import net.sf.picard.PicardException;
 import net.sf.samtools.SAMSequenceDictionary;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Manages a ReferenceSequenceFile.  Loads the requested sequence, ensuring that
@@ -93,9 +92,5 @@ public class ReferenceSequenceFileWalker {
 
     public SAMSequenceDictionary getSequenceDictionary() {
         return referenceSequenceFile.getSequenceDictionary();
-    }
-
-    public void close() throws IOException {
-        referenceSequenceFile.close();
     }
 }

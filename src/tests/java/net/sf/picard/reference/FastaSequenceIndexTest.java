@@ -61,7 +61,6 @@ public class FastaSequenceIndexTest {
         Assert.assertEquals(entry.getSize(),16571L,"Contig chrM size is incorrect");
         Assert.assertEquals(entry.getBasesPerLine(),50,"Contig chrM bases per line is incorrect");
         Assert.assertEquals(entry.getBytesPerLine(),51,"Contig chrM bytes per line is incorrect");
-
     }
 
     @Test(dataProvider="homosapiens")

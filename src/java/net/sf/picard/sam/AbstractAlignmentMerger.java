@@ -50,12 +50,10 @@ import net.sf.samtools.SAMTag;
 import net.sf.samtools.SAMUtils;
 import net.sf.samtools.SamPairUtil;
 import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.SequenceUtil;
 import net.sf.samtools.util.SortingCollection;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -690,9 +688,5 @@ public abstract class AbstractAlignmentMerger {
 
     public void setIncludeSecondaryAlignments(final boolean includeSecondaryAlignments) {
         this.includeSecondaryAlignments = includeSecondaryAlignments;
-    }
-
-    public void close() {
-        CloserUtil.close(this.refSeq);
     }
 }

@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Created by jcarey on 3/13/14.
+ */
 public abstract class FileFaker {
 
     int size;

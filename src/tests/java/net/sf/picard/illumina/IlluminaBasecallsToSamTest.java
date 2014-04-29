@@ -44,30 +44,14 @@ import java.util.List;
  */
 public class IlluminaBasecallsToSamTest {
 
-    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/sams");
-    private static final File DUAL_TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/sams");
+    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/IlluminaTests/BasecallsDir");
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/IlluminaBasecallsToSamTest");
+
     @Test
     public void testTileNumberComparator() {
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(20, 200) > 0, "");
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
-    }
-
-    @Test
-    public void testPerformance() throws Exception {
-        new IlluminaBasecallsToSam().instanceMain(new String[]{
-                "TMP_DIR=/tmp/H00GDALXX",
-                "BASECALLS_DIR=/bcltest/Data/Intensities/BaseCalls",
-                "LANE=1",
-                "RUN_BARCODE=H00GDALXX140328",
-                "RUN_START_DATE=03/28/2014",
-                "NUM_PROCESSORS=4",
-                "READ_STRUCTURE=151T8S151T",
-                "LIBRARY_PARAMS=/bcltest/library_params.txt",
-                "INCLUDE_NON_PF_READS=false "
-        });
     }
 
     @Test
@@ -78,7 +62,7 @@ public class IlluminaBasecallsToSamTest {
         new IlluminaBasecallsToSam().instanceMain(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
-                "READ_STRUCTURE=25S8S25T",
+                "READ_STRUCTURE=76T76T",
                 "OUTPUT=" + outputBam,
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
@@ -89,18 +73,18 @@ public class IlluminaBasecallsToSamTest {
 
     @Test
     public void testMultiplexed() throws Exception {
-        runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+        runStandardTest(7, "multiplexedBarcode.", "barcode.params", 1, "30T8B");
     }
 
     //Same as testMultiplexed except we use BARCODE_1 instead of BARCODE
     @Test
     public void testMultiplexedWithAlternateBarcodeName() throws Exception {
-        runStandardTest(1, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+        runStandardTest(7, "singleBarcodeAltName.", "multiplexed_positive_rgtags.params", 1, "30T8B");
     }
 
     @Test
     public void testDualBarcodes() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 1, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+        runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B");
     }
 
     /**
@@ -113,7 +97,7 @@ public class IlluminaBasecallsToSamTest {
     public void testCorruptDataReturnCode() throws Exception {
         boolean exceptionThrown = false;
         try {
-            runStandardTest(9, "dualBarcode.", "negative_test.params", 2, "30T8B8B", BASECALLS_DIR, TEST_DATA_DIR);
+            runStandardTest(9, "dualBarcode.", "negative_test.params", 2, "30T8B8B");
         } catch (Throwable e) {
             exceptionThrown = true;
         } finally {
@@ -131,9 +115,7 @@ public class IlluminaBasecallsToSamTest {
      * @param readStructure
      * @throws Exception
      */
-    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
-                                 final int concatNColumnFields, final String readStructure,
-                                 final File baseCallsDir, final File testDataDir) throws Exception {
+    private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile, final int concatNColumnFields, final String readStructure) throws Exception {
         final File outputDir = File.createTempFile(jobName, ".dir");
         outputDir.delete();
         outputDir.mkdir();
@@ -142,7 +124,7 @@ public class IlluminaBasecallsToSamTest {
         final File libraryParams = new File(outputDir, libraryParamsFile);
         libraryParams.deleteOnExit();
         final List<File> samFiles = new ArrayList<File>();
-        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
+        final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, libraryParamsFile)));
         final PrintWriter writer = new PrintWriter(libraryParams);
         final String header = reader.readLine();
         writer.println(header + "\tOUTPUT");
@@ -158,10 +140,9 @@ public class IlluminaBasecallsToSamTest {
             writer.println(line + "\t" + outputSam);
         }
         writer.close();
-        reader.close();
 
         new IlluminaBasecallsToSam().instanceMain(new String[]{
-                "BASECALLS_DIR=" + baseCallsDir,
+                "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
                 "READ_STRUCTURE=" + readStructure,
@@ -169,7 +150,7 @@ public class IlluminaBasecallsToSamTest {
         });
 
         for (final File outputSam : samFiles) {
-            IoUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+            IoUtil.assertFilesEqual(outputSam, new File(TEST_DATA_DIR, outputSam.getName()));
         }
     }
 }

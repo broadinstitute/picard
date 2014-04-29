@@ -1,7 +1,6 @@
 package net.sf.picard.reference;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -34,7 +33,6 @@ public class ReferenceSequenceFileWalkerTest {
 
         sequence = refWalker.get(index2);
         Assert.assertEquals(sequence.getContigIndex(), index2);
-        CloserUtil.close(refWalker);
     }
 
 
@@ -53,14 +51,9 @@ public class ReferenceSequenceFileWalkerTest {
         final File refFile = new File(fileName);
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(refFile);
 
-        try {
-            refWalker.get(index1);
+        refWalker.get(index1);
 
-            refWalker.get(index2);
-        }
-        finally {
-            CloserUtil.close(refWalker);
-        }
+        refWalker.get(index2);
     }
 
 

@@ -39,11 +39,11 @@ public class BclFileFakerTest {
 
         new BclFileFaker().fakeFile(fakeFile, 100000);
         // .make() has a number of checks for the file
-        final BclReader bclReader = new BclReader(
+        final BclReader bclReader = BclReader.make(
             fakeFile,
-            new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY), false);
-        Assert.assertEquals(100000, bclReader.getNumberOfClusters());
-        Assert.assertEquals(BclReader.getNumberOfClusters(fakeFile), fakeFile.length() - 4);
+            new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
+        Assert.assertEquals(100000, bclReader.numClusters);
+        Assert.assertEquals(bclReader.numClusters, fakeFile.length() - 4);
     }
 
     @Test
@@ -52,8 +52,8 @@ public class BclFileFakerTest {
         fakeFile.deleteOnExit();
 
         new BclFileFaker().fakeFile(fakeFile, 100000);
-        new BclReader(
+        BclReader.make(
                 fakeFile,
-                new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY), false);
+                new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY));
     }
 }

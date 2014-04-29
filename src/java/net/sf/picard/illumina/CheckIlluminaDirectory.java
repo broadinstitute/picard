@@ -9,7 +9,6 @@ import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
 import net.sf.picard.illumina.parser.IlluminaDataType;
 import net.sf.picard.illumina.parser.IlluminaFileUtil;
 import net.sf.picard.illumina.parser.OutputMapping;
-import net.sf.picard.illumina.parser.ParameterizedFileUtil;
 import net.sf.picard.illumina.parser.ReadStructure;
 import net.sf.picard.io.IoUtil;
 import net.sf.picard.util.Log;
@@ -148,10 +147,10 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                 .longLaneStr(lane) + File.separator);
         if (baseFile.exists()) {
             boolean success = true;
-            if (!newFileBase.exists()) {
+            if(!newFileBase.exists()){
                 success = newFileBase.mkdirs();
             }
-            if (success) {
+            if(success) {
                 for (final Integer tile : fileUtil.getExpectedTiles()) {
                     final String newName =
                             newFileBase + File.separator + String.format("s_%d_%d.locs", lane, tile);
@@ -161,7 +160,8 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
                         throw new PicardException("Could not create symlink: " + output.stdout);
                     }
                 }
-            } else {
+            }
+            else{
                 throw new PicardException(String.format("Could not create lane directory: %s.", newFileBase.getAbsolutePath()));
             }
         } else {
@@ -217,7 +217,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
         }
 
         for (final IlluminaFileUtil.SupportedIlluminaFormat format : formatToDataTypes.keySet()) {
-            final ParameterizedFileUtil util = fileUtil.getUtil(format);
+            final IlluminaFileUtil.ParameterizedFileUtil util = fileUtil.getUtil(format);
             final List<String> failures = util.verify(expectedTiles, cycles);
             //if we have failures and we want to fake files then fake them now.
             if (!failures.isEmpty() && fakeFiles) {

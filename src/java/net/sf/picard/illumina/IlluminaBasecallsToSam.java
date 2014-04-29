@@ -335,7 +335,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (barcodeSamWriterMap.isEmpty()) {
             throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does have any data rows.");
         }
-        libraryParamsParser.close();
     }
 
     /**

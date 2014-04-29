@@ -589,12 +589,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     writer.newLine();
                 }
                 writer.close();
-            } catch (final Exception e) {
+            } catch (Exception e) {
                 LOG.error(e, "Error processing tile ", this.tile);
                 this.exception = e;
-            }
-            finally{
-                provider.close();
             }
         }
 

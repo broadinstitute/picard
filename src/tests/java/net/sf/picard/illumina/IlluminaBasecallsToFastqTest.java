@@ -40,10 +40,8 @@ import java.util.List;
 
 public class IlluminaBasecallsToFastqTest {
 
-    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/fastq");
-    private static final File DUAL_TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/fastq");
+    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/IlluminaTests/BasecallsDir");
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/IlluminaBasecallsToFastqTest");
 
     @Test
     public void testNonBarcoded() throws Exception {
@@ -57,7 +55,7 @@ public class IlluminaBasecallsToFastqTest {
         new IlluminaBasecallsToFastq().instanceMain(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
-                "READ_STRUCTURE=25T8B25T",
+                "READ_STRUCTURE=76T76T",
                 "OUTPUT_PREFIX=" + outputPrefix,
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
@@ -69,20 +67,20 @@ public class IlluminaBasecallsToFastqTest {
 
     @Test
     public void testMultiplexWithIlluminaReadNameHeaders() throws Exception {
-        final File outputDir = File.createTempFile("testMultiplexRH.", ".dir");
+        final File outputDir = File.createTempFile("testMultiplex.", ".dir");
         try {
             outputDir.delete();
             outputDir.mkdir();
             outputDir.deleteOnExit();
 
-            final String filePrefix = "testMultiplexRH";
+            final String filePrefix = "testMultiplex";
             final File outputPrefix = new File(outputDir, filePrefix);
 
             new IlluminaBasecallsToFastq().instanceMain(new String[]{
                     "BASECALLS_DIR=" + BASECALLS_DIR,
-                    "LANE=" + 1,
+                    "LANE=" + 7,
                     "RUN_BARCODE=HiMom",
-                    "READ_STRUCTURE=" + "25T8B25T",
+                    "READ_STRUCTURE=" + "30T8B",
                     "OUTPUT_PREFIX=" + outputPrefix.getAbsolutePath(),
                     "MACHINE_NAME=machine1",
                     "FLOWCELL_BARCODE=abcdeACXX",
@@ -104,12 +102,12 @@ public class IlluminaBasecallsToFastqTest {
 
     @Test
     public void testDeMultiplexed() throws Exception {
-        runStandardTest(1, "multiplexedBarcode.", "mp_barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+        runStandardTest(7, "multiplexedBarcode.", "barcode.params", 1, "30T8B");
     }
 
     @Test
     public void testDualBarcodes() throws Exception {
-        runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
+        runStandardTest(9, "dualBarcode.", "barcode_double.params", 2, "30T8B8B");
     }
 
     /**
@@ -123,8 +121,7 @@ public class IlluminaBasecallsToFastqTest {
      * @throws Exception
      */
     private void runStandardTest(final int lane, final String jobName, final String libraryParamsFile,
-                                 final int concatNColumnFields, final String readStructureString, final File baseCallsDir,
-                                 final File testDataDir) throws Exception {
+                                 final int concatNColumnFields, final String readStructureString) throws Exception {
         final File outputDir = File.createTempFile(jobName, ".dir");
         try {
             outputDir.delete();
@@ -134,7 +131,7 @@ public class IlluminaBasecallsToFastqTest {
             final File libraryParams = new File(outputDir, libraryParamsFile);
             libraryParams.deleteOnExit();
             final List<File> outputPrefixes = new ArrayList<File>();
-            final LineReader reader = new BufferedLineReader(new FileInputStream(new File(testDataDir, libraryParamsFile)));
+            final LineReader reader = new BufferedLineReader(new FileInputStream(new File(TEST_DATA_DIR, libraryParamsFile)));
             final PrintWriter writer = new PrintWriter(libraryParams);
             final String header = reader.readLine();
             writer.println(header + "\tOUTPUT_PREFIX");
@@ -149,10 +146,9 @@ public class IlluminaBasecallsToFastqTest {
                 writer.println(line + "\t" + outputPrefix);
             }
             writer.close();
-            reader.close();
 
             new IlluminaBasecallsToFastq().instanceMain(new String[]{
-                    "BASECALLS_DIR=" + baseCallsDir,
+                    "BASECALLS_DIR=" + BASECALLS_DIR,
                     "LANE=" + lane,
                     "RUN_BARCODE=HiMom",
                     "READ_STRUCTURE=" + readStructureString,
@@ -165,11 +161,11 @@ public class IlluminaBasecallsToFastqTest {
             for (final File outputSam : outputPrefixes) {
                 for (int i = 1; i <= readStructure.templates.length(); ++i) {
                     String filename = outputSam.getName() + "." + i + ".fastq";
-                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(TEST_DATA_DIR, filename));
                 }
                 for (int i = 1; i <= readStructure.barcodes.length(); ++i) {
                     String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
-                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(TEST_DATA_DIR, filename));
                 }
             }
         } finally {

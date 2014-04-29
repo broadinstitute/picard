@@ -39,7 +39,7 @@ import java.util.*;
  * number of clusters in tile: 4-byte int
  * Number of records to read is determined by reaching EOF.
  */
-public class TileIndex implements Iterable<TileIndex.TileIndexRecord> {
+class TileIndex implements Iterable<TileIndex.TileIndexRecord> {
     private final File tileIndexFile;
     private final List<TileIndexRecord> tiles = new ArrayList<TileIndexRecord>();
 
@@ -126,21 +126,13 @@ public class TileIndex implements Iterable<TileIndex.TileIndexRecord> {
         throw new NoSuchElementException(String.format("Tile %d not found in %s", tileNumber, tileIndexFile));
     }
 
-    public static class TileIndexRecord {
+    static class TileIndexRecord {
         /**
          * Number of the tile, e.g. 11101.  These don't necessarily start at 0, and there may be gaps.
          */
         final int tile;
 
         final int numClustersInTile;
-
-        public int getNumClustersInTile() {
-            return numClustersInTile;
-        }
-
-        public int getZeroBasedTileNumber() {
-            return zeroBasedTileNumber;
-        }
 
         /**
          * I.e. the sum of numClustersInTile for all tiles preceding this one.

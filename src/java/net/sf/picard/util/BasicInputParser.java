@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 import net.sf.samtools.util.BufferedLineReader;
-import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.RuntimeIOException;
 
 /**
@@ -134,9 +133,6 @@ public class BasicInputParser extends AbstractInputParser
     public void close() {
         if (reader != null)  {
             reader.close();
-        }
-        for(final InputStream stream : inputs){
-            CloserUtil.close(stream);
         }
     }
 

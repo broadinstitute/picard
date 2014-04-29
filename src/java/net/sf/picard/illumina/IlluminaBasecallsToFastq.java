@@ -277,7 +277,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         if (barcodeFastqWriterMap.isEmpty()) {
             throw new PicardException("MULTIPLEX_PARAMS file " + MULTIPLEX_PARAMS + " does have any data rows.");
         }
-        libraryParamsParser.close();
     }
 
     /**

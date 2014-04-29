@@ -242,8 +242,6 @@ public class MergeBamAlignment extends CommandLineProgram {
         merger.setKeepAlignerProperPairFlags(ALIGNER_PROPER_PAIR_FLAGS);
         merger.setIncludeSecondaryAlignments(INCLUDE_SECONDARY_ALIGNMENTS);
         merger.mergeAlignment();
-        merger.close();
-
         return 0;
     }
 

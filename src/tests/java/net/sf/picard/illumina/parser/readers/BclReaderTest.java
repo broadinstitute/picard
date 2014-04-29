@@ -1,7 +1,6 @@
 package net.sf.picard.illumina.parser.readers;
 
 import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.BclData;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -9,19 +8,15 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class BclReaderTest {
 
-    public static final File TestDataDir = new File("testdata/net/sf/picard/illumina/readerTests");
+    public static File TestDataDir = new File("testdata/net/sf/picard/illumina/readerTests");
     public static final File PASSING_BCL_FILE = new File(TestDataDir, "bcl_passing.bcl");
     public static final File QUAL_0FAILING_BCL_FILE = new File(TestDataDir, "bcl_failing.bcl");
     public static final File QUAL_1FAILING_BCL_FILE = new File(TestDataDir, "bcl_failing2.bcl");
-    public static final File FILE_TOO_LONG = new File(TestDataDir, "bcl_tooLong.bcl");
+    public static final File FILE_TOO_LARGE = new File(TestDataDir, "bcl_tooLarge.bcl");
     public static final File FILE_TOO_SHORT = new File(TestDataDir, "bcl_tooShort.bcl");
 
     public static final char[] expectedBases = new char[]{
@@ -57,20 +52,19 @@ public class BclReaderTest {
     @Test
     public void readValidFile() {
         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
-        final BclReader reader = new BclReader(PASSING_BCL_FILE, bclQualityEvaluationStrategy, false);
+        final BclReader reader = BclReader.make(PASSING_BCL_FILE, bclQualityEvaluationStrategy);
         final byte[] quals = qualsAsBytes();
 
-        Assert.assertEquals(reader.numClustersPerCycle[0], expectedBases.length);
+        Assert.assertEquals(reader.numClusters, expectedBases.length);
 
         int readNum = 0;
-        while (readNum < reader.numClustersPerCycle[0]) {
-            final BclData bv = reader.next();
-            Assert.assertEquals(bv.bases[0][0], expectedBases[readNum], " On num cluster: " + readNum);
-            Assert.assertEquals(bv.qualities[0][0], quals[readNum], " On num cluster: " + readNum);
+        while (readNum < reader.numClusters) {
+            final BclReader.BclValue bv = reader.next();
+            Assert.assertEquals(bv.base, expectedBases[readNum], " On num cluster: " + readNum);
+            Assert.assertEquals(bv.quality, quals[readNum], " On num cluster: " + readNum);
             ++readNum;
         }
         bclQualityEvaluationStrategy.assertMinimumQualities();
-        reader.close();
     }
 
     @DataProvider(name = "failingFiles")
@@ -78,8 +72,8 @@ public class BclReaderTest {
         return new Object[][]{
                 {QUAL_0FAILING_BCL_FILE},
                 {QUAL_1FAILING_BCL_FILE},
-                {new File(TestDataDir, "SomeNoneExistentFile.bcl")},
-                {FILE_TOO_LONG},
+                {new File(TestDataDir, "SomeNoneExistantFile.bcl")},
+                {FILE_TOO_LARGE},
                 {FILE_TOO_SHORT}
         };
     }
@@ -87,12 +81,11 @@ public class BclReaderTest {
     @Test(expectedExceptions = PicardException.class, dataProvider = "failingFiles")
     public void failingFileTest(final File failingFile) {
         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
-        final BclReader reader = new BclReader(failingFile, bclQualityEvaluationStrategy, false);
-        Assert.assertEquals(reader.numClustersPerCycle[0], expectedBases.length);
+        final BclReader reader = BclReader.make(failingFile, bclQualityEvaluationStrategy);
+        Assert.assertEquals(reader.numClusters, expectedBases.length);
         while (reader.hasNext()) {
             reader.next();
         }
-        reader.close();
         bclQualityEvaluationStrategy.assertMinimumQualities();
     }
 
@@ -111,13 +104,11 @@ public class BclReaderTest {
             callables.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    final BclReader reader = new BclReader(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE,
-                            bclQualityEvaluationStrategy, false);
-                    Assert.assertEquals(reader.numClustersPerCycle[0], expectedBases.length);
+                    final BclReader reader = BclReader.make(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
+                    Assert.assertEquals(reader.numClusters, expectedBases.length);
                     while (reader.hasNext()) {
                         reader.next();
                     }
-                    reader.close();
                     return null;
                 }
             });
@@ -146,13 +137,11 @@ public class BclReaderTest {
             callables.add(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    final BclReader reader = new BclReader(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE,
-                            bclQualityEvaluationStrategy, false);
-                    Assert.assertEquals(reader.numClustersPerCycle[0], expectedBases.length);
+                    final BclReader reader = BclReader.make(even_i ? QUAL_1FAILING_BCL_FILE : QUAL_0FAILING_BCL_FILE, bclQualityEvaluationStrategy);
+                    Assert.assertEquals(reader.numClusters, expectedBases.length);
                     while (reader.hasNext()) {
                         reader.next();
                     }
-                    reader.close();
                     return null;
                 }
             });

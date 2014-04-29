@@ -7,7 +7,6 @@ import net.sf.picard.illumina.parser.IlluminaFileUtil;
 import net.sf.picard.illumina.parser.IlluminaFileUtilTest;
 import net.sf.picard.io.IoUtil;
 import net.sf.samtools.util.CloserUtil;
-import org.broad.tribble.index.Index;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -27,7 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.sf.picard.illumina.parser.IlluminaDataType.*;
+import static net.sf.picard.illumina.parser.IlluminaDataType.BaseCalls;
+import static net.sf.picard.illumina.parser.IlluminaDataType.Position;
 import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
 import static net.sf.samtools.util.CollectionUtil.makeList;
@@ -74,7 +74,7 @@ public class CheckIlluminaDirectoryTest {
     public void makeFiles(final SupportedIlluminaFormat[] formats, final int lane, final List<Integer> tiles,
                           final int[] cycles) {
         for (final IlluminaFileUtil.SupportedIlluminaFormat format : formats) {
-            IlluminaFileUtilTest.makeFiles(format, intensityDir, lane, tiles, cycles);
+            IlluminaFileUtilTest.makeFiles(format, intensityDir, lane, tiles, cycles, 0);
         }
     }
 

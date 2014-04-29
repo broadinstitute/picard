@@ -243,11 +243,6 @@ public class ValidateSamFileTest {
             public ReferenceSequence getSubsequenceAt(final String contig, final long start, final long stop) {
                 throw new UnsupportedOperationException();
             }
-
-            @Override
-            public void close() throws IOException {
-                //no-op
-            }
         });
 
         Assert.assertEquals(results.get(SAMValidationError.Type.INVALID_TAG_NM.getHistogramString()).getValue(), 1.0);

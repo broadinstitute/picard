@@ -169,6 +169,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             super.mergeAlignment();
         }
     }
+
     /**
      * Reads the aligned SAM records into a SortingCollection and returns an iterator over that collection
      */
