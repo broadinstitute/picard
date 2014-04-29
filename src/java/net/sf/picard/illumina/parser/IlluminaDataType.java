@@ -31,5 +31,5 @@ package net.sf.picard.illumina.parser;
  * @author jburke@broadinstitute.org
  */
 public enum IlluminaDataType {
-    Position, BaseCalls, QualityScores, RawIntensities, Noise, PF, Barcodes;
+    Position, BaseCalls, QualityScores, PF, Barcodes
 }

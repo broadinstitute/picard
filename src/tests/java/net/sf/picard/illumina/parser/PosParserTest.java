@@ -157,6 +157,7 @@ public class PosParserTest {
         }
 
         Assert.assertFalse(parser.hasNext());
+        parser.close();
     }
 
     @DataProvider(name = "multiTileData")
@@ -195,5 +196,6 @@ public class PosParserTest {
         }
 
         Assert.assertFalse(parser.hasNext());
+        parser.close();
     }
 }

@@ -24,177 +24,52 @@
 package net.sf.picard.illumina.parser;
 
 import net.sf.picard.PicardException;
-import net.sf.samtools.util.StringUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
- * A sorted map of tiles to Iterators, where each iterator traverses the cycle files for the given lane/tile.
+ * For per cycle files.  Maps a Cycle -> Tile -> List<File>
+ *
  * @author jburke@broadinstitute.org
  */
-class CycleIlluminaFileMap extends TreeMap<Integer, CycleFilesIterator> {
-    /** Return a CycleIlluminaFileMap with only the tiles listed and all of the cycles provided, throws an exception if it does not contain any of the tiles listed
+class CycleIlluminaFileMap extends TreeMap<Integer, IlluminaFileMap> {
+    /**
+     * Return a CycleIlluminaFileMap with only the tiles listed and all of the cycles provided.
      * Important NOTE: this DOES NOT eliminate cycles from the cycles parameter passed in that are missing in the cyclesFileIterator of any given lane in the CycleIlluminaFileMap
-     * */
-    public CycleIlluminaFileMap keep(List<Integer> tilesToKeep, final int [] cycles) {
-        if(tilesToKeep == null) {
-            tilesToKeep = new ArrayList<Integer>(this.keySet());
-        }
-
+     */
+    public CycleIlluminaFileMap keep(final List<Integer> tilesToKeep, final Set<Integer> cycles) {
         final CycleIlluminaFileMap ciMap = new CycleIlluminaFileMap();
-        for(final Integer tile : tilesToKeep) {
-            final CycleFilesIterator template = this.get(tile);
-            if(template != null) {
-                ciMap.put(tile, new CycleFilesIterator(this.get(tile), cycles));
+
+        if (cycles != null) {
+            for (final int cycle : cycles) {
+                final IlluminaFileMap template = this.get(cycle);
+                if (template != null) {
+                    ciMap.put(cycle, template.keep(tilesToKeep));
+                }
             }
         }
+
         return ciMap;
     }
 
     /**
      * Assert that this map has an iterator for all of the expectedTiles and each iterator has expectedCycles number
      * of files.  Also, assert that each cycle file for a given tile is the same size
-     * @param expectedTiles A list of tiles that should be in this map
+     *
+     * @param expectedTiles  A list of tiles that should be in this map
      * @param expectedCycles The total number of files(cycles) that should be in each CycledFilesIterator
      */
-    public void assertValid(final List<Integer> expectedTiles, final int [] expectedCycles) {
-        if(size() != expectedTiles.size()) {
-            throw new PicardException("Expected CycledIlluminaFileMap to contain " + expectedTiles + " tiles but only " + size() + " were found!");
+    public void assertValid(final List<Integer> expectedTiles, final int[] expectedCycles) {
+        if (size() != expectedCycles.length) {
+            throw new PicardException("Expected CycledIlluminaFileMap to contain " + expectedCycles.length + " cycles but only " + size() + " were found!");
         }
-
-        File curFile = null;
-
-        for (final int tile : expectedTiles) {
-            get(tile).assertValid(expectedCycles);
+        if (this.firstEntry().getValue().size() != expectedTiles.size()) {
+            throw new PicardException("Expected CycledIlluminaFileMap to contain " + expectedTiles.size()
+                    + " tiles but only " + this.firstEntry().getValue().size() + " were found!");
         }
     }
 
-    /**
-     * All files in a CycleFileMap should have a cycle directory (at this point in time). Return the filePath with the cycle
-     * in the cycle directory incremented by 1.
-     * @param cycleFile The cycleFile for a given tile/cycle
-     * @return A cycleFile with the same name but a cycleDir one greater than cycleFile
-     */
-    public static File incrementCycleCount(final File cycleFile) {
-        final File cycleDir = cycleFile.getParentFile();
-        final int cycle = Integer.parseInt(cycleDir.getName().substring(1, cycleDir.getName().lastIndexOf(".")));
-        return new File(cycleDir.getParentFile(), "C" + cycle + ".1" + File.separator + cycleFile.getName());
-    }
-
-    public static String remainingCyclesToString(final CycleFilesIterator cfi) {
-        String cycles = "";
-        if(cfi.hasNext()) {
-            cycles += cfi.getNextCycle();
-            cfi.next();
-        }
-
-        while(cfi.hasNext()) {
-            cycles += ", " + cfi.getNextCycle();
-            cfi.next();
-        }
-
-        return cycles;
-    }
-}
-
-/**
- * Given a lane directory, lane, tile number, and file extension get provide an iterator over files in the following order
- * <LaneDir>/<nextCycle>.1/s_<lane>_<tile>.<fileExt>
- * In other words iterate through the different cycle directory and find the file for the current cycle with the
- * given file extension while lane/tile stay the same.  Stop if the next file does not exist.
- */
- class CycleFilesIterator implements Iterator<File>, Iterable<File> {
-    protected final File parentDir;
-    protected final int lane;
-    private final int tile;
-    protected final String fileExt;
-    protected final int [] cycles;
-    protected int nextCycleIndex;
-
-    public CycleFilesIterator(final File laneDir, final int lane, final int tile, final int [] cycles, final String fileExt) {
-        this.parentDir = laneDir;
-        this.lane = lane;
-        this.tile = tile;
-        this.fileExt = fileExt;
-        this.cycles  = cycles;
-        this.nextCycleIndex = 0;
-    }
-
-    CycleFilesIterator(final CycleFilesIterator template, final int [] cycles) {
-        this(template.parentDir, template.lane, template.tile, (cycles != null) ? cycles : template.cycles, template.fileExt);
-    }
-
-    public void reset() {
-        this.nextCycleIndex = 0;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return nextCycleIndex < cycles.length;
-    }
-
-    @Override
-    public File next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException(summarizeIterator());
-        }
-
-        final File curFile = getCurrentFile();
-
-        nextCycleIndex++;
-        return curFile;
-    }
-
-    /** Allow for overriding */
-    protected File getCurrentFile() {
-        return getFileForCycle(cycles[nextCycleIndex]);
-    }
-
-    /** Allow for overriding */
-    protected File getFileForCycle(final int cycle) {
-        final File cycleDir = new File(parentDir, "C" + cycle + ".1");
-        return new File(cycleDir, "s_" + lane + "_" + tile + fileExt);
-    }
-
-    public int getNextCycle() {
-        return cycles[nextCycleIndex];
-    }
-
-    private String summarizeIterator() {
-        String cyclesSummary = "";
-        if(cycles.length > 0) {
-            cyclesSummary = String.valueOf(cycles[0]);
-            for(int i = 1; i < cycles.length; i++) {
-                cyclesSummary += ", " + String.valueOf(cycles[i]);
-            }
-        }
-
-        return " Parent dir (" + parentDir.getAbsolutePath() + ")" +
-                " Lane (" + lane + ") Tile (" + tile + ") FileExt(" + fileExt + ")" +
-                " CycleIndex (" + nextCycleIndex + ")" + "Cycles(" + cyclesSummary + ")";
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Remove is not supported by " + CycleFilesIterator.class.getName());
-    }
-
-    @Override
-    public Iterator<File> iterator() {
-        return this;
-    }
-
-    public void assertValid(final int[] expectedCycles) {
-        if (!Arrays.equals(cycles, expectedCycles)) {
-            // TODO: Make more informative if necessary
-            throw new PicardException(summarizeIterator() + " does not have expected cycles");
-        }
-        for (final int cycle : expectedCycles) {
-            final File file = getFileForCycle(cycle);
-            if (!file.exists()) {
-                throw new PicardException(file.getAbsolutePath() + " does not exist for " + summarizeIterator());
-            }
-        }
-    }
 }

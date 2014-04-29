@@ -26,6 +26,7 @@ package net.sf.picard.reference;
 
 import net.sf.picard.PicardException;
 import net.sf.samtools.SAMSequenceRecord;
+import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -70,6 +71,7 @@ public class IndexedFastaSequenceFileTest{
         long startTime = System.currentTimeMillis();
         Assert.assertNotNull(sequenceFile);
         long endTime = System.currentTimeMillis();
+        CloserUtil.close(sequenceFile);
 
         System.err.printf("testOpenFile runtime: %dms%n", (endTime - startTime)) ;
     }
@@ -84,6 +86,8 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),firstBasesOfChrM,"First n bases of chrM are incorrect");
 
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testFirstSequence runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -96,6 +100,8 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getName(),"chrM","Sequence contig is not correct");
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),extendedBasesOfChrM,"First n bases of chrM are incorrect");
+
+        CloserUtil.close(sequenceFile);
 
         System.err.printf("testFirstSequenceExtended runtime: %dms%n", (endTime - startTime)) ;
     }
@@ -115,6 +121,8 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),truncated,"First n bases of chrM are incorrect");
 
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testReadStartingInCenterOfFirstLine runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -133,6 +141,8 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),truncated,"First n bases of chrM are incorrect");
 
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testReadStartingInCenterOfMiddleLine runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -148,6 +158,9 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),StringUtil.bytesToString(expectedSequence.getBases()),"chrM is incorrect");
 
+        CloserUtil.close(originalSequenceFile);
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testFirstCompleteContigRead runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -159,6 +172,9 @@ public class IndexedFastaSequenceFileTest{
         }
         finally {
             long endTime = System.currentTimeMillis();
+
+            CloserUtil.close(sequenceFile);
+
             System.err.printf("testReadThroughEndOfContig runtime: %dms%n", (endTime - startTime)) ;
         }
     }
@@ -171,6 +187,9 @@ public class IndexedFastaSequenceFileTest{
          }
          finally {
              long endTime = System.currentTimeMillis();
+
+             CloserUtil.close(sequenceFile);
+
              System.err.printf("testReadPastEndOfContig runtime: %dms%n", (endTime - startTime)) ;
          }
      }
@@ -189,6 +208,9 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),1,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),StringUtil.bytesToString(expectedSequence.getBases()),"chrX_random is incorrect");
 
+        CloserUtil.close(originalSequenceFile);
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testLastCompleteContigRead runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -205,6 +227,8 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),1,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),lastBasesOfChr20,"First n bases of chr1 are incorrect");
 
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testFirstOfChr1 runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -219,6 +243,9 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getName(), "chrM","Sequence contig is not correct");
         Assert.assertEquals(sequence.getContigIndex(), 0,"Sequence contig index is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),StringUtil.bytesToString(expectedSequence.getBases()),"chrM is incorrect");
+
+        CloserUtil.close(originalSequenceFile);
+        CloserUtil.close(sequenceFile);
 
         System.err.printf("testFirstElementOfIterator runtime: %dms%n", (endTime - startTime)) ;
     }
@@ -239,6 +266,9 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.length(),expectedSequence.length(),"Sequence size is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),StringUtil.bytesToString(expectedSequence.getBases()),"chr1 is incorrect");
 
+        CloserUtil.close(originalSequenceFile);
+        CloserUtil.close(sequenceFile);
+
         System.err.printf("testNextElementOfIterator runtime: %dms%n", (endTime - startTime)) ;
     }
 
@@ -258,6 +288,9 @@ public class IndexedFastaSequenceFileTest{
         Assert.assertEquals(sequence.getContigIndex(),0,"Sequence contig index is not correct");
         Assert.assertEquals(sequence.length(),expectedSequence.length(), "Sequence size is not correct");
         Assert.assertEquals(StringUtil.bytesToString(sequence.getBases()),StringUtil.bytesToString(expectedSequence.getBases()),"chrM is incorrect");
+
+        CloserUtil.close(originalSequenceFile);
+        CloserUtil.close(sequenceFile);
 
         System.err.printf("testReset runtime: %dms%n", (endTime - startTime)) ;
     }

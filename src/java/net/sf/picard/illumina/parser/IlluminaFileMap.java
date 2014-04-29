@@ -29,34 +29,21 @@ import java.io.File;
 import java.util.*;
 
 /**
- * For "non-cycle" files (e.g. qseqs and other files that have multiple cycles per file).  Maps a Tile -> File
+ * For "non-cycle" files (files that have multiple cycles per file).  Maps a Tile -> File
  * @author jburke@broadinstitute.org
  */
 class IlluminaFileMap extends TreeMap<Integer, File> {
-    public IlluminaFileMap() {
-    }
-
-    //For testing purposes
-    public IlluminaFileMap(final List<Integer> tiles, final List<File> files) {
-        if(tiles.size() != files.size()) {
-            throw new PicardException("Tiles and Files were not of the same length: Tiles(" + tiles.size() + ") Files(" + files.size() + ") ");
-        }
-
-        for(int i = 0; i < tiles.size(); i++) {
-            put(tiles.get(i), files.get(i));
-        }
-    }
 
     /** Return a file map that includes only the tiles listed */
-    public IlluminaFileMap keep(final List<Integer> toInclude) {
-        final IlluminaFileMap fm = new IlluminaFileMap();
-        for(final Integer tile : toInclude) {
+    public IlluminaFileMap keep(final List<Integer> tilesToKeep) {
+        final IlluminaFileMap fileMap = new IlluminaFileMap();
+        for(final Integer tile : tilesToKeep) {
             final File file = this.get(tile);
             if(file != null) {
-                fm.put(tile, file);
+                fileMap.put(tile, file);
             }
         }
-        return fm;
+        return fileMap;
     }
 
     /**
@@ -65,7 +52,7 @@ class IlluminaFileMap extends TreeMap<Integer, File> {
      * @param startingTile The first File in the returned list will correspond to this tile
      * @return A List of files for all tiles >= startingTile that are contained in this FileMap
      */
-    public List<File> getFilesStartingAt(int startingTile) {
+    public List<File> getFilesStartingAt(final int startingTile) {
         return new ArrayList<File>(this.tailMap(startingTile).values());
     }
 }

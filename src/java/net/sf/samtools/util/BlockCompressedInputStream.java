@@ -291,6 +291,7 @@ public class BlockCompressedInputStream extends InputStream implements LocationA
             mLastBlockLength = 0;
             readBlock();
             available = available();
+            System.out.println(mFile.getSource() +" " + mFile.position());
         }
         if (uncompressedOffset > available ||
                 (uncompressedOffset == available && !eof())) {

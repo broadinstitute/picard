@@ -26,6 +26,8 @@ package net.sf.picard.reference;
 
 import net.sf.samtools.SAMSequenceDictionary;
 
+import java.io.IOException;
+
 /**
  * An interface for working with files of reference sequences regardless of the file format
  * being used.
@@ -82,4 +84,6 @@ public interface ReferenceSequenceFile {
      * @return Reference name, file name, or something other human-readable representation.
      */
     public String toString();
+
+    public void close() throws IOException;
 }

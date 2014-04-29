@@ -45,25 +45,31 @@ interface IlluminaParser<DATA_TYPE extends IlluminaData> extends Iterator<DATA_T
 
     /**
      * Is there a DATA_TYPE object for another cluster remaining.
+     *
      * @return TRUE if there is a DATA_TYPE object for the next cluster that can be provided by
      * next
      */
     boolean hasNext();
 
-    /** Get the tile for the NEXT DATA_TYPE object that will be returned by this parser.  This should
-     * be called BEFORE next if you want the tile for the value returned by next */
+    /**
+     * Get the tile for the NEXT DATA_TYPE object that will be returned by this parser.  This should
+     * be called BEFORE next if you want the tile for the value returned by next
+     */
     public int getTileOfNextCluster();
 
     /**
      * Given the expected tiles and cycles for this run, make sure this parser can provide data for
-     * all tiles/cycles or throw's an exception if it's missing any required data or data structures
+     * all tiles/cycles or throws an exception if it's missing any required data or data structures
      * it relies on do not disagree with the provided tiles/cycles
-     * @param tiles The number of tiles in the current run
+     *
+     * @param tiles  The number of tiles in the current run
      * @param cycles The number of cycles in the current run
      */
-    void verifyData(final List<Integer> tiles, final int [] cycles);
+    void verifyData(final List<Integer> tiles, final int[] cycles);
 
     /** The DataTypes that this parser can provide */
     Set<IlluminaDataType> supportedTypes();
+
+    void close();
 
 }
