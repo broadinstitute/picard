@@ -55,11 +55,13 @@ abstract class AbstractFastaSequenceFile implements ReferenceSequenceFile {
 
             try {
                 final SAMTextHeaderCodec codec = new SAMTextHeaderCodec();
-                final SAMFileHeader header = codec.decode(new BufferedLineReader(new FileInputStream(dictionary)),
+                final BufferedLineReader reader = new BufferedLineReader(new FileInputStream(dictionary));
+                final SAMFileHeader header = codec.decode(reader,
                         dictionary.toString());
                 if (header.getSequenceDictionary() != null && header.getSequenceDictionary().size() > 0) {
                     this.sequenceDictionary = header.getSequenceDictionary();
                 }
+                reader.close();
             }
             catch (Exception e) {
                 throw new PicardException("Could not open sequence dictionary file: " + dictionary, e);

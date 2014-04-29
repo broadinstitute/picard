@@ -2,9 +2,6 @@ package net.sf.picard.illumina.parser.fakers;
 
 import java.nio.ByteBuffer;
 
-/**
- * Created by jcarey on 3/13/14.
- */
 public class BclFileFaker extends FileFaker {
 
     @Override

@@ -35,6 +35,7 @@ import java.util.List;
  */
 public class MultiTileFilterParser extends MultiTileParser<PfData> {
     private final FilterFileReader reader;
+
     public MultiTileFilterParser(final TileIndex tileIndex, final List<Integer> requestedTiles, final File filterFile) {
         super(tileIndex, requestedTiles, Collections.singleton(IlluminaDataType.PF));
         reader = new FilterFileReader(filterFile);
@@ -54,5 +55,10 @@ public class MultiTileFilterParser extends MultiTileParser<PfData> {
     @Override
     void skipRecords(final int numToSkip) {
         reader.skipRecords(numToSkip);
+    }
+
+    @Override
+    public void close() {
+        //no-op
     }
 }

@@ -74,4 +74,9 @@ public class MultiTileLocsParser extends MultiTileParser<PositionalData> {
     void skipRecords(final int numToSkip) {
         reader.skipRecords(numToSkip);
     }
+
+    @Override
+    public void close() {
+        reader.close();
+    }
 }

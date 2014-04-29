@@ -1,94 +1,131 @@
- /*
- * The MIT License
- *
- * Copyright (c) 2012 The Broad Institute
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+/*
+* The MIT License
+*
+* Copyright (c) 2012 The Broad Institute
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 package net.sf.picard.illumina.parser.readers;
 
- import net.sf.picard.PicardException;
- import net.sf.picard.util.UnsignedTypeUtil;
- import net.sf.samtools.util.BlockCompressedInputStream;
- import net.sf.samtools.util.CloseableIterator;
- import net.sf.samtools.util.CloserUtil;
- import net.sf.samtools.util.IOUtil;
+import net.sf.picard.PicardException;
+import net.sf.picard.illumina.parser.BclData;
+import net.sf.picard.illumina.parser.TileIndex;
+import net.sf.picard.util.UnsignedTypeUtil;
+import net.sf.samtools.Defaults;
+import net.sf.samtools.util.BlockCompressedInputStream;
+import net.sf.samtools.util.CloseableIterator;
+import net.sf.samtools.util.CloserUtil;
+import net.sf.samtools.util.IOUtil;
+import net.sf.samtools.util.RuntimeIOException;
 
- import java.io.EOFException;
- import java.io.File;
- import java.io.FileInputStream;
- import java.io.FileNotFoundException;
- import java.io.IOException;
- import java.io.InputStream;
- import java.nio.ByteBuffer;
- import java.nio.ByteOrder;
- import java.util.zip.GZIPInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 /**
  * BCL Files are base call and quality score binary files containing a (base,quality) pair for successive clusters.
  * The file is structured as followed:
- *  Bytes 1-4 : unsigned int numClusters
- *  Bytes 5-numClusters + 5 : 1 byte base/quality score
- *
- *  The base/quality scores are organized as follows (with one exception, SEE BELOW):
- *  The right 2 most bits (these are the LEAST significant bits) indicate the base, where
- *  A=00(0x00), C=01(0x01), G=10(0x02), and T=11(0x03)
- *
- *  The remaining bytes compose the quality score which is an unsigned int.
- *
- *  EXCEPTION: If a byte is entirely 0 (e.g. byteRead == 0) then it is a no call, the base
- *  becomes '.' and the Quality becomes 2, the default illumina masking value
- *
- *  (E.g. if we get a value in binary of 10001011 it gets transformed as follows:
- *
- *  Value read: 10001011(0x8B)
- *
- *  Quality     Base
- *
- *  100010      11
- *  00100010    0x03
- *  0x22        T
- *  34          T
- *
- *  So the output base/quality will be a (T/34)
+ * Bytes 1-4 : unsigned int numClusters
+ * Bytes 5-numClusters + 5 : 1 byte base/quality score
+ * <p/>
+ * The base/quality scores are organized as follows (with one exception, SEE BELOW):
+ * The right 2 most bits (these are the LEAST significant bits) indicate the base, where
+ * A=00(0x00), C=01(0x01), G=10(0x02), and T=11(0x03)
+ * <p/>
+ * The remaining bytes compose the quality score which is an unsigned int.
+ * <p/>
+ * EXCEPTION: If a byte is entirely 0 (e.g. byteRead == 0) then it is a no call, the base
+ * becomes '.' and the Quality becomes 2, the default illumina masking value
+ * <p/>
+ * (E.g. if we get a value in binary of 10001011 it gets transformed as follows:
+ * <p/>
+ * Value read: 10001011(0x8B)
+ * <p/>
+ * Quality     Base
+ * <p/>
+ * 100010      11
+ * 00100010    0x03
+ * 0x22        T
+ * 34          T
+ * <p/>
+ * So the output base/quality will be a (T/34)
  */
-public class BclReader implements CloseableIterator<BclReader.BclValue> {
-    /** The size of the opening header (consisting solely of numClusters*/
+public class BclReader implements CloseableIterator<BclData> {
+    private static final byte BASE_MASK = 0x0003;
     private static final int HEADER_SIZE = 4;
-    
+    private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
+
+    private final InputStream[] streams;
+    private final int[] outputLengths;
+    int[] numClustersPerCycle;
+
     private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
+    private BclData queue = null;
 
-    /** The number of clusters provided in this BCL */
-    public final long numClusters;
+    public BclReader(final List<File> bclsForOneTile, final int[] outputLengths,
+                     final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean seekable) {
+        try {
+            this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
+            this.outputLengths = outputLengths;
 
-    private final InputStream inputStream;
-    private final String filePath;
+            int cycles = 0;
+            for (final int outputLength : outputLengths) {
+                cycles += outputLength;
+            }
+            this.streams = new InputStream[cycles];
+            this.numClustersPerCycle = new int[cycles];
 
-    /* This strips off the leading bits in order to compare the read byte against the static values below */
-    private final static byte BASE_MASK = 0x0003;
-    private final static byte A_VAL = 0x00;
-    private final static byte C_VAL = 0x01;
-    private final static byte G_VAL = 0x02;
-    private final static byte T_VAL = 0x03;
+            final ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
+            byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-    /** The index to the next cluster that will be returned by this reader */
-    private long nextCluster;
+            for (int i = 0; i < cycles; ++i) {
+                final File bclFile = bclsForOneTile.get(i);
+                if (bclFile == null) {
+                    close();
+                    throw new RuntimeIOException(String.format("Could not find BCL file for cycle %d", i));
+                }
+                final String filePath = bclFile.getName();
+                final boolean isGzip = filePath.endsWith(".gz");
+                final boolean isBgzf = filePath.endsWith(".bgzf");
+                final InputStream stream = open(bclFile, seekable, isGzip, isBgzf);
+                final int read = stream.read(byteBuffer.array());
+                if (read != HEADER_SIZE) {
+                    close();
+                    throw new RuntimeIOException(String.format("BCL %s has invalid header structure.", bclFile.getAbsoluteFile()));
+                }
+                numClustersPerCycle[i] = byteBuffer.getInt();
+                if (!isBgzf && !isGzip) {
+                    assertProperFileStructure(bclFile, numClustersPerCycle[i], stream);
+                }
+                this.streams[i] = stream;
+                byteBuffer.clear();
+            }
+        } catch (final IOException ioe) {
+            throw new RuntimeIOException(ioe);
+        }
+    }
 
     public static boolean isGzipped(final File file) {
         return file.getAbsolutePath().endsWith(".gz");
@@ -122,7 +159,7 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
             if (headerBytesRead != HEADER_SIZE) {
                 throw new PicardException("Malformed file, expected header of size " + HEADER_SIZE + " but received " + headerBytesRead);
             }
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new PicardException("Unable to read header for file (" + filePath + ")", ioe);
         }
 
@@ -131,165 +168,176 @@ public class BclReader implements CloseableIterator<BclReader.BclValue> {
         return UnsignedTypeUtil.uIntToLong(headerBuf.getInt());
     }
 
-    public class BclValue {
-        public final byte base;
-        public final byte quality;
 
-        public BclValue(final byte base, final byte quality) {
-            this.base = base;
-            this.quality = quality;
+    public BclReader(final File bclFile, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean seekable) {
+        try {
+
+            this.outputLengths = new int[]{1};
+            this.streams = new InputStream[1];
+            this.numClustersPerCycle = new int[]{1};
+            this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
+
+            final ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
+            final String filePath = bclFile.getName();
+            final boolean isGzip = filePath.endsWith(".gz");
+            final boolean isBgzf = filePath.endsWith(".bgzf");
+            final InputStream stream = open(bclFile, seekable, isGzip, isBgzf);
+            final int read = stream.read(byteBuffer.array());
+
+            if (read != HEADER_SIZE) {
+                throw new RuntimeIOException(String.format("BCL %s has invalid header structure.", bclFile.getAbsoluteFile()));
+            }
+
+            byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+            this.numClustersPerCycle[0] = byteBuffer.getInt();
+            if (!isBgzf && !isGzip) {
+                assertProperFileStructure(bclFile, this.numClustersPerCycle[0], stream);
+            }
+            this.streams[0] = stream;
+        } catch (final IOException ioe) {
+            throw new PicardException("IOException opening file " + bclFile.getAbsoluteFile(), ioe);
         }
     }
 
-    public static BclReader make(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
-        return new BclReader(file, bclQualityEvaluationStrategy, false);    
+    void assertProperFileStructure(final File file, final int numClusters, final InputStream stream) {
+        final long elementsInFile = file.length() - HEADER_SIZE;
+        if (numClusters != elementsInFile) {
+            CloserUtil.close(stream);
+            throw new PicardException("Expected " + numClusters + " in file but found " + elementsInFile);
+        }
     }
 
-    /** 
-     * Produces a {@link net.sf.picard.illumina.parser.readers.BclReader} appropriate for when the consumer intends to call 
-     * {@link net.sf.picard.illumina.parser.readers.BclReader#seek(long)}.  If this functionality is not required, call
-     * {@link net.sf.picard.illumina.parser.readers.BclReader#make(java.io.File, BclQualityEvaluationStrategy)}.
-     */
-    public static BclReader makeSeekable(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy) {
-        return new BclReader(file, bclQualityEvaluationStrategy, true);
-    }
-
-    BclReader(final File file, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final boolean requiresSeekability) {
-        this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
-
-        filePath = file.getAbsolutePath();
-        final boolean isGzip = BclReader.isGzipped(file);
-        final boolean isBgzf = BclReader.isBlockGzipped(file);
+    InputStream open(final File file, final boolean seekable, final boolean isGzip, final boolean isBgzf) throws IOException {
+        final String filePath = file.getAbsolutePath();
 
         try {
             // Open up a buffered stream to read from the file and optionally wrap it in a gzip stream
             // if necessary
             if (isBgzf) {
                 // Only BlockCompressedInputStreams can seek, and only if they are fed a SeekableStream.
-                inputStream = new BlockCompressedInputStream(IOUtil.maybeBufferedSeekableStream(file));
+                return new BlockCompressedInputStream(IOUtil.maybeBufferedSeekableStream(file));
             } else if (isGzip) {
-                if (requiresSeekability) { 
+                if (seekable) {
                     throw new IllegalArgumentException(
-                        String.format("Cannot create a seekable reader for gzip bcl: %s.", filePath)
+                            String.format("Cannot create a seekable reader for gzip bcl: %s.", filePath)
                     );
                 }
-                inputStream = new GZIPInputStream(IOUtil.maybeBufferInputStream(new FileInputStream(file)));
+                return (IOUtil.maybeBufferInputStream(new GZIPInputStream(new FileInputStream(file), Defaults.BUFFER_SIZE / 2),
+                        Defaults.BUFFER_SIZE / 2));
             } else {
-                if (requiresSeekability) {
+                if (seekable) {
                     throw new IllegalArgumentException(
-                        String.format("Cannot create a seekable reader for provided bcl: %s.", filePath)
+                            String.format("Cannot create a seekable reader for provided bcl: %s.", filePath)
                     );
                 }
-                inputStream = IOUtil.maybeBufferInputStream(new FileInputStream(file));
+                return IOUtil.maybeBufferInputStream(new FileInputStream(file));
             }
-        } catch (FileNotFoundException fnfe) {
+        } catch (final FileNotFoundException fnfe) {
             throw new PicardException("File not found: (" + filePath + ")", fnfe);
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new PicardException("Error reading file: (" + filePath + ")", ioe);
         }
+    }
 
-        // numClusters is used both for the file structure checks and in hasNext()
-        numClusters = getNumClusters();
-
-        if (file.length() == 0) {
-            throw new PicardException("Zero length BCL file detected: " + filePath);
+    public void close() {
+        for (final InputStream stream : this.streams) {
+            CloserUtil.close(stream);
         }
-        if (!isGzip && !isBgzf) {
-            // The file structure checks rely on the file size (as information is stored as individual bytes) but
-            // we can't reliably know the number of uncompressed bytes in the file ahead of time for gzip files. Only
-            // run the main check
-            assertProperFileStructure(file);
-        }
+    }
 
-        nextCluster = 0;
+    @Override
+    public boolean hasNext() {
+        if (queue == null) {
+            advance();
+        }
+        return queue != null;
     }
 
     private long getNumClusters() {
-        return getNumberOfClusters(filePath, inputStream);
+        return numClustersPerCycle[0];
     }
 
     protected void assertProperFileStructure(final File file) {
         final long elementsInFile = file.length() - HEADER_SIZE;
-        if (numClusters != elementsInFile) {
-            throw new PicardException("Expected " + numClusters + " in file " + filePath + " but found " + elementsInFile);
+        if (numClustersPerCycle[0] != elementsInFile) {
+            throw new PicardException("Expected " + numClustersPerCycle[0]  + " in file " + file.getAbsolutePath() + " but found " + elementsInFile);
+
         }
     }
 
-    public final boolean hasNext() {
-        return this.nextCluster < this.numClusters;
-    }
-
-    public BclValue next() {
-        // TODO(ish) There are multiple optimizations that could be made here if we find that this becomes a pinch
-        // point. For instance base & quality could be moved into BclValue, element & elements could be moved to be
-        // class members - all in an attempt to reduce the number of allocations being made.
-        final byte base;
-        final byte quality;
-
-        final byte element;
-        final byte[] elements = new byte[1];
-        try {
-            if (inputStream.read(elements) != 1) {
-                throw new PicardException("Error when reading byte from file (" + filePath + ")");
-            }
-        } catch (EOFException eofe) {
-            throw new PicardException("Attempted to read byte from file but none were available: (" + filePath + ")", eofe);
-        }catch (IOException ioe) {
-            throw new PicardException("Error when reading byte from file (" + filePath + ")", ioe);
+    public BclData next() {
+        if (queue == null) {
+            advance();
         }
 
-        element = elements[0];
-        if(element == 0) { //NO CALL, don't confuse with an A call
-            base = '.';
-            quality = 2;
-        } else {
-            switch(element & BASE_MASK) {
-                case A_VAL:
-                    base = 'A';
-                    break;
-
-                case C_VAL:
-                    base = 'C';
-                    break;
-
-                case G_VAL:
-                    base = 'G';
-                    break;
-
-                case T_VAL:
-                    base = 'T';
-                    break;
-
-                default:
-                    throw new PicardException("Impossible case! BCL Base value neither A, C, G, nor T! Value(" + (element & BASE_MASK) + ") + in file(" + filePath + ")");
-            }
-
-            quality = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte)(UnsignedTypeUtil.uByteToInt(element) >>> 2));
-        }
-
-        ++nextCluster;
-        return new BclValue(base, quality);
+        final BclData data = queue;
+        queue = null;
+        return data;
     }
 
-    public void close() {
-        CloserUtil.close(inputStream);
-    }
-
-    public void seek(final long virtualFilePointer) {
-        if (!(inputStream instanceof BlockCompressedInputStream)) {
-            throw new UnsupportedOperationException("Seeking only allowed on bzgf");
-        } else {
-            final BlockCompressedInputStream bcis = (BlockCompressedInputStream)inputStream;
-            try {
-                ((BlockCompressedInputStream) inputStream).seek(virtualFilePointer);
-            } catch (IOException e) {
-                throw new PicardException("Problem seeking in " + filePath, e);
-            }
-        }
-    }
-
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    void advance() {
+        int totalCycleCount = 0;
+        final BclData data = new BclData(outputLengths);
+        for (int read = 0; read < outputLengths.length; read++) {
+            for (int cycle = 0; cycle < outputLengths[read]; ++cycle) {
+                try {
+                    final int readByte = this.streams[totalCycleCount].read();
+                    if (readByte == -1) {
+                        queue = null;
+                        return;
+                    }
+
+                    if (readByte == 0) {
+                        //NO CALL, don't confuse with an A call
+                        data.bases[read][cycle] = (byte) '.';
+                        data.qualities[read][cycle] = (byte) 2;
+                    } else {
+                        data.bases[read][cycle] = BASE_LOOKUP[readByte & BASE_MASK];
+                        data.qualities[read][cycle] = bclQualityEvaluationStrategy.reviseAndConditionallyLogQuality((byte) (readByte >>> 2));
+                    }
+                    totalCycleCount++;
+                } catch (final IOException ioe) {
+                    throw new RuntimeIOException(ioe);
+                }
+
+            }
+        }
+        this.queue = data;
+    }
+
+    public static BclReader makeSeekable(final List<File> files, final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final int[] outputLengths) {
+        return new BclReader(files, outputLengths, bclQualityEvaluationStrategy, true);
+    }
+
+    public int seek(final List<File> files, final TileIndex tileIndex, final int currentTile) {
+        int count = 0;
+        int numClustersInTile = 0;
+        for (final InputStream inputStream : streams) {
+            final TileIndex.TileIndexRecord tileIndexRecord = tileIndex.findTile(currentTile);
+            final BclIndexReader bclIndexReader = new BclIndexReader(files.get(count));
+            final long virtualFilePointer = bclIndexReader.get(tileIndexRecord.getZeroBasedTileNumber());
+            if (!(inputStream instanceof BlockCompressedInputStream)) {
+                throw new UnsupportedOperationException("Seeking only allowed on bzgf");
+            } else {
+                try {
+                    if (tileIndex.getNumTiles() != bclIndexReader.getNumTiles()) {
+                        throw new PicardException(String.format("%s.getNumTiles(%d) != %s.getNumTiles(%d)",
+                                tileIndex.getFile().getAbsolutePath(), tileIndex.getNumTiles(), bclIndexReader.getBciFile().getAbsolutePath(), bclIndexReader.getNumTiles()));
+                    }
+                    ((BlockCompressedInputStream) inputStream).seek(virtualFilePointer);
+                    numClustersInTile = tileIndexRecord.getNumClustersInTile();
+                } catch (final IOException e) {
+                    throw new PicardException("Problem seeking to " + virtualFilePointer, e);
+                }
+            }
+            count++;
+        }
+        return numClustersInTile;
     }
 }
 

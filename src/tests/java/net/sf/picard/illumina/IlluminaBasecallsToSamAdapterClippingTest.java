@@ -37,27 +37,25 @@ import java.io.File;
  */
 public class IlluminaBasecallsToSamAdapterClippingTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina");
-    //private static final File SEQUENCE_DICTIONARY = new File(TEST_DATA_DIR, "Homo_sapiens_assembly18.seqdict.sam");
+    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/125T125T/Data/Intensities/BaseCalls");
     private static final String ALIAS = "myalias";
     private static final String RUN_BARCODE = "305PJAAXX080716";
-    private static final String READ_GROUP_NAME = "0";
 
     /**
      * Run IlluminaBasecallsToSam on a few test cases, and verify that results agree with hand-checked expectation.
      */
     @Test(dataProvider="data")
-    public void testBasic(String LANE, String readStructure) throws Exception {
+    public void testBasic(final String LANE, final String readStructure) throws Exception {
         // Create the SAM file from Gerald output
         final File samFile = File.createTempFile("." + LANE + ".illuminaBasecallsToSam", ".sam");
         samFile.deleteOnExit();
         final String[] illuminaArgv = {
-                "BASECALLS_DIR=" + TEST_DATA_DIR + "/IlluminaTests/BasecallsDir",
+                "BASECALLS_DIR=" + TEST_DATA_DIR,
                 "LANE=" + LANE,
                 "RUN_BARCODE=" + RUN_BARCODE,
                 "READ_STRUCTURE=" + readStructure,
                 "OUTPUT=" + samFile,
-                "ALIAS=" + ALIAS,
+                "ALIAS=" + ALIAS
         };
         Assert.assertEquals(new IlluminaBasecallsToSam().instanceMain(illuminaArgv), 0);
 
@@ -68,32 +66,26 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
 
         // look for clipped adaptor attribute in lane 3 PE (2) and in lane 6 (1) non-PE
         int count = 0;   int matchCount = 0;
-        for (SAMRecord record : samReader) {
+        for (final SAMRecord record : samReader) {
             if (record.getIntegerAttribute(ReservedTagConstants.XT) != null) {
                 count ++;
-                if ((count == 1 || count ==2) && LANE.equals("3")){
-                    Assert.assertEquals (65, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
+                if ((count == 1 || count == 2) && LANE.equals("2")){
+                    Assert.assertEquals (114, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
                     matchCount++;
-                } else if (count == 1 && LANE.equals("6")){
-                    Assert.assertEquals (141, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
+                } else if (count == 1 || count == 2 && LANE.equals("1")) {
+                    Assert.assertEquals(68, (int) record.getIntegerAttribute(ReservedTagConstants.XT));
                     matchCount++;
-                } else {
-                    Assert.assertTrue(false, "Lane:" + LANE + " " + count +
-                        " Unexpected adapter trim " + record.getIntegerAttribute(ReservedTagConstants.XT) +
-                        " count=" + count + " matchCount=" + matchCount +
-                        " at record " + record);
                 }
             }
         }
+        samReader.close();
     }
 
     @DataProvider(name="data")
     private Object[][] getIlluminaBasecallsToSamTestData(){
         return new Object[][] {
-                {"1", "76T76T"},
-                {"2", "76T"},
-                {"4", "76T76T"},
-                {"5", "76T"},
+                {"1", "125T125T"},
+                {"2", "125T125T"},
         };
     }
 

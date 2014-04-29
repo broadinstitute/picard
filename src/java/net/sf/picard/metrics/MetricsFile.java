@@ -27,6 +27,7 @@ package net.sf.picard.metrics;
 import net.sf.picard.PicardException;
 import net.sf.picard.util.FormatUtil;
 import net.sf.picard.util.Histogram;
+import net.sf.samtools.util.CloserUtil;
 import net.sf.samtools.util.StringUtil;
 
 import java.io.*;
@@ -267,7 +268,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
 
     /** Gets the type of the metrics bean being used. */
     private Class<?> getBeanType() {
-        if (this.metrics == null || this.metrics.isEmpty()) {
+        if (this.metrics.isEmpty()) {
             return null;
         } else {
             return this.metrics.get(0).getClass();
@@ -300,7 +301,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                     try {
                         header = (Header) loadClass(className, true).newInstance();
                     }
-                    catch (Exception e) {
+                    catch (final Exception e) {
                         throw new PicardException("Error load and/or instantiating an instance of " + className, e);
                     }
                 }
@@ -334,7 +335,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                     try {
                         type = loadClass(className, true);
                     }
-                    catch (ClassNotFoundException cnfe) {
+                    catch (final ClassNotFoundException cnfe) {
                         throw new PicardException("Could not locate class with name " + className, cnfe);
                     }
 
@@ -346,7 +347,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                         try {
                             fields[i] = type.getField(fieldNames[i]);
                         }
-                        catch (Exception e) {
+                        catch (final Exception e) {
                             throw new PicardException("Could not get field with name " + fieldNames[i] +
                                 " from class " + type.getName());
                         }
@@ -358,11 +359,11 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                             break;
                         }
                         else {
-                            String[] values = line.split(SEPARATOR, -1);
+                            final String[] values = line.split(SEPARATOR, -1);
                             BEAN bean = null;
 
                             try { bean = (BEAN) type.newInstance(); }
-                            catch (Exception e) { throw new PicardException("Error instantiating a " + type.getName(), e); }
+                            catch (final Exception e) { throw new PicardException("Error instantiating a " + type.getName(), e); }
 
                             for (int i=0; i<fields.length; ++i) {
                                 Object value = null;
@@ -371,7 +372,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                                 }
 
                                 try { fields[i].set(bean, value); }
-                                catch (Exception e) {
+                                catch (final Exception e) {
                                     throw new PicardException("Error setting field " + fields[i].getName() +
                                             " on class of type " + type.getName(), e);
                                 }
@@ -393,7 +394,7 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 Class<?> keyClass = null;
 
                 try { keyClass = loadClass(keyClassName, true); }
-                catch (ClassNotFoundException cnfe) { throw new PicardException("Could not load class with name " + keyClassName); }
+                catch (final ClassNotFoundException cnfe) { throw new PicardException("Could not load class with name " + keyClassName); }
 
                 // Read the next line with the bin and value labels
                 final String[] labels = in.readLine().split(SEPARATOR);
@@ -413,8 +414,11 @@ public class MetricsFile<BEAN extends MetricBase, HKEY extends Comparable> {
                 }
             }
         }
-        catch (IOException ioe) {
+        catch (final IOException ioe) {
             throw new PicardException("Could not read metrics from reader.", ioe);
+        }
+        finally{
+            CloserUtil.close(in);
         }
     }
 

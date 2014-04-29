@@ -141,6 +141,7 @@ public class FastaSequenceIndex implements Iterable<FastaSequenceIndexEntry> {
                 // Build sequence structure
                 add(new FastaSequenceIndexEntry(contig,location,size,basesPerLine,bytesPerLine, sequenceIndex++) );
             }
+            scanner.close();
         } catch (FileNotFoundException e) {
             throw new PicardException("Fasta index file should be found but is not: " + indexFile, e);
         }
