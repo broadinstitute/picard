@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
+import java.util.Map;
+import java.util.HashMap;
 
 public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
 
@@ -136,6 +138,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
     @Override
     public List<String> verify(final List<Integer> expectedTiles, final int[] expectedCycles) {
         final List<String> failures = new LinkedList<String>();
+        final Map<Integer, Long> tileToFileLengthMap = new HashMap<Integer, Long>();
 
         if (!base.exists()) {
             failures.add("Base directory(" + base.getAbsolutePath() + ") does not exist!");
@@ -143,20 +146,20 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
             final CycleIlluminaFileMap cfm = getFiles(expectedTiles, expectedCycles);
             for (final int currentCycle : expectedCycles) {
                 final IlluminaFileMap fileMap = cfm.get(currentCycle);
-                Long cycleSize = null;
                 if (fileMap != null) {
                     for (final int tile : expectedTiles) {
                         final File cycleFile = fileMap.get(tile);
                         if (cycleFile != null) {
-                            if (cycleSize == null) {
-                                cycleSize = BclReader.getNumberOfClusters(cycleFile);
-                            } else if (!extension.equals(".bcl.gz") && cycleSize != BclReader.getNumberOfClusters(cycleFile)) {
+                            if (tileToFileLengthMap.get(tile) == null) {
+                                tileToFileLengthMap.put(tile, cycleFile.length());
+                            } else if (!extension.equals(".bcl.gz") && tileToFileLengthMap.get(tile) != cycleFile.length()) {
+
                                 // TODO: The gzip bcl files might not be the same length despite having the same content,
                                 // for now we're punting on this but this should be looked into at some point
                                 failures.add("File type " + extension
                                         + " has cycles files of different length.  Current cycle ("
                                         + currentCycle + ") " +
-                                        "Length of first non-empty file (" + cycleSize
+                                        "Length of first non-empty file (" + tileToFileLengthMap.get(tile)
                                         + ") length of current cycle (" + cycleFile.length() + ")"
                                         + " File(" + cycleFile.getAbsolutePath() + ")");
                             }
