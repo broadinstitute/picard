@@ -203,15 +203,20 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         }
 
         final CycleIlluminaFileMap cfm = getPerTilePerCycleFiles();
-
+        Long cycleSize = null;
         for (final int currentCycle : expectedCycles) {
             final IlluminaFileMap fileMap = cfm.get(currentCycle);
-            Long cycleSize = null;
+
             if (fileMap == null) {
                 for (final Integer tile : expectedTiles) {
                     final File fileToFake = new File(base + File.separator + getFileForCycle(currentCycle, tile));
                     try {
-                        faker.fakeFile(fileToFake, 8);
+                        if (cycleSize != null) {
+                            faker.fakeFile(fileToFake, cycleSize.intValue());
+                        }
+                        else{
+                            faker.fakeFile(fileToFake, 1);
+                        }
                     } catch (final IOException e) {
                         failures.add("Could not create fake file: " + e.getMessage());
                     }
@@ -228,7 +233,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
                             if (cycleSize != null) {
                                 faker.fakeFile(fileToFake, cycleSize.intValue());
                             } else {
-                                faker.fakeFile(fileToFake, 8);
+                                faker.fakeFile(fileToFake, 1);
                             }
                         }
                     } catch (final IOException e) {
