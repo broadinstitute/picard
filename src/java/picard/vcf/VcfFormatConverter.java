@@ -23,28 +23,27 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package net.sf.picard.vcf;
+package picard.vcf;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.writer.Options;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
-import org.broadinstitute.variant.vcf.VCFFileReader;
-import org.broadinstitute.variant.vcf.VCFHeader;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.Options;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 import java.io.File;
-import java.util.EnumSet;
 
 /**
  * Converts an ASCII VCF file to a binary BCF or vice versa.
@@ -81,8 +80,8 @@ public class VcfFormatConverter extends CommandLineProgram {
     protected int doWork() {
         final ProgressLogger progress = new ProgressLogger(LOG, 10000);
         
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
 	    final VCFFileReader reader = new VCFFileReader(INPUT, REQUIRE_INDEX);
 	    final VCFHeader header = new VCFHeader(reader.getFileHeader());

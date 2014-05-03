@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.annotation;
+package picard.annotation;
 
-import net.sf.picard.annotation.Gene.Transcript;
-import net.sf.picard.annotation.Gene.Transcript.Exon;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.OverlapDetector;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser;
-import net.sf.samtools.SAMSequenceDictionary;
+import picard.annotation.Gene.Transcript;
+import picard.annotation.Gene.Transcript.Exon;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.OverlapDetector;
+import picard.util.TabbedTextFileWithHeaderParser;
+import htsjdk.samtools.SAMSequenceDictionary;
 
 import java.io.File;
 import java.util.ArrayList;

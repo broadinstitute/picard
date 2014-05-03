@@ -22,22 +22,25 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
-import static net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.ReservedTagConstants;
+import picard.util.*;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ import java.util.List;
 
 /**
  * Command line program to mark the location of adapter sequences.
- * This also outputs a histogram of metrics describing the clipped bases
+ * This also outputs a Histogram of metrics describing the clipped bases
  *
  * @author Tim Fennell (adapted by mborkan@broadinstitute.org)
  */
@@ -128,14 +131,14 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(METRICS);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(METRICS);
 
         final SAMFileReader in = new SAMFileReader(INPUT);
         final SAMFileHeader.SortOrder order = in.getFileHeader().getSortOrder();
         SAMFileWriter out = null;
         if (OUTPUT != null) {
-            IoUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsWritable(OUTPUT);
             out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
         }
 

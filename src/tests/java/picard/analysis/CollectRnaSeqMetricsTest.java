@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.annotation.RefFlatReader.RefFlatColumns;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.samtools.SAMRecordSetBuilder;
-import net.sf.picard.util.Interval;
-import net.sf.picard.util.IntervalList;
-import net.sf.samtools.*;
-import net.sf.samtools.util.StringUtil;
+import picard.annotation.RefFlatReader.RefFlatColumns;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

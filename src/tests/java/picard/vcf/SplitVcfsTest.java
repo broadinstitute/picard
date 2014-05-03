@@ -1,12 +1,12 @@
-package net.sf.picard.vcf;
+package picard.vcf;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CloseableIterator;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.VariantContext.Type;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
-import org.broadinstitute.variant.vcf.VCFFileReader;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContext.Type;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -18,12 +18,12 @@ import java.util.Queue;
 
 public class SplitVcfsTest {
 
-	private static final File OUTPUT_DATA_PATH = IoUtil.createTempDir("SplitVcfsTest", null);
-	private static final File TEST_DATA_PATH = new File("testdata/net/sf/picard/vcf/");
+	private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("SplitVcfsTest", null);
+	private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
 
 	@AfterClass
 	public void teardown() {
-		IoUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
+		IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
 	}
 
 	@Test

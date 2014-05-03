@@ -1,9 +1,9 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.util.Log;
-import net.sf.samtools.util.StringUtil;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 
 import java.util.Collections;
 import java.util.Comparator;

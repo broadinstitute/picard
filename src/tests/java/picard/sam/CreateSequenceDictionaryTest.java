@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,7 +33,7 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 public class CreateSequenceDictionaryTest {
-    public static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
+    public static File TEST_DATA_DIR = new File("testdata/picard/sam");
     public static File BASIC_FASTA = new File(TEST_DATA_DIR, "basic.fasta");
     public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR, "duplicate_sequence_names.fasta");
 

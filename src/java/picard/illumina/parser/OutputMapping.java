@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.StringUtil;
+import picard.PicardException;
+import htsjdk.samtools.util.StringUtil;
 
 /**
  * In multiple locations we need to know what cycles are output, as of now we output all non-skip cycles, but rather than sprinkle

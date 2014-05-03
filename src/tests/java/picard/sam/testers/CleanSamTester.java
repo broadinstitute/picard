@@ -1,11 +1,9 @@
-package net.sf.picard.sam.testers;
+package picard.sam.testers;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.sam.CleanSam;
-import net.sf.picard.sam.SamFileValidator;
-import net.sf.picard.sam.testers.SamFileTester;
-import net.sf.samtools.*;
-import net.sf.samtools.util.TestUtil;
+import picard.cmdline.CommandLineProgram;
+import picard.sam.CleanSam;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 
 import java.io.PrintWriter;

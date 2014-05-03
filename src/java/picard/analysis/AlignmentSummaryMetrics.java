@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MultilevelMetrics;
+import picard.metrics.MultilevelMetrics;
 
 /**
  * High level metrics about the alignment of reads within a SAM file, produced by

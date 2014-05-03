@@ -1,14 +1,15 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.BamFileIoUtils;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.BamFileIoUtils;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
 
 import java.io.File;
 import java.util.List;
@@ -35,8 +36,8 @@ public class AddCommentsToBam extends CommandLineProgram {
     public static void main(final String[] args) { new AddCommentsToBam().instanceMainWithExit(args); }
 
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         if (INPUT.getAbsolutePath().endsWith(".sam")) {
             throw new PicardException("SAM files are not supported");

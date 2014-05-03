@@ -22,21 +22,25 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.reference.ReferenceSequenceFileFactory;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.QualityUtil;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import htsjdk.samtools.util.IOUtil;
+import picard.util.*;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.*;
@@ -53,7 +57,7 @@ import java.text.NumberFormat;
  */
 public class CollectGcBiasMetrics extends CommandLineProgram {
     /** The location of the R script to do the plotting. */
-    private static final String R_SCRIPT = "net/sf/picard/analysis/gcBias.R";
+    private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="The reference sequence fasta file.")
     public File REFERENCE_SEQUENCE;
@@ -96,11 +100,11 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
-        IoUtil.assertFileIsWritable(CHART_OUTPUT);
-        if (SUMMARY_OUTPUT != null) IoUtil.assertFileIsWritable(SUMMARY_OUTPUT);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(CHART_OUTPUT);
+        if (SUMMARY_OUTPUT != null) IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
 
         // Histograms to track the number of windows at each GC, and the number of read starts
         // at windows of each GC
@@ -131,7 +135,8 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         // Loop over the reference and the reads and calculate the basic metrics
         ////////////////////////////////////////////////////////////////////////////
         ReferenceSequence ref = null;
-        final ProgressLogger progress = new ProgressLogger(log);
+        final ProgressLogger
+                progress = new ProgressLogger(log);
         while ((ref = referenceFile.nextSequence()) != null) {
             final byte[] refBases = ref.getBases();
             StringUtil.toUpperCase(refBases);

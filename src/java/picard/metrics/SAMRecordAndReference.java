@@ -1,7 +1,7 @@
-package net.sf.picard.metrics;
+package picard.metrics;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.SAMRecord;
 
 public class SAMRecordAndReference {
     private final SAMRecord samRec;

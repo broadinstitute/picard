@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.cmdline;
+package picard.cmdline;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
@@ -31,10 +31,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import net.sf.samtools.util.CollectionUtil.MultiMap;
-import net.sf.samtools.util.StringUtil;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.picard.PicardException;
+import htsjdk.samtools.util.CollectionUtil.MultiMap;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.CloserUtil;
+import picard.PicardException;
 
 /**
  * Annotation-driven utility for parsing command-line arguments, checking for errors, and producing usage message.
@@ -67,7 +67,7 @@ public class CommandLineParser {
 
     private static final Boolean[] TRUE_FALSE_VALUES = {Boolean.TRUE, Boolean.FALSE};
 
-    private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"net.sf.picard"};
+    private static final String[] PACKAGES_WITH_WEB_DOCUMENTATION = {"picard"};
 
     // Use these if no @Usage annotation
     private static final String defaultUsagePreamble = "Usage: program [options...]\n";

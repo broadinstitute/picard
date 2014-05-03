@@ -21,20 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.analysis.directed.RnaSeqMetricsCollector;
-import net.sf.picard.annotation.Gene;
-import net.sf.picard.annotation.GeneAnnotationReader;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.*;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.OverlapDetector;
+import picard.PicardException;
+import picard.analysis.directed.RnaSeqMetricsCollector;
+import picard.annotation.Gene;
+import picard.annotation.GeneAnnotationReader;
+import picard.cmdline.Option;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.*;
+import htsjdk.samtools.reference.ReferenceSequence;
+import picard.util.*;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.util.*;
@@ -92,7 +96,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
 
-        if (CHART_OUTPUT != null) IoUtil.assertFileIsWritable(CHART_OUTPUT);
+        if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
         LOG.info("Loaded " + geneOverlapDetector.getAll().size() + " genes.");
@@ -132,7 +136,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         }
         // Generate the coverage by position plot
         if (CHART_OUTPUT != null && atLeastOneHistogram) {
-            final int rResult = RExecutor.executeFromClasspath("net/sf/picard/analysis/rnaSeqCoverage.R",
+            final int rResult = RExecutor.executeFromClasspath("picard/analysis/rnaSeqCoverage.R",
                                                                OUTPUT.getAbsolutePath(),
                                                                CHART_OUTPUT.getAbsolutePath(),
                                                                INPUT.getName(),

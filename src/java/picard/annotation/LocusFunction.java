@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.annotation;
+package picard.annotation;
 
 /**
  * Describes the behavior of a locus relative to a gene.  Note that these are enumerated in a specific order:

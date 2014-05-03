@@ -1,9 +1,9 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.fakers.FileFaker;
-import net.sf.picard.illumina.parser.readers.BclReader;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.illumina.parser.fakers.FileFaker;
+import picard.illumina.parser.readers.BclReader;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
 
         final File laneDir = base;
         final File[] tempCycleDirs;
-        tempCycleDirs = IoUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
+        tempCycleDirs = IOUtil.getFilesMatchingRegexp(laneDir, IlluminaFileUtil.CYCLE_SUBDIRECTORY_PATTERN);
         if (tempCycleDirs == null || tempCycleDirs.length == 0) {
             return cycledMap;
         }

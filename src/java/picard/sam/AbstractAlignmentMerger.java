@@ -21,41 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.filter.FilteringIterator;
-import net.sf.picard.filter.SamRecordFilter;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.CigarUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.BAMRecordCodec;
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordCoordinateComparator;
-import net.sf.samtools.SAMRecordQueryNameComparator;
-import net.sf.samtools.SAMRecordUtil;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMSequenceRecord;
-import net.sf.samtools.SAMTag;
-import net.sf.samtools.SAMUtils;
-import net.sf.samtools.SamPairUtil;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.SortingCollection;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.CigarUtil;
+import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.BAMRecordCodec;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordCoordinateComparator;
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.SAMRecordUtil;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -170,9 +170,9 @@ public abstract class AbstractAlignmentMerger {
                                    final SAMFileHeader.SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
                                    final boolean addMateCigar) {
-        IoUtil.assertFileIsReadable(unmappedBamFile);
-        IoUtil.assertFileIsWritable(targetBamFile);
-        IoUtil.assertFileIsReadable(referenceFasta);
+        IOUtil.assertFileIsReadable(unmappedBamFile);
+        IOUtil.assertFileIsWritable(targetBamFile);
+        IOUtil.assertFileIsReadable(referenceFasta);
 
         this.unmappedBamFile = unmappedBamFile;
         this.targetBamFile = targetBamFile;

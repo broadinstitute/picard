@@ -22,13 +22,15 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.metrics;
+package picard.metrics;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import picard.PicardException;
+import picard.analysis.MetricAccumulationLevel;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricBase;
 
 import java.util.*;
 
@@ -55,14 +57,14 @@ import java.util.*;
  * method and they will only be done once per record.
  *
  * @param <METRIC_TYPE> The type of metrics being collected
- * @param <HISTOGRAM_KEY> If there is are histograms related to metrics of type <BEAN> then <HKEY> is the key value to these histograms
+ * @param <Histogram_KEY> If there is are Histograms related to metrics of type <BEAN> then <HKEY> is the key value to these Histograms
  * @param <ARGTYPE> The type of argument passed to individual PerUnitMetricCollector (see SAMRecordMultilevelCollector and PerUnitMetricCollector)
  */
-public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOGRAM_KEY extends Comparable, ARGTYPE>  {
+public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, Histogram_KEY extends Comparable, ARGTYPE>  {
 
     public static final String UNKNOWN = "unknown";
     //The collector that will accept all records (allReads is NULL if !calculateAll)
-    private PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> allReadCollector;
+    private PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> allReadCollector;
 
     //A list of Distributor that is at most length 3, 1 for each (SAMPLE, LIBRARY, READ_GROUP) accumulation levels
     //these will be listed in the order in which their children would be added to a metric file
@@ -82,21 +84,21 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
      *                  this collector
      * @return A PerUnitMetricCollector parameterized by the given arguments
      */
-    protected abstract PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeChildCollector(final String sample, final String library, final String readGroup);
+    protected abstract PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeChildCollector(final String sample, final String library, final String readGroup);
 
     //These are exposed here (rather than being encapsulated in the Distributor subclasses below in order
     //to provide subclasses with an explicit point to add initialization (specific to accumulation level) for
     //a PerUnitMetricCollector it is creating
-    protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeAllReadCollector() {
+    protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeAllReadCollector() {
         return makeChildCollector(null, null, null);
     }
-    protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeSampleCollector(final SAMReadGroupRecord rg) {
+    protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeSampleCollector(final SAMReadGroupRecord rg) {
         return makeChildCollector(rg.getSample(), null, null);
     }
-    protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeLibraryCollector(final SAMReadGroupRecord rg) {
+    protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeLibraryCollector(final SAMReadGroupRecord rg) {
         return makeChildCollector(rg.getSample(), rg.getLibrary(), null);
     }
-    protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeReadGroupCollector(final SAMReadGroupRecord rg) {
+    protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeReadGroupCollector(final SAMReadGroupRecord rg) {
         return makeChildCollector(rg.getSample(), rg.getLibrary(), rg.getPlatformUnit());
     }
 
@@ -110,18 +112,18 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
      */
     private abstract class Distributor {
         //A Map mapping the key for a specific record (as determined by getKey) to the appropriate collector
-        private final Map<String, PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE>> collectors;
+        private final Map<String, PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE>> collectors;
 
         //Given a SAMReadGroupRecord, return the key that identifies the collector for the corresponding SAMRecord
         protected abstract String getKey(final SAMReadGroupRecord rg);
 
         //Make a PerUnitMetricCollector for this given Distributor
-        protected abstract PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(final SAMReadGroupRecord rg);
+        protected abstract PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeCollector(final SAMReadGroupRecord rg);
 
-        protected abstract PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector();
+        protected abstract PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector();
 
         public Distributor(final List<SAMReadGroupRecord> rgRecs) {
-            collectors = new LinkedHashMap<String, PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE>>();
+            collectors = new LinkedHashMap<String, PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE>>();
             for(final SAMReadGroupRecord rg : rgRecs) {
                 final String key = getKey(rg);
                 if(!collectors.containsKey(key)) {
@@ -132,7 +134,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
 
         /** Call finish on each PerUnitMetricCollector in this Aggregate Collector */
         public void finish() {
-            for(final PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> collector : collectors.values()) {
+            for(final PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> collector : collectors.values()) {
                 collector.finish();
             }
         }
@@ -147,7 +149,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
                     key = computedKey;
                 }
             }
-            PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> collector = collectors.get(key);
+            PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> collector = collectors.get(key);
             if (collector == null) {
                 if (!UNKNOWN.equals(key)) {
                     throw new PicardException("Could not find collector for " + key);
@@ -160,8 +162,8 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
 
         /** Add all records to the MetricsFile passed in, this will happen in the order they were
          * found in the input ReadGroup records */
-        public void addToFile(final MetricsFile<METRIC_TYPE, HISTOGRAM_KEY> file) {
-            for(final PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> collector : collectors.values()) {
+        public void addToFile(final MetricsFile<METRIC_TYPE, Histogram_KEY> file) {
+            for(final PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> collector : collectors.values()) {
                 collector.addMetricsToFile(file);
             }
         }
@@ -187,13 +189,13 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(final SAMReadGroupRecord rg) {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeCollector(final SAMReadGroupRecord rg) {
             allReadCollector = makeAllReadCollector();
             return allReadCollector;
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector() {
             throw new UnsupportedOperationException("Should not happen");
         }
 
@@ -203,7 +205,7 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
-        public void addToFile(final MetricsFile<METRIC_TYPE, HISTOGRAM_KEY> file) {
+        public void addToFile(final MetricsFile<METRIC_TYPE, Histogram_KEY> file) {
             allReadCollector.addMetricsToFile(file);
         }
     }
@@ -220,12 +222,12 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeSampleCollector(rg);
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector() {
             return makeChildCollector(UNKNOWN, null, null);
         }
     }
@@ -242,12 +244,12 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeLibraryCollector(rg);
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector() {
             return makeChildCollector(UNKNOWN, UNKNOWN, null);
         }
     }
@@ -264,12 +266,12 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeCollector(SAMReadGroupRecord rg) {
             return makeReadGroupCollector(rg);
         }
 
         @Override
-        protected PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> makeUnknownCollector() {
+        protected PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> makeUnknownCollector() {
             return makeChildCollector(UNKNOWN, UNKNOWN, UNKNOWN);
         }
     }
@@ -320,14 +322,14 @@ public abstract class MultiLevelCollector<METRIC_TYPE extends MetricBase, HISTOG
     }
 
     /** Get the PerUnitMetricCollector that collects reads for all levels */
-    public PerUnitMetricCollector<METRIC_TYPE, HISTOGRAM_KEY, ARGTYPE> getAllReadsCollector() {
+    public PerUnitMetricCollector<METRIC_TYPE, Histogram_KEY, ARGTYPE> getAllReadsCollector() {
         return allReadCollector;
     }
 
     /** Add all metrics to the given file in the following MetricAccumulationLevel order
      *  ALL_READS, SAMPLE, LIBRARY, READ_GROUP.
      */
-    public void addAllLevelsToFile(final MetricsFile<METRIC_TYPE, HISTOGRAM_KEY> file) {
+    public void addAllLevelsToFile(final MetricsFile<METRIC_TYPE, Histogram_KEY> file) {
         for(final Distributor collector : outputOrderedDistributors) {
             collector.addToFile(file);
         }

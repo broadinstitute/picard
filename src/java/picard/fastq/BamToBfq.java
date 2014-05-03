@@ -22,13 +22,12 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.fastq;
+package picard.fastq;
 
-import net.sf.picard.fastq.BamToBfqWriter;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Usage;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
 

@@ -1,16 +1,16 @@
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.illumina.parser.ReadDescriptor;
-import net.sf.picard.illumina.parser.ReadType;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.ReadDescriptor;
+import picard.illumina.parser.ReadType;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import static net.sf.picard.illumina.parser.ReadType.*;
-import static net.sf.samtools.util.CollectionUtil.*;
+import static picard.illumina.parser.ReadType.*;
+import static htsjdk.samtools.util.CollectionUtil.*;
 
 public class ReadStructureTest {
 

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
  * Data for a single end of a paired-end read, a barcode read, or for the entire read if not paired end.

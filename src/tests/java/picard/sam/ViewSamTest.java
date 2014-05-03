@@ -21,11 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.samtools.util.AsciiWriter;
-import net.sf.samtools.util.BufferedLineReader;
-import net.sf.samtools.util.LineReader;
+import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.LineReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

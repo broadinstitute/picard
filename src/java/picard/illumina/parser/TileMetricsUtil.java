@@ -22,13 +22,13 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
-import net.sf.picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
-import net.sf.picard.util.IterableAdapter;
-import net.sf.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IterableAdapter;
+import picard.PicardException;
+import picard.illumina.parser.readers.TileMetricsOutReader;
+import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
+import htsjdk.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;

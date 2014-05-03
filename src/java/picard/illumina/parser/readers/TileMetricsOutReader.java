@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.util.UnsignedTypeUtil;
+import picard.PicardException;
+import picard.util.UnsignedTypeUtil;
 
 import java.io.File;
 import java.nio.ByteBuffer;

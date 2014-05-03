@@ -1,26 +1,25 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.SortingCollection;
-import net.sf.samtools.util.StringUtil;
+import picard.PicardException;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.*;
 import java.util.*;
 
-import static java.lang.Math.log;
 import static java.lang.Math.pow;
 
 /**
@@ -36,9 +35,9 @@ import static java.lang.Math.pow;
  *
  * <p>The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes
  * these in the calculation of library size. Also, since there is no alignment to screen out technical
- * reads one further filter is applied on the data.  After examining all reads a histogram is built of
+ * reads one further filter is applied on the data.  After examining all reads a Histogram is built of
  * [#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are
- * then removed from the histogram as outliers before library size is estimated.</p>
+ * then removed from the Histogram as outliers before library size is estimated.</p>
  *
  * @author Tim Fennell
  */
@@ -55,9 +54,9 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
             "Unpaired reads are ignored in this computation.\n\n" +
             "The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes " +
             "these in the calculation of library size. Also, since there is no alignment to screen out technical " +
-            "reads one further filter is applied on the data.  After examining all reads a histogram is built of " +
+            "reads one further filter is applied on the data.  After examining all reads a Histogram is built of " +
             "[#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are " +
-            "then removed from the histogram as outliers before library size is estimated.";
+            "then removed from the Histogram as outliers before library size is estimated.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more files to combine and " +
             "estimate library complexity from. Reads can be mapped or unmapped.")
@@ -214,7 +213,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
      * the sorted reads and looks at small groups at a time to find duplicates.
      */
     @Override protected int doWork() {
-        for (final File f : INPUT) IoUtil.assertFileIsReadable(f);
+        for (final File f : INPUT) IOUtil.assertFileIsReadable(f);
 
         final int maxInMemory = (int) (Runtime.getRuntime().maxMemory() / PairedReadSequence.size_in_bytes) / 2;
         log.info("Will store " + maxInMemory + " read pairs in memory before sorting.");

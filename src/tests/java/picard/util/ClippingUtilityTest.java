@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.ReservedTagConstants;
+import picard.util.IlluminaUtil.IlluminaAdapterPair;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

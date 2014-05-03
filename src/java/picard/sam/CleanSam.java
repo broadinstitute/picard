@@ -21,21 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.CigarUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CloseableIterator;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * @author alecw@broadinstitute.org
@@ -64,8 +62,8 @@ public class CleanSam extends CommandLineProgram {
      */
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
         final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         if (VALIDATION_STRINGENCY == SAMFileReader.ValidationStringency.STRICT) {
             SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.LENIENT);

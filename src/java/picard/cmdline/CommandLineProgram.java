@@ -21,26 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.cmdline;
+package picard.cmdline;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import net.sf.picard.metrics.Header;
-import net.sf.picard.metrics.MetricBase;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.metrics.StringHeader;
-import net.sf.picard.util.Log;
-import net.sf.samtools.Defaults;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMFileWriterImpl;
-import net.sf.samtools.util.BlockCompressedOutputStream;
-import net.sf.samtools.util.BlockCompressedStreamConstants;
-import net.sf.samtools.util.IOUtil;
-import net.sf.samtools.util.zip.DeflaterFactory;
+import htsjdk.samtools.Defaults;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMFileWriterImpl;
+import htsjdk.samtools.metrics.Header;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.metrics.StringHeader;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.BlockCompressedStreamConstants;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.zip.DeflaterFactory;
 
 /**
  * Abstract class to facilitate writing command-line programs.

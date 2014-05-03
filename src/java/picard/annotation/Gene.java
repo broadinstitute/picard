@@ -21,11 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.annotation;
+package picard.annotation;
 
-import net.sf.picard.util.Interval;
-import net.sf.samtools.util.CoordMath;
-import sun.tools.tree.LengthExpression;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.CoordMath;
 
 import java.util.HashMap;
 import java.util.Iterator;

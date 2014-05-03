@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -9,7 +9,7 @@ import java.io.File;
 
 public class PosFileReaderTest {
     //need to test for negatives
-    public static final File TestDir = new File("testdata/net/sf/picard/illumina/readerTests");
+    public static final File TestDir = new File("testdata/picard/illumina/readerTests");
     public static final File InvalidNamePosFile = new File(TestDir, "pos_failing1_pos.txt");
 
     public static final File PassingPosFile = new File(TestDir, "s_2_1101_pos.txt");

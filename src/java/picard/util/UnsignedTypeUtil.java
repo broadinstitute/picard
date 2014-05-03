@@ -1,4 +1,4 @@
-package net.sf.picard.util;
+package picard.util;
 
 /**
  * A utility class for dealing with unsigned types.  This class is primarily used for promoting a value in an unsigned type to

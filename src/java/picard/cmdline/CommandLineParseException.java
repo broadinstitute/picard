@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.cmdline;
+package picard.cmdline;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 public class CommandLineParseException extends PicardException {
     public CommandLineParseException(final String s) {

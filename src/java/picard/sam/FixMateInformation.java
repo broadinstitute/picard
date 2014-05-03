@@ -22,29 +22,31 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.BAMRecordCodec;
-import net.sf.samtools.BamFileIoUtils;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordQueryNameComparator;
-import net.sf.samtools.SamPairUtil;
-import net.sf.samtools.util.RuntimeIOException;
-import net.sf.samtools.util.SortingCollection;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.MergingSamRecordIterator;
+import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.util.PeekableIterator;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.BAMRecordCodec;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +93,7 @@ public class FixMateInformation extends CommandLineProgram {
         boolean allQueryNameSorted = true;
         final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
         for (final File f : INPUT) {
-            IoUtil.assertFileIsReadable(f);
+            IOUtil.assertFileIsReadable(f);
             final SAMFileReader reader = new SAMFileReader(f);
             readers.add(reader);
             if (reader.getFileHeader().getSortOrder() != SortOrder.queryname) allQueryNameSorted = false;
@@ -103,7 +105,7 @@ public class FixMateInformation extends CommandLineProgram {
         final boolean differentOutputSpecified = OUTPUT != null;
 
         if (differentOutputSpecified) {
-            IoUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsWritable(OUTPUT);
         }
         else if (INPUT.size() != 1) {
             throw new PicardException("Must specify either an explicit OUTPUT file or a single INPUT file to be overridden.");
@@ -112,8 +114,8 @@ public class FixMateInformation extends CommandLineProgram {
             final File soleInput = INPUT.get(0).getAbsoluteFile();
             final File dir       = soleInput.getParentFile().getAbsoluteFile();
             try {
-                IoUtil.assertFileIsWritable(soleInput);
-                IoUtil.assertDirectoryIsWritable(dir);
+                IOUtil.assertFileIsWritable(soleInput);
+                IOUtil.assertDirectoryIsWritable(dir);
                 OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", BamFileIoUtils.BAM_FILE_EXTENSION, dir);
             }
             catch (IOException ioe) {

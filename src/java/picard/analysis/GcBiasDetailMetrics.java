@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricBase;
 
 /**
  * Class that holds detailed metrics about reads that fall within windows of a certain

@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.Defaults;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.IOUtil;
+import picard.PicardException;
+import htsjdk.samtools.Defaults;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;

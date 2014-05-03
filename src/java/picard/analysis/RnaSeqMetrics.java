@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MultilevelMetrics;
+import picard.metrics.MultilevelMetrics;
 
 /**
  * Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics

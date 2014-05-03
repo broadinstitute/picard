@@ -1,15 +1,15 @@
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.analysis.InsertSizeMetrics;
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.metrics.MultiLevelCollector;
-import net.sf.picard.metrics.PerUnitMetricCollector;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SamPairUtil;
-import net.sf.picard.util.Histogram;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
+import picard.analysis.InsertSizeMetrics;
+import picard.analysis.MetricAccumulationLevel;
+import picard.metrics.MultiLevelCollector;
+import picard.metrics.PerUnitMetricCollector;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.Set;
  * Collects InserSizeMetrics on the specified accumulationLevels using
  */
 public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMetrics, Integer, InsertSizeCollectorArgs> {
-    // When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this
+    // When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this
     // percentage of overall reads. (Range: 0 to 1)
     private final double minimumPct;
 
@@ -29,14 +29,14 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     // artifacts to make the mean and sd grossly misleading regarding the real distribution.
     private final double deviations;
 
-    //Explicitly sets the histogram width, overriding automatic truncation of histogram tail.
-    //Also, when calculating mean and stdev, only bins <= HISTOGRAM_WIDTH will be included.
-    private Integer histogramWidth;
+    //Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail.
+    //Also, when calculating mean and stdev, only bins <= Histogram_WIDTH will be included.
+    private Integer HistogramWidth;
 
     public InsertSizeMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
-                                      final double minimumPct, final Integer histogramWidth, final double deviations) {
+                                      final double minimumPct, final Integer HistogramWidth, final double deviations) {
         this.minimumPct = minimumPct;
-        this.histogramWidth = histogramWidth;
+        this.HistogramWidth = HistogramWidth;
         this.deviations = deviations;
         setup(accumulationLevels, samRgRecords);
     }
@@ -74,7 +74,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
 
     /** A Collector for individual InsertSizeMetrics for a given SAMPLE or SAMPLE/LIBRARY or SAMPLE/LIBRARY/READ_GROUP (depending on aggregation levels) */
     public class PerUnitInsertSizeMetricsCollector implements PerUnitMetricCollector<InsertSizeMetrics, Integer, InsertSizeCollectorArgs> {
-        final EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>> histograms = new EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>>(SamPairUtil.PairOrientation.class);
+        final EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>> Histograms = new EnumMap<SamPairUtil.PairOrientation, Histogram<Integer>>(SamPairUtil.PairOrientation.class);
         final String sample;
         final String library;
         final String readGroup;
@@ -97,13 +97,13 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
             else {
                 prefix = "All_Reads.";
             }
-            histograms.put(SamPairUtil.PairOrientation.FR,     new Histogram<Integer>("insert_size", prefix + "fr_count"));
-            histograms.put(SamPairUtil.PairOrientation.TANDEM, new Histogram<Integer>("insert_size", prefix + "tandem_count"));
-            histograms.put(SamPairUtil.PairOrientation.RF,     new Histogram<Integer>("insert_size", prefix + "rf_count"));
+            Histograms.put(SamPairUtil.PairOrientation.FR,     new Histogram<Integer>("insert_size", prefix + "fr_count"));
+            Histograms.put(SamPairUtil.PairOrientation.TANDEM, new Histogram<Integer>("insert_size", prefix + "tandem_count"));
+            Histograms.put(SamPairUtil.PairOrientation.RF,     new Histogram<Integer>("insert_size", prefix + "rf_count"));
         }
 
         public void acceptRecord(final InsertSizeCollectorArgs args) {
-            histograms.get(args.getPairOrientation()).increment(args.getInsertSize());
+            Histograms.get(args.getPairOrientation()).increment(args.getInsertSize());
         }
 
         public void finish() { }
@@ -113,12 +113,12 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
         }
 
         public void addMetricsToFile(final MetricsFile<InsertSizeMetrics,Integer> file) {
-            for (final Histogram<Integer> h : this.histograms.values()) totalInserts += h.getCount();
+            for (final Histogram<Integer> h : this.Histograms.values()) totalInserts += h.getCount();
 
-            for(final Map.Entry<SamPairUtil.PairOrientation, Histogram<Integer>> entry : histograms.entrySet()) {
+            for(final Map.Entry<SamPairUtil.PairOrientation, Histogram<Integer>> entry : Histograms.entrySet()) {
                 final SamPairUtil.PairOrientation pairOrientation = entry.getKey();
-                final Histogram<Integer> histogram = entry.getValue();
-                final double total = histogram.getCount();
+                final Histogram<Integer> Histogram = entry.getValue();
+                final double total = Histogram.getCount();
 
                 // Only include a category if it has a sufficient percentage of the data in it
                 if( total > totalInserts * minimumPct ) {
@@ -128,22 +128,22 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                     metrics.READ_GROUP         = this.readGroup;
                     metrics.PAIR_ORIENTATION   = pairOrientation;
                     metrics.READ_PAIRS         = (long) total;
-                    metrics.MAX_INSERT_SIZE    = (int) histogram.getMax();
-                    metrics.MIN_INSERT_SIZE    = (int) histogram.getMin();
-                    metrics.MEDIAN_INSERT_SIZE = histogram.getMedian();
-                    metrics.MEDIAN_ABSOLUTE_DEVIATION = histogram.getMedianAbsoluteDeviation();
+                    metrics.MAX_INSERT_SIZE    = (int) Histogram.getMax();
+                    metrics.MIN_INSERT_SIZE    = (int) Histogram.getMin();
+                    metrics.MEDIAN_INSERT_SIZE = Histogram.getMedian();
+                    metrics.MEDIAN_ABSOLUTE_DEVIATION = Histogram.getMedianAbsoluteDeviation();
 
-                    final double median  = histogram.getMedian();
+                    final double median  = Histogram.getMedian();
                     double covered = 0;
                     double low  = median;
                     double high = median;
 
-                    while (low >= histogram.getMin() || high <= histogram.getMax()) {
-                        final Histogram<Integer>.Bin lowBin = histogram.get((int) low);
+                    while (low >= Histogram.getMin() || high <= Histogram.getMax()) {
+                        final Histogram<Integer>.Bin lowBin = Histogram.get((int) low);
                         if (lowBin != null) covered += lowBin.getValue();
 
                         if (low != high) {
-                            final Histogram<Integer>.Bin highBin = histogram.get((int) high);
+                            final Histogram<Integer>.Bin highBin = Histogram.get((int) high);
                             if (highBin != null) covered += highBin.getValue();
                         }
 
@@ -164,13 +164,13 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                         ++high;
                     }
 
-                    // Trim the histogram down to get rid of outliers that would make the chart useless.
-                    final Histogram<Integer> trimmedHisto = histogram; //alias it
-                    if (histogramWidth == null) {
-                        histogramWidth = (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
+                    // Trim the Histogram down to get rid of outliers that would make the chart useless.
+                    final Histogram<Integer> trimmedHisto = Histogram; //alias it
+                    if (HistogramWidth == null) {
+                        HistogramWidth = (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
                     }
 
-                    trimmedHisto.trimByWidth(histogramWidth);
+                    trimmedHisto.trimByWidth(HistogramWidth);
 
                     metrics.MEAN_INSERT_SIZE = trimmedHisto.getMean();
                     metrics.STANDARD_DEVIATION = trimmedHisto.getStandardDeviation();

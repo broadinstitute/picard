@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,17 +30,17 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.util.FastqQualityFormat;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMValidationError;
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.SamFileValidator;
+import picard.cmdline.Usage;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMValidationError;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 
 /**
  * Command line program wrapping SamFileValidator.
@@ -103,16 +103,16 @@ public class ValidateSamFile extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT);
         ReferenceSequenceFile reference = null;
         if (REFERENCE_SEQUENCE != null) {
-            IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+            IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             reference = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
 
         }
         final PrintWriter out;
         if (OUTPUT != null) {
-            IoUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsWritable(OUTPUT);
             try {
                 out = new PrintWriter(OUTPUT);
             }
@@ -153,7 +153,7 @@ public class ValidateSamFile extends CommandLineProgram {
             if (VALIDATE_INDEX){
                 validator.setValidateIndex(VALIDATE_INDEX);
             }
-            if (IoUtil.isRegularPath(INPUT)) {
+            if (IOUtil.isRegularPath(INPUT)) {
                 // Do not check termination if reading from a stream
                 validator.validateBamFileTermination(INPUT);
             }

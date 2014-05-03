@@ -1,6 +1,7 @@
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.util.IterableAdapter;
+import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

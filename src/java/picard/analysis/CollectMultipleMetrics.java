@@ -1,10 +1,10 @@
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.samtools.util.CollectionUtil;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             public SinglePassSamProgram makeInstance(final String outbase) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.OUTPUT         = new File(outbase + ".insert_size_metrics");
-                program.HISTOGRAM_FILE = new File(outbase + ".insert_size_histogram.pdf");
+                program.Histogram_FILE = new File(outbase + ".insert_size_Histogram.pdf");
                 return program;
             }
         },

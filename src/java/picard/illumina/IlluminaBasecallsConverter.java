@@ -21,20 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.ClusterData;
-import net.sf.picard.illumina.parser.IlluminaDataProvider;
-import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
-import net.sf.picard.illumina.parser.IlluminaDataType;
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.util.FileChannelJDKBugWorkAround;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.util.PeekIterator;
-import net.sf.samtools.util.SortingCollection;
+import picard.PicardException;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProvider;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.FileChannelJDKBugWorkAround;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.PeekIterator;
+import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.util.ArrayList;

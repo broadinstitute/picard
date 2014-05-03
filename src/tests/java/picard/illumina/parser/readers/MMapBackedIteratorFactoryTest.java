@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -10,7 +10,7 @@ import java.nio.*;
 import java.util.Iterator;
 
 public class MMapBackedIteratorFactoryTest {
-    public static File TestDataDir = new File("testdata/net/sf/picard/illumina/readerTests");
+    public static File TestDataDir = new File("testdata/picard/illumina/readerTests");
     public static File BinFile     = new File(TestDataDir, "binary_passing.bin");
 
     public static final int FileLength = 51;

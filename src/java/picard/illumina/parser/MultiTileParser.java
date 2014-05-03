@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.PeekIterator;
+import picard.PicardException;
+import htsjdk.samtools.util.PeekIterator;
 
 import java.util.Iterator;
 import java.util.List;

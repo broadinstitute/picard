@@ -1,13 +1,14 @@
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.illumina.parser.IlluminaDataType;
-import net.sf.picard.illumina.parser.IlluminaFileUtil;
-import net.sf.picard.illumina.parser.IlluminaFileUtilTest;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CloserUtil;
-import org.broad.tribble.index.Index;
+import htsjdk.samtools.SAMException;
+import picard.PicardException;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.IlluminaFileUtil;
+import picard.illumina.parser.IlluminaFileUtilTest;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.tribble.index.Index;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -27,10 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.sf.picard.illumina.parser.IlluminaDataType.*;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
-import static net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static picard.illumina.parser.IlluminaDataType.*;
+import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
+import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 
 public class CheckIlluminaDirectoryTest {
@@ -43,7 +44,7 @@ public class CheckIlluminaDirectoryTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        illuminaDir = IoUtil.createTempDir("ift_test", "IlluminaDir");
+        illuminaDir = IOUtil.createTempDir("ift_test", "IlluminaDir");
 
         interopDir = new File(illuminaDir, "InterOp");
         if (!interopDir.mkdir()) {
@@ -68,7 +69,7 @@ public class CheckIlluminaDirectoryTest {
 
     @AfterMethod
     private void tearDown() {
-        IoUtil.deleteDirectoryTree(intensityDir);
+        IOUtil.deleteDirectoryTree(intensityDir);
     }
 
     public void makeFiles(final SupportedIlluminaFormat[] formats, final int lane, final List<Integer> tiles,
@@ -340,7 +341,7 @@ public class CheckIlluminaDirectoryTest {
         Assert.assertEquals(1, result);
     }
 
-    @Test(expectedExceptions = PicardException.class)
+    @Test(expectedExceptions = SAMException.class)
     public void basedirDoesntExistTest() {
         final String[] args = makeCheckerArgs(new File("a_made_up_file/in_some_weird_location"), 1, "76T76T",
                 new IlluminaDataType[]{IlluminaDataType.Position},

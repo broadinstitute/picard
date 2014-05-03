@@ -1,11 +1,11 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.fakers.BciFileFaker;
-import net.sf.picard.illumina.parser.fakers.FileFaker;
-import net.sf.picard.illumina.parser.fakers.FilterFileFaker;
-import net.sf.picard.illumina.parser.fakers.MultiTileLocsFileFaker;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.illumina.parser.fakers.BciFileFaker;
+import picard.illumina.parser.fakers.FileFaker;
+import picard.illumina.parser.fakers.FilterFileFaker;
+import picard.illumina.parser.fakers.MultiTileLocsFileFaker;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public abstract class MultiTileFileUtil<OUTPUT_RECORD extends IlluminaData> exte
         } else {
             tileIndex = null;
         }
-        final File[] filesMatchingRegexp = IoUtil.getFilesMatchingRegexp(base, matchPattern);
+        final File[] filesMatchingRegexp = IOUtil.getFilesMatchingRegexp(base, matchPattern);
         if (filesMatchingRegexp == null || filesMatchingRegexp.length == 0) {
             dataFile = null;
         } else if (filesMatchingRegexp.length == 1) {
@@ -73,7 +73,7 @@ public abstract class MultiTileFileUtil<OUTPUT_RECORD extends IlluminaData> exte
             bciFileFaker.fakeBciFile(bci, expectedTiles);
             tileIndex = new TileIndex(bci);
             faker.fakeFile(base, expectedTiles, lane, extension);
-            final File[] filesMatchingRegexp = IoUtil.getFilesMatchingRegexp(base, matchPattern);
+            final File[] filesMatchingRegexp = IOUtil.getFilesMatchingRegexp(base, matchPattern);
             if (filesMatchingRegexp == null || filesMatchingRegexp.length == 0) {
                 dataFile = null;
             } else if (filesMatchingRegexp.length == 1) {

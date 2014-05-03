@@ -25,25 +25,24 @@
 /**
  * $Id$
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.filter.AlignedFilter;
-import net.sf.picard.filter.FilteringIterator;
-import net.sf.picard.filter.ReadNameFilter;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.IOUtil;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.filter.AlignedFilter;
+import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.ReadNameFilter;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -150,8 +149,8 @@ public class FilterSamReads extends CommandLineProgram {
         final SAMFileReader reader = new SAMFileReader(samOrBamFile);
         final File readsFile =
             new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
-        IoUtil.assertFileIsWritable(readsFile);
-        final BufferedWriter bw = IoUtil.openFileForBufferedWriting(readsFile, false);
+        IOUtil.assertFileIsWritable(readsFile);
+        final BufferedWriter bw = IOUtil.openFileForBufferedWriting(readsFile, false);
 
         for (final SAMRecord rec : reader) {
             bw.write(rec.toString() + "\n");
@@ -159,15 +158,15 @@ public class FilterSamReads extends CommandLineProgram {
 
         bw.close();
         reader.close();
-        IoUtil.assertFileIsReadable(readsFile);
+        IOUtil.assertFileIsReadable(readsFile);
     }
 
     @Override
     protected int doWork() {
 
         try {
-            IoUtil.assertFileIsReadable(INPUT);
-            IoUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsReadable(INPUT);
+            IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
 
             switch (FILTER) {
@@ -191,7 +190,7 @@ public class FilterSamReads extends CommandLineProgram {
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");
             }
 
-            IoUtil.assertFileIsReadable(OUTPUT);
+            IOUtil.assertFileIsReadable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(OUTPUT);
             return 0;
 

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
 * A read type describes a stretch of cycles in an ReadStructure

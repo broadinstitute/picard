@@ -21,18 +21,18 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.BclData;
-import net.sf.picard.illumina.parser.TileIndex;
-import net.sf.picard.util.UnsignedTypeUtil;
-import net.sf.samtools.Defaults;
-import net.sf.samtools.util.BlockCompressedInputStream;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.IOUtil;
-import net.sf.samtools.util.RuntimeIOException;
+import picard.PicardException;
+import picard.illumina.parser.BclData;
+import picard.illumina.parser.TileIndex;
+import picard.util.UnsignedTypeUtil;
+import htsjdk.samtools.Defaults;
+import htsjdk.samtools.util.BlockCompressedInputStream;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.FileInputStream;

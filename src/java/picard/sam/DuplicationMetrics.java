@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.metrics.MetricBase;
-import net.sf.picard.util.Histogram;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.util.Histogram;
 
 /**
  * Metrics that are calculated during the process of marking duplicates
@@ -140,7 +140,7 @@ public class DuplicationMetrics extends MetricBase {
     }
 
     /**
-     * Calculates a histogram using the estimateRoi method to estimate the effective yield
+     * Calculates a Histogram using the estimateRoi method to estimate the effective yield
      * doing x sequencing for x=1..10.
      */
     public Histogram<Double> calculateRoiHistogram() {

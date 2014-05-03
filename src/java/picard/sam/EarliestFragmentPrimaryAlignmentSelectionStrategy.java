@@ -21,11 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.samtools.AlignmentBlock;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.CoordMath;
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.CoordMath;
 
 import java.util.ArrayList;
 import java.util.List;

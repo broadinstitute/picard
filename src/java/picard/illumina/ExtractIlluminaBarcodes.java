@@ -21,22 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.*;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricBase;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import picard.illumina.parser.*;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import picard.util.IlluminaUtil;
+import htsjdk.samtools.util.Log;
+import picard.util.TabbedTextFileWithHeaderParser;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -141,11 +141,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     @Override
     protected int doWork() {
 
-        IoUtil.assertFileIsWritable(METRICS_FILE);
+        IOUtil.assertFileIsWritable(METRICS_FILE);
         if (OUTPUT_DIR == null) {
             OUTPUT_DIR = BASECALLS_DIR;
         }
-        IoUtil.assertDirectoryIsWritable(OUTPUT_DIR);
+        IOUtil.assertDirectoryIsWritable(OUTPUT_DIR);
 
         // Create BarcodeMetric for counting reads that don't match any barcode
         final String[] noMatchBarcode = new String[readStructure.barcodes.length()];
@@ -451,7 +451,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.LIBRARY_NAME = libraryName;
             this.barcodeBytes = new byte[barcodeSeqs.length][];
             for (int i = 0; i < barcodeSeqs.length; i++) {
-                barcodeBytes[i] = net.sf.samtools.util.StringUtil.stringToBytes(barcodeSeqs[i]);
+                barcodeBytes[i] = htsjdk.samtools.util.StringUtil.stringToBytes(barcodeSeqs[i]);
             }
         }
 
@@ -566,7 +566,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
                 //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
                 final int[] barcodeIndices = outputReadStructure.barcodes.getIndices();
-                final BufferedWriter writer = IoUtil.openFileForBufferedWriting(barcodeFile);
+                final BufferedWriter writer = IOUtil.openFileForBufferedWriting(barcodeFile);
                 final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
                 final byte qualityScores[][] = usingQualityScores ? new byte[barcodeIndices.length][] : null;
                 while (provider.hasNext()) {

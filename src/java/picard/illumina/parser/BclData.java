@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /** A class that implements the IlluminaData interfaces provided by this parser
  * One BclData object is returned to IlluminaDataProvider per cluster and each

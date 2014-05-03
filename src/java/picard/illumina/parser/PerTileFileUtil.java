@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.illumina.parser.fakers.FileFaker;
+import picard.illumina.parser.fakers.FileFaker;
 
 import java.io.File;
 import java.io.IOException;

@@ -21,17 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.PositionalArguments;
-import net.sf.picard.cmdline.Usage;
-import net.sf.samtools.*;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.PositionalArguments;
+import picard.cmdline.Usage;
+import htsjdk.samtools.*;
 
 /**
  * Rudimentary SAM comparer.  Compares headers, and if headers are compatible enough, compares SAMRecords,

@@ -1,23 +1,21 @@
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.SequenceUtil;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
 
 import java.io.File;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -63,7 +61,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                                    final Collection<SinglePassSamProgram> programs) {
 
         // Setup the standard inputs
-        IoUtil.assertFileIsReadable(input);
+        IOUtil.assertFileIsReadable(input);
         final SAMFileReader in = new SAMFileReader(input);
 
         // Optionally load up the reference sequence and double check sequence dictionaries
@@ -72,7 +70,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             walker = null;
         }
         else {
-            IoUtil.assertFileIsReadable(referenceSequence);
+            IOUtil.assertFileIsReadable(referenceSequence);
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
             if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {

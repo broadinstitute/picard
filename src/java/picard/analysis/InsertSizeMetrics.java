@@ -22,16 +22,16 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.samtools.SamPairUtil.PairOrientation;
-import net.sf.picard.metrics.MultilevelMetrics;
+import htsjdk.samtools.SamPairUtil.PairOrientation;
+import picard.metrics.MultilevelMetrics;
 
 /**
  * Metrics about the insert size distribution of a paired-end library, created by the
  * CollectInsertSizeMetrics program and usually written to a file with the extension
  * ".insert_size_metrics".  In addition the insert size distribution is plotted to
- * a file with the extension ".insert_size_histogram.pdf".
+ * a file with the extension ".insert_size_Histogram.pdf".
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */

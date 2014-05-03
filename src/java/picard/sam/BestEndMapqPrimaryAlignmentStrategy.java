@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMUtils;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMUtils;
 
 import java.util.*;
 

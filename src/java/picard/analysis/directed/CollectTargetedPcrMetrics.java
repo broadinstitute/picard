@@ -1,10 +1,10 @@
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.samtools.SAMReadGroupRecord;
+import picard.analysis.MetricAccumulationLevel;
+import picard.cmdline.Option;
+import picard.cmdline.Usage;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.SAMReadGroupRecord;
 
 import java.io.File;
 import java.util.List;

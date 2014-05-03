@@ -22,21 +22,21 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.RExecutor;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.SequenceUtil;
+import picard.PicardException;
+import picard.cmdline.Option;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import picard.util.RExecutor;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
 
 import java.io.File;
 import java.util.List;
@@ -82,8 +82,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        IoUtil.assertFileIsWritable(OUTPUT);
-        IoUtil.assertFileIsWritable(CHART_OUTPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         // If we're working with a single library, assign that library's name
         // as a suffix to the plot title
@@ -117,7 +117,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Override
     protected void finish() {
-        // Built the histograms out of the long[]s
+        // Built the Histograms out of the long[]s
         final Histogram<Byte> qHisto  = new Histogram<Byte>("QUALITY", "COUNT_OF_Q");
         final Histogram<Byte> oqHisto = new Histogram<Byte>("QUALITY", "COUNT_OF_OQ");
 
@@ -136,7 +136,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         else {
             // Now run R to generate a chart
             final int rResult = RExecutor.executeFromClasspath(
-                    "net/sf/picard/analysis/qualityScoreDistribution.R",
+                    "picard/analysis/qualityScoreDistribution.R",
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath(),
                     INPUT.getName(),

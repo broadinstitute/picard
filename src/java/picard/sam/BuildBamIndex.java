@@ -22,13 +22,14 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.*;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CloserUtil;
+import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.util.IOUtil;
+import picard.cmdline.*;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.net.URL;
@@ -97,7 +98,7 @@ public class BuildBamIndex extends CommandLineProgram {
             }
         }
 
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
         final SAMFileReader bam;
 
         if (inputUrl != null) {
@@ -105,7 +106,7 @@ public class BuildBamIndex extends CommandLineProgram {
             bam = new SAMFileReader(inputUrl, null, false);
         } else {
             // input from a normal file
-            IoUtil.assertFileIsReadable(inputFile);
+            IOUtil.assertFileIsReadable(inputFile);
             bam = new SAMFileReader(inputFile);
         }
 
@@ -117,33 +118,10 @@ public class BuildBamIndex extends CommandLineProgram {
             throw new SAMException("Input bam file must be sorted by coordinates");
         }
 
-        createIndex(bam, OUTPUT);
+        BAMIndexer.createIndex(bam, OUTPUT);
 
         log.info("Successfully wrote bam index file " + OUTPUT);
         CloserUtil.close(bam);
         return 0;
-    }
-
-    /**
-     * Generates a BAM index file from an input BAM file
-     *
-     * @param reader SAMFileReader for input BAM file
-     * @param output  File for output index file
-     */
-    public static void createIndex(SAMFileReader reader, File output) {
-
-        BAMIndexer indexer = new BAMIndexer(output, reader.getFileHeader());
-
-        reader.enableFileSource(true);
-        int totalRecords = 0;
-
-        // create and write the content
-        for (SAMRecord rec : reader) {
-            if (++totalRecords % 1000000 == 0) {
-                log.info(totalRecords + " reads processed ...");
-            }
-            indexer.processAlignment(rec);
-        }
-        indexer.finish();
     }
 }

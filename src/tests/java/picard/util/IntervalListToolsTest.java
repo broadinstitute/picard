@@ -21,10 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.TestUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -32,7 +34,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -41,11 +42,11 @@ import java.util.TreeSet;
  */
 public class IntervalListToolsTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/util/");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/util/");
 
     @Test
     public void testScatter() throws IOException {
-        final File scatterDir = IoUtil.createTempDir("scatter.", ".tmp");
+        final File scatterDir = IOUtil.createTempDir("scatter.", ".tmp");
 
         try {
             final File listToScatter = new File(TEST_DATA_DIR, "scatterable.interval_list");
@@ -136,7 +137,6 @@ public class IntervalListToolsTest {
 
     }
 
-
     // Gets all the interval lists for a given scatter count in a directory
     final IntervalList[] getIntervalLists(final File scatterDir, final int scatterCount) {
         final IntervalList result[] = new IntervalList[scatterCount];
@@ -145,23 +145,5 @@ public class IntervalListToolsTest {
             result[i] = IntervalList.fromFile(IntervalListTools.getScatteredFileName(scatterDir, scatterCount, format.format(i+1)));
         }
         return result;
-    }
-
-    @Test
-    public void testMerges() {
-        SortedSet<Interval> intervals = new TreeSet<Interval>() {{
-            add(new Interval("1", 500, 600, false, "foo"));
-            add(new Interval("1", 550, 650, false, "bar"));
-            add(new Interval("1", 625, 699, false, "splat"));
-        }};
-
-        Interval out = IntervalList.merge(intervals, false);
-        Assert.assertEquals(out.getStart(), 500);
-        Assert.assertEquals(out.getEnd(), 699);
-
-        intervals.add(new Interval("1", 626, 629, false, "whee"));
-        out = IntervalList.merge(intervals, false);
-        Assert.assertEquals(out.getStart(), 500);
-        Assert.assertEquals(out.getEnd(), 699);
     }
 }

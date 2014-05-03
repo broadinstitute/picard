@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.*;
+import picard.PicardException;
+import htsjdk.samtools.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -43,8 +43,8 @@ import java.util.List;
  */
 public class RevertSamTest {
 
-    public static final String basicSamToRevert = "testdata/net/sf/picard/sam/revert_sam_basic.sam";
-    public static final String negativeTestSamToRevert = "testdata/net/sf/picard/sam/revert_sam_negative.sam";
+    public static final String basicSamToRevert = "testdata/picard/sam/revert_sam_basic.sam";
+    public static final String negativeTestSamToRevert = "testdata/picard/sam/revert_sam_negative.sam";
 
     private static final String revertedQualities  =
         "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";

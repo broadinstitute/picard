@@ -22,16 +22,16 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.samtools.BAMIndex;
-import net.sf.samtools.BAMIndexMetaData;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.BAMIndex;
+import htsjdk.samtools.BAMIndexMetaData;
 
 import java.io.File;
 
@@ -69,7 +69,7 @@ public class BamIndexStats extends CommandLineProgram {
 
         if (INPUT.getName().endsWith(BAMIndex.BAMIndexSuffix))
                log.warn("INPUT should be BAM file not index file");
-        IoUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(INPUT);
         BAMIndexMetaData.printIndexStats(INPUT);
 
         return 0;

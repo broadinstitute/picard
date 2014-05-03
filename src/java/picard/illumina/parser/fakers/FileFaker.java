@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.fakers;
+package picard.illumina.parser.fakers;
 
-import net.sf.picard.illumina.parser.readers.BclReader;
-import net.sf.samtools.util.BlockCompressedOutputStream;
+import picard.illumina.parser.readers.BclReader;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;

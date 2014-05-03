@@ -21,23 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.fastq.FastqWriter;
-import net.sf.picard.fastq.FastqWriterFactory;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
-import net.sf.samtools.util.Lazy;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqWriter;
+import htsjdk.samtools.fastq.FastqWriterFactory;
+import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.Lazy;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.*;
@@ -128,8 +128,8 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(INPUT));
+        IOUtil.assertFileIsReadable(INPUT);
+        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(INPUT));
         final Map<String, SAMRecord> firstSeenMates = new HashMap<String, SAMRecord>();
         final FastqWriterFactory factory = new FastqWriterFactory();
         factory.setCreateMd5(CREATE_MD5_FILE);
@@ -196,16 +196,16 @@ public class SamToFastq extends CommandLineProgram {
 
         final FastqWriters fastqWriters;
         if (!OUTPUT_PER_RG) {
-            IoUtil.assertFileIsWritable(FASTQ);
-            IoUtil.openFileForWriting(FASTQ);
+            IOUtil.assertFileIsWritable(FASTQ);
+            IOUtil.openFileForWriting(FASTQ);
             final FastqWriter firstOfPairWriter = factory.newWriter(FASTQ);
 
             final FastqWriter secondOfPairWriter;
             if (INTERLEAVE) {
                 secondOfPairWriter = firstOfPairWriter;
             } else if (SECOND_END_FASTQ != null) {
-                IoUtil.assertFileIsWritable(SECOND_END_FASTQ);
-                IoUtil.openFileForWriting(SECOND_END_FASTQ);
+                IOUtil.assertFileIsWritable(SECOND_END_FASTQ);
+                IOUtil.openFileForWriting(SECOND_END_FASTQ);
                 secondOfPairWriter = factory.newWriter(SECOND_END_FASTQ);
             } else {
                 secondOfPairWriter = null;
@@ -244,14 +244,14 @@ public class SamToFastq extends CommandLineProgram {
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
         String fileName = readGroup.getPlatformUnit();
         if (fileName == null) fileName = readGroup.getReadGroupId();
-        fileName = IoUtil.makeFileNameSafe(fileName);
+        fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
 
         final File result = (OUTPUT_DIR != null)
                 ? new File(OUTPUT_DIR, fileName)
                 : new File(fileName);
-        IoUtil.assertFileIsWritable(result);
+        IOUtil.assertFileIsWritable(result);
         return result;
     }
 
@@ -386,7 +386,7 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     /**
-     * A collection of {@link net.sf.picard.fastq.FastqWriter}s for particular types of reads.
+     * A collection of {@link htsjdk.samtools.fastq.FastqWriter}s for particular types of reads.
      * <p/>
      * Allows for lazy construction of the second-of-pair writer, since when we are in the "output per read group mode", we only wish to
      * generate a second-of-pair fastq if we encounter a second-of-pair read.

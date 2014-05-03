@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.illumina.parser.readers.BclReader;
-import net.sf.samtools.util.CloseableIterator;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.BclReader;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.Collections;
@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import static net.sf.samtools.util.CollectionUtil.makeSet;
+import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 /**
  * BclParser parses a number of BclFiles equal to the total of all the values in outputLengths and returns a BclData object

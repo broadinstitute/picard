@@ -1,10 +1,10 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.BamFileIoUtils;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMTextHeaderCodec;
+import picard.PicardException;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMTextHeaderCodec;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class AddCommentsToBamTest {
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam");
     private static final File INPUT_FILE = new File(TEST_DATA_DIR, "aligned_queryname_sorted.bam");
     private static final File SAM_FILE = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
 

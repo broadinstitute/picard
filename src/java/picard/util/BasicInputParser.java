@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import net.sf.samtools.util.BufferedLineReader;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.RuntimeIOException;
 
 /**
  * TextFileParser which reads a single text file.
@@ -169,7 +169,7 @@ public class BasicInputParser extends AbstractInputParser
     private static InputStream[] filesToInputStreams(final File files[]) {
         final InputStream result[] = new InputStream[files.length];
         for (int i = 0; i < files.length; i++) {
-            result[i] = IoUtil.openFileForReading(files[i]);
+            result[i] = IOUtil.openFileForReading(files[i]);
         }
         return result;
     }

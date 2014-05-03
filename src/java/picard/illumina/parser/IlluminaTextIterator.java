@@ -21,17 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.util.BasicInputParser;
+import picard.util.BasicInputParser;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.CloserUtil;
+import picard.PicardException;
+import htsjdk.samtools.util.CloserUtil;
 
 
 /**

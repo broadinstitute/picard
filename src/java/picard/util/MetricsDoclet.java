@@ -22,11 +22,11 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package picard.util;
 
 import com.sun.javadoc.*;
 
-import net.sf.picard.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricBase;
 
 import java.util.TreeMap;
 import java.util.SortedMap;

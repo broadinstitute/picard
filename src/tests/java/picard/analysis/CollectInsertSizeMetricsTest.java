@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MetricsFile;
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,7 +36,7 @@ import java.io.IOException;
  */
 public class CollectInsertSizeMetricsTest {
 
-    private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/");
+    private static File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
     @Test
     public void test() throws IOException {

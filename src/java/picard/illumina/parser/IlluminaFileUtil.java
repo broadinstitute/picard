@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.fakers.BarcodeFileFaker;
-import net.sf.picard.illumina.parser.fakers.BclFileFaker;
-import net.sf.picard.illumina.parser.fakers.ClocsFileFaker;
-import net.sf.picard.illumina.parser.fakers.FilterFileFaker;
-import net.sf.picard.illumina.parser.fakers.LocsFileFaker;
-import net.sf.picard.illumina.parser.fakers.PosFileFaker;
-import net.sf.picard.illumina.parser.readers.TileMetricsOutReader;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CloserUtil;
+import picard.PicardException;
+import picard.illumina.parser.fakers.BarcodeFileFaker;
+import picard.illumina.parser.fakers.BclFileFaker;
+import picard.illumina.parser.fakers.ClocsFileFaker;
+import picard.illumina.parser.fakers.FilterFileFaker;
+import picard.illumina.parser.fakers.LocsFileFaker;
+import picard.illumina.parser.fakers.PosFileFaker;
+import picard.illumina.parser.readers.TileMetricsOutReader;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -159,7 +159,7 @@ public class IlluminaFileUtil {
      * Return the list of tiles we would expect for this lane based on the metrics found in InterOp/TileMetricsOut.bin
      */
     public List<Integer> getExpectedTiles() {
-        IoUtil.assertFileIsReadable(tileMetricsOut);
+        IOUtil.assertFileIsReadable(tileMetricsOut);
         //Used just to ensure predictable ordering
         final TreeSet<Integer> expectedTiles = new TreeSet<Integer>();
 

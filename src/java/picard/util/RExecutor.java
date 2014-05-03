@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package picard.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,9 +30,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProcessExecutor;
+import picard.PicardException;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CollectionUtil;
 
 /**
  * Util class for executing R scripts.
@@ -55,7 +57,7 @@ public class RExecutor {
     public static int executeFromClasspath(final String rScriptName, final String... arguments) {
         final File scriptFile = writeScriptFile(rScriptName);
         final int returnCode = executeFromFile(scriptFile, arguments);
-        net.sf.samtools.util.IOUtil.deleteFiles(scriptFile);
+        htsjdk.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
 
@@ -88,8 +90,8 @@ public class RExecutor {
                 throw new IllegalArgumentException("Script [" + rScriptName + "] not found in classpath");
             }
             final File scriptFile = File.createTempFile("script", ".R");
-            scriptFileStream = IoUtil.openFileForWriting(scriptFile);
-            IoUtil.copyStream(scriptStream, scriptFileStream);
+            scriptFileStream = IOUtil.openFileForWriting(scriptFile);
+            IOUtil.copyStream(scriptStream, scriptFileStream);
             return scriptFile;
         } catch (IOException e) {
             throw new PicardException("Unexpected exception creating R script file", e);

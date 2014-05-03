@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 
 public class LocsFileReaderTest {
-    private static final File TestDir = new File("testdata/net/sf/picard/illumina/readerTests");
+    private static final File TestDir = new File("testdata/picard/illumina/readerTests");
     public  static final File LocsFile = new File(TestDir, "s_1_6.locs");
     public  static final int ExpectedTile = 6;
     public  static final int ExpectedLane = 1;

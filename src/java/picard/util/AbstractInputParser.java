@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 import java.util.Iterator;
 
-import net.sf.samtools.util.AbstractIterator;
-import net.sf.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.AbstractIterator;
+import htsjdk.samtools.util.CloseableIterator;
 
 /**
  * Class for parsing text files where each line consists of fields separated by whitespace.

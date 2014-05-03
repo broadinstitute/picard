@@ -21,26 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.fastq.*;
-import net.sf.picard.illumina.parser.ClusterData;
-import net.sf.picard.illumina.parser.ReadData;
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser;
-import net.sf.samtools.*;
-import net.sf.samtools.util.SortingCollection;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.fastq.BasicFastqWriter;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqWriter;
+import htsjdk.samtools.fastq.FastqWriterFactory;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import picard.fastq.*;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.ReadData;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CollectionUtil;
+import picard.util.IlluminaUtil;
+import htsjdk.samtools.util.Log;
+import picard.util.TabbedTextFileWithHeaderParser;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.*;
 import java.util.*;
@@ -194,7 +199,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
         readStructure = new ReadStructure(READ_STRUCTURE);
         if (MULTIPLEX_PARAMS != null) {
-            IoUtil.assertFileIsReadable(MULTIPLEX_PARAMS);
+            IOUtil.assertFileIsReadable(MULTIPLEX_PARAMS);
         }
         final boolean demultiplex;
         if (OUTPUT_PREFIX != null) {
@@ -286,7 +291,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      */
     private FastqRecordsWriter buildWriter(final File outputPrefix) {
         final File outputDir = outputPrefix.getAbsoluteFile().getParentFile();
-        IoUtil.assertDirectoryIsWritable(outputDir);
+        IOUtil.assertDirectoryIsWritable(outputDir);
         final String prefixString = outputPrefix.getName();
         final FastqWriter[] templateWriters = new FastqWriter[readStructure.templates.length()];
         final FastqWriter[] barcodeWriters = new FastqWriter[readStructure.barcodes.length()];

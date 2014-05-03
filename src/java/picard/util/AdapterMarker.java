@@ -21,13 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;

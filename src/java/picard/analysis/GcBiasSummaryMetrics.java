@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricBase;
 
 /**
  * High level metrics that capture how biased the coverage in a certain lane is.

@@ -1,8 +1,7 @@
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser.Row;
-import net.sf.samtools.util.StringUtil;
+import picard.util.TabbedTextFileWithHeaderParser.Row;
+import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

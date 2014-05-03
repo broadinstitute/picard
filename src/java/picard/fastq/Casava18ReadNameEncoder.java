@@ -1,7 +1,7 @@
-package net.sf.picard.fastq;
+package picard.fastq;
 
-import net.sf.picard.illumina.parser.ClusterData;
-import net.sf.samtools.util.StringUtil;
+import picard.illumina.parser.ClusterData;
+import htsjdk.samtools.util.StringUtil;
 
 /**
  * A read name encoder conforming to the standard described by Illumina Casava 1.8.

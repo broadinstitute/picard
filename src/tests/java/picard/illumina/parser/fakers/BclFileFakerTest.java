@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.fakers;
+package picard.illumina.parser.fakers;
 
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.illumina.parser.readers.BclReader;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.BclReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

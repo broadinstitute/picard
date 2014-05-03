@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.analysis;
+package picard.analysis;
 
 /**
  * For use with Picard metrics programs that may output metrics for multiple levels

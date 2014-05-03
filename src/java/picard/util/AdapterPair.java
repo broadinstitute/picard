@@ -1,4 +1,4 @@
-package net.sf.picard.util;
+package picard.util;
 
 public interface AdapterPair {
 

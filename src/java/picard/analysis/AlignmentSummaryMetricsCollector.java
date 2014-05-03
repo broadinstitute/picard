@@ -1,16 +1,15 @@
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.metrics.PerUnitMetricCollector;
-import net.sf.picard.metrics.SAMRecordAndReference;
-import net.sf.picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.util.Histogram;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CoordMath;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Histogram;
+import picard.metrics.PerUnitMetricCollector;
+import picard.metrics.SAMRecordAndReference;
+import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CoordMath;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
 import java.util.HashSet;
 import java.util.List;

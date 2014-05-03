@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterParserTest {
-    private static final File TestDataDir = new File("testdata/net/sf/picard/illumina/parserTests");
+    private static final File TestDataDir = new File("testdata/picard/illumina/parserTests");
     private static final File BaseCallsDir = new File(TestDataDir, "filterParser");
 
     private static final boolean F = false;

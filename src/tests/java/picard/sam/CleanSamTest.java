@@ -21,12 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.sam.testers.CleanSamTester;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMValidationError;
+import htsjdk.samtools.SamFileValidator;
+import picard.sam.testers.CleanSamTester;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMValidationError;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -38,7 +39,7 @@ import java.util.Arrays;
 
 public class CleanSamTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/CleanSam");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/CleanSam");
     private static final String qualityScore = "&/,&-.1/6/&&)&).)/,&0768)&/.,/874,&.4137572)&/&&,&1-&.0/&&*,&&&&&&&&&&18775799,&16:8775-56256/69::;0";
 
     @Test(dataProvider = "testCleanSamDataProvider")

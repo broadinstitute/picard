@@ -1,8 +1,8 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.fakers.FileFaker;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.illumina.parser.fakers.FileFaker;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.util.List;
@@ -159,8 +159,8 @@ public abstract class ParameterizedFileUtil {
     protected IlluminaFileMap getTiledFiles(final File baseDirectory, final Pattern pattern) {
         final IlluminaFileMap fileMap = new IlluminaFileMap();
         if (baseDirectory.exists()) {
-            IoUtil.assertDirectoryIsReadable(baseDirectory);
-            final File[] files = IoUtil.getFilesMatchingRegexp(baseDirectory, pattern);
+            IOUtil.assertDirectoryIsReadable(baseDirectory);
+            final File[] files = IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
             for (final File file : files) {
                 if (file.length() > 0) {
                     fileMap.put(fileToTile(file.getName()), file);

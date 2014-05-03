@@ -22,23 +22,23 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineParser;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
-import net.sf.picard.PicardException;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.SortingCollection;
-import net.sf.samtools.util.SortingLongCollection;
+import picard.cmdline.CommandLineParser;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import picard.PicardException;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.SortingLongCollection;
 
 import java.io.*;
 import java.util.*;
@@ -152,9 +152,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
-        for (final File f : INPUT) IoUtil.assertFileIsReadable(f);
-        IoUtil.assertFileIsWritable(OUTPUT);
-        IoUtil.assertFileIsWritable(METRICS_FILE);
+        for (final File f : INPUT) IOUtil.assertFileIsReadable(f);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(METRICS_FILE);
 
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
@@ -678,7 +678,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
 
     /**
      * Looks through the set of reads and identifies how many of the duplicates are
-     * in fact optical duplicates, and stores the data in the instance level histogram.
+     * in fact optical duplicates, and stores the data in the instance level Histogram.
      */
     private void trackOpticalDuplicates(final List<ReadEnds> list) {
         final boolean[] opticalDuplicateFlags = findOpticalDuplicates(list, OPTICAL_DUPLICATE_PIXEL_DISTANCE);

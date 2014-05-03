@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.BufferedLineReader;
-import net.sf.samtools.util.LineReader;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.LineReader;
+import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,10 +44,10 @@ import java.util.List;
  */
 public class IlluminaBasecallsToSamTest {
 
-    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/sams");
-    private static final File DUAL_TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/sams");
+    private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
+    private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/sams");
+    private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
     @Test
     public void testTileNumberComparator() {
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
@@ -70,7 +70,7 @@ public class IlluminaBasecallsToSamTest {
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
         });
-        IoUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class IlluminaBasecallsToSamTest {
         });
 
         for (final File outputSam : samFiles) {
-            IoUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
+            IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
         }
     }
 }

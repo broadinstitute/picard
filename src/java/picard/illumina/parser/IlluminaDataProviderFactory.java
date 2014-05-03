@@ -22,13 +22,13 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.util.Log;
-import net.sf.samtools.util.StringUtil;
+import picard.PicardException;
+import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,8 +42,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
-import static net.sf.samtools.util.CollectionUtil.makeSet;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 /**
  * IlluminaDataProviderFactory accepts options for parsing Illumina data files for a lane and creates an

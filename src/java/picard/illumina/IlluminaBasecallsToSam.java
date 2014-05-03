@@ -22,25 +22,25 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.picard.util.IlluminaUtil.IlluminaAdapterPair;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.TabbedTextFileWithHeaderParser;
-import net.sf.samtools.*;
-import net.sf.samtools.util.Iso8601Date;
-import net.sf.samtools.util.SortingCollection;
-import net.sf.samtools.util.StringUtil;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.CollectionUtil;
+import picard.util.IlluminaUtil;
+import picard.util.IlluminaUtil.IlluminaAdapterPair;
+import htsjdk.samtools.util.Log;
+import picard.util.TabbedTextFileWithHeaderParser;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.Iso8601Date;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.io.InputStream;
@@ -199,11 +199,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
         if (OUTPUT != null) {
-            IoUtil.assertFileIsWritable(OUTPUT);
+            IOUtil.assertFileIsWritable(OUTPUT);
         }
 
         if (LIBRARY_PARAMS != null) {
-            IoUtil.assertFileIsReadable(LIBRARY_PARAMS);
+            IOUtil.assertFileIsReadable(LIBRARY_PARAMS);
         }
 
         if (OUTPUT != null) {
@@ -376,7 +376,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      */
     private SAMFileWriterWrapper buildSamFileWriter(final File output, final String sampleAlias,
                                                     final String libraryName, final Map<String, String> headerParameters) {
-        IoUtil.assertFileIsWritable(output);
+        IOUtil.assertFileIsWritable(output);
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(READ_GROUP_ID);
         rg.setSample(sampleAlias);
 

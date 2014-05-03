@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.CollectionUtil;
+import picard.PicardException;
+import htsjdk.samtools.util.CollectionUtil;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

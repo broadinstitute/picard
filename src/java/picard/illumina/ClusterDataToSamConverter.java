@@ -21,21 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.fastq.IlluminaReadNameEncoder;
-import net.sf.picard.fastq.ReadNameEncoder;
-import net.sf.picard.filter.SamRecordFilter;
-import net.sf.picard.filter.SolexaNoiseFilter;
-import net.sf.picard.illumina.parser.ClusterData;
-import net.sf.picard.illumina.parser.ReadData;
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.util.AdapterMarker;
-import net.sf.picard.util.AdapterPair;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMTag;
+import picard.fastq.IlluminaReadNameEncoder;
+import picard.fastq.ReadNameEncoder;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SolexaNoiseFilter;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.ReadData;
+import picard.illumina.parser.ReadStructure;
+import htsjdk.samtools.ReservedTagConstants;
+import picard.util.AdapterMarker;
+import picard.util.AdapterPair;
+import picard.util.IlluminaUtil;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 import java.util.List;
 

@@ -1,9 +1,9 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.CloseableIterator;
+import picard.PicardException;
+import htsjdk.samtools.util.CloseableIterator;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

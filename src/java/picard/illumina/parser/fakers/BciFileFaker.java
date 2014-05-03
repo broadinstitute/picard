@@ -1,6 +1,6 @@
-package net.sf.picard.illumina.parser.fakers;
+package picard.illumina.parser.fakers;
 
-import net.sf.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;

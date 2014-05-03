@@ -1,8 +1,8 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -13,10 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static net.sf.picard.illumina.parser.BinTdUtil.*;
+import static picard.illumina.parser.BinTdUtil.*;
 
 public class BclParserTest {
-    public static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L001");
+    public static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L001");
     public static final File MULTI_TILE_DATA_DIR = new File("/seq/tng/jcarey/testdata/NextSeq/Data/Intensities/BaseCalls/L001");
     public static final String READ_STRUCTURE = "25T8B25T";
     public static final String READ_STRUCTURE_WSKIPS = "25S8B25S";
@@ -216,7 +216,7 @@ public class BclParserTest {
     }
 
     public void fullBclParserTestWDeletedSkipsImpl(final int[] tiles, final int size, final int seekAfter, final int newTileIndex, final int orderedTileIndex, final String readStructure) {
-        final File basecallDir = IoUtil.createTempDir("bclParserTest", "BaseCalls");
+        final File basecallDir = IOUtil.createTempDir("bclParserTest", "BaseCalls");
 
         Exception exc = null;
         try {
@@ -231,7 +231,7 @@ public class BclParserTest {
         } catch (final Exception thrExc) {
             exc = thrExc;
         } finally {
-            IoUtil.deleteDirectoryTree(basecallDir);
+            IOUtil.deleteDirectoryTree(basecallDir);
         }
         if (exc != null) {
             if (exc.getClass() == PicardException.class) {
@@ -258,7 +258,7 @@ public class BclParserTest {
                             }
                         }
 
-                        IoUtil.copyFile(file, new File(cycleDir, file.getName()));
+                        IOUtil.copyFile(file, new File(cycleDir, file.getName()));
                     }
                 }
             }

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
  * Represents one set of cycles in an ReadStructure (e.g. if the ReadStructure is 36TB836T then

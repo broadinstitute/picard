@@ -22,18 +22,21 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.reference;
+package picard.reference;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Interval;
-import net.sf.picard.util.IntervalList;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.SequenceUtil;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.SequenceUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -68,15 +71,15 @@ public class ExtractSequences extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INTERVAL_LIST);
-        IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INTERVAL_LIST);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         final IntervalList intervals = IntervalList.fromFile(INTERVAL_LIST);
         final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
         SequenceUtil.assertSequenceDictionariesEqual(intervals.getHeader().getSequenceDictionary(), ref.getSequenceDictionary());
 
-        final BufferedWriter out = IoUtil.openFileForBufferedWriting(OUTPUT);
+        final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 
         for (final Interval interval : intervals) {
             final ReferenceSequence seq = ref.getSubsequenceAt(interval.getSequence(), interval.getStart(), interval.getEnd());

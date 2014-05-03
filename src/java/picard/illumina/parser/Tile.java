@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.CollectionUtil;
 
 import java.util.*;
 

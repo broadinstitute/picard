@@ -1,20 +1,20 @@
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.illumina.parser.IlluminaDataProviderFactory;
-import net.sf.picard.illumina.parser.IlluminaDataType;
-import net.sf.picard.illumina.parser.IlluminaFileUtil;
-import net.sf.picard.illumina.parser.OutputMapping;
-import net.sf.picard.illumina.parser.ParameterizedFileUtil;
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProcessExecutor;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.util.ProcessExecutor;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.IlluminaFileUtil;
+import picard.illumina.parser.OutputMapping;
+import picard.illumina.parser.ParameterizedFileUtil;
+import picard.illumina.parser.ReadStructure;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -236,7 +236,7 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        IoUtil.assertDirectoryIsReadable(BASECALLS_DIR);
+        IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
         final List<String> errors = new ArrayList<String>();
 
         for (final Integer lane : LANES) {

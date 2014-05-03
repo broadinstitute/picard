@@ -22,16 +22,24 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.metrics.*;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.util.*;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.OverlapDetector;
+import picard.PicardException;
+import picard.analysis.MetricAccumulationLevel;
+import htsjdk.samtools.metrics.*;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.*;
+import picard.metrics.MultilevelMetrics;
+import picard.metrics.PerUnitMetricCollector;
+import picard.metrics.SAMRecordMultiLevelCollector;
 
 import java.io.File;
 import java.io.IOException;

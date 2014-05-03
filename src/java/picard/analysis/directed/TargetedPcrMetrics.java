@@ -1,6 +1,6 @@
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.metrics.MultilevelMetrics;
+import picard.metrics.MultilevelMetrics;
 
 /** Metrics class for targeted pcr runs such as TSCA runs */
 public class TargetedPcrMetrics extends MultilevelMetrics {

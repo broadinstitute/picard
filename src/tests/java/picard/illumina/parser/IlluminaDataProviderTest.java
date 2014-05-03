@@ -21,10 +21,10 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.PicardException;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -34,8 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
-//import static net.sf.samtools.util.CollectionUtil.*;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
+//import static htsjdk.samtools.util.CollectionUtil.*;
 
 /**
  * @author jburke@broadinstitute.org
@@ -44,7 +44,7 @@ import static net.sf.samtools.util.CollectionUtil.makeList;
 public class IlluminaDataProviderTest {
 
     public static final BclQualityEvaluationStrategy bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY);
-    public static final File BINARY_TD_LOCATION = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
+    public static final File BINARY_TD_LOCATION = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final IlluminaDataType[] DEFAULT_DATA_TYPES = new IlluminaDataType[]{
             IlluminaDataType.Position, IlluminaDataType.BaseCalls, IlluminaDataType.QualityScores, IlluminaDataType.PF
     };

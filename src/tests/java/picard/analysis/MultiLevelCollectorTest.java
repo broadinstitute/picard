@@ -1,12 +1,13 @@
-package net.sf.picard.analysis;
+package picard.analysis;
 
 
-import net.sf.picard.metrics.*;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import static net.sf.samtools.util.CollectionUtil.*;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import picard.metrics.*;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import static htsjdk.samtools.util.CollectionUtil.*;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -19,7 +20,7 @@ import java.util.Set;
 
 public class MultiLevelCollectorTest {
 
-    public static File TESTFILE = new File("testdata/net/sf/picard/sam/summary_alignment_stats_test_multiple.sam");
+    public static File TESTFILE = new File("testdata/picard/sam/summary_alignment_stats_test_multiple.sam");
 
     public String noneOrStr(final String str) {
         final String out;

@@ -21,18 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.util.IOUtil;
+import picard.PicardException;
 
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFormatException;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.IOUtil;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFormatException;
+import htsjdk.samtools.SAMRecord;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -45,7 +44,7 @@ import java.util.*;
  * Tests for SamToFastq
  */
 public class SamToFastqTest {
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/bam2fastq/paired");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/bam2fastq/paired");
     private static final String CLIPPING_TEST_DATA = "ok/clipping_test.sam";
 
     @DataProvider(name = "okFiles")
@@ -220,7 +219,7 @@ public class SamToFastqTest {
         final Map<String, Set<String>> outputSets = new HashMap<String, Set<String>>(groupFiles.length);
 
         SamToFastq samToFq = new SamToFastq();
-        String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
         String [] args = new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",
@@ -246,8 +245,8 @@ public class SamToFastqTest {
             f2 = new File(fname2);
             f1.deleteOnExit();
             f2.deleteOnExit();
-            IoUtil.assertFileIsReadable(f1);
-            IoUtil.assertFileIsReadable(f2);
+            IOUtil.assertFileIsReadable(f1);
+            IOUtil.assertFileIsReadable(f2);
 
             // Check that paired fastq files are same size and store them for later comparison
             outputHeaderSet1 = createFastqReadHeaderSet(f1);
@@ -278,12 +277,12 @@ public class SamToFastqTest {
     }
 
 
-    @Test (dataProvider = "badGroupedFiles", expectedExceptions= PicardException.class)
+    @Test (dataProvider = "badGroupedFiles", expectedExceptions= SAMException.class)
     public void testBadGroupedFile(final String samFilename, final String fastq, final String secondEndFastq,
                                    final String [] groupFiles) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         SamToFastq samToFq = new SamToFastq();
-        final String tmpDir = samToFq.TMP_DIR + "/";
+        final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
         final String [] args = new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",
@@ -359,8 +358,8 @@ public class SamToFastqTest {
     }
 
     private Map<String,MatePair> createSamMatePairsMap(final File samFile) throws IOException {
-        IoUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(samFile));
+        IOUtil.assertFileIsReadable(samFile);
+        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
 
         final Map<String,MatePair> map = new LinkedHashMap<String,MatePair>();
         for (final SAMRecord record : reader ) {
@@ -377,8 +376,8 @@ public class SamToFastqTest {
 
 
     private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
-        IoUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(samFile));
+        IOUtil.assertFileIsReadable(samFile);
+        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
         final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
 
         Map<String,MatePair> curFileMap;

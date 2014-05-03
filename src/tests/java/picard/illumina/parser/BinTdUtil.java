@@ -1,14 +1,14 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 import java.io.File;
 import java.util.*;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 //Illumina Dir Test Data
 public class BinTdUtil {
-    public static final File IntensitiesDir = new File("testdata/net/sf/picard/illumina/CompleteIlluminaDir/Intensities/");
-    public static final File basecallDir = new File("testdata/net/sf/picard/illumina/CompleteIlluminaDir/Intensities/BaseCalls");
+    public static final File IntensitiesDir = new File("testdata/picard/illumina/CompleteIlluminaDir/Intensities/");
+    public static final File basecallDir = new File("testdata/picard/illumina/CompleteIlluminaDir/Intensities/BaseCalls");
 
     public static final String ltStr(final int lane, final int tile) {
         return "s_" + lane + "_" + tile;

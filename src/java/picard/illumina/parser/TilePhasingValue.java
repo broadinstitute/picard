@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
  * Captures information about a phasing value - Which read it corresponds to, which phasing type and a median value

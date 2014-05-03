@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 /**
  * Store the information from Illumina files for a single cluster with one or more reads.

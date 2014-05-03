@@ -23,10 +23,10 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package net.sf.picard.vcf;
+package picard.vcf;
 
-import net.sf.picard.PicardException;
-import org.broad.tribble.Tribble;
+import picard.PicardException;
+import htsjdk.tribble.Tribble;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class VcfFormatConverterTest {
-    private static final String TEST_DATA_PATH = "testdata/net/sf/picard/vcf/";
+    private static final String TEST_DATA_PATH = "testdata/picard/vcf/";
     private static final String TEST_FILE_BASE = "vcfFormatTest";
 
     private static final String VCF = ".vcf";

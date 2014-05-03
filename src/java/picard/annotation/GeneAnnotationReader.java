@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.annotation;
+package picard.annotation;
 
-import net.sf.picard.util.OverlapDetector;
-import net.sf.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.samtools.SAMSequenceDictionary;
 
 import java.io.File;
 

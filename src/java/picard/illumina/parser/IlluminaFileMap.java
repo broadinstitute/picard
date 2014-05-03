@@ -21,9 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
-
-import net.sf.picard.PicardException;
+package picard.illumina.parser;
 
 import java.io.File;
 import java.util.*;

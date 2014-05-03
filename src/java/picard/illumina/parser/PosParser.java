@@ -21,20 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
-import net.sf.picard.illumina.parser.readers.ClocsFileReader;
-import net.sf.picard.illumina.parser.readers.LocsFileReader;
-import net.sf.picard.illumina.parser.readers.PosFileReader;
-import net.sf.samtools.util.CloseableIterator;
+import picard.PicardException;
+import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
+import picard.illumina.parser.readers.ClocsFileReader;
+import picard.illumina.parser.readers.LocsFileReader;
+import picard.illumina.parser.readers.PosFileReader;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
-import static net.sf.samtools.util.CollectionUtil.makeSet;
+import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 /**
  * PosParser parses multiple files formatted as one of the three file formats that contain position information

@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.samtools.BamFileIoUtils;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
 
 public class MergeSamFilesTest {
-    private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/MergeSamFiles");
+    private static File TEST_DATA_DIR = new File("testdata/picard/sam/MergeSamFiles");
 
     /**
      * Confirm that unsorted input can result in coordinate sorted output, with index created.

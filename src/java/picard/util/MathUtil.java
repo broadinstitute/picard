@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package picard.util;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

@@ -1,10 +1,9 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
-import java.util.List;
 
 public class IlluminaDataProviderFactoryTest {
 

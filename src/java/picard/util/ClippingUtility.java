@@ -22,12 +22,13 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
-import net.sf.samtools.SAMRecord;
-import net.sf.picard.sam.ReservedTagConstants;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.ReservedTagConstants;
 
 /**
  * Utilities to clip the adapater sequence from a SAMRecord read

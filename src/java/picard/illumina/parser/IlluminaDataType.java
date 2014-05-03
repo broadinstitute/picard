@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
  * List of data types of interest when parsing Illumina data.  Because different Illumina versions

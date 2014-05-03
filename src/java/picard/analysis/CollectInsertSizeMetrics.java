@@ -22,53 +22,53 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
 import java.io.File;
 import java.util.*;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.analysis.directed.InsertSizeMetricsCollector;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.RExecutor;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
+import picard.PicardException;
+import picard.analysis.directed.InsertSizeMetricsCollector;
+import picard.cmdline.Option;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Log;
+import picard.util.RExecutor;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
 
 /**
- * Command line program to read non-duplicate insert sizes, create a histogram
+ * Command line program to read non-duplicate insert sizes, create a Histogram
  * and report distribution statistics.
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
-    private static final String HISTOGRAM_R_SCRIPT = "net/sf/picard/analysis/insertSizeHistogram.R";
+    private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
     // Usage and parameters
     @Usage
     public String USAGE = getStandardUsagePreamble() +
 			"Reads a SAM or BAM file and writes a file containing metrics about " +
             "the statistical distribution of insert size (excluding duplicates) " +
-            "and generates a histogram plot.\n";
+            "and generates a Histogram plot.\n";
 
-    @Option(shortName="H", doc="File to write insert size histogram chart to.")
-    public File HISTOGRAM_FILE;
+    @Option(shortName="H", doc="File to write insert size Histogram chart to.")
+    public File Histogram_FILE;
 
     @Option(doc="Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. " +
             "This is done because insert size data typically includes enough anomalous values from chimeras and other " +
             "artifacts to make the mean and sd grossly misleading regarding the real distribution.")
     public double DEVIATIONS = 10;
 
-    @Option(shortName="W", doc="Explicitly sets the histogram width, overriding automatic truncation of histogram tail. " +
-            "Also, when calculating mean and standard deviation, only bins <= HISTOGRAM_WIDTH will be included.", optional=true)
-    public Integer HISTOGRAM_WIDTH = null;
+    @Option(shortName="W", doc="Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. " +
+            "Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be included.", optional=true)
+    public Integer Histogram_WIDTH = null;
 
-    @Option(shortName="M", doc="When generating the histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
+    @Option(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
     public float MINIMUM_PCT = 0.05f;
 
@@ -103,11 +103,11 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     @Override protected boolean usesNoRefReads() { return false; }
 
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
-        IoUtil.assertFileIsWritable(OUTPUT);
-        IoUtil.assertFileIsWritable(HISTOGRAM_FILE);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(Histogram_FILE);
 
         //Delegate actual collection to InsertSizeMetricCollector
-        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT, HISTOGRAM_WIDTH, DEVIATIONS);
+        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT, Histogram_WIDTH, DEVIATIONS);
     }
 
     @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
@@ -131,24 +131,24 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             file.write(OUTPUT);
 
             final int rResult;
-            if(HISTOGRAM_WIDTH == null) {
+            if(Histogram_WIDTH == null) {
                 rResult = RExecutor.executeFromClasspath(
-                    HISTOGRAM_R_SCRIPT,
+                    Histogram_R_SCRIPT,
                     OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
+                    Histogram_FILE.getAbsolutePath(),
                     INPUT.getName());
             } else {
                 rResult = RExecutor.executeFromClasspath(
-                    HISTOGRAM_R_SCRIPT,
+                    Histogram_R_SCRIPT,
                     OUTPUT.getAbsolutePath(),
-                    HISTOGRAM_FILE.getAbsolutePath(),
+                    Histogram_FILE.getAbsolutePath(),
                     INPUT.getName(),
-                    String.valueOf( HISTOGRAM_WIDTH ) ); //HISTOGRAM_WIDTH is passed because R automatically sets histogram width to the last
-                                                         //bin that has data, which may be less than HISTOGRAM_WIDTH and confuse the user.
+                    String.valueOf( Histogram_WIDTH ) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
+                                                         //bin that has data, which may be less than Histogram_WIDTH and confuse the user.
             }
 
             if (rResult != 0) {
-                throw new PicardException("R script " + HISTOGRAM_R_SCRIPT + " failed with return code " + rResult);
+                throw new PicardException("R script " + Histogram_R_SCRIPT + " failed with return code " + rResult);
             }
         }
     }

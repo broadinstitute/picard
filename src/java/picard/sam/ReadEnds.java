@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
 /** Little struct-like class to hold read pair (and fragment) end data for MarkDuplicates. */
 class ReadEnds implements MarkDuplicates.PhysicalLocation {

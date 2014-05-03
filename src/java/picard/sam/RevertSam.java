@@ -22,20 +22,20 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.util.SortingCollection;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -122,8 +122,8 @@ public class RevertSam extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         final boolean sanitizing = SANITIZE;
         final SAMFileReader in = new SAMFileReader(INPUT, true);

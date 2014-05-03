@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.util.BasicInputParser;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.BasicInputParser;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
@@ -37,16 +37,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.illumina.parser.*;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import picard.illumina.parser.*;
 
 /**
  * @author alecw@broadinstitute.org
  */
 public class ExtractIlluminaBarcodesTest {
-    private static final File SINGLE_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
+    private static final File SINGLE_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
+    private static final File DUAL_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final String[] BARCODES = {
             "CAACTCTC",
             "CAACTCTG", // This one is artificial -- one edit away from the first one
@@ -72,22 +72,22 @@ public class ExtractIlluminaBarcodesTest {
         basecallsDir = File.createTempFile("eib.", ".tmp");
         Assert.assertTrue(basecallsDir.delete());
         Assert.assertTrue(basecallsDir.mkdir());
-        IoUtil.copyDirectoryTree(SINGLE_DATA_DIR, basecallsDir);
+        IOUtil.copyDirectoryTree(SINGLE_DATA_DIR, basecallsDir);
         dual = File.createTempFile("eib_dual", ".tmp");
         Assert.assertTrue(dual.delete());
         Assert.assertTrue(dual.mkdir());
-        IoUtil.copyDirectoryTree(DUAL_DATA_DIR, dual);
+        IOUtil.copyDirectoryTree(DUAL_DATA_DIR, dual);
         qual = File.createTempFile("eib_qual", ".tmp");
         Assert.assertTrue(qual.delete());
         Assert.assertTrue(qual.mkdir());
-        IoUtil.copyDirectoryTree(DUAL_DATA_DIR, qual);
+        IOUtil.copyDirectoryTree(DUAL_DATA_DIR, qual);
     }
 
     @AfterTest
     private void tearDown() {
-        IoUtil.deleteDirectoryTree(basecallsDir);
-        IoUtil.deleteDirectoryTree(dual);
-        IoUtil.deleteDirectoryTree(qual);
+        IOUtil.deleteDirectoryTree(basecallsDir);
+        IOUtil.deleteDirectoryTree(dual);
+        IOUtil.deleteDirectoryTree(qual);
     }
 
     @Test
@@ -182,7 +182,7 @@ public class ExtractIlluminaBarcodesTest {
         Assert.assertEquals(metricNoMatch.PF_READS, 112);
 
         // Check the barcode files themselves
-        final File[] barcodeFiles = IoUtil.getFilesMatchingRegexp(basecallsDir, "s_" + lane + "_\\d{4}_barcode.txt");
+        final File[] barcodeFiles = IOUtil.getFilesMatchingRegexp(basecallsDir, "s_" + lane + "_\\d{4}_barcode.txt");
         Arrays.sort(barcodeFiles);
 
         final BasicInputParser barcodeParser = new BasicInputParser(true, barcodeFiles);

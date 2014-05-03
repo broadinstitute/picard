@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 public class PerTilePerCycleParserTest {
     public static final List<Integer> DEFAULT_TILES = makeList(1, 2, 3, 4);

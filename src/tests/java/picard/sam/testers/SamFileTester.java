@@ -1,9 +1,9 @@
-package net.sf.picard.sam.testers;
+package picard.sam.testers;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.SAMRecordSetBuilder;
-import net.sf.samtools.*;
+import picard.cmdline.CommandLineProgram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.*;
 import org.testng.Assert;
 
 import java.io.File;
@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public abstract class SamFileTester {
 
-    public static final String TEST_DATA_BASE_DIR = "testdata/net/sf/picard/sam/";
+    public static final String TEST_DATA_BASE_DIR = "testdata/picard/sam/";
     private final SAMRecordSetBuilder samRecordSetBuilder;
     protected final Map<String, Boolean> duplicateFlags = new HashMap<String, Boolean>();
     private File outputDir;
@@ -54,7 +54,7 @@ public abstract class SamFileTester {
     }
 
     private void setOutputDir() {
-        this.outputDir = IoUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
+        this.outputDir = IOUtil.createTempDir(this.getClass().getSimpleName() + ".", ".tmp");
         if(deleteOnExit){
             outputDir.deleteOnExit();
         }

@@ -1,10 +1,9 @@
-package net.sf.picard;
+package picard;
 
-import net.sf.samtools.util.StopWatch;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.util.StopWatch;
+import htsjdk.samtools.util.StringUtil;
 
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 /**
  *

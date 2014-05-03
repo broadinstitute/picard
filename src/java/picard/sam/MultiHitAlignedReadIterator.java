@@ -21,19 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.filter.FilteringIterator;
-import net.sf.picard.filter.SamRecordFilter;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CloseableIterator;
+import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.util.PeekableIterator;
+import picard.PicardException;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.util.*;
-
-import static net.sf.picard.sam.HitsForInsert.NumPrimaryAlignmentState;
 
 
 /**

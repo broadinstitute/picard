@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.*;
-import net.sf.samtools.util.TestUtil;
-import net.sf.picard.sam.testers.MarkDuplicatesTester;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.TestUtil;
+import picard.sam.testers.MarkDuplicatesTester;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -35,7 +35,7 @@ import java.io.File;
 import java.util.*;
 
 public class MarkDuplicatesTest {
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/MarkDuplicates");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MarkDuplicates");
 
 
     /**
@@ -47,7 +47,7 @@ public class MarkDuplicatesTest {
     @Test(dataProvider = "pgRecordChainingTest")
     public void pgRecordChainingTest(final boolean suppressPg,
                                      final Map<String, List<ExpectedPnAndVn>> expectedPnVnByReadName) {
-        final File outputDir = IoUtil.createTempDir("MarkDuplicatesTest.", ".tmp");
+        final File outputDir = IOUtil.createTempDir("MarkDuplicatesTest.", ".tmp");
         outputDir.deleteOnExit();
         try {
             // Run MarkDuplicates, merging the 3 input files, and either enabling or suppressing PG header

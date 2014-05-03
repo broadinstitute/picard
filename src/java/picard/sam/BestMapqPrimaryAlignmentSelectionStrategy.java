@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import net.sf.picard.sam.HitsForInsert.NumPrimaryAlignmentState;
-import net.sf.samtools.SAMUtils;
+import picard.sam.HitsForInsert.NumPrimaryAlignmentState;
+import htsjdk.samtools.SAMUtils;
 
 /**
  * This strategy was designed for TopHat output, but could be of general utility.  It picks the alignment with best MAPQ.

@@ -1,10 +1,10 @@
-package net.sf.picard.vcf;
+package picard.vcf;
 
-import net.sf.samtools.util.CloseableIterator;
-import org.broad.tribble.TribbleException;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.VariantContextComparator;
-import org.broadinstitute.variant.vcf.VCFFileReader;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.tribble.TribbleException;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextComparator;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -18,7 +18,7 @@ import java.util.Queue;
 
 public class MergeVcfsTest {
 
-	private static final String TEST_DATA_PATH = "testdata/net/sf/picard/vcf/";
+	private static final String TEST_DATA_PATH = "testdata/picard/vcf/";
 
 	@Test(enabled = false)
 	public void testLong() {

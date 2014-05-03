@@ -21,9 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard;
-
-import net.sf.samtools.SAMException;
+package picard;
 
 /**
  * Basic Picard runtime exception that, for now, does nothing much

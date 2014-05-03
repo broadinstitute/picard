@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

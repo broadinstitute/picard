@@ -1,27 +1,26 @@
-package net.sf.picard.vcf;
+package picard.vcf;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineParser;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.CloserUtil;
-import org.broadinstitute.variant.variantcontext.VariantContext;
-import org.broadinstitute.variant.variantcontext.writer.Options;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriter;
-import org.broadinstitute.variant.variantcontext.writer.VariantContextWriterBuilder;
-import org.broadinstitute.variant.vcf.VCFFileReader;
-import org.broadinstitute.variant.vcf.VCFHeader;
+import picard.PicardException;
+import picard.cmdline.CommandLineParser;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.Options;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 import java.io.File;
-import java.util.EnumSet;
 
 /**
  * Splits the input VCF file into two, one for indels and one for SNPs. The headers of the two output
@@ -66,7 +65,7 @@ public class SplitVcfs extends CommandLineProgram {
 
 	@Override
 	protected int doWork() {
-		IoUtil.assertFileIsReadable(INPUT);
+		IOUtil.assertFileIsReadable(INPUT);
 		final ProgressLogger progress = new ProgressLogger(log, 10000);
 
 		final VCFFileReader fileReader = new VCFFileReader(INPUT);

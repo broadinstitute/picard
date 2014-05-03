@@ -1,8 +1,8 @@
-package net.sf.picard.pedigree;
+package picard.pedigree;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,8 +43,8 @@ public class PedFile extends TreeMap<String, PedFile.PedTrio> {
      * Writes a set of pedigrees out to disk.
      */
     public void write(final File file) {
-        IoUtil.assertFileIsWritable(file);
-        final BufferedWriter out = IoUtil.openFileForBufferedWriting(file);
+        IOUtil.assertFileIsWritable(file);
+        final BufferedWriter out = IOUtil.openFileForBufferedWriting(file);
 
         try {
             for (final PedTrio trio : values()) {
@@ -75,8 +75,8 @@ public class PedFile extends TreeMap<String, PedFile.PedTrio> {
     public static PedFile fromFile(final File file, final boolean isTabMode) {
         final PedFile pedFile = new PedFile(isTabMode);
 
-        IoUtil.assertFileIsReadable(file);
-        for (final String line : IoUtil.readLines(file)) {
+        IOUtil.assertFileIsReadable(file);
+        for (final String line : IOUtil.readLines(file)) {
             final String[] fields = pedFile.delimiterPattern.split(line);
             if (fields.length != 6) {
                 log.error("Ped file line contained invalid number of fields, skipping: " + line);

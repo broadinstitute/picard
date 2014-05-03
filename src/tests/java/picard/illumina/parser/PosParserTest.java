@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -6,11 +6,11 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.util.*;
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 public class PosParserTest {
 
-    public static final File TEST_DIR = new File("testdata/net/sf/picard/illumina/parserTests/posParser");
+    public static final File TEST_DIR = new File("testdata/picard/illumina/parserTests/posParser");
     public static final File S_1_1_POS = new File(TEST_DIR, "s_1_1_pos.txt");
     public static final File S_1_2_POS = new File(TEST_DIR, "s_1_2_pos.txt");
     public static final File S_1_3_POS = new File(TEST_DIR, "s_1_3_pos.txt");

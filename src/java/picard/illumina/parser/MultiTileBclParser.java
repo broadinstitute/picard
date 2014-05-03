@@ -21,12 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.illumina.parser.readers.BclIndexReader;
-import net.sf.picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import net.sf.picard.illumina.parser.readers.BclReader;
-import net.sf.samtools.util.CloseableIterator;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.illumina.parser.readers.BclReader;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.List;

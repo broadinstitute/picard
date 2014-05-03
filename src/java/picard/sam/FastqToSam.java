@@ -21,21 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.util.Iso8601Date;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.QualityEncodingDetector;
+import htsjdk.samtools.util.SolexaQualityConverter;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.util.Iso8601Date;
+import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -147,8 +151,8 @@ public class FastqToSam extends CommandLineProgram {
 
     /** Creates a simple SAM file from a single fastq file. */
     protected int doUnpaired() {
-        IoUtil.assertFileIsReadable(FASTQ);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(FASTQ);
+        IOUtil.assertFileIsWritable(OUTPUT);
         
         final FastqReader freader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
         final SAMFileHeader header = createFileHeader();
@@ -170,9 +174,9 @@ public class FastqToSam extends CommandLineProgram {
 
     /** More complicated method that takes two fastq files and builds pairing information in the SAM. */
     protected int doPaired() {
-        IoUtil.assertFileIsReadable(FASTQ);
-        IoUtil.assertFileIsReadable(FASTQ2);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(FASTQ);
+        IOUtil.assertFileIsReadable(FASTQ2);
+        IOUtil.assertFileIsWritable(OUTPUT);
         
         final FastqReader freader1 = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
         final FastqReader freader2 = new FastqReader(FASTQ2,ALLOW_AND_IGNORE_EMPTY_LINES);

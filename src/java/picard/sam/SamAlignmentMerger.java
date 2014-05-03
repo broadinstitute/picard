@@ -1,22 +1,24 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.samtools.BAMRecordCodec;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordQueryNameComparator;
-import net.sf.samtools.SamPairUtil;
-import net.sf.picard.PicardException;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.util.CloseableIterator;
-import net.sf.samtools.util.DelegatingIterator;
-import net.sf.samtools.util.SortingCollection;
+import htsjdk.samtools.BAMRecordCodec;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.MergingSamRecordIterator;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.PeekableIterator;
+import picard.PicardException;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.DelegatingIterator;
+import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.util.*;
@@ -106,14 +108,14 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
 
         if (alignedSamFile != null) {
             for (final File f : alignedSamFile) {
-                IoUtil.assertFileIsReadable(f);
+                IOUtil.assertFileIsReadable(f);
             }
         } else {
             for (final File f : read1AlignedSamFile) {
-                IoUtil.assertFileIsReadable(f);
+                IOUtil.assertFileIsReadable(f);
             }
             for (final File f : read2AlignedSamFile) {
-                IoUtil.assertFileIsReadable(f);
+                IOUtil.assertFileIsReadable(f);
             }
         }
 

@@ -21,16 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.*;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class MergeSamFiles extends CommandLineProgram {
             SAMSequenceDictionary dict = null; // Used to try and reduce redundant SDs in memory
 
             for (final File inFile : INPUT) {
-                IoUtil.assertFileIsReadable(inFile);
+                IOUtil.assertFileIsReadable(inFile);
                 final SAMFileReader in = new SAMFileReader(inFile);
                 readers.add(in);
                 headers.add(in.getFileHeader());
@@ -112,7 +112,7 @@ public class MergeSamFiles extends CommandLineProgram {
 
         // If all the input sort orders match the output sort order then just merge them and
         // write on the fly, otherwise setup to merge and sort before writing out the final file
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
         final boolean presorted;
         final SAMFileHeader.SortOrder headerMergerSortOrder;
         final boolean mergingSamRecordIteratorAssumeSorted;

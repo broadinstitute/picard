@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
 /**
  * Created by IntelliJ IDEA.

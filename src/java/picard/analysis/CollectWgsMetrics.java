@@ -1,24 +1,24 @@
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.filter.SamRecordFilter;
-import net.sf.picard.filter.SecondaryAlignmentFilter;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricBase;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.reference.ReferenceSequenceFileWalker;
-import net.sf.picard.util.Histogram;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.MathUtil;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.picard.util.SamLocusIterator;
-import net.sf.samtools.AlignmentBlock;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.util.SamLocusIterator;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import picard.util.MathUtil;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -117,9 +117,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
-        IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
         // Setup all the inputs
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
@@ -142,7 +142,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
         iterator.setIncludeNonPfReads(false);
 
         final int max = COVERAGE_CAP;
-        final long[] histogramArray = new long[max + 1];
+        final long[] HistogramArray = new long[max + 1];
         final boolean usingStopAfter = STOP_AFTER > 0;
         final long stopAfter = STOP_AFTER-1;
         long counter = 0;
@@ -169,7 +169,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
             final int depth = Math.min(readNames.size(), max);
             if (depth < readNames.size()) basesExcludedByCapping += readNames.size() - max;
-            histogramArray[depth]++;
+            HistogramArray[depth]++;
 
             // Record progress and perhaps stop
             progress.record(info.getSequenceName(), info.getPosition());
@@ -178,8 +178,8 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
         // Construct and write the outputs
         final Histogram<Integer> histo = new Histogram<Integer>("coverage", "count");
-        for (int i=0; i<histogramArray.length; ++i) {
-            histo.increment(i, histogramArray[i]);
+        for (int i=0; i<HistogramArray.length; ++i) {
+            histo.increment(i, HistogramArray[i]);
         }
 
         final WgsMetrics metrics = new WgsMetrics();
@@ -202,17 +202,17 @@ public class CollectWgsMetrics extends CommandLineProgram {
         metrics.PCT_EXC_CAPPED   = basesExcludedByCapping / totalWithExcludes;
         metrics.PCT_EXC_TOTAL    = (totalWithExcludes - total) / totalWithExcludes;
 
-        metrics.PCT_5X     = MathUtil.sum(histogramArray, 5, histogramArray.length)   / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_10X    = MathUtil.sum(histogramArray, 10, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_20X    = MathUtil.sum(histogramArray, 20, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_30X    = MathUtil.sum(histogramArray, 30, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_40X    = MathUtil.sum(histogramArray, 40, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_50X    = MathUtil.sum(histogramArray, 50, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_60X    = MathUtil.sum(histogramArray, 60, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_70X    = MathUtil.sum(histogramArray, 70, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_80X    = MathUtil.sum(histogramArray, 80, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_90X    = MathUtil.sum(histogramArray, 90, histogramArray.length)  / (double) metrics.GENOME_TERRITORY;
-        metrics.PCT_100X   = MathUtil.sum(histogramArray, 100, histogramArray.length) / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_5X     = MathUtil.sum(HistogramArray, 5, HistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_10X    = MathUtil.sum(HistogramArray, 10, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_20X    = MathUtil.sum(HistogramArray, 20, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_30X    = MathUtil.sum(HistogramArray, 30, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_40X    = MathUtil.sum(HistogramArray, 40, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_50X    = MathUtil.sum(HistogramArray, 50, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_60X    = MathUtil.sum(HistogramArray, 60, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_70X    = MathUtil.sum(HistogramArray, 70, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_80X    = MathUtil.sum(HistogramArray, 80, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_90X    = MathUtil.sum(HistogramArray, 90, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_100X   = MathUtil.sum(HistogramArray, 100, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
 
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
         out.addMetric(metrics);

@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.samtools.*;
-import net.sf.picard.sam.ReservedTagConstants;
+import htsjdk.samtools.*;
+import htsjdk.samtools.ReservedTagConstants;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
@@ -37,7 +37,7 @@ import java.io.File;
  */
 public class IlluminaBasecallsToSamAdapterClippingTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/125T125T/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/125T125T/Data/Intensities/BaseCalls");
     private static final String ALIAS = "myalias";
     private static final String RUN_BARCODE = "305PJAAXX080716";
 

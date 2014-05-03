@@ -1,5 +1,7 @@
-package net.sf.picard.metrics;
+package picard.metrics;
 
+
+import htsjdk.samtools.metrics.MetricBase;
 
 public class MultilevelMetrics extends MetricBase {
      /** The sample to which these metrics apply.  If null, it means they apply

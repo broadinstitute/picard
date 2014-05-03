@@ -1,21 +1,21 @@
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.reference.ReferenceSequenceFileFactory;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.picard.util.IntervalList;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.ProgressLogger;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.util.SequenceUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.ProgressLogger;
+import picard.analysis.MetricAccumulationLevel;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
 
 import java.io.File;
 import java.util.Iterator;
@@ -84,11 +84,11 @@ public abstract class CollectTargetedMetrics extends CommandLineProgram {
      * HsMetricsCalculator instance to do the real work.
      */
     protected int doWork() {
-        IoUtil.assertFileIsReadable(getProbeIntervals());
-        IoUtil.assertFileIsReadable(TARGET_INTERVALS);
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
-        if (PER_TARGET_COVERAGE != null) IoUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
+        IOUtil.assertFileIsReadable(getProbeIntervals());
+        IOUtil.assertFileIsReadable(TARGET_INTERVALS);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
+        if (PER_TARGET_COVERAGE != null) IOUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
 
         final SAMFileReader samReader = new SAMFileReader(INPUT);
 
@@ -104,7 +104,7 @@ public abstract class CollectTargetedMetrics extends CommandLineProgram {
 
         ReferenceSequenceFile ref = null;
         if (REFERENCE_SEQUENCE != null) {
-            IoUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
+            IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
             SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
                     INPUT, REFERENCE_SEQUENCE);

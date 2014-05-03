@@ -22,11 +22,11 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.samtools.*;
+import picard.analysis.MetricAccumulationLevel;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.*;
 
 import java.io.File;
 import java.util.*;

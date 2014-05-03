@@ -22,19 +22,16 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import net.sf.picard.analysis.CollectAlignmentSummaryMetrics;
+import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.analysis.AlignmentSummaryMetrics;
 
 /**
  * Tests CollectAlignmentSummaryStatistics
@@ -42,7 +39,7 @@ import net.sf.picard.analysis.AlignmentSummaryMetrics;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 public class CollectAlignmentSummaryMetricsTest {
-    private static File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam");
+    private static File TEST_DATA_DIR = new File("testdata/picard/sam");
     
     @Test
     public void test() throws IOException {

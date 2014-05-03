@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
 /**
  * Illumina's TileMetricsOut.bin file codes various metrics, both concrete (all density id's are code 100) or as a base code

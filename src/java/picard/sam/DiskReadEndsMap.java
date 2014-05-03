@@ -21,11 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.CloserUtil;
+import htsjdk.samtools.CoordinateSortedPairInfoMap;
+import picard.PicardException;
+import htsjdk.samtools.util.CloserUtil;
 
 import java.io.*;
 import java.util.*;
@@ -88,7 +88,7 @@ class DiskReadEndsMap implements ReadEndsMap {
             try {
                 final String key = readEndsCodec.getInputStream().readUTF();
                 final ReadEnds record = readEndsCodec.decode();
-                return new AbstractMap.SimpleEntry<java.lang.String,net.sf.picard.sam.ReadEnds>(key, record);
+                return new AbstractMap.SimpleEntry<java.lang.String, picard.sam.ReadEnds>(key, record);
             } catch (IOException e) {
                 throw new PicardException("Error loading ReadEndsMap from disk", e);
             }

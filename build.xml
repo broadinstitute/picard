@@ -36,17 +36,20 @@
     <property name="scripts" value="src/scripts"/>
     <property name="reports" value="dist/test"/>
     <property name="test.output" value="dist/test"/>
+    <property name="htsjdk_lib_dir" value="${dist}/htsjdk_lib_dir"/>
+    <property name="htsjdk_git_url" value="git@github.com:samtools/htsjdk.git" />
 
     <property name="javac.target" value="1.6"/>
     <property name="javac.debug" value="true"/>
 
-    <!-- Get SVN revision, if available, otherwise leave it blank.  -->
-    <exec executable="svnversion" outputproperty="repository.revision" failifexecutionfails="false"/>
+    <!-- Get GIT hash, if available, otherwise leave it blank.  -->
+    <exec executable="git" outputproperty="repository.revision" failifexecutionfails="true" errorproperty="">
+        <arg value="log"/>
+        <arg value="-1"/>
+        <arg value="--pretty=format:%H_%at"/>
+    </exec>
     <property name="repository.revision" value=""/>
-    <property name="sam-version" value="1.112"/>
-    <property name="picard-version" value="${sam-version}"/>
-    <property name="tribble-version" value="${sam-version}"/>
-    <property name="variant-version" value="${sam-version}"/>
+    <property name="picard-version" value="1.112"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
@@ -54,6 +57,7 @@
 
     <property environment="env"/>
     <property name="java6.home" value="${env.JAVA6_HOME}"/>
+    <property name="htsjdk" value="htsjdk"/>
 
     <condition  property="isUnix">
         <os family="unix"/>
@@ -73,6 +77,9 @@
             <fileset dir="${lib}">
                 <include name="**/*.jar"/>
             </fileset>
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+            </fileset>
         </path>
         <path  id="metrics.classpath">
             <pathelement path="${classpath}"/>
@@ -89,9 +96,60 @@
         <delete dir="${classes}"/>
         <delete dir="${classes.test}"/>
         <delete dir="${test.output}"/>
-        <delete  dir="${dist}"/>
-        <delete  dir="${command_tmp}"/>
-        <delete  dir="javadoc"/>
+        <delete dir="${dist}"/>
+        <delete dir="${command_tmp}"/>
+        <delete dir="javadoc"/>
+    </target>
+
+    <!-- HTS-JDK -->
+    <target name="set-htsjdk-version">
+        <!-- set the htsjdk version -->
+        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
+        <loadfile property="htsjdk-version" srcFile="${htsjdk}/htsjdk.version.property.xml">
+            <filterchain>
+                <linecontains>
+                    <contains value="htsjdk-version="/>
+                </linecontains>
+                <tokenfilter>
+                    <replacestring from="htsjdk-version=" to="" />
+                </tokenfilter>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+    </target>
+
+    <target name="clone-htsjdk" description="Clone HTS-JDK sources from Sourceforge">
+        <exec executable="git" failonerror="true">
+            <arg value="clone"/>
+            <arg value="${htsjdk_git_url}"/>
+            <arg value="${htsjdk}"/>
+        </exec>
+    </target>
+
+    <target name="compile-htsjdk" depends="set-htsjdk-version" description="Build HTS-JDK, and grab build jars">
+        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
+        <ant antfile="build.xml" dir="${htsjdk}" target="all" inheritall="false"/>
+        <copy todir="${htsjdk_lib_dir}">
+            <fileset dir="${htsjdk}/dist" includes="**/*-*.jar"/>
+            <fileset dir="${htsjdk}/lib" includes="*.jar"/>
+        </copy>
+        <copy todir="${dist}">
+            <fileset dir="${htsjdk}/dist" includes="**/*.jar" excludes="**/*-*.jar"/>
+        </copy>
+        <!-- set the htsjdk version -->
+        <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
+    </target>
+
+    <target name="clean-htsjdk" description="Clean HTS-JDK">
+        <ant antfile="build.xml" dir="${htsjdk}" target="clean" inheritall="false"/>
+    </target>
+
+    <target name="test-htsjdk" description="Test HTS-JDK">
+        <ant antfile="build.xml" dir="${htsjdk}" target="test" inheritall="false"/>
+    </target>
+
+    <target name="compile-htsjdk-tests" description="Test HTS-JDK">
+        <ant antfile="build.xml" dir="${htsjdk}" target="compile-tests" inheritall="false"/>
     </target>
 
     <!-- COMPILE -->
@@ -99,43 +157,19 @@
             description="Compile files without cleaning">
     </target>
 
-    <target name="compile-src" depends="compile-sam-jdk, compile-picard, compile-tribble, compile-variant" description="Compile files without cleaning"/>
+    <target name="compile-src" depends="compile-htsjdk, compile-picard" description="Compile files without cleaning"/>
 
-    <target name="compile-sam-jdk" depends="init" description="Compile sam-jdk files without cleaning">
-        <compile-src includes="net/sf/samtools/**/*.*"/>
+    <target name="compile-picard" depends="init" description="Compile picard files without cleaning">
+        <compile-src includes="picard/**/*.*"/>
     </target>
 
-    <target name="compile-picard" depends="init, compile-variant" description="Compile picard files without cleaning">
-        <compile-src includes="net/sf/picard/**/*.*"/>
-    </target>
-
-    <target name="compile-tribble" depends="init, compile-sam-jdk" description="Compile tribble files without cleaning">
-        <compile-src includes="org/broad/tribble/**/*.*"/>
-    </target>
-
-    <target name="compile-variant" depends="init, compile-tribble" description="Compile variant files without cleaning">
-        <compile-src includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:none"/>
-    </target>
-
-    <target name="compile-tests" depends="compile-sam-jdk-tests, compile-picard-tests, compile-tribble-tests, compile-variant-tests" description="Compile test files without cleaning"/>
-
-    <target name="compile-sam-jdk-tests" depends="init" description="Compile sam-jdk test files without cleaning">
-        <compile-tests includes="net/sf/samtools/**/*.*"/>
-    </target>
+    <target name="compile-tests" depends="compile-htsjdk-tests, compile-picard-tests" description="Compile test files without cleaning"/>
 
     <target name="compile-picard-tests" depends="init" description="Compile picard test files without cleaning">
-        <compile-tests includes="net/sf/picard/**/*.*"/>
+        <compile-tests includes="picard/**/*.*"/>
         <copy todir="${classes.test}/">
             <fileset dir="${src.test}/scripts" includes="**/*"/>
         </copy>
-    </target>
-
-    <target name="compile-tribble-tests" depends="init" description="Compile tribble test files without cleaning">
-        <compile-tests includes="org/broad/tribble/**/*.*"/>
-    </target>
-
-    <target name="compile-variant-tests" depends="init" description="Compile variant test files without cleaning">
-        <compile-tests includes="org/broadinstitute/variant/**/*.*" compiler.args="-proc:none"/>
     </target>
 
     <!-- TEST -->
@@ -175,7 +209,7 @@
           <isset property="test.debug" />
         </condition>
 
-        <testng suitename="samtools-single-test" classpathref="classpath" outputdir="${test.output}"
+        <testng suitename="picard-single-test" classpathref="classpath" outputdir="${test.output}"
                 verbose="${testng.verbosity}">
             <jvmarg line="-Xmx512M ${debug.jvm.args}"/>
             <classpath>
@@ -189,23 +223,11 @@
         </testng>
     </target>
 
-    <target name="sam-jar" depends="compile-sam-jdk"
-            description="Builds sam-${sam-version}.jar for inclusion in other projects">
-        <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/sam-${sam-version}.jar" compress="no">
-            <fileset dir="${classes}" includes ="net/sf/samtools/**/*.*"/>
-            <manifest>
-                <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
-                <attribute name="Implementation-Vendor" value="Broad Institute"/>
-            </manifest>
-        </jar>
-    </target>
-
     <target name="picard-jar" depends="compile"
             description="Builds picard-${picard-version}.jar for inclusion in other projects">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
-            <fileset dir="${classes}" includes ="net/sf/picard/**/*.*"/>
+            <fileset dir="${classes}" includes ="picard/**/*.*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
             <zipfileset src="${lib}/apache-ant-1.8.2-bzip2.jar"/>
             <manifest>
@@ -215,35 +237,13 @@
         </jar>
     </target>
 
-    <target name="tribble-jar" depends="compile"
-            description="Builds tribble-${tribble-version}.jar for inclusion in other projects">
-        <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/tribble-${tribble-version}.jar" compress="no">
-            <fileset dir="${classes}" includes="org/broad/tribble/**/*.*"/>
-        </jar>
-        <copy todir="${dist}">
-            <fileset dir="lib" includes="*.jar"/>
-        </copy>
-    </target>
-
-    <target name="variant-jar" depends="compile"
-            description="Builds variant-${variant-version}.jar for inclusion in other projects">
-        <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/variant-${variant-version}.jar" compress="no">
-            <fileset dir="${classes}" includes="org/broadinstitute/variant/**/*.*"/>
-        </jar>
-        <copy todir="${dist}">
-            <fileset dir="lib" includes="*.jar"/>
-        </copy>
-    </target>
-
     <target name="javadoc" depends="init" description="Generates the project javadoc.">
         <javadoc
                 sourcepath="${src}"
                 destdir="javadoc"
-                packagenames="net.sf.samtools.*, net.sf.picard.*, org.broadinstitute.variant.*, org.broad.tribble.*"
-                windowtitle="SAM JDK API Documentation"
-                doctitle="&lt;h1&gt;SAM JDK API Documentation&lt;/h1&gt;"
+                packagenames="picard*"
+                windowtitle="PICARD JDK API Documentation"
+                doctitle="&lt;h1&gt;PICARD JDK API Documentation&lt;/h1&gt;"
                 author="true"
                 protected="true"
                 use="true"
@@ -259,7 +259,7 @@
         </javadoc>
         <mkdir dir="${command-line-html-dir}"/>
         <javadoc sourcepath="${src}/java"
-                 doclet="net.sf.picard.util.MetricsDoclet"
+                 doclet="picardutil.MetricsDoclet"
                  docletpathref="metrics.classpath"
                  classpathref="metrics.classpath"
                  failonerror="true">
@@ -268,7 +268,7 @@
         </javadoc>
     </target>
 
-    <target name="package-commands" depends="compile, sam-jar, picard-jar, tribble-jar, variant-jar">
+    <target name="package-commands" depends="compile, picard-jar">
         <delete dir="${command_tmp}"/>
 
         <mkdir dir="${command_tmp}"/>
@@ -277,6 +277,9 @@
         </copy>
 
         <unzip dest=".command_tmp">
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+            </fileset>
             <fileset dir="${lib}">
                 <include  name="*.jar"/>
             </fileset>
@@ -285,76 +288,76 @@
 
         <!-- The order of these elements determines the order they appear in the on-line help -->
         <!-- If you don't want to generate on-line doc for a command, use package-command instead of package-and-document-command -->
-        <package-and-document-command title="AddCommentsToBam"                main-class="net.sf.picard.sam.AddCommentsToBam"/>
-        <package-and-document-command title="AddOrReplaceReadGroups"         main-class="net.sf.picard.sam.AddOrReplaceReadGroups"/>
-        <package-and-document-command title="BamToBfq"                       main-class="net.sf.picard.fastq.BamToBfq"/>
-        <package-and-document-command title="BamIndexStats"                  main-class="net.sf.picard.sam.BamIndexStats"/>
-        <package-and-document-command title="BuildBamIndex"                  main-class="net.sf.picard.sam.BuildBamIndex"/>
-        <package-and-document-command title="CalculateHsMetrics"             main-class="net.sf.picard.analysis.directed.CalculateHsMetrics"/>
-        <package-and-document-command title="CleanSam"                       main-class="net.sf.picard.sam.CleanSam"/>
-        <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="net.sf.picard.analysis.CollectAlignmentSummaryMetrics"/>
-        <package-and-document-command title="CollectGcBiasMetrics"           main-class="net.sf.picard.analysis.CollectGcBiasMetrics"/>
-        <package-and-document-command title="CollectInsertSizeMetrics"       main-class="net.sf.picard.analysis.CollectInsertSizeMetrics"/>
-        <package-and-document-command title="CollectMultipleMetrics"         main-class="net.sf.picard.analysis.CollectMultipleMetrics"/>
-        <package-and-document-command title="CollectTargetedPcrMetrics"      main-class="net.sf.picard.analysis.directed.CollectTargetedPcrMetrics"/>
-        <package-and-document-command title="CollectRnaSeqMetrics"           main-class="net.sf.picard.analysis.CollectRnaSeqMetrics"/>
-        <package-and-document-command title="CollectWgsMetrics"              main-class="net.sf.picard.analysis.CollectWgsMetrics"/>
-        <package-and-document-command title="CompareSAMs"                    main-class="net.sf.picard.sam.CompareSAMs"/>
-        <package-and-document-command title="CreateSequenceDictionary"       main-class="net.sf.picard.sam.CreateSequenceDictionary"/>
-        <package-and-document-command title="DownsampleSam"                  main-class="net.sf.picard.sam.DownsampleSam"/>
-        <package-and-document-command title="ExtractIlluminaBarcodes"        main-class="net.sf.picard.illumina.ExtractIlluminaBarcodes"/>
-        <package-and-document-command title="EstimateLibraryComplexity"      main-class="net.sf.picard.sam.EstimateLibraryComplexity"/>
-        <package-and-document-command title="FastqToSam"                     main-class="net.sf.picard.sam.FastqToSam"/>
-        <package-and-document-command title="FilterSamReads"                 main-class="net.sf.picard.sam.FilterSamReads"/>
-        <package-and-document-command title="FixMateInformation"             main-class="net.sf.picard.sam.FixMateInformation"/>
-        <package-and-document-command title="GatherBamFiles"                 main-class="net.sf.picard.sam.GatherBamFiles"/>
-        <package-and-document-command title="IlluminaBasecallsToFastq"       main-class="net.sf.picard.illumina.IlluminaBasecallsToFastq"/>
-        <package-and-document-command title="IlluminaBasecallsToSam"         main-class="net.sf.picard.illumina.IlluminaBasecallsToSam"/>
-        <package-and-document-command title="CheckIlluminaDirectory"         main-class="net.sf.picard.illumina.CheckIlluminaDirectory"/>
-        <package-and-document-command title="IntervalListTools"              main-class="net.sf.picard.util.IntervalListTools"/>
-        <package-and-document-command title="MakeSitesOnlyVcf"               main-class="net.sf.picard.vcf.MakeSitesOnlyVcf"/>
-        <package-and-document-command title="MarkDuplicates"                 main-class="net.sf.picard.sam.MarkDuplicates"/>
-        <package-and-document-command title="MeanQualityByCycle"             main-class="net.sf.picard.analysis.MeanQualityByCycle"/>
-        <package-and-document-command title="MergeBamAlignment"              main-class="net.sf.picard.sam.MergeBamAlignment"/>
-        <package-and-document-command title="MergeSamFiles"                  main-class="net.sf.picard.sam.MergeSamFiles"/>
-        <package-and-document-command title="MergeVcfs"                      main-class="net.sf.picard.vcf.MergeVcfs">
+        <package-and-document-command title="AddCommentsToBam"                main-class="picard.sam.AddCommentsToBam"/>
+        <package-and-document-command title="AddOrReplaceReadGroups"         main-class="picard.sam.AddOrReplaceReadGroups"/>
+        <package-and-document-command title="BamToBfq"                       main-class="picard.fastq.BamToBfq"/>
+        <package-and-document-command title="BamIndexStats"                  main-class="picard.sam.BamIndexStats"/>
+        <package-and-document-command title="BuildBamIndex"                  main-class="picard.sam.BuildBamIndex"/>
+        <package-and-document-command title="CalculateHsMetrics"             main-class="picard.analysis.directed.CalculateHsMetrics"/>
+        <package-and-document-command title="CleanSam"                       main-class="picard.sam.CleanSam"/>
+        <package-and-document-command title="CollectAlignmentSummaryMetrics" main-class="picard.analysis.CollectAlignmentSummaryMetrics"/>
+        <package-and-document-command title="CollectGcBiasMetrics"           main-class="picard.analysis.CollectGcBiasMetrics"/>
+        <package-and-document-command title="CollectInsertSizeMetrics"       main-class="picard.analysis.CollectInsertSizeMetrics"/>
+        <package-and-document-command title="CollectMultipleMetrics"         main-class="picard.analysis.CollectMultipleMetrics"/>
+        <package-and-document-command title="CollectTargetedPcrMetrics"      main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>
+        <package-and-document-command title="CollectRnaSeqMetrics"           main-class="picard.analysis.CollectRnaSeqMetrics"/>
+        <package-and-document-command title="CollectWgsMetrics"              main-class="picard.analysis.CollectWgsMetrics"/>
+        <package-and-document-command title="CompareSAMs"                    main-class="picard.sam.CompareSAMs"/>
+        <package-and-document-command title="CreateSequenceDictionary"       main-class="picard.sam.CreateSequenceDictionary"/>
+        <package-and-document-command title="DownsampleSam"                  main-class="picard.sam.DownsampleSam"/>
+        <package-and-document-command title="ExtractIlluminaBarcodes"        main-class="picard.illumina.ExtractIlluminaBarcodes"/>
+        <package-and-document-command title="EstimateLibraryComplexity"      main-class="picard.sam.EstimateLibraryComplexity"/>
+        <package-and-document-command title="FastqToSam"                     main-class="picard.sam.FastqToSam"/>
+        <package-and-document-command title="FilterSamReads"                 main-class="picard.sam.FilterSamReads"/>
+        <package-and-document-command title="FixMateInformation"             main-class="picard.sam.FixMateInformation"/>
+        <package-and-document-command title="GatherBamFiles"                 main-class="picard.sam.GatherBamFiles"/>
+        <package-and-document-command title="IlluminaBasecallsToFastq"       main-class="picard.illumina.IlluminaBasecallsToFastq"/>
+        <package-and-document-command title="IlluminaBasecallsToSam"         main-class="picard.illumina.IlluminaBasecallsToSam"/>
+        <package-and-document-command title="CheckIlluminaDirectory"         main-class="picard.illumina.CheckIlluminaDirectory"/>
+        <package-and-document-command title="IntervalListTools"              main-class="picard.util.IntervalListTools"/>
+        <package-and-document-command title="MakeSitesOnlyVcf"               main-class="picard.vcf.MakeSitesOnlyVcf"/>
+        <package-and-document-command title="MarkDuplicates"                 main-class="picard.sam.MarkDuplicates"/>
+        <package-and-document-command title="MeanQualityByCycle"             main-class="picard.analysis.MeanQualityByCycle"/>
+        <package-and-document-command title="MergeBamAlignment"              main-class="picard.sam.MergeBamAlignment"/>
+        <package-and-document-command title="MergeSamFiles"                  main-class="picard.sam.MergeSamFiles"/>
+        <package-and-document-command title="MergeVcfs"                      main-class="picard.vcf.MergeVcfs">
             <package-filesets>
                 <fileset dir=".command_tmp" >
                     <include name="org/apache/commons/logging/**/*"/>
                 </fileset>
             </package-filesets>
         </package-and-document-command>
-        <package-and-document-command title="NormalizeFasta"                 main-class="net.sf.picard.reference.NormalizeFasta"/>
-        <package-and-document-command title="ExtractSequences"               main-class="net.sf.picard.reference.ExtractSequences"/>
-        <package-and-document-command title="QualityScoreDistribution"       main-class="net.sf.picard.analysis.QualityScoreDistribution"/>
-        <package-and-document-command title="ReorderSam" id=""               main-class="net.sf.picard.sam.ReorderSam"/>
-        <package-and-document-command title="ReplaceSamHeader"               main-class="net.sf.picard.sam.ReplaceSamHeader"/>
-        <package-and-document-command title="RevertSam"                      main-class="net.sf.picard.sam.RevertSam"/>
-        <package-and-document-command title="RevertOriginalBaseQualitiesAndAddMateCigar" main-class="net.sf.picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
-        <package-and-document-command title="SamFormatConverter"             main-class="net.sf.picard.sam.SamFormatConverter"/>
-        <package-and-document-command title="SamToFastq"                     main-class="net.sf.picard.sam.SamToFastq"/>
-        <package-and-document-command title="SortSam"                        main-class="net.sf.picard.sam.SortSam"/>
-        <package-and-document-command title="VcfFormatConverter"           main-class="net.sf.picard.vcf.VcfFormatConverter">
+        <package-and-document-command title="NormalizeFasta"                 main-class="picard.reference.NormalizeFasta"/>
+        <package-and-document-command title="ExtractSequences"               main-class="picard.reference.ExtractSequences"/>
+        <package-and-document-command title="QualityScoreDistribution"       main-class="picard.analysis.QualityScoreDistribution"/>
+        <package-and-document-command title="ReorderSam" id=""               main-class="picard.sam.ReorderSam"/>
+        <package-and-document-command title="ReplaceSamHeader"               main-class="picard.sam.ReplaceSamHeader"/>
+        <package-and-document-command title="RevertSam"                      main-class="picard.sam.RevertSam"/>
+        <package-and-document-command title="RevertOriginalBaseQualitiesAndAddMateCigar" main-class="picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
+        <package-and-document-command title="SamFormatConverter"             main-class="picard.sam.SamFormatConverter"/>
+        <package-and-document-command title="SamToFastq"                     main-class="picard.sam.SamToFastq"/>
+        <package-and-document-command title="SortSam"                        main-class="picard.sam.SortSam"/>
+        <package-and-document-command title="VcfFormatConverter"           main-class="picard.vcf.VcfFormatConverter">
             <package-filesets>
                 <fileset dir=".command_tmp" >
                     <include name="org/apache/commons/logging/**/*"/>
                 </fileset>
             </package-filesets>
         </package-and-document-command>
-        <package-and-document-command title="MarkIlluminaAdapters"         main-class="net.sf.picard.illumina.MarkIlluminaAdapters"/>
-        <package-and-document-command title="SplitVcfs"                      main-class="net.sf.picard.vcf.SplitVcfs">
+        <package-and-document-command title="MarkIlluminaAdapters"         main-class="picard.illumina.MarkIlluminaAdapters"/>
+        <package-and-document-command title="SplitVcfs"                      main-class="picard.vcf.SplitVcfs">
             <package-filesets>
                 <fileset dir=".command_tmp" >
                     <include name="org/apache/commons/logging/**/*"/>
                 </fileset>
             </package-filesets>
         </package-and-document-command>
-        <package-and-document-command title="ValidateSamFile"                main-class="net.sf.picard.sam.ValidateSamFile"/>
-        <package-and-document-command title="ViewSam"                        main-class="net.sf.picard.sam.ViewSam"/>
+        <package-and-document-command title="ValidateSamFile"                main-class="picard.sam.ValidateSamFile"/>
+        <package-and-document-command title="ViewSam"                        main-class="picard.sam.ViewSam"/>
     </target>
 
     <!-- ALL -->
-    <target name="all" depends="compile, sam-jar, picard-jar, tribble-jar, variant-jar, package-commands, document-standard-options" description="Default build target">
+    <target name="all" depends="compile, picard-jar, package-commands, document-standard-options" description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
@@ -385,7 +388,7 @@
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/VERSION"/>
                 <fileset dir="${command_tmp}" includes="META-INF/maven/org.xerial.snappy/snappy-java/pom.properties"/>
                 <!-- Force inclusion of IntelDeflater, which is dynamically linked. -->
-                <fileset dir="${command_tmp}" includes="net/sf/samtools/util/zip/*"/>
+                <fileset dir="${command_tmp}" includes="htsjdk/util/zip/*"/>
                 <filesets/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
@@ -397,18 +400,18 @@
         </sequential>
     </macrodef>
 
-    <target name="document-standard-options" depends="picard-jar, sam-jar">
+    <target name="document-standard-options" depends="picard-jar">
         <sequential>
             <!-- For Sourceforge project website -->
             <mkdir dir="${command-line-html-dir}/program_usage"/>
 
             <!-- Generate HTML for each command -->
-            <java classname="net.sf.picard.cmdline.CreateHtmlDocForStandardOptions"
+            <java classname="picard.cmdline.CreateHtmlDocForStandardOptions"
                   output="${command-line-html-dir}/program_usage/standard-options.shtml"
                   failonerror="true">
                 <classpath>
                     <pathelement location="${dist}/picard-${picard-version}.jar"/>
-                    <pathelement location="${dist}/sam-${sam-version}.jar"/>
+                    <pathelement location="${htsjdk_lib_dir}/htsjdk-${htsjdk-version}.jar"/>
                 </classpath>
             </java>
         </sequential>
@@ -424,13 +427,12 @@
             <mkdir dir="${command-line-html-dir}/program_usage"/>
 
             <!-- Generate HTML for each command -->
-            <java classname="net.sf.picard.cmdline.CreateHtmlDocForProgram"
+            <java classname="picard.cmdline.CreateHtmlDocForProgram"
                   output="${command-line-html-dir}/program_usage/@{title}.shtml"
                   failonerror="true">
                 <classpath>
                     <pathelement location="${dist}/picard-${picard-version}.jar"/>
-                    <pathelement location="${dist}/sam-${sam-version}.jar"/>
-                    <pathelement location="${dist}/variant-${variant-version}.jar"/>
+                    <pathelement location="${htsjdk_lib_dir}/htsjdk-${htsjdk-version}.jar"/>
                 </classpath>
                 <arg value="@{main-class}"/>
             </java>

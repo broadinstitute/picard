@@ -21,9 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.io.IoUtil;
+import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
 import org.testng.Assert;
@@ -32,14 +33,14 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 public class TextFileParsersTest {
 
-    private static final String testFile1 = "testdata/net/sf/picard/util/whitepace_text_file.txt";
-    private static final String testFile2 = "testdata/net/sf/picard/util/all_ones_text_file.txt";
-    private static final String testFile3 = "testdata/net/sf/picard/util/no_grouping_file.txt";
-    private static final String testFile4 = "testdata/net/sf/picard/util/tabbed_text_file.txt";
+    private static final String testFile1 = "testdata/picard/util/whitespace_text_file.txt";
+    private static final String testFile2 = "testdata/picard/util/all_ones_text_file.txt";
+    private static final String testFile3 = "testdata/picard/util/no_grouping_file.txt";
+    private static final String testFile4 = "testdata/picard/util/tabbed_text_file.txt";
     // There is a comment in the file data that should be skipped by the parser, so it is not included below
     private static final Object[][] testFile1Data = {
         { "Now", "is", "the", "time" },
@@ -98,7 +99,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile1)},
-                {IoUtil.openFileForReading(new File(testFile1))}
+                {IOUtil.openFileForReading(new File(testFile1))}
         };
     }
 
@@ -158,7 +159,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile1), new File(testFile1)},
-                {IoUtil.openFileForReading(new File(testFile1)), IoUtil.openFileForReading(new File(testFile1))}
+                {IOUtil.openFileForReading(new File(testFile1)), IOUtil.openFileForReading(new File(testFile1))}
         };
     }
 
@@ -183,7 +184,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile3)},
-                {IoUtil.openFileForReading(new File(testFile3))}
+                {IOUtil.openFileForReading(new File(testFile3))}
         };
     }
 
@@ -206,7 +207,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile2)},
-                {IoUtil.openFileForReading(new File(testFile2))}
+                {IOUtil.openFileForReading(new File(testFile2))}
         };
     }
 
@@ -227,7 +228,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile1)},
-                {IoUtil.openFileForReading(new File(testFile1))}
+                {IOUtil.openFileForReading(new File(testFile1))}
         };
     }
 
@@ -251,7 +252,7 @@ public class TextFileParsersTest {
     {
         return new Object[][] {
                 {new File(testFile4)},
-                {IoUtil.openFileForReading(new File(testFile4))}
+                {IOUtil.openFileForReading(new File(testFile4))}
         };
     }
 

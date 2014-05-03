@@ -21,13 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.util;
+package picard.util;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.util.SequenceUtil;
-import net.sf.samtools.util.StringUtil;
+import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.SolexaQualityConverter;
+import picard.PicardException;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 
-import java.io.Closeable;
 import java.util.List;
 
 /**
@@ -104,7 +105,7 @@ public class IlluminaUtil {
      * @param cycleNumber Which cycle to get quality for.
      * @param formatter For converting decimal strings to ints.
      * @return best quality for the given cycle.
-     * @throws net.sf.picard.PicardException if the best quality ASCII value is > 255.
+     * @throws picard.PicardException if the best quality ASCII value is > 255.
      */
     public static byte getSolexaQualityCharFromFourQualities(final String[] qualities, final int cycleNumber, final FormatUtil formatter) {
         // It apparently is the case that all 4 qualities might be negative, but this appears to correspond to

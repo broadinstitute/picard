@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.BclData;
+import picard.PicardException;
+import picard.illumina.parser.BclData;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 
 public class BclReaderTest {
 
-    public static final File TestDataDir = new File("testdata/net/sf/picard/illumina/readerTests");
+    public static final File TestDataDir = new File("testdata/picard/illumina/readerTests");
     public static final File PASSING_BCL_FILE = new File(TestDataDir, "bcl_passing.bcl");
     public static final File QUAL_0FAILING_BCL_FILE = new File(TestDataDir, "bcl_failing.bcl");
     public static final File QUAL_1FAILING_BCL_FILE = new File(TestDataDir, "bcl_failing2.bcl");

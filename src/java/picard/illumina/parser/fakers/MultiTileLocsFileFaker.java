@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser.fakers;
+package picard.illumina.parser.fakers;
 
 import java.nio.ByteBuffer;
 

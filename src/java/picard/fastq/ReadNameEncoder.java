@@ -1,6 +1,6 @@
-package net.sf.picard.fastq;
+package picard.fastq;
 
-import net.sf.picard.illumina.parser.ClusterData;
+import picard.illumina.parser.ClusterData;
 
 /**
  * @author mccowan

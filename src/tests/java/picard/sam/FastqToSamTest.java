@@ -21,11 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.util.FastqQualityFormat;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.util.FastqQualityFormat;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -40,7 +41,7 @@ import java.util.List;
  * Tests for FastqToBam
  */
 public class FastqToSamTest {
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/fastq2bam");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/fastq2bam");
 
     // fastq files with legal values for each fastq version
     @DataProvider(name = "okVersionFiles")
@@ -125,7 +126,7 @@ public class FastqToSamTest {
         convertFile(filename1,filename2,version,true);
     }
 
-    @Test(dataProvider = "permissiveFormatFiles",expectedExceptions = PicardException.class)
+    @Test(dataProvider = "permissiveFormatFiles",expectedExceptions = SAMException.class)
     public void testPermissiveFail(final String filename1, final String filename2, final FastqQualityFormat version) throws IOException {
         convertFile(filename1,filename2,version,false);
     }
@@ -135,17 +136,17 @@ public class FastqToSamTest {
         convertFile(fastqVersionFilename, version);
     }
 
-    @Test(dataProvider = "badVersionFiles", expectedExceptions= PicardException.class)
+    @Test(dataProvider = "badVersionFiles", expectedExceptions= SAMException.class)
     public void testFastqVersionBad(final String fastqVersionFilename, final FastqQualityFormat version) throws IOException {
         convertFile(fastqVersionFilename, version);
     }
 
-    @Test(dataProvider = "badFormatFiles", expectedExceptions= PicardException.class) 
+    @Test(dataProvider = "badFormatFiles", expectedExceptions= SAMException.class)
     public void testBadFile(final String filename) throws IOException {
         convertFile(filename, null, FastqQualityFormat.Standard);
     }
 
-    @Test(dataProvider = "badPairedFiles", expectedExceptions= PicardException.class) 
+    @Test(dataProvider = "badPairedFiles", expectedExceptions= PicardException.class)
     public void testPairedBad(final String filename1, final String filename2) throws IOException {
         convertFile(filename1, filename2, FastqQualityFormat.Standard);
     }

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.fastq;
+package picard.fastq;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,21 +29,21 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.filter.AggregateFilter;
-import net.sf.picard.filter.FailsVendorReadQualityFilter;
-import net.sf.picard.filter.FilteringIterator;
-import net.sf.picard.filter.SamRecordFilter;
-import net.sf.picard.filter.TagFilter;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.sam.ReservedTagConstants;
-import net.sf.picard.filter.WholeReadClippedFilter;
-import net.sf.picard.util.Log;
-import net.sf.picard.util.PeekableIterator;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMFileHeader.SortOrder;
-import net.sf.samtools.util.BinaryCodec;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.BinaryCodec;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import picard.PicardException;
+import htsjdk.samtools.filter.AggregateFilter;
+import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
+import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.TagFilter;
+import htsjdk.samtools.filter.WholeReadClippedFilter;
 
 /**
  * Class to take unmapped reads in BAM file format and create Maq binary fastq format file(s) --
@@ -89,7 +89,7 @@ public class BamToBfqWriter {
                           final Integer chunk, final boolean pairedReads, String namePrefix,
                           boolean includeNonPfReads, boolean clipAdapters, Integer basesToWrite) {
 
-        IoUtil.assertFileIsReadable(bamFile);
+        IOUtil.assertFileIsReadable(bamFile);
         this.bamFile = bamFile;
         this.outputPrefix = outputPrefix;
         this.pairedReads = pairedReads;
@@ -130,7 +130,7 @@ public class BamToBfqWriter {
      */
     public void writeBfqFiles() {
 
-        final Iterator<SAMRecord> iterator = (new SAMFileReader(IoUtil.openFileForReading(this.bamFile))).iterator();
+        final Iterator<SAMRecord> iterator = (new SAMFileReader(IOUtil.openFileForReading(this.bamFile))).iterator();
 
         // Filter out noise reads and reads that fail the quality filter
         final TagFilter tagFilter = new TagFilter(ReservedTagConstants.XN, 1);
@@ -269,11 +269,11 @@ public class BamToBfqWriter {
 
         // Open new file, using the fileIndex.
         final File bfq1 = getOutputFile(this.outputPrefix , 1, fileIndex);
-        codec1 = new BinaryCodec(IoUtil.openFileForWriting(bfq1));
+        codec1 = new BinaryCodec(IOUtil.openFileForWriting(bfq1));
         log.info("Now writing to file " + bfq1.getAbsolutePath());
         if (pairedReads) {
             final File bfq2 = getOutputFile(this.outputPrefix , 2, fileIndex);
-            codec2 = new BinaryCodec(IoUtil.openFileForWriting(bfq2));
+            codec2 = new BinaryCodec(IOUtil.openFileForWriting(bfq2));
             log.info("Now writing to file " + bfq2.getAbsolutePath());
         }
     }
@@ -381,8 +381,8 @@ public class BamToBfqWriter {
     private int countWritableRecords() {
         int count = 0;
         
-        SAMFileReader reader = new SAMFileReader(IoUtil.openFileForReading(this.bamFile));
-        if(!reader.getFileHeader().getSortOrder().equals(SortOrder.queryname)) {        	
+        SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(this.bamFile));
+        if(!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
         	//this is a fix for issue PIC-274: It looks like BamToBfqWriter requires that the input BAM is queryname sorted, 
         	//but it doesn't check this early, nor produce an understandable error message."
         	throw new PicardException("Input file (" + this.bamFile.getAbsolutePath() +") needs to be sorted by queryname.");
@@ -434,7 +434,7 @@ public class BamToBfqWriter {
      */
     private File getOutputFile(final String outputPrefix, final int read, final int index) {
         final File result = new File(outputPrefix + index + "." + read + ".bfq");
-        IoUtil.assertFileIsWritable(result);
+        IOUtil.assertFileIsWritable(result);
         return result;
     }
 

@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina;
+package picard.illumina;
 
-import net.sf.picard.illumina.parser.ReadStructure;
-import net.sf.picard.io.IoUtil;
-import net.sf.samtools.util.BufferedLineReader;
-import net.sf.samtools.util.LineReader;
-import net.sf.samtools.util.StringUtil;
-import net.sf.samtools.util.TestUtil;
+import picard.illumina.parser.ReadStructure;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.LineReader;
+import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.TestUtil;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -40,10 +40,10 @@ import java.util.List;
 
 public class IlluminaBasecallsToFastqTest {
 
-    private static final File BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
-    private static final File DUAL_BASECALLS_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/fastq");
-    private static final File DUAL_TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B8B25T/fastq");
+    private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
+    private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/fastq");
+    private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
 
     @Test
     public void testNonBarcoded() throws Exception {
@@ -63,8 +63,8 @@ public class IlluminaBasecallsToFastqTest {
                 "MACHINE_NAME=machine1",
                 "FLOWCELL_BARCODE=abcdeACXX"
         });
-        IoUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
-        IoUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
+        IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
+        IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class IlluminaBasecallsToFastqTest {
                 filePrefix + ".barcode_1.fastq"
             };
             for (String filename : filenames) {
-                IoUtil.assertFilesEqual(new File(outputDir, filename), new File(TEST_DATA_DIR, filename));
+                IOUtil.assertFilesEqual(new File(outputDir, filename), new File(TEST_DATA_DIR, filename));
             }
 
         } finally {
@@ -165,11 +165,11 @@ public class IlluminaBasecallsToFastqTest {
             for (final File outputSam : outputPrefixes) {
                 for (int i = 1; i <= readStructure.templates.length(); ++i) {
                     String filename = outputSam.getName() + "." + i + ".fastq";
-                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
                 for (int i = 1; i <= readStructure.barcodes.length(); ++i) {
                     String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
-                    IoUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
             }
         } finally {

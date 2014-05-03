@@ -1,4 +1,4 @@
-package net.sf.picard.pedigree;
+package picard.pedigree;
 
 /**
  * Represents the sex of an individual.

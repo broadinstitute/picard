@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 /**
  * While structurally identical to CompositeIndex, this class is maintained as it makes code more readable when the two are used together (see QSeqParser)

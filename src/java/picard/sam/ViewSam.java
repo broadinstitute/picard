@@ -22,21 +22,21 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import net.sf.samtools.*;
-import net.sf.samtools.util.AsciiWriter;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.AsciiWriter;
 
 /**
  * Very simple command that just reads a SAM or BAM file and writes out the header
@@ -72,7 +72,7 @@ public class ViewSam extends CommandLineProgram {
      */
     int writeSamText(PrintStream printStream) {
         try {
-            IoUtil.assertFileIsReadable(INPUT);
+            IOUtil.assertFileIsReadable(INPUT);
             final SAMFileReader in = new SAMFileReader(INPUT);
             final AsciiWriter writer = new AsciiWriter(printStream);
             final SAMFileHeader header = in.getFileHeader();

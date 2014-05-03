@@ -22,17 +22,17 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis;
+package picard.analysis;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.util.CollectionUtil;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.metrics.*;
-import net.sf.picard.util.IlluminaUtil;
-import net.sf.picard.util.Log;
-import net.sf.samtools.*;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import picard.cmdline.Option;
+import picard.cmdline.Usage;
+import picard.util.IlluminaUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.*;
 
 import java.io.File;
 import java.util.*;
@@ -96,7 +96,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     protected final int testDoWork() { return doWork(); }
 
     @Override protected void setup(final SAMFileHeader header, final File samFile) {
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         if (header.getSequenceDictionary().isEmpty()) {
             log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +

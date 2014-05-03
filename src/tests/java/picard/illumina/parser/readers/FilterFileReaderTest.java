@@ -1,6 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.PicardException;
+import htsjdk.samtools.SAMException;
+import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -9,7 +10,7 @@ import java.io.File;
 import java.util.NoSuchElementException;
 
 public class FilterFileReaderTest {
-    public static File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/readerTests");
+    public static File TEST_DATA_DIR = new File("testdata/picard/illumina/readerTests");
     public static final File PASSING_FILTER_FILE = new File(TEST_DATA_DIR, "pf_passing.filter");
 
     public static final boolean [] expectedPfs = {
@@ -42,21 +43,35 @@ public class FilterFileReaderTest {
         reader.next();
     }
 
-    @DataProvider(name="failingFiles")
-    public Object[][] failingFiles() {
+    @DataProvider(name="failingFilesForSAMException")
+    public Object[][] failingFilesForSAMException() {
+        return new Object[][] {
+                {"pf_nonExistentFile.filter"}
+        };
+    }
+
+    @DataProvider(name="failingFilesForPicardException")
+    public Object[][] failingFilesForPicardException() {
         return new Object[][] {
             {"pf_failing1.filter"},
             {"pf_failing2.filter"},
             {"pf_tooLarge.filter"},
             {"pf_tooShort.filter"},
             {"pf_badOpeningBytes.filter"},
-            {"pf_badVersionBytes.filter"},
-            {"pf_nonExistentFile.filter"}
+            {"pf_badVersionBytes.filter"}
         };
     }
 
-    @Test(dataProvider = "failingFiles", expectedExceptions = PicardException.class)
-    public void readInvalidValues(final String failingFile) {
+    @Test(dataProvider = "failingFilesForSAMException", expectedExceptions = SAMException.class)
+    public void readInvalidValuesForSAMException(final String failingFile) {
+        final FilterFileReader reader = new FilterFileReader(new File(TEST_DATA_DIR, failingFile));
+        while(reader.hasNext()) {
+            reader.next();
+        }
+    }
+
+    @Test(dataProvider = "failingFilesForPicardException", expectedExceptions = PicardException.class)
+    public void readInvalidValuesForPicardException(final String failingFile) {
         final FilterFileReader reader = new FilterFileReader(new File(TEST_DATA_DIR, failingFile));
         while(reader.hasNext()) {
             reader.next();

@@ -1,4 +1,4 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -8,7 +8,7 @@ import java.io.File;
 
 public class ClocsFileReaderTest {
 
-    private static final File TEST_DIR = new File("testdata/net/sf/picard/illumina/readerTests");
+    private static final File TEST_DIR = new File("testdata/picard/illumina/readerTests");
     private static final File PASSING_CLOCS_FILE = new File(TEST_DIR, "s_2_1101.clocs");
 
     public static final int blockSize = 25;

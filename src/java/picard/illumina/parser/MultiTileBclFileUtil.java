@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.illumina.parser.fakers.MultiTileBclFileFaker;
-import net.sf.picard.io.IoUtil;
+import picard.illumina.parser.fakers.MultiTileBclFileFaker;
+import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class MultiTileBclFileUtil extends ParameterizedFileUtil {
         this.basecallLaneDir = basecallLaneDir;
         bci = new File(basecallLaneDir, "s_" + lane + ".bci");
         // Do this once rather than when deciding if these files exist and again later.
-        final File[] cycleFiles = IoUtil.getFilesMatchingRegexp(base, matchPattern);
+        final File[] cycleFiles = IOUtil.getFilesMatchingRegexp(base, matchPattern);
         if (bci.exists()) {
             tileIndex = new TileIndex(bci);
             if (cycleFiles != null) {

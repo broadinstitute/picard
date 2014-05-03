@@ -1,14 +1,14 @@
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.util.Log;
-import net.sf.samtools.*;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.*;
 
-import net.sf.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.util.List;
@@ -45,9 +45,9 @@ public class GatherBamFiles extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        final List<File> inputs = IoUtil.unrollFiles(INPUT, BamFileIoUtils.BAM_FILE_EXTENSION, ".sam");
-        for (final File f: inputs) IoUtil.assertFileIsReadable(f);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        final List<File> inputs = IOUtil.unrollFiles(INPUT, BamFileIoUtils.BAM_FILE_EXTENSION, ".sam");
+        for (final File f: inputs) IOUtil.assertFileIsReadable(f);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         if (determineBlockCopyingStatus(inputs)) {
             BamFileIoUtils.gatherWithBlockCopying(inputs, OUTPUT, CREATE_INDEX, CREATE_MD5_FILE);

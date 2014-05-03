@@ -21,12 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.cmdline;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+package picard.cmdline;
 
 /**
  * Print out the usage for one or more CommandLinePrograms in a form close to what is used in the Sourceforge Picard website.

@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.annotation;
+package picard.annotation;
 
-import net.sf.picard.PicardException;
+import picard.PicardException;
 
 /**
  * Exception thrown when loading gene annotations.  It is expected that there will be inconsistencies in annotation

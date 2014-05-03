@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.metrics.MultilevelMetrics;
+import picard.metrics.MultilevelMetrics;
 
 /**
  * The set of metrics captured that are specific to a hybrid selection analysis.

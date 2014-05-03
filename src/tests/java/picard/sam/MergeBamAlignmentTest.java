@@ -21,25 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.sf.picard.sam;
+package picard.sam;
 
-import net.sf.picard.PicardException;
-import net.sf.samtools.BamFileIoUtils;
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.SAMReadGroupRecord;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
-import net.sf.samtools.SAMSequenceRecord;
-import net.sf.samtools.SAMTag;
-import net.sf.samtools.SamPairUtil;
-import net.sf.samtools.util.CloserUtil;
+import htsjdk.samtools.BamFileIoUtils;
+import picard.PicardException;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -60,12 +61,12 @@ import java.util.Map;
  */
 public class MergeBamAlignmentTest {
 
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/sam/MergeBamAlignment");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MergeBamAlignment");
 
-    private static final File unmappedBam = new File("testdata/net/sf/picard/sam/unmapped.sam");
-    private static final File alignedBam = new File("testdata/net/sf/picard/sam/aligned.sam");
-    private static final File oneHalfAlignedBam = new File("testdata/net/sf/picard/sam/onehalfaligned.sam");
-    private static final File otherHalfAlignedBam = new File("testdata/net/sf/picard/sam/otherhalfaligned.sam");
+    private static final File unmappedBam = new File("testdata/picard/sam/unmapped.sam");
+    private static final File alignedBam = new File("testdata/picard/sam/aligned.sam");
+    private static final File oneHalfAlignedBam = new File("testdata/picard/sam/onehalfaligned.sam");
+    private static final File otherHalfAlignedBam = new File("testdata/picard/sam/otherhalfaligned.sam");
     private static final File mergingUnmappedBam = new File(TEST_DATA_DIR, "unmapped.sam");
     private static final File firstReadAlignedBam = new File(TEST_DATA_DIR, "allread1.trimmed.aligned.sam");
     private static final File secondReadAlignedBam = new File(TEST_DATA_DIR, "allread2.trimmed.aligned.sam");
@@ -75,10 +76,10 @@ public class MergeBamAlignmentTest {
     private static final File secondReadAlignedBam_secondHalf = new File(TEST_DATA_DIR, "secondhalf.read2.trimmed.aligned.sam");
     private static final File supplementalReadAlignedBam = new File(TEST_DATA_DIR, "aligned.supplement.sam");
     private static final File alignedQuerynameSortedBam =
-            new File("testdata/net/sf/picard/sam/aligned_queryname_sorted.sam");
-    private static final File fasta = new File("testdata/net/sf/picard/sam/merger.fasta");
+            new File("testdata/picard/sam/aligned_queryname_sorted.sam");
+    private static final File fasta = new File("testdata/picard/sam/merger.fasta");
     private static final String bigSequenceName = "chr7"; // The longest sequence in merger.fasta
-    private static final File sequenceDict = new File("testdata/net/sf/picard/sam/merger.dict");
+    private static final File sequenceDict = new File("testdata/picard/sam/merger.dict");
     private static final File badorderUnmappedBam = new File(TEST_DATA_DIR, "unmapped.badorder.sam");
     private static final File badorderAlignedBam = new File(TEST_DATA_DIR, "aligned.badorder.sam");
 

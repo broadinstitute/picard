@@ -21,27 +21,22 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-import org.testng.Assert;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 /**
 * @author jburke@broadinstitute.org
 */
 public class CycleIlluminaFileMapTest {
     //TODO: REVAMP THIS
-    private static final File TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L001");
-    private static final File ZERO_LENGTH_TEST_DATA_DIR = new File("testdata/net/sf/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L002");
+    private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L001");
+    private static final File ZERO_LENGTH_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls/L002");
     private static final int [] ALL_CYCLES = {1,2,3,4};
 
     private static String laneToDir(int lane) {

@@ -1,17 +1,17 @@
-package net.sf.picard.reference;
+package picard.reference;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.cmdline.CommandLineProgram;
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.io.IoUtil;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.picard.reference.ReferenceSequenceFile;
-import net.sf.picard.reference.ReferenceSequenceFileFactory;
-import net.sf.picard.util.Log;
-import net.sf.samtools.util.CloserUtil;
-import net.sf.samtools.util.RuntimeIOException;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,15 +46,15 @@ public class NormalizeFasta extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        IoUtil.assertFileIsReadable(INPUT);
-        IoUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         if (INPUT.getAbsoluteFile().equals(OUTPUT.getAbsoluteFile())) {
             throw new IllegalArgumentException("Input and output cannot be the same file.");
         }
 
         final ReferenceSequenceFile ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(INPUT, TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE);
-        final BufferedWriter out = IoUtil.openFileForBufferedWriting(OUTPUT);
+        final BufferedWriter out = IOUtil.openFileForBufferedWriting(OUTPUT);
 
         ReferenceSequence seq = null;
         while ((seq = ref.nextSequence()) != null) {

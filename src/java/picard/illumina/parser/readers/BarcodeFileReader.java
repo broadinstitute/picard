@@ -1,7 +1,7 @@
-package net.sf.picard.illumina.parser.readers;
+package picard.illumina.parser.readers;
 
-import net.sf.picard.util.BasicInputParser;
-import net.sf.samtools.util.CloseableIterator;
+import picard.util.BasicInputParser;
+import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 

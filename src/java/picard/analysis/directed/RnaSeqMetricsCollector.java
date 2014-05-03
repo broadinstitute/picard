@@ -1,17 +1,21 @@
-package net.sf.picard.analysis.directed;
+package picard.analysis.directed;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.analysis.RnaSeqMetrics;
-import net.sf.picard.annotation.Gene;
-import net.sf.picard.annotation.LocusFunction;
-import net.sf.picard.metrics.PerUnitMetricCollector;
-import net.sf.picard.metrics.SAMRecordMultiLevelCollector;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.util.CoordMath;
-import net.sf.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.OverlapDetector;
+import picard.PicardException;
+import picard.analysis.MetricAccumulationLevel;
+import picard.analysis.RnaSeqMetrics;
+import picard.annotation.Gene;
+import picard.annotation.LocusFunction;
+import picard.metrics.PerUnitMetricCollector;
+import picard.metrics.SAMRecordMultiLevelCollector;
+import htsjdk.samtools.metrics.MetricsFile;
+import picard.util.*;
+import htsjdk.samtools.*;
+import htsjdk.samtools.util.CoordMath;
+import htsjdk.samtools.util.SequenceUtil;
 
 import java.io.File;
 import java.util.*;

@@ -1,8 +1,8 @@
-package net.sf.picard.illumina.parser;
+package picard.illumina.parser;
 
-import net.sf.picard.PicardException;
-import net.sf.picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
-import net.sf.picard.io.IoUtil;
+import picard.PicardException;
+import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -12,7 +12,6 @@ import org.testng.annotations.Test;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static net.sf.samtools.util.CollectionUtil.makeList;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 public class IlluminaFileUtilTest {
     private static final int DEFAULT_LANE = 7;
@@ -49,7 +48,7 @@ public class IlluminaFileUtilTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        intensityDir = IoUtil.createTempDir("ift_test", "Intensities");
+        intensityDir = IOUtil.createTempDir("ift_test", "Intensities");
         basecallDir = new File(intensityDir, "BaseCalls");
         if (!basecallDir.mkdir()) {
             throw new RuntimeException("Couldn't make basecalls dir " + basecallDir.getAbsolutePath());
@@ -58,7 +57,7 @@ public class IlluminaFileUtilTest {
 
     @AfterMethod
     private void tearDown() {
-        IoUtil.deleteDirectoryTree(intensityDir);
+        IOUtil.deleteDirectoryTree(intensityDir);
     }
 
     @DataProvider(name = "validLanes")
@@ -259,9 +258,9 @@ public class IlluminaFileUtilTest {
             }
 
             if (actualFile.isDirectory()) {
-                IoUtil.deleteDirectoryTree(actualFile);
+                IOUtil.deleteDirectoryTree(actualFile);
             } else {
-                IoUtil.deleteFiles(actualFile);
+                IOUtil.deleteFiles(actualFile);
             }
             if (actualFile.exists()) {
                 throw new RuntimeException("File still exists after calling delete: " + actualFile);
