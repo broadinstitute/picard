@@ -24,15 +24,22 @@
 
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IterableAdapter;
 import picard.PicardException;
 import picard.illumina.parser.readers.TileMetricsOutReader;
 import picard.illumina.parser.readers.TileMetricsOutReader.IlluminaTileMetrics;
-import htsjdk.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility for reading the tile data from an Illumina run directory's TileMetricsOut.bin file

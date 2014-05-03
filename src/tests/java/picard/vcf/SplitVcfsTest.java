@@ -1,7 +1,7 @@
 package picard.vcf;
 
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContext.Type;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;

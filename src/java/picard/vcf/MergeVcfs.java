@@ -23,20 +23,14 @@
  */
 package picard.vcf;
 
-import htsjdk.samtools.util.MergingIterator;
-import picard.PicardException;
-import picard.cmdline.CommandLineParser;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.MergingIterator;
+import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -45,6 +39,12 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
+import picard.PicardException;
+import picard.cmdline.CommandLineParser;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
 
 import java.io.File;
 import java.util.ArrayList;

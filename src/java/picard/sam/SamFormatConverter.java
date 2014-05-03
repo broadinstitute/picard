@@ -38,7 +38,6 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
 import java.io.File;
-import java.util.Iterator;
 
 /**
  * Converts a BAM file to human-readable SAM output or vice versa

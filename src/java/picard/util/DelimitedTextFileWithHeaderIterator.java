@@ -1,9 +1,13 @@
 package picard.util;
 
-import picard.PicardException;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.PicardException;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * Iterate through a delimited text file in which columns are found by looking at a header line rather than by position.

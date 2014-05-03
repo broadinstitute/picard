@@ -1,9 +1,17 @@
 package picard.analysis.directed;
 
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
 import picard.analysis.RnaSeqMetrics;
@@ -11,14 +19,16 @@ import picard.annotation.Gene;
 import picard.annotation.LocusFunction;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
-import htsjdk.samtools.metrics.MetricsFile;
-import picard.util.*;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CoordMath;
-import htsjdk.samtools.util.SequenceUtil;
+import picard.util.MathUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqMetrics, Integer> {
     public enum StrandSpecificity {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND}

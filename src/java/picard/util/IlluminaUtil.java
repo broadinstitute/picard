@@ -24,10 +24,10 @@
 package picard.util;
 
 import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.SolexaQualityConverter;
-import picard.PicardException;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
 
 import java.util.List;
 

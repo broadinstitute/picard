@@ -24,7 +24,9 @@
 package picard.illumina.parser;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
 /**
  * For "non-cycle" files (files that have multiple cycles per file).  Maps a Tile -> File

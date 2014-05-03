@@ -24,14 +24,15 @@
 package picard.illumina.parser.readers;
 
 
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.NoSuchElementException;

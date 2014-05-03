@@ -23,8 +23,8 @@
  */
 package picard.illumina.parser.readers;
 
-import picard.PicardException;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.NoSuchElementException;

@@ -24,12 +24,19 @@
 
 package picard.sam;
 
+import htsjdk.samtools.BAMIndex;
 import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.util.IOUtil;
-import picard.cmdline.*;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.*;
+import htsjdk.samtools.BamFileIoUtils;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
 
 import java.io.File;
 import java.net.URL;

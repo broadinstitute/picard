@@ -23,11 +23,6 @@
  */
 package picard.cmdline;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.text.DecimalFormat;
-import java.util.*;
-
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -41,6 +36,14 @@ import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.zip.DeflaterFactory;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract class to facilitate writing command-line programs.

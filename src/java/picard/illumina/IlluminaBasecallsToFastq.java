@@ -23,32 +23,48 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.BasicFastqWriter;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import picard.fastq.*;
+import picard.fastq.Casava18ReadNameEncoder;
+import picard.fastq.IlluminaReadNameEncoder;
+import picard.fastq.ReadNameEncoder;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.CollectionUtil;
 import picard.util.IlluminaUtil;
-import htsjdk.samtools.util.Log;
 import picard.util.TabbedTextFileWithHeaderParser;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
     // The following attributes define the command-line arguments

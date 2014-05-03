@@ -26,7 +26,12 @@ package picard.illumina.parser;
 
 import htsjdk.samtools.util.CollectionUtil;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /** Represents a tile from TileMetricsOut.bin. Stores information on location (lane & tile #, density, number of clusters and the
  * phasing/prephasing values associated with this tile

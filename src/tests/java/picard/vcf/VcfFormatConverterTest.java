@@ -25,10 +25,10 @@
 
 package picard.vcf;
 
-import picard.PicardException;
 import htsjdk.tribble.Tribble;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;

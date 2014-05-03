@@ -24,18 +24,20 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import picard.cmdline.Option;
 import picard.cmdline.Usage;
 import picard.util.IlluminaUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.*;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A command line tool to read a BAM file and produce standard alignment metrics that would be applicable to any alignment.  

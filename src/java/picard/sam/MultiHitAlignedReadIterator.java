@@ -23,14 +23,23 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.PeekableIterator;
 import picard.PicardException;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CloseableIterator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 
 /**

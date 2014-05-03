@@ -1,10 +1,15 @@
 package picard.sam.testers;
 
-import picard.cmdline.CommandLineProgram;
-import picard.sam.CleanSam;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.SAMValidationError;
+import htsjdk.samtools.SamFileValidator;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
+import picard.cmdline.CommandLineProgram;
+import picard.sam.CleanSam;
 
 import java.io.PrintWriter;
 import java.util.Arrays;

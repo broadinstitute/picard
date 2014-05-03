@@ -23,27 +23,26 @@
  */
 package picard.fastq;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.BinaryCodec;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import picard.PicardException;
 import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.TagFilter;
 import htsjdk.samtools.filter.WholeReadClippedFilter;
+import htsjdk.samtools.util.BinaryCodec;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import picard.PicardException;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Class to take unmapped reads in BAM file format and create Maq binary fastq format file(s) --

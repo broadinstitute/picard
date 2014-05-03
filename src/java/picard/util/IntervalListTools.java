@@ -1,5 +1,8 @@
 package picard.util;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
@@ -9,13 +12,14 @@ import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMProgramRecord;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Little class to aid working with interval lists.

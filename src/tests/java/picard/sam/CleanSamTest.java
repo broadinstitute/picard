@@ -23,14 +23,14 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SamFileValidator;
-import picard.sam.testers.CleanSamTester;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMValidationError;
+import htsjdk.samtools.SamFileValidator;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.testers.CleanSamTester;
 
 import java.io.File;
 import java.io.IOException;

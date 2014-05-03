@@ -24,8 +24,6 @@
 package picard.sam;
 
 import htsjdk.samtools.BamFileIoUtils;
-import picard.PicardException;
-import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -44,6 +42,7 @@ import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;

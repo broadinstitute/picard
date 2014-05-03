@@ -1,8 +1,8 @@
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.illumina.parser.fakers.FileFaker;
-import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.util.List;

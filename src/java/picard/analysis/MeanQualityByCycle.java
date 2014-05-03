@@ -24,17 +24,17 @@
 
 package picard.analysis;
 
-import picard.PicardException;
-import picard.cmdline.Option;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Log;
-import picard.util.RExecutor;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import picard.PicardException;
+import picard.cmdline.Option;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.util.Arrays;

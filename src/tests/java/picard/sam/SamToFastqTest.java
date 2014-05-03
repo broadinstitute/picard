@@ -24,21 +24,25 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMException;
-import htsjdk.samtools.fastq.FastqReader;
-import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.util.IOUtil;
-import picard.PicardException;
-
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Tests for SamToFastq

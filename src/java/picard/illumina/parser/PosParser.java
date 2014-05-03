@@ -23,12 +23,12 @@
  */
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 import picard.illumina.parser.readers.AbstractIlluminaPositionFileReader;
 import picard.illumina.parser.readers.ClocsFileReader;
 import picard.illumina.parser.readers.LocsFileReader;
 import picard.illumina.parser.readers.PosFileReader;
-import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.Collections;

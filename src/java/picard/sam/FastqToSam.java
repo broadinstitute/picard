@@ -23,23 +23,29 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.QualityEncodingDetector;
 import htsjdk.samtools.util.SolexaQualityConverter;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.*;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.util.Iso8601Date;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,19 +1,19 @@
 package picard.analysis;
 
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.ProgressLogger;
-import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.Log;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
 import java.util.Arrays;

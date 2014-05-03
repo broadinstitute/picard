@@ -1,9 +1,9 @@
 package picard.util;
 
-import picard.util.TabbedTextFileWithHeaderParser.Row;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.util.TabbedTextFileWithHeaderParser.Row;
 
 import java.io.BufferedWriter;
 import java.io.File;

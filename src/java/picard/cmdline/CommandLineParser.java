@@ -23,18 +23,30 @@
  */
 package picard.cmdline;
 
-import java.io.*;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CollectionUtil.MultiMap;
+import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
-
-import htsjdk.samtools.util.CollectionUtil.MultiMap;
-import htsjdk.samtools.util.StringUtil;
-import htsjdk.samtools.util.CloserUtil;
-import picard.PicardException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Annotation-driven utility for parsing command-line arguments, checking for errors, and producing usage message.

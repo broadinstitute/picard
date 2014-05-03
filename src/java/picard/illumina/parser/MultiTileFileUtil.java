@@ -1,11 +1,11 @@
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.illumina.parser.fakers.BciFileFaker;
 import picard.illumina.parser.fakers.FileFaker;
 import picard.illumina.parser.fakers.FilterFileFaker;
 import picard.illumina.parser.fakers.MultiTileLocsFileFaker;
-import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;

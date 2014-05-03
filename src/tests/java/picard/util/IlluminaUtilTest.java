@@ -1,8 +1,8 @@
 package picard.util;
 
-import org.testng.annotations.Test;
-import org.testng.annotations.DataProvider;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 /**
  * Just some simple tests for the IlluminaUtil.getTileFromReadName() method for now.

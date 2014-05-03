@@ -24,21 +24,21 @@
 
 package picard.analysis;
 
-import java.io.File;
-import java.util.*;
-
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
 import picard.cmdline.Option;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.Log;
 import picard.util.RExecutor;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
+
+import java.io.File;
+import java.util.Set;
 
 /**
  * Command line program to read non-duplicate insert sizes, create a Histogram

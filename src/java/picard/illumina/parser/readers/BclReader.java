@@ -23,16 +23,16 @@
 */
 package picard.illumina.parser.readers;
 
-import picard.PicardException;
-import picard.illumina.parser.BclData;
-import picard.illumina.parser.TileIndex;
-import picard.util.UnsignedTypeUtil;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
+import picard.PicardException;
+import picard.illumina.parser.BclData;
+import picard.illumina.parser.TileIndex;
+import picard.util.UnsignedTypeUtil;
 
 import java.io.File;
 import java.io.FileInputStream;

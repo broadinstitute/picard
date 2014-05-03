@@ -24,23 +24,23 @@
 
 package picard.sam;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.ArrayList;
-
-import htsjdk.samtools.SamFileValidator;
-import picard.cmdline.Usage;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMValidationError;
+import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import picard.cmdline.Usage;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Command line program wrapping SamFileValidator.

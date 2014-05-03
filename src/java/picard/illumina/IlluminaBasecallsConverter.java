@@ -23,6 +23,10 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
@@ -31,10 +35,6 @@ import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.FileChannelJDKBugWorkAround;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.PeekIterator;
-import htsjdk.samtools.util.SortingCollection;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,12 +1,15 @@
 package picard.illumina.parser.readers;
 
-import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
-import java.nio.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.Iterator;
 
 public class MMapBackedIteratorFactoryTest {

@@ -23,15 +23,21 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.PositionalArguments;
+import picard.cmdline.Usage;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.PositionalArguments;
-import picard.cmdline.Usage;
-import htsjdk.samtools.*;
 
 /**
  * Rudimentary SAM comparer.  Compares headers, and if headers are compatible enough, compares SAMRecords,

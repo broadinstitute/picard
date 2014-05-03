@@ -23,11 +23,15 @@
  */
 package picard.util;
 
-import picard.PicardException;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.PicardException;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**

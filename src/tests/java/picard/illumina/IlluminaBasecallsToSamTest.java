@@ -23,8 +23,8 @@
  */
 package picard.illumina;
 
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;

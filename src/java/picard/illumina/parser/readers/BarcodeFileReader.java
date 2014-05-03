@@ -1,7 +1,7 @@
 package picard.illumina.parser.readers;
 
-import picard.util.BasicInputParser;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.util.BasicInputParser;
 
 import java.io.File;
 

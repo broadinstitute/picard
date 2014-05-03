@@ -24,19 +24,21 @@
 
 package picard.sam;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTextHeaderCodec;
+import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.AsciiWriter;
 
 /**
  * Very simple command that just reads a SAM or BAM file and writes out the header

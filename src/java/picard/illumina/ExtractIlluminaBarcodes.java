@@ -23,25 +23,37 @@
  */
 package picard.illumina;
 
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import picard.illumina.parser.*;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProvider;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadDescriptor;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricBase;
-import htsjdk.samtools.metrics.MetricsFile;
 import picard.util.IlluminaUtil;
-import htsjdk.samtools.util.Log;
 import picard.util.TabbedTextFileWithHeaderParser;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;

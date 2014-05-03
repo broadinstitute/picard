@@ -24,7 +24,6 @@
 package picard.util;
 
 import htsjdk.samtools.ReservedTagConstants;
-import picard.util.IlluminaUtil.IlluminaAdapterPair;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
@@ -32,6 +31,7 @@ import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.util.IlluminaUtil.IlluminaAdapterPair;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,22 +1,25 @@
 package picard.analysis;
 
 
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.reference.ReferenceSequence;
-import picard.metrics.*;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import static htsjdk.samtools.util.CollectionUtil.*;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.metrics.MultiLevelCollector;
+import picard.metrics.MultilevelMetrics;
+import picard.metrics.PerUnitMetricCollector;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 public class MultiLevelCollectorTest {
 

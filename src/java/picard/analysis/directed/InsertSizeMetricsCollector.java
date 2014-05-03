@@ -1,15 +1,15 @@
 package picard.analysis.directed;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Histogram;
 import picard.analysis.InsertSizeMetrics;
 import picard.analysis.MetricAccumulationLevel;
 import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
 
 import java.util.EnumMap;
 import java.util.List;

@@ -23,11 +23,12 @@
  */
 package picard.illumina;
 
-import htsjdk.samtools.*;
 import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
 import org.testng.Assert;
-import org.testng.annotations.Test;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.File;
 

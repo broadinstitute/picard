@@ -23,8 +23,8 @@
  */
 package picard.illumina.parser;
 
-import picard.PicardException;
 import htsjdk.samtools.util.PeekIterator;
+import picard.PicardException;
 
 import java.util.Iterator;
 import java.util.List;

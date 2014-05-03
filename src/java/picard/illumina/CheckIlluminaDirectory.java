@@ -1,6 +1,9 @@
 package picard.illumina;
 
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProcessExecutor;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
@@ -12,9 +15,6 @@ import picard.illumina.parser.IlluminaFileUtil;
 import picard.illumina.parser.OutputMapping;
 import picard.illumina.parser.ParameterizedFileUtil;
 import picard.illumina.parser.ReadStructure;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;

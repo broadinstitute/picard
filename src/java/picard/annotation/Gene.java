@@ -23,8 +23,8 @@
  */
 package picard.annotation;
 
-import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.CoordMath;
+import htsjdk.samtools.util.Interval;
 
 import java.util.HashMap;
 import java.util.Iterator;

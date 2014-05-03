@@ -23,16 +23,16 @@
  */
 package picard.util;
 
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-
-import java.io.*;
-import java.util.Arrays;
-import java.util.ArrayList;
-
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.RuntimeIOException;
+import picard.PicardException;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * TextFileParser which reads a single text file.

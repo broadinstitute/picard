@@ -25,15 +25,18 @@ package picard.util;
 
 import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.IOUtil;
-import org.testng.annotations.Test;
-import org.testng.annotations.DataProvider;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import picard.PicardException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import picard.PicardException;
 
 public class TextFileParsersTest {
 

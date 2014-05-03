@@ -23,11 +23,15 @@
  */
 package picard.sam;
 
-import picard.PicardException;
-import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.Arrays;

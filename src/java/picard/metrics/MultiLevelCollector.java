@@ -24,15 +24,19 @@
 
 package picard.metrics;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.metrics.MetricBase;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * MultiLevelCollector handles accumulating Metrics at different MetricAccumulationLevels(ALL_READS, SAMPLE, LIBRARY, READ_GROUP).

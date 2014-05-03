@@ -23,9 +23,9 @@
  */
 package picard.illumina.parser;
 
-import picard.PicardException;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;

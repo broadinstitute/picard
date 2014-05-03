@@ -23,15 +23,14 @@
  */
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.CloserUtil;
+import picard.PicardException;
 import picard.util.BasicInputParser;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import picard.PicardException;
-import htsjdk.samtools.util.CloserUtil;
 
 
 /**

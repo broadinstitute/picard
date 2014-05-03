@@ -23,19 +23,19 @@
  */
 package picard.illumina;
 
-import picard.fastq.IlluminaReadNameEncoder;
-import picard.fastq.ReadNameEncoder;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SolexaNoiseFilter;
+import picard.fastq.IlluminaReadNameEncoder;
+import picard.fastq.ReadNameEncoder;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
-import htsjdk.samtools.ReservedTagConstants;
 import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.IlluminaUtil;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTag;
 
 import java.util.List;
 

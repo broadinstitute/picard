@@ -23,7 +23,14 @@
  */
 package picard.analysis;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
@@ -33,15 +40,12 @@ import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
 import picard.cmdline.Option;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.*;
-import htsjdk.samtools.reference.ReferenceSequence;
-import picard.util.*;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CollectionUtil;
+import picard.util.RExecutor;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);

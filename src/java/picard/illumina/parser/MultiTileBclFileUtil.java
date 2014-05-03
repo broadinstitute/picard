@@ -1,7 +1,7 @@
 package picard.illumina.parser;
 
-import picard.illumina.parser.fakers.MultiTileBclFileFaker;
 import htsjdk.samtools.util.IOUtil;
+import picard.illumina.parser.fakers.MultiTileBclFileFaker;
 
 import java.io.File;
 import java.util.ArrayList;

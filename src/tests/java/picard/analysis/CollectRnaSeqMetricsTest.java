@@ -23,15 +23,19 @@
  */
 package picard.analysis;
 
-import picard.annotation.RefFlatReader.RefFlatColumns;
-import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.*;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.annotation.RefFlatReader.RefFlatColumns;
 
 import java.io.File;
 import java.io.FileReader;

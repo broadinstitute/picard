@@ -1,10 +1,10 @@
 package picard.illumina.parser.readers;
 
 import htsjdk.samtools.SAMException;
-import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.NoSuchElementException;

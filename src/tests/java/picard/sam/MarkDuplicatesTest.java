@@ -23,16 +23,24 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.*;
 import htsjdk.samtools.util.TestUtil;
-import picard.sam.testers.MarkDuplicatesTester;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.sam.testers.MarkDuplicatesTester;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MarkDuplicatesTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MarkDuplicates");

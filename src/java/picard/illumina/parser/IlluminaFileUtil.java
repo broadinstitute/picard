@@ -23,6 +23,8 @@
  */
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.illumina.parser.fakers.BarcodeFileFaker;
 import picard.illumina.parser.fakers.BclFileFaker;
@@ -31,8 +33,6 @@ import picard.illumina.parser.fakers.FilterFileFaker;
 import picard.illumina.parser.fakers.LocsFileFaker;
 import picard.illumina.parser.fakers.PosFileFaker;
 import picard.illumina.parser.readers.TileMetricsOutReader;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 import java.util.ArrayList;

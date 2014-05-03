@@ -23,12 +23,11 @@
  */
 package picard.util;
 
+import htsjdk.samtools.util.AbstractIterator;
+import htsjdk.samtools.util.CloseableIterator;
 import picard.PicardException;
 
 import java.util.Iterator;
-
-import htsjdk.samtools.util.AbstractIterator;
-import htsjdk.samtools.util.CloseableIterator;
 
 /**
  * Class for parsing text files where each line consists of fields separated by whitespace.

@@ -23,15 +23,15 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SamPairUtil;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -24,19 +24,26 @@
 
 package picard.analysis.directed;
 
+import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.CoordMath;
+import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
-import htsjdk.samtools.metrics.*;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.*;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
@@ -45,7 +52,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * TargetMetrics, are metrics to measure how well we hit specific targets (or baits) when using a targeted sequencing process like hybrid selection

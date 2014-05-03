@@ -23,13 +23,13 @@
  */
 package picard.illumina;
 
-import picard.illumina.parser.ReadStructure;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.annotations.Test;
+import picard.illumina.parser.ReadStructure;
 
 import java.io.File;
 import java.io.FileInputStream;

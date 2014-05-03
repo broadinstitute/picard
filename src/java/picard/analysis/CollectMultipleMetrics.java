@@ -1,10 +1,10 @@
 package picard.analysis;
 
+import htsjdk.samtools.util.CollectionUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.CollectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;

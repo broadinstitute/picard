@@ -23,12 +23,17 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CoordMath;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * For a paired-end aligner that aligns each end independently, select the pair of alignments that result

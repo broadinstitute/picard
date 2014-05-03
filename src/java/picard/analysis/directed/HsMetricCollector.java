@@ -30,7 +30,8 @@ import picard.analysis.MetricAccumulationLevel;
 import picard.sam.DuplicationMetrics;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Calculates HS metrics for a given SAM or BAM file. Requires the input of a list of

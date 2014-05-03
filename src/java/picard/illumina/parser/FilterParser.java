@@ -23,13 +23,14 @@
  */
 package picard.illumina.parser;
 
-import picard.illumina.parser.readers.FilterFileReader;
 import htsjdk.samtools.util.CloseableIterator;
-
-import static htsjdk.samtools.util.CollectionUtil.*;
+import picard.illumina.parser.readers.FilterFileReader;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.Set;
+
+import static htsjdk.samtools.util.CollectionUtil.makeSet;
 
 /**
  * Sequentially parses filter files for the given tiles.  One tile is processed at a time.  IlluminaDataProvider should

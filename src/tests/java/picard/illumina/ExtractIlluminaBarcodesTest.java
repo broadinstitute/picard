@@ -23,23 +23,26 @@
  */
 package picard.illumina;
 
-import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import picard.util.BasicInputParser;
-import org.testng.annotations.BeforeTest;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.IOUtil;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.testng.Assert;
+import picard.illumina.parser.ClusterData;
+import picard.illumina.parser.IlluminaDataProvider;
+import picard.illumina.parser.IlluminaDataProviderFactory;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.util.BasicInputParser;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
-
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import picard.illumina.parser.*;
 
 /**
  * @author alecw@broadinstitute.org

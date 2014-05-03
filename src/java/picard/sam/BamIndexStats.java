@@ -24,14 +24,14 @@
 
 package picard.sam;
 
+import htsjdk.samtools.BAMIndex;
+import htsjdk.samtools.BAMIndexMetaData;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.BAMIndex;
-import htsjdk.samtools.BAMIndexMetaData;
 
 import java.io.File;
 

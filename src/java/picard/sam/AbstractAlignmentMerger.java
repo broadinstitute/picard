@@ -23,18 +23,10 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.filter.FilteringIterator;
-import htsjdk.samtools.filter.SamRecordFilter;
-import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.CigarUtil;
-import htsjdk.samtools.util.ProgressLogger;
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileReader;
@@ -50,10 +42,18 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.CigarUtil;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SortingCollection;
+import picard.PicardException;
 
 import java.io.File;
 import java.text.DecimalFormat;

@@ -24,15 +24,18 @@
 
 package picard.util;
 
-import com.sun.javadoc.*;
-
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.Doc;
+import com.sun.javadoc.FieldDoc;
+import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.Tag;
 import htsjdk.samtools.metrics.MetricBase;
 
-import java.util.TreeMap;
-import java.util.SortedMap;
-import java.io.PrintStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Doclet for use with JavaDoc that will find all classes extending MetricBase and

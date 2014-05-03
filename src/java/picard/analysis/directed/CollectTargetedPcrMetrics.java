@@ -1,10 +1,10 @@
 package picard.analysis.directed;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.Option;
 import picard.cmdline.Usage;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.SAMReadGroupRecord;
 
 import java.io.File;
 import java.util.List;

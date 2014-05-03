@@ -24,7 +24,6 @@
 package picard.util;
 
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
@@ -34,8 +33,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * Very basic test for scatter functionality in IntervalListTools

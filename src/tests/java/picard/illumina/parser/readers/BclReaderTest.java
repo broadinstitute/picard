@@ -1,10 +1,10 @@
 package picard.illumina.parser.readers;
 
-import picard.PicardException;
-import picard.illumina.parser.BclData;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
+import picard.illumina.parser.BclData;
 
 import java.io.File;
 import java.util.Collection;

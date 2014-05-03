@@ -24,27 +24,35 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.ReservedTagConstants;
-import picard.util.*;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CollectionUtil;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
-import static picard.util.IlluminaUtil.IlluminaAdapterPair;
+import picard.util.AdapterMarker;
+import picard.util.AdapterPair;
+import picard.util.ClippingUtility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static picard.util.IlluminaUtil.IlluminaAdapterPair;
 
 /**
  * Command line program to mark the location of adapter sequences.

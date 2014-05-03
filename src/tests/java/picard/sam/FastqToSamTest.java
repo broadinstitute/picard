@@ -26,11 +26,11 @@ package picard.sam;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
-import picard.PicardException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;

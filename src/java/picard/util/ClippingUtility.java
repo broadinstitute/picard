@@ -24,11 +24,10 @@
 
 package picard.util;
 
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.ReservedTagConstants;
 
 /**
  * Utilities to clip the adapater sequence from a SAMRecord read

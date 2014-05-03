@@ -26,7 +26,12 @@ package picard.sam;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /** Coded for ReadEnds that just outputs the primitive fields and reads them back. */
 class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {

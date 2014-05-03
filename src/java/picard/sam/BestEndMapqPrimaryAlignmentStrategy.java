@@ -26,7 +26,10 @@ package picard.sam;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 
 
 /**

@@ -24,14 +24,14 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.metrics.MetricsFile;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.NumberFormat;
-
-import htsjdk.samtools.metrics.MetricsFile;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 /**
  * Tests CollectAlignmentSummaryStatistics

@@ -5,23 +5,24 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamPairUtil;
-import htsjdk.samtools.util.PeekableIterator;
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.DelegatingIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.SortingCollection;
+import picard.PicardException;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class that takes in a set of alignment information in SAM format and merges it with the set

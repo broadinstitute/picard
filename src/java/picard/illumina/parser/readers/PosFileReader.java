@@ -23,9 +23,9 @@
  */
 package picard.illumina.parser.readers;
 
+import htsjdk.samtools.util.CloserUtil;
 import picard.PicardException;
 import picard.util.BasicInputParser;
-import htsjdk.samtools.util.CloserUtil;
 
 import java.io.File;
 

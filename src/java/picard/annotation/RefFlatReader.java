@@ -23,12 +23,12 @@
  */
 package picard.annotation;
 
-import picard.annotation.Gene.Transcript;
-import picard.annotation.Gene.Transcript.Exon;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.OverlapDetector;
+import picard.annotation.Gene.Transcript;
+import picard.annotation.Gene.Transcript.Exon;
 import picard.util.TabbedTextFileWithHeaderParser;
-import htsjdk.samtools.SAMSequenceDictionary;
 
 import java.io.File;
 import java.util.ArrayList;

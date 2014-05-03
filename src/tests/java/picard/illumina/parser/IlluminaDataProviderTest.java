@@ -23,11 +23,11 @@
 */
 package picard.illumina.parser;
 
-import picard.PicardException;
-import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
+import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
 import java.io.File;
 import java.util.Arrays;

@@ -24,24 +24,40 @@
 
 package picard.sam;
 
+import htsjdk.samtools.MergingSamRecordIterator;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.SortingLongCollection;
+import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Log;
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.*;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.SortingLongCollection;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A better duplication marking algorithm that handles all cases including clipped

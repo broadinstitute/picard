@@ -1,22 +1,22 @@
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.illumina.parser.fakers.FileFaker;
 import picard.illumina.parser.readers.BclReader;
-import htsjdk.samtools.util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
-import java.util.Map;
-import java.util.HashMap;
 
 public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
 

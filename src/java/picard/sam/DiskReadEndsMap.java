@@ -25,10 +25,12 @@ package picard.sam;
 
 import htsjdk.samtools.CoordinateSortedPairInfoMap;
 import picard.PicardException;
-import htsjdk.samtools.util.CloserUtil;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.AbstractMap;
+import java.util.Map;
 
 /**
  * Disk-based implementation of ReadEndsMap.  A subdirectory of the system tmpdir is created to store

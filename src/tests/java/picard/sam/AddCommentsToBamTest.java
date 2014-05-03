@@ -1,12 +1,12 @@
 package picard.sam;
 
-import picard.PicardException;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMTextHeaderCodec;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;

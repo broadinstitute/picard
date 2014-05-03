@@ -1,12 +1,12 @@
 package picard.sam.testers;
 
 
-import picard.cmdline.CommandLineProgram;
-import picard.sam.MarkDuplicates;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
+import picard.cmdline.CommandLineProgram;
+import picard.sam.MarkDuplicates;
 
 import java.io.File;
 

@@ -24,11 +24,11 @@
 
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -24,7 +24,6 @@
 
 package picard.analysis.directed;
 
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import picard.analysis.MetricAccumulationLevel;
@@ -32,7 +31,8 @@ import picard.cmdline.Option;
 import picard.cmdline.Usage;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Calculates a set of HS metrics from a sam or bam file.  See HsMetricsCollector and CollectTargetedMetrics for more details.

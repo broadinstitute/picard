@@ -1,19 +1,18 @@
 package picard.illumina;
 
 import htsjdk.samtools.SAMException;
-import picard.PicardException;
-import picard.cmdline.StandardOptionDefinitions;
-import picard.illumina.parser.IlluminaDataType;
-import picard.illumina.parser.IlluminaFileUtil;
-import picard.illumina.parser.IlluminaFileUtilTest;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.CloserUtil;
-import htsjdk.tribble.index.Index;
+import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.illumina.parser.IlluminaDataType;
+import picard.illumina.parser.IlluminaFileUtil;
+import picard.illumina.parser.IlluminaFileUtilTest;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,10 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static picard.illumina.parser.IlluminaDataType.*;
+import static htsjdk.samtools.util.CollectionUtil.makeList;
+import static picard.illumina.parser.IlluminaDataType.BaseCalls;
+import static picard.illumina.parser.IlluminaDataType.Position;
 import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
-import static htsjdk.samtools.util.CollectionUtil.makeList;
 
 
 public class CheckIlluminaDirectoryTest {

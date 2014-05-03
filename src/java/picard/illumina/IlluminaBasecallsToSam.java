@@ -24,6 +24,19 @@
 
 package picard.illumina;
 
+import htsjdk.samtools.BAMRecordCodec;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordQueryNameComparator;
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Iso8601Date;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
@@ -31,21 +44,22 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.CollectionUtil;
 import picard.util.IlluminaUtil;
 import picard.util.IlluminaUtil.IlluminaAdapterPair;
-import htsjdk.samtools.util.Log;
 import picard.util.TabbedTextFileWithHeaderParser;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.Iso8601Date;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * IlluminaBasecallsToSam transforms a lane of Illumina data file formats (bcl, locs, clocs, qseqs, etc.) into

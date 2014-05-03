@@ -23,15 +23,18 @@
  */
 package picard.illumina.parser;
 
-import picard.util.UnsignedTypeUtil;
 import htsjdk.samtools.util.CloserUtil;
-import picard.PicardException;
 import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
+import picard.util.UnsignedTypeUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 

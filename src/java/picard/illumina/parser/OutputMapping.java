@@ -23,8 +23,8 @@
  */
 package picard.illumina.parser;
 
-import picard.PicardException;
 import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
 
 /**
  * In multiple locations we need to know what cycles are output, as of now we output all non-skip cycles, but rather than sprinkle

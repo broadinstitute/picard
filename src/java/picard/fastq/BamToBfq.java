@@ -25,9 +25,9 @@
 package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.Usage;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.Usage;
 
 import java.io.File;
 

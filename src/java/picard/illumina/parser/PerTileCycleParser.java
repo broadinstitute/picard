@@ -24,7 +24,6 @@
 package picard.illumina.parser;
 
 import picard.PicardException;
-import htsjdk.variant.variantcontext.writer.BCF2FieldWriter;
 
 import java.io.File;
 import java.util.ArrayList;

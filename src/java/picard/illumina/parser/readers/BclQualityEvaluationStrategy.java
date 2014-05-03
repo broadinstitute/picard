@@ -1,9 +1,13 @@
 package picard.illumina.parser.readers;
 
-import picard.PicardException;
 import htsjdk.samtools.util.CollectionUtil;
+import picard.PicardException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**

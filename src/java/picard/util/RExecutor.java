@@ -24,17 +24,17 @@
 
 package picard.util;
 
+import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProcessExecutor;
+import picard.PicardException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProcessExecutor;
-import picard.PicardException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.CollectionUtil;
 
 /**
  * Util class for executing R scripts.

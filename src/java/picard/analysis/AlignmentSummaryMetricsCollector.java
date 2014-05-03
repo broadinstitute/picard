@@ -1,15 +1,21 @@
 package picard.analysis;
 
+import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.BAMRecord;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.StringUtil;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CoordMath;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.StringUtil;
 
 import java.util.HashSet;
 import java.util.List;

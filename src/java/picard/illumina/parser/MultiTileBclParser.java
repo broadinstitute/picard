@@ -23,9 +23,9 @@
  */
 package picard.illumina.parser;
 
+import htsjdk.samtools.util.CloseableIterator;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.illumina.parser.readers.BclReader;
-import htsjdk.samtools.util.CloseableIterator;
 
 import java.io.File;
 import java.util.List;

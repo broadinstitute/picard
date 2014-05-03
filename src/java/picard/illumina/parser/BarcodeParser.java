@@ -23,9 +23,9 @@
  */
 package picard.illumina.parser;
 
-import picard.illumina.parser.readers.BarcodeFileReader;
-import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CollectionUtil;
+import picard.illumina.parser.readers.BarcodeFileReader;
 
 import java.io.File;
 import java.util.Collections;

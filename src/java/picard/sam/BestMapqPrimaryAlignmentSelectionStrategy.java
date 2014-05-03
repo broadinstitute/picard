@@ -23,11 +23,12 @@
  */
 package picard.sam;
 
+import htsjdk.samtools.SAMUtils;
+import picard.sam.HitsForInsert.NumPrimaryAlignmentState;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import picard.sam.HitsForInsert.NumPrimaryAlignmentState;
-import htsjdk.samtools.SAMUtils;
 
 /**
  * This strategy was designed for TopHat output, but could be of general utility.  It picks the alignment with best MAPQ.
