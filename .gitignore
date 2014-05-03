@@ -1,0 +1,11 @@
+. - Picard-public.iws
+.command_tmp
+classes
+testclasses
+javadoc
+dist
+contracts
+atlassian-ide-plugin.xml
+intellij.testclasses
+intellij.classes
+
