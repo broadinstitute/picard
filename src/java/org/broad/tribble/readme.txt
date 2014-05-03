@@ -1,1 +1,0 @@
-Source root for tribble project -- indexed, queryable genomic file formats
