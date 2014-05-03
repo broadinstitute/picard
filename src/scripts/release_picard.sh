@@ -26,15 +26,32 @@ USERNAME=alecw
 
 function usage () {
     echo "USAGE: $PROGNAME <release-id>" >&2
-    echo "Branches Sourceforge Picard source, checks out and builds sources, uploads build results to Sourceforge.">&2
+	echo "Tags Github Picard source, checks out and builds sources, uploads build results to Sourceforge.">&2
     echo "-t <tmpdir>                Build in <tmpdir>.  Default: $TMPDIR." >&2
     echo "-u <sourceforge-user> Sourceforge username.  Default: $USERNAME." >&2
 }
 
-function branch_exists() {
-    if svn info $1 2>&1 | fgrep -q 'Not a valid URL'
+function tag_exists() {
+    git tag | grep -q "$1$"
+    if test $? = 0
+        then return 0
+        else return 1
+    fi
+}
+
+function remote_does_not_exist() {
+    git ls-remote $1 2>/dev/null 1>/dev/null
+    if test $? = 0
         then return 1
         else return 0
+    fi
+}
+
+function remote_tag_does_not_exist() {
+    git ls-remote --tags $2 | grep -q "$1$";
+    if test $? = 0
+        then return 0
+        else return 1
     fi
 }
 
@@ -71,56 +88,62 @@ fi
 java_version=`java -version 2>&1 | fgrep -i version`
 (echo $java_version | fgrep -q 1.6. ) || { echo "java -version: $java_version is not 1.6"; exit 1; }
 
-SVNROOT=svn+ssh://$USERNAME@svn.code.sf.net/p/picard/code
+GITROOT=git@github.com:broadinstitute/picard.git
+REMOTE=origin
 
 RELEASE_ID=$1
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
-PREV_RELEASE_ID=`svn --username $USERNAME ls $SVNROOT/tags | egrep '[.]\d\d\d' | tail -1 | sed 's/\/$//'`
+PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
 
-if branch_exists $SVNROOT/branches/$RELEASE_ID
-then echo "ERROR: $SVNROOT/branches/$RELEASE_ID already exists.">&2
-       exit 1
-fi
-
-if branch_exists $SVNROOT/tags/$RELEASE_ID
-then echo "ERROR: $SVNROOT/tags/$RELEASE_ID already exists.">&2
-       exit 1
-fi
-
-if [[ -e $TMPDIR/Picard-public ]]
-then echo "$TMPDIR/Picard-public already exists.  Please remove or specify a different TMPDIR." >&2
+if [[ -e $TMPDIR/htsjdk ]]
+then echo "$TMPDIR/htsjdk already exists.  Please remove or specify a different TMPDIR." >&2
         exit 1
 fi
-
-# NB: do not copy the trunk to branches, as we already are copying it to tags.
-#svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/branches/$RELEASE_ID
-svn --username $USERNAME copy -m "Release $RELEASE_ID" $SVNROOT/trunk $SVNROOT/tags/$RELEASE_ID
-
 cd $TMPDIR
 
-mkdir Picard-public
-cd Picard-public
-svn --username $USERNAME co $SVNROOT/tags/$RELEASE_ID .
+# clone
+git clone $GITROOT htsjdk
+cd htsjdk
+ant clean # Shouldn't be necessary, but no harm
+
+# tag must not exist
+if tag_exists $RELEASE_ID
+then echo "ERROR: Tag $RELEASE_ID locally already exists"
+     exit 1
+fi
+
+# remote must exist
+if remote_does_not_exist $REMOTE
+then echo "ERROR: Remote $REMOTE does not exist"
+     exit 1
+fi
+
+# tag at remote must not exist
+if remote_tag_does_not_exist $RELEASE_ID $REMOTE
+then echo "ERROR: Tag $RELEASE_ID at remote $REMOTE already exists"
+     exit 1
+fi
+
+# tag the branch locally then push to remote
+echo Tagging master as $tag and pushing the tag to $remote
+# NB: we could use annotated tags in the future to store release notes, etc.
+git tag $tag
+git push $remote $tag # TODO: should we check this return value in case someone made a tag since we last checked?
 
 ant -lib lib/ant test
 
 ant -lib lib/ant clean all javadoc
 
-REVISION=`svn --username $USERNAME info $SVNROOT/tags/$RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
-PREV_REVISION=`svn --username $USERNAME info $SVNROOT/tags/$PREV_RELEASE_ID | egrep '^Last Changed Rev: ' | awk '{print $4}'`
-
 mkdir -p deploy/picard-tools/$RELEASE_ID
 
-svn --username $USERNAME log -r $PREV_REVISION:$REVISION -v > deploy/picard-tools/$RELEASE_ID/README.txt
+git log ${PREV_RELEASE_ID}..${RELEASE_ID} > deploy/picard-tools/$RELEASE_ID/README.txt
 
 echo 'Edit release notes and exit editor when finished.'
 
 $EDITOR deploy/picard-tools/$RELEASE_ID/README.txt
 
 cp dist/picard-tools-$RELEASE_ID.zip deploy/picard-tools/$RELEASE_ID/
-mkdir -p deploy/sam-jdk/$RELEASE_ID
-cp dist/sam-$RELEASE_ID.jar deploy/sam-jdk/$RELEASE_ID/
 
 # Make all files to be pushed to Sourceforge writable by group so that another Picard admin can overwrite them.
 
@@ -132,7 +155,6 @@ scp -p -r javadoc $USERNAME,picard@web.sourceforge.net:htdocs
 
 cd deploy
 scp -p -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
-scp -p -r sam-jdk/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/sam-jdk/
 
 cd ../dist/html
 scp -p *.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
