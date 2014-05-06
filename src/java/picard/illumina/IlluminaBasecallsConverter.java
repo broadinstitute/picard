@@ -632,6 +632,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             // Update all of the barcodes and the tile to be marked as read
             for (final String barcode : tileRecord.getBarcodes()) {
                 tileRecord.setBarcodeState(barcode, TileBarcodeProcessingState.READ);
+                tileRecord.barcodeToRecordCollection.get(barcode).doneAdding();
             }
             tileRecord.setState(TileProcessingState.DONE_READING);
 
