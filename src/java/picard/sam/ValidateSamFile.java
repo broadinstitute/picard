@@ -27,6 +27,7 @@ package picard.sam;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
@@ -125,8 +126,8 @@ public class ValidateSamFile extends CommandLineProgram {
             out = new PrintWriter(System.out);
         }
 
-        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
-        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
         boolean result;
         try {
             final SAMFileReader samReader = new SAMFileReader(INPUT);

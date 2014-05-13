@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.ValidationStringency;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -55,7 +56,7 @@ public class CleanSamTest {
         validator.setVerbose(true, 1000);
         validator.setErrorsToIgnore(Arrays.asList(SAMValidationError.Type.MISSING_READ_GROUP));
         SAMFileReader samReader = new SAMFileReader(cleanedFile);
-        samReader.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
+        samReader.setValidationStringency(ValidationStringency.LENIENT);
         final SAMRecord rec = samReader.iterator().next();
         samReader.close();
         Assert.assertEquals(rec.getCigarString(), expectedCigar);
