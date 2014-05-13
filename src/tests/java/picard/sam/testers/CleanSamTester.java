@@ -6,6 +6,7 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
@@ -36,7 +37,7 @@ public class CleanSamTester extends SamFileTester {
             validator.setVerbose(true, 1000);
             validator.setErrorsToIgnore(Arrays.asList(SAMValidationError.Type.MISSING_READ_GROUP));
             SAMFileReader samReader = new SAMFileReader(getOutput());
-            samReader.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
+            samReader.setValidationStringency(ValidationStringency.LENIENT);
             final SAMRecordIterator iterator = samReader.iterator();
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();

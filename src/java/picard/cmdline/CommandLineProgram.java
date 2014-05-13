@@ -27,6 +27,7 @@ import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.Header;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -82,7 +83,7 @@ public abstract class CommandLineProgram {
     @Option(doc = "Validation stringency for all SAM files read by this program.  Setting stringency to SILENT " +
             "can improve performance when processing a BAM file in which variable-length data (read, qualities, tags) " +
             "do not otherwise need to be decoded.", common=true)
-    public SAMFileReader.ValidationStringency VALIDATION_STRINGENCY = SAMFileReader.ValidationStringency.DEFAULT_STRINGENCY;
+    public ValidationStringency VALIDATION_STRINGENCY = ValidationStringency.DEFAULT_STRINGENCY;
 
     @Option(doc = "Compression level for all compressed files created (e.g. BAM and GELI).", common=true)
     public int COMPRESSION_LEVEL = BlockCompressedStreamConstants.DEFAULT_COMPRESSION_LEVEL;
@@ -138,7 +139,7 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 

@@ -12,6 +12,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.DelegatingIterator;
 import htsjdk.samtools.util.IOUtil;
@@ -129,7 +130,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                     ? this.alignedSamFile.get(0)
                     : this.read1AlignedSamFile.get(0);
             final SAMFileReader tmpReader = new SAMFileReader(tmpFile);
-            tmpReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            tmpReader.setValidationStringency(ValidationStringency.SILENT);
             if (tmpReader.getFileHeader().getProgramRecords().size() == 1) {
                 setProgramRecord(tmpReader.getFileHeader().getProgramRecords().get(0));
             }

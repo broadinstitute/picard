@@ -27,6 +27,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -67,9 +68,9 @@ public class CleanSam extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
-        if (VALIDATION_STRINGENCY == SAMFileReader.ValidationStringency.STRICT) {
-            SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.LENIENT);
+        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        if (VALIDATION_STRINGENCY == ValidationStringency.STRICT) {
+            SAMFileReader.setDefaultValidationStringency(ValidationStringency.LENIENT);
         }
         try {
             final SAMFileReader reader = new SAMFileReader(INPUT);

@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -79,8 +80,8 @@ public class ReplaceSamHeader extends CommandLineProgram {
         final SAMFileHeader replacementHeader = headerReader.getFileHeader();
         headerReader.close();
 
-        final SAMFileReader.ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
-        SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
 
         try {
             if (BamFileIoUtils.isBamFile(INPUT)) {
