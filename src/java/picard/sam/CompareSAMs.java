@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.PositionalArguments;
 import picard.cmdline.Usage;
@@ -123,7 +124,6 @@ public class CompareSAMs extends CommandLineProgram {
                 return compareUnsortedAlignments();
             default:
                 // unreachable
-                assert(false);
                 return false;
         }
     }
@@ -241,8 +241,7 @@ public class CompareSAMs extends CommandLineProgram {
         }
         final int leftReferenceIndex = samReaders[0].getFileHeader().getSequenceIndex(leftReferenceName);
         final int rightReferenceIndex = samReaders[0].getFileHeader().getSequenceIndex(rightReferenceName);
-        assert(leftReferenceIndex >= 0);
-        assert(rightReferenceIndex >= 0);
+
         if (leftReferenceIndex != rightReferenceIndex) {
             return leftReferenceIndex - rightReferenceIndex;
         }
@@ -316,7 +315,9 @@ public class CompareSAMs extends CommandLineProgram {
     }
 
     private boolean tallyAlignmentRecords(final SAMRecord s1, final SAMRecord s2) {
-        assert (s1.getReadName().equals(s2.getReadName()));
+        if (!s1.getReadName().equals(s2.getReadName())) {
+            throw new PicardException("Read names do not match: " + s1.getReadName() + " : " + s2.getReadName());
+        }
         if (s1.getReadUnmappedFlag() && s2.getReadUnmappedFlag()) {
             ++unmappedBoth;
             return true;
