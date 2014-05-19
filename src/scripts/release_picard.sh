@@ -55,6 +55,34 @@ function remote_tag_does_not_exist() {
     fi
 }
 
+
+# This method called once for picard and once for htsjdk
+function tag_it() {
+    # tag must not exist
+    if tag_exists $RELEASE_ID
+    then echo "ERROR: Tag $RELEASE_ID locally already exists"
+         exit 1
+    fi
+
+    # remote must exist
+    if remote_does_not_exist $REMOTE
+    then echo "ERROR: Remote $REMOTE does not exist"
+         exit 1
+    fi
+
+    # tag at remote must not exist
+    if remote_tag_does_not_exist $RELEASE_ID $REMOTE
+    then echo "ERROR: Tag $RELEASE_ID at remote $REMOTE already exists"
+         exit 1
+    fi
+
+    # tag the branch locally then push to remote
+    echo Tagging master as $RELEASE_ID and pushing the tag to $REMOTE
+    # NB: we could use annotated tags in the future to store release notes, etc.
+    git tag $RELEASE_ID
+    git push $REMOTE $RELEASE_ID # TODO: should we check this return value in case someone made a tag since we last checked?
+}
+
 set -e
 
 while getopts "ht:u:" options; do
@@ -88,7 +116,7 @@ fi
 java_version=`java -version 2>&1 | fgrep -i version`
 (echo $java_version | fgrep -q 1.6. ) || { echo "java -version: $java_version is not 1.6"; exit 1; }
 
-GITROOT=git@github.com:broadinstitute/picard.git
+PICARDGITROOT=git@github.com:broadinstitute/picard.git
 REMOTE=origin
 
 RELEASE_ID=$1
@@ -96,40 +124,21 @@ RELEASE_ID=$1
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
 PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
 
-if [[ -e $TMPDIR/htsjdk ]]
-then echo "$TMPDIR/htsjdk already exists.  Please remove or specify a different TMPDIR." >&2
+if [[ -e $TMPDIR/picard ]]
+then echo "$TMPDIR/picard already exists.  Please remove or specify a different TMPDIR." >&2
         exit 1
 fi
 cd $TMPDIR
 
 # clone
-git clone $GITROOT htsjdk
-cd htsjdk
-ant clean # Shouldn't be necessary, but no harm
+git clone $PICARDGITROOT picard
+cd picard
+ant clean clone-htsjdk # Shouldn't be necessary, but no harm
 
-# tag must not exist
-if tag_exists $RELEASE_ID
-then echo "ERROR: Tag $RELEASE_ID locally already exists"
-     exit 1
-fi
-
-# remote must exist
-if remote_does_not_exist $REMOTE
-then echo "ERROR: Remote $REMOTE does not exist"
-     exit 1
-fi
-
-# tag at remote must not exist
-if remote_tag_does_not_exist $RELEASE_ID $REMOTE
-then echo "ERROR: Tag $RELEASE_ID at remote $REMOTE already exists"
-     exit 1
-fi
-
-# tag the branch locally then push to remote
-echo Tagging master as $tag and pushing the tag to $remote
-# NB: we could use annotated tags in the future to store release notes, etc.
-git tag $tag
-git push $remote $tag # TODO: should we check this return value in case someone made a tag since we last checked?
+# Tag in both repos
+for sandbox in . htsjdk
+do (cd $sandbox; tag_it)
+done
 
 ant -lib lib/ant test
 
