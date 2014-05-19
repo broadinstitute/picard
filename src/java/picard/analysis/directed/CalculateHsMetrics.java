@@ -26,6 +26,9 @@ package picard.analysis.directed;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.StringUtil;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.Option;
 import picard.cmdline.Usage;
@@ -33,40 +36,45 @@ import picard.cmdline.Usage;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Calculates a set of HS metrics from a sam or bam file.  See HsMetricsCollector and CollectTargetedMetrics for more details.
  *
  * @author Tim Fennell
  */
-public class CalculateHsMetrics extends CollectTargetedMetrics {
+public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {
 
     @Usage
-	public final String USAGE = getStandardUsagePreamble() +
+    public final String USAGE = getStandardUsagePreamble() +
             "Calculates a set of Hybrid Selection specific metrics from an aligned SAM" +
             "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
             "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
             "mean coverage information for every target.";
-    @Option(shortName="BI", doc="An interval list file that contains the locations of the baits used.")
-    public File BAIT_INTERVALS;
+    @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.")
+    public List<File> BAIT_INTERVALS;
 
-    @Option(shortName="N",  doc="Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional=true)
+    @Option(shortName = "N", doc = "Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional = true)
     public String BAIT_SET_NAME;
 
-    /**
-     * @return BAIT_INTERVALS file
-     */
     @Override
-    protected File getProbeIntervals() {
-        return BAIT_INTERVALS;
+    protected IntervalList getProbeIntervals() {
+        for (final File file : BAIT_INTERVALS) IOUtil.assertFileIsReadable(file);
+        return IntervalList.fromFiles(BAIT_INTERVALS);
     }
 
-    /**
-     * @return BAIT_SET_NAME
-     */
     @Override
     protected String getProbeSetName() {
-        return BAIT_SET_NAME;
+        if (BAIT_SET_NAME != null) {
+            return BAIT_SET_NAME;
+        } else {
+            final SortedSet<String> baitSetNames = new TreeSet<String>();
+            for (final File file : BAIT_INTERVALS) {
+                baitSetNames.add(CollectTargetedMetrics.renderProbeNameFromFile(file));
+            }
+            return StringUtil.join(".", baitSetNames);
+        }
     }
 
     /** Stock main method. */
@@ -75,13 +83,13 @@ public class CalculateHsMetrics extends CollectTargetedMetrics {
     }
 
     @Override
-    protected TargetMetricsCollector makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
-                                                    final List<SAMReadGroupRecord> samRgRecords,
-                                                    final ReferenceSequenceFile refFile,
-                                                    final File perTargetCoverage,
-                                                    final File targetIntervals,
-                                                    final File probeIntervals,
-                                                    final String probeSetName) {
+    protected HsMetricCollector makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                              final List<SAMReadGroupRecord> samRgRecords,
+                                              final ReferenceSequenceFile refFile,
+                                              final File perTargetCoverage,
+                                              final IntervalList targetIntervals,
+                                              final IntervalList probeIntervals,
+                                              final String probeSetName) {
         return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName);
     }
 }
