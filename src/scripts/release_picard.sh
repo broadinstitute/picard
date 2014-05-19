@@ -61,19 +61,19 @@ function tag_it() {
     # tag must not exist
     if tag_exists $RELEASE_ID
     then echo "ERROR: Tag $RELEASE_ID locally already exists"
-         exit 1
+         return 1
     fi
 
     # remote must exist
     if remote_does_not_exist $REMOTE
     then echo "ERROR: Remote $REMOTE does not exist"
-         exit 1
+         return 1
     fi
 
     # tag at remote must not exist
     if remote_tag_does_not_exist $RELEASE_ID $REMOTE
     then echo "ERROR: Tag $RELEASE_ID at remote $REMOTE already exists"
-         exit 1
+         return 1
     fi
 
     # tag the branch locally then push to remote
@@ -122,7 +122,7 @@ REMOTE=origin
 RELEASE_ID=$1
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
-PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
+PICARD_PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
 
 if [[ -e $TMPDIR/picard ]]
 then echo "$TMPDIR/picard already exists.  Please remove or specify a different TMPDIR." >&2
@@ -133,11 +133,19 @@ cd $TMPDIR
 # clone
 git clone $PICARDGITROOT picard
 cd picard
-ant clean clone-htsjdk # Shouldn't be necessary, but no harm
+ant clean clone-htsjdk # clean shouldn't be necessary, but no harm
+
+# Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
+PICARD_PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
+
+HTSJDK_PREV_RELEASE_ID=$(cd htsjdk; git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1)
+
+
 
 # Tag in both repos
 for sandbox in . htsjdk
-do (cd $sandbox; tag_it)
+do pushd $sandbox
+    tag_it || exit 1
 done
 
 ant -lib lib/ant test
@@ -146,7 +154,9 @@ ant -lib lib/ant clean all javadoc
 
 mkdir -p deploy/picard-tools/$RELEASE_ID
 
-git log ${PREV_RELEASE_ID}..${RELEASE_ID} > deploy/picard-tools/$RELEASE_ID/README.txt
+git log --name-status ${PICARD_PREV_RELEASE_ID}..${RELEASE_ID} > deploy/picard-tools/$RELEASE_ID/README.txt
+
+(cd htsjdk; git log --name-status  ${HTSJDK_PREV_RELEASE_ID}..${RELEASE_ID}) >> deploy/picard-tools/$RELEASE_ID/README.txt
 
 echo 'Edit release notes and exit editor when finished.'
 
