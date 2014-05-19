@@ -81,9 +81,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     //If perTargetCoverage != null then coverage is computed for each specified target and output to this file
     private final File perTargetCoverage;
 
-    //The intervals covered by the targeting mechanism (baits in Hybrid Selection, amplicons in TSCA) of this sequencing run
-    private final File probeIntervals;
-
     //The name of the set of probes used
     private final String probeSetName;
 
@@ -188,24 +185,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     }
 
     public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile,
-                                  final File perTargetCoverage, final File targetIntervals, final File probeIntervals, final String probeSetName) {
+                                  final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName) {
         this.perTargetCoverage = perTargetCoverage;
-        this.probeIntervals    = probeIntervals;
+        this.probeSetName = probeSetName;
 
-        if(probeSetName == null) {
-            final String baitFileName = probeIntervals.getName();
-            final int tmp = baitFileName.indexOf(".");
-            if (tmp > 0) {
-                this.probeSetName = baitFileName.substring(0, tmp);
-            } else {
-                this.probeSetName = null;
-            }
-        } else {
-            this.probeSetName = probeSetName;
-        }
-
-        this.allProbes  = IntervalList.fromFile(probeIntervals);
-        this.allTargets = IntervalList.fromFile(targetIntervals);
+        this.allProbes  = probeIntervals;
+        this.allTargets = targetIntervals;
 
         final List<Interval> uniqueBaits = this.allProbes.getUniqueIntervals();
         this.probeDetector = new OverlapDetector<Interval>(-NEAR_PROBE_DISTANCE, 0);
@@ -247,7 +232,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     @Override
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeChildCollector(final String sample, final String library, final String readGroup) {
-        final PerUnitTargetMetricCollector collector =  new PerUnitTargetMetricCollector(probeIntervals.getName(), coverageByTargetForRead.keySet(),
+        final PerUnitTargetMetricCollector collector =  new PerUnitTargetMetricCollector(probeSetName, coverageByTargetForRead.keySet(),
                                                                                          sample, library, readGroup, probeTerritory, targetTerritory, genomeSize,
                                                                                          intervalToGc);
         if (this.probeSetName != null) {

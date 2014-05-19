@@ -1,8 +1,9 @@
 package picard.analysis.directed;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
@@ -16,9 +17,9 @@ import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.metrics.MultilevelMetrics;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -26,57 +27,50 @@ import java.util.Set;
  * Both CollectTargetedPCRMetrics and CalculateHybridSelection metrics share virtually identical program structures except
  * for the name of their targeting mechanisms (e.g. bait set or amplicon set).  The shared behavior of these programs
  * is encapsulated in CollectTargetedMetrics which is then subclassed by CalculateHsMetrics and CollectTargetedPcrMetrics.
- *
+ * <p/>
  * This program verifies the input parameters to TargetMetricsCollector and converts all files to
  * the format desired by TargetMetricsCollector.  Then it instantiates a TargetMetricsCollector and
  * collects metric information for all reads in the INPUT sam file.
  */
-public abstract class CollectTargetedMetrics extends CommandLineProgram {
+public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, COLLECTOR extends TargetMetricsCollector<METRIC>> extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(CalculateHsMetrics.class);
 
-    /**
-     * The interval file to be fed to TargetMetricsCollector
-     * @return An interval file that denotes the intervals of the regions targeted by the probes for this run that is
-     *         passed to the TargetMetricsCollector produced by makeCollector
-     */
-    protected abstract File getProbeIntervals();
+    protected abstract IntervalList getProbeIntervals();
 
-    /**
-     * @return The name of the probe set used in this run, getProbeIntervals().getName() is
-     */
     protected abstract String getProbeSetName();
-
+    
     /**
-     *  A factory method for the TargetMetricsCollector to use this time.  Examples of TargetMetricsCollector:
-     *  (TargetedPcrMetricsCollector, HsMetricsCalculator)
-     *  @return A TargetMetricsCollector to which we will pass SAMRecords
+     * A factory method for the TargetMetricsCollector to use this time.  Examples of TargetMetricsCollector:
+     * (TargetedPcrMetricsCollector, HsMetricsCalculator)
+     *
+     * @return A TargetMetricsCollector to which we will pass SAMRecords
      */
-    protected abstract TargetMetricsCollector makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
-                                                             final List<SAMReadGroupRecord> samRgRecords,
-                                                             final ReferenceSequenceFile refFile,
-                                                             final File perTargetCoverage,
-                                                             final File targetIntervals,
-                                                             final File probeIntervals,
-                                                             final String probeSetName);
+    protected abstract COLLECTOR makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                                            final List<SAMReadGroupRecord> samRgRecords,
+                                                            final ReferenceSequenceFile refFile,
+                                                            final File perTargetCoverage,
+                                                            final IntervalList targetIntervals,
+                                                            final IntervalList probeIntervals,
+                                                            final String probeSetName);
 
 
-    @Option(shortName="TI", doc="An interval list file that contains the locations of the targets.")
-    public File TARGET_INTERVALS;
+    @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.")
+    public List<File> TARGET_INTERVALS;
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="An aligned SAM or BAM file.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output file to write the metrics to.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output file to write the metrics to.")
     public File OUTPUT;
 
-    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, optional=true, doc="The reference sequence aligned to.")
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, optional = true, doc = "The reference sequence aligned to.")
     public File REFERENCE_SEQUENCE;
 
-    @Option(optional=true, doc="An optional file to output per target coverage information to.")
+    @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
 
     /**
@@ -84,48 +78,51 @@ public abstract class CollectTargetedMetrics extends CommandLineProgram {
      * HsMetricsCalculator instance to do the real work.
      */
     protected int doWork() {
-        IOUtil.assertFileIsReadable(getProbeIntervals());
-        IOUtil.assertFileIsReadable(TARGET_INTERVALS);
+        for (final File targetInterval : TARGET_INTERVALS) IOUtil.assertFileIsReadable(targetInterval);
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         if (PER_TARGET_COVERAGE != null) IOUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
 
-        final SAMFileReader samReader = new SAMFileReader(INPUT);
-
-        final File probeIntervals = getProbeIntervals();
+        final SamReader reader = SamReaderFactory.makeDefault().open(INPUT);
+        final IntervalList targetIntervals = IntervalList.fromFiles(TARGET_INTERVALS);
 
         // Validate that the targets and baits have the same references as the reads file
-        SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(),
-                IntervalList.fromFile(TARGET_INTERVALS).getHeader().getSequenceDictionary(),
-                INPUT, TARGET_INTERVALS);
-        SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(),
-                IntervalList.fromFile(probeIntervals).getHeader().getSequenceDictionary(),
-                INPUT, probeIntervals);
+        SequenceUtil.assertSequenceDictionariesEqual(
+                reader.getFileHeader().getSequenceDictionary(),
+                targetIntervals.getHeader().getSequenceDictionary());
+        SequenceUtil.assertSequenceDictionariesEqual(
+                reader.getFileHeader().getSequenceDictionary(),
+                getProbeIntervals().getHeader().getSequenceDictionary()
+        );
 
         ReferenceSequenceFile ref = null;
         if (REFERENCE_SEQUENCE != null) {
             IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
             ref = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-            SequenceUtil.assertSequenceDictionariesEqual(samReader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
-                    INPUT, REFERENCE_SEQUENCE);
+            SequenceUtil.assertSequenceDictionariesEqual(
+                    reader.getFileHeader().getSequenceDictionary(), ref.getSequenceDictionary(),
+                    INPUT, REFERENCE_SEQUENCE
+            );
         }
 
-        final TargetMetricsCollector collector = makeCollector(METRIC_ACCUMULATION_LEVEL, samReader.getFileHeader().getReadGroups(), ref,
-                PER_TARGET_COVERAGE, TARGET_INTERVALS, probeIntervals, getProbeSetName());
+        final COLLECTOR collector = makeCollector(
+                METRIC_ACCUMULATION_LEVEL,
+                reader.getFileHeader().getReadGroups(),
+                ref,
+                PER_TARGET_COVERAGE,
+                targetIntervals,
+                getProbeIntervals(),
+                getProbeSetName()
+        );
 
-
-        // Add each record to the requested collectors
-        final Iterator<SAMRecord> records = samReader.iterator();
         final ProgressLogger progress = new ProgressLogger(log);
-
-        while (records.hasNext()) {
-            final SAMRecord sam = records.next();
-            collector.acceptRecord(sam, null);
-            progress.record(sam);
+        for (final SAMRecord record : reader) {
+            collector.acceptRecord(record, null);
+            progress.record(record);
         }
 
         // Write the output file
-        final MetricsFile<HsMetrics, Integer> metrics = getMetricsFile();
+        final MetricsFile<METRIC, Integer> metrics = getMetricsFile();
         collector.finish();
 
         collector.addAllLevelsToFile(metrics);
@@ -135,15 +132,26 @@ public abstract class CollectTargetedMetrics extends CommandLineProgram {
         return 0;
     }
 
+    /** Renders a probe name from the provided file, returning {@link java.io.File#getName()} with all extensions stripped. */
+    static String renderProbeNameFromFile(final File probeIntervalFile) {
+        final String name = probeIntervalFile.getName();
+        final int firstPeriodIndex = name.indexOf('.');
+        if (firstPeriodIndex == -1) {
+            return name;
+        } else {
+            return name.substring(0, firstPeriodIndex);
+        }
+    } 
+    
     protected String[] customCommandLineValidation() {
         if (PER_TARGET_COVERAGE != null && (METRIC_ACCUMULATION_LEVEL.size() != 1 ||
                 METRIC_ACCUMULATION_LEVEL.iterator().next() != MetricAccumulationLevel.ALL_READS)) {
-            return new String[] {"PER_TARGET_COVERAGE can be specified only when METRIC_ACCUMULATION_LEVEL is set " +
+            return new String[]{"PER_TARGET_COVERAGE can be specified only when METRIC_ACCUMULATION_LEVEL is set " +
                     "to ALL_READS."};
         }
 
-        if(PER_TARGET_COVERAGE != null && REFERENCE_SEQUENCE == null) {
-            return new String[] {"Must supply REFERENCE_SEQUENCE when supplying PER_TARGET_COVERAGE"};
+        if (PER_TARGET_COVERAGE != null && REFERENCE_SEQUENCE == null) {
+            return new String[]{"Must supply REFERENCE_SEQUENCE when supplying PER_TARGET_COVERAGE"};
         }
 
         return super.customCommandLineValidation();
