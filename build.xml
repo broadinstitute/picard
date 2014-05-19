@@ -58,7 +58,7 @@
     <property environment="env"/>
     <property name="java6.home" value="${env.JAVA6_HOME}"/>
     <property name="htsjdk" value="htsjdk"/>
-
+    <property name="htsjdk_src" value="${htsjdk}/src/java"/>
     <condition  property="isUnix">
         <os family="unix"/>
     </condition>
@@ -84,6 +84,7 @@
         <path  id="metrics.classpath">
             <pathelement path="${classpath}"/>
             <pathelement location="${classes}"/>
+            <pathelement location="${htsjdk}/classes"/>
         </path>
 
         <path id="java6.lib.ref">
@@ -239,9 +240,8 @@
 
     <target name="javadoc" depends="init" description="Generates the project javadoc.">
         <javadoc
-                sourcepath="${src}"
                 destdir="javadoc"
-                packagenames="picard*"
+                packagenames="picard*,htsjdk*"
                 windowtitle="PICARD JDK API Documentation"
                 doctitle="&lt;h1&gt;PICARD JDK API Documentation&lt;/h1&gt;"
                 author="true"
@@ -256,14 +256,20 @@
                 </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+            <fileset dir=".">
+                <include name="${src}/**/*.java"/>
+                <include name="${htsjdk_src}/**/*.java"/>
+            </fileset>
         </javadoc>
         <mkdir dir="${command-line-html-dir}"/>
-        <javadoc sourcepath="${src}/java"
-                 doclet="picardutil.MetricsDoclet"
+        <javadoc doclet="picard.util.MetricsDoclet"
                  docletpathref="metrics.classpath"
                  classpathref="metrics.classpath"
-                 failonerror="true">
-            <sourcepath path="${src}"/>
+                 failonerror="true" verbose="true">
+            <fileset dir=".">
+                <include name="${src}/**/*.java"/>
+                <include name="${htsjdk_src}/**/*.java"/>
+            </fileset>
             <arg line="-f ${command-line-html-dir}/picard-metric-definitions.shtml"/>
         </javadoc>
     </target>
