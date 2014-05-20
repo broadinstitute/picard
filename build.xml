@@ -56,7 +56,6 @@
     <property name="test.debug.port" value="5005" />  <!-- override on the command line if desired -->
 
     <property environment="env"/>
-    <property name="java6.home" value="${env.JAVA6_HOME}"/>
     <property name="htsjdk" value="htsjdk"/>
     <property name="htsjdk_src" value="${htsjdk}/src/java"/>
     <condition  property="isUnix">
@@ -87,9 +86,6 @@
             <pathelement location="${htsjdk}/classes"/>
         </path>
 
-        <path id="java6.lib.ref">
-            <fileset dir="${java6.home}/lib" includes="*.jar"/>
-        </path>
     </target>
 
     <!-- CLEAN -->
@@ -491,8 +487,6 @@
                    target="${javac.target}">
                 <classpath refid="@{compile.classpath}"/>
                 <compilerarg line="@{compiler.args}" />
-                <!-- ensure that Java 6 bootclasspath is used -->
-                <compilerarg value="-Xbootclasspath/p:${toString:java6.lib.ref}"/>
             </javac>
         </sequential>
     </macrodef>
@@ -517,8 +511,6 @@
                     <pathelement location="${classes}"/>
                 </classpath>
                 <compilerarg line="@{compiler.args}"/>
-                <!-- ensure that Java 6 bootclasspath is used -->
-                <compilerarg value="-Xbootclasspath/p:${toString:java6.lib.ref}"/>
             </javac>
         </sequential>
     </macrodef>
