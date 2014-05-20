@@ -149,7 +149,7 @@ do pushd $sandbox
    popd
 done
 
-ant -lib lib/ant test
+ant -lib lib/ant test-htsjdk test
 
 ant -lib lib/ant clean all javadoc
 
