@@ -145,7 +145,8 @@ HTSJDK_PREV_RELEASE_ID=$(cd htsjdk; git ls-remote --tags | grep -v "{}$" | awk '
 # Tag in both repos
 for sandbox in . htsjdk
 do pushd $sandbox
-    tag_it || exit 1
+   tag_it || exit 1
+   popd
 done
 
 ant -lib lib/ant test
