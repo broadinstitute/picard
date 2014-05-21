@@ -89,7 +89,7 @@
     </target>
 
     <!-- CLEAN -->
-    <target name="clean">
+    <target name="clean-local" description="Delete local build products but not nested project">
         <delete dir="${classes}"/>
         <delete dir="${classes.test}"/>
         <delete dir="${test.output}"/>
@@ -97,6 +97,8 @@
         <delete dir="${command_tmp}"/>
         <delete dir="javadoc"/>
     </target>
+
+    <target name="clean" description="Clean local build products and also nested project" depends="clean-local, clean-htsjdk"/>
 
     <!-- HTS-JDK -->
     <target name="set-htsjdk-version">
