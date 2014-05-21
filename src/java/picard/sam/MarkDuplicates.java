@@ -80,7 +80,7 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             "All records are then written to the output file with the duplicate records flagged.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
-		    doc="One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
+		    doc="One or more input SAM or BAM files to analyze. Must be coordinate sorted.  May not be a stream because file is read twice.")
     public List<File> INPUT;
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
