@@ -151,6 +151,9 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             "the passing-filter flag value for the read, the flowcell name, and the sequencer name.", optional = false)
     public ReadNameFormat READ_NAME_FORMAT = ReadNameFormat.CASAVA_1_8;
 
+    @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.")
+    public boolean COMPRESS_OUTPUTS = false;
+    
     /** Simple switch to control the read name format to emit. */
     public enum ReadNameFormat {
         CASAVA_1_8, ILLUMINA
@@ -309,14 +312,15 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final File outputDir = outputPrefix.getAbsoluteFile().getParentFile();
         IOUtil.assertDirectoryIsWritable(outputDir);
         final String prefixString = outputPrefix.getName();
+        final String suffixString = COMPRESS_OUTPUTS ? "fastq.gz" : "fastq";
         final FastqWriter[] templateWriters = new FastqWriter[readStructure.templates.length()];
         final FastqWriter[] barcodeWriters = new FastqWriter[readStructure.barcodes.length()];
         for (int i = 0; i < templateWriters.length; ++i) {
-            final String filename = String.format("%s.%d.fastq", prefixString, i+1);
+            final String filename = String.format("%s.%d.%s", prefixString, i+1, suffixString);
             templateWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
         }
         for (int i = 0; i < barcodeWriters.length; ++i) {
-            final String filename = String.format("%s.barcode_%d.fastq", prefixString, i+1);
+            final String filename = String.format("%s.barcode_%d.%s", prefixString, i+1, suffixString);
             barcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
         }
         return new FastqRecordsWriter(templateWriters, barcodeWriters);
