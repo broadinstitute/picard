@@ -71,6 +71,7 @@ public class IlluminaFileUtil {
     private final File basecallLaneDir;
     private final File intensityLaneDir;
     private final File basecallDir;
+    private final File barcodeDir;
     private final File intensityDir;
     private final int lane;
 
@@ -78,8 +79,14 @@ public class IlluminaFileUtil {
     private final Map<SupportedIlluminaFormat, ParameterizedFileUtil> utils = new HashMap<SupportedIlluminaFormat, ParameterizedFileUtil>();
 
     public IlluminaFileUtil(final File basecallDir, final int lane) {
+		this(basecallDir, null, lane);
+	}
+
+
+	public IlluminaFileUtil(final File basecallDir, File barcodeDir, final int lane) {
         this.lane = lane;
         this.basecallDir = basecallDir;
+        this.barcodeDir = barcodeDir;
         this.intensityDir = basecallDir.getParentFile();
         final File dataDir = intensityDir.getParentFile();
         this.basecallLaneDir = new File(basecallDir, longLaneStr(lane));
@@ -135,7 +142,7 @@ public class IlluminaFileUtil {
                     utils.put(SupportedIlluminaFormat.Filter, parameterizedFileUtil);
                     break;
                 case Barcode:
-                    parameterizedFileUtil = new PerTileFileUtil("_barcode.txt", basecallDir, new BarcodeFileFaker(), lane);
+                    parameterizedFileUtil = new PerTileFileUtil("_barcode.txt", barcodeDir != null ? barcodeDir : basecallDir, new BarcodeFileFaker(), lane);
                     utils.put(SupportedIlluminaFormat.Barcode, parameterizedFileUtil);
                     break;
                 case MultiTileFilter:

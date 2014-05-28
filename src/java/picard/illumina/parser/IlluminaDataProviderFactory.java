@@ -89,6 +89,7 @@ public class IlluminaDataProviderFactory {
     // The following properties must be specified by caller.
     /** basecallDirectory holds QSeqs or bcls * */
     private final File basecallDirectory;
+    private final File barcodesDirectory;
     private final int lane;
 
     /**
@@ -111,19 +112,40 @@ public class IlluminaDataProviderFactory {
     private final BclQualityEvaluationStrategy bclQualityEvaluationStrategy;
 
     /**
+	 * Create factory with the specified options, one that favors using QSeqs over all other files
+	 *
+	 * @param basecallDirectory The baseCalls directory of a complete Illumina directory.  Files are found by searching relative to this folder (some of them higher up in the directory tree).
+	 * @param lane              Which lane to iterate over.
+	 * @param readStructure     The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
+	 *                          the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
+	 *                          in a run's QSeq files
+	 * @param dataTypesArg      Which data types to read
+	 */
+	public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,
+	                                   final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+	                                   final IlluminaDataType... dataTypesArg) {
+										this(basecallDirectory, null,
+												lane, readStructure,
+												bclQualityEvaluationStrategy,
+												dataTypesArg);
+									}
+
+	/**
      * Create factory with the specified options, one that favors using QSeqs over all other files
      *
      * @param basecallDirectory The baseCalls directory of a complete Illumina directory.  Files are found by searching relative to this folder (some of them higher up in the directory tree).
+     * @param barcodesDirectory The barcodesDirectory with barcode files extracted by 'ExtractIlluminaBarcodes' (optional, use basecallDirectory if not specified)
      * @param lane              Which lane to iterate over.
      * @param readStructure     The read structure to which output clusters will conform.  When not using QSeqs, EAMSS masking(see BclParser) is run on individual reads as found in the readStructure, if
      *                          the readStructure specified does not match the readStructure implied by the sequencer's output than the quality scores output may differ than what would be found
      *                          in a run's QSeq files
      * @param dataTypesArg      Which data types to read
      */
-    public IlluminaDataProviderFactory(final File basecallDirectory, final int lane, final ReadStructure readStructure,
-                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                       final IlluminaDataType... dataTypesArg) {
+    public IlluminaDataProviderFactory(final File basecallDirectory, File barcodesDirectory, final int lane,
+                                       final ReadStructure readStructure,
+                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy, final IlluminaDataType... dataTypesArg) {
         this.basecallDirectory = basecallDirectory;
+        this.barcodesDirectory = barcodesDirectory;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
         this.lane = lane;
@@ -139,7 +161,7 @@ public class IlluminaDataProviderFactory {
                     ", lane " + lane);
         }
 
-        this.fileUtil = new IlluminaFileUtil(basecallDirectory, lane);
+        this.fileUtil = new IlluminaFileUtil(basecallDirectory, barcodesDirectory, lane);
 
         //find what request IlluminaDataTypes we have files for and select the most preferred file format available for that type
         formatToDataTypes = determineFormats(dataTypes, fileUtil);

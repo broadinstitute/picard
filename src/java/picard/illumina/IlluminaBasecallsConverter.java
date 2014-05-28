@@ -138,7 +138,49 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
 
     /**
+	 * @param basecallsDir           Where to read basecalls from.
+	 * @param lane                   What lane to process.
+	 * @param readStructure          How to interpret each cluster.
+	 * @param barcodeRecordWriterMap Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
+	 *                               one writer stored with key=null.
+	 * @param demultiplex            If true, output is split by barcode, otherwise all are written to the same output stream.
+	 * @param maxReadsInRamPerTile   Configures number of reads each tile will store in RAM before spilling to disk.
+	 * @param tmpDirs                For SortingCollection spilling.
+	 * @param numProcessors          Controls number of threads.  If <= 0, the number of threads allocated is
+	 *                               available cores - numProcessors.
+	 * @param forceGc                Force explicit GC periodically.  This is good for causing memory maps to be released.
+	 * @param firstTile              (For debugging) If non-null, start processing at this tile.
+	 * @param tileLimit              (For debugging) If non-null, process no more than this many tiles.
+	 * @param outputRecordComparator For sorting output records within a single tile.
+	 * @param codecPrototype         For spilling output records to disk.
+	 * @param outputRecordClass      Inconveniently needed to create SortingCollections.
+	 * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
+	 */
+	public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
+	                                  final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
+	                                  final boolean demultiplex,
+	                                  final int maxReadsInRamPerTile,
+	                                  final List<File> tmpDirs,
+	                                  final int numProcessors, final boolean forceGc,
+	                                  final Integer firstTile, final Integer tileLimit,
+	                                  final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
+	                                  final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
+	                                  final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
+	                                  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
+	                                  final boolean applyEamssFiltering,
+	                                  final boolean includeNonPfReads
+	) {
+		this(basecallsDir, null, lane, readStructure,
+				barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
+				tmpDirs, numProcessors, forceGc, firstTile, tileLimit,
+				outputRecordComparator, codecPrototype, outputRecordClass,
+				bclQualityEvaluationStrategy, applyEamssFiltering,
+				includeNonPfReads);
+	}
+
+	/**
      * @param basecallsDir           Where to read basecalls from.
+     * @param barcodesDir            Where to read barcodes from (optional; use basecallsDir if not specified).
      * @param lane                   What lane to process.
      * @param readStructure          How to interpret each cluster.
      * @param barcodeRecordWriterMap Map from barcode to CLUSTER_OUTPUT_RECORD writer.  If demultiplex is false, must contain
@@ -156,19 +198,19 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param outputRecordClass      Inconveniently needed to create SortingCollections.
      * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
      */
-    public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
+    public IlluminaBasecallsConverter(final File basecallsDir, File barcodesDir, final int lane,
+                                      final ReadStructure readStructure,
                                       final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
                                       final boolean demultiplex,
                                       final int maxReadsInRamPerTile,
-                                      final List<File> tmpDirs,
-                                      final int numProcessors, final boolean forceGc,
-                                      final Integer firstTile, final Integer tileLimit,
+                                      final List<File> tmpDirs, final int numProcessors,
+                                      final boolean forceGc, final Integer firstTile,
+                                      final Integer tileLimit,
                                       final Comparator<CLUSTER_OUTPUT_RECORD> outputRecordComparator,
                                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                       final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                      final boolean applyEamssFiltering,
-                                      final boolean includeNonPfReads
+                                      final boolean applyEamssFiltering, final boolean includeNonPfReads
     ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.demultiplex = demultiplex;
@@ -198,7 +240,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             gcTimerTask = null;
         }
 
-        this.factory = new IlluminaDataProviderFactory(basecallsDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
+        this.factory = new IlluminaDataProviderFactory(basecallsDir, barcodesDir, lane, readStructure, bclQualityEvaluationStrategy, getDataTypesFromReadStructure(readStructure, demultiplex));
         this.factory.setApplyEamssFiltering(applyEamssFiltering);
 
         if (numProcessors == 0) {
