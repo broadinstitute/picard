@@ -1,0 +1,279 @@
+/* link and hover */
+a:link {
+	color: #000;
+}
+a:hover {
+  	text-decoration: none;
+	border-bottom: 1px dotted #bb242d;
+	background-color: #e0e0e0;
+	color: #666;
+}
+
+a:visited {
+	color: #333;
+}
+
+/* basic html */
+body, td, th {
+	font: 76% "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif;
+}
+body {
+	color: #000;
+	background: #fff;
+	margin: 0;
+	padding: 0;
+}
+blockquote {
+	margin: 1em 2em;
+	font-style: italic;
+}
+caption {
+	font-weight: bold;
+	color: #444;
+	background: #ccc;
+	border-bottom: 0;
+	padding: 0.3em 1em;
+}
+dd {
+	margin: 1em 2em;
+}
+dl {
+	margin: 2em 0;
+}
+dt {
+	font-weight: bold;
+}
+hr {
+	margin: 2em 0;
+	color: #C7C7C7;
+	background: #C7C7C7;
+	border-color: #C7C7C7;
+	border-style: none;
+	height: 1px;
+}
+li {
+	margin: 0.5em 0;
+}
+table {
+	border: solid 1px #ccc;
+}
+td {
+	vertical-align: top;
+	padding: 0.5em;
+}
+th {
+	font-weight: bold;
+	text-align: left;
+	padding: 0.5em;
+}
+ol, ul {
+	margin: 2em 0;
+	padding-left: 1em;
+}
+
+ol li {
+	list-style-type: decimal;
+	margin-left: 2em;
+}
+ul li {
+	margin-left: 2em;
+	list-style-type: square;
+}
+td p {
+	margin-top: 0;
+}
+p {
+	margin: 1em 0;
+	line-height: 1.5;
+}
+h1,h2,h3,h4,h5,h6 {
+	font-family: "Trebuchet MS", arial, sans-serif;
+}
+h1 {
+	color: #C7C7C7;
+	font-size: 2.4em;
+	letter-spacing: 0.2em;
+	font-weight: normal;
+	padding: 1em 25px 0 25px;
+}
+h2 {
+	margin: 0 0 0.5em 0;
+	color: #888;
+	font-size: 1.4em;
+	font-weight: normal;
+	border-bottom: double 3px #C7C7C7;
+	padding: 0 0 0.4em 0;
+	border-bottom-color: #eee;
+}
+h3 {
+	font-size: 1.2em;
+	color: #666;
+	background: #eee;
+	border: dotted 1px #C7C7C7;
+	padding: 0.2em;
+	border-color: #ddd;
+}
+h4 {
+	border-bottom-color: #888;
+	font-size: 1.2em;
+	padding: 0 0 0.2em 0;
+	margin: 0.6em 0 0 0.4em;
+	color: #444;
+}
+h5 {
+	color: #888;
+	border-bottom: dotted 1px #C7C7C7;
+	border-bottom-color: #C7C7C7;
+}
+h6 {
+	border-left: solid 1.2em #777;
+	padding-left: 0.6em;
+	color: #ccc;
+	border-left-color: #888;
+}
+body {
+	color: #444;
+	background: #fff;
+}
+caption {
+	color: inherit;
+	background: #eee;
+}
+hr {
+	color: #eee;
+	background: #eee;
+	border-color: #eee;
+}
+table {
+	border-color: #e6e6e6;
+}
+th {
+	color: #444;
+	background: #ccc;
+}
+
+#wrap {
+  width: 740px;
+  text-align: left;
+  margin: 0 auto;
+}
+
+#header {
+	color: #888;
+	border-top: solid 3px #777;
+	border-top-color: #fff;
+	padding: 0;
+	margin: 0 0 1.5em 0;
+}
+
+#header table {
+	border-style: hidden;
+	padding: 0;
+	margin: 0;
+}
+
+#menu {
+	font: normal 1em "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif;
+	color: #444;
+	background-color: #e9e9e9;
+	height: 2.5em;
+	margin: 0 0 1.5em 0;
+	text-align: right;
+}
+#menu ul {
+	margin: 0;
+	padding: 0.5em;
+	list-style: none;
+}
+#menu li {
+	display: inline;
+	padding: 0;
+}
+#menu a {
+	font-weight: bold;
+	text-decoration: none;
+}
+
+#widemain {
+	float: left;
+	display: inline; /* for IE */
+	padding: 0 25px 0 25px;
+	margin: 0;
+}
+
+#main {
+	float: left;
+	display: inline; /* for IE */
+	width: 490px;
+	padding: 0 25px;
+	margin: 0;
+}
+
+/* sidebar */
+#sidebar {
+	float: right;
+	display: inline; /* for IE */
+	width: 170px;
+	margin: 0 10px;
+}
+
+#sidebar h3 {
+	margin: 0;
+	color: #777;
+	background: none;
+	font-size: 1.4em;
+	font-weight: normal;
+	border: none;
+	padding: 0;
+}
+#sidebar blockquote, #sidebar blockquote p, #sidebar-alternate blockquote, #sidebar-alternate blockquote p {
+	margin-left: 0;
+	margin-right: 0;
+}
+#sidebar blockquote {
+	margin: 1em 0;
+	padding: 0;
+}
+#sidebar ul {
+	margin: 10px 0 20px 12px;
+	padding: 0;
+	list-style:none;
+}
+#sidebar ul li {
+	display: block;
+	padding: 4px 0 0 0;
+	margin: 0;
+}
+#sidebar a:link {
+	color: #666;
+}
+#sidebar a:visited {
+	color: #444;
+}
+#sidebar a:hover {
+	color: #999;
+}
+
+/* footer */
+#footer {
+	clear: both;
+	color: #888;
+	padding: 0 1em 1em 1em;
+	margin-bottom: 1px;
+}
+
+/* floatright class */
+.floatright {
+	display: block;
+	font-weight: bold;
+	float: right;
+	margin: 0 0 2em 2em;
+	border: 3px double #666;
+	padding: 1em;
+	font-size: 1.2em;
+	background: #fff;
+}
+.floatright li {
+	margin: 3px;
+	list-style:none;
+}

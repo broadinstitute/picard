@@ -1,0 +1,11 @@
+<div id="header">
+  <table border="0" width="100%" cellspacing="0" bordercolor="white">
+	  <td width="83%"><h1><a href="index.shtml">Picard</a></h1></td>
+	  <td style="vertical-align:middle"><a href="http://sourceforge.net"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=246254&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a></td>
+	</tr></table>
+</div>
+<div id="menu">
+  <ul>
+	<li><a href="index.shtml">Home</a></li>
+  </ul>
+</div>

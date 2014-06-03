@@ -177,5 +177,6 @@ cd deploy
 scp -p -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
 
 cd ../dist/html
-scp -p *.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
+scp -p inc/*.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
+scp -p *.css *.shtml $USERNAME,picard@web.sourceforge.net:htdocs
 
