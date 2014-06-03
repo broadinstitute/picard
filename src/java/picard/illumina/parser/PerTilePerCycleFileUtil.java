@@ -203,7 +203,7 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
         }
 
         final CycleIlluminaFileMap cfm = getPerTilePerCycleFiles();
-        Long cycleSize = null;
+        final Map<Integer, Integer> tileToSizeMap = new HashMap<Integer, Integer>();
         for (final int currentCycle : expectedCycles) {
             final IlluminaFileMap fileMap = cfm.get(currentCycle);
 
@@ -211,8 +211,8 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
                 for (final Integer tile : expectedTiles) {
                     final File fileToFake = new File(base + File.separator + getFileForCycle(currentCycle, tile));
                     try {
-                        if (cycleSize != null) {
-                            faker.fakeFile(fileToFake, cycleSize.intValue());
+                        if (tileToSizeMap.containsKey(tile)) {
+                            faker.fakeFile(fileToFake, tileToSizeMap.get(tile));
                         }
                         else{
                             faker.fakeFile(fileToFake, 1);
@@ -224,14 +224,14 @@ public class PerTilePerCycleFileUtil extends ParameterizedFileUtil {
             } else {
                 for (final int tile : expectedTiles) {
                     final File cycleFile = fileMap.get(tile);
-                    if (cycleFile != null && cycleSize == null) {
-                        cycleSize = BclReader.getNumberOfClusters(cycleFile);
+                    if (cycleFile != null && !tileToSizeMap.containsKey(tile)) {
+                        tileToSizeMap.put(tile, (int) BclReader.getNumberOfClusters(cycleFile));
                     }
                     try {
                         if (cycleFile == null) {
                             final File fileToFake = new File(base + File.separator + getFileForCycle(currentCycle, tile));
-                            if (cycleSize != null) {
-                                faker.fakeFile(fileToFake, cycleSize.intValue());
+                            if (tileToSizeMap.containsKey(tile)) {
+                                faker.fakeFile(fileToFake, tileToSizeMap.get(tile));
                             } else {
                                 faker.fakeFile(fileToFake, 1);
                             }
