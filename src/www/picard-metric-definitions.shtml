@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>Picard Metrics Definitions</title>
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+<!--#include virtual="inc/header.shtml" -->
+<!--#include virtual="inc/left0.shtml" -->
+<div id="main">
+<!-- BEGIN OF THE MAIN BODY  -->
+
+<!--#include virtual="inc/picard-metric-definitions.shtml" -->
+<!-- END OF THE MAIN BODY  -->
+</div>
+
+<div style="clear: both;"> </div>
+<div id="footer">
+<hr/>
+<p style="text-align: right;">Last modified: @builddate@ </p>
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<html>
+<head>
+	<title>Explain SAM Flags</title>
+	<script type="text/javascript">
+		lstFlags = [["read paired", 0x1],
+			    ["read mapped in proper pair", 0x2],
+			    ["read unmapped", 0x4],
+			    ["mate unmapped", 0x8],
+			    ["read reverse strand", 0x10],
+			    ["mate reverse strand", 0x20],
+			    ["first in pair", 0x40],
+			    ["second in pair", 0x80],
+			    ["not primary alignment", 0x100],
+			    ["read fails platform/vendor quality checks", 0x200],
+			    ["read is PCR or optical duplicate", 0x400],
+			    ["supplementary alignment", 0x800]];
+
+		function explainFlags() {
+			var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
+			var summary = "";
+			for(var i = 0; i < lstFlags.length; i++) {
+				var checkbox = document.getElementById('cb' + i)
+				if(lstFlags[i][1] & flagValue) {
+					summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + "<br>";
+					checkbox.checked = true;
+				} else {
+					checkbox.checked = false;
+				}
+			}
+
+			document.getElementById('summary').innerHTML = summary;
+		}
+
+		function checkboxClicked() {
+			//compute the new flag value
+			var newFlagValue = 0;
+			for(var i = 0; i < lstFlags.length; i++) {
+				var checkBox = document.getElementById('cb' + i);
+				if(checkBox.checked) {
+					newFlagValue |= lstFlags[i][1];
+				}
+			}
+			var textbox = document.getElementById('tb');
+			textbox.value = newFlagValue;
+			explainFlags();
+		}
+	</script>
+
+	<noscript>This page requires JavaScript. Please enable it in your browser settings.</noscript>
+</head>
+<body>
+
+This utility explains SAM flags in plain English. <br>
+<br>
+
+<form onSubmit="explainFlags(); return false;">
+Flag: &nbsp;
+<input id="tb" type=text size=10 /> &nbsp; &nbsp; &nbsp;
+<input type=submit value="Explain" /><br>
+<br>
+Explanation:<br>
+<script type="text/javascript">
+for(var i = 0; i < lstFlags.length; i++) {
+	document.write("<input type=checkbox name=cb" + i + " id='cb" + i + "' onclick='checkboxClicked();'> &nbsp; " +lstFlags[i][0] + "</input><br>");
+}
+</script>
+<br>
+Summary:<br>
+<div id="summary">
+
+</form>
+
+</body>
+</html>

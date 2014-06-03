@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>Overview of Picard command-line tools</title>
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<div id="wrap">
+<!--#include virtual="inc/header.shtml" -->
+<!--#include virtual="inc/left0.shtml" -->
+<div id="main">
+<!-- BEGIN OF THE MAIN BODY  -->
+
+<a name="Overview"/>
+<h2>Overview of Picard command-line tools</h2>
+
+<p>The Picard command-line tools are packaged as executable jar files.  They require Java
+  1.6.  They can be invoked as follows:</p>
+<pre>java <i>jvm-args</i> -jar <i>PicardCommand</i>.jar OPTION1=value1 OPTION2=value2...</pre>
+<p>Most of the commands are designed to run in 2GB of JVM, so the JVM argument -Xmx2g is
+  recommended.</p>
+<h3>Standard Options</h3>
+<p>The following options are relevant for most Picard programs:</p>
+<!--#include virtual="inc/standard-options.shtml" -->
+<br/>
+<!--#include virtual="inc/command-line-usage.shtml" -->
+<!-- END OF THE MAIN BODY  -->
+</div>
+
+<div style="clear: both;"> </div>
+<div id="footer">
+<hr/>
+<p style="text-align: right;">Last modified: @builddate@</p>
+</div>
+</div>
+
+</body>
+</html>
