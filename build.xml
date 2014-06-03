@@ -480,6 +480,7 @@
         <sequential>
             <!-- For Sourceforge project website -->
             <mkdir dir="${command-line-html-dir}/program_usage"/>
+            <mkdir dir="${command-line-html-dir}/inc"/>
 
             <!-- Generate HTML for each command -->
             <java classname="picard.cmdline.CreateHtmlDocForProgram"
@@ -493,11 +494,11 @@
             </java>
 
             <!-- Generate links to each command -->
-            <echo file="dist/html/inc/command-line-sidebar.shtml" append="true"
+            <echo file="${command-line-html-dir}/inc/command-line-sidebar.shtml" append="true"
                   message="&lt;li>&lt;a href=&quot;command-line-overview.shtml#@{title}&quot;>@{title}&lt;/a>${line.separator}"/>
 
             <!-- include usage for each command -->
-            <echo file="dist/html/inc/command-line-usage.shtml" append="true"
+            <echo file="${command-line-html-dir}/inc/command-line-usage.shtml" append="true"
                   message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
         </sequential>
     </macrodef>
