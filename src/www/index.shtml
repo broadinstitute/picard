@@ -30,13 +30,13 @@
         <p>Picard is hosted by <a target="_blank" href="http://sourceforge.net">SourceForge.net</a>. The project page
             is <a target="_blank" href="http://sourceforge.net/projects/picard/">here</a>.
 
-        <p>The source code for Picard is available from on GitHub <a href="https://github.com/broadinstitute/picard">here</a>.
+        <p>The source code for Picard is available on GitHub <a href="https://github.com/broadinstitute/picard">here</a>.
         You can check out the latest source code with:
         </p>
             <pre>git clone git@github.com:broadinstitute/picard.git</pre>
 
 
-        <p>The source code for HTSJDK is available from on GitHub <a href="https://github.com/samtools/htsjdk">here</a>.
+        <p>The source code for HTSJDK is available on GitHub <a href="https://github.com/samtools/htsjdk">here</a>.
             You can check out the latest source code with:
         </p>
         <pre>git clone git@github.com:samtools/htsjdk.git</pre>
