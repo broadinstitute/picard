@@ -64,7 +64,7 @@ import java.util.Map;
  * 4. Implement the following static method in the concrete class:
  *
  *     public static void main(String[] argv) {
-        new MyConcreteClass().instanceMainWithExit(argv);
+        new MyConcreteClass().instanceMain(argv);
     }
 
 

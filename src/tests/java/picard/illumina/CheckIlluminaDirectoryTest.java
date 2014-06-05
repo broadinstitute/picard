@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.cmdline.PicardCommandLine;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
@@ -82,20 +83,21 @@ public class CheckIlluminaDirectoryTest {
     public String[] makeCheckerArgs(final File basecallDir, final int lane, final String readStructure,
                                     final IlluminaDataType[] dataTypes, final List<Integer> filterTiles,
                                     final boolean makeFakeFiles, final boolean createSymLinks) {
-        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 5];
-
-        dataTypeArgs[0] = "B=" + basecallDir;
-        dataTypeArgs[1] = StandardOptionDefinitions.LANE_SHORT_NAME + "=" + lane;
-        dataTypeArgs[2] = "RS=" + readStructure;
-        dataTypeArgs[3] = "F=" + makeFakeFiles;
-        dataTypeArgs[4] = "X=" + createSymLinks;
+        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 7];
+        dataTypeArgs[0] = "-t";
+        dataTypeArgs[1] = CheckIlluminaDirectory.class.getSimpleName();
+        dataTypeArgs[2] = "B=" + basecallDir;
+        dataTypeArgs[3] = StandardOptionDefinitions.LANE_SHORT_NAME + "=" + lane;
+        dataTypeArgs[4] = "RS=" + readStructure;
+        dataTypeArgs[5] = "F=" + makeFakeFiles;
+        dataTypeArgs[6] = "X=" + createSymLinks;
 
         for (int i = 0; i < dataTypes.length; i++) {
-            dataTypeArgs[i + 5] = "DT=" + dataTypes[i];
+            dataTypeArgs[i + 7] = "DT=" + dataTypes[i];
         }
 
         if (filterTiles.size() > 0) {
-            final int start = dataTypes.length + 5;
+            final int start = dataTypes.length + 7;
             for (int i = start; i < dataTypeArgs.length; i++) {
                 dataTypeArgs[i] = "T=" + filterTiles.get(i - start);
             }
@@ -227,7 +229,7 @@ public class CheckIlluminaDirectoryTest {
                 makeList(makeList(1, 2, 3), tiles, tiles)));
 
         final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, false, false);
-        final int result = new CheckIlluminaDirectory().instanceMain(args);
+        final int result = new PicardCommandLine().instanceMain(args);
         Assert.assertEquals(result, 0);
     }
 
@@ -292,11 +294,11 @@ public class CheckIlluminaDirectoryTest {
 
         final String[] args =
                 makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles, false);
-        int result = new CheckIlluminaDirectory().instanceMain(args);
+        int result = new PicardCommandLine().instanceMain(args);
         Assert.assertEquals(expectedNumErrors, result);
         //if we previously faked files make sure CheckIlluminaDirectory returns with no failures
         if (makeFakeFiles) {
-            result = new CheckIlluminaDirectory().instanceMain(args);
+            result = new PicardCommandLine().instanceMain(args);
             Assert.assertEquals(0, result);
         }
     }
@@ -337,7 +339,7 @@ public class CheckIlluminaDirectoryTest {
 
         final String[] args =
                 makeCheckerArgs(basecallDir, lane, "50T", dataTypes, new ArrayList<Integer>(), false, false);
-        final int result = new CheckIlluminaDirectory().instanceMain(args);
+        final int result = new PicardCommandLine().instanceMain(args);
         Assert.assertEquals(1, result);
     }
 
@@ -347,7 +349,7 @@ public class CheckIlluminaDirectoryTest {
                 new IlluminaDataType[]{IlluminaDataType.Position},
                 new ArrayList<Integer>(), false, false);
 
-        final int result = new CheckIlluminaDirectory().instanceMain(args);
+        final int result = new PicardCommandLine().instanceMain(args);
     }
 
     @Test
@@ -364,14 +366,14 @@ public class CheckIlluminaDirectoryTest {
         createSingleLocsFile();
         final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
         intensityLaneDir.mkdirs();
-        int result = new CheckIlluminaDirectory().instanceMain(args);
+        int result = new PicardCommandLine().instanceMain(args);
         Assert.assertEquals(result, 0);
         //now that we have created the loc files lets test to make sure they are there
         args = makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{IlluminaDataType.Position},
                 new ArrayList<Integer>(), false,
                 true);
 
-        result = new CheckIlluminaDirectory().instanceMain(args);
+        result = new PicardCommandLine().instanceMain(args);
         Assert.assertEquals(result, 0);
     }
 
