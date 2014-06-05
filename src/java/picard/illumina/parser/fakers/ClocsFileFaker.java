@@ -9,8 +9,8 @@ public class ClocsFileFaker extends FileFaker {
         buffer.put((byte) 1);
         buffer.putInt(1);
         buffer.put((byte) (0xff & 1));
-        buffer.putFloat((byte) (0xff & 5));
-        buffer.putFloat((byte) (0xff & 5));
+        buffer.put((byte) (0xff & 5));
+        buffer.put((byte) (0xff & 5));
     }
 
     @Override
@@ -20,6 +20,6 @@ public class ClocsFileFaker extends FileFaker {
 
     @Override
     protected int bufferSize() {
-        return (Integer.SIZE * 2) + (Float.SIZE * 3);
+        return Integer.SIZE + (Byte.SIZE * 4);
     }
 }
