@@ -178,5 +178,5 @@ scp -p -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/fr
 
 cd ../dist/html
 scp -p inc/*.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
-scp -p *.css *.shtml $USERNAME,picard@web.sourceforge.net:htdocs
+scp -p *.css *.shtml *.html $USERNAME,picard@web.sourceforge.net:htdocs
 
