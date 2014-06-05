@@ -95,7 +95,9 @@ public class SamToFastq extends CommandLineProgram {
     @Option(shortName = "INTER", doc = "Will generate an interleaved fastq if paired, each line will have /1 or /2 to describe which end it came from")
     public boolean INTERLEAVE = false;
 
-    @Option(shortName = "NON_PF", doc = "Include non-PF reads from the SAM file into the output FASTQ files.")
+    @Option(shortName = "NON_PF", doc = "Include non-PF reads from the SAM file into the output " +
+            "FASTQ files. PF means 'passes filtering'. Reads whose 'not passing quality controls' " +
+            "flag is set are non-PF reads.")
     public boolean INCLUDE_NON_PF_READS = false;
 
     @Option(shortName = "CLIP_ATTR", doc = "The attribute that stores the position at which " +
