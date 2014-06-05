@@ -229,10 +229,10 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             gcTimerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Before explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+                    log.info("Before explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
                     System.gc();
                     System.runFinalization();
-                    System.out.println("After explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
+                    log.info("After explicit GC, Runtime.totalMemory()=" + Runtime.getRuntime().totalMemory());
                 }
             };
             gcTimer.scheduleAtFixedRate(gcTimerTask, delay, delay);
@@ -323,7 +323,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         } finally {
             try {
-                gcTimerTask.cancel();
+            	if (gcTimerTask != null) gcTimerTask.cancel();
             } catch (final Throwable ex) {
                 log.warn(ex, "Ignoring exception stopping background GC thread.");
             }
