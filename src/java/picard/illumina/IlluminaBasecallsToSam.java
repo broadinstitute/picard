@@ -40,6 +40,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.illumina.parser.ReadStructure;
@@ -90,6 +91,7 @@ import java.util.Set;
  * @author jburke@broadinstitute.org
  * @author mccowan@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class IlluminaBasecallsToSam extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage

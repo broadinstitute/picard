@@ -7,6 +7,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -28,6 +29,7 @@ import java.util.TreeSet;
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
  * specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.
  */
+@ProviderFor(CommandLineProgram.class)
 public class CheckIlluminaDirectory extends CommandLineProgram {
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 

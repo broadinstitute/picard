@@ -38,6 +38,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.fastq.Casava18ReadNameEncoder;
@@ -66,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@ProviderFor(CommandLineProgram.class)
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage

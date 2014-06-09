@@ -75,19 +75,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/lib/reflections" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/lib/reflections" />
-        </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/lib/reflections" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/lib/reflections" recursive="false" type="SOURCES" />
-      </library>
-    </orderEntry>
   </component>
 </module>
 

@@ -1,18 +1,9 @@
 package picard.cmdline;
 
 import htsjdk.samtools.util.Log;
-import org.reflections.Reflections;
-import org.reflections.scanners.FieldAnnotationsScanner;
-import org.reflections.util.FilterBuilder;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.ServiceLoader;
 
 /*
  * The MIT License
@@ -41,115 +32,51 @@ public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
 
     public int instanceMain(final String[] args) {
-        try {
-            final String commandLineProgram = extractCommandLineProgram(args);
-            final Class<?> clpClass = Class.forName(commandLineProgram);
-            if (CommandLineProgram.class.isAssignableFrom(clpClass)) {
-                final CommandLineProgram program = (CommandLineProgram) clpClass.newInstance();
-                final Method mainMethod = clpClass.getMethod("instanceMain", String[].class);
-                // we can lop off the first two arguments but it requires an array copy or alternatively we could update CLP to remove them
-                // in the constructor do the former in this implementation.
-                final String[] mainArgs = Arrays.copyOfRange(args, 2, args.length);
-                return (Integer) mainMethod.invoke(program, (Object) mainArgs);
-            } else {
-                log.error("Program with the name " + commandLineProgram +
-                        " does not extend CommandLineProgram. Use -h to print out a list of available programs and their descriptions");
-                return 1;
-            }
-        } catch (final IllegalAccessException e) {
-            log.error("Could not access class  " + args[1]);
-            return 1;
-        } catch (final ClassNotFoundException e) {
-            log.error("Could not find command line program with the name " + args[1] +
-                    ". Use -h to print out a list of available programs and their descriptions");
-            return 1;
-        } catch (final NoSuchMethodException e) {
-            log.error("Could not find method instanceMain on class " + args[1]);
-            return 1;
-        } catch (final InstantiationException e) {
-            log.error("Could not find instantiate class with the name " + args[1]);
-            return 1;
-        } catch (final InvocationTargetException e) {
-            // Runtime exceptions cause InvocationTargetExceptions with the RuntimeException as the target. We don't want to gobble these up
-            // so if we have one be sure to rethrow it.
-            if (e.getTargetException() != null) {
-                if (RuntimeException.class.isAssignableFrom(e.getTargetException().getClass())) {
-                    throw (RuntimeException) e.getTargetException();
-                }
-            }
-            log.error("Could not invoke instanceMain on class " + args[1]);
-            return 1;
-        }
+        final CommandLineProgram program = extractCommandLineProgram(args);
+        // we can lop off the first two arguments but it requires an array copy or alternatively we could update CLP to remove them
+        // in the constructor do the former in this implementation.
+        final String[] mainArgs = Arrays.copyOfRange(args, 2, args.length);
+        return program.instanceMain(mainArgs);
     }
 
     public static void main(final String[] args) {
         System.exit(new PicardCommandLine().instanceMain(args));
     }
 
-    private static String extractCommandLineProgram(final String[] args)
-            throws InstantiationException, IllegalAccessException {
+    private static CommandLineProgram extractCommandLineProgram(final String[] args) {
+        final ServiceLoader<CommandLineProgram> loader = ServiceLoader.load(CommandLineProgram.class);
         if (args.length < 2) {
-            printUsage();
+            printUsage(loader);
             System.exit(1);
         } else {
             if (!args[0].equals("-t") || args[0].equals("-h")) {
-                printUsage();
+                printUsage(loader);
                 System.exit(1);
             } else {
-                final Set<Class<? extends CommandLineProgram>> allClps = getAllClpClasses();
 
-                for (final Class<? extends CommandLineProgram> programClass : allClps) {
-                    if (programClass.getSimpleName().equals(args[1])) {
-                        return programClass.getName();
+                for (final CommandLineProgram program : loader) {
+                    if (program.getClass().getSimpleName().equals(args[1])) {
+                        return program;
                     }
                 }
-                printUsage();
+                printUsage(loader);
                 System.exit(1);
             }
         }
-        return "";
+        return null;
     }
 
-    private static Set<Class<? extends CommandLineProgram>> getAllClpClasses() {
-        Reflections.log = null;
-        final Reflections reflections = new Reflections("picard", "edu.mit.broad.picard",
-                new FilterBuilder().excludePackage("edu.mit.broad.picard.personal"));
-        return reflections.getSubTypesOf(CommandLineProgram.class);
-    }
-
-    private static void printUsage() throws IllegalAccessException, InstantiationException {
-        final Set<Class<? extends CommandLineProgram>> allClps = getSortedClps();
+    private static void printUsage(final ServiceLoader<CommandLineProgram> loader) {
         final StringBuilder builder = new StringBuilder();
         builder.append("USAGE: PicardCommandLine -t <program name>\n\n");
-        builder.append(allClps.size());
         builder.append(" Available Programs: \n");
         builder.append("--------------------------------------------------------------------------------------\n");
-        for (final Class<? extends CommandLineProgram> programClass : allClps) {
-            if (!Modifier.isAbstract(programClass.getModifiers())) {
-                final Reflections reflections = new Reflections(programClass.getName(), new FieldAnnotationsScanner());
-                final CommandLineProgram program = programClass.newInstance();
-                builder.append(programClass.getSimpleName());
-                builder.append("\n\n");
-                final Set<Field> usages = reflections.getFieldsAnnotatedWith(Usage.class);
-                if (usages.size() == 1) {
-                    builder.append(usages.iterator().next().get(program));
-                }
-                builder.append("\n--------------------------------------------------------------------------------------\n");
-            }
+        for (final CommandLineProgram program : loader) {
+            builder.append(program.getClass().getSimpleName());
+            builder.append("\n\n");
+            builder.append(program.getUsage());
+            builder.append("\n--------------------------------------------------------------------------------------\n");
         }
         System.err.println(builder.toString());
     }
-
-    private static Set<Class<? extends CommandLineProgram>> getSortedClps() {
-        final Set<Class<? extends CommandLineProgram>> allClps = getAllClpClasses();
-        final Set<Class<? extends CommandLineProgram>> sortedClps = new TreeSet<Class<? extends CommandLineProgram>>(new Comparator<Class>() {
-            @Override
-            public int compare(final Class class1, final Class class2) {
-                return class1.getSimpleName().compareTo(class2.getSimpleName());
-            }
-        });
-        sortedClps.addAll(allClps);
-        return sortedClps;
-    }
-
 }

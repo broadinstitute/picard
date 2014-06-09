@@ -39,6 +39,8 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.zip.DeflaterFactory;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -312,5 +314,21 @@ public abstract class CommandLineProgram {
      */
     public Map<String, Object> getNestedOptionsForHelp() {
         return getNestedOptions();
+    }
+
+    public String getUsage(){
+        final StringBuilder builder = new StringBuilder();
+        for(final Field field : this.getClass().getDeclaredFields()){
+            for(final Annotation annotation : field.getDeclaredAnnotations()){
+                if(Usage.class.isAssignableFrom(annotation.getClass())){
+                    try {
+                        builder.append(field.get(this));
+                    } catch (final IllegalAccessException e) {
+                        builder.append("Class ").append(getClass()).append(" does not have a @Usage annotation.");
+                    }
+                }
+            }
+        }
+        return builder.toString();
     }
 }
