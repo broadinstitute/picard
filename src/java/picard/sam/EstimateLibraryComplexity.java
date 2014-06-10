@@ -217,6 +217,10 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
         new EstimateLibraryComplexity().instanceMainWithExit(args);
     }
 
+    public EstimateLibraryComplexity() {
+        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / PairedReadSequence.size_in_bytes) / 2;
+    }
+
     /**
      * Method that does most of the work.  Reads through the input BAM file and extracts the
      * read sequences of each read pair and sorts them via a SortingCollection.  Then traverses
@@ -225,15 +229,14 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
     @Override protected int doWork() {
         for (final File f : INPUT) IOUtil.assertFileIsReadable(f);
 
-        final int maxInMemory = (int) (Runtime.getRuntime().maxMemory() / PairedReadSequence.size_in_bytes) / 2;
-        log.info("Will store " + maxInMemory + " read pairs in memory before sorting.");
+        log.info("Will store " + MAX_RECORDS_IN_RAM + " read pairs in memory before sorting.");
 
         final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
         int recordsRead = 0;
         final SortingCollection<PairedReadSequence> sorter = SortingCollection.newInstance(PairedReadSequence.class,
                                                                                            new PairedReadCodec(),
                                                                                            new PairedReadComparator(),
-                                                                                           maxInMemory,
+                                                                                           MAX_RECORDS_IN_RAM,
                                                                                            TMP_DIR);
 
         // Loop through the input files and pick out the read sequences etc.
