@@ -33,6 +33,7 @@ import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.PositionalArguments;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 
 import java.io.File;
@@ -46,6 +47,7 @@ import java.util.Map;
 
  * @author alecw@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class CompareSAMs extends CommandLineProgram {
 
     @Usage

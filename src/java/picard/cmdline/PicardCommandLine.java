@@ -49,7 +49,7 @@ public class PicardCommandLine {
             printUsage(loader);
             System.exit(1);
         } else {
-            if (!args[0].equals("-t") || args[0].equals("-h")) {
+            if (!args[0].equals("-T") || args[0].equals("-h")) {
                 printUsage(loader);
                 System.exit(1);
             } else {
@@ -68,7 +68,7 @@ public class PicardCommandLine {
 
     private static void printUsage(final ServiceLoader<CommandLineProgram> loader) {
         final StringBuilder builder = new StringBuilder();
-        builder.append("USAGE: PicardCommandLine -t <program name>\n\n");
+        builder.append("USAGE: PicardCommandLine -T <program name>\n\n");
         builder.append(" Available Programs: \n");
         builder.append("--------------------------------------------------------------------------------------\n");
         for (final CommandLineProgram program : loader) {

@@ -30,6 +30,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -43,9 +44,10 @@ import java.io.File;
  *
  * @author Martha Borkan
  */
+@ProviderFor(CommandLineProgram.class)
 public class BamIndexStats extends CommandLineProgram {
 
-    private static final Log log = Log.getInstance(BuildBamIndex.class);
+    private static final Log log = Log.getInstance(BamIndexStats.class);
 
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates BAM index statistics. " +

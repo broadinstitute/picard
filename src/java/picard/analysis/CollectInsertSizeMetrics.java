@@ -33,7 +33,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.RExecutor;
 
@@ -46,6 +48,7 @@ import java.util.Set;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";

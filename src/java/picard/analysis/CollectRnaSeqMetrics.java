@@ -38,7 +38,9 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.RExecutor;
 
@@ -47,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@ProviderFor(CommandLineProgram.class)
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 

@@ -369,8 +369,7 @@
         <document-command title="ReorderSam" id="" main-class="picard.sam.ReorderSam"/>
         <document-command title="ReplaceSamHeader" main-class="picard.sam.ReplaceSamHeader"/>
         <document-command title="RevertSam" main-class="picard.sam.RevertSam"/>
-        <document-command title="RevertOriginalBaseQualitiesAndAddMateCigar"
-                          main-class="picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
+        <document-command title="RevertOriginalBaseQualitiesAndAddMateCigar" main-class="picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
         <document-command title="SamFormatConverter" main-class="picard.sam.SamFormatConverter"/>
         <document-command title="SamToFastq" main-class="picard.sam.SamToFastq"/>
         <document-command title="SortSam" main-class="picard.sam.SortSam"/>

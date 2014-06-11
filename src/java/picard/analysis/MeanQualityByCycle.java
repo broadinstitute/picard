@@ -33,7 +33,9 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -48,6 +50,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class MeanQualityByCycle extends SinglePassSamProgram {
 
 	public final String USAGE = getStandardUsagePreamble() + "Program to generate a data table and chart of " +

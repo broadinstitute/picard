@@ -27,6 +27,8 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
+import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,26 +40,30 @@ import java.text.NumberFormat;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-public class CollectAlignmentSummaryMetricsTest {
-    private static File TEST_DATA_DIR = new File("testdata/picard/sam");
+public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam");
+
+    public String getCommandLineProgramName() {
+        return CollectAlignmentSummaryMetrics.class.getSimpleName();
+    }
     
     @Test
     public void test() throws IOException {
-        File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
-        File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        int result = new CollectAlignmentSummaryMetrics().instanceMain(new String[] {
+        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
-        });
+        }));
         Assert.assertEquals(result, 0);
-        
-        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
         
-        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
             switch (metrics.CATEGORY) {
             case FIRST_OF_PAIR:
@@ -102,25 +108,25 @@ public class CollectAlignmentSummaryMetricsTest {
 
     @Test
     public void testBisulfite() throws IOException {
-        File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
-        File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_bisulfite_test.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        int result = new CollectAlignmentSummaryMetrics().instanceMain(new String[] {
+        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
                 "IS_BISULFITE_SEQUENCED=true"
-        });
+        }));
         Assert.assertEquals(result, 0);
 
-        NumberFormat format =  NumberFormat.getInstance();
+        final NumberFormat format =  NumberFormat.getInstance();
         format.setMaximumFractionDigits(4);
 
-        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
-        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
             switch (metrics.CATEGORY) {
             case FIRST_OF_PAIR:
@@ -165,19 +171,19 @@ public class CollectAlignmentSummaryMetricsTest {
 
     @Test
     public void testNoReference() throws IOException {
-        File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
-        File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        int result = new CollectAlignmentSummaryMetrics().instanceMain(new String[] {
+        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-        });
+        }));
         Assert.assertEquals(result, 0);
 
-        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
-        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
             switch (metrics.CATEGORY) {
             case FIRST_OF_PAIR:
@@ -222,41 +228,41 @@ public class CollectAlignmentSummaryMetricsTest {
 
     @Test
     public void testZeroLengthReads() throws IOException {
-        File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
-        File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        int result = new CollectAlignmentSummaryMetrics().instanceMain(new String[] {
+        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-        });
+        }));
         Assert.assertEquals(result, 0);
 
-        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
-        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             // test that it doesn't blow up
         }
     }
 
     @Test
     public void testMultipleLevelsOfMetrics() throws IOException {
-        File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
-        File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        int result = new CollectAlignmentSummaryMetrics().instanceMain(new String[] {
+        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "METRIC_ACCUMULATION_LEVEL=ALL_READS",
                 "METRIC_ACCUMULATION_LEVEL=SAMPLE",
                 "METRIC_ACCUMULATION_LEVEL=LIBRARY",
                 "METRIC_ACCUMULATION_LEVEL=READ_GROUP",
-        });
+        }));
         Assert.assertEquals(result, 0);
 
-        MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
-        for (AlignmentSummaryMetrics metrics : output.getMetrics()) {
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
             if (metrics.SAMPLE == null) {
                 switch (metrics.CATEGORY) {

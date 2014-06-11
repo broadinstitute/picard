@@ -14,6 +14,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -25,6 +26,7 @@ import java.util.Arrays;
  *
  * @author mdepristo
  */
+@ProviderFor(CommandLineProgram.class)
 public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Usage(programVersion="1.0")
     public String USAGE = "Replaces all read groups in the INPUT file with a new read group and assigns " +

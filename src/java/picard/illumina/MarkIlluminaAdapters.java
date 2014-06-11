@@ -42,6 +42,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.util.AdapterMarker;
@@ -60,6 +61,7 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
  *
  * @author Tim Fennell (adapted by mborkan@broadinstitute.org)
  */
+@ProviderFor(CommandLineProgram.class)
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
     // The following attributes define the command-line arguments

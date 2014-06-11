@@ -26,6 +26,7 @@ package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -36,6 +37,7 @@ import java.io.File;
  *
  * @author ktibbett@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class BamToBfq extends CommandLineProgram {
 
     private static final String PROGRAM_VERSION = "1.0";

@@ -34,7 +34,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.RExecutor;
 
@@ -46,6 +48,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class QualityScoreDistribution extends SinglePassSamProgram {
 	@Usage
 	public final String USAGE = getStandardUsagePreamble() + "Program to chart " +

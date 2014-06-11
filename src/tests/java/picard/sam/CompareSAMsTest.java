@@ -25,11 +25,16 @@ package picard.sam;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
 
 import java.io.File;
 
-public class CompareSAMsTest {
+public class CompareSAMsTest extends CommandLineProgramTest {
     private static final File TEST_FILES_DIR = new File("testdata/picard/sam/CompareSAMs");
+
+    public String getCommandLineProgramName() {
+        return CompareSAMs.class.getSimpleName();
+    }
 
     private void testHelper(final String f1, final String f2, final int expectedMatch, final int expectedDiffer,
                             final int expectedUnmappedBoth,
@@ -39,6 +44,7 @@ public class CompareSAMsTest {
                 new File(TEST_FILES_DIR, f1).getAbsolutePath(),
                 new File(TEST_FILES_DIR, f2).getAbsolutePath()
         };
+
         CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.instanceMain(samFiles);
         Assert.assertEquals(areEqual, compareSAMs.areEqual());

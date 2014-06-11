@@ -31,7 +31,9 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.IlluminaUtil;
 
@@ -60,6 +62,7 @@ import java.util.Set;
  * 
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);

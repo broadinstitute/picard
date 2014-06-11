@@ -35,6 +35,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -48,6 +49,7 @@ import java.io.IOException;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class ExtractSequences extends CommandLineProgram {
     @Usage public final String USAGE = "Extracts one or more intervals described in an interval_list file " +
             "from a given reference sequence and writes them out in FASTA format. Requires a fasta index " +

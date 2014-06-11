@@ -8,6 +8,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
 import picard.PicardException;
 import picard.cmdline.PicardCommandLine;
 import picard.cmdline.StandardOptionDefinitions;
@@ -35,13 +36,17 @@ import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
 
 
-public class CheckIlluminaDirectoryTest {
+public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
     private File illuminaDir;
     private File dataDir;
     private File interopDir;
     private File intensityDir;
     private File basecallDir;
+
+    public String getCommandLineProgramName() {
+        return CheckIlluminaDirectory.class.getSimpleName();
+    }
 
     @BeforeMethod
     private void setUp() throws Exception {
@@ -83,27 +88,24 @@ public class CheckIlluminaDirectoryTest {
     public String[] makeCheckerArgs(final File basecallDir, final int lane, final String readStructure,
                                     final IlluminaDataType[] dataTypes, final List<Integer> filterTiles,
                                     final boolean makeFakeFiles, final boolean createSymLinks) {
-        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 7];
-        dataTypeArgs[0] = "-t";
-        dataTypeArgs[1] = CheckIlluminaDirectory.class.getSimpleName();
-        dataTypeArgs[2] = "B=" + basecallDir;
-        dataTypeArgs[3] = StandardOptionDefinitions.LANE_SHORT_NAME + "=" + lane;
-        dataTypeArgs[4] = "RS=" + readStructure;
-        dataTypeArgs[5] = "F=" + makeFakeFiles;
-        dataTypeArgs[6] = "X=" + createSymLinks;
+        final String[] dataTypeArgs = new String[dataTypes.length + filterTiles.size() + 5];
+        dataTypeArgs[0] = "B=" + basecallDir;
+        dataTypeArgs[1] = StandardOptionDefinitions.LANE_SHORT_NAME + "=" + lane;
+        dataTypeArgs[2] = "RS=" + readStructure;
+        dataTypeArgs[3] = "F=" + makeFakeFiles;
+        dataTypeArgs[4] = "X=" + createSymLinks;
 
         for (int i = 0; i < dataTypes.length; i++) {
-            dataTypeArgs[i + 7] = "DT=" + dataTypes[i];
+            dataTypeArgs[i + 5] = "DT=" + dataTypes[i];
         }
 
         if (filterTiles.size() > 0) {
-            final int start = dataTypes.length + 7;
+            final int start = dataTypes.length + 5;
             for (int i = start; i < dataTypeArgs.length; i++) {
                 dataTypeArgs[i] = "T=" + filterTiles.get(i - start);
             }
         }
-
-        return dataTypeArgs;
+        return makePicardCommandLineArgs(dataTypeArgs);
     }
 
     public File writeTileMetricsOutFile(final Map<Integer, List<Integer>> lanesToTiles) {
@@ -324,7 +326,6 @@ public class CheckIlluminaDirectoryTest {
 
     @Test
     public void differentSizedBclTest() {
-        final SupportedIlluminaFormat[] formats = new SupportedIlluminaFormat[]{Bcl, Filter};
         final int lane = 5;
         final List<Integer> tiles = makeList(1, 2, 3, 4);
         final int[] cycles = IlluminaFileUtilTest.cycleRange(1, 50);

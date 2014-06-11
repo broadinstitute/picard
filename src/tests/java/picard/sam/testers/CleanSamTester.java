@@ -20,7 +20,9 @@ import java.util.Arrays;
  */
 public class CleanSamTester extends SamFileTester {
     private final String expectedCigar;
-    private final CleanSam program = new CleanSam();
+
+    @Override
+    public String getCommandLineProgramName() { return CleanSam.class.getSimpleName(); }
 
     public CleanSamTester(final String expectedCigar, final int readLength, final int defaultChromosomeLength) {
         super(readLength, true, defaultChromosomeLength);
@@ -57,10 +59,4 @@ public class CleanSamTester extends SamFileTester {
             TestUtil.recursiveDelete(getOutputDir());
         }
     }
-
-    @Override
-    protected CommandLineProgram getProgram() {
-        return program;
-    }
-
 }

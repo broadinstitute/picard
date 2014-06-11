@@ -46,7 +46,9 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.SortingLongCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -65,6 +67,7 @@ import java.util.Set;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     private final Log log = Log.getInstance(MarkDuplicates.class);
 

@@ -14,8 +14,8 @@ import java.io.File;
  * This class is an extension of SamFileTester used to test MarkDuplicates with SAM files generated on the fly.
  */
 public class MarkDuplicatesTester extends SamFileTester {
-
-    private final MarkDuplicates program = new MarkDuplicates();
+    @Override
+    public String getCommandLineProgramName() { return MarkDuplicates.class.getSimpleName(); }
 
     public MarkDuplicatesTester() {
         super(50, true);
@@ -44,11 +44,6 @@ public class MarkDuplicatesTester extends SamFileTester {
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
         }
-    }
-
-    @Override
-    protected CommandLineProgram getProgram() {
-        return program;
     }
 }
 

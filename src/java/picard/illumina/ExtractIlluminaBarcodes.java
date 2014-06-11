@@ -31,6 +31,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.illumina.parser.ClusterData;
@@ -71,6 +72,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author jburke@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
@@ -354,7 +356,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
     }
 
     public static void main(final String[] argv) {
-        System.exit(new ExtractIlluminaBarcodes().instanceMain(argv));
+        new ExtractIlluminaBarcodes().instanceMainWithExit(argv);
     }
 
     private static final String BARCODE_SEQUENCE_COLUMN = "barcode_sequence";

@@ -3,6 +3,7 @@ package picard.analysis;
 import htsjdk.samtools.util.CollectionUtil;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -18,6 +19,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectMultipleMetrics extends CommandLineProgram {
 
     /**

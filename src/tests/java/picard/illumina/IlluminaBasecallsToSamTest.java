@@ -29,6 +29,8 @@ import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
+import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,12 +44,17 @@ import java.util.List;
  *
  * @author alecw@broadinstitute.org
  */
-public class IlluminaBasecallsToSamTest {
+public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
 
     private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/sams");
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
+
+    public String getCommandLineProgramName() {
+        return IlluminaBasecallsToSam.class.getSimpleName();
+    }
+
     @Test
     public void testTileNumberComparator() {
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(100, 10) < 0, "");
@@ -61,7 +68,8 @@ public class IlluminaBasecallsToSamTest {
         final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
-        new IlluminaBasecallsToSam().instanceMain(new String[]{
+
+        new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25S8S25T",
@@ -69,7 +77,7 @@ public class IlluminaBasecallsToSamTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
-        });
+        }));
         IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
     }
 
@@ -146,13 +154,13 @@ public class IlluminaBasecallsToSamTest {
         writer.close();
         reader.close();
 
-        new IlluminaBasecallsToSam().instanceMain(new String[]{
+        new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
                 "BASECALLS_DIR=" + baseCallsDir,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
                 "READ_STRUCTURE=" + readStructure,
                 "LIBRARY_PARAMS=" + libraryParams
-        });
+        }));
 
         for (final File outputSam : samFiles) {
             IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));

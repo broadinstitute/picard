@@ -43,6 +43,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.util.RExecutor;
 
@@ -60,6 +61,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectGcBiasMetrics extends CommandLineProgram {
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";

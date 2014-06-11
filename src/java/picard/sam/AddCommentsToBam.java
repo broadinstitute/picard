@@ -7,6 +7,7 @@ import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -19,6 +20,7 @@ import java.util.List;
  *
  * @author jgentry
  */
+@ProviderFor(CommandLineProgram.class)
 public class AddCommentsToBam extends CommandLineProgram {
     @Usage public final String USAGE = "Adds one or more comments to the header of a specified BAM file. Copies the file with the " +
             "modified header to a specified output file. Note that a block copying method is used to ensure efficient transfer to the " +

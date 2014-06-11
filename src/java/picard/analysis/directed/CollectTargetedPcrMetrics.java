@@ -4,7 +4,9 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
 import picard.analysis.MetricAccumulationLevel;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 
 import java.io.File;
@@ -15,6 +17,7 @@ import java.util.Set;
  * Collect metric information for target pcr metrics runs.  See CollectTargetedMetrics and TargetPcrMetricsCollector for
  * more information
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {
 
     @Usage

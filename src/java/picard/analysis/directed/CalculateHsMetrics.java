@@ -30,7 +30,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import picard.analysis.MetricAccumulationLevel;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 
 import java.io.File;
@@ -44,6 +46,7 @@ import java.util.TreeSet;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {
 
     @Usage

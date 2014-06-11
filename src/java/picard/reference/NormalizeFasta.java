@@ -9,6 +9,7 @@ import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
  * Little program to "normalize" a fasta file to ensure that all line of sequence are the
  * same length, and are a reasonable length!
  */
+@ProviderFor(CommandLineProgram.class)
 public class NormalizeFasta extends CommandLineProgram {
     @Usage public final String USAGE = "Takes any file that conforms to the fasta format and " +
             "normalizes it so that all lines of sequence except the last line per named sequence " +

@@ -16,6 +16,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamLocusIterator;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 import picard.util.MathUtil;
@@ -30,6 +31,7 @@ import java.util.List;
  *
  * @author tfennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class CollectWgsMetrics extends CommandLineProgram {
 
     @Usage
