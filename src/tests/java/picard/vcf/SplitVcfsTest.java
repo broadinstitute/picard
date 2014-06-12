@@ -10,16 +10,21 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
-public class SplitVcfsTest {
+public class SplitVcfsTest extends CommandLineProgramTest {
 
 	private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("SplitVcfsTest", null);
 	private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+
+    public String getCommandLineProgramName() {
+        return SplitVcfs.class.getSimpleName();
+    }
 
 	@AfterClass
 	public void teardown() {
@@ -35,13 +40,12 @@ public class SplitVcfsTest {
 		indelOutputFile.deleteOnExit();
 		snpOutputFile.deleteOnExit();
 
-		final SplitVcfs splitVcfs = new SplitVcfs();
-		splitVcfs.SNP_OUTPUT = snpOutputFile;
-		splitVcfs.INDEL_OUTPUT = indelOutputFile;
-		splitVcfs.INPUT = input;
-
-		final int returnCode = splitVcfs.instanceMain(new String[0]);
-		Assert.assertEquals(returnCode, 0);
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "SNP_OUTPUT=" + snpOutputFile.getAbsolutePath(),
+                "INDEL_OUTPUT=" + indelOutputFile.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
 		final Queue<String> indelContigPositions = MergeVcfsTest.loadContigPositions(indelOutputFile);
 		final Queue<String> snpContigPositions = MergeVcfsTest.loadContigPositions(snpOutputFile);

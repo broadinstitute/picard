@@ -35,6 +35,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -51,6 +52,7 @@ import java.util.Set;
  * Create a SAM/BAM file from a fasta containing reference sequence.  The output SAM file contains a header but no
  * SAMRecords, and the header contains only sequence records.
  */
+@ProviderFor(CommandLineProgram.class)
 public class CreateSequenceDictionary extends CommandLineProgram {
 
     // The following attributes define the command-line arguments

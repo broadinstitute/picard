@@ -84,15 +84,15 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
-        final int ret = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+        final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" +ignoredSequence
-        }));
-        Assert.assertEquals(ret, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
         output.read(new FileReader(metricsFile));
@@ -155,7 +155,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
-        final int ret = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+        final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
@@ -165,8 +165,8 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
                 "LEVEL=null",
                 "LEVEL=SAMPLE",
                 "LEVEL=LIBRARY"
-        }));
-        Assert.assertEquals(ret, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
         output.read(new FileReader(metricsFile));

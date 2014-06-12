@@ -45,6 +45,7 @@ public class CompareSAMsTest extends CommandLineProgramTest {
                 new File(TEST_FILES_DIR, f2).getAbsolutePath()
         };
 
+        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.instanceMain(samFiles);
         Assert.assertEquals(areEqual, compareSAMs.areEqual());

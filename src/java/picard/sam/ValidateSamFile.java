@@ -34,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -48,6 +49,7 @@ import java.util.List;
  *
  * @author Doug Voet
  */
+@ProviderFor(CommandLineProgram.class)
 public class ValidateSamFile extends CommandLineProgram {
 
     @Usage

@@ -43,6 +43,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -62,6 +63,7 @@ import java.util.List;
  * An index file is created for the output file by default. Using an output file name with a
  * ".gz" extension will create gzip-compressed output.
  */
+@ProviderFor(CommandLineProgram.class)
 public class MergeVcfs extends CommandLineProgram {
 
 	@Usage

@@ -18,6 +18,7 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -31,6 +32,7 @@ import java.util.List;
  * New BAM/BAI/MD5 files are created.
  * @author Nils Homer
  */
+@ProviderFor(CommandLineProgram.class)
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
 
     @Usage

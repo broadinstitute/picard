@@ -17,6 +17,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -29,6 +30,7 @@ import java.util.TreeSet;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class MakeSitesOnlyVcf extends CommandLineProgram {
     @Usage
     public final String usage = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +

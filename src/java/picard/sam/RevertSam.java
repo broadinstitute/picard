@@ -43,6 +43,7 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -57,6 +58,7 @@ import java.util.List;
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
  */
+@ProviderFor(CommandLineProgram.class)
 public class RevertSam extends CommandLineProgram {
     @Usage public String USAGE = getStandardUsagePreamble() +
             "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +

@@ -13,7 +13,9 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -51,6 +53,7 @@ import static java.lang.Math.pow;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm {
     @Usage public final String USAGE =
             "Attempts to estimate library complexity from sequence of read pairs alone. Does so by sorting all reads " +

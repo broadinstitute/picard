@@ -45,6 +45,7 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -60,6 +61,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class FixMateInformation extends CommandLineProgram {
     @Usage public final String USAGE = "Ensure that all mate-pair information is in sync between each read " +
             " and it's mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +

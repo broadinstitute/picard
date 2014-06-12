@@ -10,7 +10,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.CommandLineProgramTest;
 import picard.PicardException;
-import picard.cmdline.PicardCommandLine;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
@@ -34,7 +33,6 @@ import static picard.illumina.parser.IlluminaDataType.BaseCalls;
 import static picard.illumina.parser.IlluminaDataType.Position;
 import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat;
 import static picard.illumina.parser.IlluminaFileUtil.SupportedIlluminaFormat.*;
-
 
 public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
@@ -105,7 +103,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
                 dataTypeArgs[i] = "T=" + filterTiles.get(i - start);
             }
         }
-        return makePicardCommandLineArgs(dataTypeArgs);
+        return dataTypeArgs;
     }
 
     public File writeTileMetricsOutFile(final Map<Integer, List<Integer>> lanesToTiles) {
@@ -231,8 +229,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
                 makeList(makeList(1, 2, 3), tiles, tiles)));
 
         final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, false, false);
-        final int result = new PicardCommandLine().instanceMain(args);
-        Assert.assertEquals(result, 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
     @DataProvider(name = "negativeTestData")
@@ -294,14 +291,11 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         IlluminaFileUtilTest.emptyRelativeFiles(intensityDir, filesToEmpty);
         writeTileMetricsOutFile(makeMap(makeList(lane - 1, lane + 1, lane), makeList(makeList(1, 2, 3), tiles, tiles)));
 
-        final String[] args =
-                makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles, false);
-        int result = new PicardCommandLine().instanceMain(args);
-        Assert.assertEquals(expectedNumErrors, result);
+        final String[] args = makeCheckerArgs(basecallDir, lane, readStructure, dataTypes, filterTiles, makeFakeFiles, false);
+        Assert.assertEquals(runPicardCommandLine(args), expectedNumErrors);
         //if we previously faked files make sure CheckIlluminaDirectory returns with no failures
         if (makeFakeFiles) {
-            result = new PicardCommandLine().instanceMain(args);
-            Assert.assertEquals(0, result);
+            Assert.assertEquals(runPicardCommandLine(args), 0);
         }
     }
 
@@ -340,8 +334,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
 
         final String[] args =
                 makeCheckerArgs(basecallDir, lane, "50T", dataTypes, new ArrayList<Integer>(), false, false);
-        final int result = new PicardCommandLine().instanceMain(args);
-        Assert.assertEquals(1, result);
+        Assert.assertEquals(runPicardCommandLine(args), 1);
     }
 
     @Test(expectedExceptions = SAMException.class)
@@ -349,8 +342,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         final String[] args = makeCheckerArgs(new File("a_made_up_file/in_some_weird_location"), 1, "76T76T",
                 new IlluminaDataType[]{IlluminaDataType.Position},
                 new ArrayList<Integer>(), false, false);
-
-        final int result = new PicardCommandLine().instanceMain(args);
+        runPicardCommandLine(args);
     }
 
     @Test
@@ -367,15 +359,13 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         createSingleLocsFile();
         final File intensityLaneDir = new File(intensityDir, IlluminaFileUtil.longLaneStr(lane));
         intensityLaneDir.mkdirs();
-        int result = new PicardCommandLine().instanceMain(args);
-        Assert.assertEquals(result, 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         //now that we have created the loc files lets test to make sure they are there
         args = makeCheckerArgs(basecallDir, lane, "50T", new IlluminaDataType[]{IlluminaDataType.Position},
                 new ArrayList<Integer>(), false,
                 true);
 
-        result = new PicardCommandLine().instanceMain(args);
-        Assert.assertEquals(result, 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
     private void createSingleLocsFile() {

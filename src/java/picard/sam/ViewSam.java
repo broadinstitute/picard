@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -46,6 +47,7 @@ import java.io.PrintStream;
  *
  * @author tfennell@broad.mit.edu
  */
+@ProviderFor(CommandLineProgram.class)
 public class ViewSam extends CommandLineProgram {
     public static enum AlignmentStatus { Aligned, Unaligned, All }
     public static enum PfStatus { PF, NonPF, All }

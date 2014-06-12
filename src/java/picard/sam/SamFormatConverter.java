@@ -34,6 +34,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -44,6 +45,7 @@ import java.io.File;
  *
  * @author ktibbett@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class SamFormatConverter extends CommandLineProgram {
 
     private static final String PROGRAM_VERSION = "1.0";

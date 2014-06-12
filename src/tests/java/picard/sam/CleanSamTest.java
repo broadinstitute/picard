@@ -32,7 +32,6 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLine;
 import picard.sam.testers.CleanSamTester;
 
 import java.io.File;
@@ -56,9 +55,7 @@ public class CleanSamTest extends CommandLineProgramTest {
                 "INPUT=" + new File(TEST_DATA_DIR, samFile).getAbsolutePath(),
                 "OUTPUT=" + cleanedFile.getAbsolutePath()
         };
-        final String[] picardCommandLineArgs = makePicardCommandLineArgs(args);
-
-        Assert.assertEquals(new PicardCommandLine().instanceMain(picardCommandLineArgs), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 8000);
         validator.setIgnoreWarnings(true);

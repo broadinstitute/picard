@@ -147,7 +147,7 @@
         <ant antfile="build.xml" dir="${htsjdk}" target="test" inheritall="false"/>
     </target>
 
-    <target name="compile-htsjdk-tests" description="Test HTS-JDK">
+    <target name="compile-htsjdk-tests" description="Compile HTS-JDK Tests">
         <ant antfile="build.xml" dir="${htsjdk}" target="compile-tests" inheritall="false"/>
     </target>
 

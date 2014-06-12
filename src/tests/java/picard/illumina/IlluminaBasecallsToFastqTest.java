@@ -30,7 +30,6 @@ import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.annotations.Test;
 import picard.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLine;
 import picard.illumina.parser.ReadStructure;
 
 import java.io.File;
@@ -60,7 +59,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
         final File outputFastq2 = new File(outputPrefix + ".2.fastq");
         outputFastq2.deleteOnExit();
         final int lane = 1;
-        new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+        runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25T8B25T",
@@ -68,7 +67,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
                 "FLOWCELL_BARCODE=abcdeACXX"
-        }));
+        });
         IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
     }
@@ -84,7 +83,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             final String filePrefix = "testMultiplexRH";
             final File outputPrefix = new File(outputDir, filePrefix);
 
-            new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+            runPicardCommandLine(new String[]{
                     "BASECALLS_DIR=" + BASECALLS_DIR,
                     "LANE=" + 1,
                     "RUN_BARCODE=HiMom",
@@ -93,7 +92,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     "MACHINE_NAME=machine1",
                     "FLOWCELL_BARCODE=abcdeACXX",
                     "READ_NAME_FORMAT=" + IlluminaBasecallsToFastq.ReadNameFormat.ILLUMINA
-            }));
+            });
 
             final String[] filenames = new String[]{
                 filePrefix + ".1.fastq",
@@ -157,7 +156,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
             writer.close();
             reader.close();
 
-            new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+            runPicardCommandLine(new String[]{
                     "BASECALLS_DIR=" + baseCallsDir,
                     "LANE=" + lane,
                     "RUN_BARCODE=HiMom",
@@ -165,7 +164,7 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     "MULTIPLEX_PARAMS=" + libraryParams,
                     "MACHINE_NAME=machine1",
                     "FLOWCELL_BARCODE=abcdeACXX"
-            }));
+            });
 
             final ReadStructure readStructure = new ReadStructure(readStructureString);
             for (final File outputSam : outputPrefixes) {

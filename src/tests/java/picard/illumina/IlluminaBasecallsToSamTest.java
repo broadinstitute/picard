@@ -30,7 +30,6 @@ import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -69,7 +68,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         outputBam.deleteOnExit();
         final int lane = 1;
 
-        new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+        runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25S8S25T",
@@ -77,7 +76,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
-        }));
+        });
         IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
     }
 
@@ -154,13 +153,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         writer.close();
         reader.close();
 
-        new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[]{
+        runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + baseCallsDir,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
                 "READ_STRUCTURE=" + readStructure,
                 "LIBRARY_PARAMS=" + libraryParams
-        }));
+        });
 
         for (final File outputSam : samFiles) {
             IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));

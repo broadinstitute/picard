@@ -40,6 +40,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -54,6 +55,7 @@ import java.text.DecimalFormat;
  * <p/>
  * $Id$
  */
+@ProviderFor(CommandLineProgram.class)
 public class FilterSamReads extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(FilterSamReads.class);

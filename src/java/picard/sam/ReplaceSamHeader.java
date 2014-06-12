@@ -36,6 +36,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -44,6 +45,7 @@ import java.io.File;
 /**
  * @author alecw@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class ReplaceSamHeader extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Replace the SAMFileHeader in a SAM file with the given header. " +

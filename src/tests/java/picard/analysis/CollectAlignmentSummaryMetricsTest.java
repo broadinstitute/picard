@@ -53,12 +53,12 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
-        }));
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
@@ -112,13 +112,13 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
                 "IS_BISULFITE_SEQUENCED=true"
-        }));
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final NumberFormat format =  NumberFormat.getInstance();
         format.setMaximumFractionDigits(4);
@@ -174,11 +174,11 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
         final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-        }));
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
@@ -231,11 +231,11 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test2.sam");
         final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
-        }));
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
@@ -249,15 +249,15 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_multiple.sam");
         final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
         outfile.deleteOnExit();
-        final int result = new PicardCommandLine().instanceMain(makePicardCommandLineArgs(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "METRIC_ACCUMULATION_LEVEL=ALL_READS",
                 "METRIC_ACCUMULATION_LEVEL=SAMPLE",
                 "METRIC_ACCUMULATION_LEVEL=LIBRARY",
                 "METRIC_ACCUMULATION_LEVEL=READ_GROUP",
-        }));
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));

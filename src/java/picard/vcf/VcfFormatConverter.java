@@ -40,6 +40,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -50,6 +51,7 @@ import java.io.File;
  *
  * @author jgentry@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class VcfFormatConverter extends CommandLineProgram {
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfFormatConverter.class);

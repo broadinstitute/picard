@@ -52,6 +52,7 @@ public class ViewSamTest {
         final ViewSam viewSam = new ViewSam();
         viewSam.INPUT = inputSam;
         final PrintStream viewSamPrintStream = new PrintStream(viewSamOutputFile);
+        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         Assert.assertEquals(viewSam.writeSamText(viewSamPrintStream), 0);
         viewSamPrintStream.close();
         final LineReader viewSamInputReader = new BufferedLineReader(new FileInputStream(viewSamOutputFile));

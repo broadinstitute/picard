@@ -44,6 +44,7 @@ import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -57,6 +58,7 @@ import java.util.List;
  * Three fastq versions are supported: FastqSanger, FastqSolexa and FastqIllumina.
  * Input files can be in GZip format (end in .gz).
  */
+@ProviderFor(CommandLineProgram.class)
 public class FastqToSam extends CommandLineProgram {
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 

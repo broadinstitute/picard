@@ -1,5 +1,7 @@
 package picard;
 
+import picard.cmdline.PicardCommandLine;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,4 +33,11 @@ public abstract class CommandLineProgramTest {
         return makePicardCommandLineArgs(Arrays.asList(args));
     }
 
+    public int runPicardCommandLine(final List<String> args) {
+        return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(args));
+    }
+
+    public int runPicardCommandLine(final String[] args) {
+        return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(args));
+    }
 }

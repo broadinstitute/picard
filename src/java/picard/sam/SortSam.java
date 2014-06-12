@@ -33,6 +33,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -41,6 +42,7 @@ import java.io.File;
 /**
  * @author alecw@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class SortSam extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Sorts the input SAM or BAM.\n" + "" +

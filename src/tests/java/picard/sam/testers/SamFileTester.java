@@ -204,9 +204,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         output = new File(outputDir, "output.sam");
         args.add("INPUT=" + input.getAbsoluteFile());
         args.add("OUTPUT=" + output.getAbsoluteFile());
-        final String[] picardCommandLineArgs = makePicardCommandLineArgs(args);
-
-        Assert.assertEquals(new PicardCommandLine().instanceMain(picardCommandLineArgs), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         test();
     }
 

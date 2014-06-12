@@ -7,43 +7,34 @@ import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-public class MergeVcfsTest {
-
+public class MergeVcfsTest extends CommandLineProgramTest {
 	private static final String TEST_DATA_PATH = "testdata/picard/vcf/";
 
-	@Test(enabled = false)
-	public void testLong() {
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = new File("/Users/jrose/development/long-merge-test.vcf.gz");
-		mergeVcfs.CREATE_INDEX = false;
-		mergeVcfs.INPUT = Arrays.asList(
-				new File("/Volumes/Disko Segundo/mergevcfs/t2d_genes_contam_test4_per_sample_plus_five.snps.recalibrated.vcf"),
-				new File("/Volumes/Disko Segundo/mergevcfs/t2d_genes_contam_test4_per_sample_plus_five.indels.filtered.vcf"));
-
-		final int returnCode = mergeVcfs.instanceMain(new String[0]);
-		Assert.assertEquals(returnCode, 0);
-	}
+    public String getCommandLineProgramName() {
+        return MergeVcfs.class.getSimpleName();
+    }
 
 	@Test (expectedExceptions = IllegalArgumentException.class)
 	public void testFailsOnDissimilarContigLists() {
 		final File dissimilarContigs = new File(TEST_DATA_PATH, "CEUTrio-indels-dissimilar-contigs.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
 
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = new File("/dev/null/blah");
-		mergeVcfs.CREATE_INDEX = false;
-		mergeVcfs.INPUT = Arrays.asList(dissimilarContigs, snpInputFile);
-
-		mergeVcfs.instanceMain(new String[0]);
+        final String[] args = new String[]{
+                "INPUT=" + dissimilarContigs.getAbsolutePath(),
+                "INPUT=" + snpInputFile.getAbsolutePath(),
+                "CREATE_INDEX=false",
+                "OUTPUT=/dev/null/blah"
+        };
+        runPicardCommandLine(args);
 	}
 
 	@Test (expectedExceptions = TribbleException.class)
@@ -51,11 +42,12 @@ public class MergeVcfsTest {
 		final File contiglessIndelFile = new File(TEST_DATA_PATH + "CEUTrio-indels-no-contigs.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
 
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = new File("/dev/null/blah");
-		mergeVcfs.INPUT = Arrays.asList(contiglessIndelFile, snpInputFile);
-
-		mergeVcfs.instanceMain(new String[0]);
+        final String[] args = new String[]{
+                "INPUT=" + contiglessIndelFile.getAbsolutePath(),
+                "INPUT=" + snpInputFile.getAbsolutePath(),
+                "OUTPUT=/dev/null/blah"
+        };
+        runPicardCommandLine(args);
 	}
 
 	@Test (expectedExceptions = IllegalArgumentException.class)
@@ -63,11 +55,12 @@ public class MergeVcfsTest {
 		final File badSampleIndelFile = new File(TEST_DATA_PATH + "CEUTrio-indels-bad-samples.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
 
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = new File("/dev/null/blah");
-		mergeVcfs.INPUT = Arrays.asList(badSampleIndelFile, snpInputFile);
-
-		mergeVcfs.instanceMain(new String[0]);
+        final String[] args = new String[]{
+                "INPUT=" + badSampleIndelFile.getAbsolutePath(),
+                "INPUT=" + snpInputFile.getAbsolutePath(),
+                "OUTPUT=/dev/null/blah"
+        };
+        runPicardCommandLine(args);
 	}
 
 	@Test
@@ -80,12 +73,12 @@ public class MergeVcfsTest {
 		final Queue<String> indelContigPositions = loadContigPositions(indelInputFile);
 		final Queue<String> snpContigPositions = loadContigPositions(snpInputFile);
 
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = output;
-		mergeVcfs.INPUT = Arrays.asList(indelInputFile, snpInputFile);
-
-		final int returnCode = mergeVcfs.instanceMain(new String[0]);
-		Assert.assertEquals(returnCode, 0);
+        final String[] args = new String[]{
+                "INPUT=" + indelInputFile.getAbsolutePath(),
+                "INPUT=" + snpInputFile.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
 		// Make sure that the order of the output file is identical to the order
 		// of the input files by iterating through the output, making sure that,
@@ -132,12 +125,16 @@ public class MergeVcfsTest {
 		final File output = File.createTempFile("random-scatter-test-output.", ".vcf");
 		output.deleteOnExit();
 
-		final MergeVcfs mergeVcfs = new MergeVcfs();
-		mergeVcfs.OUTPUT = output;
-		mergeVcfs.INPUT = Arrays.asList(zero, one, two, three, four, five);
-
-		final int returnCode = mergeVcfs.instanceMain(new String[0]);
-		Assert.assertEquals(returnCode, 0);
+        final String[] args = new String[]{
+                "INPUT=" + zero.getAbsolutePath(),
+                "INPUT=" + one.getAbsolutePath(),
+                "INPUT=" + two.getAbsolutePath(),
+                "INPUT=" + three.getAbsolutePath(),
+                "INPUT=" + four.getAbsolutePath(),
+                "INPUT=" + five.getAbsolutePath(),
+                "OUTPUT=" + output.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
 		final VCFFileReader outputReader = new VCFFileReader(output);
 		final VariantContextComparator outputComparator = outputReader.getFileHeader().getVCFRecordComparator();

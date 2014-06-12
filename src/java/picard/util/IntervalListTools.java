@@ -10,6 +10,7 @@ import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -26,6 +27,7 @@ import java.util.Set;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class IntervalListTools extends CommandLineProgram {
     @Usage
     public final String USAGE = getStandardUsagePreamble() + " General tool for manipulating interval lists, " +

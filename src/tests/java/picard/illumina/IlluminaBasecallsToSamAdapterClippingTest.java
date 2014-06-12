@@ -64,8 +64,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
                 "OUTPUT=" + samFile,
                 "ALIAS=" + ALIAS
         };
-        final String[] picardCommandLineArgs = makePicardCommandLineArgs(illuminaArgv);
-        Assert.assertEquals(new PicardCommandLine().instanceMain(picardCommandLineArgs), 0);
+        Assert.assertEquals(runPicardCommandLine(illuminaArgv), 0);
 
         System.out.println ("Ouput Sam file is in " + samFile.getAbsolutePath());
 

@@ -30,6 +30,7 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -45,6 +46,7 @@ import java.util.List;
  *
  * @author ktibbett@broadinstitute.org
  */
+@ProviderFor(CommandLineProgram.class)
 public class MergeBamAlignment extends CommandLineProgram {
 
     @Usage

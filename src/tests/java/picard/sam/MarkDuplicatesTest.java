@@ -33,6 +33,7 @@ import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.CommandLineProgramTest;
 import picard.sam.testers.MarkDuplicatesTester;
 
 import java.io.File;
@@ -42,10 +43,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MarkDuplicatesTest {
+public class MarkDuplicatesTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MarkDuplicates");
 
-
+    public String getCommandLineProgramName() {
+        return MarkDuplicates.class.getSimpleName();
+    }
     /**
      * Test that PG header records are created & chained appropriately (or not created), and that the PG record chains
      * are as expected.  MarkDuplicates is used both to merge and to mark dupes in this case.
@@ -60,7 +63,6 @@ public class MarkDuplicatesTest {
         try {
             // Run MarkDuplicates, merging the 3 input files, and either enabling or suppressing PG header
             // record creation according to suppressPg.
-            final MarkDuplicates markDuplicates = new MarkDuplicates();
             final ArrayList<String> args = new ArrayList<String>();
             for (int i = 1; i <= 3; ++i) {
                 args.add("INPUT=" + new File(TEST_DATA_DIR, "merge" + i + ".sam").getAbsolutePath());
@@ -70,11 +72,9 @@ public class MarkDuplicatesTest {
             args.add("METRICS_FILE=" + new File(outputDir, "markDuplicatesTest.duplicate_metrics").getAbsolutePath());
             if (suppressPg) args.add("PROGRAM_RECORD_ID=null");
 
-            // I generally prefer to call doWork rather than invoking the argument parser, but it is necessary
-            // in this case to initialize the command line.
             // Note that for the unit test, version won't come through because it is obtained through jar
             // manifest, and unit test doesn't run code from a jar.
-            Assert.assertEquals(markDuplicates.instanceMain(args.toArray(new String[args.size()])), 0);
+            Assert.assertEquals(runPicardCommandLine(args), 0);
 
             // Read the MarkDuplicates output file, and get the PG ID for each read.  In this particular test,
             // the PG ID should be the same for both ends of a pair.

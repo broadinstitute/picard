@@ -39,6 +39,7 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -51,6 +52,7 @@ import java.util.Map;
  *
  * @author mdepristo
  */
+@ProviderFor(CommandLineProgram.class)
 public class ReorderSam extends CommandLineProgram {
     @Usage(programVersion="1.0")
     public String USAGE = "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, " +

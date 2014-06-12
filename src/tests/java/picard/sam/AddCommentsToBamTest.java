@@ -65,8 +65,7 @@ public class AddCommentsToBamTest extends CommandLineProgramTest {
         for (final String comment : commentList) {
             args.add("COMMENT=" + comment);
         }
-        final String[] picardCommandLineArgs = makePicardCommandLineArgs(args);
-        new PicardCommandLine().instanceMain(picardCommandLineArgs);
+        runPicardCommandLine(args);
     }
 
 }

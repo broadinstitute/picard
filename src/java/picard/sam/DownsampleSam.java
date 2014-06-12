@@ -9,6 +9,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -21,6 +22,7 @@ import java.util.Random;
  * Class to randomly downsample a BAM file while respecting that we should either get rid
  * of both ends of a pair or neither end of the pair!
  */
+@ProviderFor(CommandLineProgram.class)
 public class DownsampleSam extends CommandLineProgram {
     @Usage public final String USAGE = getStandardUsagePreamble() + " Randomly down-sample a SAM or BAM file to retain " +
             "a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary " +

@@ -11,6 +11,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
+import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
 
@@ -24,6 +25,7 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@ProviderFor(CommandLineProgram.class)
 public class GatherBamFiles extends CommandLineProgram {
     @Usage public final String USAGE = "Concatenates one or more BAM files together as efficiently as possible. Assumes that the " +
             "list of BAM files provided as INPUT are in the order that they should be concatenated and simply concatenates the bodies " +
