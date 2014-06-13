@@ -30,6 +30,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -86,6 +87,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                     "    * Y or N indicating if there was a barcode match\n" +
                     "    * matched barcode sequence\n" +
                     "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Tool to determine the barcode for each read in an Illumina lane";
 
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;

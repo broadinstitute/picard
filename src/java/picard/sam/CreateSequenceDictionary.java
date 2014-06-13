@@ -34,6 +34,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -60,6 +61,9 @@ public class CreateSequenceDictionary extends CommandLineProgram {
     public String USAGE =
             "Usage: " + getClass().getName() + " [options]\n\n" +
                     "Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Creates a SAM or BAM file from reference sequence in fasta format";
 
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;

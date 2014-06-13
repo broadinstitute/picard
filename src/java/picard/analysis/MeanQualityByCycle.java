@@ -34,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.util.RExecutor;
@@ -57,7 +58,10 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 			"mean quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
 			"merged BAMs.";
 
-	@Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes mean quality by cycle for a SAM or BAM file";
+
+    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
     @Option(doc="If set to true, calculate mean quality over aligned reads only.")

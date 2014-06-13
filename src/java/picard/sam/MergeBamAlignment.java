@@ -29,6 +29,7 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -55,6 +56,9 @@ public class MergeBamAlignment extends CommandLineProgram {
             "or BAM file of aligned and unaligned reads. NOTE that this program expects to " +
             "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
             "to have the same base name as the reference fasta except with the extension '.dict'";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file";
 
     @Option(shortName="UNMAPPED",
 		    doc="Original SAM or BAM file of unmapped reads, which must be in queryname order.")

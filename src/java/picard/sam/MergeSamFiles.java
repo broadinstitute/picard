@@ -35,6 +35,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -56,6 +57,9 @@ public class MergeSamFiles extends CommandLineProgram {
     // Usage and parameters
     @Usage
     public String USAGE = "Merges multiple SAM/BAM files into one file.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Merges multiple SAM or BAM files into one file";
 
     @Option(shortName="I", doc="SAM or BAM input file", minElements=1)
     public List<File> INPUT = new ArrayList<File>();

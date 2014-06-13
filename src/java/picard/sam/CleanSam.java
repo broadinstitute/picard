@@ -33,6 +33,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -49,6 +50,9 @@ public class CleanSam extends CommandLineProgram {
     public String USAGE = getStandardUsagePreamble() + "Read SAM and perform various fix-ups.  " +
             "Currently, the only fix-ups are 1: to soft-clip an alignment that hangs off the end of its reference sequence; " +
             "and 2: to set MAPQ to 0 if a read is unmapped.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Reads a SAM file and performs various fixes";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM to be cleaned.")
     public File INPUT;

@@ -68,14 +68,11 @@ public class PicardCommandLine {
 
     private static void printUsage(final ServiceLoader<CommandLineProgram> loader) {
         final StringBuilder builder = new StringBuilder();
-        builder.append("USAGE: PicardCommandLine -T <program name>\n\n");
-        builder.append(" Available Programs: \n");
+        builder.append("USAGE: PicardCommandLine -T <program name> [-h]\n\n");
+        builder.append("Available Programs:\n");
         builder.append("--------------------------------------------------------------------------------------\n");
         for (final CommandLineProgram program : loader) {
-            builder.append(program.getClass().getSimpleName());
-            builder.append("\n\n");
-            builder.append(program.getUsage());
-            builder.append("\n--------------------------------------------------------------------------------------\n");
+            builder.append(String.format(" %-45s%s\n", program.getClass().getSimpleName(), program.getShortUsage()));
         }
         System.err.println(builder.toString());
     }

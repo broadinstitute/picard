@@ -39,6 +39,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -60,6 +61,9 @@ public class VcfFormatConverter extends CommandLineProgram {
     public String USAGE = getStandardUsagePreamble() +
 		    "Convert a VCF file to a BCF file, or BCF to VCF.\n" + "" +
             "Input and output formats are determined by file extension.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Converts a VCF file to a BCF file, or BCF to VCF";
 
     @Option(doc="The BCF or VCF input file. The file format is determined by file extension.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

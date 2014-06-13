@@ -6,6 +6,7 @@ import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -36,11 +37,12 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage
     public String USAGE = getStandardUsagePreamble() +
-            "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  "
-            +
-            "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. "
-            +
+            "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
+            "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
             "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Tool to check a lane of an Illumina output directory";
 
     @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;

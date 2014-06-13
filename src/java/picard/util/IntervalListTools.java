@@ -9,6 +9,7 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -33,6 +34,9 @@ public class IntervalListTools extends CommandLineProgram {
     public final String USAGE = getStandardUsagePreamble() + " General tool for manipulating interval lists, " +
             "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
             "merge and sort them.  Other options are controlled by arguments.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "General tool for manipulating interval lists";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +

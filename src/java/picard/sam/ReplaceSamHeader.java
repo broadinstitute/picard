@@ -35,6 +35,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -51,6 +52,9 @@ public class ReplaceSamHeader extends CommandLineProgram {
     public String USAGE = getStandardUsagePreamble() + "Replace the SAMFileHeader in a SAM file with the given header. " +
             "Validation is minimal.  It is up to the user to ensure that all the elements referred to in the SAMRecords " +
             "are present in the new header.  Sort order of the two input files must be the same.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Replace the SAMFileHeader in a SAM file with the given header";
 
     @Option(doc="SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

@@ -35,6 +35,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -53,6 +54,9 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 	@Usage
 	public final String USAGE = getStandardUsagePreamble() + "Program to chart " +
 			"quality score distributions in a SAM or BAM file.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Charts quality score distributions for a SAM or BAM file";
 
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;

@@ -39,6 +39,7 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -97,6 +98,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Usage
     public String USAGE =
             getStandardUsagePreamble() + "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Generate SAM or BAM file from data in an Illumina basecalls output directory";
 
     @Option(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;

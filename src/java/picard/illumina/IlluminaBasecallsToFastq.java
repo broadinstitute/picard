@@ -37,6 +37,7 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -77,6 +78,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             "Template fastqs have extensions like .<number>.fastq, where <number> is the number of the template read,\n" +
             "starting with 1.  Barcode fastqs have extensions like .barcode_<number>.fastq, where <number> is the number\n" +
             "of the barcode read, starting with 1.";
+
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Generate fastq file(s) from data in an Illumina basecalls output directory";
 
     @Option(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;

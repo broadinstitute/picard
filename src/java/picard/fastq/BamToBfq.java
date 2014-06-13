@@ -25,6 +25,7 @@
 package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -45,6 +46,9 @@ public class BamToBfq extends CommandLineProgram {
     // The following attributes define the command-line arguments
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Create BFQ files for use by the Maq aligner.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Create BFQ files for use by the Maq aligner from a BAM file";
 
     @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;

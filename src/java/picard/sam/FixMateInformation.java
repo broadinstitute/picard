@@ -44,6 +44,7 @@ import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -67,6 +68,9 @@ public class FixMateInformation extends CommandLineProgram {
             " and it's mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
             " and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
             "to the output file unchanged.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Ensure that all mate-pair information is in sync between each read and it's mate pair";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input file to fix.")
     public List<File> INPUT;

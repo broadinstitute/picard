@@ -33,6 +33,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -52,8 +53,11 @@ public class SamFormatConverter extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
     @Usage
-    public String USAGE = getStandardUsagePreamble() + "Convert a BAM file to a SAM file, or BAM to SAM.\n" + "" +
+    public String USAGE = getStandardUsagePreamble() + "Convert a BAM file to a SAM file, or SAM to BAM.\n" + "" +
             "Input and output formats are determined by file extension.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Convert a BAM file to a SAM file, or a SAM to a BAM";
 
     @Option(doc="The BAM or SAM file to parse.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The BAM or SAM output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) public File OUTPUT;

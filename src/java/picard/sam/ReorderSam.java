@@ -38,6 +38,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -59,6 +60,9 @@ public class ReorderSam extends CommandLineProgram {
                           "ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, " +
                           "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
                           "reference are dropped. Runs substantially faster if the input is an indexed BAM file.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Reorders reads in a SAM or BAM file to match ordering in reference";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam) to extract reads from.")
     public File INPUT;

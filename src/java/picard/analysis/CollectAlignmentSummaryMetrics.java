@@ -32,6 +32,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -70,6 +71,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     // Usage and parameters
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes summary alignment metrics for a SAM or BAM file";
 
     @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;

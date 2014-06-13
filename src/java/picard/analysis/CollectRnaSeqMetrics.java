@@ -39,6 +39,7 @@ import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -59,6 +60,8 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             " coding, intronic, UTR, intergenic, ribosomal.\n" +
             "Also determines strand-specificity for strand-specific libraries.";
 
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes RNA alignment metrics for a SAM or BAM file";
 
     @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;

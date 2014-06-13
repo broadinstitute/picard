@@ -31,6 +31,7 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -55,6 +56,10 @@ public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetr
             "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
             "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
             "mean coverage information for every target.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes Hybrid Selection-specific metrics for a SAM or BAM file";
+
     @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.")
     public List<File> BAIT_INTERVALS;
 

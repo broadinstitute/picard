@@ -16,6 +16,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -36,6 +37,9 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
     public final String usage = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
             "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
             "any support variant format including .vcf, .vcf.gz or .bcf.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Creates a VCF bereft of genotype information from an input VCF or BCF";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF")
     public File INPUT;

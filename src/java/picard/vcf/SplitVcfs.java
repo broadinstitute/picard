@@ -16,6 +16,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -40,7 +41,10 @@ public class SplitVcfs extends CommandLineProgram {
 			"headers of the two output files will be identical. An index file is created and a" +
 			"sequence dictionary is required by default.";
 
-	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Splits an input VCF or BCF file into two VCF or BCF files";
+
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
 	public File INPUT;
 
 	@Option(doc="The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")

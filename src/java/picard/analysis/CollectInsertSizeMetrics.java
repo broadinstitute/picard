@@ -34,6 +34,7 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -58,6 +59,9 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 			"Reads a SAM or BAM file and writes a file containing metrics about " +
             "the statistical distribution of insert size (excluding duplicates) " +
             "and generates a Histogram plot.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes insert size distribution metrics for a SAM or BAM file";
 
     @Option(shortName="H", doc="File to write insert size Histogram chart to.")
     public File Histogram_FILE;

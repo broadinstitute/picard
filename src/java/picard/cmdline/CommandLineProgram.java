@@ -316,19 +316,23 @@ public abstract class CommandLineProgram {
         return getNestedOptions();
     }
 
-    public String getUsage(){
+    /**
+     * Returns a SHORT description of the tool
+     */
+    public String getShortUsage(){
         final StringBuilder builder = new StringBuilder();
-        for(final Field field : this.getClass().getDeclaredFields()){
-            for(final Annotation annotation : field.getDeclaredAnnotations()){
-                if(Usage.class.isAssignableFrom(annotation.getClass())){
+        for (final Field field : this.getClass().getDeclaredFields()){
+            for (final Annotation annotation : field.getDeclaredAnnotations()){
+                if (OneLineUsage.class.isAssignableFrom(annotation.getClass())){
                     try {
                         builder.append(field.get(this));
                     } catch (final IllegalAccessException e) {
-                        builder.append("Class ").append(getClass()).append(" does not have a @Usage annotation.");
+                        builder.append("Class ").append(getClass()).append(" does not have a @OneLineUsage annotation.");
                     }
                 }
             }
         }
         return builder.toString();
     }
+
 }

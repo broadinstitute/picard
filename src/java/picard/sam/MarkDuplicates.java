@@ -47,6 +47,7 @@ import htsjdk.samtools.util.SortingLongCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -81,6 +82,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
 		    CommandLineParser.getStandardUsagePreamble(getClass()) +
             "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
             "All records are then written to the output file with the duplicate records flagged.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Given a SAM or BAM file, creates a SAM or BAM file with duplicate records marked";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
 		    doc="One or more input SAM or BAM files to analyze. Must be coordinate sorted.  May not be a stream because file is read twice.")

@@ -5,6 +5,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -26,6 +27,10 @@ public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPc
                     "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
                     "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
                     "mean coverage information for every target.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes Targeted PCR-related metrics for a SAM or BAM file";
+
     @Option(shortName = "AI", doc = "An interval list file that contains the locations of the baits used.")
     public File AMPLICON_INTERVALS;
 

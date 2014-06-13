@@ -43,6 +43,7 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -64,8 +65,10 @@ public class FastqToSam extends CommandLineProgram {
 
     @Usage 
     public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
-        + " Input files can be in GZip format (end in .gz).\n" 
-        ;
+        + " Input files can be in GZip format (end in .gz).\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Converts a fastq file to an unaligned BAM or SAM file";
 
     @Option(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
     public File FASTQ;

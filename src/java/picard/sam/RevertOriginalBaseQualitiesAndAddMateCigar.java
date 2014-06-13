@@ -17,6 +17,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -38,6 +39,9 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
     @Usage
     public String USAGE = getStandardUsagePreamble() +
             "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;

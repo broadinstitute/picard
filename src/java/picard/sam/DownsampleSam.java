@@ -8,6 +8,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -28,6 +29,9 @@ public class DownsampleSam extends CommandLineProgram {
             "a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary " +
             "alignments are all discarded. Each read is given a probability P of being retained - results with the exact " +
             "same input in the same order and with the same value for RANDOM_SEED will produce the same results.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Down-sample a SAM or BAM file to retain a random subset of the reads";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to downsample.")
     public File INPUT;

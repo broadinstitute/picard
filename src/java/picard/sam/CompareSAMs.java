@@ -32,6 +32,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.PositionalArguments;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -56,6 +57,9 @@ public class CompareSAMs extends CommandLineProgram {
         "For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand. " +
         "Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input, " +
         "or are missing in one of the files";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Compares two input SAM or BAM files";
 
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;

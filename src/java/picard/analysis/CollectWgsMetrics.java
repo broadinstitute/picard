@@ -15,6 +15,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamLocusIterator;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -37,6 +38,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Usage
     public final String usage = "Computes a number of metrics that are useful for evaluating coverage and performance of " +
             "whole genome sequencing experiments.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes whole genome sequencing-related metrics for a SAM or BAM file";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM or BAM file.")
     public File INPUT;

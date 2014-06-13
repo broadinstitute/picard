@@ -8,6 +8,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -26,6 +27,9 @@ public class NormalizeFasta extends CommandLineProgram {
     @Usage public final String USAGE = "Takes any file that conforms to the fasta format and " +
             "normalizes it so that all lines of sequence except the last line per named sequence " +
             "are of the same length.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Normalizes lines of sequence in a fasta file to be of the same length";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input fasta file to normalize.")
     public File INPUT;

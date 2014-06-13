@@ -41,6 +41,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -71,6 +72,9 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
                     "Clear any existing adapter-trimming tags (XT:i:).\n" +
                     "Only works for unaligned files in query-name order.\n"+
                     "Note: This is a utility program and will not be run in the pipeline.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

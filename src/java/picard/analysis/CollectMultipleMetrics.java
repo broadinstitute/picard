@@ -2,6 +2,7 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -70,6 +71,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 			"Takes an input BAM and reference sequence and runs one or more Picard " +
             "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
             "default options and fixed output extesions, but this may become more flexible in future.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Writes multiple types of metrics for a SAM or BAM file";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM or BAM file.")
     public File INPUT;

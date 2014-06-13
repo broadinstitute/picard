@@ -39,6 +39,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -82,6 +83,9 @@ public class FilterSamReads extends CommandLineProgram {
     public String USAGE =
             "Produces a new SAM or BAM file by including or excluding aligned reads " +
                     "or a list of reads names supplied in the READ_LIST_FILE from the INPUT SAM or BAM file.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Creates a new SAM or BAM file by including or excluding aligned reads";
 
     @Option(doc = "The SAM or BAM file that will be filtered.",
         optional = false,

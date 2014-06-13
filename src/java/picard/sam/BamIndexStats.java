@@ -29,6 +29,7 @@ import htsjdk.samtools.BAMIndexMetaData;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -52,6 +53,9 @@ public class BamIndexStats extends CommandLineProgram {
     @Usage
     public String USAGE = getStandardUsagePreamble() + "Generates BAM index statistics. " +
             "Input BAM file must have a corresponding index file.\n";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Generates index statistics from a BAM file";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")

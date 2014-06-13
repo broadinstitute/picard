@@ -42,6 +42,7 @@ import htsjdk.variant.vcf.VCFUtils;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -73,7 +74,10 @@ public class MergeVcfs extends CommandLineProgram {
 			"and, within contigs, by start position. The input files must have the same sample and " +
 			"contig lists. An index file is created and a sequence dictionary is required by default.";
 
-	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Merges multiple VCF or BCF files into one VCF file or BCF";
+
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
 	public List<File> INPUT;
 
 	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The merged VCF or BCF file. File format is determined by file extension.")

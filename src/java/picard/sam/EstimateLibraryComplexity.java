@@ -14,6 +14,7 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
@@ -70,6 +71,9 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
             "reads one further filter is applied on the data.  After examining all reads a Histogram is built of " +
             "[#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are " +
             "then removed from the Histogram as outliers before library size is estimated.";
+
+    @OneLineUsage
+    public String ONE_LINE_USAGE = "Estimates library complexity from the sequence of read pairs";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more files to combine and " +
             "estimate library complexity from. Reads can be mapped or unmapped.")
