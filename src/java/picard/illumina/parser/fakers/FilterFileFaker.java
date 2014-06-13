@@ -12,6 +12,7 @@ public class FilterFileFaker extends FileFaker {
         buffer.putInt(0);
         buffer.putInt(3);
         buffer.putInt(1);
+        buffer.put((byte) 0);
     }
 
     @Override
@@ -21,6 +22,6 @@ public class FilterFileFaker extends FileFaker {
 
     @Override
     protected int bufferSize() {
-        return Integer.SIZE * 3;
+        return Integer.SIZE * 3 + Byte.SIZE;
     }
 }
