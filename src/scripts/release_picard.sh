@@ -133,7 +133,8 @@ cd $TMPDIR
 # clone
 git clone $PICARDGITROOT picard
 cd picard
-ant clean clone-htsjdk # clean shouldn't be necessary, but no harm
+ant clone-htsjdk
+ant clean # clean shouldn't be necessary, but no harm
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
 PICARD_PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
