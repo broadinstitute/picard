@@ -1,0 +1,12 @@
+## htsjdk.samtools.metrics.StringHeader
+# picard.vcf.GenotypeConcordance TRUTH_VCF=testdata/picard/vcf/CEUTrio-snps.vcf CALL_VCF=testdata/picard/vcf/CEUTrio-snps_first_line_diff.vcf OUTPUT=testdata/picard/vcf/CEUTrio-snps_CEUTrio-snps_first_line_GtConcordanceDiff DEBUG_VARIANT_METRICS_FILE=testdata/picard/vcf/CEUTrio-snps_CEUTrio-snps_first_line_GtConcordanceDiff.variant_metrics.txt TRUTH_SAMPLE=NA12878 CALL_SAMPLE=NA12878    INTERSECT_INTERVALS=true MIN_GQ=0 MIN_DP=0 OUTPUT_ALL_ROWS=false USE_VCF_INDEX_PCT=25 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Fri Sep 12 12:00:55 EDT 2014
+
+## METRICS CLASS	picard.vcf.GenotypeConcordance$GenotypeConcordanceVariantTypeDetailsMetrics
+TRUTH_SAMPLE	CALL_SAMPLE	TRUTH_TYPE	CALL_TYPE	COUNT
+NA12878	NA12878	NO_VARIATION	NO_VARIATION	72
+NA12878	NA12878	SNP	NO_VARIATION	1
+NA12878	NA12878	SNP	SNP	202
+
+
