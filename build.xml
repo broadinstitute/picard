@@ -39,6 +39,8 @@
     <property name="test.output" value="dist/test"/>
     <property name="htsjdk_lib_dir" value="${dist}/htsjdk_lib_dir"/>
     <property name="htsjdk_git_url" value="git@github.com:samtools/htsjdk.git"/>
+    <!-- TODO: get this from the build.xml in htsjdk -->
+    <property name="htsjdk-classes" value="htsjdk/classes"/>
 
     <property name="javac.target" value="1.6"/>
     <property name="javac.debug" value="true"/>
@@ -249,11 +251,12 @@
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
-            <manifest>
+            <fileset dir="${htsjdk-classes}" includes ="htsjdk/samtools/**/*.*"/>
+            <fileset dir="${htsjdk-classes}" includes="htsjdk/tribble/**/*.*"/>
+            <fileset dir="${htsjdk-classes}" includes="htsjdk/variant/**/*.*"/>            <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 <attribute name="Main-Class" value="picard.cmdline.PicardCommandLine"/>
-                <attribute name="Class-Path" value="${htsjdk}-${htsjdk-version}.jar"/>
             </manifest>
         </jar>
     </target>
@@ -332,39 +335,40 @@
         <!-- If you don't want to generate on-line doc for a command, use package-command instead of document-command -->
         <document-command title="AddCommentsToBam" main-class="picard.sam.AddCommentsToBam"/>
         <document-command title="AddOrReplaceReadGroups" main-class="picard.sam.AddOrReplaceReadGroups"/>
-        <document-command title="BamToBfq" main-class="picard.fastq.BamToBfq"/>
         <document-command title="BamIndexStats" main-class="picard.sam.BamIndexStats"/>
+        <document-command title="BamToBfq" main-class="picard.fastq.BamToBfq"/>
         <document-command title="BuildBamIndex" main-class="picard.sam.BuildBamIndex"/>
         <document-command title="CalculateHsMetrics" main-class="picard.analysis.directed.CalculateHsMetrics"/>
+        <document-command title="CheckIlluminaDirectory" main-class="picard.illumina.CheckIlluminaDirectory"/>
         <document-command title="CleanSam" main-class="picard.sam.CleanSam"/>
         <document-command title="CollectAlignmentSummaryMetrics" main-class="picard.analysis.CollectAlignmentSummaryMetrics"/>
         <document-command title="CollectGcBiasMetrics" main-class="picard.analysis.CollectGcBiasMetrics"/>
         <document-command title="CollectInsertSizeMetrics" main-class="picard.analysis.CollectInsertSizeMetrics"/>
         <document-command title="CollectMultipleMetrics" main-class="picard.analysis.CollectMultipleMetrics"/>
-        <document-command title="CollectTargetedPcrMetrics" main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>
         <document-command title="CollectRnaSeqMetrics" main-class="picard.analysis.CollectRnaSeqMetrics"/>
+        <document-command title="CollectTargetedPcrMetrics" main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>
         <document-command title="CollectWgsMetrics" main-class="picard.analysis.CollectWgsMetrics"/>
         <document-command title="CompareSAMs" main-class="picard.sam.CompareSAMs"/>
         <document-command title="CreateSequenceDictionary" main-class="picard.sam.CreateSequenceDictionary"/>
         <document-command title="DownsampleSam" main-class="picard.sam.DownsampleSam"/>
-        <document-command title="ExtractIlluminaBarcodes" main-class="picard.illumina.ExtractIlluminaBarcodes"/>
         <document-command title="EstimateLibraryComplexity" main-class="picard.sam.EstimateLibraryComplexity"/>
+        <document-command title="ExtractIlluminaBarcodes" main-class="picard.illumina.ExtractIlluminaBarcodes"/>
+        <document-command title="ExtractSequences" main-class="picard.reference.ExtractSequences"/>
         <document-command title="FastqToSam" main-class="picard.sam.FastqToSam"/>
         <document-command title="FilterSamReads" main-class="picard.sam.FilterSamReads"/>
         <document-command title="FixMateInformation" main-class="picard.sam.FixMateInformation"/>
         <document-command title="GatherBamFiles" main-class="picard.sam.GatherBamFiles"/>
         <document-command title="IlluminaBasecallsToFastq" main-class="picard.illumina.IlluminaBasecallsToFastq"/>
         <document-command title="IlluminaBasecallsToSam" main-class="picard.illumina.IlluminaBasecallsToSam"/>
-        <document-command title="CheckIlluminaDirectory" main-class="picard.illumina.CheckIlluminaDirectory"/>
         <document-command title="IntervalListTools" main-class="picard.util.IntervalListTools"/>
         <document-command title="MakeSitesOnlyVcf" main-class="picard.vcf.MakeSitesOnlyVcf"/>
         <document-command title="MarkDuplicates" main-class="picard.sam.MarkDuplicates"/>
+        <document-command title="MarkIlluminaAdapters" main-class="picard.illumina.MarkIlluminaAdapters"/>
         <document-command title="MeanQualityByCycle" main-class="picard.analysis.MeanQualityByCycle"/>
         <document-command title="MergeBamAlignment" main-class="picard.sam.MergeBamAlignment"/>
         <document-command title="MergeSamFiles" main-class="picard.sam.MergeSamFiles"/>
         <document-command title="MergeVcfs" main-class="picard.vcf.MergeVcfs"/>
         <document-command title="NormalizeFasta" main-class="picard.reference.NormalizeFasta"/>
-        <document-command title="ExtractSequences" main-class="picard.reference.ExtractSequences"/>
         <document-command title="QualityScoreDistribution" main-class="picard.analysis.QualityScoreDistribution"/>
         <document-command title="ReorderSam" id="" main-class="picard.sam.ReorderSam"/>
         <document-command title="ReplaceSamHeader" main-class="picard.sam.ReplaceSamHeader"/>
@@ -373,10 +377,9 @@
         <document-command title="SamFormatConverter" main-class="picard.sam.SamFormatConverter"/>
         <document-command title="SamToFastq" main-class="picard.sam.SamToFastq"/>
         <document-command title="SortSam" main-class="picard.sam.SortSam"/>
-        <document-command title="VcfFormatConverter" main-class="picard.vcf.VcfFormatConverter"/>
-        <document-command title="MarkIlluminaAdapters" main-class="picard.illumina.MarkIlluminaAdapters"/>
         <document-command title="SplitVcfs" main-class="picard.vcf.SplitVcfs"/>
         <document-command title="ValidateSamFile" main-class="picard.sam.ValidateSamFile"/>
+        <document-command title="VcfFormatConverter" main-class="picard.vcf.VcfFormatConverter"/>
         <document-command title="ViewSam" main-class="picard.sam.ViewSam"/>
     </target>
 

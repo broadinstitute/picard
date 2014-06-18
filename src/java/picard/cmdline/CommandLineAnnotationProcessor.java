@@ -17,7 +17,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -47,6 +51,13 @@ import java.util.TreeSet;
  */
 @SupportedAnnotationTypes("picard.cmdline.*")
 public class CommandLineAnnotationProcessor extends AbstractProcessor {
+
+    private class CommandLineNameComparator implements Comparator<String> {
+        @Override
+        public int compare(final String a, final String b) {
+            return a.substring(a.lastIndexOf(".")+1).compareTo(b.substring(b.lastIndexOf(".")+1));
+        }
+    }
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
@@ -80,7 +91,7 @@ public class CommandLineAnnotationProcessor extends AbstractProcessor {
 
             Set<String> allContractNames = services.get(contractName);
             if (allContractNames == null)
-                services.put(contractName, allContractNames = new TreeSet<String>());
+                services.put(contractName, allContractNames = new TreeSet<String>(new CommandLineNameComparator()));
             allContractNames.add(elements.getBinaryName(type).toString());
         }
 

@@ -36,7 +36,9 @@
       </profile>
     </annotationProcessing>
   </component>
-  <component name="CopyrightManager" default="" />
+  <component name="CopyrightManager" default="">
+    <module2copyright />
+  </component>
   <component name="DependencyValidationManager">
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
@@ -89,6 +91,8 @@
         <inspection_tool class="LocalCanBeFinal" enabled="true" level="WARNING" enabled_by_default="true">
           <option name="REPORT_VARIABLES" value="true" />
           <option name="REPORT_PARAMETERS" value="true" />
+          <option name="REPORT_CATCH_PARAMETERS" value="true" />
+          <option name="REPORT_FOREACH_PARAMETERS" value="true" />
         </inspection_tool>
         <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
         <inspection_tool class="UnusedDeclaration" enabled="false" level="WARNING" enabled_by_default="false">
