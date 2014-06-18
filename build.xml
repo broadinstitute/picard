@@ -253,7 +253,8 @@
             <fileset dir="${src.scripts}" includes="**/*.R"/>
             <fileset dir="${htsjdk-classes}" includes ="htsjdk/samtools/**/*.*"/>
             <fileset dir="${htsjdk-classes}" includes="htsjdk/tribble/**/*.*"/>
-            <fileset dir="${htsjdk-classes}" includes="htsjdk/variant/**/*.*"/>            <manifest>
+            <fileset dir="${htsjdk-classes}" includes="htsjdk/variant/**/*.*"/>
+            <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 <attribute name="Main-Class" value="picard.cmdline.PicardCommandLine"/>
