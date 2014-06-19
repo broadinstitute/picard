@@ -251,9 +251,7 @@
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
-            <fileset dir="${htsjdk-classes}" includes ="htsjdk/samtools/**/*.*"/>
-            <fileset dir="${htsjdk-classes}" includes="htsjdk/tribble/**/*.*"/>
-            <fileset dir="${htsjdk-classes}" includes="htsjdk/variant/**/*.*"/>
+            <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
