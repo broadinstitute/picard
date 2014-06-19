@@ -25,8 +25,10 @@
 package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -64,6 +66,9 @@ public class BamToBfq extends CommandLineProgram {
     @Option(doc="Whether to clip adapters from the reads") public boolean CLIP_ADAPTERS = true;
     @Option(doc="The number of bases from each read to write to the bfq file.  If this is non-null, then " +
             "only the first BASES_TO_WRITE bases from each read will be written.", optional=true) public Integer BASES_TO_WRITE = null;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     protected int doWork() {
 

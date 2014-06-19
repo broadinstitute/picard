@@ -43,8 +43,10 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -129,6 +131,9 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(doc="Allow (and ignore) empty lines")
     public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 

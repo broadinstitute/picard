@@ -39,8 +39,10 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -136,6 +138,9 @@ public class SamToFastq extends CommandLineProgram {
     @Option(doc = "If true, include non-primary alignments in the output.  Support of non-primary alignments in SamToFastq " +
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
     public boolean INCLUDE_NON_PRIMARY_ALIGNMENTS = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final Log log = Log.getInstance(SamToFastq.class);
 

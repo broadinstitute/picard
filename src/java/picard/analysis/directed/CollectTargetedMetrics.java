@@ -15,7 +15,9 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.analysis.MetricAccumulationLevel;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.metrics.MultilevelMetrics;
 
@@ -72,6 +74,9 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
 
     @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     /**
      * Asserts that files are readable and writable and then fires off an

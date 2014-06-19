@@ -32,8 +32,10 @@ import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -66,6 +68,9 @@ public class ViewSam extends CommandLineProgram {
 
     @Option(doc="Print out all reads, just the PF reads or just the non-PF reads.")
     public PfStatus PF_STATUS = PfStatus.All;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] args) {
         new ViewSam().instanceMain(args);

@@ -39,8 +39,10 @@ import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.RExecutor;
@@ -90,6 +92,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private RnaSeqMetricsCollector collector;
 

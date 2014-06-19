@@ -6,8 +6,10 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -38,6 +40,9 @@ public class AddCommentsToBam extends CommandLineProgram {
 
     @Option(shortName="C", doc="Comments to add to the BAM file")
     public List<String> COMMENT;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] args) { new AddCommentsToBam().instanceMainWithExit(args); }
 

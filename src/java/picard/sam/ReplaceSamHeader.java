@@ -35,8 +35,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -65,6 +67,9 @@ public class ReplaceSamHeader extends CommandLineProgram {
     @Option(doc="SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] argv) {
         new ReplaceSamHeader().instanceMainWithExit(argv);

@@ -34,8 +34,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -88,6 +90,9 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Option(doc = "Stop after writing this many sequences.  For testing.")
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Fasta; }
 
     private final MessageDigest md5;
 

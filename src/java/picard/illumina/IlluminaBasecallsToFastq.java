@@ -37,8 +37,10 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -163,7 +165,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
     @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.")
     public boolean COMPRESS_OUTPUTS = false;
-    
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
+
     /** Simple switch to control the read name format to emit. */
     public enum ReadNameFormat {
         CASAVA_1_8, ILLUMINA

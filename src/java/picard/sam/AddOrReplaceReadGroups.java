@@ -13,8 +13,10 @@ import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -72,6 +74,9 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
 
     @Option(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
     public Integer RGPI;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 

@@ -34,8 +34,10 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -70,6 +72,9 @@ public class ExtractSequences extends CommandLineProgram {
 
     @Option(doc="Maximum line length for sequence data.")
     public int LINE_LENGTH = 80;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Intervals; }
 
     public static void main(final String[] args) {
         new ExtractSequences().instanceMainWithExit(args);

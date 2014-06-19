@@ -9,8 +9,10 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -74,6 +76,9 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Option(doc = "Produce the inverse list", optional = true)
     public boolean INVERT = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Intervals; }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
 

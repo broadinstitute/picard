@@ -39,8 +39,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -73,6 +75,9 @@ public class VcfFormatConverter extends CommandLineProgram {
 
 	@Option(doc="Fail if an index is not available for the input VCF/BCF")
 	public Boolean REQUIRE_INDEX = true;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] argv) {
         new VcfFormatConverter().instanceMainWithExit(argv);

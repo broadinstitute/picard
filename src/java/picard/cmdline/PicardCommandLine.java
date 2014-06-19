@@ -37,7 +37,7 @@ import java.util.TreeSet;
 public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
 
-    // TODO: with/without color...
+    /** Provides ANSI colors for the terminal output **/
     private final static String KNRM = "\u001B[0m"; // reset
     private final static String KBLD = "\u001B[1m"; // Bold
     private final static String KRED = "\u001B[31m";
@@ -86,31 +86,30 @@ public class PicardCommandLine {
 
     private static void printUsage(final ServiceLoader<CommandLineProgram> loader) {
         final StringBuilder builder = new StringBuilder();
-        builder.append(KRED + "USAGE: PicardCommandLine -T <program name> [-h]\n\n" + KNRM);
-        builder.append("Available Programs:\n");
+        builder.append(KBLDRED + "USAGE: PicardCommandLine -T <program name> [-h]\n\n" + KNRM);
+        builder.append(KBLDRED + "Available Programs:\n" + KNRM);
 
-        // Get all group names
-        Map<String, List<CommandLineProgram>> programsMap = new TreeMap<String, List<CommandLineProgram>>();
+        // Get all program groups
+        Map<CommandLineProgramGroup, List<CommandLineProgram>> programsMap = new TreeMap<CommandLineProgramGroup, List<CommandLineProgram>>();
         for (final CommandLineProgram program : loader) {
-            List<CommandLineProgram> programs = programsMap.get(program.groupName);
+            List<CommandLineProgram> programs = programsMap.get(program.getCommandLineProgramGroup());
             if (null == programs) {
-                programsMap.put(program.groupName, programs = new ArrayList<CommandLineProgram>());
+                programsMap.put(program.getCommandLineProgramGroup(), programs = new ArrayList<CommandLineProgram>());
             }
             programs.add(program);
         }
 
-
         // Print out the programs in each group
-        for (final Map.Entry<String, List<CommandLineProgram>> entry : programsMap.entrySet()) {
-            String groupName = entry.getKey();
+        for (final Map.Entry<CommandLineProgramGroup, List<CommandLineProgram>> entry : programsMap.entrySet()) {
+            CommandLineProgramGroup programGroup = entry.getKey();
             builder.append("--------------------------------------------------------------------------------------\n");
-            builder.append(String.format("%-45s\n", groupName));
+            builder.append(String.format("%s%s: %45s%s\n", KRED, programGroup.getName(), programGroup.getDescription(), KNRM));
             for (final CommandLineProgram program : entry.getValue()) {
-                builder.append(String.format("    %-45s%s\n", program.getClass().getSimpleName(), program.getShortUsage()));
+                builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, program.getClass().getSimpleName(), KCYN, program.getShortUsage(), KNRM));
             }
-            builder.append(String.format("\n", groupName));
+            builder.append(String.format("\n"));
         }
-        builder.append("--------------------------------------------------------------------------------------\n");
+        builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
         System.err.println(builder.toString());
     }
 }

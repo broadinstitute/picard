@@ -35,8 +35,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
 import picard.util.RExecutor;
@@ -69,6 +71,9 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
 
     @Option(doc="If set to true, include quality for no-call bases in the distribution.")
     public boolean INCLUDE_NO_CALLS = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private final long[] qCounts  = new long[128];
     private final long[] oqCounts = new long[128];

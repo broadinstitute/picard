@@ -38,8 +38,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -83,6 +85,9 @@ public class ReorderSam extends CommandLineProgram {
                                "same name but a different length.  Highly dangerous, only use if you know what you " +
                                "are doing.")
     public boolean ALLOW_CONTIG_LENGTH_DISCORDANCE = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final Log log = Log.getInstance(ReorderSam.class);
 

@@ -2,8 +2,10 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -93,6 +95,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Option(doc="List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.values());
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     /**
      * Contents of PROGRAM list is transferred to this list during command-line validation, so that an outside

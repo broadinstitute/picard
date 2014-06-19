@@ -101,10 +101,10 @@ public abstract class CommandLineProgram {
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
-    protected final String groupName = "General Tools";
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.None; }
 
     /**
-    * Initialized in parseArgs.  Subclasses may want to access this to do their
+    * InitializeCd in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
     */
     private CommandLineParser commandLineParser;

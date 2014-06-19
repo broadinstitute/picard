@@ -10,8 +10,10 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -43,6 +45,9 @@ public class GatherBamFiles extends CommandLineProgram {
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output BAM file to write.")
     public File OUTPUT;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final Log log = Log.getInstance(GatherBamFiles.class);
 

@@ -16,8 +16,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -49,6 +51,9 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 
     @Option(shortName="S", doc="Optionally one or more samples to retain when building the 'sites-only' VCF.", optional=true)
     public Set<String> SAMPLE = new TreeSet<String>();
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.VcfOrBcf; }
 
     // Stock main method
     public static void main(final String[] args) {

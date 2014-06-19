@@ -42,8 +42,10 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -117,6 +119,9 @@ public class RevertSam extends CommandLineProgram {
             "sample alias in the file and is used only if all the read groups in the input file have the " +
             "same sample alias ", shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional=true)
     public String LIBRARY_NAME;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final static Log log = Log.getInstance(RevertSam.class);
 

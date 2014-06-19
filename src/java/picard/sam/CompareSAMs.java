@@ -32,7 +32,9 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.PositionalArguments;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.Usage;
@@ -63,6 +65,9 @@ public class CompareSAMs extends CommandLineProgram {
 
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final SAMFileReader[] samReaders = new SAMFileReader[2];
     private boolean sequenceDictionariesDiffer;

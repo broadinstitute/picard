@@ -34,8 +34,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.util.RExecutor;
 
@@ -69,6 +71,9 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Option(doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private HistogramGenerator q  = new HistogramGenerator(false);
     private HistogramGenerator oq = new HistogramGenerator(true);

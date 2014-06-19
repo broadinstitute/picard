@@ -6,8 +6,10 @@ import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -82,6 +84,9 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Option(doc = "A flag to create symlinks to the loc file for the X Ten for each tile.", shortName = "X",
             optional = true)
     public Boolean LINK_LOCS = false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     /**
      * Required main method implementation.

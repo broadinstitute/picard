@@ -47,8 +47,10 @@ import htsjdk.samtools.util.SortingLongCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -144,6 +146,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     @Option(doc="This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
             "some of the sorting collections.  If you are running out of memory, try reducing this number.")
     public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;

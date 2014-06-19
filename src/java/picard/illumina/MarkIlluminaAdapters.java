@@ -41,8 +41,10 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -125,6 +127,9 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
     @Option(doc="If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that " +
             "were tied with the adapters being kept).")
     public int NUM_ADAPTERS_TO_KEEP = AdapterMarker.DEFAULT_NUM_ADAPTERS_TO_KEEP;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 

@@ -29,8 +29,10 @@ import htsjdk.samtools.BAMIndexMetaData;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -60,6 +62,9 @@ public class BamIndexStats extends CommandLineProgram {
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file to process.")
     public File INPUT;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
 
     /** Stock main method for a command line program. */

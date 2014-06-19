@@ -8,8 +8,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -42,6 +44,9 @@ public class NormalizeFasta extends CommandLineProgram {
 
     @Option(doc="Truncate sequence names at first whitespace.")
     public boolean TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=false;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Fasta; }
 
     private final Log log = Log.getInstance(NormalizeFasta.class);
 

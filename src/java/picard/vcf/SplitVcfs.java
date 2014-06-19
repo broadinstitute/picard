@@ -16,8 +16,10 @@ import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -59,7 +61,10 @@ public class SplitVcfs extends CommandLineProgram {
     @Option(doc="If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
 
-	private final Log log = Log.getInstance(SplitVcfs.class);
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.VcfOrBcf; }
+
+    private final Log log = Log.getInstance(SplitVcfs.class);
 
 	public static void main(final String[] argv) {
 		new SplitVcfs().instanceMainWithExit(argv);

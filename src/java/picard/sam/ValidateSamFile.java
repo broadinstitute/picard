@@ -33,8 +33,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -103,6 +105,9 @@ public class ValidateSamFile extends CommandLineProgram {
             "Set this number a little lower than the per-process maximum number of file that may be open. " +
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));

@@ -42,8 +42,10 @@ import htsjdk.variant.vcf.VCFUtils;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -86,7 +88,10 @@ public class MergeVcfs extends CommandLineProgram {
 	@Option(shortName="D", doc="The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
 	public File SEQUENCE_DICTIONARY;
 
-	private final Log log = Log.getInstance(MergeVcfs.class);
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.VcfOrBcf; }
+
+    private final Log log = Log.getInstance(MergeVcfs.class);
 
 	public static void main(final String[] argv) {
 		new MergeVcfs().instanceMainWithExit(argv);

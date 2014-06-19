@@ -14,8 +14,10 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -100,7 +102,10 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
             "I.e. if the input contains 10m read pairs and MIN_IDENTICAL_BASES is set to 5, then the mean expected " +
             "group size would be approximately 10 reads.")
     public int MAX_GROUP_RATIO = 500;
-    
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
+
     private final Log log = Log.getInstance(EstimateLibraryComplexity.class);
 
     /**

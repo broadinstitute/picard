@@ -35,8 +35,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -84,6 +86,9 @@ public class MergeSamFiles extends CommandLineProgram {
 
     @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
     public List<String> COMMENT = new ArrayList<String>();
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final int PROGRESS_INTERVAL = 1000000;
 

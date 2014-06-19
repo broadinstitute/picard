@@ -30,8 +30,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -138,6 +140,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 

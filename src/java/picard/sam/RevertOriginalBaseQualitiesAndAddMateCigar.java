@@ -17,8 +17,10 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramGroup;
 import picard.cmdline.OneLineUsage;
 import picard.cmdline.Option;
+import picard.cmdline.PicardCommandLineProgramGroup;
 import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
@@ -61,6 +63,9 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
             + " there are a no original base qualities (if we are to restore) and mate cigars exist."
             + " Set to 0 to never skip the file.")
     public int MAX_RECORDS_TO_EXAMINE = 10000;
+
+    @Override
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final static Log log = Log.getInstance(RevertOriginalBaseQualitiesAndAddMateCigar.class);
 
