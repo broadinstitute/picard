@@ -357,6 +357,7 @@
         <package-and-document-command title="CalculateHsMetrics"                main-class="picard.analysis.directed.CalculateHsMetrics"/>
         <package-and-document-command title="CleanSam"                          main-class="picard.sam.CleanSam"/>
         <package-and-document-command title="CollectAlignmentSummaryMetrics"    main-class="picard.analysis.CollectAlignmentSummaryMetrics"/>
+        <package-and-document-command title="CollectBaseDistributionByCycle"    main-class="picard.analysis.CollectBaseDistributionByCycle"/>
         <package-and-document-command title="CollectGcBiasMetrics"              main-class="picard.analysis.CollectGcBiasMetrics"/>
         <package-and-document-command title="CollectInsertSizeMetrics"          main-class="picard.analysis.CollectInsertSizeMetrics"/>
         <package-and-document-command title="CollectMultipleMetrics"            main-class="picard.analysis.CollectMultipleMetrics"/>
