@@ -74,7 +74,7 @@ public class ExtractSequences extends CommandLineProgram {
     public int LINE_LENGTH = 80;
 
     @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Intervals; }
+    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Fasta; }
 
     public static void main(final String[] args) {
         new ExtractSequences().instanceMainWithExit(args);
