@@ -29,13 +29,10 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,18 +46,16 @@ import java.util.List;
  *
  * @author ktibbett@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Merges alignment data from a SAM or BAM " +
+                "file with additional data stored in an unmapped BAM file and produces a third SAM " +
+                "or BAM file of aligned and unaligned reads. NOTE that this program expects to " +
+                "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
+                "to have the same base name as the reference fasta except with the extension '.dict'",
+        usageShort = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file",
+        programGroup = SamOrBam.class
+)
 public class MergeBamAlignment extends CommandLineProgram {
-
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Merges alignment data from a SAM or BAM " +
-            "file with additional data stored in an unmapped BAM file and produces a third SAM " +
-            "or BAM file of aligned and unaligned reads. NOTE that this program expects to " +
-            "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
-            "to have the same base name as the reference fasta except with the extension '.dict'";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file";
 
     @Option(shortName="UNMAPPED",
 		    doc="Original SAM or BAM file of unmapped reads, which must be in queryname order.")
@@ -189,9 +184,6 @@ public class MergeBamAlignment extends CommandLineProgram {
 
     @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
     public Boolean ADD_MATE_CIGAR = true;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 

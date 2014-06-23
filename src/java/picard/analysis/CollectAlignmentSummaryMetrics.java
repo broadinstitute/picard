@@ -31,13 +31,9 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.IlluminaUtil;
 
 import java.io.File;
@@ -65,17 +61,16 @@ import java.util.Set;
  * 
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n",
+        usageShort = "Writes summary alignment metrics for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     // Usage and parameters
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Writes summary alignment metrics for a SAM or BAM file";
 
     @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;
@@ -95,9 +90,6 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private AlignmentSummaryMetricsCollector collector;
 

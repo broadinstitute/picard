@@ -30,13 +30,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -75,23 +72,21 @@ import java.util.concurrent.TimeUnit;
  *
  * @author jburke@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Determine the barcode for each read in an Illumina lane.\n" +
+                "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. " +
+                "An output file contains a line for each read in the tile, aligned with the regular basecall output. \n" +
+                "The output file contains the following tab-separated columns: \n" +
+                "    * read subsequence at barcode position\n" +
+                "    * Y or N indicating if there was a barcode match\n" +
+                "    * matched barcode sequence\n" +
+                "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n",
+        usageShort = "Tool to determine the barcode for each read in an Illumina lane",
+        programGroup = Illumina.class
+)
 public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE =
-            getStandardUsagePreamble() + "Determine the barcode for each read in an Illumina lane.\n" +
-                    "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. " +
-                    "An output file contains a line for each read in the tile, aligned with the regular basecall output. \n" +
-                    "The output file contains the following tab-separated columns: \n" +
-                    "    * read subsequence at barcode position\n" +
-                    "    * Y or N indicating if there was a barcode match\n" +
-                    "    * matched barcode sequence\n" +
-                    "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Tool to determine the barcode for each read in an Illumina lane";
 
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -140,9 +135,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.")
     public int NUM_PROCESSORS = 1;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     private static final Log LOG = Log.getInstance(ExtractIlluminaBarcodes.class);
 
@@ -240,7 +232,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 return 4;
             }
         }
-
 
         // Finish metrics tallying.
         int totalReads = noMatchMetric.READS;
@@ -409,7 +400,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         barcodesParser.close();
     }
 
-
     /**
      * Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
      * the basecalls directory and determine to which barcode each read should be assigned.
@@ -493,7 +483,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             return result;
         }
 
-
         /**
          * Adds the non-calculated
          *
@@ -566,7 +555,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         }
 
-
         // These methods return the results of the extraction
         public synchronized Map<String, BarcodeMetric> getMetrics() {
             return this.metrics;
@@ -584,7 +572,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 //Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
                 //is non-overlapping sets of files so make the  data providers in the individual threads for PerTileBarcodeExtractors
                 //so they are not all waiting for each others file operations
-
 
                 //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
                 //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
@@ -646,7 +633,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             // base is a mismatch.
             int numMismatchesInBestBarcode = totalBarcodeReadBases + 1;
             int numMismatchesInSecondBestBarcode = totalBarcodeReadBases + 1;
-
 
             for (final BarcodeMetric barcodeMetric : metrics.values()) {
                 final int numMismatches = countMismatches(barcodeMetric.barcodeBytes, readSubsequences, qualityScores);

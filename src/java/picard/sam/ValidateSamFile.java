@@ -33,13 +33,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,16 +49,12 @@ import java.util.List;
  *
  * @author Doug Voet
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Read a SAM or BAM file and report on its validity.",
+        usageShort = "Validates a SAM or BAM file",
+        programGroup = SamOrBam.class
+)
 public class ValidateSamFile extends CommandLineProgram {
-
-    @Usage
-    public final String USAGE =
-		    getStandardUsagePreamble() +
-		    "Read a SAM or BAM file and report on its validity.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Validates a SAM or BAM file";
 
     public enum Mode { VERBOSE, SUMMARY }
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -105,9 +98,6 @@ public class ValidateSamFile extends CommandLineProgram {
             "Set this number a little lower than the per-process maximum number of file that may be open. " +
             "This number can be found by executing the 'ulimit -n' command on a Unix system.")
     public int MAX_OPEN_TEMP_FILES = 8000;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] args) {
         System.exit(new ValidateSamFile().instanceMain(args));

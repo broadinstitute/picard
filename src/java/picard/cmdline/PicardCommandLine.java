@@ -1,9 +1,13 @@
 package picard.cmdline;
 
 import htsjdk.samtools.util.Log;
+import picard.sam.SamToFastq;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -49,6 +53,9 @@ public class PicardCommandLine {
     private final static String KWHT = "\u001B[37m";
     private final static String KBLDRED = "\u001B[1m\u001B[31m";
 
+    /** Override this if you wish to search for command line programs in different packages **/
+    protected static String[] packageList = {"picard"};
+
     public int instanceMain(final String[] args) {
         final CommandLineProgram program = extractCommandLineProgram(args);
         // we can lop off the first two arguments but it requires an array copy or alternatively we could update CLP to remove them
@@ -62,50 +69,82 @@ public class PicardCommandLine {
     }
 
     private static CommandLineProgram extractCommandLineProgram(final String[] args) {
-        final ServiceLoader<CommandLineProgram> loader = ServiceLoader.load(CommandLineProgram.class);
+        /** Get the set of classes that are our command line programs **/
+        final ClassFinder classFinder = new ClassFinder();
+        for (final String pkg : packageList) {
+            classFinder.find(pkg, CommandLineProgram.class);
+        }
+        final Set<Class<?>> classes = new HashSet<Class<?>>();
+        for (final Class clazz : classFinder.getClasses()) {
+            // No interfaces, synthetic, primitive, local, or abstract classes.
+            if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass() && !Modifier.isAbstract(clazz.getModifiers())) {
+                classes.add(clazz);
+            }
+        }
+
         if (args.length < 2) {
-            printUsage(loader);
+            printUsage(classes);
             System.exit(1);
         } else {
             if (!args[0].equals("-T") || args[0].equals("-h")) {
-                printUsage(loader);
+                printUsage(classes);
                 System.exit(1);
             } else {
-
-                for (final CommandLineProgram program : loader) {
-                    if (program.getClass().getSimpleName().equals(args[1])) {
-                        return program;
+                for (final Class clazz : classes) {
+                    if (clazz.getSimpleName().equals(args[1])) {
+                        try {
+                            return (CommandLineProgram)clazz.newInstance();
+                        } catch (InstantiationException e) {
+                            throw new RuntimeException(e);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
-                printUsage(loader);
+                printUsage(classes);
                 System.exit(1);
             }
         }
         return null;
     }
 
-    private static void printUsage(final ServiceLoader<CommandLineProgram> loader) {
+    private static void printUsage(final Set<Class<?>> classes) {
         final StringBuilder builder = new StringBuilder();
-        builder.append(KBLDRED + "USAGE: PicardCommandLine -T <program name> [-h]\n\n" + KNRM);
+        builder.append(KBLDRED + "USAGE: PicardCommandLine -T " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
         builder.append(KBLDRED + "Available Programs:\n" + KNRM);
 
-        // Get all program groups
-        Map<CommandLineProgramGroup, List<CommandLineProgram>> programsMap = new TreeMap<CommandLineProgramGroup, List<CommandLineProgram>>();
-        for (final CommandLineProgram program : loader) {
-            List<CommandLineProgram> programs = programsMap.get(program.getCommandLineProgramGroup());
-            if (null == programs) {
-                programsMap.put(program.getCommandLineProgramGroup(), programs = new ArrayList<CommandLineProgram>());
+        // Maps a subclass of CommandLineProgramGroup to a list of CommandLineProgramProperties annotations that have that subclass as their programGroup
+        final Map<Class, List<CommandLineProgramProperties>> classToPropertiesMap = new TreeMap<Class, List<CommandLineProgramProperties>>(CommandLineProgramGroup.comparator);
+        // Maps a CommandLineProgramProperties property to a specific CommandLineProgramGroup subclass
+        final Map<CommandLineProgramProperties, Class> propertiesToClassMap = new HashMap<CommandLineProgramProperties, Class>();
+        for (final Class clazz : classes) {
+            final CommandLineProgramProperties property = (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
+            if (null == property) {
+                throw new RuntimeException("No CommandLineProgramProperties annotation for: " + clazz.getSimpleName());
             }
-            programs.add(program);
+            List<CommandLineProgramProperties> programs = classToPropertiesMap.get(property.programGroup());
+            if (null == programs) {
+                classToPropertiesMap.put(property.programGroup(), programs = new ArrayList<CommandLineProgramProperties>());
+            }
+            programs.add(property);
+            propertiesToClassMap.put(property, clazz);
         }
 
         // Print out the programs in each group
-        for (final Map.Entry<CommandLineProgramGroup, List<CommandLineProgram>> entry : programsMap.entrySet()) {
-            CommandLineProgramGroup programGroup = entry.getKey();
+        for (final Map.Entry<Class, List<CommandLineProgramProperties>> entry : classToPropertiesMap.entrySet()) {
+            Class propertyClass = entry.getKey();
+            CommandLineProgramGroup programGroup;
+            try {
+                programGroup = (CommandLineProgramGroup)propertyClass.newInstance();
+            } catch (InstantiationException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
             builder.append("--------------------------------------------------------------------------------------\n");
-            builder.append(String.format("%s%s: %45s%s\n", KRED, programGroup.getName(), programGroup.getDescription(), KNRM));
-            for (final CommandLineProgram program : entry.getValue()) {
-                builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, program.getClass().getSimpleName(), KCYN, program.getShortUsage(), KNRM));
+            builder.append(String.format("%s%-48s %-45s%s\n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
+            for (final CommandLineProgramProperties property : entry.getValue()) {
+                builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, propertiesToClassMap.get(property).getSimpleName(), KCYN, property.usageShort(), KNRM));
             }
             builder.append(String.format("\n"));
         }

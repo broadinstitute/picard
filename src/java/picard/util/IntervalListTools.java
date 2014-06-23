@@ -9,13 +9,10 @@ import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Intervals;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -30,15 +27,14 @@ import java.util.Set;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = " General tool for manipulating interval lists, " +
+                "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
+                "merge and sort them.  Other options are controlled by arguments.",
+        usageShort = "General tool for manipulating interval lists",
+        programGroup = Intervals.class
+)
 public class IntervalListTools extends CommandLineProgram {
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() + " General tool for manipulating interval lists, " +
-            "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
-            "merge and sort them.  Other options are controlled by arguments.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "General tool for manipulating interval lists";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
@@ -76,9 +72,6 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Option(doc = "Produce the inverse list", optional = true)
     public boolean INVERT = false;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Intervals; }
 
     private static final Log LOG = Log.getInstance(IntervalListTools.class);
 
@@ -121,7 +114,6 @@ public class IntervalListTools extends CommandLineProgram {
                 return IntervalList.difference(list1, list2);
             }
         };
-
 
         String helpdoc;
 
@@ -215,7 +207,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
         final List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
-
 
         // Decide on a PG ID and make a program group
         final SAMFileHeader header = result.getHeader();

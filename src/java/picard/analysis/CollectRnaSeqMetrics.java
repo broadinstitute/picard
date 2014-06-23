@@ -38,13 +38,9 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -52,18 +48,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Program to collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
+                " coding, intronic, UTR, intergenic, ribosomal.\n" +
+                "Also determines strand-specificity for strand-specific libraries.",
+        usageShort = "Writes RNA alignment metrics for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
-
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() +
-            "Program to collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
-            " coding, intronic, UTR, intergenic, ribosomal.\n" +
-            "Also determines strand-specificity for strand-specific libraries.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Writes RNA alignment metrics for a SAM or BAM file";
 
     @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;
@@ -92,9 +85,6 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private RnaSeqMetricsCollector collector;
 
@@ -162,6 +152,5 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             }
         }
     }
-
 
 }

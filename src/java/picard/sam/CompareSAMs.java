@@ -32,12 +32,9 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
-import picard.cmdline.PicardCommandLineProgramGroup;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.PositionalArguments;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.HashMap;
@@ -50,24 +47,19 @@ import java.util.Map;
 
  * @author alecw@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "USAGE: CompareSAMS <SAMFile1> <SAMFile2>\n" +
+                "Compares the headers of the two input SAM or BAM files, and, if possible, the SAMRecords. " +
+                "For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand. " +
+                "Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input, " +
+                "or are missing in one of the files",
+        usageShort = "Compares two input SAM or BAM files",
+        programGroup = SamOrBam.class
+)
 public class CompareSAMs extends CommandLineProgram {
-
-    @Usage
-    public final String USAGE = "USAGE: CompareSAMS <SAMFile1> <SAMFile2>\n" +
-        "Compares the headers of the two input SAM or BAM files, and, if possible, the SAMRecords. " +
-        "For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand. " +
-        "Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input, " +
-        "or are missing in one of the files";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Compares two input SAM or BAM files";
 
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final SAMFileReader[] samReaders = new SAMFileReader[2];
     private boolean sequenceDictionariesDiffer;
@@ -138,7 +130,6 @@ public class CompareSAMs extends CommandLineProgram {
                 return false;
         }
     }
-
 
     private boolean compareCoordinateSortedAlignments() {
         final SecondaryOrSupplementarySkippingIterator itLeft =
@@ -351,7 +342,6 @@ public class CompareSAMs extends CommandLineProgram {
         }
         return ret;
     }
-
 
     private boolean compareHeaders() {
         final SAMFileHeader h1 = samReaders[0].getFileHeader();

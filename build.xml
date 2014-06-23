@@ -234,20 +234,8 @@
         </testng>
     </target>
 
-    <!-- TODO: confirm to build annotations, we need to clean/picard-annotations-jar/clean/picard-annotations-jar -->
-    <target name="picard-annotations-jar" depends="compile">
-        <mkdir dir="${classes}"/>
-        <jar destfile="${lib}/picard-annotations.jar" compress="no">
-            <service type="javax.annotation.processing.Processor" provider="picard.cmdline.CommandLineAnnotationProcessor"/>
-            <fileset dir="${classes}" includes="picard/cmdline/**/*.*"/>
-            <manifest>
-                <attribute name="Class-Path" value="$picard-${picard-version}.jar"/>
-            </manifest>
-        </jar>
-    </target>
-
     <target name="picard-jar" depends="compile"
-            description="Builds picard-${picard-version}.jar for inclusion in other projects">
+        description="Builds the main picard-${picard-version}.jar">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-${picard-version}.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>

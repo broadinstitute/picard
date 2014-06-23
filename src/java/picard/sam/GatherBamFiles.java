@@ -10,13 +10,10 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.List;
@@ -28,16 +25,16 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Concatenates one or more BAM files together as efficiently as possible. Assumes that the " +
+                "list of BAM files provided as INPUT are in the order that they should be concatenated and simply concatenates the bodies " +
+                "of the BAM files while retaining the header from the first file.  Operates via copying of the gzip blocks directly for speed " +
+                "but also supports generation of an MD5 on the output and indexing of the output BAM file. Only support BAM files, does not " +
+                "support SAM files.",
+        usageShort = "Concatenates one or more BAM files together as efficiently as possible",
+        programGroup = SamOrBam.class
+)
 public class GatherBamFiles extends CommandLineProgram {
-    @Usage public final String USAGE = "Concatenates one or more BAM files together as efficiently as possible. Assumes that the " +
-            "list of BAM files provided as INPUT are in the order that they should be concatenated and simply concatenates the bodies " +
-            "of the BAM files while retaining the header from the first file.  Operates via copying of the gzip blocks directly for speed " +
-            "but also supports generation of an MD5 on the output and indexing of the output BAM file. Only support BAM files, does not " +
-            "support SAM files.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Concatenates one or more BAM files together as efficiently as possible";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="One or more BAM files or text files containing lists of BAM files one per line.")
@@ -45,9 +42,6 @@ public class GatherBamFiles extends CommandLineProgram {
 
     @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output BAM file to write.")
     public File OUTPUT;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final Log log = Log.getInstance(GatherBamFiles.class);
 
@@ -107,6 +101,5 @@ public class GatherBamFiles extends CommandLineProgram {
 
         out.close();
     }
-
 
 }

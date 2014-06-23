@@ -8,13 +8,10 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,14 +21,14 @@ import java.io.IOException;
  * Little program to "normalize" a fasta file to ensure that all line of sequence are the
  * same length, and are a reasonable length!
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Takes any file that conforms to the fasta format and " +
+                "normalizes it so that all lines of sequence except the last line per named sequence " +
+                "are of the same length.",
+        usageShort = "Normalizes lines of sequence in a fasta file to be of the same length",
+        programGroup = Fasta.class
+)
 public class NormalizeFasta extends CommandLineProgram {
-    @Usage public final String USAGE = "Takes any file that conforms to the fasta format and " +
-            "normalizes it so that all lines of sequence except the last line per named sequence " +
-            "are of the same length.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Normalizes lines of sequence in a fasta file to be of the same length";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input fasta file to normalize.")
     public File INPUT;
@@ -44,9 +41,6 @@ public class NormalizeFasta extends CommandLineProgram {
 
     @Option(doc="Truncate sequence names at first whitespace.")
     public boolean TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=false;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Fasta; }
 
     private final Log log = Log.getInstance(NormalizeFasta.class);
 

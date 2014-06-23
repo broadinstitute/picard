@@ -13,13 +13,10 @@ import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.Arrays;
@@ -29,14 +26,14 @@ import java.util.Arrays;
  *
  * @author mdepristo
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Replaces all read groups in the INPUT file with a new read group and assigns " +
+                "all reads to this read group in the OUTPUT BAM",
+        usageShort = "Replaces read groups in a BAM or SAM file with new read groups",
+        programVersion = "1.0",
+        programGroup = SamOrBam.class
+)
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-    @Usage(programVersion="1.0")
-    public String USAGE = "Replaces all read groups in the INPUT file with a new read group and assigns " +
-                          "all reads to this read group in the OUTPUT BAM";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Replaces read groups in a BAM or SAM file with new read groups";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam).")
     public File INPUT = null;
@@ -74,9 +71,6 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
 
     @Option(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
     public Integer RGPI;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 

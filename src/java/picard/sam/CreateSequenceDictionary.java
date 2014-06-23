@@ -34,13 +34,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Fasta;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -55,17 +52,14 @@ import java.util.Set;
  * Create a SAM/BAM file from a fasta containing reference sequence.  The output SAM file contains a header but no
  * SAMRecords, and the header contains only sequence records.
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.\n",
+        usageShort = "Creates a SAM or BAM file from reference sequence in fasta format",
+        programGroup = Fasta.class
+)
 public class CreateSequenceDictionary extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE =
-            "Usage: " + getClass().getName() + " [options]\n\n" +
-                    "Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Creates a SAM or BAM file from reference sequence in fasta format";
 
     @Option(doc = "Input reference fasta or fasta.gz", shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME)
     public File REFERENCE;
@@ -90,9 +84,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
 
     @Option(doc = "Stop after writing this many sequences.  For testing.")
     public int NUM_SEQUENCES = Integer.MAX_VALUE;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Fasta; }
 
     private final MessageDigest md5;
 
@@ -136,7 +127,6 @@ public class CreateSequenceDictionary extends CommandLineProgram {
         samWriter.close();
         return 0;
     }
-
 
     /**
      * Read all the sequences from the given reference file, and convert into SAMSequenceRecords

@@ -35,13 +35,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,16 +49,13 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Merges multiple SAM/BAM files into one file.\n",
+        usageShort = "Merges multiple SAM or BAM files into one file",
+        programGroup = SamOrBam.class
+)
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
-
-    // Usage and parameters
-    @Usage
-    public String USAGE = "Merges multiple SAM/BAM files into one file.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Merges multiple SAM or BAM files into one file";
 
     @Option(shortName="I", doc="SAM or BAM input file", minElements=1)
     public List<File> INPUT = new ArrayList<File>();
@@ -86,9 +80,6 @@ public class MergeSamFiles extends CommandLineProgram {
 
     @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
     public List<String> COMMENT = new ArrayList<String>();
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private static final int PROGRESS_INTERVAL = 1000000;
 

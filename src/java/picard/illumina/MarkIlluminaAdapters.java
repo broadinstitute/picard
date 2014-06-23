@@ -41,13 +41,10 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.ClippingUtility;
@@ -64,19 +61,17 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
  *
  * @author Tim Fennell (adapted by mborkan@broadinstitute.org)
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.\n" +
+                "Clear any existing adapter-trimming tags (XT:i:).\n" +
+                "Only works for unaligned files in query-name order.\n"+
+                "Note: This is a utility program and will not be run in the pipeline.\n",
+        usageShort = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags",
+        programGroup = Illumina.class
+)
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE =
-            getStandardUsagePreamble() +  "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.\n" +
-                    "Clear any existing adapter-trimming tags (XT:i:).\n" +
-                    "Only works for unaligned files in query-name order.\n"+
-                    "Note: This is a utility program and will not be run in the pipeline.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
@@ -127,9 +122,6 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
     @Option(doc="If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that " +
             "were tied with the adapters being kept).")
     public int NUM_ADAPTERS_TO_KEEP = AdapterMarker.DEFAULT_NUM_ADAPTERS_TO_KEEP;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     private static final Log log = Log.getInstance(MarkIlluminaAdapters.class);
 

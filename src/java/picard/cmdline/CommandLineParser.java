@@ -46,6 +46,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -168,7 +169,6 @@ public class CommandLineParser {
     // For non-nested, empty string.  For nested, prefix + "."
     private final String prefixDot;
 
-    private String usagePreamble;
     // null if no @PositionalArguments annotation
     private Field positionalArguments;
     private int minPositionalArguments;
@@ -195,7 +195,7 @@ public class CommandLineParser {
     // In case implementation wants to get at arg for some reason.
     private String[] argv;
 
-    private String programVersion = "";
+    private String programVersion = null;
 
     // The command line used to launch this program, including non-null default options that
     // weren't explicitly specified. This is used for logging and debugging.
@@ -206,6 +206,9 @@ public class CommandLineParser {
      */
     public File IGNORE_THIS_PROPERTY;
 
+    // The associated program properties using the CommandLineProgramProperties annotation
+    private CommandLineProgramProperties programProperties = null;
+
     /**
      * Prepare for parsing command line arguments, by validating annotations.
      * @param callerOptions This object contains annotations that define the acceptable command-line options,
@@ -213,6 +216,54 @@ public class CommandLineParser {
      */
     public CommandLineParser(final Object callerOptions) {
         this(callerOptions, "");
+    }
+
+    private CommandLineProgramProperties getCommandLineProgramProperties() {
+        if (null != programProperties) {
+            return this.programProperties;
+        }
+        try {
+            return this.callerOptions.getClass().getAnnotation(CommandLineProgramProperties.class);
+        } catch (ClassCastException e) {
+            throw new CommandLineParserDefinitionException
+                    ("@CommandLineProgramProperties can only be applied to a CommandLineProgram.");
+        }
+    }
+
+    private String getUsagePreamble() {
+        CommandLineProgramProperties programProperties = this.getCommandLineProgramProperties();
+        String usagePreamble = "";
+        if (null != programProperties) {
+            usagePreamble += programProperties.usage();
+        }
+        else if (positionalArguments == null) {
+            usagePreamble += defaultUsagePreamble;
+        }
+        else {
+            usagePreamble += defaultUsagePreambleWithPositionalArguments;
+        }
+        if (null != this.programVersion && 0 < this.programVersion.length()) {
+            usagePreamble += "Version: " + getProgramVersion() + "\n";
+        }
+        return usagePreamble;
+    }
+
+    public String getProgramVersion() {
+        if (null != programVersion) {
+            return programVersion;
+        }
+        CommandLineProgramProperties programProperties = this.getCommandLineProgramProperties();
+        if (null != programProperties && programProperties.programVersion().length() > 0) {
+            this.programVersion = programProperties.programVersion();
+        }
+        else {
+            this.programVersion = "";
+        }
+        return this.programVersion;
+    }
+
+    public Class getCommandLineProgramGroup() {
+        return this.getCommandLineProgramProperties().programGroup();
     }
 
     /**
@@ -230,9 +281,6 @@ public class CommandLineParser {
             if (field.getAnnotation(PositionalArguments.class) != null) {
                 handlePositionalArgumentAnnotation(field);
             }
-            if (field.getAnnotation(Usage.class) != null) {
-                handleUsageAnnotation(field);
-            }
             if (field.getAnnotation(Option.class) != null) {
                 handleOptionAnnotation(field);
             } else if (!isCommandLineProgram() && field.getAnnotation(NestedOptions.class) != null) {
@@ -240,14 +288,6 @@ public class CommandLineParser {
                 // CommandLineParsers until after parsing options for this parser, in case CommandLineProgram
                 // wants to do something dynamic based on values for this parser.
                 handleNestedOptionsAnnotation(field);
-            }
-        }
-
-        if (usagePreamble == null) {
-            if (positionalArguments == null) {
-                usagePreamble = defaultUsagePreamble;
-            } else {
-                usagePreamble = defaultUsagePreambleWithPositionalArguments;
             }
         }
     }
@@ -275,7 +315,7 @@ public class CommandLineParser {
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
         if (prefix.isEmpty()) {
-            stream.print(usagePreamble);
+            stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
             stream.println("\nVersion: " + getVersion());
             stream.println("\n\nOptions:\n");
 
@@ -337,7 +377,7 @@ public class CommandLineParser {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a name=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
-        stream.println("<p>" + htmlEscape(usagePreamble) + "</p>");
+        stream.println("<p>" + htmlEscape(getUsagePreamble()) + "</p>");
         boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!optionDefinition.isCommon || printCommon) {
@@ -888,27 +928,6 @@ public class CommandLineParser {
         }
     }
 
-    private void handleUsageAnnotation(final Field field) {
-        if (usagePreamble != null) {
-            throw new CommandLineParserDefinitionException
-                    ("@Usage cannot be used more than once in an option class.");
-        }
-        try {
-            field.setAccessible(true);
-            usagePreamble = (String)field.get(callerOptions);
-            final Usage usageAnnotation = field.getAnnotation(Usage.class);
-            if (usageAnnotation.programVersion().length() > 0) {
-                this.programVersion = usageAnnotation.programVersion();
-                usagePreamble += "Version: " + usageAnnotation.programVersion() + "\n";
-            }
-        } catch (IllegalAccessException e) {
-            throw new CommandLineParserDefinitionException("@Usage data member must be public");
-        } catch (ClassCastException e) {
-            throw new CommandLineParserDefinitionException
-                    ("@Usage can only be applied to a String data member.");
-        }
-    }
-
     private void handlePositionalArgumentAnnotation(final Field field) {
         if (positionalArguments != null) {
             throw new CommandLineParserDefinitionException
@@ -1205,8 +1224,6 @@ public class CommandLineParser {
             throw new RuntimeException("Should never happen", e);
         }
     }
-
-    public String getProgramVersion() { return programVersion; }
 
     /**
      * The commandline used to run this program, including any default args that

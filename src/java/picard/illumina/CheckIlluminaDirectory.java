@@ -6,13 +6,10 @@ import htsjdk.samtools.util.ProcessExecutor;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.IlluminaFileUtil;
@@ -32,19 +29,17 @@ import java.util.TreeSet;
  * Program to check a lane of an Illumina output directory.  This program checks that files exist, are non-zero in length, for every tile/cycle and
  * specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
+                "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
+                "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n",
+        usageShort = "Tool to check a lane of an Illumina output directory",
+        programGroup = Illumina.class
+)
 public class CheckIlluminaDirectory extends CommandLineProgram {
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE = getStandardUsagePreamble() +
-            "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
-            "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Tool to check a lane of an Illumina output directory";
 
     @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -85,16 +80,12 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
             optional = true)
     public Boolean LINK_LOCS = false;
 
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
-
     /**
      * Required main method implementation.
      */
     public static void main(final String[] argv) {
         new CheckIlluminaDirectory().instanceMainWithExit(argv);
     }
-
 
     @Override
     protected int doWork() {

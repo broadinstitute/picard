@@ -14,15 +14,11 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
-import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 
@@ -33,18 +29,14 @@ import java.io.File;
  * An index file is created for the output file by default. Using an output file name with a ".gz"
  * extension will create gzip-compressed output.
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Splits an input VCF or BCF file into two VCF files, one for indel records and one for SNPs. The" +
+                "headers of the two output files will be identical. An index file is created and a" +
+                "sequence dictionary is required by default.",
+        usageShort = "Splits an input VCF or BCF file into two VCF or BCF files",
+        programGroup = VcfOrBcf.class
+)
 public class SplitVcfs extends CommandLineProgram {
-
-	@Usage
-	public final String USAGE =
-			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Splits an input VCF or BCF file into two VCF files, one for indel records and one for SNPs. The" +
-			"headers of the two output files will be identical. An index file is created and a" +
-			"sequence dictionary is required by default.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Splits an input VCF or BCF file into two VCF or BCF files";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
 	public File INPUT;
@@ -60,9 +52,6 @@ public class SplitVcfs extends CommandLineProgram {
 
     @Option(doc="If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.VcfOrBcf; }
 
     private final Log log = Log.getInstance(SplitVcfs.class);
 

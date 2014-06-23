@@ -16,13 +16,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 import java.util.Set;
@@ -33,15 +30,14 @@ import java.util.TreeSet;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
+                "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
+                "any support variant format including .vcf, .vcf.gz or .bcf.",
+        usageShort = "Creates a VCF bereft of genotype information from an input VCF or BCF",
+        programGroup = VcfOrBcf.class
+)
 public class MakeSitesOnlyVcf extends CommandLineProgram {
-    @Usage
-    public final String usage = "Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining " +
-            "all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be " +
-            "any support variant format including .vcf, .vcf.gz or .bcf.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Creates a VCF bereft of genotype information from an input VCF or BCF";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF or BCF")
     public File INPUT;
@@ -51,9 +47,6 @@ public class MakeSitesOnlyVcf extends CommandLineProgram {
 
     @Option(shortName="S", doc="Optionally one or more samples to retain when building the 'sites-only' VCF.", optional=true)
     public Set<String> SAMPLE = new TreeSet<String>();
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.VcfOrBcf; }
 
     // Stock main method
     public static void main(final String[] args) {

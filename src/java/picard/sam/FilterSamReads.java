@@ -39,13 +39,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,7 +55,12 @@ import java.text.DecimalFormat;
  * <p/>
  * $Id$
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage =                 "Produces a new SAM or BAM file by including or excluding aligned reads " +
+                "or a list of reads names supplied in the READ_LIST_FILE from the INPUT SAM or BAM file.\n",
+        usageShort = "Creates a new SAM or BAM file by including or excluding aligned reads",
+        programGroup = SamOrBam.class
+)
 public class FilterSamReads extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(FilterSamReads.class);
@@ -80,14 +82,6 @@ public class FilterSamReads extends CommandLineProgram {
             return this.name() + " [" + description + "]";
         }
     }
-
-    @Usage
-    public String USAGE =
-            "Produces a new SAM or BAM file by including or excluding aligned reads " +
-                    "or a list of reads names supplied in the READ_LIST_FILE from the INPUT SAM or BAM file.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Creates a new SAM or BAM file by including or excluding aligned reads";
 
     @Option(doc = "The SAM or BAM file that will be filtered.",
         optional = false,
@@ -115,9 +109,6 @@ public class FilterSamReads extends CommandLineProgram {
     @Option(doc = "SAM or BAM file to write read excluded results to",
         optional = false, shortName = "O")
     public File OUTPUT;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private void filterReads(final FilteringIterator filteringIterator) {
 

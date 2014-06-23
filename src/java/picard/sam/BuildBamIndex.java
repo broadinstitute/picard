@@ -34,13 +34,10 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.net.URL;
@@ -50,16 +47,14 @@ import java.net.URL;
  *
  * @author Martha Borkan
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Generates a BAM index (.bai) file.",
+        usageShort = "Generates a BAM index (.bai) file",
+        programGroup = SamOrBam.class
+)
 public class BuildBamIndex extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(BuildBamIndex.class);
-
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Generates a BAM index (.bai) file";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file or URL to process. Must be sorted in coordinate order.")
@@ -72,9 +67,6 @@ public class BuildBamIndex extends CommandLineProgram {
             doc="The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
                 "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional=true)
     public File OUTPUT;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {

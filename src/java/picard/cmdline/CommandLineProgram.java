@@ -101,8 +101,6 @@ public abstract class CommandLineProgram {
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.None; }
-
     /**
     * InitializeCd in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
@@ -279,7 +277,6 @@ public abstract class CommandLineProgram {
         return commandLineParser.getProgramVersion();
     }
 
-
     /**
      * @return Version stored in the manifest of the jarfile.
      */
@@ -317,24 +314,4 @@ public abstract class CommandLineProgram {
     public Map<String, Object> getNestedOptionsForHelp() {
         return getNestedOptions();
     }
-
-    /**
-     * Returns a SHORT description of the tool
-     */
-    public String getShortUsage(){
-        final StringBuilder builder = new StringBuilder();
-        for (final Field field : this.getClass().getDeclaredFields()){
-            for (final Annotation annotation : field.getDeclaredAnnotations()){
-                if (OneLineUsage.class.isAssignableFrom(annotation.getClass())){
-                    try {
-                        builder.append(field.get(this));
-                    } catch (final IllegalAccessException e) {
-                        builder.append("Class ").append(getClass()).append(" does not have a @OneLineUsage annotation.");
-                    }
-                }
-            }
-        }
-        return builder.toString();
-    }
-
 }

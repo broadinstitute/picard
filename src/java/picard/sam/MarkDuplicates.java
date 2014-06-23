@@ -45,15 +45,10 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.SortingLongCollection;
 import picard.PicardException;
-import picard.cmdline.CommandLineParser;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -70,7 +65,12 @@ import java.util.Set;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
+                "All records are then written to the output file with the duplicate records flagged.",
+        usageShort = "Given a SAM or BAM file, creates a SAM or BAM file with duplicate records marked",
+        programGroup = SamOrBam.class
+)
 public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     private final Log log = Log.getInstance(MarkDuplicates.class);
 
@@ -78,15 +78,6 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
      * If more than this many sequences in SAM file, don't spill to disk because there will not
      * be enough file handles.
      */
-
-    @Usage
-    public final String USAGE =
-		    CommandLineParser.getStandardUsagePreamble(getClass()) +
-            "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
-            "All records are then written to the output file with the duplicate records flagged.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Given a SAM or BAM file, creates a SAM or BAM file with duplicate records marked";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
 		    doc="One or more input SAM or BAM files to analyze. Must be coordinate sorted.  May not be a stream because file is read twice.")
@@ -146,9 +137,6 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
     @Option(doc="This number, plus the maximum RAM available to the JVM, determine the memory footprint used by " +
             "some of the sorting collections.  If you are running out of memory, try reducing this number.")
     public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
@@ -269,7 +257,6 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
                     ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
                 }
 
-
                 if (recordInFileIndex == nextDuplicateIndex) {
                     rec.setDuplicateReadFlag(true);
 
@@ -312,7 +299,6 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         reportMemoryStats("Before output close");
         out.close();
         reportMemoryStats("After output close");
-
 
         // Write out the metrics
         final MetricsFile<DuplicationMetrics,Double> file = getMetricsFile();
@@ -574,8 +560,6 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             else return ReadEnds.FF;
         }
     }
-
-
 
     /** Calculates a score for the read which is the sum of scores over Q20. */
     private short getScore(final SAMRecord rec) {

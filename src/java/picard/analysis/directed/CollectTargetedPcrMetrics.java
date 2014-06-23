@@ -4,11 +4,9 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
 import picard.analysis.MetricAccumulationLevel;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
 import java.util.List;
@@ -18,18 +16,15 @@ import java.util.Set;
  * Collect metric information for target pcr metrics runs.  See CollectTargetedMetrics and TargetPcrMetricsCollector for
  * more information
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage =                 "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
+                "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
+                "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
+                "mean coverage information for every target.",
+        usageShort = "Writes Targeted PCR-related metrics for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {
-
-    @Usage
-    public final String USAGE =
-            "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
-                    "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
-                    "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
-                    "mean coverage information for every target.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Writes Targeted PCR-related metrics for a SAM or BAM file";
 
     @Option(shortName = "AI", doc = "An interval list file that contains the locations of the baits used.")
     public File AMPLICON_INTERVALS;

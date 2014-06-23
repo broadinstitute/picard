@@ -33,12 +33,9 @@ import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -53,15 +50,14 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Program to generate a data table and chart of " +
+                "mean quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
+                "merged BAMs.",
+        usageShort = "Writes mean quality by cycle for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class MeanQualityByCycle extends SinglePassSamProgram {
-
-	public final String USAGE = getStandardUsagePreamble() + "Program to generate a data table and chart of " +
-			"mean quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
-			"merged BAMs.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Writes mean quality by cycle for a SAM or BAM file";
 
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
@@ -71,9 +67,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
     @Option(doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private HistogramGenerator q  = new HistogramGenerator(false);
     private HistogramGenerator oq = new HistogramGenerator(true);
@@ -134,7 +127,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             }
         }
 
-
         Histogram<Integer> getMeanQualityHistogram() {
             final String label = useOriginalQualities ? "MEAN_ORIGINAL_QUALITY" : "MEAN_QUALITY";
             final Histogram<Integer> meanQualities = new Histogram<Integer>("CYCLE", label);
@@ -162,7 +154,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             return this.maxLengthSoFar == 0;
         }
     }
-
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {

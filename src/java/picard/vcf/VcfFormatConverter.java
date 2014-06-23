@@ -39,13 +39,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
@@ -54,18 +51,15 @@ import java.io.File;
  *
  * @author jgentry@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Convert a VCF file to a BCF file, or BCF to VCF.\n" +
+                "Input and output formats are determined by file extension.",
+        usageShort = "Converts a VCF file to a BCF file, or BCF to VCF",
+        programGroup = SamOrBam.class
+)
 public class VcfFormatConverter extends CommandLineProgram {
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfFormatConverter.class);
-    
-    @Usage
-    public String USAGE = getStandardUsagePreamble() +
-		    "Convert a VCF file to a BCF file, or BCF to VCF.\n" + "" +
-            "Input and output formats are determined by file extension.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Converts a VCF file to a BCF file, or BCF to VCF";
 
     @Option(doc="The BCF or VCF input file. The file format is determined by file extension.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
@@ -75,9 +69,6 @@ public class VcfFormatConverter extends CommandLineProgram {
 
 	@Option(doc="Fail if an index is not available for the input VCF/BCF")
 	public Boolean REQUIRE_INDEX = true;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     public static void main(final String[] argv) {
         new VcfFormatConverter().instanceMainWithExit(argv);

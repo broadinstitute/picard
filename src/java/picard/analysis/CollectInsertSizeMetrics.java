@@ -33,13 +33,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.analysis.directed.InsertSizeMetricsCollector;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -51,19 +47,17 @@ import java.util.Set;
  *
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reads a SAM or BAM file and writes a file containing metrics about " +
+                "the statistical distribution of insert size (excluding duplicates) " +
+                "and generates a Histogram plot.\n",
+        usageShort = "Writes insert size distribution metrics for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
     // Usage and parameters
-    @Usage
-    public String USAGE = getStandardUsagePreamble() +
-			"Reads a SAM or BAM file and writes a file containing metrics about " +
-            "the statistical distribution of insert size (excluding duplicates) " +
-            "and generates a Histogram plot.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Writes insert size distribution metrics for a SAM or BAM file";
 
     @Option(shortName="H", doc="File to write insert size Histogram chart to.")
     public File Histogram_FILE;
@@ -83,9 +77,6 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;

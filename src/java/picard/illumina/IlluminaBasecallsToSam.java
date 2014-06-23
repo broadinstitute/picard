@@ -39,13 +39,10 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.IlluminaUtil;
@@ -94,15 +91,13 @@ import java.util.Set;
  * @author jburke@broadinstitute.org
  * @author mccowan@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n",
+        usageShort = "Generate SAM or BAM file from data in an Illumina basecalls output directory",
+        programGroup = Illumina.class
+)
 public class IlluminaBasecallsToSam extends CommandLineProgram {
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE =
-            getStandardUsagePreamble() + "Generate a SAM or BAM file from data in an Illumina basecalls output directory.\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Generate SAM or BAM file from data in an Illumina basecalls output directory";
 
     @Option(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -203,9 +198,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true)
     public boolean INCLUDE_NON_PF_READS = true;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Illumina; }
 
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
@@ -457,7 +449,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
         return messages.toArray(new String[messages.size()]);
     }
-
 
     private static class SAMFileWriterWrapper
             implements IlluminaBasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {

@@ -25,13 +25,10 @@
 package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
@@ -40,17 +37,15 @@ import java.io.File;
  *
  * @author ktibbett@broadinstitute.org
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Create BFQ files for use by the Maq aligner.",
+        usageShort = "Create BFQ files for use by the Maq aligner from a BAM file",
+        programVersion = "1.0",
+        programGroup = SamOrBam.class
+)
 public class BamToBfq extends CommandLineProgram {
 
-    private static final String PROGRAM_VERSION = "1.0";
-
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Create BFQ files for use by the Maq aligner.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Create BFQ files for use by the Maq aligner from a BAM file";
 
     @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;
@@ -66,9 +61,6 @@ public class BamToBfq extends CommandLineProgram {
     @Option(doc="Whether to clip adapters from the reads") public boolean CLIP_ADAPTERS = true;
     @Option(doc="The number of bases from each read to write to the bfq file.  If this is non-null, then " +
             "only the first BASES_TO_WRITE bases from each read will be written.", optional=true) public Integer BASES_TO_WRITE = null;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     protected int doWork() {
 

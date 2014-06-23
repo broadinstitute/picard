@@ -34,13 +34,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -51,14 +47,13 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Program to chart " +
+                "quality score distributions in a SAM or BAM file.",
+        usageShort = "Charts quality score distributions for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class QualityScoreDistribution extends SinglePassSamProgram {
-	@Usage
-	public final String USAGE = getStandardUsagePreamble() + "Program to chart " +
-			"quality score distributions in a SAM or BAM file.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Charts quality score distributions for a SAM or BAM file";
 
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
@@ -72,9 +67,6 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     @Option(doc="If set to true, include quality for no-call bases in the distribution.")
     public boolean INCLUDE_NO_CALLS = false;
 
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
-
     private final long[] qCounts  = new long[128];
     private final long[] oqCounts = new long[128];
 
@@ -83,14 +75,12 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
      */
     private String plotSubtitle = "";
 
-
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     /** Required main method. */
     public static void main(final String[] args) {
         System.exit(new QualityScoreDistribution().instanceMain(args));
     }
-
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {

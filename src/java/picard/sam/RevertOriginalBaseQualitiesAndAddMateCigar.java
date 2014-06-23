@@ -17,13 +17,10 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.Iterator;
@@ -35,15 +32,12 @@ import java.util.List;
  * New BAM/BAI/MD5 files are created.
  * @author Nils Homer
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.",
+        usageShort = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs",
+        programGroup = SamOrBam.class
+)
 public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgram {
-
-    @Usage
-    public String USAGE = getStandardUsagePreamble() +
-            "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -63,9 +57,6 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
             + " there are a no original base qualities (if we are to restore) and mate cigars exist."
             + " Set to 0 to never skip the file.")
     public int MAX_RECORDS_TO_EXAMINE = 10000;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final static Log log = Log.getInstance(RevertOriginalBaseQualitiesAndAddMateCigar.class);
 
@@ -133,7 +124,6 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         int numMateCigarsAdded = 0;
         while (sorterIterator.hasNext()) {
             final List<SAMRecord> records = new LinkedList<SAMRecord>();
-
 
             /**
              * Get all records with the same name, and then identify the canonical first and second end to which we

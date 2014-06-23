@@ -42,13 +42,10 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
+import picard.cmdline.programgroups.Metrics;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -65,21 +62,20 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Tool to collect information about GC bias in the reads in a given BAM file. Computes" +
+                " the number of windows (of size specified by WINDOW_SIZE) in the genome at each GC%" +
+                " and counts the number of read starts in each GC bin.  What is output and plotted is" +
+                " the \"normalized coverage\" in each bin - i.e. the number of reads per window normalized" +
+                " to the average number of reads per window across the whole genome..\n",
+        usageShort = "Collects information about GC bias in the reads in a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectGcBiasMetrics extends CommandLineProgram {
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     // Usage and parameters
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Tool to collect information about GC bias in the reads in a given BAM file. Computes" +
-            " the number of windows (of size specified by WINDOW_SIZE) in the genome at each GC%" +
-            " and counts the number of read starts in each GC bin.  What is output and plotted is" +
-            " the \"normalized coverage\" in each bin - i.e. the number of reads per window normalized" +
-            " to the average number of reads per window across the whole genome..\n";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Collects information about GC bias in the reads in a SAM or BAM file";
 
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="The reference sequence fasta file.")
     public File REFERENCE_SEQUENCE;
@@ -109,9 +105,6 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.Metrics; }
 
     private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
 
@@ -263,7 +256,6 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
 
         return 0;
     }
-
 
     /** Sums the values in an int[]. */
     private double sum(final int[] values) {

@@ -42,13 +42,10 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramGroup;
-import picard.cmdline.OneLineUsage;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.PicardCommandLineProgramGroup;
-import picard.cmdline.ProviderFor;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -61,14 +58,13 @@ import java.util.List;
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
  */
-@ProviderFor(CommandLineProgram.class)
+@CommandLineProgramProperties(
+        usage = "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +
+                "substituting in the original quality scores when available.",
+        usageShort = "Reverts SAM or BAM files to a previous state",
+        programGroup = SamOrBam.class
+)
 public class RevertSam extends CommandLineProgram {
-    @Usage public String USAGE = getStandardUsagePreamble() +
-            "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +
-            "substituting in the original quality scores when available.";
-
-    @OneLineUsage
-    public String ONE_LINE_USAGE = "Reverts SAM or BAM files to a previous state";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -119,9 +115,6 @@ public class RevertSam extends CommandLineProgram {
             "sample alias in the file and is used only if all the read groups in the input file have the " +
             "same sample alias ", shortName=StandardOptionDefinitions.LIBRARY_NAME_SHORT_NAME, optional=true)
     public String LIBRARY_NAME;
-
-    @Override
-    protected CommandLineProgramGroup getCommandLineProgramGroup() { return PicardCommandLineProgramGroup.SamOrBam; }
 
     private final static Log log = Log.getInstance(RevertSam.class);
 
@@ -194,7 +187,6 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
-
 
         ////////////////////////////////////////////////////////////////////////////
         // Build a sorting collection to use if we are sanitizing
