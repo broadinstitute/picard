@@ -53,6 +53,10 @@ public class PicardCommandLine {
     private final static String KWHT = "\u001B[37m";
     private final static String KBLDRED = "\u001B[1m\u001B[31m";
 
+    /** similarity floor for matching in help **/
+    private final static int HELP_SIMILARITY_FLOOR = 7;
+    private final static int MINIMUM_SUBSTRING_LENGTH = 5;
+
     /** Override this if you wish to search for command line programs in different packages **/
     protected static String[] packageList = {"picard"};
 
@@ -102,6 +106,7 @@ public class PicardCommandLine {
                     }
                 }
                 printUsage(classes);
+                printUnknown(classes, args[1]);
                 System.exit(1);
             }
         }
@@ -150,5 +155,136 @@ public class PicardCommandLine {
         }
         builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
         System.err.println(builder.toString());
+    }
+
+    public static void printUnknown(final Set<Class<?>> classes, final String command) {
+        Map<Class, Integer> distances = new HashMap<Class, Integer>();
+
+        int bestDistance = Integer.MAX_VALUE;
+        int bestN = 0;
+
+        // Score against all classes
+        for (final Class clazz : classes) {
+            final String name = clazz.getSimpleName();
+            final int distance;
+            if (name.equals(command)) {
+                throw new RuntimeException("Command matches: " + command);
+            }
+            if (name.startsWith(command) || (MINIMUM_SUBSTRING_LENGTH <= command.length() && name.contains(command))) {
+                distance = 0;
+            }
+            else {
+                distance = levenshteinDistance(command, name, 0, 2, 1, 4);
+            }
+            distances.put(clazz, distance);
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestN = 1;
+            }
+            else if (distance == bestDistance) {
+                bestN++;
+            }
+        }
+
+        // Upper bound on the similarity score
+        if (0 == bestDistance && bestN == classes.size()) {
+            bestDistance = HELP_SIMILARITY_FLOOR + 1;
+        }
+
+        // Output similar matches
+        // TODO
+        System.err.println(String.format("'%s' is not a valid command. See PicardCommandLine --help for more information.", command));
+        if (bestDistance < HELP_SIMILARITY_FLOOR) {
+            System.err.println(String.format("Did you mean %s?", (bestN < 2) ? "this" : "one of these"));
+            for (final Class clazz : classes) {
+                if (bestDistance == distances.get(clazz)) {
+                    System.err.println(String.format("        %s", clazz.getSimpleName()));
+                }
+            }
+        }
+    }
+
+    /*
+     * This s from GIT!
+     *  This function implements the Damerau-Levenshtein algorithm to
+     * calculate a distance between strings.
+     *
+     * Basically, it says how many letters need to be swapped, substituted,
+     * deleted from, or added to string1, at least, to get string2.
+     *
+     * The idea is to build a distance matrix for the substrings of both
+     * strings.  To avoid a large space complexity, only the last three rows
+     * are kept in memory (if swaps had the same or higher cost as one deletion
+     * plus one insertion, only two rows would be needed).
+     *
+     * At any stage, "i + 1" denotes the length of the current substring of
+     * string1 that the distance is calculated for.
+     *
+     * row2 holds the current row, row1 the previous row (i.e. for the substring
+     * of string1 of length "i"), and row0 the row before that.
+     *
+     * In other words, at the start of the big loop, row2[j + 1] contains the
+     * Damerau-Levenshtein distance between the substring of string1 of length
+     * "i" and the substring of string2 of length "j + 1".
+     *
+     * All the big loop does is determine the partial minimum-cost paths.
+     *
+     * It does so by calculating the costs of the path ending in characters
+     * i (in string1) and j (in string2), respectively, given that the last
+     * operation is a substitution, a swap, a deletion, or an insertion.
+     *
+     * This implementation allows the costs to be weighted:
+     *
+     * Note that this algorithm calculates a distance _iff_ d == a.
+     */
+    private static int levenshteinDistance(final String string1, final String string2, int swap, int substitution, int insertion, int deletion) {
+        int i, j;
+
+        int[] row0 = new int[(string2.length() + 1)];
+        int[] row1 = new int[(string2.length() + 1)];
+        int[] row2 = new int[(string2.length() + 1)];
+        int[] dummy;
+
+
+        byte[] str1 = string1.getBytes();
+        byte[] str2 = string2.getBytes();
+
+        for (j = 0; j < str2.length; j++) {
+            row1[j] = j * insertion;
+        }
+        for (i = 0; i < str1.length; i++) {
+            row2[0] = (i + 1) * deletion;
+            for (j = 0; j < str2.length; j++) {
+                /* substitution */
+                row2[j + 1] = row1[j];
+                if (str1[i] != str2[j]) {
+                    row2[j + 1] += substitution;
+                }
+                /* swap */
+                if (i > 0 && j > 0 && str1[i - 1] == str2[j] &&
+                        str1[i] == str2[j - 1] &&
+                        row2[j + 1] > row0[j - 1] + swap) {
+                    row2[j + 1] = row0[j - 1] + swap;
+                }
+                /* deletion */
+                if (row2[j + 1] > row1[j + 1] + deletion) {
+                    row2[j + 1] = row1[j + 1] + deletion;
+                }
+                /* insertion */
+                if (row2[j + 1] > row2[j] + insertion) {
+                    row2[j + 1] = row2[j] + insertion;
+                }
+            }
+
+            dummy = row0;
+            row0 = row1;
+            row1 = row2;
+            row2 = dummy;
+        }
+
+        i = row1[str2.length];
+
+        return i;
     }
 }
