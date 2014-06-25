@@ -81,8 +81,12 @@ public class PicardCommandLine {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
         for (final Class clazz : classFinder.getClasses()) {
             // No interfaces, synthetic, primitive, local, or abstract classes.
-            if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass() && !Modifier.isAbstract(clazz.getModifiers())) {
-                classes.add(clazz);
+            if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
+                    && !Modifier.isAbstract(clazz.getModifiers())) {
+                final CommandLineProgramProperties property = (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
+                if (!property.omitFromCommandLine()) {
+                    classes.add(clazz);
+                }
             }
         }
 
@@ -146,7 +150,7 @@ public class PicardCommandLine {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
-            builder.append("--------------------------------------------------------------------------------------\n");
+            builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
             builder.append(String.format("%s%-48s %-45s%s\n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
             for (final CommandLineProgramProperties property : entry.getValue()) {
                 builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, propertiesToClassMap.get(property).getSimpleName(), KCYN, property.usageShort(), KNRM));

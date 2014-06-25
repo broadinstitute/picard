@@ -41,4 +41,5 @@ public @interface CommandLineProgramProperties {
     String usageShort();
     String programVersion() default "";
     Class programGroup() default None.class;
+    boolean omitFromCommandLine() default false;
 }

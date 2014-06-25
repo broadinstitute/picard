@@ -33,7 +33,8 @@ public class CreateHtmlDocForStandardOptions {
 
     @CommandLineProgramProperties(
             usage = "",
-            usageShort = ""
+            usageShort = "",
+            omitFromCommandLine = true
     )
     static class DummyProgram extends CommandLineProgram {
         @Override
