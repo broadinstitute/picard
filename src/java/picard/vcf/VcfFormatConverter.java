@@ -43,6 +43,7 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
+import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 
@@ -55,7 +56,7 @@ import java.io.File;
         usage = "Convert a VCF file to a BCF file, or BCF to VCF.\n" +
                 "Input and output formats are determined by file extension.",
         usageShort = "Converts a VCF file to a BCF file, or BCF to VCF",
-        programGroup = SamOrBam.class
+        programGroup = VcfOrBcf.class
 )
 public class VcfFormatConverter extends CommandLineProgram {
     // The following attributes define the command-line arguments
