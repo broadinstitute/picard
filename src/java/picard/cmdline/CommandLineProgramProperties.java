@@ -33,6 +33,8 @@ import java.lang.annotation.ElementType;
 /**
  * Annotates a command line program with various properties, such as usage (short and long),
  * as well as to which program group it belongs.
+ *
+ * TODO: enforced that any CommandLineProgram has this property defined (use an annotation processor?).
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

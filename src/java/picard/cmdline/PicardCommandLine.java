@@ -58,7 +58,7 @@ public class PicardCommandLine {
     private final static int MINIMUM_SUBSTRING_LENGTH = 5;
 
     /** Override this if you wish to search for command line programs in different packages **/
-    protected static String[] packageList = {"picard"};
+    protected static String[] packageList = {"picard", "edu.mit.broad.picard"};
 
     public int instanceMain(final String[] args) {
         final CommandLineProgram program = extractCommandLineProgram(args);
@@ -84,6 +84,9 @@ public class PicardCommandLine {
             if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
                     && !Modifier.isAbstract(clazz.getModifiers())) {
                 final CommandLineProgramProperties property = (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
+                if (null == property) {
+                    throw new RuntimeException(String.format("The class '%s' is missing the required CommandLineProgramProperties annotation.", clazz.getSimpleName()));
+                }
                 if (!property.omitFromCommandLine()) {
                     classes.add(clazz);
                 }
