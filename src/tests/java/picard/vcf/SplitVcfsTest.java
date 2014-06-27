@@ -10,7 +10,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.HashMap;

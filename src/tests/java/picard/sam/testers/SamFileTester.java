@@ -8,8 +8,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
-import picard.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLine;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.ArrayList;

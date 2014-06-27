@@ -3,7 +3,7 @@ package picard.sam;
 import htsjdk.samtools.BamFileIoUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.ArrayList;

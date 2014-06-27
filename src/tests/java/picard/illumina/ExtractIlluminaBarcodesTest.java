@@ -30,7 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;

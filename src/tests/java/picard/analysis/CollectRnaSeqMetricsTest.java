@@ -35,9 +35,8 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
-import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.FileReader;

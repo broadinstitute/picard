@@ -27,8 +27,7 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
-import picard.cmdline.PicardCommandLine;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileReader;

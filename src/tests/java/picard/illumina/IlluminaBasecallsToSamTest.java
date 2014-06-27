@@ -29,7 +29,7 @@ import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileInputStream;

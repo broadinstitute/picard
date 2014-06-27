@@ -1,6 +1,4 @@
-package picard;
-
-import picard.cmdline.PicardCommandLine;
+package picard.cmdline;
 
 import java.util.Arrays;
 import java.util.List;

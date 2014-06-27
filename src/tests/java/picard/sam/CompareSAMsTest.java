@@ -25,7 +25,7 @@ package picard.sam;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 

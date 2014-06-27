@@ -31,7 +31,7 @@ import htsjdk.samtools.ValidationStringency;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.CleanSamTester;
 
 import java.io.File;

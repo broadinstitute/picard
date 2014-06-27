@@ -72,7 +72,6 @@
     </target>
     <target name="set_excluded_test_groups" depends="set_excluded_test_groups_unix,set_excluded_test_groups_non_unix"/>
 
-
     <!-- INIT -->
     <target name="init">
         <path id="classpath">
@@ -246,6 +245,7 @@
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
                 <attribute name="Main-Class" value="picard.cmdline.PicardCommandLine"/>
                 <attribute name="Implementation-Title" value="PICARD Tools"/>
+                <attribute name="HTSJDK-Version" value="${htsjdk-version}"/>
             </manifest>
         </jar>
     </target>

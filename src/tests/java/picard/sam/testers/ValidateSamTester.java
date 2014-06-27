@@ -1,7 +1,7 @@
 package picard.sam.testers;
 
 import org.testng.Assert;
-import picard.CommandLineProgramTest;
+import picard.cmdline.CommandLineProgramTest;
 import picard.sam.ValidateSamFile;
 
 import java.io.File;

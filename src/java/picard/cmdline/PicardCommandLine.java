@@ -53,52 +53,74 @@ public class PicardCommandLine {
     private final static String KWHT = "\u001B[37m";
     private final static String KBLDRED = "\u001B[1m\u001B[31m";
 
+    /** The name of this unified command line program **/
+    private final static String COMMAND_LINE_NAME = PicardCommandLine.class.getSimpleName();
+
     /** similarity floor for matching in help **/
     private final static int HELP_SIMILARITY_FLOOR = 7;
     private final static int MINIMUM_SUBSTRING_LENGTH = 5;
 
-    /** Override this if you wish to search for command line programs in different packages **/
-    protected static String[] packageList = {"picard", "edu.mit.broad.picard"};
+    /** The packages we wish to include in our command line **/
+    protected static List<String> getPackageList() {
+        final List<String> packageList = new ArrayList();
+        packageList.add("picard");
+        packageList.add("edu.mit.broad.picard");
+        return packageList;
+    }
 
-    public int instanceMain(final String[] args) {
-        final CommandLineProgram program = extractCommandLineProgram(args);
+    /** The main method**/
+    protected int instanceMain(final String[] args, final List<String> packageList, final String commandLineName) {
+        final CommandLineProgram program = extractCommandLineProgram(args, packageList, commandLineName);
         // we can lop off the first two arguments but it requires an array copy or alternatively we could update CLP to remove them
         // in the constructor do the former in this implementation.
         final String[] mainArgs = Arrays.copyOfRange(args, 2, args.length);
         return program.instanceMain(mainArgs);
     }
 
-    public static void main(final String[] args) {
-        System.exit(new PicardCommandLine().instanceMain(args));
+    /** For testing **/
+    protected int instanceMain(final String[] args) {
+        return instanceMain(args, getPackageList(), COMMAND_LINE_NAME);
     }
 
-    private static CommandLineProgram extractCommandLineProgram(final String[] args) {
+    /** Override this if you want to include different packages **/
+    public static void main(final String[] args) {
+        System.exit(new PicardCommandLine().instanceMain(args, getPackageList(), COMMAND_LINE_NAME));
+    }
+
+    private static CommandLineProgram extractCommandLineProgram(final String[] args, final List<String> packageList, final String commandLineName) {
         /** Get the set of classes that are our command line programs **/
         final ClassFinder classFinder = new ClassFinder();
-        for (final String pkg : packageList) {
+        for (final String pkg :packageList) {
             classFinder.find(pkg, CommandLineProgram.class);
         }
         final Set<Class<?>> classes = new HashSet<Class<?>>();
+        String missingAnnotationClasses = "";
+
         for (final Class clazz : classFinder.getClasses()) {
             // No interfaces, synthetic, primitive, local, or abstract classes.
             if (!clazz.isInterface() && !clazz.isSynthetic() && !clazz.isPrimitive() && !clazz.isLocalClass()
                     && !Modifier.isAbstract(clazz.getModifiers())) {
                 final CommandLineProgramProperties property = (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
+                // Check for missing annotations
                 if (null == property) {
-                    throw new RuntimeException(String.format("The class '%s' is missing the required CommandLineProgramProperties annotation.", clazz.getSimpleName()));
+                    if (0 == missingAnnotationClasses.length()) missingAnnotationClasses += clazz.getSimpleName();
+                    else missingAnnotationClasses += ", " + clazz.getSimpleName();
                 }
-                if (!property.omitFromCommandLine()) {
+                else if (!property.omitFromCommandLine()) { /** We should check for missing annotations later **/
                     classes.add(clazz);
                 }
             }
         }
+        if (0 < missingAnnotationClasses.length()) {
+            throw new RuntimeException("The following classes are missing the required CommandLineProgramProperties annotation: " + missingAnnotationClasses);
+        }
 
         if (args.length < 2) {
-            printUsage(classes);
+            printUsage(classes, commandLineName);
             System.exit(1);
         } else {
             if (!args[0].equals("-T") || args[0].equals("-h")) {
-                printUsage(classes);
+                printUsage(classes, commandLineName);
                 System.exit(1);
             } else {
                 for (final Class clazz : classes) {
@@ -112,7 +134,7 @@ public class PicardCommandLine {
                         }
                     }
                 }
-                printUsage(classes);
+                printUsage(classes, commandLineName);
                 printUnknown(classes, args[1]);
                 System.exit(1);
             }
@@ -120,9 +142,9 @@ public class PicardCommandLine {
         return null;
     }
 
-    private static void printUsage(final Set<Class<?>> classes) {
+    private static void printUsage(final Set<Class<?>> classes, String commandLineName) {
         final StringBuilder builder = new StringBuilder();
-        builder.append(KBLDRED + "USAGE: PicardCommandLine -T " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
+        builder.append(KBLDRED + "USAGE: " + commandLineName + " -T " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
         builder.append(KBLDRED + "Available Programs:\n" + KNRM);
 
         // Maps a subclass of CommandLineProgramGroup to a list of CommandLineProgramProperties annotations that have that subclass as their programGroup
@@ -132,7 +154,7 @@ public class PicardCommandLine {
         for (final Class clazz : classes) {
             final CommandLineProgramProperties property = (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
             if (null == property) {
-                throw new RuntimeException("No CommandLineProgramProperties annotation for: " + clazz.getSimpleName());
+                throw new RuntimeException(String.format("The class '%s' is missing the required CommandLineProgramProperties annotation.", clazz.getSimpleName()));
             }
             List<CommandLineProgramProperties> programs = classToPropertiesMap.get(property.programGroup());
             if (null == programs) {
