@@ -27,6 +27,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.programgroups.Testing;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -673,7 +674,9 @@ public class CommandLineParserTest {
 
     @CommandLineProgramProperties(
             usage = "Class with nested options.",
-            usageShort = "Class with nested options"
+            usageShort = "Class with nested options",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
     )
     class ClpOptionsWithNested extends CommandLineProgram {
         @Option
@@ -707,6 +710,12 @@ public class CommandLineParserTest {
         }
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested options again.",
+            usageShort = "Class with nested options again",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class ClpOptionsWithNestedAgain extends CommandLineProgram {
         private final OptionsWithoutPositional FROB = new OptionsWithoutPositional();
 
@@ -722,7 +731,6 @@ public class CommandLineParserTest {
             return 0;
         }
     }
-
 
     @Test
     public void testDynamicNestedOptions() {
@@ -842,6 +850,12 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.CHILD.COLLECTION, new ArrayList<String>());
     }
 
+    @CommandLineProgramProperties(
+            usage = "",
+            usageShort = "",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class DynamicPropagationParent extends CommandLineProgram {
         @Option
         public String STRING1 = "String1ParentDefault";
