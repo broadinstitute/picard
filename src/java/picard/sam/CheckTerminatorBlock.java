@@ -17,14 +17,13 @@ import java.io.IOException;
  * Simple class to check the terminator block of a SAM file.
  */
 @CommandLineProgramProperties(
-        usage = "Checks a BAM file or other block-compressed GZIP'd file and determines " +
-                "if the file is terminated with an empty block, a healthy non-empty block or if the ending of the " +
-                "file is defective (implying a truncated or non-block compressed file).",
-        usageShort = "Checks a BAM file for the terminating empty-block",
+        usage = CheckTerminatorBlock.USAGE,
+        usageShort = CheckTerminatorBlock.USAGE,
         programGroup = SamOrBam.class
 )
 public class CheckTerminatorBlock extends CommandLineProgram {
-
+    static final String USAGE = "Asserts the provided gzip file's (e.g., BAM) last block is well-formed; RC 100 otherwise";
+    
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The block compressed file to check.")
     public File INPUT;
 

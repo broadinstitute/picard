@@ -55,11 +55,13 @@ import java.util.Set;
  *	@author jgentry@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Collects metrics about bisulfite conversion for RRBS data.",
-        usageShort = "Collects metrics about bisulfite conversion for RRBS data.",
+        usage = CollectRrbsMetrics.USAGE,
+        usageShort = CollectRrbsMetrics.USAGE,
         programGroup = Metrics.class
 )
 public class CollectRrbsMetrics extends CommandLineProgram {
+    final static String USAGE = "Collects metrics about bisulfite conversion for RRBS data";
+    
 	// Path to R file for plotting purposes
 	private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 

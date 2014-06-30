@@ -49,10 +49,9 @@ import java.util.List;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = "Program to collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
-                " coding, intronic, UTR, intergenic, ribosomal.\n" +
-                "Also determines strand-specificity for strand-specific libraries.",
-        usageShort = "Writes RNA alignment metrics for a SAM or BAM file",
+        usage = "Collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
+                "coding, intronic, UTR, intergenic, ribosomal. Also determines strand-specificity for strand-specific libraries.",
+        usageShort = "Produces RNA alignment metrics for a SAM or BAM file",
         programGroup = Metrics.class
 )
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {

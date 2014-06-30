@@ -68,7 +68,7 @@ import java.util.List;
                 " and counts the number of read starts in each GC bin.  What is output and plotted is" +
                 " the \"normalized coverage\" in each bin - i.e. the number of reads per window normalized" +
                 " to the average number of reads per window across the whole genome..\n",
-        usageShort = "Collects information about GC bias in the reads in a SAM or BAM file",
+        usageShort = "Collects information about GC bias in the reads in the provided SAM or BAM",
         programGroup = Metrics.class
 )
 public class CollectGcBiasMetrics extends CommandLineProgram {

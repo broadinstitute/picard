@@ -41,12 +41,13 @@ import static java.lang.Math.log10;
  * Class for trying to quantify the CpCG->CpCA error rate.
  */
 @CommandLineProgramProperties(
-        usage = "A utility for quantifying the CpCG -> CpCA error rate.",
-        usageShort = "A utility for quantifying the CpCG -> CpCA error rate",
+        usage = CollectOxoGMetrics.USAGE,
+        usageShort = CollectOxoGMetrics.USAGE,
         programGroup = Metrics.class
 )
 public class CollectOxoGMetrics extends CommandLineProgram {
-
+    static final String USAGE = "Collects metrics quantifying the CpCG -> CpCA error rate from the provided SAM/BAM";
+        
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
 			doc="Input BAM file for analysis.")
     public File INPUT;

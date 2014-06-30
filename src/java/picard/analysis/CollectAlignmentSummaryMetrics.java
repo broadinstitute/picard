@@ -62,12 +62,13 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        usage = "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n",
-        usageShort = "Writes summary alignment metrics for a SAM or BAM file",
+        usage = CollectAlignmentSummaryMetrics.USAGE,
+        usageShort = CollectAlignmentSummaryMetrics.USAGE,
         programGroup = Metrics.class
 )
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
-
+    static final String USAGE = "Produces from a SAM or BAM a file containing summary alignment metrics";
+    
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     // Usage and parameters

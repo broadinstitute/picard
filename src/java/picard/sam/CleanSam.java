@@ -44,14 +44,14 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Read SAM and perform various fix-ups.  " +
-                "Currently, the only fix-ups are 1: to soft-clip an alignment that hangs off the end of its reference sequence; " +
-                "and 2: to set MAPQ to 0 if a read is unmapped.",
-        usageShort = "Reads a SAM file and performs various fixes",
+        usage = CleanSam.USAGE,
+        usageShort = CleanSam.USAGE,
         programGroup = SamOrBam.class
 )
 public class CleanSam extends CommandLineProgram {
 
+    static final String USAGE = "Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads";
+    
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM to be cleaned.")
     public File INPUT;
 

@@ -49,12 +49,13 @@ import java.util.Map;
  */
 
 @CommandLineProgramProperties(
-        usage = "Collects Illumina Lane Metrics for the given basecalling analysis directory.",
-        usageShort = "Collects Illumina Lane Metrics for the given basecalling analysis directory",
+        usage = CollectIlluminaLaneMetrics.USAGE,
+        usageShort = CollectIlluminaLaneMetrics.USAGE,
         programGroup = Illumina.class
 )
 public class CollectIlluminaLaneMetrics extends CommandLineProgram {
-
+    static final String USAGE = "Collects Illumina lane metrics for the given basecalling analysis directory";
+    
     @Option(doc = "The Illumina run directory of the run for which the lane metrics are to be generated")
     public File RUN_DIRECTORY;
 

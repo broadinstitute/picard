@@ -17,11 +17,11 @@ import java.util.Set;
  * more information
  */
 @CommandLineProgramProperties(
-        usage =                 "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
+        usage = "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
                 "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
                 "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
                 "mean coverage information for every target.",
-        usageShort = "Writes Targeted PCR-related metrics for a SAM or BAM file",
+        usageShort = "Produces Targeted PCR-related metrics given the provided SAM/BAM",
         programGroup = Metrics.class
 )
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {

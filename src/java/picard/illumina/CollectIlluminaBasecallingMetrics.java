@@ -54,13 +54,14 @@ import java.util.TreeMap;
  *    *  Standard Deviation of Percentage of Pf Clusters Per Tile
  */
 @CommandLineProgramProperties(
-        usage = "Collects Illumina Basecalling Metrics on a per-barcode, per-lane basis from Illumina cluster data and writes them to a file.\n",
-        usageShort = "Collects Illumina Basecalling Metrics on a per-barcode, per-lane basis",
+        usage = CollectIlluminaBasecallingMetrics.USAGE,
+        usageShort = CollectIlluminaBasecallingMetrics.USAGE,
         programGroup = Illumina.class
 )
 public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
     //Command Line Arguments
-
+    static final String USAGE = "Given an Illumina basecalling and a lane, produces per-lane-barcode basecalling metrics";
+    
     @Option(doc="The Illumina basecalls output directory from which data are read", shortName="B")
     public File BASECALLS_DIR;
 

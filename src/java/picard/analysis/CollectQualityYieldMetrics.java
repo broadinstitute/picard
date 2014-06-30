@@ -45,10 +45,9 @@ import java.io.File;import java.lang.Integer;import java.lang.String;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = "Collects quality yield metrics, " +
-                "a set of metrics that quantify the quality and yield of sequence data from a " +
-                "SAM/BAM input file." ,
-        usageShort = "Collects a set of metrics that quantify the quality and yield of sequence data",
+        usage = "Collects quality yield metrics, a set of metrics that quantify the quality and yield of sequence data from a " +
+                "SAM/BAM input file.",
+        usageShort = "Collects a set of metrics that quantify the quality and yield of sequence data from the provided SAM/BAM",
         programGroup = Metrics.class
 )
 public class CollectQualityYieldMetrics extends CommandLineProgram {

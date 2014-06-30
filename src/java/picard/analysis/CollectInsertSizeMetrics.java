@@ -50,14 +50,13 @@ import java.util.Set;
 @CommandLineProgramProperties(
         usage = "Reads a SAM or BAM file and writes a file containing metrics about " +
                 "the statistical distribution of insert size (excluding duplicates) " +
-                "and generates a Histogram plot.\n",
+                "and generates a Histogram plot.",
         usageShort = "Writes insert size distribution metrics for a SAM or BAM file",
         programGroup = Metrics.class
 )
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
-    // Usage and parameters
 
     @Option(shortName="H", doc="File to write insert size Histogram chart to.")
     public File Histogram_FILE;

@@ -23,7 +23,7 @@ import java.util.List;
         usage = "Takes an input BAM and reference sequence and runs one or more Picard " +
                 "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
                 "default options and fixed output extesions, but this may become more flexible in future.",
-        usageShort = "Writes multiple types of metrics for a SAM or BAM file",
+        usageShort = "A \"meta-metrics\" calculating program that produces multiple metrics for the provided SAM/BAM",
         programGroup = Metrics.class
 )
 public class CollectMultipleMetrics extends CommandLineProgram {

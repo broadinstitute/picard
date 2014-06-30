@@ -56,7 +56,7 @@ import htsjdk.samtools.SAMTag;
         usage = "Computes jumping library metrics.  Gets all data for computation from the first" +
                 "read in each pair and assumes that the MQ tag is set with the mate's mapping quality.  If the " +
                 "MQ tag is not set, then the program assumes that the mate's mapping quality is >= MINIMUM_MAPPING_QUALITY",
-        usageShort = "Computes jumping library metrics.",
+        usageShort = "Produces jumping library metrics for the provided SAM/BAMs",
         programGroup = Metrics.class
 )
 public class CollectJumpingLibraryMetrics extends CommandLineProgram {

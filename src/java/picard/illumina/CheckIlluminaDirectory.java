@@ -32,8 +32,8 @@ import java.util.TreeSet;
 @CommandLineProgramProperties(
         usage = "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
                 "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-                "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.\n",
-        usageShort = "Tool to check a lane of an Illumina output directory",
+                "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.",
+        usageShort = "Asserts the validity of the data in the specified Illumina basecalling data",
         programGroup = Illumina.class
 )
 public class CheckIlluminaDirectory extends CommandLineProgram {
@@ -44,23 +44,15 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(doc =
-            "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those "
-                    +
-                    "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on"
-                    +
-                    "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option "
-                    +
-                    "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the "
-                    +
-                    "individual records of the files themselves are spurious. ",
-            shortName = "DT",
-            optional = true)
+    @Option(doc = "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those " +
+            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on " +
+            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option " +
+            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the " +
+            "individual records of the files themselves are spurious.",
+            shortName = "DT", optional = true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
 
-    @Option(doc = ReadStructure.PARAMETER_DOC
-            + "  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes "
-            +
+    @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes " +
             "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.",
             shortName = "RS")
     public String READ_STRUCTURE;
