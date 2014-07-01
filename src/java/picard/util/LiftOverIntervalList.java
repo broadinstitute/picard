@@ -43,7 +43,8 @@ import java.lang.Override;import java.lang.String;import java.util.List;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Lifts over an interval list from one reference build to another.",
+        usage = "Lifts over an interval list from one reference build to another. Based on UCSC liftOver." +
+                " Uses a UCSC chain file to guide the liftOver.",
         usageShort = "Lifts over an interval list from one reference build to another",
         programGroup = Intervals.class
 )

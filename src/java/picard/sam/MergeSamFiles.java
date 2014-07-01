@@ -50,7 +50,7 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Merges multiple SAM/BAM files into one file.\n",
+        usage = "Merges multiple SAM/BAM files into one file.",
         usageShort = "Merges multiple SAM or BAM files into one file",
         programGroup = SamOrBam.class
 )
