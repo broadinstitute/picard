@@ -50,7 +50,7 @@ import java.util.TreeSet;
                 "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
                 "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
                 "mean coverage information for every target.",
-        usageShort = "Writes Hybrid Selection-specific metrics for a SAM or BAM file",
+        usageShort = "Calculates Hybrid Selection-specific metrics for a SAM or BAM file",
         programGroup = Metrics.class
 )
 public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {

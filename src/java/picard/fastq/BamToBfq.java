@@ -38,8 +38,8 @@ import java.io.File;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Create BFQ files for use by the Maq aligner.",
-        usageShort = "Create BFQ files for use by the Maq aligner from a BAM file",
+        usage = "Create BFQ files from a BAM file for use by the Maq aligner.",
+        usageShort = "Create BFQ files from a BAM file for use by the Maq aligner.",
         programVersion = "1.0",
         programGroup = SamOrBam.class
 )
