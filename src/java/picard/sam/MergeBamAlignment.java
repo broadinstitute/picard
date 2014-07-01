@@ -49,7 +49,9 @@ import java.util.List;
 @CommandLineProgramProperties(
         usage = "Merges alignment data from a SAM or BAM " +
                 "file with additional data stored in an unmapped BAM file and produces a third SAM " +
-                "or BAM file of aligned and unaligned reads. NOTE that this program expects to " +
+                "or BAM file of aligned and unaligned reads. The purpose is to use information from the " +
+                "unmapped BAM to fix up aligner output, so that the resulting file is valid for use by other " +
+                "Picard programs. For simple BAM file merges, use MergeSamFiles. NOTE that MergeBamAlignment expects to " +
                 "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
                 "to have the same base name as the reference fasta except with the extension '.dict'",
         usageShort = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file",
