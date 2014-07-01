@@ -82,6 +82,9 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair by this must in order to be considered rRNA.")
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
+    @Option(doc="Determines if per-transcript coverage metrics are gathered.  Turn this off if you have many read groups and don't have available memory, or if you don't wish to gather coverage.")
+    public Boolean COLLECT_COVERAGE = true;
+    
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
@@ -111,7 +114,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         final HashSet<Integer> ignoredSequenceIndices = RnaSeqMetricsCollector.makeIgnoredSequenceIndicesSet(header, IGNORE_SEQUENCE);
 
         collector = new RnaSeqMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), ribosomalBasesInitialValue,
-                geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE);
+                geneOverlapDetector, ribosomalSequenceOverlapDetector, ignoredSequenceIndices, MINIMUM_LENGTH, STRAND_SPECIFICITY, RRNA_FRAGMENT_PERCENTAGE, COLLECT_COVERAGE);
 
         // If we're working with a single library, assign that library's name as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
