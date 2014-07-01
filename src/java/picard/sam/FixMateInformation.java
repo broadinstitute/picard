@@ -63,10 +63,10 @@ import java.util.List;
  */
 @CommandLineProgramProperties(
         usage = "Ensure that all mate-pair information is in sync between each read " +
-                " and it's mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
-                " and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
+                "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
+                "and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
                 "to the output file unchanged.",
-        usageShort = "Ensure that all mate-pair information is in sync between each read and it's mate pair",
+        usageShort = "Ensure that all mate-pair information is in sync between each read and its mate pair",
         programGroup = SamOrBam.class
 )
 public class FixMateInformation extends CommandLineProgram {
