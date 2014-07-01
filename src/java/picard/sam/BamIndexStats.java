@@ -45,7 +45,8 @@ import java.io.File;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = "Generates BAM index statistics. " +
+        usage = "Generates BAM index statistics, including the number of aligned and unaligned SAMRecords for each reference sequence, " +
+                "and the number of SAMRecords with no coordinate." +
                 "Input BAM file must have a corresponding index file.\n",
         usageShort = "Generates index statistics from a BAM file",
         programGroup = SamOrBam.class

@@ -14,10 +14,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 @CommandLineProgramProperties(
-        usage = "Creates a hash code from identifying information in the RG (read group) " +
+        usage = "Creates a hash code based on identifying information in the RG (read group) " +
                 "records in a SAM file's header. This hash code changes any time read groups are added or removed " +
-                "comparing one file's hash code to another's tells you if the contents of the BAM file have changed.",
-        usageShort = "Creates a hash code from the read groups (RG) in the SAM or BAM header",
+                "comparing one file's hash code to another tells you if the read groups in the BAM files are different.",
+        usageShort = "Creates a hash code based on the read groups (RG) in the SAM or BAM header.",
         programGroup = SamOrBam.class
 )
 public class CalculateReadGroupChecksum extends CommandLineProgram {
@@ -27,7 +27,7 @@ public class CalculateReadGroupChecksum extends CommandLineProgram {
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file. ")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The file to which the checksum should be written.", optional=true)
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The file to which the hash code should be written.", optional=true)
     public File OUTPUT;
 
     public static void main(final String[] args) {

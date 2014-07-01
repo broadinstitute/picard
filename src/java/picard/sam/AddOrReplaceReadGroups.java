@@ -27,9 +27,9 @@ import java.util.Arrays;
  * @author mdepristo
  */
 @CommandLineProgramProperties(
-        usage = "Replaces all read groups in the INPUT file with a new read group and assigns " +
+        usage = "Replaces all read groups in the INPUT file with a single new read group and assigns " +
                 "all reads to this read group in the OUTPUT BAM",
-        usageShort = "Replaces read groups in a BAM or SAM file with new read groups",
+        usageShort = "Replaces read groups in a BAM or SAM file with a single new read group",
         programVersion = "1.0",
         programGroup = SamOrBam.class
 )
