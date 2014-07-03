@@ -42,11 +42,12 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
     private final OverlapDetector<Gene> geneOverlapDetector;
     private final OverlapDetector<Interval> ribosomalSequenceOverlapDetector;
-
+    private final boolean collectCoverageStatistics;
+    
     public RnaSeqMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                   final Long ribosomalBasesInitialValue, OverlapDetector<Gene> geneOverlapDetector, OverlapDetector<Interval> ribosomalSequenceOverlapDetector,
                                   final HashSet<Integer> ignoredSequenceIndices, final int minimumLength, final StrandSpecificity strandSpecificity,
-                                  final double rrnaFragmentPercentage) {
+                                  final double rrnaFragmentPercentage, boolean collectCoverageStatistics) {
         this.ribosomalInitialValue  = ribosomalBasesInitialValue;
         this.ignoredSequenceIndices = ignoredSequenceIndices;
         this.geneOverlapDetector    = geneOverlapDetector;
@@ -54,6 +55,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         this.minimumLength          = minimumLength;
         this.strandSpecificity      = strandSpecificity;
         this.rrnaFragmentPercentage = rrnaFragmentPercentage;
+        this.collectCoverageStatistics = collectCoverageStatistics;
         setup(accumulationLevels, samRgRecords);
     }
 
@@ -96,6 +98,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
     private class PerUnitRnaSeqMetricsCollector implements PerUnitMetricCollector<RnaSeqMetrics, Integer, SAMRecord> {
 
         final RnaSeqMetrics metrics = new RnaSeqMetrics();
+        
         private final Map<Gene.Transcript, int[]> coverageByTranscript = new HashMap<Gene.Transcript, int[]>();
 
         public PerUnitRnaSeqMetricsCollector(final String sample,
@@ -106,6 +109,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
             this.metrics.LIBRARY = library;
             this.metrics.READ_GROUP = readGroup;
             this.metrics.RIBOSOMAL_BASES = ribosomalBasesInitialValue;
+            
         }
 
         public void acceptRecord(SAMRecord rec) {
@@ -169,16 +173,20 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                 for (final Gene gene : overlappingGenes) {
                     for (final Gene.Transcript transcript : gene) {
                         transcript.assignLocusFunctionForRange(alignmentBlock.getReferenceStart(), locusFunctions);
-
+                        // if you want to gather coverage statistics, this variable should be true.
+                        // added for cases with many units [samples/read groups] which overwhelm memory.                
                         // Add coverage to our coverage counter for this transcript
-                        int[] coverage = this.coverageByTranscript.get(transcript);
-                        if (coverage == null) {
-                            coverage = new int[transcript.length()];
-                            this.coverageByTranscript.put(transcript, coverage);
+                        if (collectCoverageStatistics) {
+                            int[] coverage = this.coverageByTranscript.get(transcript);
+                            if (coverage == null) {
+                                coverage = new int[transcript.length()];
+                                this.coverageByTranscript.put(transcript, coverage);
+                            }
+                            transcript.addCoverageCounts(alignmentBlock.getReferenceStart(),
+                                    CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength()),
+                                    coverage);
                         }
-                        transcript.addCoverageCounts(alignmentBlock.getReferenceStart(),
-                                CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength()),
-                                coverage);
+
                     }
                 }
 
