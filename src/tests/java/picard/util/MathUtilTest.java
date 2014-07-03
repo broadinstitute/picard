@@ -4,6 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static picard.util.MathUtil.divide;
+
 /**
  * @author mccowan
  */
@@ -38,6 +40,44 @@ public class MathUtilTest {
 
         for (int i=0; i<expected.length; ++i) {
             Assert.assertTrue(Math.abs(actual[i] - expected[i]) < 0.0000001);
+        }
+    }
+
+    @DataProvider
+    public Object[][] divideMethodTestCases() {
+        return new Object[][] {
+                new Object[] {new double [] {1, 2, 3, 4}, new double [] {2, 3, 4, -5}, new double[] {.5, 2.0/3, 3.0/4, -4.0/5}},
+                new Object[] {new double [] {100}, new double [] {200}, new double[] {.5}},
+                new Object[] {new double [] {0, 4, -3, 2}, new double [] {200, 30, 32, 12}, new double[] {0, 4.0/30, -3.0/32, 2.0/12}},
+                new Object[] {new double [] {}, new double [] {}, new double[] {}},
+
+        };
+    }
+
+    @Test(dataProvider = "divideMethodTestCases")
+    public void testDivide(final double [] numerators, final double [] denominators, final double [] expected) {
+        assertEquals(divide(numerators, denominators), expected);
+    }
+
+    @DataProvider
+    public Object[][] divideMethodFailTestCases() {
+        return new Object[][] {
+                new Object[] {new double [] { 1, 2, 3, 4}, new double [] {2, 3, 4}},
+                new Object[] {new double [] {100}, new double [] {}},
+        };
+    }
+
+    @Test(dataProvider = "divideMethodFailTestCases",expectedExceptions = RuntimeException.class)
+    public void testDivideFail(final double [] lhs, final double [] rhs){
+        divide(lhs, rhs);
+    }
+
+    //TestNG doesn't have a utility function with this signature....
+    private void assertEquals(final double [] actual, final double [] expected) {
+        Assert.assertEquals(actual.length,expected.length,"Arrays do not have equal lengths");
+
+        for(int i=0;i<actual.length;++i){
+            Assert.assertEquals(actual[i], expected[i],"Array differ at position " +i);
         }
     }
 }
