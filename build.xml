@@ -80,6 +80,12 @@
             </fileset>
             <fileset dir="${htsjdk_lib_dir}">
                 <include name="*.jar"/>
+                <include name="**/*.jar"/>
+            </fileset>
+            <!-- for the specific HTSJDK library JARs -->
+            <fileset dir="${htsjdk}/lib">
+                <include name="*.jar"/>
+                <include name="**/*.jar"/>
             </fileset>
         </path>
         <path id="metrics.classpath">
