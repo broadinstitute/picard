@@ -417,7 +417,7 @@
             <zipfileset dir="${htsjdk_lib_dir}" includes="htsjdk-*.jar" prefix="picard-tools-${picard-version}"/>
             <zipfileset dir="${lib}" includes="snappy*.jar"/>
             <!-- distribute libJniDeflater.so in same directory as jarfiles-->
-            <zipfileset dir="${lib}/jni" includes="*" prefix="picard-tools-${picard-version}"/>
+            <zipfileset dir="${htsjdk}/lib/jni" includes="*" prefix="picard-tools-${picard-version}"/>
         </zip>
     </target>
 
