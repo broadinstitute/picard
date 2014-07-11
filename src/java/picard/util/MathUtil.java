@@ -191,6 +191,16 @@ public class MathUtil {
         return tmp;
     }
 
+    /** Calculates the ratio of two arrays of the same length. */
+    public static double[] divide(final double[] numerators, final double[] denominators) {
+        if (numerators.length != denominators.length) throw new IllegalArgumentException("Arrays must be of same length.");
+
+        final int len = numerators.length;
+        final double[] result = new double[len];
+        for (int i = 0; i < len; ++i) result[i] = numerators[i] / denominators[i];
+        return result;
+    }
+
     /** Calculates the product of two arrays of the same length. */
     public static double[] multiply(final double[] lhs, final double[] rhs) {
         if (lhs.length != rhs.length) throw new IllegalArgumentException("Arrays must be of same length.");
@@ -201,6 +211,7 @@ public class MathUtil {
         return result;
     }
 
+    
     /** Returns the sum of the elements in the array. */
     public static double sum(final double[] arr) {
         double result = 0;
