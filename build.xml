@@ -273,6 +273,9 @@
                 <fileset dir="${htsjdk}/dist">
                     <include name="**/*.jar"/>
                 </fileset>
+                <fileset dir="${htsjdk}/lib">
+                    <include name="**/*.jar"/>
+                </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
             <fileset dir="${src}" defaultexcludes="yes">
@@ -295,6 +298,9 @@
                 <fileset dir="${lib}">
                     <include name="**/*.jar"/>
                 </fileset>
+                <fileset dir="${htsjdk}/lib">
+                    <include name="**/*.jar"/>
+                </fileset>
             </classpath>
             <link href="http://java.sun.com/j2se/1.6.0/docs/api/"/>
             <fileset dir="${htsjdk_src}" defaultexcludes="yes">
@@ -309,6 +315,9 @@
             <classpath>
                 <pathelement location="${java.home}/../lib/tools.jar"/>
                 <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+                <fileset dir="${htsjdk}/dist">
                     <include name="**/*.jar"/>
                 </fileset>
             </classpath>
