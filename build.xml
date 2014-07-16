@@ -452,7 +452,7 @@
                 <fileset dir="${command_tmp}" includes="org/xerial/snappy/VERSION"/>
                 <fileset dir="${command_tmp}" includes="META-INF/maven/org.xerial.snappy/snappy-java/pom.properties"/>
                 <!-- Force inclusion of IntelDeflater, which is dynamically linked. -->
-                <fileset dir="${command_tmp}" includes="htsjdk/util/zip/*"/>
+                <fileset dir="${command_tmp}" includes="htsjdk/samtools/util/zip/*"/>
                 <filesets/>
                 <manifest>
                     <attribute name="Implementation-Title" value="@{title}"/>
