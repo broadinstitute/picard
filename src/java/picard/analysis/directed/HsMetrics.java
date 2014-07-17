@@ -130,6 +130,10 @@ public class HsMetrics extends MultilevelMetrics {
 	public double PCT_TARGET_BASES_50X;
 	/** The percentage of ALL target bases achieving 100X or greater coverage. */
 	public double PCT_TARGET_BASES_100X;
+    /** The percentage of ALL target bases acheiving 200X or greater coverage. */
+    public double PCT_TARGET_BASES_200X;
+    /** The percentage of ALL target bases acheiving 300X or greater coverage. */
+    public double PCT_TARGET_BASES_300X;
 
     /** The estimated number of unique molecules in the selected part of the library. */
     public Long HS_LIBRARY_SIZE;
