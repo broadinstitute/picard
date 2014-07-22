@@ -446,7 +446,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             // Sort the array (ASCENDING) and then find the base the coverage value that lies at the 80%
             // line, which is actually at 20% into the array now
             Arrays.sort(depths);
-            final int indexOf80thPercentile = (depths.length - 1 - basesConsidered) + (int) (basesConsidered * 0.2);
+            // Note.  basesConsidered can be between 0 and depths.length inclusive.  indexOf80thPercentile will be -1 in the latter case
+            final int indexOf80thPercentile = Math.max((depths.length - 1 - basesConsidered) + (int) (basesConsidered * 0.2), 0);
             final int coverageAt80thPercentile = depths[indexOf80thPercentile];
             this.metrics.FOLD_80_BASE_PENALTY = this.metrics.MEAN_TARGET_COVERAGE / coverageAt80thPercentile;
             this.metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
