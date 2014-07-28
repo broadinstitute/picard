@@ -2,7 +2,7 @@
     <!-- BEGIN OF THE SIDEBAR  -->
     <h3>General Information</h3>
     <ul>
-        <li><a href=" https://sourceforge.net/apps/mediawiki/picard/index.php?title=Main_Page">FAQ</a></li>
+        <li><a href="http://sourceforge.net/p/picard/wiki/Main_Page/">FAQ</a></li>
         <li><a href="http://sourceforge.net/project/showfiles.php?group_id=262138">Download Page</a></li>
         <li><a href="http://picard.sourceforge.net/index.shtml#GettingHelp">Getting help</a></li>
         <li><a href="https://github.com/broadinstitute/picard">Picard Github Project Page</a></li>
