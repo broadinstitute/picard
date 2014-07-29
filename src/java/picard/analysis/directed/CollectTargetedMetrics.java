@@ -39,7 +39,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     protected abstract IntervalList getProbeIntervals();
 
     protected abstract String getProbeSetName();
-    
+
     /**
      * A factory method for the TargetMetricsCollector to use this time.  Examples of TargetMetricsCollector:
      * (TargetedPcrMetricsCollector, HsMetricsCalculator)
@@ -47,12 +47,12 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
      * @return A TargetMetricsCollector to which we will pass SAMRecords
      */
     protected abstract COLLECTOR makeCollector(final Set<MetricAccumulationLevel> accumulationLevels,
-                                                            final List<SAMReadGroupRecord> samRgRecords,
-                                                            final ReferenceSequenceFile refFile,
-                                                            final File perTargetCoverage,
-                                                            final IntervalList targetIntervals,
-                                                            final IntervalList probeIntervals,
-                                                            final String probeSetName);
+                                               final List<SAMReadGroupRecord> samRgRecords,
+                                               final ReferenceSequenceFile refFile,
+                                               final File perTargetCoverage,
+                                               final IntervalList targetIntervals,
+                                               final IntervalList probeIntervals,
+                                               final String probeSetName);
 
 
     @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
@@ -67,9 +67,6 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Option(shortName = "LEVEL", doc = "The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, optional = true, doc = "The reference sequence aligned to.")
-    public File REFERENCE_SEQUENCE;
-
     @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
 
@@ -83,7 +80,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         IOUtil.assertFileIsWritable(OUTPUT);
         if (PER_TARGET_COVERAGE != null) IOUtil.assertFileIsWritable(PER_TARGET_COVERAGE);
 
-        final SamReader reader = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final IntervalList targetIntervals = IntervalList.fromFiles(TARGET_INTERVALS);
 
         // Validate that the targets and baits have the same references as the reads file
@@ -141,8 +138,8 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
         } else {
             return name.substring(0, firstPeriodIndex);
         }
-    } 
-    
+    }
+
     protected String[] customCommandLineValidation() {
         if (PER_TARGET_COVERAGE != null && (METRIC_ACCUMULATION_LEVEL.size() != 1 ||
                 METRIC_ACCUMULATION_LEVEL.iterator().next() != MetricAccumulationLevel.ALL_READS)) {

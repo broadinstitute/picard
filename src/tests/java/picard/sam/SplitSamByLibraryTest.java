@@ -23,7 +23,9 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -50,7 +52,7 @@ public class SplitSamByLibraryTest {
     public void basicPositiveTest() {
         SplitSamByLibrary splitter = new SplitSamByLibrary();
         splitter.INPUT = new File("testdata/picard/sam/split_test.sam");
-        Assert.assertEquals(splitter.doWork(), 0,  "SAM file split should have succeeded but didn't.");
+        Assert.assertEquals(splitter.doWork(), 0, "SAM file split should have succeeded but didn't.");
 
         File f = new File("unknown.sam");
         Assert.assertTrue(f.exists(), "uknown.sam should exist but doesn't");
@@ -77,7 +79,7 @@ public class SplitSamByLibraryTest {
     public void testNoUnknownFile() {
         SplitSamByLibrary splitter = new SplitSamByLibrary();
         splitter.INPUT = new File("testdata/picard/sam/split_test2.sam");
-        Assert.assertEquals(splitter.doWork(), 0,  "SAM file split should have succeeded but didn't.");
+        Assert.assertEquals(splitter.doWork(), 0, "SAM file split should have succeeded but didn't.");
 
         // The unknown file should exist and have two reads
         File f = new File("unknown.sam");
@@ -97,13 +99,13 @@ public class SplitSamByLibraryTest {
     }
 
     private int countReads(File samFile) {
-        SAMFileReader reader = new SAMFileReader(samFile);
+        SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         int count = 0;
-        for (Iterator it = reader.iterator(); it.hasNext();) {
+        for (Iterator it = reader.iterator(); it.hasNext(); ) {
             it.next();
             count++;
         }
-        reader.close();
+        CloserUtil.close(reader);
         return count;
 
     }

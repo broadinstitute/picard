@@ -24,9 +24,10 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.IOUtil;
@@ -363,7 +364,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
 
     private Map<String,MatePair> createSamMatePairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
+        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
 
         final Map<String,MatePair> map = new LinkedHashMap<String,MatePair>();
         for (final SAMRecord record : reader ) {
@@ -381,7 +382,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
 
     private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
+        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
 
         Map<String,MatePair> curFileMap;

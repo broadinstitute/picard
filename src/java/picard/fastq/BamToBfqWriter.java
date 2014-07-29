@@ -25,8 +25,9 @@ package picard.fastq;
 
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.FailsVendorReadQualityFilter;
 import htsjdk.samtools.filter.FilteringIterator;
@@ -129,7 +130,7 @@ public class BamToBfqWriter {
      */
     public void writeBfqFiles() {
 
-        final Iterator<SAMRecord> iterator = (new SAMFileReader(IOUtil.openFileForReading(this.bamFile))).iterator();
+        final Iterator<SAMRecord> iterator = SamReaderFactory.makeDefault().open(bamFile).iterator();
 
         // Filter out noise reads and reads that fail the quality filter
         final TagFilter tagFilter = new TagFilter(ReservedTagConstants.XN, 1);
@@ -380,7 +381,7 @@ public class BamToBfqWriter {
     private int countWritableRecords() {
         int count = 0;
         
-        SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(this.bamFile));
+        SamReader reader = SamReaderFactory.makeDefault().open(this.bamFile);
         if(!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
         	//this is a fix for issue PIC-274: It looks like BamToBfqWriter requires that the input BAM is queryname sorted, 
         	//but it doesn't check this early, nor produce an understandable error message."

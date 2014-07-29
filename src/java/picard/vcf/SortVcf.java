@@ -30,7 +30,6 @@ import java.util.List;
  * Sorts one or more VCF files according to the order of the contigs in the header/sequence dictionary and then
  * by coordinate.  Can accept an external dictionary. If no external dictionary is supplied, multiple inputs' headers must have
  * the same sequence dictionaries
- *
  */
 @CommandLineProgramProperties(
         usage = "Sorts one or more VCF files according to the order of the contigs in the header/sequence dictionary and then by coordinate. " +
@@ -41,13 +40,13 @@ import java.util.List;
 )
 public class SortVcf extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
     public List<File> INPUT;
 
-    @Option(shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output VCF to be written.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional=true)
+    @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true)
     public File SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(SortVcf.class);
@@ -74,7 +73,7 @@ public class SortVcf extends CommandLineProgram {
 
         SAMSequenceDictionary samSequenceDictionary = null;
         if (SEQUENCE_DICTIONARY != null) {
-            samSequenceDictionary = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+            samSequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
             CloserUtil.close(SEQUENCE_DICTIONARY);
         }
 
@@ -117,7 +116,7 @@ public class SortVcf extends CommandLineProgram {
             if (sampleList.isEmpty()) {
                 sampleList.addAll(header.getSampleNamesInOrder());
             } else {
-                if ( !sampleList.equals(header.getSampleNamesInOrder())) {
+                if (!sampleList.equals(header.getSampleNamesInOrder())) {
                     throw new IllegalArgumentException("Input file " + input.getAbsolutePath() + " has sample names that don't match the other files.");
                 }
             }
@@ -128,12 +127,12 @@ public class SortVcf extends CommandLineProgram {
 
     /**
      * Merge the inputs and sort them by adding each input's content to a single SortingCollection.
-     *
+     * <p/>
      * NB: It would be better to have a merging iterator as in MergeSamFiles, as this would perform better for pre-sorted inputs.
      * Here, we are assuming inputs are unsorted, and so adding their VariantContexts iteratively is fine for now.
      * MergeVcfs exists for simple merging of presorted inputs.
      *
-     * @param readers - a list of VCFFileReaders, one for each input VCF
+     * @param readers      - a list of VCFFileReaders, one for each input VCF
      * @param outputHeader - The merged header whose information we intend to use in the final output file
      */
     private SortingCollection<VariantContext> sortInputs(final List<VCFFileReader> readers, final VCFHeader outputHeader) {

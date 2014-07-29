@@ -1,7 +1,7 @@
 package picard.vcf;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -25,7 +25,7 @@ import java.io.File;
 /**
  * Splits the input VCF file into two, one for indels and one for SNPs. The headers of the two output
  * files will be identical.
- *
+ * <p/>
  * An index file is created for the output file by default. Using an output file name with a ".gz"
  * extension will create gzip-compressed output.
  */
@@ -39,45 +39,45 @@ import java.io.File;
 public class SplitVcfs extends CommandLineProgram {
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The VCF or BCF input file")
-	public File INPUT;
+    public File INPUT;
 
-	@Option(doc="The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
-	public File SNP_OUTPUT;
+    @Option(doc = "The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.")
+    public File SNP_OUTPUT;
 
-	@Option(doc="The VCF or BCF file to which indel records should be written. The file format is determined by file extension.")
-	public File INDEL_OUTPUT;
+    @Option(doc = "The VCF or BCF file to which indel records should be written. The file format is determined by file extension.")
+    public File INDEL_OUTPUT;
 
-	@Option(shortName="D", doc="The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
-	public File SEQUENCE_DICTIONARY;
+    @Option(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionaries in the input files", optional = true)
+    public File SEQUENCE_DICTIONARY;
 
-    @Option(doc="If true an exception will be thrown if an event type other than SNP or indel is encountered")
+    @Option(doc = "If true an exception will be thrown if an event type other than SNP or indel is encountered")
     public Boolean STRICT = true;
 
     private final Log log = Log.getInstance(SplitVcfs.class);
 
-	public static void main(final String[] argv) {
-		new SplitVcfs().instanceMainWithExit(argv);
-	}
+    public static void main(final String[] argv) {
+        new SplitVcfs().instanceMainWithExit(argv);
+    }
 
-	public SplitVcfs() {
-		this.CREATE_INDEX = true;
-	}
+    public SplitVcfs() {
+        this.CREATE_INDEX = true;
+    }
 
-	@Override
-	protected int doWork() {
-		IOUtil.assertFileIsReadable(INPUT);
-		final ProgressLogger progress = new ProgressLogger(log, 10000);
+    @Override
+    protected int doWork() {
+        IOUtil.assertFileIsReadable(INPUT);
+        final ProgressLogger progress = new ProgressLogger(log, 10000);
 
-		final VCFFileReader fileReader = new VCFFileReader(INPUT);
-		final VCFHeader fileHeader = fileReader.getFileHeader();
+        final VCFFileReader fileReader = new VCFFileReader(INPUT);
+        final VCFHeader fileHeader = fileReader.getFileHeader();
 
-		final SAMSequenceDictionary sequenceDictionary =
-				SEQUENCE_DICTIONARY != null
-						? SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY)
-						: fileHeader.getSequenceDictionary();
-		if (CREATE_INDEX && sequenceDictionary == null) {
-			throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
-		}
+        final SAMSequenceDictionary sequenceDictionary =
+                SEQUENCE_DICTIONARY != null
+                        ? SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary()
+                        : fileHeader.getSequenceDictionary();
+        if (CREATE_INDEX && sequenceDictionary == null) {
+            throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+        }
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                 .setReferenceDictionary(sequenceDictionary)
@@ -85,35 +85,35 @@ public class SplitVcfs extends CommandLineProgram {
         if (CREATE_INDEX)
             builder.setOption(Options.INDEX_ON_THE_FLY);
 
-		final VariantContextWriter snpWriter = builder.setOutputFile(SNP_OUTPUT).build();
-		final VariantContextWriter indelWriter = builder.setOutputFile(INDEL_OUTPUT).build();
-		snpWriter.writeHeader(fileHeader);
-		indelWriter.writeHeader(fileHeader);
+        final VariantContextWriter snpWriter = builder.setOutputFile(SNP_OUTPUT).build();
+        final VariantContextWriter indelWriter = builder.setOutputFile(INDEL_OUTPUT).build();
+        snpWriter.writeHeader(fileHeader);
+        indelWriter.writeHeader(fileHeader);
 
         int incorrectVariantCount = 0;
 
-		final CloseableIterator<VariantContext> iterator = fileReader.iterator();
-		while (iterator.hasNext()) {
-			final VariantContext context = iterator.next();
-			if (context.isIndel()) indelWriter.add(context);
-			else if (context.isSNP()) snpWriter.add(context);
-			else {
+        final CloseableIterator<VariantContext> iterator = fileReader.iterator();
+        while (iterator.hasNext()) {
+            final VariantContext context = iterator.next();
+            if (context.isIndel()) indelWriter.add(context);
+            else if (context.isSNP()) snpWriter.add(context);
+            else {
                 if (STRICT) throw new IllegalStateException("Found a record with type " + context.getType().name());
                 else incorrectVariantCount++;
             }
 
             progress.record(context.getChr(), context.getStart());
-		}
+        }
 
         if (incorrectVariantCount > 0) {
             log.debug("Found " + incorrectVariantCount + " records that didn't match SNP or INDEL");
         }
 
-		CloserUtil.close(iterator);
-		CloserUtil.close(fileReader);
-		snpWriter.close();
-		indelWriter.close();
+        CloserUtil.close(iterator);
+        CloserUtil.close(fileReader);
+        snpWriter.close();
+        indelWriter.close();
 
-		return 0;
-	}
+        return 0;
+    }
 }

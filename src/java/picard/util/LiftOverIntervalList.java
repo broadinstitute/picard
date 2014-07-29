@@ -23,21 +23,21 @@
  */
 package picard.util;
 
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Intervals;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.liftover.LiftOver;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Intervals;
 
 import java.io.File;
-import java.lang.Override;import java.lang.String;import java.util.List;
+import java.util.List;
 
 /**
  * @author alecw@broadinstitute.org
@@ -89,7 +89,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
         liftOver.setLiftOverMinMatch(MIN_LIFTOVER_PCT);
 
         final IntervalList fromIntervals = IntervalList.fromFile(INPUT);
-        final SAMFileHeader toHeader = new SAMFileReader(SEQUENCE_DICTIONARY).getFileHeader();
+        final SAMFileHeader toHeader = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader();
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
         final IntervalList toIntervals = new IntervalList(toHeader);
         boolean anyFailed = false;
@@ -107,8 +107,8 @@ public class LiftOverIntervalList extends CommandLineProgram {
             }
         }
 
-        toIntervals.sort();
+        toIntervals.sorted();
         toIntervals.write(OUTPUT);
-        return anyFailed? 1: 0;
+        return anyFailed ? 1 : 0;
     }
 }

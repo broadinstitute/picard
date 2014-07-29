@@ -23,8 +23,8 @@
  */
 package picard.vcf;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -58,7 +58,7 @@ import java.util.List;
  * are not present in the input files, are not identical or if the sample lists are not the
  * same; this class uses the GATK to merge headers, which may throw exceptions if the headers
  * cannot be merged. See VCFUtils.smartMergeHeaders for details.
- *
+ * <p/>
  * An index file is created for the output file by default. Using an output file name with a
  * ".gz" extension will create gzip-compressed output.
  */
@@ -72,67 +72,68 @@ import java.util.List;
 public class MergeVcfs extends CommandLineProgram {
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
-	public List<File> INPUT;
+    public List<File> INPUT;
 
-	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The merged VCF or BCF file. File format is determined by file extension.")
-	public File OUTPUT;
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
+    public File OUTPUT;
 
-	@Option(shortName="D", doc="The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
-	public File SEQUENCE_DICTIONARY;
+    @Option(shortName = "D", doc = "The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
+    public File SEQUENCE_DICTIONARY;
 
     private final Log log = Log.getInstance(MergeVcfs.class);
 
-	public static void main(final String[] argv) {
-		new MergeVcfs().instanceMainWithExit(argv);
-	}
+    public static void main(final String[] argv) {
+        new MergeVcfs().instanceMainWithExit(argv);
+    }
 
-	public MergeVcfs() {
-		this.CREATE_INDEX = true;
-	}
+    public MergeVcfs() {
+        this.CREATE_INDEX = true;
+    }
 
-	@Override
-	protected int doWork() {
-		final ProgressLogger progress = new ProgressLogger(log, 10000);
-		final List<String> sampleList = new ArrayList<String>();
-		final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
-		final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
+    @Override
+    protected int doWork() {
+        final ProgressLogger progress = new ProgressLogger(log, 10000);
+        final List<String> sampleList = new ArrayList<String>();
+        final Collection<CloseableIterator<VariantContext>> iteratorCollection = new ArrayList<CloseableIterator<VariantContext>>(INPUT.size());
+        final Collection<VCFHeader> headers = new HashSet<VCFHeader>(INPUT.size());
 
-		VariantContextComparator variantContextComparator = null;
-		SAMSequenceDictionary sequenceDictionary = null;
+        VariantContextComparator variantContextComparator = null;
+        SAMSequenceDictionary sequenceDictionary = null;
 
-		if (SEQUENCE_DICTIONARY != null) sequenceDictionary = SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY);
+        if (SEQUENCE_DICTIONARY != null)
+            sequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
 
-		for (final File file : INPUT) {
-			IOUtil.assertFileIsReadable(file);
-			final VCFFileReader fileReader = new VCFFileReader(file, false);
-			final VCFHeader fileHeader = fileReader.getFileHeader();
+        for (final File file : INPUT) {
+            IOUtil.assertFileIsReadable(file);
+            final VCFFileReader fileReader = new VCFFileReader(file, false);
+            final VCFHeader fileHeader = fileReader.getFileHeader();
 
-			if (variantContextComparator == null) {
-				variantContextComparator = fileHeader.getVCFRecordComparator();
-			} else {
-				if ( ! variantContextComparator.isCompatible(fileHeader.getContigLines())) {
-					throw new IllegalArgumentException(
-							"The contig entries in input file " + file.getAbsolutePath() + " are not compatible with the others.");
-				}
-			}
+            if (variantContextComparator == null) {
+                variantContextComparator = fileHeader.getVCFRecordComparator();
+            } else {
+                if (!variantContextComparator.isCompatible(fileHeader.getContigLines())) {
+                    throw new IllegalArgumentException(
+                            "The contig entries in input file " + file.getAbsolutePath() + " are not compatible with the others.");
+                }
+            }
 
-			if (sequenceDictionary == null) sequenceDictionary = fileHeader.getSequenceDictionary();
+            if (sequenceDictionary == null) sequenceDictionary = fileHeader.getSequenceDictionary();
 
-			if (sampleList.isEmpty()) {
-				sampleList.addAll(fileHeader.getSampleNamesInOrder());
-			} else {
-				if ( ! sampleList.equals(fileHeader.getSampleNamesInOrder())) {
-					throw new IllegalArgumentException("Input file " + file.getAbsolutePath() + " has sample entries that don't match the other files.");
-				}
-			}
+            if (sampleList.isEmpty()) {
+                sampleList.addAll(fileHeader.getSampleNamesInOrder());
+            } else {
+                if (!sampleList.equals(fileHeader.getSampleNamesInOrder())) {
+                    throw new IllegalArgumentException("Input file " + file.getAbsolutePath() + " has sample entries that don't match the other files.");
+                }
+            }
 
-			headers.add(fileHeader);
-			iteratorCollection.add(fileReader.iterator());
-		}
+            headers.add(fileHeader);
+            iteratorCollection.add(fileReader.iterator());
+        }
 
-		if (CREATE_INDEX && sequenceDictionary == null) {
-			throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
-		}
+        if (CREATE_INDEX && sequenceDictionary == null) {
+            throw new PicardException("A sequence dictionary must be available (either through the input file or by setting it explicitly) when creating indexed output.");
+        }
 
         final VariantContextWriterBuilder builder = new VariantContextWriterBuilder()
                 .setOutputFile(OUTPUT)
@@ -142,17 +143,17 @@ public class MergeVcfs extends CommandLineProgram {
             builder.setOption(Options.INDEX_ON_THE_FLY);
         final VariantContextWriter writer = builder.build();
 
-		writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
+        writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));
 
-		final MergingIterator<VariantContext> mergingIterator = new MergingIterator<VariantContext>(variantContextComparator, iteratorCollection);
-		while (mergingIterator.hasNext()) {
-			final VariantContext context = mergingIterator.next();
-			writer.add(context);
-			progress.record(context.getChr(), context.getStart());
-		}
+        final MergingIterator<VariantContext> mergingIterator = new MergingIterator<VariantContext>(variantContextComparator, iteratorCollection);
+        while (mergingIterator.hasNext()) {
+            final VariantContext context = mergingIterator.next();
+            writer.add(context);
+            progress.record(context.getChr(), context.getStart());
+        }
 
-		CloserUtil.close(mergingIterator);
-		writer.close();
-		return 0;
-	}
+        CloserUtil.close(mergingIterator);
+        writer.close();
+        return 0;
+    }
 }

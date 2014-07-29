@@ -23,10 +23,11 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
@@ -72,38 +73,33 @@ public class CleanSam extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE);
         if (VALIDATION_STRINGENCY == ValidationStringency.STRICT) {
-            SAMFileReader.setDefaultValidationStringency(ValidationStringency.LENIENT);
+            factory.validationStringency(ValidationStringency.LENIENT);
         }
-        try {
-            final SAMFileReader reader = new SAMFileReader(INPUT);
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-            final CloseableIterator<SAMRecord> it = reader.iterator();
-            final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
+        final SamReader reader = factory.open(INPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+        final CloseableIterator<SAMRecord> it = reader.iterator();
+        final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
+
+        // If the read (or its mate) maps off the end of the alignment, clip it
+        while (it.hasNext()) {
+            final SAMRecord rec = it.next();
 
             // If the read (or its mate) maps off the end of the alignment, clip it
-            while(it.hasNext()) {
-                final SAMRecord rec = it.next();
+            AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(rec);
 
-                // If the read (or its mate) maps off the end of the alignment, clip it
-                AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(rec);
-
-                // check the read's mapping quality
-                if (rec.getReadUnmappedFlag() && 0 != rec.getMappingQuality()) {
-                    rec.setMappingQuality(0);
-                }
-
-                writer.addAlignment(rec);
-                progress.record(rec);
+            // check the read's mapping quality
+            if (rec.getReadUnmappedFlag() && 0 != rec.getMappingQuality()) {
+                rec.setMappingQuality(0);
             }
 
-            writer.close();
-            it.close();
+            writer.addAlignment(rec);
+            progress.record(rec);
         }
-        finally {
-            SAMFileReader.setDefaultValidationStringency(originalStringency);
-        }
+
+        writer.close();
+        it.close();
         return 0;
     }
 }

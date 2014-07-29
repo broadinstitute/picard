@@ -24,20 +24,21 @@
 
 package picard.analysis;
 
-import picard.cmdline.CommandLineProgram;
-import picard.cmdline.CommandLineProgramProperties;
-import picard.cmdline.programgroups.Metrics;
-import picard.cmdline.Option;
-import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMRecord;
+import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Metrics;
 
-import java.io.File;import java.lang.Integer;import java.lang.String;
+import java.io.File;
 
 /**
  * Command line program to calibrate quality yield metrics
@@ -52,17 +53,17 @@ import java.io.File;import java.lang.Integer;import java.lang.String;
 )
 public class CollectQualityYieldMetrics extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="A SAM or BAM file to process.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "A SAM or BAM file to process.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The metrics file to write with quality yield metrics.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The metrics file to write with quality yield metrics.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
-            doc="If available in the OQ tag, use the original quality scores " +
-            "as inputs instead of the quality scores in the QUAL field.")
+    @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
+            doc = "If available in the OQ tag, use the original quality scores " +
+                    "as inputs instead of the quality scores in the QUAL field.")
     public boolean USE_ORIGINAL_QUALITIES = true;
 
     /** Stock main method for a command line program. */
@@ -85,18 +86,18 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
 
         log.info("Reading input file and calculating metrics.");
 
-        final SAMFileReader sam = new SAMFileReader(IOUtil.openFileForReading(INPUT));
+        final SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
 
-        final MetricsFile<QualityYieldMetrics,Integer> metricsFile = getMetricsFile();
+        final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
         final QualityYieldMetrics metrics = new QualityYieldMetrics();
 
         for (final SAMRecord rec : sam) {
-            metrics.TOTAL_READS ++;
+            metrics.TOTAL_READS++;
             final int length = rec.getReadLength();
 
             final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
-            if (isPfRead){
-                metrics.PF_READS ++;
+            if (isPfRead) {
+                metrics.PF_READS++;
                 metrics.PF_BASES += length;
             }
 
@@ -107,18 +108,17 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
                 byte[] tmp = rec.getOriginalBaseQualities();
                 if (tmp == null) tmp = rec.getBaseQualities();
                 quals = tmp;
-            }
-            else {
+            } else {
                 quals = rec.getBaseQualities();
             }
 
             // add up quals, and quals >= 20
-            for (int i=0; i<quals.length; ++i) {
+            for (int i = 0; i < quals.length; ++i) {
                 metrics.Q20_EQUIVALENT_YIELD += quals[i];
                 if (quals[i] >= 20) metrics.Q20_BASES++;
                 if (quals[i] >= 30) metrics.Q30_BASES++;
 
-                if (isPfRead){
+                if (isPfRead) {
                     metrics.PF_Q20_EQUIVALENT_YIELD += quals[i];
                     if (quals[i] >= 20) metrics.PF_Q20_BASES++;
                     if (quals[i] >= 30) metrics.PF_Q30_BASES++;
@@ -127,10 +127,10 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
 
             progress.record(rec);
         }
-        
+
         metrics.READ_LENGTH = metrics.TOTAL_READS == 0 ? 0 : (int) (metrics.TOTAL_BASES / metrics.TOTAL_READS);
-        metrics.Q20_EQUIVALENT_YIELD =  metrics.Q20_EQUIVALENT_YIELD / 20 ;
-        metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20 ;
+        metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
+        metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
 
         metricsFile.addMetric(metrics);
         metricsFile.write(OUTPUT);
@@ -175,5 +175,5 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
         public long PF_Q20_EQUIVALENT_YIELD = 0;
 
     }
-    
+
 }

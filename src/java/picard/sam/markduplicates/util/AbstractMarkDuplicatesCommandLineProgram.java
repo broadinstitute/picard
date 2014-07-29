@@ -24,22 +24,31 @@
 
 package picard.sam.markduplicates.util;
 
+import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
+import htsjdk.samtools.MergingSamRecordIterator;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
     import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.MergingSamRecordIterator;
-import htsjdk.samtools.SamFileHeaderMerger;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.*;
-import htsjdk.samtools.util.CloseableIterator;
 import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
-import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Abstract class that holds parameters and methods common to classes that perform duplicate
@@ -223,10 +232,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      */
     protected SamHeaderAndIterator openInputs() {
         final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(INPUT.size());
-        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>(INPUT.size());
+        final List<SamReader> readers = new ArrayList<SamReader>(INPUT.size());
 
         for (final File f : INPUT) {
-            final SAMFileReader reader = new SAMFileReader(f, true); // eager decode
+            final SamReader reader = SamReaderFactory.makeDefault().enable(SamReaderFactory.Option.EAGERLY_DECODE).open(f); // eager decode
             final SAMFileHeader header = reader.getFileHeader();
 
             if (!ASSUME_SORTED && header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {

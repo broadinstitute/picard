@@ -23,14 +23,16 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SAMValidationError;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Lazy;
 import htsjdk.samtools.util.Log;
@@ -146,7 +148,7 @@ public class SamToFastq extends CommandLineProgram {
 
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(INPUT));
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final Map<String, SAMRecord> firstSeenMates = new HashMap<String, SAMRecord>();
         final FastqWriterFactory factory = new FastqWriterFactory();
         factory.setCreateMd5(CREATE_MD5_FILE);
@@ -188,7 +190,7 @@ public class SamToFastq extends CommandLineProgram {
             progress.record(currentRecord);
         }
 
-        reader.close();
+        CloserUtil.close(reader);
 
         // Close all the fastq writers being careful to close each one only once!
         for (final FastqWriters writerMapping : new HashSet<FastqWriters>(writers.values())) {

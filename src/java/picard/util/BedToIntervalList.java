@@ -58,7 +58,7 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
         try {
-            final SamReader samReader = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY);
+            final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY);
             final SAMFileHeader header = samReader.getFileHeader();
             final IntervalList intervalList = new IntervalList(header);
             CloserUtil.close(samReader);
@@ -92,20 +92,15 @@ public class BedToIntervalList extends CommandLineProgram {
                 // Do some validation
                 if (null == sequenceRecord) {
                     throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
-                }
-                else if (start < 1) {
+                } else if (start < 1) {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
-                }
-                else if (sequenceRecord.getSequenceLength() < start) {
+                } else if (sequenceRecord.getSequenceLength() < start) {
                     throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                }
-                else if (end < 1) {
+                } else if (end < 1) {
                     throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
-                }
-                else if (sequenceRecord.getSequenceLength() < end) {
+                } else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
-                }
-                else if (end < start - 1) {
+                } else if (end < start - 1) {
                     throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
                 }
 

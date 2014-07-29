@@ -24,10 +24,12 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -50,13 +52,13 @@ import java.io.File;
 )
 public class SortSam extends CommandLineProgram {
 
-    @Option(doc="The BAM or SAM file to sort.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Option(doc = "The BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc="The sorted BAM or SAM output file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Option(doc = "The sorted BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc="Sort order of output file")
+    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
     private final Log log = Log.getInstance(SortSam.class);
@@ -68,21 +70,22 @@ public class SortSam extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(INPUT));
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        ;
         reader.getFileHeader().setSortOrder(SORT_ORDER);
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
-	    writer.setProgressLogger(
-			    new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
+        writer.setProgressLogger(
+                new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
-        for (final SAMRecord rec: reader) {
+        for (final SAMRecord rec : reader) {
             writer.addAlignment(rec);
             progress.record(rec);
         }
 
         log.info("Finished reading inputs, merging and writing to output now.");
 
-        reader.close();
+        CloserUtil.close(reader);
         writer.close();
         return 0;
     }

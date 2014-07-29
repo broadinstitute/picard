@@ -28,13 +28,15 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.AlignedFilter;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.ReadNameFilter;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -84,8 +86,8 @@ public class FilterSamReads extends CommandLineProgram {
     }
 
     @Option(doc = "The SAM or BAM file that will be filtered.",
-        optional = false,
-        shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+            optional = false,
+            shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
     @Option(doc = "Filter.", optional = false)
@@ -97,23 +99,23 @@ public class FilterSamReads extends CommandLineProgram {
     public File READ_LIST_FILE;
 
     @Option(
-        doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
-        optional = true, shortName = "SO")
+            doc = "SortOrder of the OUTPUT SAM or BAM file, otherwise use the SortOrder of the INPUT file.",
+            optional = true, shortName = "SO")
     public SAMFileHeader.SortOrder SORT_ORDER;
 
     @Option(
-        doc = "Create .reads files (for debugging purposes)",
-        optional = true)
+            doc = "Create .reads files (for debugging purposes)",
+            optional = true)
     public boolean WRITE_READS_FILES = true;
 
     @Option(doc = "SAM or BAM file to write read excluded results to",
-        optional = false, shortName = "O")
+            optional = false, shortName = "O")
     public File OUTPUT;
 
     private void filterReads(final FilteringIterator filteringIterator) {
 
         // get OUTPUT header from INPUT and owerwrite it if necessary
-        final SAMFileReader inputReader = new SAMFileReader(INPUT);
+        final SamReader inputReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMFileHeader.SortOrder inputSortOrder = inputReader.getFileHeader().getSortOrder();
         final SAMFileHeader outputHeader = inputReader.getFileHeader();
         if (SORT_ORDER != null) {
@@ -121,13 +123,13 @@ public class FilterSamReads extends CommandLineProgram {
         }
         final boolean presorted = inputSortOrder.equals(outputHeader.getSortOrder());
         log.info("Filtering [presorted=" + presorted + "] " + INPUT.getName() + " -> OUTPUT=" +
-            OUTPUT.getName() + " [sortorder=" + outputHeader.getSortOrder().name() + "]");
+                OUTPUT.getName() + " [sortorder=" + outputHeader.getSortOrder().name() + "]");
 
         // create OUTPUT file
         final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader, presorted, OUTPUT);
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
-        
+
         while (filteringIterator.hasNext()) {
             final SAMRecord rec = filteringIterator.next();
             outputWriter.addAlignment(rec);
@@ -136,7 +138,7 @@ public class FilterSamReads extends CommandLineProgram {
 
         filteringIterator.close();
         outputWriter.close();
-        inputReader.close();
+        CloserUtil.close(inputReader);
         log.info(new DecimalFormat("#,###").format(progress.getCount()) + " SAMRecords written to " + OUTPUT.getName());
     }
 
@@ -147,9 +149,9 @@ public class FilterSamReads extends CommandLineProgram {
      *                     containing read names
      */
     private void writeReadsFile(final File samOrBamFile) throws IOException {
-        final SAMFileReader reader = new SAMFileReader(samOrBamFile);
+        final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(samOrBamFile);
         final File readsFile =
-            new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
+                new File(OUTPUT.getParentFile(), IOUtil.basename(samOrBamFile) + ".reads");
         IOUtil.assertFileIsWritable(readsFile);
         final BufferedWriter bw = IOUtil.openFileForBufferedWriting(readsFile, false);
 
@@ -172,20 +174,20 @@ public class FilterSamReads extends CommandLineProgram {
 
             switch (FILTER) {
                 case includeAligned:
-                    filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
-                    new AlignedFilter(true), true));
+                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                            new AlignedFilter(true), true));
                     break;
                 case excludeAligned:
-                    filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
-                    new AlignedFilter(false), true));
+                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                            new AlignedFilter(false), true));
                     break;
                 case includeReadList:
-                    filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
-                    new ReadNameFilter(READ_LIST_FILE, true)));
+                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                            new ReadNameFilter(READ_LIST_FILE, true)));
                     break;
                 case excludeReadList:
-                    filterReads(new FilteringIterator(new SAMFileReader(INPUT).iterator(),
-                    new ReadNameFilter(READ_LIST_FILE, false)));
+                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                            new ReadNameFilter(READ_LIST_FILE, false)));
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");

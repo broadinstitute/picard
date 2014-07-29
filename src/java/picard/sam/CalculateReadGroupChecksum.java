@@ -1,12 +1,12 @@
 package picard.sam;
 
+import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.SAMUtils;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
@@ -24,10 +24,10 @@ public class CalculateReadGroupChecksum extends CommandLineProgram {
 
     private static final String OUTPUT_FILE_EXTENSION = ".read_group_md5";
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file. ")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file. ")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The file to which the hash code should be written.", optional=true)
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The file to which the hash code should be written.", optional = true)
     public File OUTPUT;
 
     public static void main(final String[] args) {
@@ -49,7 +49,7 @@ public class CalculateReadGroupChecksum extends CommandLineProgram {
                         : OUTPUT;
 
         IOUtil.assertFileIsWritable(output);
-        final String hashText = SAMUtils.calculateReadGroupRecordChecksum(INPUT);
+        final String hashText = SAMUtils.calculateReadGroupRecordChecksum(INPUT, REFERENCE_SEQUENCE);
 
         try {
             final FileWriter outputWriter = new FileWriter(output);

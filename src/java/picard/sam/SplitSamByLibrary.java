@@ -23,18 +23,23 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileHeader;import htsjdk.samtools.SAMFileReader;import htsjdk.samtools.SAMFileWriter;import htsjdk.samtools.SAMFileWriterFactory;import htsjdk.samtools.SAMReadGroupRecord;import htsjdk.samtools.SAMRecord;import picard.cmdline.CommandLineProgram;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.lang.Override;
-import java.lang.String;
-import java.lang.System;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,12 +63,12 @@ import java.util.Map;
 )
 public class SplitSamByLibrary extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="The SAM or BAM file to be split. ")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "The SAM or BAM file to be split. ")
     public File INPUT;
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The directory where the library SAM or BAM files should be written " +
-                    "(defaults to the current directory). ", optional=true )
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The directory where the library SAM or BAM files should be written " +
+                    "(defaults to the current directory). ", optional = true)
     public File OUTPUT = new File(".").getAbsoluteFile();
 
     private static final Log log = Log.getInstance(SplitSamByLibrary.class);
@@ -79,11 +84,11 @@ public class SplitSamByLibrary extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertDirectoryIsWritable(OUTPUT);
 
-        SAMFileReader reader = new SAMFileReader(INPUT);
+        SamReader reader = SamReaderFactory.makeDefault().open(INPUT);
         Map<String, SAMFileWriter> libraryToWriter = new HashMap<String, SAMFileWriter>();
         Map<String, List<SAMReadGroupRecord>> libraryToRg = new HashMap<String, List<SAMReadGroupRecord>>();
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
-        String extension = reader.isBinary() ? ".bam" : ".sam";
+        String extension = reader.type().equals(SamReader.Type.BAM_TYPE) ? ".bam" : ".sam";
 
         SAMFileHeader unknownHeader = reader.getFileHeader().clone();
         unknownHeader.setReadGroups(new ArrayList<SAMReadGroupRecord>());
@@ -96,8 +101,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
                     libraryToRg.put(lib, new ArrayList<SAMReadGroupRecord>());
                 }
                 libraryToRg.get(lib).add(rg);
-            }
-            else {
+            } else {
                 unknownHeader.addReadGroup(rg);
             }
         }
@@ -121,8 +125,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
             SAMReadGroupRecord rg = sam.getReadGroup();
             if (rg != null && rg.getLibrary() != null) {
                 libraryToWriter.get(rg.getLibrary()).addAlignment(sam);
-            }
-            else {
+            } else {
                 if (unknown == null) {
                     unknown = factory.makeSAMOrBAMWriter(unknownHeader, true,
                             new File(OUTPUT, "unknown" + extension));
@@ -132,7 +135,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
         }
 
         // Close the reader and writers
-        reader.close();
+        CloserUtil.close(reader);
 
         if (unknown != null) {
             unknown.close();

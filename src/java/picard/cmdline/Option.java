@@ -44,31 +44,31 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Documented
 public @interface Option {
-	/** The name of the option as it would appear on the command line. */
+    /** The name of the option as it would appear on the command line. */
     String shortName() default "";
-    
+
     /** Text that appears for this option in text describing usage of the command line program. */
     String doc() default "";
-    
+
     /**
      * If set to false, an exception will be thrown if the option is not specified.
      * If 2 options are mutually exclusive and both have optional=false it will be
      * interpreted as one or the other is required and an exception will only be thrown if
-     * neither are specified. 
+     * neither are specified.
      */
     boolean optional() default false;
-    
-    /** 
+
+    /**
      * Array of option names that cannot be used in conjunction with this one.
      * If 2 options are mutually exclusive and both have optional=false it will be
      * interpreted as one OR the other is required and an exception will only be thrown if
-     * neither are specified. 
-     */ 
+     * neither are specified.
+     */
     String[] mutex() default {};
-    
+
     /** The minimum number of times that this option is required. */
     int minElements() default 0;
-    
+
     /** The maximum number of times this option is allowed. */
     int maxElements() default Integer.MAX_VALUE;
 
@@ -77,4 +77,10 @@ public @interface Option {
      * be displayed in usage info when H or STDHELP is used to display usage.
      */
     boolean common() default false;
+
+    /**
+     * This boolean determines if this annotation overrides a parent annotation. If that is the case then
+     * the options of the parent annotation are overridden with this annotation.
+     */
+    boolean overridable() default false;
 }

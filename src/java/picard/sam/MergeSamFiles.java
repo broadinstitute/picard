@@ -25,12 +25,13 @@ package picard.sam;
 
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -57,28 +58,28 @@ import java.util.List;
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
 
-    @Option(shortName="I", doc="SAM or BAM input file", minElements=1)
+    @Option(shortName = "I", doc = "SAM or BAM input file", minElements = 1)
     public List<File> INPUT = new ArrayList<File>();
 
-    @Option(shortName="O", doc="SAM or BAM file to write merged result to")
+    @Option(shortName = "O", doc = "SAM or BAM file to write merged result to")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc="Sort order of output file", optional=true)
+    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, doc = "Sort order of output file", optional = true)
     public SAMFileHeader.SortOrder SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
 
-    @Option(doc="If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",
-    shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+    @Option(doc = "If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",
+            shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(shortName="MSD", doc="Merge the sequence dictionaries", optional=true)
+    @Option(shortName = "MSD", doc = "Merge the sequence dictionaries", optional = true)
     public boolean MERGE_SEQUENCE_DICTIONARIES = false;
 
-    @Option(doc="Option to create a background thread to encode, " +
+    @Option(doc = "Option to create a background thread to encode, " +
             "compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases " +
             "runtime by ~20% when writing out a compressed BAM file.")
     public boolean USE_THREADING = false;
 
-    @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
+    @Option(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String> COMMENT = new ArrayList<String>();
 
     private static final int PROGRESS_INTERVAL = 1000000;
@@ -90,18 +91,18 @@ public class MergeSamFiles extends CommandLineProgram {
 
     /** Combines multiple SAM/BAM files into one. */
     @Override
-	protected int doWork() {
+    protected int doWork() {
         boolean matchedSortOrders = true;
 
         // Open the files for reading and writing
-        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SamReader> readers = new ArrayList<SamReader>();
         final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
         {
             SAMSequenceDictionary dict = null; // Used to try and reduce redundant SDs in memory
 
             for (final File inFile : INPUT) {
                 IOUtil.assertFileIsReadable(inFile);
-                final SAMFileReader in = new SAMFileReader(inFile);
+                final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inFile);
                 readers.add(in);
                 headers.add(in.getFileHeader());
 
@@ -110,8 +111,7 @@ public class MergeSamFiles extends CommandLineProgram {
                 // replace the duplicate copies with a single dictionary to reduce the memory footprint. 
                 if (dict == null) {
                     dict = in.getFileHeader().getSequenceDictionary();
-                }
-                else if (dict.equals(in.getFileHeader().getSequenceDictionary())) {
+                } else if (dict.equals(in.getFileHeader().getSequenceDictionary())) {
                     in.getFileHeader().setSequenceDictionary(dict);
                 }
 
@@ -131,8 +131,7 @@ public class MergeSamFiles extends CommandLineProgram {
             headerMergerSortOrder = SORT_ORDER;
             mergingSamRecordIteratorAssumeSorted = ASSUME_SORTED;
             presorted = true;
-        }
-        else {
+        } else {
             log.info("Sorting input files using temp directory " + TMP_DIR);
             headerMergerSortOrder = SAMFileHeader.SortOrder.unsorted;
             mergingSamRecordIteratorAssumeSorted = false;
