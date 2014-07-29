@@ -59,6 +59,14 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
                 return program;
             }
+        },
+        CollectBaseDistributionByCycle {
+            public SinglePassSamProgram makeInstance(final String outbase) {
+                final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
+                program.OUTPUT       = new File(outbase + ".base_distribution_by_cycle_metrics");
+                program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
+                return program;
+            }
         };
 
     }

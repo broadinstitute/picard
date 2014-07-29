@@ -32,6 +32,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.Option;
 import picard.util.RExecutor;
@@ -63,8 +64,8 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
     @Option(doc="If set to true calculate mean quality over PF reads only.")
     public boolean PF_READS_ONLY = false;
 
-    private HistogramGenerator q  = new HistogramGenerator(false);
-    private HistogramGenerator oq = new HistogramGenerator(true);
+    private final HistogramGenerator q  = new HistogramGenerator(false);
+    private final HistogramGenerator oq = new HistogramGenerator(true);
 
     /**
      * A subtitle for the plot, usually corresponding to a library.
@@ -86,11 +87,11 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         double[] secondReadTotalsByCycle = new double[maxLengthSoFar];
         long[]   secondReadCountsByCycle = new long[maxLengthSoFar];
 
-        private HistogramGenerator(boolean useOriginalQualities) {
+        private HistogramGenerator(final boolean useOriginalQualities) {
             this.useOriginalQualities = useOriginalQualities;
         }
 
-        void addRecord(SAMRecord rec) {
+        void addRecord(final SAMRecord rec) {
             final byte[] quals = (useOriginalQualities ? rec.getOriginalBaseQualities() : rec.getBaseQualities());
             if (quals == null) return;
 
@@ -99,7 +100,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             ensureArraysBigEnough(length+1);
 
             for (int i=0; i<length; ++i) {
-                int cycle = rc ? length-i : i+1;
+                final int cycle = rc ? length-i : i+1;
 
                 if (rec.getReadPairedFlag() && rec.getSecondOfPairFlag()) {
                     secondReadTotalsByCycle[cycle] += quals[i];
@@ -112,13 +113,13 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             }
         }
 
-        private void ensureArraysBigEnough(int length) {
+        private void ensureArraysBigEnough(final int length) {
             if (length > maxLengthSoFar) {
-                this.firstReadTotalsByCycle  = Arrays.copyOf(this.firstReadTotalsByCycle, length);
-                this.firstReadCountsByCycle  = Arrays.copyOf(this.firstReadCountsByCycle, length);
-                this.secondReadTotalsByCycle = Arrays.copyOf(this.secondReadTotalsByCycle , length);
-                this.secondReadCountsByCycle = Arrays.copyOf(secondReadCountsByCycle, length);
-                this.maxLengthSoFar = length;
+                firstReadTotalsByCycle  = Arrays.copyOf(firstReadTotalsByCycle, length);
+                firstReadCountsByCycle  = Arrays.copyOf(firstReadCountsByCycle, length);
+                secondReadTotalsByCycle = Arrays.copyOf(secondReadTotalsByCycle , length);
+                secondReadCountsByCycle = Arrays.copyOf(secondReadCountsByCycle, length);
+                maxLengthSoFar = length;
             }
         }
 
@@ -147,7 +148,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         }
 
         boolean isEmpty() {
-            return this.maxLengthSoFar == 0;
+            return maxLengthSoFar == 0;
         }
     }
 
@@ -159,8 +160,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         // as a suffix to the plot title
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
         if (readGroups.size() == 1) {
-            this.plotSubtitle = readGroups.get(0).getLibrary();
-            if (null == this.plotSubtitle) this.plotSubtitle = "";
+            plotSubtitle = StringUtil.asEmptyIfNull(readGroups.get(0).getLibrary());
         }
     }
 
@@ -178,7 +178,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
     @Override
     protected void finish() {
         // Generate a "Histogram" of mean quality and write it to the file
-        MetricsFile<?,Integer> metrics = getMetricsFile();
+        final MetricsFile<?,Integer> metrics = getMetricsFile();
         metrics.addHistogram(q.getMeanQualityHistogram());
         if (!oq.isEmpty()) metrics.addHistogram(oq.getMeanQualityHistogram());
         metrics.write(OUTPUT);
@@ -193,7 +193,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath(),
                     INPUT.getName(),
-                    this.plotSubtitle);
+                    plotSubtitle);
 
             if (rResult != 0) {
                 throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
