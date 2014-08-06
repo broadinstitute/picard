@@ -91,8 +91,12 @@ public class CollectWgsMetrics extends CommandLineProgram {
         public double PCT_5X;
         /** The fraction of bases that attained at least 10X sequence coverage in post-filtering bases. */
         public double PCT_10X;
+        /** The fraction of bases that attained at least 15X sequence coverage in post-filtering bases. */
+        public double PCT_15X;
         /** The fraction of bases that attained at least 20X sequence coverage in post-filtering bases. */
         public double PCT_20X;
+        /** The fraction of bases that attained at least 25X sequence coverage in post-filtering bases. */
+        public double PCT_25X;
         /** The fraction of bases that attained at least 30X sequence coverage in post-filtering bases. */
         public double PCT_30X;
         /** The fraction of bases that attained at least 40X sequence coverage in post-filtering bases. */
@@ -204,7 +208,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
         metrics.PCT_5X     = MathUtil.sum(HistogramArray, 5, HistogramArray.length)   / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_10X    = MathUtil.sum(HistogramArray, 10, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_15X    = MathUtil.sum(HistogramArray, 15, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_20X    = MathUtil.sum(HistogramArray, 20, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_25X    = MathUtil.sum(HistogramArray, 25, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_30X    = MathUtil.sum(HistogramArray, 30, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_40X    = MathUtil.sum(HistogramArray, 40, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_50X    = MathUtil.sum(HistogramArray, 50, HistogramArray.length)  / (double) metrics.GENOME_TERRITORY;
