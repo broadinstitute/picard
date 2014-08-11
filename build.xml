@@ -370,6 +370,7 @@
         <package-and-document-command title="ExtractIlluminaBarcodes"           main-class="picard.illumina.ExtractIlluminaBarcodes"/>
         <package-and-document-command title="EstimateLibraryComplexity"         main-class="picard.sam.EstimateLibraryComplexity"/>
         <package-and-document-command title="FastqToSam"                        main-class="picard.sam.FastqToSam"/>
+        <package-and-document-command title="FifoBuffer"                        main-class="picard.util.FifoBuffer"/>
         <package-and-document-command title="FilterSamReads"                    main-class="picard.sam.FilterSamReads"/>
         <package-and-document-command title="FixMateInformation"                main-class="picard.sam.FixMateInformation"/>
         <package-and-document-command title="GatherBamFiles"                    main-class="picard.sam.GatherBamFiles"/>
