@@ -13,10 +13,10 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
     final static int CONTROL_FIELD_VALUE = 0;
     final String runId, instrumentName, flowcellId;
     
-    static enum PassesFilterLabel {
+    static enum IsFilteredLabel {
         Y, N;
-        static PassesFilterLabel get(final boolean passesFilter) {
-            return passesFilter ? Y : N;
+        static IsFilteredLabel get(final boolean passesFilter) {
+            return passesFilter ? N : Y;
         }
     }
     
@@ -38,7 +38,7 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
                 cluster.getX(),
                 cluster.getY(),
                 StringUtil.asEmptyIfNull(pairNumber),
-                PassesFilterLabel.get(cluster.isPf()),
+                IsFilteredLabel.get(cluster.isPf()),
                 CONTROL_FIELD_VALUE,
                 StringUtil.asEmptyIfNull(cluster.getMatchedBarcode())
         );
