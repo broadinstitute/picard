@@ -3,12 +3,15 @@ package picard.analysis;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -54,7 +57,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(shortName="CAP", doc="Treat bases with coverage exceeding this value as if they had coverage at this value.")
     public int COVERAGE_CAP = 250;
 
-    @Option(doc="For debugging purposes, stop after processing this many genomic bases.")
+    @Option(doc="For debugging purposes, stop after processing this many covered genomic bases.")
     public long STOP_AFTER = -1;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
@@ -119,6 +122,32 @@ public class CollectWgsMetrics extends CommandLineProgram {
         new CollectWgsMetrics().instanceMainWithExit(args);
     }
 
+    private int prevReferenceIndex = 0;
+    private int prevCoordinate = 1;
+    private long nBasesUncoveredThatAreN = 0;
+
+    private ReferenceSequence updateNBasesUncoveredThatAreN(final ReferenceSequenceFileWalker refWalker, final int sequenceIndex, final int coordinate) {
+        // Get the number of Ns in previous reference sequences
+        while (prevReferenceIndex < sequenceIndex) {
+            final ReferenceSequence ref = refWalker.get(prevReferenceIndex);
+            for (int position = prevCoordinate + 1; position < ref.length(); position++) {
+                final byte base = ref.getBases()[position-1];
+                if (base == 'N') nBasesUncoveredThatAreN++;
+            }
+            prevReferenceIndex++;
+            prevCoordinate = 1;
+        }
+        // Get the number of Ns in the current reference sequence
+        final ReferenceSequence ref = refWalker.get(sequenceIndex);
+        for (int position = prevCoordinate + 1; position <= coordinate; position++) {
+            final byte base = ref.getBases()[position-1];
+            if (base == 'N') nBasesUncoveredThatAreN++;
+        }
+        prevReferenceIndex = sequenceIndex;
+        prevCoordinate = coordinate;
+        return ref;
+    }
+
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
@@ -129,6 +158,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SAMFileReader in        = new SAMFileReader(INPUT);
+        final SAMSequenceDictionary dict = in.getFileHeader().getSequenceDictionary();
 
         final SamLocusIterator iterator = new SamLocusIterator(in);
         final List<SamRecordFilter> filters   = new ArrayList<SamRecordFilter>();
@@ -140,7 +170,6 @@ public class CollectWgsMetrics extends CommandLineProgram {
         filters.add(pairFilter);
         filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         iterator.setSamFilters(filters);
-        iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
         iterator.setQualityScoreCutoff(0);        // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
@@ -155,14 +184,23 @@ public class CollectWgsMetrics extends CommandLineProgram {
         long basesExcludedByOverlap = 0;
         long basesExcludedByCapping = 0;
 
-        // Loop through all the loci
+        // Compute the # of bases not covered
+        long nBasesUncovered = dict.getReferenceLength();
+
         while (iterator.hasNext()) {
             final SamLocusIterator.LocusInfo info = iterator.next();
 
+            // Update from the previous visited position, if any, up to and including this position
+            final ReferenceSequence ref = updateNBasesUncoveredThatAreN(refWalker, info.getSequenceIndex(), info.getPosition());
+
             // Check that the reference is not N
-            final ReferenceSequence ref = refWalker.get(info.getSequenceIndex());
             final byte base = ref.getBases()[info.getPosition()-1];
-            if (base == 'N') continue;
+            if (base == 'N') {
+                continue;
+            }
+
+            // This is now covered, so decrement the # of bases uncovered
+            nBasesUncovered--;
 
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
             final HashSet<String> readNames = new HashSet<String>(info.getRecordAndPositions().size());
@@ -179,6 +217,14 @@ public class CollectWgsMetrics extends CommandLineProgram {
             progress.record(info.getSequenceName(), info.getPosition());
             if (usingStopAfter && ++counter > stopAfter) break;
         }
+
+        // Update to the end of the genome, and not farther
+        updateNBasesUncoveredThatAreN(refWalker, dict.getSequences().size()-1, dict.getSequence(dict.getSequences().size()-1).getSequenceLength());
+
+        CloserUtil.close(refWalker);
+
+        // update due to uncovered loci
+        HistogramArray[0] = nBasesUncovered - nBasesUncoveredThatAreN;
 
         // Construct and write the outputs
         final Histogram<Integer> histo = new Histogram<Integer>("coverage", "count");
