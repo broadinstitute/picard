@@ -166,6 +166,7 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
             for (int j=i+1; j<length; ++j) {
                 PhysicalLocation rhs = list.get(j);
 
+                if (opticalDuplicateFlags[j]) continue;
                 if (lhs.getReadGroup() != rhs.getReadGroup()) continue outer;
                 if (lhs.getTile() != rhs.getTile()) continue outer;
                 if (rhs.getX() > lhs.getX() + maxDistance) continue outer;
