@@ -345,7 +345,7 @@ public abstract class AbstractAlignmentMerger {
                         for (final SAMRecord supp : supplementals) {
                             final SAMRecord out = clone(sourceRec);
                             transferAlignmentInfoToFragment(out, supp);
-                            if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary);
+                            if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary, true);
                             ++aligned;
                             addIfNotFiltered(sorted, out);
                         }
