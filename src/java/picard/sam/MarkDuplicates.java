@@ -138,6 +138,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             "some of the sorting collections.  If you are running out of memory, try reducing this number.")
     public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
 
+    @Option(doc="If true do not identify optical duplicates within the larger list of duplicates.  This may make the library size estimate inaccurate!")
+    public boolean SKIP_OPTICAL_DUPLICATES = false;
+
     private SortingCollection<ReadEnds> pairSort;
     private SortingCollection<ReadEnds> fragSort;
     private SortingLongCollection duplicateIndexes;
@@ -179,7 +182,12 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         generateDuplicateIndexes();
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
-        log.info("Found " + ((long) this.opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters.");
+
+        if (this.SKIP_OPTICAL_DUPLICATES) {
+            log.warn("Skipped optical duplicate cluster discovery; library size estimation may be inaccurate!");
+        } else {
+            log.info("Found " + ((long) this.opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters.");
+        }
 
         final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SamHeaderAndIterator headerAndIterator = openInputs();
@@ -689,7 +697,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
 
-        trackOpticalDuplicates(list);
+        if (!this.SKIP_OPTICAL_DUPLICATES) {
+            trackOpticalDuplicates(list);
+        }
     }
 
     /**
