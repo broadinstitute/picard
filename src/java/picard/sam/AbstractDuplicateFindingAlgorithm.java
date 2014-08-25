@@ -18,17 +18,21 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgram {
-    private static Log LOG = Log.getInstance(AbstractDuplicateFindingAlgorithm.class);
+    private static final Log LOG = Log.getInstance(AbstractDuplicateFindingAlgorithm.class);
 
     private static final String DEFAULT_READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*".intern();
 
     @Option(doc="Regular expression that can be used to parse read names in the incoming SAM file. Read names are " +
             "parsed to extract three variables: tile/region, x coordinate and y coordinate. These values are used " +
             "to estimate the rate of optical duplication in order to give a more accurate estimated library size. " +
+            "Set this option to null to disable optical duplicate detection. " +
             "The regular expression should contain three capture groups for the three variables, in order. " +
             "It must match the entire read name. " +
             "Note that if the default regex is specified, a regex match is not actually done, but instead the read name " +
-            " is split on colon character and the 2nd, 3rd and 4th elements are assumed to be tile, x and y values.")
+            " is split on colon character. " +
+            "For 5 element names, the 3rd, 4th and 5th elements are assumed to be tile, x and y values. " +
+            "For 7 element names (CASAVA 1.8), the 5th, 6th, and 7th elements are assumed to be tile, x and y values.",
+            optional = true)
     public String READ_NAME_REGEX = DEFAULT_READ_NAME_REGEX;
     
     @Option(doc="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
@@ -69,7 +73,8 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
         // Optimized version if using the default read name regex (== used on purpose):
         if (READ_NAME_REGEX == DEFAULT_READ_NAME_REGEX) {
             final int fields = StringUtil.split(readName, tmpLocationFields, ':');
-            if (fields < 5) {
+
+            if (!(fields == 5 || fields == 7)) {
                 if (!warnedAboutRegexNotMatching) {
                     LOG.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
                             "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
@@ -80,9 +85,11 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
                 return false;
             }
 
-            loc.setTile((short) rapidParseInt(tmpLocationFields[2]));
-            loc.setX((short) rapidParseInt(tmpLocationFields[3]));
-            loc.setY((short) rapidParseInt(tmpLocationFields[4]));
+            final int offset = fields == 7 ? 2 : 0;
+
+            loc.setTile((short) rapidParseInt(tmpLocationFields[offset + 2]));
+            loc.setX((short) rapidParseInt(tmpLocationFields[offset + 3]));
+            loc.setY((short) rapidParseInt(tmpLocationFields[offset + 4]));
             return true;
         }
         else if (READ_NAME_REGEX == null) {
@@ -155,12 +162,13 @@ public abstract class AbstractDuplicateFindingAlgorithm extends CommandLineProgr
         });
 
         outer: for (int i=0; i<length; ++i) {
-            PhysicalLocation lhs = list.get(i);
+            final PhysicalLocation lhs = list.get(i);
             if (lhs.getTile() < 0) continue;
 
             for (int j=i+1; j<length; ++j) {
-                PhysicalLocation rhs = list.get(j);
+                final PhysicalLocation rhs = list.get(j);
 
+                if (opticalDuplicateFlags[j]) continue;
                 if (lhs.getReadGroup() != rhs.getReadGroup()) continue outer;
                 if (lhs.getTile() != rhs.getTile()) continue outer;
                 if (rhs.getX() > lhs.getX() + maxDistance) continue outer;

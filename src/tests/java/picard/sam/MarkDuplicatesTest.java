@@ -28,6 +28,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
@@ -193,6 +194,15 @@ public class MarkDuplicatesTest {
     }
 
     @Test
+    public void testTwoMappedPairsOpticalDupeDetectionDisabled() {
+        final MarkDuplicatesTester tester = new MarkDuplicatesTester();
+        tester.addArg("READ_NAME_REGEX=null");
+        tester.addMappedPair(1, 1, 100, false, false, 50);
+        tester.addMappedPair(1, 1, 100, true, true, 30); // duplicate!!!
+        tester.runTest();
+    }
+
+    @Test
     public void testThreeMappedPairs() {
         final MarkDuplicatesTester tester = new MarkDuplicatesTester();
         tester.addMappedPair(1, 1, 100, false, false, 50);
@@ -314,5 +324,34 @@ public class MarkDuplicatesTest {
         final MarkDuplicatesTester tester = new MarkDuplicatesTester();
         tester.addMappedPair(1, 4914, 4914, false, false, "37M39S", "73M3S", false, false, false, 50); // +/+
         tester.runTest();
+    }
+
+    @Test(dataProvider = "testOpticalDuplicateDetectionDataProvider")
+    public void testOpticalDuplicateDetection(final File sam, final long expectedNumOpticalDuplicates) {
+        final File outputDir = IOUtil.createTempDir("MarkDuplicatesTest.", ".tmp");
+        outputDir.deleteOnExit();
+        final File outputSam = new File(outputDir, "markDuplicatesTest.sam");
+        outputSam.deleteOnExit();
+        final File metricsFile = new File(outputDir, "markDuplicatesTest.duplicate_metrics");
+        metricsFile.deleteOnExit();
+        // Run MarkDuplicates, merging the 3 input files, and either enabling or suppressing PG header
+        // record creation according to suppressPg.
+        final MarkDuplicates markDuplicates = new MarkDuplicates();
+        markDuplicates.INPUT = CollectionUtil.makeList(sam);
+        markDuplicates.OUTPUT = outputSam;
+        markDuplicates.METRICS_FILE = metricsFile;
+        markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
+        // Needed to suppress calling CommandLineProgram.getVersion(), which doesn't work for code not in a jar
+        markDuplicates.PROGRAM_RECORD_ID = null;
+        Assert.assertEquals(markDuplicates.doWork(), 0);
+        Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
+    }
+
+    @DataProvider(name="testOpticalDuplicateDetectionDataProvider")
+    public Object[][] testOpticalDuplicateDetectionDataProvider() {
+        return new Object[][] {
+            {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
+            {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
+        };
     }
 }

@@ -179,7 +179,12 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
         generateDuplicateIndexes();
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
-        log.info("Found " + ((long) this.opticalDupesByLibraryId.getSumOfValues()) + " optical duplicate clusters.");
+
+        if (this.READ_NAME_REGEX == null) {
+            log.warn("Skipped optical duplicate cluster discovery; library size estimation may be inaccurate!");
+        } else {
+            log.info("Found " + numOpticalDuplicates() + " optical duplicate clusters.");
+        }
 
         final Map<String,DuplicationMetrics> metricsByLibrary = new HashMap<String,DuplicationMetrics>();
         final SamHeaderAndIterator headerAndIterator = openInputs();
@@ -331,6 +336,11 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
 
         return 0;
     }
+
+    /**
+     * package-visible for testing
+     */
+    long numOpticalDuplicates() {return ((long) this.opticalDupesByLibraryId.getSumOfValues());}
 
     /** Little class used to package up a header and an iterable/iterator. */
     private static final class SamHeaderAndIterator {
@@ -689,7 +699,9 @@ public class MarkDuplicates extends AbstractDuplicateFindingAlgorithm {
             }
         }
 
-        trackOpticalDuplicates(list);
+        if (this.READ_NAME_REGEX != null) {
+            trackOpticalDuplicates(list);
+        }
     }
 
     /**
