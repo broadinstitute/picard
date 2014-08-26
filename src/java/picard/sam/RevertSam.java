@@ -307,12 +307,15 @@ public class RevertSam extends CommandLineProgram {
 
                 // If we've made it this far spit the records into the output!
                 for (final SAMRecord rec : recs) {
-                    // Harmonize the quality scores  encoding scores -- either it's all one quality or we're moving them all to Phred
-                    final FastqQualityFormat recordFormat = readGroupToFormat.get(rec.getReadGroup());
-                    if (!recordFormat.equals(targetFormat)) {
-                        final byte quals[] = rec.getBaseQualities();
-                        for (int i = 0; i < quals.length; i++) {
-                            quals[i] -= SolexaQualityConverter.ILLUMINA_TO_PHRED_SUBTRAHEND;
+                    // Harmonize the quality scores  encoding scores if we have more than one read group-- either it's all one quality or we're moving them all to Phred
+                    // only harmonize the quality format if we have more than one read group
+                    if (targetFormat != null) { // 1 < readGroupCount
+                        final FastqQualityFormat recordFormat = readGroupToFormat.get(rec.getReadGroup());
+                        if (!recordFormat.equals(targetFormat)) {
+                            final byte quals[] = rec.getBaseQualities();
+                            for (int i = 0; i < quals.length; i++) {
+                                quals[i] -= SolexaQualityConverter.ILLUMINA_TO_PHRED_SUBTRAHEND;
+                            }
                         }
                     }
                     out.addAlignment(rec);
