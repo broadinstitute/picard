@@ -39,6 +39,9 @@ public class MathUtil {
     /** The double value closest to 1 while still being less than 1. */
     public static final double MAX_PROB_BELOW_ONE = 0.9999999999999999d;
 
+    /**
+     *  this function mimics the behavior of log_1p but resulting in log _base 10_ of (1+x) instead of natural log of 1+x
+     */
     public static double log10_1p(final double x){
         return log1p(x)/LOG_10_MATH.log_of_base;
     }
@@ -164,16 +167,16 @@ public class MathUtil {
         return ds;
     }
 
-    /**
-     * Takes a complete set of mutually exclusive logPosteriors and converts them to probabilities
-     * that sum to 1 with as much fidelity as possible.  Limits probabilities to be in the space:
-     * 0.9999999999999999 >= p >= (1-0.9999999999999999)/(logPosteriors.length-1)
-     */
     @Deprecated  // use pNormalizeLogProbability instead (renamed)
     public static double[] logLikelihoodsToProbs(final double[] likelihoods) {
         return pNormalizeLogProbability(likelihoods);
     }
 
+    /**
+     * Takes a complete set of mutually exclusive logPosteriors and converts them to probabilities
+     * that sum to 1 with as much fidelity as possible.  Limits probabilities to be in the space:
+     * 0.9999999999999999 >= p >= (1-0.9999999999999999)/(lPosteriors.length-1)
+     */
     public static double[] pNormalizeLogProbability(final double[] lPosterior) {
         // Note: bumping all the LLs so that the biggest is 300 ensures that we have the
         // widest range possible when unlogging them before one of them underflows. 10^300 is
@@ -212,7 +215,7 @@ public class MathUtil {
     }
 
     /**
-     * Takes a vector and converts it them to probabilities
+     * Takes a vector of numbers and converts it to a vector of probabilities
      * that sum to 1 with as much fidelity as possible.  Limits probabilities to be in the space:
      * 0.9999999999999999 >= p >= (1-0.9999999999999999)/(likelihoods.length-1)
      */
@@ -245,6 +248,8 @@ public class MathUtil {
 
     /** calculates the sum of the arrays as a third array. */
     public static double[] sum(final double[] lhs, final double[] rhs) {
+        if (lhs.length != rhs.length) throw new IllegalArgumentException("Arrays must be of same length.");
+
         final int len = lhs.length;
         final double [] result = new double[len];
         for (int i = 0; i < len; ++i) result[i] = lhs[i] + rhs[i];
@@ -288,7 +293,11 @@ public class MathUtil {
      */
     public static class LogMath {
         private final double base;
-        public final double log_of_base;
+        private final double log_of_base;
+
+        public double getLog_of_base() {
+            return log_of_base;
+        }
 
         private LogMath(final double base) {
             this.base = base;
@@ -302,7 +311,7 @@ public class MathUtil {
 
         /** Returns the log-representation of the provided decimal value. */
         public double getLogValue(final double nonLogValue) {
-            return Math.log(nonLogValue) / Math.log(base);
+            return Math.log(nonLogValue) / log_of_base;
         }
 
         /** Computes the mean of the provided log values. */
