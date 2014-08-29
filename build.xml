@@ -353,6 +353,7 @@
         <package-and-document-command title="AddOrReplaceReadGroups"            main-class="picard.sam.AddOrReplaceReadGroups"/>
         <package-and-document-command title="BamToBfq"                          main-class="picard.fastq.BamToBfq"/>
         <package-and-document-command title="BamIndexStats"                     main-class="picard.sam.BamIndexStats"/>
+        <package-and-document-command title="BedToIntervalList"                 main-class="picard.util.BedToIntervalList"/>
         <package-and-document-command title="BuildBamIndex"                     main-class="picard.sam.BuildBamIndex"/>
         <package-and-document-command title="CalculateHsMetrics"                main-class="picard.analysis.directed.CalculateHsMetrics"/>
         <package-and-document-command title="CleanSam"                          main-class="picard.sam.CleanSam"/>
