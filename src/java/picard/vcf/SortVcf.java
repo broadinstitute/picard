@@ -7,7 +7,6 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -15,7 +14,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import htsjdk.variant.vcf.VCFUtils;
-import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
@@ -56,21 +54,26 @@ public class SortVcf extends CommandLineProgram {
         new SortVcf().instanceMainWithExit(args);
     }
 
+    public SortVcf() {
+        this.CREATE_INDEX = true;
+    }
+
+    private final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
+    private final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
+
     @Override
     protected int doWork() {
         final List<String> sampleList = new ArrayList<String>();
 
         for (final File input : INPUT) IOUtil.assertFileIsReadable(input);
-        IOUtil.assertFileIsWritable(OUTPUT);
+
         if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
 
         SAMSequenceDictionary samSequenceDictionary = null;
         if (SEQUENCE_DICTIONARY != null) samSequenceDictionary = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
 
         // Gather up a file reader and file header for each input file. Check for sequence dictionary compatibility along the way.
-        final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
-        final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
-        collectFileReadersAndHeaders(sampleList, samSequenceDictionary, inputReaders, inputHeaders);
+        collectFileReadersAndHeaders(sampleList, samSequenceDictionary);
 
         // Create the merged output header from the input headers
         final VCFHeader outputHeader = new VCFHeader(VCFUtils.smartMergeHeaders(inputHeaders, false), sampleList);
@@ -84,19 +87,23 @@ public class SortVcf extends CommandLineProgram {
         return 0;
     }
 
-    private void collectFileReadersAndHeaders(final List<String> sampleList, SAMSequenceDictionary samSequenceDictionary, final List<VCFFileReader> inputReaders, final List<VCFHeader> inputHeaders) {
+    private void collectFileReadersAndHeaders(final List<String> sampleList, SAMSequenceDictionary samSequenceDictionary) {
         for (final File input : INPUT) {
             final VCFFileReader in = new VCFFileReader(input, false);
             final VCFHeader header = in.getFileHeader();
             final SAMSequenceDictionary dict = in.getFileHeader().getSequenceDictionary();
-            if (dict.isEmpty()) {
+            if (dict == null || dict.isEmpty()) {
                 if (null == samSequenceDictionary) {
-                    throw new PicardException("Please specify SEQUENCE_DICTIONARY. Sequence dictionary was empty for the VCF: " + input.getAbsolutePath());
+                    throw new IllegalArgumentException("Please specify SEQUENCE_DICTIONARY. Sequence dictionary was missing or empty for the VCF: " + input.getAbsolutePath());
                 }
                 header.setSequenceDictionary(samSequenceDictionary);
             } else {
                 if (null == samSequenceDictionary) samSequenceDictionary = dict;
-                else samSequenceDictionary.assertSameDictionary(dict);
+                try {
+                    samSequenceDictionary.assertSameDictionary(dict);
+                } catch (final AssertionError e) {
+                    throw new IllegalArgumentException(e);
+                }
             }
             if (sampleList.isEmpty()) {
                 sampleList.addAll(header.getSampleNamesInOrder());
@@ -115,7 +122,7 @@ public class SortVcf extends CommandLineProgram {
                 SortingCollection.newInstance(
                         VariantContext.class,
                         new VCFRecordCodec(outputHeader),
-                        new VariantContextComparator(outputHeader.getSequenceDictionary()),
+                        outputHeader.getVCFRecordComparator(),
                         MAX_RECORDS_IN_RAM,
                         TMP_DIR);
         for (final VCFFileReader reader : readers) {

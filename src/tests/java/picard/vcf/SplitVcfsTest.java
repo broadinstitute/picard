@@ -43,15 +43,15 @@ public class SplitVcfsTest {
 		final int returnCode = splitVcfs.instanceMain(new String[0]);
 		Assert.assertEquals(returnCode, 0);
 
-		final Queue<String> indelContigPositions = MergeVcfsTest.loadContigPositions(indelOutputFile);
-		final Queue<String> snpContigPositions = MergeVcfsTest.loadContigPositions(snpOutputFile);
+		final Queue<String> indelContigPositions = AbstractVcfMergingTest.loadContigPositions(indelOutputFile);
+		final Queue<String> snpContigPositions = AbstractVcfMergingTest.loadContigPositions(snpOutputFile);
 
 		final VCFFileReader reader = new VCFFileReader(input);
 		final CloseableIterator<VariantContext> iterator = reader.iterator();
 		while (iterator.hasNext()) {
 			final VariantContext inputContext = iterator.next();
-			if (inputContext.isIndel()) Assert.assertEquals(MergeVcfsTest.getContigPosition(inputContext), indelContigPositions.poll());
-			if (inputContext.isSNP()) Assert.assertEquals(MergeVcfsTest.getContigPosition(inputContext), snpContigPositions.poll());
+			if (inputContext.isIndel()) Assert.assertEquals(AbstractVcfMergingTest.getContigPosition(inputContext), indelContigPositions.poll());
+			if (inputContext.isSNP()) Assert.assertEquals(AbstractVcfMergingTest.getContigPosition(inputContext), snpContigPositions.poll());
 		}
 
 		// We should have polled everything off the indel (snp) queues
