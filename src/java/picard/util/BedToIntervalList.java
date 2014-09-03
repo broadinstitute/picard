@@ -13,6 +13,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.annotation.Strand;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import picard.PicardException;
@@ -79,6 +80,10 @@ public class BedToIntervalList extends CommandLineProgram {
                  * NB: BED is 0-based OPEN (which, for the end is equivalent to 1-based closed).
                  */
                 final int end = bedFeature.getEnd();
+                // NB: do not use an empty name within an interval
+                String name = bedFeature.getName();
+                if (name.isEmpty()) name = null;
+
                 final SAMSequenceRecord sequenceRecord = header.getSequenceDictionary().getSequence(sequenceName);
 
                 // Do some validation
@@ -101,7 +106,7 @@ public class BedToIntervalList extends CommandLineProgram {
                     throw new PicardException(String.format("On sequence '%s', end <= start: %d <= %d", sequenceName, end, start));
                 }
 
-                final Interval interval = new Interval(sequenceName, start, end);
+                final Interval interval = new Interval(sequenceName, start, end, bedFeature.getStrand() == Strand.POSITIVE, name);
                 intervalList.add(interval);
 
                 progressLogger.record(sequenceName, start);
