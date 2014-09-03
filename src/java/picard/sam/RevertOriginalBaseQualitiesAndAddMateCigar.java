@@ -1,6 +1,7 @@
 package picard.sam;
 
 import htsjdk.samtools.BAMRecordCodec;
+import htsjdk.samtools.DuplicateScoringStrategy;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
@@ -35,7 +36,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
 
     @Usage
     public String USAGE = getStandardUsagePreamble() +
-            "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.";
+            "Reverts the original base qualities and adds the mate cigar tag to SAM or BAMs.  The mate cigar is only added to ";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -123,7 +124,6 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         while (sorterIterator.hasNext()) {
             final List<SAMRecord> records = new LinkedList<SAMRecord>();
 
-
             /**
              * Get all records with the same name, and then identify the canonical first and second end to which we
              * want to add mate cigars.
@@ -180,15 +180,15 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         CANNOT_SKIP_FOUND_OQ("Cannot skip the BAM as we found a record with an OQ", false),
         CANNOT_SKIP_FOUND_NO_MC("Cannot skip the BAM as we found a mate with no mate cigar tag", false),
         FOUND_NO_EVIDENCE("Found no evidence of OQ or mate with no mate cigar in the first %d records.  Will continue...", false);
-        private String format;
-        private boolean skip;
+        final private String format;
+        final private boolean skip;
 
-        private CanSkipSamFile(String format, boolean skip) {
+        private CanSkipSamFile(final String format, final boolean skip) {
             this.format = format;
             this.skip = skip;
         }
 
-        public String getMessage(int maxRecordsToExamine) { return String.format(this.format, maxRecordsToExamine); }
+        public String getMessage(final int maxRecordsToExamine) { return String.format(this.format, maxRecordsToExamine); }
         public boolean canSkip() { return this.skip; }
     }
 
@@ -199,7 +199,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
      * @param revertOriginalBaseQualities true if we are to revert original base qualities, false otherwise
      * @return whether we can skip or not, and the explanation why.
      */
-    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine, boolean revertOriginalBaseQualities)  {
+    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine, final boolean revertOriginalBaseQualities)  {
         final SAMFileReader in = new SAMFileReader(inputFile, true);
         final Iterator<SAMRecord> iterator = in.iterator();
         int numRecordsExamined = 0;

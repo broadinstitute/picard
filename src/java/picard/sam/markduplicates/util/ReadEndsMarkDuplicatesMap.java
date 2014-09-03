@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.sam;
+package picard.sam.markduplicates.util;
 
 /**
  * Interface for storing and retrieving ReadEnds objects.  An implementation may be disk-based to
  * reduce memory footprint.
  */
-public interface ReadEndsMap {
+public interface ReadEndsMarkDuplicatesMap {
     /**
      * Remove element with given key from the map.  Because an implementation may be disk-based,
      * the object returned may not be the same object that was put into the map
@@ -35,7 +35,7 @@ public interface ReadEndsMap {
      * @param key typically, concatenation of read group ID and read name
      * @return null if the key is not found, otherwise the object removed.
      */
-    ReadEnds remove(int mateSequenceIndex, String key);
+    ReadEndsForMarkDuplicates remove(int mateSequenceIndex, String key);
 
     /**
      * Store the element in the map with the given key.  It is assumed that the element
@@ -45,7 +45,7 @@ public interface ReadEndsMap {
      * @param key typically, concatenation of read group ID and read name
      * @param readEnds the object to be stored
      */
-    void put(int mateSequenceIndex, String key, ReadEnds readEnds);
+    void put(int mateSequenceIndex, String key, ReadEndsForMarkDuplicates readEnds);
 
     /**
      * @return number of elements stored in map
