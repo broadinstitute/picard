@@ -13,6 +13,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.annotation.Strand;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import picard.PicardException;
@@ -101,7 +102,7 @@ public class BedToIntervalList extends CommandLineProgram {
                     throw new PicardException(String.format("On sequence '%s', end <= start: %d <= %d", sequenceName, end, start));
                 }
 
-                final Interval interval = new Interval(sequenceName, start, end);
+                final Interval interval = new Interval(sequenceName, start, end, bedFeature.getStrand() == Strand.POSITIVE, bedFeature.getName());
                 intervalList.add(interval);
 
                 progressLogger.record(sequenceName, start);

@@ -52,7 +52,8 @@ public class BedToIntervalListTest {
     public Object[][] testBedToIntervalListDataProvider() {
         return new Object[][]{
                 {"simple.bed"},
-                {"overlapping.bed"}
+                {"overlapping.bed"},
+                {"extended.bed"}
         };
     }
 
