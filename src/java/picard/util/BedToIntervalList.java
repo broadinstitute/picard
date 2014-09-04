@@ -102,7 +102,7 @@ public class BedToIntervalList extends CommandLineProgram {
                 else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
                 }
-                else if (end <= start) {
+                else if (end < start - 1) {
                     throw new PicardException(String.format("On sequence '%s', end <= start: %d <= %d", sequenceName, end, start));
                 }
 

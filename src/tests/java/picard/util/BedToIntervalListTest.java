@@ -53,7 +53,9 @@ public class BedToIntervalListTest {
         return new Object[][]{
                 {"simple.bed"},
                 {"overlapping.bed"},
-                {"extended.bed"}
+                {"extended.bed"},
+                {"one_base_interval.bed"},
+                {"zero_base_interval.bed"}
         };
     }
 
@@ -64,7 +66,8 @@ public class BedToIntervalListTest {
                 {"end_before_chr.bed"},
                 {"missing_chr.bed"},
                 {"start_after_chr.bed"},
-                {"start_before_chr.bed"}
+                {"start_before_chr.bed"},
+                {"off_by_one_interval.bed"}
         };
     }
 }
