@@ -117,7 +117,7 @@ public class CommandLineParser {
     /***
      * Determines if a class has web documentation based on its package name
      * @param clazz
-     * @return
+     * @return true if the class has web documentation, false otherwise
      */
     public static boolean hasWebDocumentation(final Class clazz) {
         for(final String pkg : PACKAGES_WITH_WEB_DOCUMENTATION) {
@@ -129,8 +129,7 @@ public class CommandLineParser {
     }
 
     /***
-     * Returns the link to a FAQ
-     * @return
+     * @return the link to a FAQ
      */
     public static String getFaqLink() {
         return "To get help, see http://picard.sourceforge.net/index.shtml#GettingHelp";

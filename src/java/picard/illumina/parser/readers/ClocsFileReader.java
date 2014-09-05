@@ -97,8 +97,8 @@ public class ClocsFileReader extends AbstractIlluminaPositionFileReader {
     }
 
     /**
-     * Grab the next set off offset values, decompress them and then
-     * @return
+     * Grab the next set of offset values, decompress them.
+     * @return the position information of the next offset values
      */
     @Override
     protected PositionInfo unsafeNextInfo() {
