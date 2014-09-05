@@ -1,0 +1,47 @@
+---
+---
+<!doctype html>
+<html>
+	{% include head.html title="SAM Differences in Picard" %}
+	<body>
+		<div class="wrapper">
+			{% include header.html %}
+
+			<h2>SAM Differences in Picard</h2>
+			<section>
+			<p>Picard attempts to conform to the <a href="http://samtools.sourceforge.net/SAM1.pdf">SAM format specification</a>, but there are a few areas in which it diverges.</p>
+			<section>
+			
+			<h3>Strictness</h3>
+			<section>
+			<p>In many cases Picard complains about constructs that are allowed in the SAM spec. In some cases passing VALIDATION_STRINGENCY=LENIENT or SILENT will allow the program to continue, but in other cases the requirement is essential to the program's correct execution. Typically a Picard program will fail in these cases.</p>
+			</section>
+
+			<h3>Multi-segment Reads</h3>
+			<section>
+			<p>Picard can handle unpaired reads (i.e. single-end), or paired reads, but is not prepared to handle more than two segments for a read.</p>
+			</section>
+			
+			<h3>Secondary Alignments</h3>
+			<section>
+			<p>A number of Picard programs can handle secondary alignments, but typically these programs either ignore these alignments or pass them from input to output unchanged. MergeBamAlignment has the PRIMARY_ALIGNMENT_STRATEGY that can be used to determine how the program will select a primary alignment among multiple alignments for a segment in an aligner's output.</p>
+			</section>
+			
+			<h3>TLEN</h3>
+			<section>
+			<p>The original definition of the TLEN field of a SAM record was the distance between the 5' ends, with leftmost segment having positive value and rightmost segment negative. This is what Picard implements. At some point, the spec was changed to define TLEN as the distance between the leftmost mapped base to the rightmost mapped base, with leftmost segment having positive value and rightmost segment having negative value.</p>
+			</section>
+			
+			<h3>CIGAR Validation</h3>
+			<section>
+			<p>Picard's validation of CIGAR strings is more stringent than that allowed by SAM spec. Picard's CIGAR validation is oriented toward resequencing data rather than assembly. If these validations get in your way, you can turn down VALIDATION_STRINGENCY, or for ValidateSamFile, use the IGNORE option to turn off validations you don't want.</p>
+			</section>
+			
+			<h3>Queryname Sort Order</h3>
+			<section>
+			<p>Queryname sort order is not clearly defined in the SAM spec. Picard implements queryname order as a simple lexical ordering. samtools implements queryname sort order differently than Picard.</p>
+			</section>
+		</div>
+		{% include footer.html %}
+	</body>
+</html>

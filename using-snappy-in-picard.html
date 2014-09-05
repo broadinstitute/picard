@@ -1,0 +1,72 @@
+---
+---
+<!doctype html>
+<html>
+	{% include head.html title="Using Snappy in Picard" %}
+	<body>
+		<div class="wrapper">
+			{% include header.html %}
+
+			<h2>Using Snappy in Picard</h2>
+
+			<section>
+			<p><a href="http://code.google.com/p/snappy">Snappy</a> is an open-source compression library that emphasizes fast compression over maximum compression. 
+			<a href="http://code.google.com/p/snappy-java">Snappy-java</a> is a Java JNI wrapper for Snappy.
+			If the Snappy-java library is installed on a system and made available to the JVM then Picard programs that sort large amounts of data will use it to compress temporary data before writing it to disk. 
+			This is a performance optimization only and is entirely optional. 
+			Snappy can reduce file I/O, and in some cases the savings in file I/O more than compensates for the time spent compressing and decompressing, and results in faster execution times. 
+			We have seen sort times reduced by nearly 25%, although your mileage may vary.</p>
+
+			<ul>
+				<li><a href="#Requirements">Requirements for using Snappy</a></li>
+				<li><a href="#MakingClassesAvailable">Making Snappy-java classes available</a></li>
+				<li><a href="#Obtaining">Obtaining the Snappy-java DLL</a></li>
+				<li><a href="#MakingDLLAvailable">Making the Snappy DLL available</a></li>
+				<li><a href="#ControllingSnappy">Controlling Snappy in Picard</a></li>
+			</ul>
+			</section>
+
+			<a id="Requirements"></a>
+			<h3>Requirements for using Snappy</h3>
+			<section>
+			<p>In order for Picard to use Snappy, two requirements must be met: 1) the Snappy-java classes must be available on Java's classpath; and 2) the Snappy-java DLL (dynamic-link library) must be available to Snappy-java.</p>
+			</section>
+
+			<a id="MakingClassesAvailable"></a>
+			<h3>Making Snappy-java classes available</h3>
+			<section>
+			<p>On Linux only, if you use one of the executable jars in the Picard bundle (e.g. SortSam.jar), the Snappy-java classes are included in the executable jar so you need do nothing additional. 
+			However, if you are using sam-&lt;version#&gt;.jar, or it you are on , then you must also add the Snappy-java jar to the classpath. 
+			The jar can be found in the picard-tools-&lt;version#&gt;.zip file.</p>
+			</section>
+			
+			<a id="Obtaining"></a>
+			<h3>Obtaining the Snappy-java DLL</h3>
+			<section>
+			<p>The Snappy-java jarfile contains Snappy DLLs for the most popular platforms, so you may extract it from there. 
+			Note that the Snappy-java DLL is not the same as the Snappy DLL, because it contains JNI (Jave native interface) code in addition to the Snappy code itself.</p>
+			</section>
+			
+			<a id="MakingDLLAvailable"></a>
+			<h3>Making the Snappy DLL available</h3>
+			<section>
+			<p>If the Snappy jar is on your classpath, Snappy-java can find the Snappy (DLL) automatically. 
+			The Linux version of the Snappy-java DLL is included in the executable jars. 
+			On other platforms, you must make the Snappy DLL available for Snappy-java to load. 
+			There are several ways this can be done:</p>
+			<ul>
+				<li>Set the org.xerial.snappy.lib.path system property to point to the directory containing the Snappy-java DLL. E.g. add an argument like the following to your Java command line: <pre>-Dorg.xerial.snappy.lib.path=&lt;directory containing Snappy DLL&gt;</pre></li>
+				<li>Put the Snappy-java jar on your classpath, e.g. add an argument like the following to your Java command line: <pre>-classpath snappy-java&lt;version#&gt;.jar</pre></li>
+			</ul>
+			</section>
+
+			<a id="ControllingSnappy"></a>
+			<h3>Controlling Snappy in Picard</h3>
+			<section>
+			<p>In order to see if Snappy has been found by Picard, pass -Dsnappy.loader.verbosity=true on the Java command line. When SortingCollection first tries to sort something, a message will be printed to stderr indicating whether or not Snappy-java and Snappy DLL have been found.</p>
+			<p>In order to force Snappy not to be used by Picard, pass -Dsnappy.disable=true on the Java command line.</p>
+			</section>
+		</div>
+		{% include footer.html %}
+	</body>
+</html>

@@ -1,0 +1,225 @@
+---
+---
+<!doctype html>
+<html>
+	{% include head.html title="Frequentyl Asked Questions" %}
+	<body>
+		<style type="text/css">
+			.faq {
+				cursor: hand;
+				cursor: pointer;
+				border: 1px solid #CCC;
+				width: 860px;
+				margin-top: 10px;
+				padding: 10px;
+				color:#333;
+				font-weight: bold;
+			}
+			.ans { 
+				display: none;
+				margin-top:7px;
+				font-weight: normal;
+			}
+		</style>
+		<script type="text/javascript">
+			function toggle(Info) {
+				var element = document.getElementById(Info);
+				element.style.display = (element.style.display != 'block') ? 'block' : 'none';
+			}
+		</script>
+		<div class="wrapper">
+			{% include header.html %}
+
+			<h2>Frequently Asked Questions</h2>
+			<section>
+
+				<div class="faq" onclick="toggle('faq1')">
+					Q: What does this flag value mean?
+					<div id="faq1" class="ans">
+						There are 2 ways to get a human-readable explanation of what a particular SAM file FLAG value means:
+						<ol>
+							<li>In your Picard checkout area, run explain_sam_flags.py: <pre>python  src/scripts/explain_sam_flags.py  [flag]</pre></li>
+						<li>Use this javascript utility: <a href="http://picard.sourceforge.net/explain-flags.html">http://picard.sourceforge.net/explain-flags.html</a></li>
+					</ol>
+				</div>
+				</div>
+				<div class="faq" onclick="toggle('faq2')">
+					Q: A Picard program that sorts its output SAM/BAM file is taking a very long time and/or running out of memory. What can I do?
+					<div id="faq2" class="ans">
+						<p>A: Picard programs that sort their output (e.g. SortSam, MergeSamFiles if the inputs are not all sorted in the same order as the output) will run faster when given more RAM, and told to store more alignment records in memory before writing to a temporary file. You can give the program more memory by increasing the size of the Java heap with the -Xmx argument. If your operating system imposes a hard memory limit on a process, a rule of thumb is to set the -Xmx value no higher than 2GB less than the hard memory limit. Even if your system does not set a hard memory limit, if you set the -Xmx value much greater than the available RAM on the computer, excessive swapping will hurt performance. The Picard MAX_RECORDS_IN_RAM option controls the number of records to store in RAM before writing to a temporary file when producing sorted output. The optimal setting for this option depends on a number of factors, including: </p>
+						<ul>
+							<li>read length </li>
+							<li>tag content. E.g. OQ and E2 tags can be large. </li>
+							<li>SAM input generally has larger memory footprint than BAM input, but if validation stringency is not silent, then BAM can actually be larger. </li>
+							<li>setting variable-length attributes onto a record read from a BAM file can expand its memory footprint even if validation stringency is silent. </li>
+							<li>different Picard programs have varying RAM requirements separate from the RAM needed for sorting. </li>
+						</ul>
+						<p>A rule of thumb for reads of ~100bp is to set MAX_RECORDS_IN_RAM to be 250,000 reads per each GB given to the -Xmx parameter for SortSam. 
+						<i>Thanks to Keiran Raine for performing the experiments to arrive at these numbers.</i></p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq3')">
+					Q: A Picard program complains that CIGAR M operator maps off the end of reference. I want this record to be treated as valid despite the fact that the alignment end is greater than the length of the reference sequence.
+					<div id="faq3" class="ans">
+						<p>A: Picard validation errors may be turned into warnings by passing the command line argument <i>VALIDATION_STRINGENCY=LENIENT</i>. Picard validation messages may be suppressed completely with <i>VALIDATION_STRINGENCY=SILENT</i>. Another option is to use CleanSam to soft-clip these reads so they don't map off the end of the reference. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq4')">
+					Q: How does MarkDuplicates work?
+					<div id="faq4" class="ans">
+						<p>A: Essentially what it does (for pairs; single-end data is also handled) is to find the 5' coordinates and mapping orientations of each read pair. When doing this it takes into account all clipping that has taking place as well as any gaps or jumps in the alignment. You can thus think of it as determining "if all the bases from the read were aligned, where would the 5' most base have been aligned". It then matches all read pairs that have identical 5' coordinates and orientations and marks as duplicates all but the "best" pair. "Best" is defined as the read pair having the highest sum of base qualities as bases with Q &gt;= 15. </p>
+						<p>If your reads have been divided into separate BAMs by chromosome, inter-chromosomal pairs will not be identified, but MarkDuplicates will not fail due to inability to find the mate pair for a read. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq5')">
+					Q: MarkDuplicates takes a long time. Is something wrong?
+					<div id="faq5" class="ans">
+						<p>A: Not necessarily. MarkDuplicates is very memory intensive. This is required in order to detect interchromosomal duplication. At Broad we run MarkDuplicates with 2GB Java heap (java -Xmx2g) and 10GB hard memory limit. Some example times: </p>
+						<ul>
+							<li>An 8.6GB file (63M records) took about 1 hours. </li>
+							<li>A 20GB file (133M records) took about 2.5 hours. </li>
+						</ul>
+						<p>Increasing the amount of RAM you give MarkDuplicates (the -Xmx value) will improve the speed somewhat. Note that if you have a hard memory limit, this will ned to be increased also. Marking duplicates for different libraries independently, and then merging the marked files, rather than merging followed by marking duplicates, will be faster. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq6')">
+					Q: What is the difference between MarkDuplicates and samtools rmdup?
+					<div id="faq6" class="ans">
+						<p>A: samtools rmdup does not remove interchromosomal duplicates. MarkDuplicates does remove these duplicates. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq7')">
+					Q: What is meaning of the histogram produced by MarkDuplicates?
+					<div id="faq7" class="ans">
+						<p>A: It estimates the return on investment for sequencing a library to a higher coverage than the observed coverage. The first column is the coverage multiple, and the second column is the multiple of additional actual coverage for the given coverage multiple. The first row (1x, i.e. the actual amount of sequencing done) should have ROI of approximately 1. The next row estimates the ROI for twice as much sequencing of the library. As one increases the amount of sequencing for a library, the ROI for additional sequencing diminishes because more and more of the reads are duplicates. 
+						The algorithm is described <a href="http://broadinstittute.github.io/picard/javadoc/picard/DuplicationMetrics.html#estimateRoi(long,%20double,%20long,%20long)">here</a>. The code can be found <a href="https://github.com/broadinstitute/picard/blob/master/src/java/picard/sam/DuplicationMetrics.java">here</a>.</p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq8')">
+					Q: MarkDuplicates (or ValidateSamFile) produces the error "Value was put into PairInfoMap more than once." What should I do?
+					<div id="faq8" class="ans">
+						<p>A: Many aligners produce output that is not up to Picard standards. E.g. an aligner might not output unmapped reads, might drop some important tags, might not set mate information correctly, might produce multiple primary alignments, or other problems. To address this problem, <a href="http://broadinstittute.github.io/picard/command-line-overview.shtml#MergeBamAlignment">MergeBamAlignment</a> is designed to merge an aligned BAM produced directly by an aligner with an unmapped BAM. The input aligned BAM will not necessarily meet Picard validation standards but the output of MergeBamAlignment should work properly with other Picard programs. If you do not have an unmapped BAM because the input to your aligner is in FASTQ format, you can create one with <a href="http://broadinstittute.github.io/picard/command-line-overview.shtml#FastqToSam">FastqToSam</a>. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq9')">
+					Q: How do MarkDuplicates and EstimateLibraryComplexity estimate library size?
+					<div id="faq9" class="ans">
+						<p>A: See this <a href="http://sourceforge.net/p/samtools/mailman/samtools-help/thread/DUB405-EAS154589A1ACEF2BE4C573D4592180%40phx.gbl/#msg31513744">thread</a> for a discussion of the algorithm. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq10')">
+					Q: Why does a Picard program use so many threads?
+					<div id="faq10" class="ans">
+						<p>A: This can be caused by the GC method of Java when used on 64 bit Java. By default the JVM switches to 'server' settings when on 64 bit, this automatically implements parallel GC and will use as many cores as it can get it's hands on. The approach we decided on to get round this was to define the number of threads we would allow Java for GC. </p>
+				<pre>-XX:ParallelGCThreads=&lt;number of threads&gt;</pre>
+						<p>An alternative approach is to turn off Parallel Gc (boolean option so note the '-' to indicate it is turned off): </p>
+				<pre>-XX:+UseSerialGC</pre>
+				</pre>
+						<p>. We found this to be sub-optimal as the process has to stop completely when GC occurs and takes much longer as (from what I can tell) a full GC sweep is the only type performed which in many cases is not required (parallel GC employs ~7 different types of GC). See <a href="http://java.sun.com/javase/technologies/hotspot/vmoptions.jsp" rel="nofollow">here</a> for further details of the tuneable parameters. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq11')">
+					Q: I sorted my file with samtools sort. Why does a Picard program complain that the file is not sorted?
+					<div id="faq11" class="ans">
+						<p>A: samtools sort does not change the SAM file header to indicate that the file is sorted. Some Picard programs (CollectAlignmentSummaryMetrics, MarkDuplicates, MergeSamFiles) have an ASSUME_SORTED option. If you put ASSUME_SORTED=true on the command line, the program will assume that the input SAM or BAM is sorted appropriately. Alternately, you can use Picard's SortSam instead of samtools sort. Finally, you can capture the text header using Picard's ViewSam, edit the text header in a text editor, and then create a new BAM with Picard's ReplaceSamHeader. The downside of this last alternative is that currently replacing the header requires writing a copy of the input BAM, rather than editing in place. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq12')">
+					Q: Can Picard programs read from stdin and write to stdout?
+					<div id="faq12" class="ans">
+					<p>A: Most Picard programs can do this. To read from stdin, specify /dev/stdin as the input file. To write to stdout, specify /dev/stdout as the output file, and also add the option QUIET=true to suppress other messages that otherwise would be written to stdout. Not that Picard determines whether to write in SAM or BAM format by examining the file extension of the output file. Since /dev/stdout ends in neither .sam nor .bam, Picard defaults to writing in BAM format. Some Picard programs, e.g. MarkDuplicates, cannot read its input from stdin, because it makes multiple passes over the input file. When writing a BAM to stdout so that it can be read by another program, passing the argument COMPRESSION_LEVEL=0 to the program writing the BAM to stdout can reduce unnecessary computation. </p>
+				</div>
+				</div>
+				<div class="faq" onclick="toggle('faq13')">
+						Q: Why am I getting errors from Picard like "MAPQ should be 0 for unmapped read" or "CIGAR should have zero elements for unmapped read?"
+					<div id="faq13" class="ans">
+						<p>A: BWA can produce SAM records that are marked as unmapped but have non-zero MAPQ and/or non-"*" CIGAR. Typically this is because BWA found an alignment for the read that hangs off the end of the reference sequence. Picard considers such input to be invalid. In general, this error can be suppressed in Picard programs by passing VALIDATION_STRINGENCY=LENIENT or VALIDATION_STRINGENCY=SILENT. For ValidateSamFile, you can pass the arguments IGNORE=INVALID_MAPPING_QUALITY IGNORE=INVALID_CIGAR. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq14')">
+					Q: I'm getting a warning message from CollectGcBiasMetrics. It says <i>In arrows(metrics$GC, metrics$NORMALIZED_COVERAGE - metrics$ERROR_BAR_WIDTH,  :zero-length arrow is of indeterminate angle and so skipped</i>. Is this a problem?
+					<div id="faq14" class="ans">
+						<p>A: This warning message can be ignored. R is trying to write error bars with length 0, because there are no reads with a particular GC content. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq15')">
+					Q: How should I cite Picard in my manuscript?
+					<div id="faq15" class="ans">
+						<p>A: Currently there is no Picard paper. You can cite Picard by referring to the website, <a href="http://broadinstittute.github.io/picard">http://broadinstittute.github.io/picard</a>.</p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq16')">
+					Q: What is the format of an interval list file?
+					<div id="faq16" class="ans">
+						<p>A: Description of this format can be found in the <a href="http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html">IntervalList javadoc</a></p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq17')">
+					Q: How should I invoke a Picard program from within my Java program? I call the main() method of the Picard program, but System.exit() is called when it finishes, which is not what I want.
+					<div id="faq17" class="ans">
+						<p>A: If you want to invoke a Picard program from within your java program, but not have it exit, do this: </p>
+				</pre>int returnValue = new PicardProgram().instanceMain(argv);</pre>
+						<p>Make sure to check the return value from this call. If it returns non-zero, an error has occurred. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq18')">
+					Q: I'm getting java.io.FileNotFoundException: (Too many open files). What should I do?
+					<div id="faq18" class="ans">
+						<p>A: There are several things you can do: 1) On Unix systems, the allowed number of open files can be increased. <i>ulimit -n</i> will show you how many open files a process is allowed to have. You can ask your system administrator to increase that number. 2) Many Picard programs use temporary files to sort. You can increase the value of the <i>MAX_RECORDS_IN_RAM</i> command-line parameter in order to tell Picard to store more records in fewer files in order to reduce the number of open files. This will, however, increase memory consumption. 3) MarkDuplicates has the command-line parameter <i>MAX_FILE_HANDLES_FOR_READ_ENDS_MAP</i>. By reducing this number, you reduce the number of concurrently open files (trading off execution speed). </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq20')">
+					Q: What is Snappy and how do I use it?
+					<div id="faq20" class="ans">
+						<p>A: Snappy is a compression library that some Picard programs can optionally. See <a href="using-snappy-in-picard.html">[Using_Snappy_in_Picard]</a> for details. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq21')">
+					<div id="faq21" class="ans">
+						Q: Where can I find an appropriate file to give to the RIBOSOMAL_INTERVALS argument of CollectRnaSeqMetrics?
+						<p>A: First, this file is not required. If not provided, CollectRnaSeqMetrics will not be able to identify bases as ribosomal, so they will fall into one of the other categories in the <a href="http://broadinstitute.github.io/picard/picard-metric-definitions.shtml#RnaSeqMetrics">metrics output</a>. There is no public distribution of ribosomal RNA interval lists. However, you may create your own. You will need to obtain ribosomal sequence for the organism in question, and then determine where reads containing these sequences will align to the genome. You will then need to put the intervals to which the ribosomal sequences align into an interval list (format describe <a href="http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html">here</a>. We do this by taking a FASTA containing ribosomal sequences, creating pseudo-reads the are close to the length of real reads, aligning these reads using TopHat, and then creating an interval list using the alignments produced by TopHat. It may be useful to use <a href="http://broadinstitute.github.io/picard/command-line-overview.shtml#IntervalListTools">IntervalListTools</a> during this process. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq22')">
+					Q: I got the error: java.io.IOException: Map failed. How can I fix the problem?
+					<div id="faq22" class="ans">
+						<p>A: This may be due to a long-standing <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4469299" rel="nofollow">JVM bug</a>. Try increasing the value of the JVM option -XX:MaxDirectMemorySize. Although this is documented as having a default value of unbounded, others have reported that the default is 64M. Try, e.g. -XX:MaxDirectMemorySize=4G . </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq23')">
+					Q: A metric file produced by a Picard program produces a column labeled PCT_something or PERCENT_something. Is the denominator of this value 1 or 100?
+					<div id="faq23" class="ans">
+						<p><strong>A</strong> The denominator is 1. E.g. if PERCENT_DUPLICATION is 0.5, it means that half the reads are marked as duplicates. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq25')">
+					Q: What is the relationship between Picard and the current SAM spec?
+					<div id="faq25" class="ans">
+						<p><strong>A</strong> There are several areas in which Picard diverges from the SAM spec. See <a href="sam-differences.html">[Differences_between_Picard_and_SAM]</a> for details. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq26')">
+					Q: What is IntelDeflater and how do I control it?
+					<div id="faq26" class="ans">
+						<p><strong>A</strong> libIntelDeflater.so is a library that speeds compression on some Intel processors. See <a href="intel-deflater.html">[IntelDeflater]</a> for details. </p>
+					</div>
+				</div>
+				<div class="faq" onclick="toggle('faq27')">
+					Q: What is the limit for the length of a reference sequence in SAM/BAM?
+					<div id="faq27" class="ans">
+						<p><strong>A</strong> The BAM index format imposes a limit of 512MB for a single reference sequence.  If this limit is exceeded, various errors may occur depending on what steps have been taken, including the following: </p>
+				<pre>
+				bin field of BAM record does not equal value computed based on alignment start and end, and length of sequence to which read is aligned
+
+				Value too large to be written as ushort.
+
+				java.lang.ArrayIndexOutOfBoundsException
+				</pre>
+						<p>If you want to create a BAM index, you will need to ensure that each reference sequence is less than 512MB, perhaps by splitting long reference sequences.</p>
+					</div>
+				</div>
+			</section>
+		</div>
+		{% include footer.html %}
+	</body>
+</html>

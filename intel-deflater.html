@@ -1,0 +1,34 @@
+---
+---
+<!doctype html>
+<html>
+	{% include head.html title="Intel Deflator" %}
+	<body>
+		<div class="wrapper">
+			{% include header.html %}
+
+			<h2>Intel Deflator</h2>
+			<section>
+			<p>As of Picard release 1.104, Picard can optionally use a shared library on x86 unix systems to compress in BlockCompressedOutputStream, which is used to write BAM files. 
+			This library uses AVX code from the <a href="http://software.intel.com/en-us/intel-ipp">Intel Integrated Performance Primitives Library</a> to improve compression performance. 
+			We have found that on some processors, this library can reduce compression time by 1/3. 
+			It does not appear to hurt compression performance on non-Intel processors. 
+			This functionality is available in the Picard command-line tools, and in any program that uses the sam-jdk API, if the shared library is available to the code as described below.</p>
+
+			<p>Picard needs to load libIntelDeflater.so in order to use the faster compressor. This can be found in one of the following ways:</p>
+			<ol>
+				<li>If the system property samjdk.intel_deflater_so_path is set to the location of libIntelDeflater.so (e.g. by passing -Dsamjdk.intel_deflater_so_path=/path/to/libIntelDeflater.so on the java command line), Picard attempts to load the library from that location.</li>
+				<li>If the above system property is not set, Picard looks in the directory containing the Picard jar being executed for libIntelDeflater.so. We expect that this is the way that most users will use this library. The library is included in the picard-tools zipfile alongside the executable jars.</li>
+				<li>If neither of the above has loaded the library, the library is searched for in LD_LIBRARY_PATH (i.e. java.library.path).</li>
+			</ol>
+		
+			<p>When running a Picard command-line program, the preamble that is printed when the program starts (containing username, hostname, Java version, etc.) will now additionally contain either "IntelDeflater" or "JdkDeflater" indicating whether or not libIntelDeflater.so is being used.</p>
+			
+			<p>In order to suppress use of this library, pass -Dsamjdk.try_use_intel_deflater=false on the java command line.</p>
+		
+			<p>Note that the Java wrapper for this functionality is dynamically linked, so developers who repackaged Picard classes in their own jars should make sure to include all the classes in htsjdk.samtools.util.zip in order to make libIntelDeflater available.</p>
+			</section>
+		</div>
+		{% include footer.html %}
+	</body>
+</html>

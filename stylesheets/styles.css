@@ -19,9 +19,9 @@ body {
 }
 
 .wrapper {
-  width: 640px;
+  width: 740px;
   margin: 0 auto;
-  background: #DEDEDE;
+  background: #CCCCCC;
   -webkit-border-radius: 8px;
   -moz-border-radius: 8px;
   -ms-border-radius: 8px;
@@ -82,7 +82,7 @@ header.without-description h1 {
 header p {
   margin: 0;
   color: #61778B;
-  width: 300px;
+  width: 400px;
   font-size: 13px;
 }
 header p.view {
@@ -195,7 +195,7 @@ section {
 h1, h2, h3, h4, h5, h6 {
   color: #222;
   padding: 0;
-  margin: 0 0 20px;
+  margin: 20px 20px 20px;
   line-height: 1.2;
 }
 
@@ -215,7 +215,7 @@ h2 {
   color: #393939;
 }
 
-h3, h4, h5, h6 {
+h4, h5, h6 {
   color: #494949;
 }
 
@@ -353,4 +353,26 @@ footer p + p {
   header p.view a small:before {
     content: 'at http://github.com/';
   }
+}
+
+/* sidebar */
+#sidebar {
+	float: right;
+	display: inline; /* for IE */
+	width: 300px;
+	margin: 0px 20px;
+	background: #CCCCCC;
+}
+
+#sidebar section {
+	padding: 0;
+	margin: 0;
+}
+#sidebar h2 {
+	margin: 0;
+	padding: 0 20px 20px;
+}
+
+#topsidebar h2 {
+	padding: 20px 20px 20px;
 }
