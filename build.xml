@@ -184,7 +184,7 @@
             <format property="build.timestamp" pattern="yyyy.MM.dd hh.mm.ss" locale="en,US"/>
         </tstamp>
         <replace dir="${command-line-html-dir}" token="@builddate@" value="${build.timestamp}">
-            <include name="**/*.shtml"/>
+            <include name="**/*.html"/>
         </replace>
     </target>
 
@@ -325,7 +325,7 @@
                 <include name="${src}/**/*.java"/>
                 <include name="${htsjdk_src}/**/*.java"/>
             </fileset>
-            <arg line="-f ${command-line-html-dir}/picard-metric-definitions.shtml"/>
+            <arg line="-f ${command-line-html-dir}/picard-metric-definitions.html"/>
         </javadoc>
     </target>
 
@@ -474,7 +474,7 @@
 
             <!-- Generate HTML for each command -->
             <java classname="picard.cmdline.CreateHtmlDocForStandardOptions"
-                  output="${command-line-html-dir}/program_usage/standard-options.shtml"
+                  output="${command-line-html-dir}/program_usage/standard-options.html"
                   failonerror="true">
                 <classpath>
                     <pathelement location="${dist}/picard-${picard-version}.jar"/>
@@ -502,7 +502,7 @@
 
             <!-- Generate HTML for each command -->
             <java classname="picard.cmdline.CreateHtmlDocForProgram"
-                  output="${command-line-html-dir}/program_usage/@{title}.shtml"
+                  output="${command-line-html-dir}/program_usage/@{title}.html"
                   failonerror="true">
                 <classpath>
                     <pathelement location="${dist}/picard-${picard-version}.jar"/>
@@ -512,12 +512,12 @@
             </java>
 
             <!-- Generate links to each command -->
-            <echo file="${command-line-html-dir}/inc/command-line-sidebar.shtml" append="true"
-                  message="&lt;li>&lt;a href=&quot;command-line-overview.shtml#@{title}&quot;>@{title}&lt;/a>${line.separator}"/>
+            <echo file="${command-line-html-dir}/inc/command-line-sidebar.html" append="true"
+                  message="&lt;li>&lt;a href=&quot;command-line-overview.html#@{title}&quot;>@{title}&lt;/a>${line.separator}"/>
 
             <!-- include usage for each command -->
-            <echo file="${command-line-html-dir}/inc/command-line-usage.shtml" append="true"
-                  message="&lt;!--#include virtual=&quot;@{title}.shtml&quot; -->${line.separator}"/>
+            <echo file="${command-line-html-dir}/inc/command-line-usage.html" append="true"
+                  message="&lt;!--#include virtual=&quot;@{title}.html&quot; -->${line.separator}"/>
         </sequential>
     </macrodef>
 

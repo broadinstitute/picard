@@ -93,7 +93,7 @@ public class MetricsDoclet {
 
         // Now print out each class
         for (final ClassDoc doc : metricsClasses.values()) {
-            out.println("<a name=\"" + doc.name() + "\"");
+            out.println("<a id=\"" + doc.name() + "\"");
             out.println("<h2>" + doc.name() + "</h2>");
             out.println("<p class=\"class_description\">" + doc.commentText() + "</p>");
             out.println("<h3>Column Definitions</h3>");
