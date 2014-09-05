@@ -22,13 +22,61 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 PROGNAME=`basename $0`
-USERNAME=alecw
 
 function usage () {
     echo "USAGE: $PROGNAME <release-id>" >&2
 	echo "Tags Github Picard source, checks out and builds sources, uploads build results to Sourceforge.">&2
     echo "-t <tmpdir>                Build in <tmpdir>.  Default: $TMPDIR." >&2
-    echo "-u <sourceforge-user> Sourceforge username.  Default: $USERNAME." >&2
+}
+
+function create_release () {
+	local token="$1";
+	local owner="$2";
+	local repo="$3";
+	local tag_name="$4";
+	local target_commitish="$5";
+	local name="$6";
+	local body="$7";
+	local draft="$8";
+	local prerelease="$9";
+
+	local payload="\"tag_name\":\"$tag_name\"";
+	payload="$payload,\"target_commitish\":\"$target_commitish\"";
+	payload="$payload,\"name\":\"$name\"";
+	payload="$payload,\"body\":\"$body\"";
+	payload="$payload,\"draft\":$draft";
+	payload="$payload,\"prerelease\":$prerelease";
+	payload="{$payload}";
+
+	RELEASE_RESPONSE=$(curl --fail -s -S -X POST \
+		https://api.github.com/repos/$owner/$repo/releases \
+		-A "create-release" \
+		-H "Accept: application/vnd.github.v3+json" \
+		-H "Content-Type: application/json" \
+		-H "Authorization: token $token" \
+		-d "$payload");
+
+	# NB: we must set the RELEASE_GITHUB_ID as the ID in the returned json response
+	export RELEASE_GITHUB_ID=$(echo "$RELEASE_RESPONSE" | sed -e 's_",.*__g' -e 's_.*/__g')
+}
+
+function upload_asset () {
+	local token="$1";
+	local owner="$2";
+	local repo="$3";
+	local name="$4";
+	local content_type="$5";
+	local file="$6";
+	local id="$7";
+
+	curl --fail -s -S -X POST \
+		https://uploads.github.com/repos/$owner/$repo/releases/$id/assets?name=$name \
+		-A "upload-asset" \
+		-H "Accept: application/vnd.github.v3+json" \
+		-H "Content-Type: $content_type" \
+		-H "Authorization: token $token" \
+		--progress-bar \
+		--data-binary @"$file";
 }
 
 function tag_exists() {
@@ -58,6 +106,7 @@ function remote_tag_does_not_exist() {
 
 # This method called once for picard and once for htsjdk
 function tag_it() {
+
     # tag must not exist
     if tag_exists $RELEASE_ID
     then echo "ERROR: Tag $RELEASE_ID locally already exists"
@@ -85,22 +134,26 @@ function tag_it() {
 
 set -e
 
-while getopts "ht:u:" options; do
+while getopts "ht:" options; do
   case $options in
-    u ) USERNAME=$OPTARG;;
     t ) TMPDIR=$OPTARG;;
     h ) usage;;
     \? ) usage
          exit 1;;
     * ) usage
           exit 1;;
-
   esac
 done
 shift $(($OPTIND - 1))
 
+if [ -z $GITHUB_USER_TOKEN ]
+then echo "ERROR: environment variable GITHUB_USER_TOKEN must be set." >&2
+	usage
+	exit 1
+fi
+
 if (( $# != 1 ))
- then echo "ERROR: Incorrect number of arguments." >&2
+then echo "ERROR: Incorrect number of arguments." >&2
       usage
       exit 1
 fi
@@ -118,6 +171,7 @@ java_version=`java -version 2>&1 | fgrep -i version`
 
 PICARDGITROOT=git@github.com:broadinstitute/picard.git
 REMOTE=origin
+GHPAGES_BRANCH="gh-pages"
 
 RELEASE_ID=$1
 
@@ -138,16 +192,13 @@ ant clean # clean shouldn't be necessary, but no harm
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
 PICARD_PREV_RELEASE_ID=`git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1`
-
 HTSJDK_PREV_RELEASE_ID=$(cd htsjdk; git ls-remote --tags | grep -v "{}$" | awk '{print $2}' | sed -e "s_.*/__g" | egrep '[.]\d\d\d' | tail -1)
-
-
 
 # Tag in both repos
 for sandbox in . htsjdk
 do pushd $sandbox
-   tag_it || exit 1
-   popd
+	tag_it || exit 1
+	popd
 done
 
 ant -lib lib/ant test-htsjdk test
@@ -172,12 +223,63 @@ chmod -R gu+rw javadoc deploy dist
 
 find javadoc deploy dist -type d -exec chmod g+s '{}' ';' 
 
-scp -p -r javadoc $USERNAME,picard@web.sourceforge.net:htdocs
+# Move the javadoc directory to a temporary location
+mv javadoc tmp_javadoc
 
-cd deploy
-scp -p -r picard-tools/$RELEASE_ID $USERNAME,picard@web.sourceforge.net:/home/frs/project/p/pi/picard/picard-tools/
+# Copy over javadoc for htsjdk since we are in the picard directory
+# NB: need to move javadoc to a tmp directory since the javadoc 
+# directory in the gh-pages branch may already exist.
+cd htsjdk
+mkdir tmp_javadoc
+cp -r ../javadoc/$sandbox tmp_javadoc/.
+cd ../
 
-cd ../dist/html
-scp -p inc/*.shtml program_usage/*.shtml $USERNAME,picard@web.sourceforge.net:htdocs/inc
-scp -p *.css *.shtml *.html $USERNAME,picard@web.sourceforge.net:htdocs
+# Update the javadoc
+for sandbox in . htsjdk
+do pushd $sandbox
+	if [ "." == $sandbox ]; then
+		sandbox="picard";
+	fi
+	echo "Updating the javadoc for $sandbox"
+	# Checkout the gh-pages branch
+	git checkout -b $GHPAGES_BRANCH $REMOTE/$GHPAGES_BRANCH
+	# Copy over from the tmp javadoc directory
+	rsync -avP --delete-after tmp_javadoc/* javadoc/.
+	# Remove the tmp directory as we no longer need it
+	rm -r tmp_javadoc
+	# Add the new javadoc files
+	find javadoc/$sandbox | xargs git add
+	# Commit!
+	git commit -m "Updating javadoc for release: $RELEASE_ID"
+	# NB: assumes the push will not fail
+	git push $REMOTE $GHPAGES_BRANCH
+	# Reset the repository to master 
+	git checkout master
+	echo "Updated the javadoc for $sandbox"
+	popd
+done
 
+# Publish a release and upload assets
+echo "Creating a release on github for htsjdk and picard"
+create_release $GITHUB_USER_TOKEN samtools htsjdk $RELEASE_ID "" $RELEASE_ID "Release $RELEASE_ID" "false" "false";
+create_release $GITHUB_USER_TOKEN broadinstitute picard $RELEASE_ID "" $RELEASE_ID "Release $RELEASE_ID" "false" "false";
+echo "Github release id: $RELEASE_GITHUB_ID"
+echo "Updating the release zip and README.txt to github"
+upload_asset $GITHUB_USER_TOKEN broadinstitute picard picard-tools-$RELEASE_ID.zip "application/zip" deploy/picard-tools/$RELEASE_ID/picard-tools-$RELEASE_ID.zip $RELEASE_GITHUB_ID;
+upload_asset $GITHUB_USER_TOKEN broadinstitute picard README.txt "application/zip" deploy/picard-tools/$RELEASE_ID/README.txt $RELEASE_GITHUB_ID;
+
+# Update the website
+echo "Updating the website"
+# Assumes the gh-pages branch is already locally created
+git checkout $GHPAGES_BRANCH;
+cd dist/html
+cp inc/*.html program_usage/*.html picard-metric-definitions.html ../../_includes/.
+cd ../../
+find _includes | xargs git add
+git commit -m "Adding website files for $RELEASE_ID"
+git push $REMOTE $GHPAGES_BRANCH
+
+# Move back to master just in case
+git checkout master
+
+echo "Release was successful!"
