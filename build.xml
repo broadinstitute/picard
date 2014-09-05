@@ -384,6 +384,7 @@
         <document-command title="FastqToSam"                        main-class="picard.sam.FastqToSam"/>
         <document-command title="FifoBuffer"                        main-class="picard.util.FifoBuffer"/>
         <document-command title="FilterSamReads"                    main-class="picard.sam.FilterSamReads"/>
+        <document-command title="FilterVcf"                         main-class="picard.vcf.filter.FilterVcf"/>
         <document-command title="FixMateInformation"                main-class="picard.sam.FixMateInformation"/>
         <document-command title="GatherBamFiles"                    main-class="picard.sam.GatherBamFiles"/>
         <document-command title="GenotypeConcordance"               main-class="picard.vcf.GenotypeConcordance"/>
