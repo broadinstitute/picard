@@ -62,10 +62,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * @param maxGaps             The maximum number of insertions or deletions permitted in an
 *                            alignment.  Alignments with more than this many gaps will be ignored.
 *                            -1 means to allow any number of gaps.
-     * @param attributesToRetain  private attributes from the alignment record that should be
-*                          included when merging.  This overrides the exclusion of
-*                          attributes whose tags start with the reserved characters
-*                          of X, Y, and Z
      * @param attributesToRetain  attributes from the alignment record that should be
      *                          removed when merging.  This overrides attributesToRetain if they share
      *                           common tags.
