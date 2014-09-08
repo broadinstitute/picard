@@ -182,6 +182,7 @@ if [[ -e $TMPDIR/picard ]]
 then echo "$TMPDIR/picard already exists.  Please remove or specify a different TMPDIR." >&2
         exit 1
 fi
+echo "Using TMPDIR: $TMPDIR";
 cd $TMPDIR
 
 # clone
@@ -231,7 +232,7 @@ mv javadoc tmp_javadoc
 # directory in the gh-pages branch may already exist.
 cd htsjdk
 mkdir tmp_javadoc
-cp -r ../javadoc/$sandbox tmp_javadoc/.
+cp -r ../tmp_javadoc/htsjdk tmp_javadoc/.
 cd ../
 
 # Update the javadoc
@@ -244,6 +245,9 @@ do pushd $sandbox
 	# Checkout the gh-pages branch
 	git checkout -b $GHPAGES_BRANCH $REMOTE/$GHPAGES_BRANCH
 	# Copy over from the tmp javadoc directory
+	if [ ! -d javadoc ]; then
+		mkdir javadoc;
+	fi
 	rsync -avP --delete-after tmp_javadoc/* javadoc/.
 	# Remove the tmp directory as we no longer need it
 	rm -r tmp_javadoc
