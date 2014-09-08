@@ -27,6 +27,7 @@ import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.Header;
 import htsjdk.samtools.metrics.MetricBase;
@@ -141,6 +142,7 @@ public abstract class CommandLineProgram {
         Log.setGlobalLogLevel(VERBOSITY);
         final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
         SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
+        SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
         if (MAX_RECORDS_IN_RAM != null) {
