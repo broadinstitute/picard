@@ -146,7 +146,7 @@ public class RevertSam extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         final boolean sanitizing = SANITIZE;
-        final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault().validationStringency(VALIDATION_STRINGENCY).open(INPUT);
         final SAMFileHeader inHeader = in.getFileHeader();
 
         // If we are going to override SAMPLE_ALIAS or LIBRARY_NAME, make sure all the read
