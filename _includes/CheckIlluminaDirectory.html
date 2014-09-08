@@ -1,0 +1,19 @@
+<a id="CheckIlluminaDirectory"/>
+<h3>CheckIlluminaDirectory</h3>
+<p>USAGE: CheckIlluminaDirectory [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#CheckIlluminaDirectory
+<p>
+<p>Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.
+<p></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>BASECALLS_DIR=File</td><td>The basecalls output directory.   Required. </td></tr>
+<tr><td>DATA_TYPES=IlluminaDataType</td><td>The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending onwhether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the individual records of the files themselves are spurious.   Possible values: {Position, BaseCalls, QualityScores, PF, Barcodes} This option may be specified 0 or more times. </td></tr>
+<tr><td>READ_STRUCTURE=String</td><td>A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of "36T8B8S28T" then, before being converted to SAM records those bases will be split into 4 reads where read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of skipped cycles and read four is another 28 cycle template read.  The read consisting of skipped cycles would NOT be included in output SAM/BAM file read groups.  Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.  Required. </td></tr>
+<tr><td>LANES=Integer</td><td>The number of the lane(s) to check.   This option must be specified at least 1 times. </td></tr>
+<tr><td>TILE_NUMBERS=Integer</td><td>The number(s) of the tile(s) to check.   This option may be specified 0 or more times. </td></tr>
+<tr><td>FAKE_FILES=Boolean</td><td>A flag to determine whether or not to create fake versions of the missing files.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>LINK_LOCS=Boolean</td><td>A flag to create symlinks to the loc file for the X Ten for each tile.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+<br/>

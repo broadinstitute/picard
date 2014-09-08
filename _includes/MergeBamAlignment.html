@@ -1,0 +1,38 @@
+<a id="MergeBamAlignment"/>
+<h3>MergeBamAlignment</h3>
+<p>USAGE: MergeBamAlignment [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#MergeBamAlignment
+<p>
+<p>Merges alignment data from a SAM or BAM file with additional data stored in an unmapped BAM file and produces a third SAM or BAM file of aligned and unaligned reads. NOTE that this program expects to find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it to have the same base name as the reference fasta except with the extension '.dict'</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>UNMAPPED_BAM=File</td><td>Original SAM or BAM file of unmapped reads, which must be in queryname order.  Required. </td></tr>
+<tr><td>ALIGNED_BAM=File</td><td>SAM or BAM file(s) with alignment data.  This option may be specified 0 or more times.  Cannot be used in conjuction with option(s) READ1_ALIGNED_BAM (R1_ALIGNED) READ2_ALIGNED_BAM (R2_ALIGNED)</td></tr>
+<tr><td>READ1_ALIGNED_BAM=File</td><td>SAM or BAM file(s) with alignment data from the first read of a pair.  This option may be specified 0 or more times.  Cannot be used in conjuction with option(s) ALIGNED_BAM (ALIGNED)</td></tr>
+<tr><td>READ2_ALIGNED_BAM=File</td><td>SAM or BAM file(s) with alignment data from the second read of a pair.  This option may be specified 0 or more times.  Cannot be used in conjuction with option(s) ALIGNED_BAM (ALIGNED)</td></tr>
+<tr><td>OUTPUT=File</td><td>Merged SAM or BAM file to write to.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE=File</td><td>Path to the fasta file for the reference sequence.  Required. </td></tr>
+<tr><td>PROGRAM_RECORD_ID=String</td><td>The program group ID of the aligner (if not supplied by the aligned file).  Default value: null. </td></tr>
+<tr><td>PROGRAM_GROUP_VERSION=String</td><td>The version of the program group (if not supplied by the aligned file).  Default value: null. </td></tr>
+<tr><td>PROGRAM_GROUP_COMMAND_LINE=String</td><td>The command line of the program group (if not supplied by the aligned file).  Default value: null. </td></tr>
+<tr><td>PROGRAM_GROUP_NAME=String</td><td>The name of the program group (if not supplied by the aligned file).  Default value: null. </td></tr>
+<tr><td>PAIRED_RUN=Boolean</td><td>This argument is ignored and will be removed.  Required. Possible values: {true, false} </td></tr>
+<tr><td>JUMP_SIZE=Integer</td><td>The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead  Default value: null.  Cannot be used in conjuction with option(s) EXPECTED_ORIENTATIONS (ORIENTATIONS)</td></tr>
+<tr><td>CLIP_ADAPTERS=Boolean</td><td>Whether to clip adapters where identified.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>IS_BISULFITE_SEQUENCE=Boolean</td><td>Whether the lane is bisulfite sequence (used when caculating the NM tag).  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>ALIGNED_READS_ONLY=Boolean</td><td>Whether to output only aligned reads.    Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MAX_INSERTIONS_OR_DELETIONS=Integer</td><td>The maximum number of insertions or deletions permitted for an alignment to be included. Alignments with more than this many insertions or deletions will be ignored. Set to -1 to allow any number of insertions or deletions.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>ATTRIBUTES_TO_RETAIN=String</td><td>Reserved alignment attributes (tags starting with X, Y, or Z) that should be brought over from the alignment data when merging.  This option may be specified 0 or more times. </td></tr>
+<tr><td>ATTRIBUTES_TO_REMOVE=String</td><td>Attributes from the alignment record that should be removed when merging.  This overrides ATTRIBUTES_TO_RETAIN if they share common tags.  This option may be specified 0 or more times. </td></tr>
+<tr><td>READ1_TRIM=Integer</td><td>The number of bases trimmed from the beginning of read 1 prior to alignment  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>READ2_TRIM=Integer</td><td>The number of bases trimmed from the beginning of read 2 prior to alignment  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>EXPECTED_ORIENTATIONS=PairOrientation</td><td>The expected orientation of proper read pairs. Replaces JUMP_SIZE  Possible values: {FR, RF, TANDEM} This option may be specified 0 or more times.  Cannot be used in conjuction with option(s) JUMP_SIZE (JUMP)</td></tr>
+<tr><td>ALIGNER_PROPER_PAIR_FLAGS=Boolean</td><td>Use the aligner's idea of what a proper pair is rather than computing in this program.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>SORT_ORDER=SortOrder</td><td>The order in which the merged reads should be output.  Default value: coordinate. This option can be set to 'null' to clear the default value. Possible values: {unsorted, queryname, coordinate} </td></tr>
+<tr><td>PRIMARY_ALIGNMENT_STRATEGY=PrimaryAlignmentStrategy</td><td>Strategy for selecting primary alignment when the aligner has provided more than one alignment for a pair or fragment, and none are marked as primary, more than one is marked as primary, or the primary alignment is filtered out for some reason. BestMapq expects that multiple alignments will be correlated with HI tag, and prefers the pair of alignments with the largest MAPQ, in the absence of a primary selected by the aligner. EarliestFragment prefers the alignment which maps the earliest base in the read. Note that EarliestFragment may not be used for paired reads. BestEndMapq is appropriate for cases in which the aligner is not pair-aware, and does not output the HI tag. It simply picks the alignment for each end with the highest MAPQ, and makes those alignments primary, regardless of whether the two alignments make sense together.MostDistant is also for a non-pair-aware aligner, and picks the alignment pair with the largest insert size. If all alignments would be chimeric, it picks the alignments for each end with the best MAPQ.  For all algorithms, ties are resolved arbitrarily.  Default value: BestMapq. This option can be set to 'null' to clear the default value. Possible values: {BestMapq, EarliestFragment, BestEndMapq, MostDistant} </td></tr>
+<tr><td>CLIP_OVERLAPPING_READS=Boolean</td><td>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INCLUDE_SECONDARY_ALIGNMENTS=Boolean</td><td>If false, do not write secondary alignments to output.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>ADD_MATE_CIGAR=Boolean</td><td>Adds the mate CIGAR tag (MC) if true, does not if false.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+<br/>

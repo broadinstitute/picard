@@ -1,0 +1,20 @@
+<a id="QualityScoreDistribution"/>
+<h3>QualityScoreDistribution</h3>
+<p>USAGE: QualityScoreDistribution [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#QualityScoreDistribution
+<p>
+<p>Program to chart quality score distributions in a SAM or BAM file.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>CHART_OUTPUT=File</td><td>A file (with .pdf extension) to write the chart to.  Required. </td></tr>
+<tr><td>ALIGNED_READS_ONLY=Boolean</td><td>If set to true calculate mean quality over aligned reads only.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>PF_READS_ONLY=Boolean</td><td>If set to true calculate mean quality over PF reads only.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INCLUDE_NO_CALLS=Boolean</td><td>If set to true, include quality for no-call bases in the distribution.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INPUT=File</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>File to write the output to.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE=File</td><td>Reference sequence fasta  Default value: null. </td></tr>
+<tr><td>ASSUME_SORTED=Boolean</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>STOP_AFTER=Long</td><td>Stop after processing N reads, mainly for debugging.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+<br/>

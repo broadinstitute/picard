@@ -1,0 +1,16 @@
+<a id="RevertOriginalBaseQualitiesAndAddMateCigar"/>
+<h3>RevertOriginalBaseQualitiesAndAddMateCigar</h3>
+<p>USAGE: RevertOriginalBaseQualitiesAndAddMateCigar [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#RevertOriginalBaseQualitiesAndAddMateCigar
+<p>
+<p>Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT=File</td><td>The input SAM/BAM file to revert the state of.  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>The output SAM/BAM file to create.  Required. </td></tr>
+<tr><td>SORT_ORDER=SortOrder</td><td>The sort order to create the reverted output file with.By default, the sort order will be the same as the input.  Default value: null. Possible values: {unsorted, queryname, coordinate} </td></tr>
+<tr><td>RESTORE_ORIGINAL_QUALITIES=Boolean</td><td>True to restore original qualities from the OQ field to the QUAL field if available.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MAX_RECORDS_TO_EXAMINE=Integer</td><td>The maximum number of records to examine to determine if we can exit early and not output, given that there are a no original base qualities (if we are to restore) and mate cigars exist. Set to 0 to never skip the file.  Default value: 10000. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+<br/>

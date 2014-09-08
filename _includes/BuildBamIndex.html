@@ -1,0 +1,14 @@
+<a id="BuildBamIndex"/>
+<h3>BuildBamIndex</h3>
+<p>USAGE: BuildBamIndex [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#BuildBamIndex
+<p>
+<p>Generates a BAM index (.bai) file.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT=String</td><td>A BAM file or URL to process. Must be sorted in coordinate order.  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.
+<p>If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.  Default value: null. </td></tr>
+</table>
+<br/>

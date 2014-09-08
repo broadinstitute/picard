@@ -1,0 +1,11 @@
+<a id="NormalizeFasta"/>
+<h3>NormalizeFasta</h3>
+<p>Takes any file that conforms to the fasta format and normalizes it so that all lines of sequence except the last line per named sequence are of the same length.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT=File</td><td>The input fasta file to normalize.  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>The output fasta file to write.  Required. </td></tr>
+<tr><td>LINE_LENGTH=Integer</td><td>The line length to be used for the output fasta file.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE=Boolean</td><td>Truncate sequence names at first whitespace.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+<br/>

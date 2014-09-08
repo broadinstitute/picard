@@ -1,0 +1,10 @@
+<a id="MakeSitesOnlyVcf"/>
+<h3>MakeSitesOnlyVcf</h3>
+<p>Reads a VCF/VCF.gz/BCF and removes all genotype information from it while retaining all site level information, including annotations based on genotypes (e.g. AN, AF). Output an be any support variant format including .vcf, .vcf.gz or .bcf.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT=File</td><td>Input VCF or BCF  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>Output VCF or BCF to emit without per-sample info.  Required. </td></tr>
+<tr><td>SAMPLE=String</td><td>Optionally one or more samples to retain when building the 'sites-only' VCF.  This option may be specified 0 or more times. </td></tr>
+</table>
+<br/>
