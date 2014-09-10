@@ -132,21 +132,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
             tmpReader.close();
         }
-        // If not null, the program record was already added in the superclass.  DO NOT RE-ADD!
 
-        if (getProgramRecord() != null) {
-            final SAMFileReader tmp = new SAMFileReader(unmappedBamFile);
-            try {
-                for (final SAMProgramRecord pg : tmp.getFileHeader().getProgramRecords()) {
-                    if (pg.getId().equals(getProgramRecord().getId())) {
-                        throw new PicardException("Program Record ID already in use in unmapped BAM file.");
-                    }
-                }
-            }
-            finally {
-                tmp.close();
-            }
-        }
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
 

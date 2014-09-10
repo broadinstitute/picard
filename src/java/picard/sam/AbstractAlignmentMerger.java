@@ -42,6 +42,8 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
@@ -88,7 +90,6 @@ public abstract class AbstractAlignmentMerger {
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X','Y', 'Z'};
-    private final NumberFormat FMT = new DecimalFormat("#,###");
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Written to sorting collection in queryname order", "records");
@@ -244,7 +245,17 @@ public abstract class AbstractAlignmentMerger {
      */
     public void mergeAlignment() {
         // Open the file of unmapped records and write the read groups to the the header for the merged file
-        final SAMFileReader unmappedSam = new SAMFileReader(this.unmappedBamFile);
+        final SamReader unmappedSam = SamReaderFactory.makeDefault().open(this.unmappedBamFile);
+
+        // Check that the program record we are going to insert is not already used in the unmapped SAM
+        if (getProgramRecord() != null) {
+            for (final SAMProgramRecord pg : unmappedSam.getFileHeader().getProgramRecords()) {
+                if (pg.getId().equals(getProgramRecord().getId())) {
+                    throw new PicardException("Program Record ID already in use in unmapped BAM file.");
+                }
+            }
+        }
+
         final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
         this.header.setReadGroups(unmappedSam.getFileHeader().getReadGroups());
 
@@ -252,9 +263,7 @@ public abstract class AbstractAlignmentMerger {
         int unmapped = 0;
 
         // Get the aligned records and set up the first one
-        alignedIterator = new MultiHitAlignedReadIterator(
-                new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter),
-                primaryAlignmentSelectionStrategy);
+        alignedIterator = new MultiHitAlignedReadIterator(new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
         HitsForInsert nextAligned = nextAligned();
 
         // Create the sorting collection that will write the records in the coordinate order
