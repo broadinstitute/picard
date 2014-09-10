@@ -207,7 +207,6 @@ public class SamToFastq extends CommandLineProgram {
         final FastqWriters fastqWriters;
         if (!OUTPUT_PER_RG) {
             IOUtil.assertFileIsWritable(FASTQ);
-            IOUtil.openFileForWriting(FASTQ);
             final FastqWriter firstOfPairWriter = factory.newWriter(FASTQ);
 
             final FastqWriter secondOfPairWriter;
@@ -215,7 +214,6 @@ public class SamToFastq extends CommandLineProgram {
                 secondOfPairWriter = firstOfPairWriter;
             } else if (SECOND_END_FASTQ != null) {
                 IOUtil.assertFileIsWritable(SECOND_END_FASTQ);
-                IOUtil.openFileForWriting(SECOND_END_FASTQ);
                 secondOfPairWriter = factory.newWriter(SECOND_END_FASTQ);
             } else {
                 secondOfPairWriter = null;
