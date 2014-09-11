@@ -1,34 +1,27 @@
-package picard.sam;
+package picard.sam.markduplicates;
 
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.Usage;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
+import picard.sam.DuplicationMetrics;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
+import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
+import picard.sam.markduplicates.util.OpticalDuplicateFinder;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 import static java.lang.Math.pow;
 
@@ -51,7 +44,7 @@ import static java.lang.Math.pow;
  *
  * @author Tim Fennell
  */
-public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm {
+public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
     @Usage public final String USAGE =
             "Attempts to estimate library complexity from sequence of read pairs alone. Does so by sorting all reads " +
             "by the first N bases (5 by default) of each read and then comparing reads with the first " +
@@ -99,7 +92,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
     /**
      * Little class to hold the sequence of a pair of reads and tile location information.
      */
-    static class PairedReadSequence implements PhysicalLocation {
+    static class PairedReadSequence implements OpticalDuplicateFinder.PhysicalLocation {
         static int size_in_bytes = 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
         short readGroup = -1;
         short tile = -1;
@@ -107,6 +100,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
         boolean qualityOk = true;
         byte[] read1;
         byte[] read2;
+        short libraryId;
 
         public short getReadGroup() { return this.readGroup; }
         public void setReadGroup(final short readGroup) { this.readGroup = readGroup; }
@@ -119,6 +113,9 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
 
         public short getY() { return this.y; }
         public void setY(final short y) { this.y = y; }
+
+        public short getLibraryId() { return this.libraryId; }
+        public void setLibraryId(final short libraryId) { this.libraryId = libraryId; }
     }
 
     /**
@@ -256,7 +253,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
                 if (prs == null) {
                     // Make a new paired read object and add RG and physical location information to it
                     prs = new PairedReadSequence();
-                    if (addLocationInformation(rec.getReadName(), prs)) {
+                    if (opticalDuplicateFinder.addLocationInformation(rec.getReadName(), prs)) {
                         final SAMReadGroupRecord rg = rec.getReadGroup();
                         if (rg != null) prs.setReadGroup((short) readGroups.indexOf(rg));
                     }
@@ -352,7 +349,7 @@ public class EstimateLibraryComplexity extends AbstractDuplicateFindingAlgorithm
                             final int duplicateCount = dupes.size();
                             duplicationHisto.increment(duplicateCount);
 
-                            final boolean[] flags = findOpticalDuplicates(dupes, OPTICAL_DUPLICATE_PIXEL_DISTANCE);
+                            final boolean[] flags = opticalDuplicateFinder.findOpticalDuplicates(dupes);
                             for (final boolean b : flags) {
                                 if (b) opticalHisto.increment(duplicateCount);
                             }

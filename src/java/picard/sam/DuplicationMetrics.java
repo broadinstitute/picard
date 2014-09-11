@@ -140,7 +140,7 @@ public class DuplicationMetrics extends MetricBase {
     }
 
     /**
-     * Calculates a Histogram using the estimateRoi method to estimate the effective yield
+     * Calculates a histogram using the estimateRoi method to estimate the effective yield
      * doing x sequencing for x=1..10.
      */
     public Histogram<Double> calculateRoiHistogram() {
