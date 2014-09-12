@@ -402,6 +402,7 @@
         <package-and-document-command title="SamFormatConverter"                main-class="picard.sam.SamFormatConverter"/>
         <package-and-document-command title="SamToFastq"                        main-class="picard.sam.SamToFastq"/>
         <package-and-document-command title="SortSam"                           main-class="picard.sam.SortSam"/>
+        <package-and-document-command title="SortVcf"                           main-class="picard.vcf.SortVcf"/>
         <package-and-document-command title="VcfFormatConverter"                main-class="picard.vcf.VcfFormatConverter">
             <package-filesets>
                 <fileset dir=".command_tmp">

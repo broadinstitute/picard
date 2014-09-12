@@ -104,7 +104,7 @@ public class MergeVcfs extends CommandLineProgram {
 
 		for (final File file : INPUT) {
 			IOUtil.assertFileIsReadable(file);
-			final VCFFileReader fileReader = new VCFFileReader(file);
+			final VCFFileReader fileReader = new VCFFileReader(file, false);
 			final VCFHeader fileHeader = fileReader.getFileHeader();
 
 			if (variantContextComparator == null) {
