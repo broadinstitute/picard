@@ -17,17 +17,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-public abstract class AbstractVcfMergingTest {
+public abstract class AbstractVcfMergingClpTester {
 
 	protected static final String TEST_DATA_PATH = "testdata/picard/vcf/";
 
     protected abstract CommandLineProgram getProgram();
 
-    protected ArrayList<String> populateArguments(List<File> inputs, File output) {
-        return populateArguments(inputs, output, Collections.<String>emptyList());
+    protected void runClp(final List<File> inputs, final File output, final int expectedReturnCode) {
+        runClp(inputs, output, Collections.<String>emptyList(), expectedReturnCode);
     }
 
-    protected ArrayList<String> populateArguments(List<File> inputs, File output, List<String> otherArguments) {
+    protected void runClp(final List<File> inputs, final File output, final List<String> otherArguments, final int expectedReturnCode) {
         final ArrayList<String> arguments = new ArrayList<String>();
         for (final File input : inputs) {
             arguments.add("INPUT=" + input);
@@ -36,20 +36,8 @@ public abstract class AbstractVcfMergingTest {
         for (final String argument : otherArguments) {
             arguments.add(argument);
         }
-        return arguments;
+        Assert.assertEquals(getProgram().instanceMain(arguments.toArray(new String[arguments.size()])), expectedReturnCode);
     }
-
-	@Test(enabled = false)
-	public void testLong() throws IOException {
-        final File output = new File("/Users/jrose/development/long-merge-test.vcf.gz");
-        final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
-		final List<File> inputs = Arrays.asList(
-				new File("/Volumes/Disko Segundo/mergevcfs/t2d_genes_contam_test4_per_sample_plus_five.snps.recalibrated.vcf"),
-				new File("/Volumes/Disko Segundo/mergevcfs/t2d_genes_contam_test4_per_sample_plus_five.indels.filtered.vcf"));
-
-        final ArrayList<String> args = populateArguments(inputs, output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-	}
 
 	@Test (expectedExceptions = IllegalArgumentException.class)
 	public void testFailsOnDissimilarContigLists() {
@@ -58,34 +46,31 @@ public abstract class AbstractVcfMergingTest {
         final File output = new File("/dev/null/blah");
         final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(dissimilarContigs, snpInputFile), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
+        runClp(Arrays.asList(dissimilarContigs, snpInputFile), output, indexing, 0);
 	}
 
 	@Test (expectedExceptions = IllegalArgumentException.class)
 	public void testFailsOnNoContigList() {
-		final File contiglessIndelFile = new File(TEST_DATA_PATH + "CEUTrio-indels-no-contigs.vcf");
+		final File contiglessIndelFile = new File(TEST_DATA_PATH, "CEUTrio-indels-no-contigs.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
-        final File output = new File("/dev/null/blah");
+        final File output = new File("/dev/null");
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(contiglessIndelFile, snpInputFile), output);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 1);
+        runClp(Arrays.asList(contiglessIndelFile, snpInputFile), output, 1);
 	}
 
 	@Test (expectedExceptions = IllegalArgumentException.class)
 	public void testFailsOnDissimilarSampleLists() {
-		final File badSampleIndelFile = new File(TEST_DATA_PATH + "CEUTrio-indels-bad-samples.vcf");
+		final File badSampleIndelFile = new File(TEST_DATA_PATH, "CEUTrio-indels-bad-samples.vcf");
 		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
-        final File output = new File("/dev/null/blah");
+        final File output = new File("/dev/null");
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(badSampleIndelFile, snpInputFile), output);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 1);
+        runClp(Arrays.asList(badSampleIndelFile, snpInputFile), output, 1);
 	}
 
 	@Test
 	public void testMergeIndelsSnps() throws IOException {
-		final File indelInputFile = new File(TEST_DATA_PATH + "CEUTrio-indels.vcf");
-		final File snpInputFile = new File(TEST_DATA_PATH + "CEUTrio-snps.vcf");
+		final File indelInputFile = new File(TEST_DATA_PATH, "CEUTrio-indels.vcf");
+		final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
 		final File output = File.createTempFile("merge-indels-snps-test-output.", ".vcf");
         final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
         output.deleteOnExit();
@@ -93,8 +78,7 @@ public abstract class AbstractVcfMergingTest {
 		final Queue<String> indelContigPositions = loadContigPositions(indelInputFile);
 		final Queue<String> snpContigPositions = loadContigPositions(snpInputFile);
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(indelInputFile, snpInputFile), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
+        runClp(Arrays.asList(indelInputFile, snpInputFile), output, indexing, 0);
         validateSnpAndIndelResults(output, indelContigPositions, snpContigPositions);
     }
 
@@ -114,7 +98,7 @@ public abstract class AbstractVcfMergingTest {
             final VariantContext outputContext = iterator.next();
             if (outputContext.isIndel()) Assert.assertEquals(getContigPosition(outputContext), indelContigPositions.poll());
             if (outputContext.isSNP()) Assert.assertEquals(getContigPosition(outputContext), snpContigPositions.poll());
-            if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) < 0);
+            if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) <= 0);
             last = outputContext;
         }
         iterator.close();
@@ -146,9 +130,7 @@ public abstract class AbstractVcfMergingTest {
         final File output = File.createTempFile("random-scatter-test-output.", ".vcf");
 		output.deleteOnExit();
 
-        final ArrayList<String> args = populateArguments(inputs, output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(inputs, output, indexing, 0);
         validateResultsForMultipleInputs(output, positionQueues);
 	}
 
@@ -166,7 +148,7 @@ public abstract class AbstractVcfMergingTest {
                     break;
                 }
             }
-            if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) < 0);
+            if (last != null) Assert.assertTrue(outputComparator.compare(last, outputContext) <= 0);
             last = outputContext;
         }
         iterator.close();

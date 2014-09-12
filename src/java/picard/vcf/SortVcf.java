@@ -2,6 +2,7 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -37,7 +38,7 @@ public class SortVcf extends CommandLineProgram {
             CommandLineParser.getStandardUsagePreamble(getClass()) +
             "Sorts one or more VCF files according to the order of the contigs in the header/sequence dictionary and then by coordinate. " +
             "Can accept an external sequence dictionary. If no external dictionary is supplied, multiple inputs' headers must have " +
-            "the same sequence dictionaries\n";
+            "the same sequence dictionaries. Multiple inputs must have the same sample names (in order)\n";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input VCF(s) to be sorted. Multiple inputs must have the same sample names (in order)")
     public List<File> INPUT;
@@ -50,19 +51,22 @@ public class SortVcf extends CommandLineProgram {
 
     private final Log log = Log.getInstance(SortVcf.class);
 
+    private final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
+    private final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
+
     public static void main(final String[] args) {
         new SortVcf().instanceMainWithExit(args);
     }
 
+    // Overrides the option default, including in the help message. Option remains settable on commandline.
     public SortVcf() {
         this.CREATE_INDEX = true;
     }
 
-    private final List<VCFFileReader> inputReaders = new ArrayList<VCFFileReader>();
-    private final List<VCFHeader> inputHeaders = new ArrayList<VCFHeader>();
-
     @Override
     protected int doWork() {
+        System.out.println(this.CREATE_INDEX);
+
         final List<String> sampleList = new ArrayList<String>();
 
         for (final File input : INPUT) IOUtil.assertFileIsReadable(input);
@@ -70,7 +74,10 @@ public class SortVcf extends CommandLineProgram {
         if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
 
         SAMSequenceDictionary samSequenceDictionary = null;
-        if (SEQUENCE_DICTIONARY != null) samSequenceDictionary = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+        if (SEQUENCE_DICTIONARY != null) {
+            samSequenceDictionary = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+            CloserUtil.close(SEQUENCE_DICTIONARY);
+        }
 
         // Gather up a file reader and file header for each input file. Check for sequence dictionary compatibility along the way.
         collectFileReadersAndHeaders(sampleList, samSequenceDictionary);
@@ -78,7 +85,7 @@ public class SortVcf extends CommandLineProgram {
         // Create the merged output header from the input headers
         final VCFHeader outputHeader = new VCFHeader(VCFUtils.smartMergeHeaders(inputHeaders, false), sampleList);
 
-        // Write to the sorting collection
+        // Load entries into the sorting collection
         final SortingCollection<VariantContext> sortedOutput = sortInputs(inputReaders, outputHeader);
 
         // Output to the final file
@@ -94,22 +101,25 @@ public class SortVcf extends CommandLineProgram {
             final SAMSequenceDictionary dict = in.getFileHeader().getSequenceDictionary();
             if (dict == null || dict.isEmpty()) {
                 if (null == samSequenceDictionary) {
-                    throw new IllegalArgumentException("Please specify SEQUENCE_DICTIONARY. Sequence dictionary was missing or empty for the VCF: " + input.getAbsolutePath());
+                    throw new IllegalArgumentException("Sequence dictionary was missing or empty for the VCF: " + input.getAbsolutePath() + " Please add a sequence dictionary to this VCF or specify SEQUENCE_DICTIONARY.");
                 }
                 header.setSequenceDictionary(samSequenceDictionary);
             } else {
-                if (null == samSequenceDictionary) samSequenceDictionary = dict;
-                try {
-                    samSequenceDictionary.assertSameDictionary(dict);
-                } catch (final AssertionError e) {
-                    throw new IllegalArgumentException(e);
+                if (null == samSequenceDictionary) {
+                    samSequenceDictionary = dict;
+                } else {
+                    try {
+                        samSequenceDictionary.assertSameDictionary(dict);
+                    } catch (final AssertionError e) {
+                        throw new IllegalArgumentException(e);
+                    }
                 }
             }
             if (sampleList.isEmpty()) {
                 sampleList.addAll(header.getSampleNamesInOrder());
             } else {
-                if ( ! sampleList.equals(header.getSampleNamesInOrder())) {
-                    throw new IllegalArgumentException("Input file " + input.getAbsolutePath() + " has sample entries that don't match the other files.");
+                if ( !sampleList.equals(header.getSampleNamesInOrder())) {
+                    throw new IllegalArgumentException("Input file " + input.getAbsolutePath() + " has sample names that don't match the other files.");
                 }
             }
             inputReaders.add(in);
@@ -117,7 +127,21 @@ public class SortVcf extends CommandLineProgram {
         }
     }
 
-    private SortingCollection<VariantContext> sortInputs(final List<VCFFileReader> readers, final VCFHeader outputHeader) {ProgressLogger progress = new ProgressLogger(log, 25000, "read", "records");
+    /**
+     * Merge the inputs and sort them by adding each input's content to a single SortingCollection.
+     *
+     * NB: It would be better to have a merging iterator as in MergeSamFiles, as this would perform better for pre-sorted inputs.
+     * Here, we are assuming inputs are unsorted, and so adding their VariantContexts iteratively is fine for now.
+     * MergeVcfs exists for simple merging of presorted inputs.
+     *
+     * @param readers - a list of VCFFileReaders, one for each input VCF
+     * @param outputHeader - The merged header whose information we intend to use in the final output file
+     */
+    private SortingCollection<VariantContext> sortInputs(final List<VCFFileReader> readers, final VCFHeader outputHeader) {
+        final ProgressLogger readProgress = new ProgressLogger(log, 25000, "read", "records");
+
+        // NB: The default MAX_RECORDS_IN_RAM may not be appropriate here. VariantContexts are smaller than SamRecords
+        // We would have to play around empirically to find an appropriate value. We are not performing this optimization at this time.
         final SortingCollection<VariantContext> sorter =
                 SortingCollection.newInstance(
                         VariantContext.class,
@@ -125,20 +149,22 @@ public class SortVcf extends CommandLineProgram {
                         outputHeader.getVCFRecordComparator(),
                         MAX_RECORDS_IN_RAM,
                         TMP_DIR);
+        int readerCount = 1;
         for (final VCFFileReader reader : readers) {
+            log.info("Reading entries from input file " + readerCount);
             for (final VariantContext variantContext : reader) {
                 sorter.add(variantContext);
-                progress.record(variantContext.getChr(), variantContext.getStart());
+                readProgress.record(variantContext.getChr(), variantContext.getStart());
             }
             reader.close();
+            readerCount++;
         }
         return sorter;
     }
 
     private void writeSortedOutput(final VCFHeader outputHeader, final SortingCollection<VariantContext> sortedOutput) {
-        final ProgressLogger progress;
+        final ProgressLogger writeProgress = new ProgressLogger(log, 25000, "wrote", "records");
         final EnumSet<Options> options = CREATE_INDEX ? EnumSet.of(Options.INDEX_ON_THE_FLY) : EnumSet.noneOf(Options.class);
-        progress = new ProgressLogger(log, 25000, "wrote", "records");
         final VariantContextWriter out = new VariantContextWriterBuilder().
                 setReferenceDictionary(outputHeader.getSequenceDictionary()).
                 setOptions(options).
@@ -146,7 +172,7 @@ public class SortVcf extends CommandLineProgram {
         out.writeHeader(outputHeader);
         for (final VariantContext variantContext : sortedOutput) {
             out.add(variantContext);
-            progress.record(variantContext.getChr(), variantContext.getStart());
+            writeProgress.record(variantContext.getChr(), variantContext.getStart());
         }
         out.close();
     }

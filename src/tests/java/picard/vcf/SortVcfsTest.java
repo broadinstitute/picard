@@ -15,11 +15,11 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Test class for SortVCF. Several tests also conducted by AbstractVcfMergingTest
+ * Test class for SortVCF. Several tests also conducted by AbstractVcfMergingClpTester
  *
  * Created by bradt on 9/3/14.
  */
-public class SortVcfsTest extends AbstractVcfMergingTest {
+public class SortVcfsTest extends AbstractVcfMergingClpTester {
 
     @Override
     protected CommandLineProgram getProgram() {
@@ -30,16 +30,14 @@ public class SortVcfsTest extends AbstractVcfMergingTest {
     public void testPresortedFile() throws IOException {
         final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
         final File output = File.createTempFile("sort-presorted-test-output.", ".vcf");
+        final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
+        output.deleteOnExit();
 
         final int numberOfVariantContexts = loadContigPositions(snpInputFile).size();
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(snpInputFile), output);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(Arrays.asList(snpInputFile), output, indexing, 0);
         validateSortingResults(output, numberOfVariantContexts);
     }
-
-
 
     @Test
     public void testSingleScrambledFile() throws IOException {
@@ -50,57 +48,49 @@ public class SortVcfsTest extends AbstractVcfMergingTest {
 
         final int numberOfVariantContexts = loadContigPositions(snpInputFile).size();
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(snpInputFile), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(Arrays.asList(snpInputFile), output, indexing, 0);
         validateSortingResults(output, numberOfVariantContexts);
     }
 
     @Test
     public void testTwoScrambledSnpFiles() throws IOException {
-        final File inputFile1 = new File(TEST_DATA_PATH + "CEUTrio-snps-scrambled.1.vcf");
-        final File inputFile2 = new File(TEST_DATA_PATH + "vcfFormatTest.scrambled.vcf");
+        final File inputFile1 = new File(TEST_DATA_PATH, "CEUTrio-snps-scrambled.1.vcf");
+        final File inputFile2 = new File(TEST_DATA_PATH, "vcfFormatTest.scrambled.vcf");
         final File output = File.createTempFile("sort-multiple-scrambled-test-output.", ".vcf");
         final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
         output.deleteOnExit();
 
         final int numberOfVariantContexts = loadContigPositions(inputFile1).size() + loadContigPositions(inputFile2).size();
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(inputFile1, inputFile2), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(Arrays.asList(inputFile1, inputFile2), output, indexing, 0);
         validateSortingResults(output, numberOfVariantContexts);
     }
 
     @Test
     public void testScrambledSnpsAndOrderedIndels() throws IOException {
-        final File indelInputFile = new File(TEST_DATA_PATH + "CEUTrio-indels.vcf");
-        final File snpInputFile = new File(TEST_DATA_PATH + "CEUTrio-snps-scrambled.1.vcf");
+        final File indelInputFile = new File(TEST_DATA_PATH, "CEUTrio-indels.vcf");
+        final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps-scrambled.1.vcf");
         final File output = File.createTempFile("sort-scrambled-indels-snps-test-output.", ".vcf");
         final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
         output.deleteOnExit();
 
         final int numberOfVariantContexts = loadContigPositions(indelInputFile).size() + loadContigPositions(snpInputFile).size();
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(indelInputFile, snpInputFile), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(Arrays.asList(indelInputFile, snpInputFile), output, indexing, 0);
         validateSortingResults(output, numberOfVariantContexts);
     }
 
     @Test
     public void testScrambledSnpsAndScrambledIndels() throws IOException {
-        final File indelInputFile = new File(TEST_DATA_PATH + "CEUTrio-indels-scrambled.1.vcf");
-        final File snpInputFile = new File(TEST_DATA_PATH + "CEUTrio-snps-scrambled.1.vcf");
+        final File indelInputFile = new File(TEST_DATA_PATH, "CEUTrio-indels-scrambled.1.vcf");
+        final File snpInputFile = new File(TEST_DATA_PATH, "CEUTrio-snps-scrambled.1.vcf");
         final File output = File.createTempFile("merge-indels-snps-test-output.", ".vcf");
         final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
         output.deleteOnExit();
 
         final int numberOfVariantContexts = loadContigPositions(indelInputFile).size() + loadContigPositions(snpInputFile).size();
 
-        final ArrayList<String> args = populateArguments(Arrays.asList(indelInputFile, snpInputFile), output, indexing);
-        Assert.assertEquals(getProgram().instanceMain(args.toArray(new String[args.size()])), 0);
-
+        runClp(Arrays.asList(indelInputFile, snpInputFile), output, indexing, 0);
         validateSortingResults(output, numberOfVariantContexts);
     }
 

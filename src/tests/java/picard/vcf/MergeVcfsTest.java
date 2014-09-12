@@ -5,7 +5,7 @@ import picard.cmdline.CommandLineProgram;
 /**
  * Created by bradt on 9/3/14.
  */
-public class MergeVcfsTest extends AbstractVcfMergingTest {
+public class MergeVcfsTest extends AbstractVcfMergingClpTester {
 
     @Override
     protected CommandLineProgram getProgram() {
