@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -151,7 +152,7 @@ public class FixMateInformation extends CommandLineProgram {
 
             // And now deal with re-sorting if necessary
             if (ASSUME_SORTED || allQueryNameSorted) {
-                iterator = new PeekableIterator<SAMRecord>(tmp);
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(tmp), ADD_MATE_CIGAR);
             }
             else {
                 log.info("Sorting input into queryname order.");
@@ -165,13 +166,13 @@ public class FixMateInformation extends CommandLineProgram {
 
                 }
 
-                iterator = new PeekableIterator<SAMRecord>(sorter.iterator()) {
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(sorter.iterator()) {
                     @Override
                     public void close() {
                         super.close();
                         sorter.cleanup();
                     }
-                };
+                }, ADD_MATE_CIGAR);
                 log.info("Sorting by queryname complete.");
             }
 
@@ -190,38 +191,9 @@ public class FixMateInformation extends CommandLineProgram {
         log.info("Traversing query name sorted records and fixing up mate pair information.");
         final ProgressLogger progress = new ProgressLogger(log);
         while (iterator.hasNext()) {
-            final SAMRecord rec1 = iterator.next();
-            if (rec1.isSecondaryOrSupplementary()) {
-                writeAlignment(rec1);
-                progress.record(rec1);
-                continue;
-            }
-            SAMRecord rec2 = null;
-            // Keep peeking at next SAMRecord until one is found that is not marked as secondary alignment,
-            // or until there are no more SAMRecords.
-            while (iterator.hasNext()) {
-                rec2 = iterator.peek();
-                if (rec2.isSecondaryOrSupplementary()) {
-                    iterator.next();
-                    writeAlignment(rec2);
-                    progress.record(rec2);
-                    rec2 = null;
-                } else {
-                    break;
-                }
-            }
-
-            if (rec2 != null && rec1.getReadName().equals(rec2.getReadName())) {
-                iterator.next(); // consume the peeked record
-                SamPairUtil.setMateInfo(rec1, rec2, header, ADD_MATE_CIGAR);
-                writeAlignment(rec1);
-                writeAlignment(rec2);
-                progress.record(rec1, rec2);
-            }
-            else {
-                writeAlignment(rec1);
-                progress.record(rec1);
-            }
+            final SAMRecord record = iterator.next();
+            out.addAlignment(record);
+            progress.record(record);
         }
         iterator.close();
 

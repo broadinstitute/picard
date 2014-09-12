@@ -114,55 +114,16 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
 
         /**
          * Iterator through sorting collection output
-         * 1. Set mate cigar string on primary/non-supplemental records
+         * 1. Set mate cigar string and mate information
          * 2. push record into SAMFileWriter to the output
          */
-        final PeekableIterator<SAMRecord> sorterIterator = new PeekableIterator<SAMRecord>(sorter.iterator());
+        final SamPairUtil.SetMateInfoIterator sorterIterator = new SamPairUtil.SetMateInfoIterator(sorter.iterator(), true);
         final ProgressLogger sorterProgress = new ProgressLogger(log, 1000000, " mate cigars added");
         int numMateCigarsAdded = 0;
         while (sorterIterator.hasNext()) {
-            final List<SAMRecord> records = new LinkedList<SAMRecord>();
-
-
-            /**
-             * Get all records with the same name, and then identify the canonical first and second end to which we
-             * want to add mate cigars.
-             */
-            SAMRecord firstRecord = null, secondRecord = null;
-            final SAMRecord first = sorterIterator.peek(); // peek so we consider it in the following loop
-            while (sorterIterator.hasNext() && sorterIterator.peek().getReadName().equals(first.getReadName())) {
-                final SAMRecord record = sorterIterator.next();
-                // We must make sure that we find only one "primary" alignments for each end
-                if (record.getReadPairedFlag() && !record.isSecondaryOrSupplementary()) {
-                    if (record.getFirstOfPairFlag()) {
-                        if (null != firstRecord) {
-                            throw new PicardException("Found two records that are paired, not supplementary, and first of the pair");
-                        }
-                        firstRecord = record;
-                    }
-                    else if (record.getSecondOfPairFlag()) {
-                        if (null != secondRecord) {
-                            throw new PicardException("Found two records that are paired, not supplementary, and second of the pair");
-                        }
-                        secondRecord = record;
-                    }
-                }
-                records.add(record);
-            }
-
-            // we must find both records, and then always update the mate cigar
-            if (null != firstRecord && null != secondRecord) {
-                // Update mate info
-                SamPairUtil.setMateInfo(firstRecord, secondRecord, outHeader, true);
-                numMateCigarsAdded+=2;
-            }
-
-            // Add it to the output file
-            for (final SAMRecord record : records) {
-                sorterProgress.record(record);
-                out.addAlignment(record);
-            }
-
+            final SAMRecord record = sorterIterator.next();
+            out.addAlignment(record);
+            sorterProgress.record(record);
         }
         sorterIterator.close();
         CloserUtil.close(out);
