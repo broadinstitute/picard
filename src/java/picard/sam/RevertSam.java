@@ -302,6 +302,7 @@ public class RevertSam extends CommandLineProgram {
                         for (int i = 0; i < quals.length; i++) {
                             quals[i] -= SolexaQualityConverter.ILLUMINA_TO_PHRED_SUBTRAHEND;
                         }
+                        rec.setBaseQualities(quals);
                     }
                     out.addAlignment(rec);
                     sanitizerProgress.record(rec);
