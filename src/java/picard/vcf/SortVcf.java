@@ -65,8 +65,6 @@ public class SortVcf extends CommandLineProgram {
 
     @Override
     protected int doWork() {
-        System.out.println(this.CREATE_INDEX);
-
         final List<String> sampleList = new ArrayList<String>();
 
         for (final File input : INPUT) IOUtil.assertFileIsReadable(input);
