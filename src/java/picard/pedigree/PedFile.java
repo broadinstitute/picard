@@ -144,4 +144,28 @@ public class PedFile extends TreeMap<String, PedFile.PedTrio> {
         public Sex getSex() { return sex; }
         public Number getPhenotype() { return phenotype; }
     }
+
+    /** Function that accepts a map from sample-name to its sex and creates a PEDFile
+     * documenting the sexes. Note that the parents are created as UNKNOWNS in this implementation
+     * as the purpose is only to create a PED file for the sex of the samples, not the whole pedigree
+     * @param sampleSexes a map from sample-name to its sex
+     * @return a PedFile object that contains data.
+     */
+    static public PedFile fromSexMap(final Map<String, Sex> sampleSexes) {
+
+        final PedFile pedfile = new PedFile(true);
+        int parentCounter = 1;
+        for (final Map.Entry<String, Sex> sampleSex : sampleSexes.entrySet()) {
+            final PedFile.PedTrio ped = pedfile.new PedTrio(
+                    sampleSex.getKey(), sampleSex.getKey(),
+                    "UNKNOWN" + (parentCounter),
+                    "UNKNOWN" + (parentCounter + 1),
+                    sampleSex.getValue(), PedFile.NO_PHENO);
+            parentCounter += 2;
+
+            pedfile.add(ped);
+        }
+
+        return pedfile;
+    }
 }
