@@ -112,7 +112,7 @@
     <target name="set-htsjdk-version">
         <!-- set the htsjdk version -->
         <ant antfile="build.xml" dir="${htsjdk}" target="write-version-property" inheritall="false"/>
-        <loadfile property="htsjdk-version" srcFile="${htsjdk}/htsjdk.version.property.xml">
+        <loadfile property="htsjdk-version" srcFile="${htsjdk}/htsjdk.version.properties">
             <filterchain>
                 <linecontains>
                     <contains value="htsjdk-version="/>
