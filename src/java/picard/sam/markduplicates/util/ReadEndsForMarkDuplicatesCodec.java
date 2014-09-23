@@ -21,28 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.sam;
+package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 /** Coded for ReadEnds that just outputs the primitive fields and reads them back. */
-class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
+public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<ReadEndsForMarkDuplicates> {
     private DataInputStream in;
     private DataOutputStream out;
 
-    public SortingCollection.Codec<ReadEnds> clone() {
-        return new ReadEndsCodec();
+    public SortingCollection.Codec<ReadEndsForMarkDuplicates> clone() {
+        return new ReadEndsForMarkDuplicatesCodec();
     }
 
     public void setOutputStream(final OutputStream os) { this.out = new DataOutputStream(os); }
+
     public void setInputStream(final InputStream is) { this.in = new DataInputStream(is); }
 
     public DataInputStream getInputStream() {
@@ -53,15 +49,15 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
         return out;
     }
 
-    public void encode(final ReadEnds read) {
+    public void encode(final ReadEndsForMarkDuplicates read) {
         try {
             this.out.writeShort(read.score);
             this.out.writeShort(read.libraryId);
             this.out.writeByte(read.orientation);
-            this.out.writeInt(read.read1Sequence);
+            this.out.writeInt(read.read1ReferenceIndex);
             this.out.writeInt(read.read1Coordinate);
             this.out.writeLong(read.read1IndexInFile);
-            this.out.writeInt(read.read2Sequence);
+            this.out.writeInt(read.read2ReferenceIndex);
 
             if (read.orientation > ReadEnds.R) {
                 this.out.writeInt(read.read2Coordinate);
@@ -72,39 +68,49 @@ class ReadEndsCodec implements SortingCollection.Codec<ReadEnds> {
             this.out.writeShort(read.tile);
             this.out.writeShort(read.x);
             this.out.writeShort(read.y);
-        }
-        catch (IOException ioe) {
+            this.out.writeInt(read.name.length());
+            this.out.writeBytes(read.name);
+            this.out.writeByte(read.orientationForOpticalDuplicates);
+        } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
         }
     }
 
-    public ReadEnds decode() {
-        final ReadEnds read = new ReadEnds();
+    public ReadEndsForMarkDuplicates decode() {
+        final ReadEndsForMarkDuplicates read = new ReadEndsForMarkDuplicates();
         try {
             // If the first read results in an EOF we've exhausted the stream
-            try { read.score = this.in.readShort(); }
-            catch (EOFException eof) { return null; }
+            try {
+                read.score = this.in.readShort();
+            } catch (final EOFException eof) {
+                return null;
+            }
 
-            read.libraryId        = this.in.readShort();
-            read.orientation      = this.in.readByte();
-            read.read1Sequence    = this.in.readInt();
-            read.read1Coordinate  = this.in.readInt();
+            read.libraryId = this.in.readShort();
+            read.orientation = this.in.readByte();
+            read.read1ReferenceIndex = this.in.readInt();
+            read.read1Coordinate = this.in.readInt();
             read.read1IndexInFile = this.in.readLong();
-            read.read2Sequence    = this.in.readInt();
+            read.read2ReferenceIndex = this.in.readInt();
 
             if (read.orientation > ReadEnds.R) {
-                read.read2Coordinate  = this.in.readInt();
+                read.read2Coordinate = this.in.readInt();
                 read.read2IndexInFile = this.in.readLong();
             }
 
             read.readGroup = this.in.readShort();
-            read.tile      = this.in.readShort();
-            read.x         = this.in.readShort();
-            read.y         = this.in.readShort();
+            read.tile = this.in.readShort();
+            read.x = this.in.readShort();
+            read.y = this.in.readShort();
+
+            final byte[] bytes = new byte[this.in.readInt()];
+            this.in.read(bytes);
+            read.name = new String(bytes);
+
+            read.orientationForOpticalDuplicates = this.in.readByte();
 
             return read;
-        }
-        catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new PicardException("Exception writing ReadEnds to file.", ioe);
         }
     }
