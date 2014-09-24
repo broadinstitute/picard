@@ -62,7 +62,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
-            "Format described here: http://picard.sourceforge.net/javadoc/net/sf/picard/util/IntervalList.html", optional = true)
+            "Format described here: http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
