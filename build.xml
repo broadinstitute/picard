@@ -520,7 +520,7 @@
 
             <!-- include usage for each command -->
             <echo file="${command-line-html-dir}/inc/command-line-usage.html" append="true"
-                  message="&lt;!--#include virtual=&quot;@{title}.html&quot; -->${line.separator}"/>
+                  message="{% include @{title}.html %}${line.separator}"/>
         </sequential>
     </macrodef>
 
