@@ -12,10 +12,8 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SortingCollection;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
@@ -23,8 +21,7 @@ import picard.cmdline.Usage;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+
 /**
  * This tool reverts the original base qualities (if specified) and adds the mate cigar tag to mapped BAMs.
  * If the file does not have OQs and already has mate cigar tags, nothing is done.
@@ -35,7 +32,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
 
     @Usage
     public String USAGE = getStandardUsagePreamble() +
-            "Reverts the original base qualities and adds the mate cigar tag to read-group BAMs.";
+            "Reverts the original base qualities and adds the mate cigar tag to SAM or BAMs.  The mate cigar is only added to ";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -119,7 +116,6 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
          */
         final SamPairUtil.SetMateInfoIterator sorterIterator = new SamPairUtil.SetMateInfoIterator(sorter.iterator(), true);
         final ProgressLogger sorterProgress = new ProgressLogger(log, 1000000, " mate cigars added");
-        int numMateCigarsAdded = 0;
         while (sorterIterator.hasNext()) {
             final SAMRecord record = sorterIterator.next();
             out.addAlignment(record);
@@ -127,7 +123,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         }
         sorterIterator.close();
         CloserUtil.close(out);
-        log.info("Updated " + numMateCigarsAdded + " records with mate cigar");
+        log.info("Updated " + sorterIterator.getNumMateCigarsAdded() + " records with mate cigar");
         if (!foundPairedMappedReads) log.info("Did not find any paired mapped reads.");
 
         return 0;
@@ -141,15 +137,15 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
         CANNOT_SKIP_FOUND_OQ("Cannot skip the BAM as we found a record with an OQ", false),
         CANNOT_SKIP_FOUND_NO_MC("Cannot skip the BAM as we found a mate with no mate cigar tag", false),
         FOUND_NO_EVIDENCE("Found no evidence of OQ or mate with no mate cigar in the first %d records.  Will continue...", false);
-        private String format;
-        private boolean skip;
+        final private String format;
+        final private boolean skip;
 
-        private CanSkipSamFile(String format, boolean skip) {
+        private CanSkipSamFile(final String format, final boolean skip) {
             this.format = format;
             this.skip = skip;
         }
 
-        public String getMessage(int maxRecordsToExamine) { return String.format(this.format, maxRecordsToExamine); }
+        public String getMessage(final int maxRecordsToExamine) { return String.format(this.format, maxRecordsToExamine); }
         public boolean canSkip() { return this.skip; }
     }
 
@@ -160,7 +156,7 @@ public class RevertOriginalBaseQualitiesAndAddMateCigar extends CommandLineProgr
      * @param revertOriginalBaseQualities true if we are to revert original base qualities, false otherwise
      * @return whether we can skip or not, and the explanation why.
      */
-    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine, boolean revertOriginalBaseQualities)  {
+    public static CanSkipSamFile canSkipSAMFile(final File inputFile, final int maxRecordsToExamine, final boolean revertOriginalBaseQualities)  {
         final SAMFileReader in = new SAMFileReader(inputFile, true);
         final Iterator<SAMRecord> iterator = in.iterator();
         int numRecordsExamined = 0;
