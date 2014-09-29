@@ -421,6 +421,7 @@
             </package-filesets>
         </package-and-document-command>
         <package-and-document-command title="ValidateSamFile"                   main-class="picard.sam.ValidateSamFile"/>
+        <package-and-document-command title="VcfToIntervalList"                 main-class="picard.vcf.VcfToIntervalList"/>
         <package-and-document-command title="ViewSam"                           main-class="picard.sam.ViewSam"/>
     </target>
 
