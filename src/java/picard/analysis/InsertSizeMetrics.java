@@ -91,4 +91,10 @@ public class InsertSizeMetrics extends MultilevelMetrics {
     public int WIDTH_OF_90_PERCENT;
     /** The "width" of the bins, centered around the median, that encompass 100% of all read pairs. */
     public int WIDTH_OF_99_PERCENT;
+
+    /** Value of the insert size histogram bin where 02.5%, 25%, 75%, and 97.5% of the data falls. Useful for boxplots and such. */
+    public double PERCENT_02_5_INSERT_SIZE;
+    public double PERCENT_25_INSERT_SIZE;
+    public double PERCENT_75_INSERT_SIZE;
+    public double PERCENT_97_5_INSERT_SIZE;
 }
