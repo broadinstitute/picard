@@ -286,7 +286,42 @@ public class MathUtil {
             return Math.log10(nonLogValue);
         }
     };
-    
+
+
+    /** calculates the log of the Poisson distribution probability
+     *
+     * @param k counts
+     * @param lambda mean of distribusion
+     * @return the probability of getting k counts from a poisson process with rate lambda
+     */
+    public static double logPoissionP(final int k, final double lambda){
+        // should be log(lambda ^k exp(-lambda) / k ! )
+        // or k * log(lambda) - lambda - log(k!)
+        return k * Math.log(lambda) - lambda - logFactorial(k);
+    }
+
+    private static double memoizedLogFactorial[] = null;
+
+    //calculate the log of the factorial function exactly up to some finite size and then using Sterling's approximation
+    public static double logFactorial(final int n) {
+        final int MEMOIZE_LENGTH = 256;
+
+        if (n < MEMOIZE_LENGTH) {
+            if (memoizedLogFactorial == null) {
+                memoizedLogFactorial = new double[MEMOIZE_LENGTH];
+                memoizedLogFactorial[0] = 0; // factorial(0)=1 but let's not start an argument over this, OK?
+                for (int i = 1; i < MEMOIZE_LENGTH; i++) {
+                    memoizedLogFactorial[i] = memoizedLogFactorial[i - 1] + Math.log(i);
+                }
+            }
+            return memoizedLogFactorial[n];
+        } else {
+            //use Sterling's approximation for factorial
+            return (n - 1.0 / 2) * Math.log(n) - n + (1 / 2) * Math.log(2 * Math.PI) + 1 / (12.0 * n);
+        }
+    }
+
+
     /** 
      * A collection of common math operations that work with log values. To use it, pass values from log space, the operation will be
      * computed in non-log space, and a value in log space will be returned.
