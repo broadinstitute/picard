@@ -378,6 +378,7 @@
         <package-and-document-command title="IlluminaBasecallsToFastq"          main-class="picard.illumina.IlluminaBasecallsToFastq"/>
         <package-and-document-command title="IlluminaBasecallsToSam"            main-class="picard.illumina.IlluminaBasecallsToSam"/>
         <package-and-document-command title="CheckIlluminaDirectory"            main-class="picard.illumina.CheckIlluminaDirectory"/>
+        <package-and-document-command title="CollectHiSeqXPfFailMetrics"        main-class="picard.illumina.quality.CollectHiSeqXPfFailMetrics"/>
         <package-and-document-command title="IntervalListTools"                 main-class="picard.util.IntervalListTools"/>
         <package-and-document-command title="MakeSitesOnlyVcf"                  main-class="picard.vcf.MakeSitesOnlyVcf"/>
         <package-and-document-command title="MarkDuplicates"                    main-class="picard.sam.MarkDuplicates"/>
