@@ -375,6 +375,7 @@
         <package-and-document-command title="FilterSamReads"                    main-class="picard.sam.FilterSamReads"/>
         <package-and-document-command title="FixMateInformation"                main-class="picard.sam.FixMateInformation"/>
         <package-and-document-command title="GatherBamFiles"                    main-class="picard.sam.GatherBamFiles"/>
+        <package-and-document-command title="GenotypeConcordance"               main-class="picard.vcf.GenotypeConcordance"/>
         <package-and-document-command title="IlluminaBasecallsToFastq"          main-class="picard.illumina.IlluminaBasecallsToFastq"/>
         <package-and-document-command title="IlluminaBasecallsToSam"            main-class="picard.illumina.IlluminaBasecallsToSam"/>
         <package-and-document-command title="CheckIlluminaDirectory"            main-class="picard.illumina.CheckIlluminaDirectory"/>
