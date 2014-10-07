@@ -55,7 +55,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                                                             final String probeSetName);
 
 
-    @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.")
+    @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
     public List<File> TARGET_INTERVALS;
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "An aligned SAM or BAM file.")

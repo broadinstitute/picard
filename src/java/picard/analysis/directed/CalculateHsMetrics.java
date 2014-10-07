@@ -52,7 +52,7 @@ public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetr
             "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
             "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
             "mean coverage information for every target.";
-    @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.")
+    @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.", minElements=1)
     public List<File> BAIT_INTERVALS;
 
     @Option(shortName = "N", doc = "Bait set name. If not provided it is inferred from the filename of the bait intervals.", optional = true)
