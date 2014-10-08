@@ -8,9 +8,12 @@ picard.illumina
 picard.illumina.parser
 picard.illumina.parser.fakers
 picard.illumina.parser.readers
+picard.illumina.quality
 picard.metrics
 picard.pedigree
 picard.reference
 picard.sam
+picard.sam.markduplicates
+picard.sam.markduplicates.util
 picard.util
 picard.vcf
