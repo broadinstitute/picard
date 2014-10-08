@@ -92,12 +92,12 @@ public class InsertSizeMetrics extends MultilevelMetrics {
     /** The "width" of the bins, centered around the median, that encompass 100% of all read pairs. */
     public int WIDTH_OF_99_PERCENT;
 
-    /** Insert size for which 2.5% of all read pairs have an insert size &le; that value. */
+    /** Insert size for which 2.5% of all read pairs have an insert size <= that value. */
     public double PERCENT_02_5_INSERT_SIZE;
-    /** Insert size for which 25% of all read pairs have an insert size &le; that value. The first quartile of the insert size distribution. This value along with MEDIAN_INSERT_SIZE, PERCENT_75_INSERT_SIZE, and MIN/MAX_INSERT_SIZE is what one needs for a boxplot. */
+    /** Insert size for which 25% of all read pairs have an insert size <= that value. The first quartile of the insert size distribution. This value along with MEDIAN_INSERT_SIZE, PERCENT_75_INSERT_SIZE, and MIN/MAX_INSERT_SIZE is what one needs for a boxplot. */
     public double PERCENT_25_INSERT_SIZE;
-    /** Insert size for which 75% of all read pairs have an insert size &le; that value. The thrid quartile of the insert size distribution. */
+    /** Insert size for which 75% of all read pairs have an insert size <= that value. The thrid quartile of the insert size distribution. */
     public double PERCENT_75_INSERT_SIZE;
-    /** Insert size for which 97.5% of all read pairs have an insert size &le; that value. */
+    /** Insert size for which 97.5% of all read pairs have an insert size <= that value. */
     public double PERCENT_97_5_INSERT_SIZE;
 }
