@@ -1,0 +1,24 @@
+<a id="GenotypeConcordance"/>
+<h3>GenotypeConcordance</h3>
+<p>USAGE: GenotypeConcordance [options]
+<p>
+<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#GenotypeConcordance
+<p>
+<p>Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference) the other being considered the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics are reported
+<p>
+<p>Note that for any pair of variants to compare, only the alleles for the samples under interrogation are considered and MNP, Symbolic, and Mixed classes of variants are not included.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>TRUTH_VCF=File</td><td>The VCF containing the truth sample  Required. </td></tr>
+<tr><td>CALL_VCF=File</td><td>The VCF containing the call sample  Required. </td></tr>
+<tr><td>OUTPUT=File</td><td>Basename for the two metrics files that are to be written. Resulting files will be &lt;OUTPUT>.summary_metrics.txt  and &lt;OUTPUT>.detailed_metrics.txt.  Required. </td></tr>
+<tr><td>TRUTH_SAMPLE=String</td><td>The name of the truth sample within the truth VCF  Required. </td></tr>
+<tr><td>CALL_SAMPLE=String</td><td>The name of the call sample within the call VCF  Required. </td></tr>
+<tr><td>INTERVALS=File</td><td>One or more interval list files that will be used to limit the genotype concordance.  This option may be specified 0 or more times. </td></tr>
+<tr><td>INTERSECT_INTERVALS=Boolean</td><td>If true, multiple interval lists will be intersected. If false multiple lists will be unioned.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MIN_GQ=Integer</td><td>Genotypes below this genotype quality will have genotypes classified as LowGq.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_DP=Integer</td><td>Genotypes below this depth will have genotypes classified as LowDp.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>OUTPUT_ALL_ROWS=Boolean</td><td>If true, output all rows in detailed statistics even when count == 0.  When false only output rows with non-zero counts.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>USE_VCF_INDEX=Boolean</td><td>If true, use the VCF index, else iterate over the entire VCF.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+<br/>

@@ -15,6 +15,8 @@
  the CollectAlignmentSummaryMetrics program and usually stored in a file with
  the extension ".alignment_summary_metrics".</li>
 <li><a href="#BaseDistributionByCycleMetrics">BaseDistributionByCycleMetrics</a>: </li>
+<li><a href="#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric">CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</a>: a metric class for describing FP failing reads from an Illumina HiSeqX lane *</li>
+<li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
@@ -23,6 +25,8 @@
 <li><a href="#GcBiasDetailMetrics">GcBiasDetailMetrics</a>: Class that holds detailed metrics about reads that fall within windows of a certain
  GC bin on the reference genome.</li>
 <li><a href="#GcBiasSummaryMetrics">GcBiasSummaryMetrics</a>: High level metrics that capture how biased the coverage in a certain lane is.</li>
+<li><a href="#GenotypeConcordanceDetailMetrics">GenotypeConcordanceDetailMetrics</a>: Class that holds detail metrics about Genotype Concordance</li>
+<li><a href="#GenotypeConcordanceSummaryMetrics">GenotypeConcordanceSummaryMetrics</a>: Class that holds summary metrics about Genotype Concordance</li>
 <li><a href="#HsMetrics">HsMetrics</a>: The set of metrics captured that are specific to a hybrid selection analysis.</li>
 <li><a href="#InsertSizeMetrics">InsertSizeMetrics</a>: Metrics about the insert size distribution of a paired-end library, created by the
  CollectInsertSizeMetrics program and usually written to a file with the extension
@@ -91,6 +95,36 @@
 <div class="metric_column_def"><span>PCT_G: </span></div>
 <div class="metric_column_def"><span>PCT_T: </span></div>
 <div class="metric_column_def"><span>PCT_N: </span></div>
+<a id="CollectHiSeqXPfFailMetrics.PFFailDetailedMetric"
+<h2>CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</h2>
+<p class="class_description">a metric class for describing FP failing reads from an Illumina HiSeqX lane *</p>
+<h3>Column Definitions</h3>
+<div class="metric_column_def"><span>TILE: </span></div>
+<div class="metric_column_def"><span>X: </span></div>
+<div class="metric_column_def"><span>Y: </span></div>
+<div class="metric_column_def"><span>NUM_N: </span></div>
+<div class="metric_column_def"><span>NUM_Q_GT_TWO: </span></div>
+<div class="metric_column_def"><span>CLASSIFICATION: </span>The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
+ (See PFFailSummaryMetric for explanation regarding the possible classification.)</div>
+<a id="CollectHiSeqXPfFailMetrics.PFFailSummaryMetric"
+<h2>CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</h2>
+<p class="class_description">Metrics produced by the GetHiSeqXPFFailMetrics program. Used to diagnose lanes from HiSeqX
+ Sequencing, providing the number and fraction of each of the reasons that reads could have not passed PF.
+ Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
+ cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)</p>
+<h3>Column Definitions</h3>
+<div class="metric_column_def"><span>TILE: </span>The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. *</div>
+<div class="metric_column_def"><span>READS: </span>The total number of reads examined</div>
+<div class="metric_column_def"><span>PF_FAIL_READS: </span>The number of non-PF reads in this tile.</div>
+<div class="metric_column_def"><span>PCT_PF_FAIL_READS: </span>The fraction of PF_READS</div>
+<div class="metric_column_def"><span>PF_FAIL_EMPTY: </span>The number of non-PF reads in this tile that are deemed empty.</div>
+<div class="metric_column_def"><span>PCT_PF_FAIL_EMPTY: </span>The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF reads).</div>
+<div class="metric_column_def"><span>PF_FAIL_POLYCLONAL: </span>The number of non-PF reads in this tile that are deemed multiclonal.</div>
+<div class="metric_column_def"><span>PCT_PF_FAIL_POLYCLONAL: </span>The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all non-PF reads).</div>
+<div class="metric_column_def"><span>PF_FAIL_MISALIGNED: </span>The number of non-PF reads in this tile that are deemed "misaligned".</div>
+<div class="metric_column_def"><span>PCT_PF_FAIL_MISALIGNED: </span>The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all non-PF reads).</div>
+<div class="metric_column_def"><span>PF_FAIL_UNKNOWN: </span>The number of non-PF reads in this tile that have not been classified.</div>
+<div class="metric_column_def"><span>PCT_PF_FAIL_UNKNOWN: </span>The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads).</div>
 <a id="CollectWgsMetrics.WgsMetrics"
 <h2>CollectWgsMetrics.WgsMetrics</h2>
 <p class="class_description">Metrics for evaluating the performance of whole genome sequencing experiments.</p>
@@ -194,6 +228,29 @@
  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].</div>
 <div class="metric_column_def"><span>GC_DROPOUT: </span>Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].</div>
+<a id="GenotypeConcordanceDetailMetrics"
+<h2>GenotypeConcordanceDetailMetrics</h2>
+<p class="class_description">Class that holds detail metrics about Genotype Concordance</p>
+<h3>Column Definitions</h3>
+<div class="metric_column_def"><span>VARIANT_TYPE: </span>The type of the event (i.e. either SNP or INDEL)</div>
+<div class="metric_column_def"><span>TRUTH_SAMPLE: </span>The name of the 'truth' sample</div>
+<div class="metric_column_def"><span>CALL_SAMPLE: </span>The name of the 'call' sample</div>
+<div class="metric_column_def"><span>TRUTH_STATE: </span>The state of the 'truth' sample (i.e. HOM_REF, HET_REF_VAR1, HET_VAR1_VAR2...)</div>
+<div class="metric_column_def"><span>CALL_STATE: </span>The state of the 'call' sample (i.e. HOM_REF, HET_REF_VAR1...)</div>
+<div class="metric_column_def"><span>COUNT: </span>The number of events of type TRUTH_STATE and CALL_STATE for the EVENT_TYPE and SAMPLEs</div>
+<a id="GenotypeConcordanceSummaryMetrics"
+<h2>GenotypeConcordanceSummaryMetrics</h2>
+<p class="class_description">Class that holds summary metrics about Genotype Concordance</p>
+<h3>Column Definitions</h3>
+<div class="metric_column_def"><span>VARIANT_TYPE: </span>The type of the event (i.e. either SNP or INDEL)</div>
+<div class="metric_column_def"><span>TRUTH_SAMPLE: </span>The name of the 'truth' sample</div>
+<div class="metric_column_def"><span>CALL_SAMPLE: </span>The name of the 'call' sample</div>
+<div class="metric_column_def"><span>HET_SENSITIVITY: </span>The sensitivity for all heterozygous variants (Sensitivity is TP / (TP + FN))</div>
+<div class="metric_column_def"><span>HET_PPV: </span>The ppv (positive predictive value) for all heterozygous variants (PPV is the TP / (TP + FP))</div>
+<div class="metric_column_def"><span>HOMVAR_SENSITIVITY: </span>The sensitivity for all homozygous variants (Sensitivity is TP / (TP + FN))</div>
+<div class="metric_column_def"><span>HOMVAR_PPV: </span>The ppv (positive predictive value) for all homozygous variants (PPV is the TP / (TP + FP))</div>
+<div class="metric_column_def"><span>VAR_SENSITIVITY: </span>The sensitivity for all (heterozygous and homozygous) variants (Sensitivity is TP / (TP + FN))</div>
+<div class="metric_column_def"><span>VAR_PPV: </span>The ppv (positive predictive value) for all (heterozygous and homozygous) variants (PPV is the TP / (TP + FP))</div>
 <a id="HsMetrics"
 <h2>HsMetrics</h2>
 <p class="class_description">The set of metrics captured that are specific to a hybrid selection analysis.</p>

@@ -9,7 +9,7 @@
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>REF_FLAT=File</td><td>Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat  Required. </td></tr>
-<tr><td>RIBOSOMAL_INTERVALS=File</td><td>Location of rRNA sequences in genome, in interval_list format.  If not specified no bases will be identified as being ribosomal.  Format described here: http://picard.sourceforge.net/javadoc/net/sf/picard/util/IntervalList.html  Default value: null. </td></tr>
+<tr><td>RIBOSOMAL_INTERVALS=File</td><td>Location of rRNA sequences in genome, in interval_list format.  If not specified no bases will be identified as being ribosomal.  Format described here: http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html  Default value: null. </td></tr>
 <tr><td>STRAND_SPECIFICITY=StrandSpecificity</td><td>For strand-specific library prep. For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.  Required. Possible values: {NONE, FIRST_READ_TRANSCRIPTION_STRAND, SECOND_READ_TRANSCRIPTION_STRAND} </td></tr>
 <tr><td>MINIMUM_LENGTH=Integer</td><td>When calculating coverage based values (e.g. CV of coverage) only use transcripts of this length or greater.  Default value: 500. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>CHART_OUTPUT=File</td><td>The PDF file to write out a plot of normalized position vs. coverage.  Default value: null. </td></tr>
