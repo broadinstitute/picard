@@ -31,7 +31,6 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
@@ -107,8 +106,8 @@ public class GenotypeConcordance extends CommandLineProgram {
     private final Log log = Log.getInstance(GenotypeConcordance.class);
     private final ProgressLogger progress = new ProgressLogger(log, 10000, "checked", "variants");
 
-    public static final String SUMMARY_METRICS_FILE_EXTENSION = ".summary_metrics.txt";
-    public static final String DETAILED_METRICS_FILE_EXTENSION = ".detailed_metrics.txt";
+    public static final String SUMMARY_METRICS_FILE_EXTENSION = ".genotype_concordance_summary_metrics";
+    public static final String DETAILED_METRICS_FILE_EXTENSION = ".genotype_concordance_detail_metrics";
 
     protected GenotypeConcordanceCounts snpCounter;
     public GenotypeConcordanceCounts getSnpCounter() { return snpCounter; }
@@ -193,86 +192,59 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // A map to keep track of the count of Truth/Call States which we could not successfully classify
         final Map<String, Integer> unClassifiedStatesMap = new HashMap<String, Integer>();
-        int numMismatchedRefAlleles = 0;
 
         log.info("Starting iteration over variants.");
         while (pairedIterator.hasNext()) {
             final VcTuple tuple = pairedIterator.next();
 
-            final VariantContext.Type truthVariantContextType;
-            final Allele truthRef;
-            if (tuple.truthVariantContext != null) {
-                truthVariantContextType = tuple.truthVariantContext.getType();
-                truthRef = tuple.truthVariantContext.getReference();
-            } else {
-                truthVariantContextType = NO_VARIATION;
-                truthRef = null;
-            }
-            final VariantContext.Type callVariantContextType;
-            final Allele callRef;
-            if (tuple.callVariantContext != null) {
-                callVariantContextType = tuple.callVariantContext.getType();
-                callRef = tuple.callVariantContext.getReference();
-            } else {
-                callVariantContextType = NO_VARIATION;
-                callRef = null;
-            }
+            final VariantContext.Type truthVariantContextType = tuple.truthVariantContext != null ? tuple.truthVariantContext.getType() : NO_VARIATION;
+            final VariantContext.Type callVariantContextType =  tuple.callVariantContext != null ? tuple.callVariantContext.getType() : NO_VARIATION;
 
             // A flag to keep track of whether we have been able to successfully classify the Truth/Call States.
             // Unclassified include MIXED/MNP/Symbolic...
             boolean stateClassified = false;
-            boolean misMatchedRefAlleles = false;
-            if (truthRef != null && callRef != null) {
-                if (!truthRef.equals(callRef)) {
-                    log.warn("Ref alleles disagree between: " + tuple.truthVariantContext + " and " + tuple.callVariantContext + " - skipping");
-                    misMatchedRefAlleles = true;
-                    numMismatchedRefAlleles++;
+            final TruthAndCallStates truthAndCallStates = determineState(tuple.truthVariantContext, TRUTH_SAMPLE, tuple.callVariantContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
+            if (truthVariantContextType == SNP) {
+                if ((callVariantContextType == SNP) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
+                    // Note.  If truth is SNP and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
+                    snpCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
             }
-            if (!misMatchedRefAlleles) {
-                final TruthAndCallStates truthAndCallStates = determineState(tuple.truthVariantContext, TRUTH_SAMPLE, tuple.callVariantContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
-                if (truthVariantContextType == SNP) {
-                    if ((callVariantContextType == SNP) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
-                        // Note.  If truth is SNP and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
-                        snpCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
+            else if (truthVariantContextType == INDEL) {
+                // Note.  If truth is Indel and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
+                if ((callVariantContextType == INDEL) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
+                    indelCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
-                else if (truthVariantContextType == INDEL) {
-                    // Note.  If truth is Indel and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
-                    if ((callVariantContextType == INDEL) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
-                        indelCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
+            }
+            else if (truthVariantContextType == MIXED) {
+                // Note.  If truth is MIXED and call is SNP, the event will be logged in the snpCounter, with column = MIXED
+                if (callVariantContextType == SNP) {
+                    snpCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
-                else if (truthVariantContextType == MIXED) {
-                    // Note.  If truth is MIXED and call is SNP, the event will be logged in the snpCounter, with column = MIXED
-                    if (callVariantContextType == SNP) {
-                        snpCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
-                    // Note.  If truth is MIXED and call is INDEL, the event will be logged in the snpCounter, with column = MIXED
-                    else if (callVariantContextType == INDEL) {
-                        indelCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
+                // Note.  If truth is MIXED and call is INDEL, the event will be logged in the snpCounter, with column = MIXED
+                else if (callVariantContextType == INDEL) {
+                    indelCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
-                else if (truthVariantContextType == NO_VARIATION) {
-                    if (callVariantContextType == SNP) {
-                        snpCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
-                    else if (callVariantContextType == INDEL) {
-                        indelCounter.increment(truthAndCallStates);
-                        stateClassified = true;
-                    }
+            }
+            else if (truthVariantContextType == NO_VARIATION) {
+                if (callVariantContextType == SNP) {
+                    snpCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
-                if (!stateClassified) {
-                    final String condition = truthVariantContextType + " " + callVariantContextType;
-                    Integer count = unClassifiedStatesMap.get(condition);
-                    if (count == null) count = 0;
-                    unClassifiedStatesMap.put(condition, ++count);
+                else if (callVariantContextType == INDEL) {
+                    indelCounter.increment(truthAndCallStates);
+                    stateClassified = true;
                 }
+            }
+            if (!stateClassified) {
+                final String condition = truthVariantContextType + " " + callVariantContextType;
+                Integer count = unClassifiedStatesMap.get(condition);
+                if (count == null) count = 0;
+                unClassifiedStatesMap.put(condition, ++count);
             }
 
             final VariantContext variantContextForLogging = tuple.truthVariantContext != null ? tuple.truthVariantContext : tuple.callVariantContext;
@@ -295,9 +267,6 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         for (final String condition : unClassifiedStatesMap.keySet()) {
             log.info("Uncovered truth/call Variant Context Type Counts: " + condition + " " + unClassifiedStatesMap.get(condition));
-        }
-        if (numMismatchedRefAlleles > 0) {
-            log.warn("Number of variant comparisons with mismatched REF alleles: " + numMismatchedRefAlleles);
         }
 
         return 0;
@@ -381,26 +350,69 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
 
         // initialize the reference
-        final Allele truthRef = (truthContext != null) ? truthContext.getReference() : null;
-        final Allele callRef  = (callContext != null) ?  callContext.getReference() : null;
-        if (truthRef != null && callRef != null) {
-            if (!truthRef.equals(callRef)) {
+        String truthRef = (truthContext != null) ? truthContext.getReference().getBaseString() : null;
+        String callRef  = (callContext != null) ?  callContext.getReference().getBaseString() : null;
+
+        String truthAllele1 = null;
+        String truthAllele2 = null;
+        if (null == truthState) {
+            // Truth State not yet determined - will need to use truth genotypes below
+            if (truthGenotype.getAlleles().size() != 2) {
+                throw new IllegalStateException("Genotype for Variant Context: " + truthContext + " does not have exactly 2 alleles");
+            }
+            truthAllele1 = truthGenotype.getAllele(0).getBaseString();
+            truthAllele2 = truthGenotype.getAllele(1).getBaseString();
+        }
+
+        String callAllele1 = null;
+        String callAllele2 = null;
+        if (null == callState) {
+            if (callGenotype.getAlleles().size() != 2) {
+                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 2 alleles");
+            }
+            callAllele1 = callGenotype.getAllele(0).getBaseString();
+            callAllele2 = callGenotype.getAllele(1).getBaseString();
+        }
+
+        if ((truthRef != null && callRef != null) && (!truthRef.equals(callRef))) {
+            // This is for dealing with indel conditions, where we can have truth being TCAA*/T, call being TCAACAA*/TCAA (*=ref)
+            // So, we want to verify that both refs start with the shorter substring of the two
+            // and then we want to pad the shorter's ref and alleles, so that TCAA*/T becomes TCAACAA*/TCAA (i.e. tacking on the CAA)
+            if (truthRef.length() < callRef.length()) {
+                // Truth reference is shorter than call reference
+                final String suffix = getStringSuffix(callRef, truthRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
+                truthRef = truthRef + suffix;
+                if (null == truthState) {
+                    truthAllele1 = truthGenotype.getAllele(0).getBaseString() + suffix;
+                    truthAllele2 = truthGenotype.getAllele(1).getBaseString() + suffix;
+                }
+            }
+            else if (truthRef.length() > callRef.length()) {
+                // call reference is shorter than truth:
+                final String suffix = getStringSuffix(truthRef, callRef, "Ref alleles mismatch between: " + truthContext + " and " + callContext);
+                callRef = callRef + suffix;
+                if (null == callState) {
+                    callAllele1 = callGenotype.getAllele(0).getBaseString() + suffix;
+                    callAllele2 = callGenotype.getAllele(1).getBaseString() + suffix;
+                }
+            }
+            else {
+                // Same length - so they must just disagree...
                 throw new IllegalStateException("Ref alleles mismatch between: " + truthContext + " and " + callContext);
             }
         }
 
-        final OrderedSet<Allele> allAlleles = new OrderedSet<Allele>();
+        final OrderedSet<String> allAlleles = new OrderedSet<String>();
 
         if (truthContext != null || callContext != null) {
-            allAlleles.smartAdd(truthContext == null ? callContext.getReference() : truthContext.getReference()); // zeroth allele;
+            // Store the refAllele as the first (0th index) allele in allAlleles (only can do if at least one context is non-null)
+            allAlleles.smartAdd(truthContext == null ? callRef : truthRef); // zeroth allele;
         }
 
         if (null == truthState) {
-            if (truthGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + truthContext + " does not have exactly 2 alleles");
-            }
-            allAlleles.smartAdd(truthGenotype.getAllele(0));
-            allAlleles.smartAdd(truthGenotype.getAllele(1));
+            // If truthState is not null, it has not yet been determined, and the truthContext has genotypes (i.e. the alleles are valid)
+            allAlleles.smartAdd(truthAllele1);
+            allAlleles.smartAdd(truthAllele2);
         }
 
         /**
@@ -418,24 +430,22 @@ public class GenotypeConcordance extends CommandLineProgram {
          */
 
         if (null == callState) {
-            if (callGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 2 alleles");
-            }
-            if (allAlleles.indexOf(callGenotype.getAllele(0)) > 1 || allAlleles.indexOf(callGenotype.getAllele(1)) > 1) {
+            // If callState is not null, it has not yet been determined, and the callContext has genotypes (i.e. the alleles are valid)
+            if (allAlleles.indexOf(callAllele1) > 1 || allAlleles.indexOf(callAllele2) > 1) {
                 allAlleles.remove(2);
                 allAlleles.remove(1);
-                allAlleles.smartAdd(truthGenotype.getAllele(1));
-                allAlleles.smartAdd(truthGenotype.getAllele(0));
+                allAlleles.smartAdd(truthAllele2);
+                allAlleles.smartAdd(truthAllele1);
             }
 
-            allAlleles.smartAdd(callGenotype.getAllele(0));
-            allAlleles.smartAdd(callGenotype.getAllele(1));
+            allAlleles.smartAdd(callAllele1);
+            allAlleles.smartAdd(callAllele2);
         }
 
         // Truth
         if (null == truthState) {
-            final int allele0idx = allAlleles.indexOf(truthGenotype.getAllele(0));
-            final int allele1idx = allAlleles.indexOf(truthGenotype.getAllele(1));
+            final int allele0idx = allAlleles.indexOf(truthAllele1);
+            final int allele1idx = allAlleles.indexOf(truthAllele2);
 
             if (allele0idx == allele1idx) { //HOM
                 truthState = TruthState.getHom(allele0idx);
@@ -446,8 +456,8 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Call
         if (null == callState) {
-            final int allele0idx = allAlleles.indexOf(callGenotype.getAllele(0));
-            final int allele1idx = allAlleles.indexOf(callGenotype.getAllele(1));
+            final int allele0idx = allAlleles.indexOf(callAllele1);
+            final int allele1idx = allAlleles.indexOf(callAllele2);
 
             if (allele0idx == allele1idx) { //HOM
                 callState = CallState.getHom(allele0idx);
@@ -461,6 +471,14 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
 
         return new TruthAndCallStates(truthState, callState);
+    }
+
+    final String getStringSuffix(final String longerString, final String shorterString, final String errorMsg) {
+        // Truth reference is shorter than call reference
+        if (!longerString.startsWith(shorterString)) {
+            throw new IllegalStateException(errorMsg);
+        }
+        return longerString.substring(shorterString.length());
     }
 }
 
