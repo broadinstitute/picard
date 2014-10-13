@@ -14,6 +14,8 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
@@ -56,6 +58,15 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
     @Option(doc="For debugging purposes, stop after processing this many genomic bases.")
     public long STOP_AFTER = -1;
+
+    @Option(doc="Treat soft-masked (lower case) bases as if they were 'N'.")
+    public Boolean SOFT_MASKED = false;
+
+    @Option(doc="Interval list file describing intervals to be analyzed.", optional=true)
+    public File INTERVAL_LIST;
+
+    @Option(doc="Whitespace separated list of regions in chrom[:start[-end]] 1-based closed format (like samtools uses) describing intervals to be analyzed.", optional=true)
+    public String INTERVAL_LIST_STRING;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
 
@@ -129,8 +140,38 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SAMFileReader in        = new SAMFileReader(INPUT);
-
-        final SamLocusIterator iterator = new SamLocusIterator(in);
+        // Optional intervals specification (file and/or argument string)
+        IntervalList intervals = null;
+        if( INTERVAL_LIST != null ){
+            IOUtil.assertFileIsReadable(INTERVAL_LIST);
+            intervals = IntervalList.fromFile(INTERVAL_LIST);
+        }
+        if( INTERVAL_LIST_STRING != null ){
+            if( intervals == null ){
+                intervals = new IntervalList(in.getFileHeader());
+            }
+            // Parse INTERVAL_LIST_STRING in samtools region format "chrom:[start[-end]] chrom2:[start2[-end2] ..." into intervals
+            // FIXME: This really should be a utility function someplace.  Also, needs some error checking and useful messages.
+            String [] tmp_str_list = INTERVAL_LIST_STRING.split("\\s+");
+            String tmp_chrom;
+            int tmp_start, tmp_end, colon, hyphen;
+            for( String tmp_str : tmp_str_list ){
+                // logic from Heng Li's htsjdk.tribble.readers.TabixReader.parseReg() function
+                colon = tmp_str.indexOf(':');
+                hyphen = tmp_str.indexOf('-');
+                tmp_chrom = colon >= 0 ? tmp_str.substring(0, colon) : tmp_str;
+                tmp_start = colon >= 0 ? Integer.parseInt(tmp_str.substring(colon + 1, hyphen >= 0 ? hyphen : tmp_str.length()).replaceAll(",","")) : 1;
+                tmp_end = hyphen >= 0 ? Integer.parseInt(tmp_str.substring(hyphen + 1).replaceAll(",","")) : in.getFileHeader().getSequence(tmp_chrom).getSequenceLength();
+                intervals.add(new Interval(tmp_chrom, tmp_start, tmp_end));
+            }
+        }
+        // SamLocusIterator iterator initialization varies based on whether there are intervals or not
+        SamLocusIterator iterator;
+        if( intervals != null ){
+            iterator = new SamLocusIterator(in, intervals.sorted());
+        }else{
+            iterator = new SamLocusIterator(in);
+        }
         final List<SamRecordFilter> filters   = new ArrayList<SamRecordFilter>();
         final CountingFilter dupeFilter       = new CountingDuplicateFilter();
         final CountingFilter mapqFilter       = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
@@ -162,7 +203,8 @@ public class CollectWgsMetrics extends CommandLineProgram {
             // Check that the reference is not N
             final ReferenceSequence ref = refWalker.get(info.getSequenceIndex());
             final byte base = ref.getBases()[info.getPosition()-1];
-            if (base == 'N') continue;
+            if (base == 'N' || base == 'n' ) continue;
+            if (SOFT_MASKED && base >= 'a' && base <= 'z' ) continue;
 
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
             final HashSet<String> readNames = new HashSet<String>(info.getRecordAndPositions().size());
