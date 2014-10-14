@@ -27,6 +27,7 @@ package picard.sam;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTextHeaderCodec;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.AsciiWriter;
@@ -39,7 +40,6 @@ import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -60,8 +60,8 @@ public class ViewSam extends CommandLineProgram {
     public static enum PfStatus {PF, NonPF, All}
 
     public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file to view.")
-    public File INPUT;
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file or GA4GH url to view.")
+    public String INPUT;
 
     @Option(doc = "Print out all reads, just the aligned reads or just the unaligned reads.")
     public AlignmentStatus ALIGNMENT_STATUS = AlignmentStatus.All;
@@ -98,8 +98,9 @@ public class ViewSam extends CommandLineProgram {
      */
     int writeSamText(PrintStream printStream) {
         try {
-            IOUtil.assertFileIsReadable(INPUT);
-            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            final SamReader in = SamReaderFactory.makeDefault()
+                .referenceSequence(REFERENCE_SEQUENCE)
+                .open(SamInputResource.of(INPUT.toString()));
             final AsciiWriter writer = new AsciiWriter(printStream);
             final SAMFileHeader header = in.getFileHeader();
             if (!RECORDS_ONLY) {

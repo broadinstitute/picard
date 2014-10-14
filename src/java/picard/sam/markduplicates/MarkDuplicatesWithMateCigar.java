@@ -88,7 +88,7 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
      * Main work method.
      */
     protected int doWork() {
-        IOUtil.assertFilesAreReadable(INPUT);
+        IOUtil.assertInputsAreValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(METRICS_FILE);
 

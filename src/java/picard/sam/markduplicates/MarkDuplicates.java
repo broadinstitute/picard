@@ -105,7 +105,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * input file and writing it out with duplication flags set correctly.
      */
     protected int doWork() {
-        IOUtil.assertFilesAreReadable(INPUT);
+        IOUtil.assertInputsAreValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
