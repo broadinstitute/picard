@@ -85,10 +85,10 @@ public class GenotypeConcordanceScheme {
         addRow(CallState.HOM_VAR2,        NA,           NA,           FP_FN,             TP_FN,               FP_FN,          NA,            NA,           NA,           NA,           NA,           NA);
         addRow(CallState.HOM_VAR3,        NA,           NA,           NA,                FP_FN,               NA,             NA,            NA,           NA,           NA,           NA,           NA);
         addRow(CallState.NO_CALL,         EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.VC_FILTERED,     EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.GT_FILTERED,     EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.LOW_GQ,          EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.LOW_DP,          EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.VC_FILTERED,     EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.GT_FILTERED,     EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.LOW_GQ,          EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.LOW_DP,          EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
         addRow(CallState.IS_MIXED,        EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
 
         validateScheme();
