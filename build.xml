@@ -50,7 +50,7 @@
         <arg value="--pretty=format:%H_%at"/>
     </exec>
     <property name="repository.revision" value=""/>
-    <property name="picard-version" value="1.122"/>
+    <property name="picard-version" value="1.123"/>
     <property name="command_tmp" value=".command_tmp"/>
     <property name="command-line-html-dir" value="${dist}/html"/>
     <property name="testng.verbosity" value="2"/>
