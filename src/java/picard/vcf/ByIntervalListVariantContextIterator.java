@@ -22,7 +22,7 @@ public class ByIntervalListVariantContextIterator implements Iterator<VariantCon
     private final Iterator<Interval> intervals;
     private CloseableIterator<VariantContext> currentIterator;
 
-    ByIntervalListVariantContextIterator(final VCFFileReader reader, final IntervalList intervals) {
+    public ByIntervalListVariantContextIterator(final VCFFileReader reader, final IntervalList intervals) {
         this.reader = reader;
         this.intervals = intervals.uniqued().iterator();
     }
