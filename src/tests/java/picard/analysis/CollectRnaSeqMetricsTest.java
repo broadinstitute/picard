@@ -35,13 +35,18 @@ import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintStream;
 
-public class CollectRnaSeqMetricsTest {
+public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
+    public String getCommandLineProgramName() {
+        return CollectRnaSeqMetrics.class.getSimpleName();
+    }
+
     @Test
     public void basic() throws Exception {
         final String sequence = "chr1";
@@ -78,15 +83,15 @@ public class CollectRnaSeqMetricsTest {
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
-        final int ret = new CollectRnaSeqMetrics().instanceMain(new String[]{
+        final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
                 "RIBOSOMAL_INTERVALS=" + rRnaIntervalsFile.getAbsolutePath(),
                 "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
                 "IGNORE_SEQUENCE=" +ignoredSequence
-        });
-        Assert.assertEquals(ret, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
         output.read(new FileReader(metricsFile));
@@ -114,7 +119,7 @@ public class CollectRnaSeqMetricsTest {
         // Set seed so that strandedness is consistent among runs.
         builder.setRandomSeed(0);
         final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
-        SAMReadGroupRecord rg1 = new SAMReadGroupRecord("2");
+        final SAMReadGroupRecord rg1 = new SAMReadGroupRecord("2");
         rg1.setSample("Sample");
         rg1.setLibrary("foo");
         builder.setReadGroup(rg1);
@@ -123,7 +128,7 @@ public class CollectRnaSeqMetricsTest {
         builder.addFrag("frag1", sequenceIndex, 150, true);
         builder.addFrag("frag2", sequenceIndex, 450, true);
 
-        SAMReadGroupRecord rg2 = new SAMReadGroupRecord("3");
+        final SAMReadGroupRecord rg2 = new SAMReadGroupRecord("3");
         rg2.setSample("Sample");
         rg2.setLibrary("bar");
         builder.setReadGroup(rg2);
@@ -149,7 +154,7 @@ public class CollectRnaSeqMetricsTest {
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
 
-        final int ret = new CollectRnaSeqMetrics().instanceMain(new String[]{
+        final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
                 "OUTPUT=" +              metricsFile.getAbsolutePath(),
                 "REF_FLAT=" +            getRefFlatFile(sequence).getAbsolutePath(),
@@ -159,8 +164,8 @@ public class CollectRnaSeqMetricsTest {
                 "LEVEL=null",
                 "LEVEL=SAMPLE",
                 "LEVEL=LIBRARY"
-        });
-        Assert.assertEquals(ret, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<RnaSeqMetrics, Comparable<?>> output = new MetricsFile<RnaSeqMetrics, Comparable<?>>();
         output.read(new FileReader(metricsFile));

@@ -32,19 +32,23 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
 /**
  * @author alecw@broadinstitute.org
  */
+@CommandLineProgramProperties(
+        usage = "Sorts the input SAM or BAM.\n" +
+                "Input and output formats are determined by file extension.",
+        usageShort = "Sorts a SAM or BAM file",
+        programGroup = SamOrBam.class
+)
 public class SortSam extends CommandLineProgram {
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Sorts the input SAM or BAM.\n" + "" +
-            "Input and output formats are determined by file extension.";
 
     @Option(doc="The BAM or SAM file to sort.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

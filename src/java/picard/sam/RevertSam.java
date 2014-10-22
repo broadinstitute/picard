@@ -49,9 +49,10 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -68,10 +69,13 @@ import java.util.Set;
  * Reverts a SAM file by optionally restoring original quality scores and by removing
  * all alignment information.
  */
+@CommandLineProgramProperties(
+        usage = "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +
+                "substituting in the original quality scores when available.",
+        usageShort = "Reverts SAM or BAM files to a previous state",
+        programGroup = SamOrBam.class
+)
 public class RevertSam extends CommandLineProgram {
-    @Usage public String USAGE = getStandardUsagePreamble() +
-            "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +
-            "substituting in the original quality scores when available.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM/BAM file to revert the state of.")
     public File INPUT;
@@ -194,7 +198,6 @@ public class RevertSam extends CommandLineProgram {
         }
 
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outHeader, presorted, OUTPUT);
-
 
         ////////////////////////////////////////////////////////////////////////////
         // Build a sorting collection to use if we are sanitizing

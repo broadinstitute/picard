@@ -27,11 +27,11 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.StringUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -57,12 +57,13 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Yossi Farjoun
  */
+@CommandLineProgramProperties(
+        usage = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories. The classification is based on a heuristic that was derived by looking at a few titration experiments.",
+        usageShort = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.",
+        programGroup = Metrics.class
+)
+
 public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
-
-    @Usage
-    public String USAGE = super.getStandardUsagePreamble() + " program to classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into categories: [" + StringUtil.join(", ", ReadClassifier.PfFailReason.values()) +
-            "]. The classification is based on a heuristic that was derived by looking at a few titration experiments.";
-
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 

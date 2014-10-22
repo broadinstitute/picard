@@ -25,13 +25,14 @@
 package picard.sam.markduplicates;
 
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Log;
+import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
@@ -43,7 +44,6 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
-
 import java.io.*;
 import java.util.*;
 
@@ -68,25 +68,27 @@ import static java.lang.Math.pow;
  *
  * @author Tim Fennell
  */
-public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
-    @Usage
-    public final String USAGE =
-            "Attempts to estimate library complexity from sequence of read pairs alone. Does so by sorting all reads " +
-                    "by the first N bases (5 by default) of each read and then comparing reads with the first " +
-                    "N bases identical to each other for duplicates.  Reads are considered to be duplicates if " +
-                    "they match each other with no gaps and an overall mismatch rate less than or equal to " +
-                    "MAX_DIFF_RATE (0.03 by default).\n\n" +
-                    "Reads of poor quality are filtered out so as to provide a more accurate estimate. The filtering " +
-                    "removes reads with any no-calls in the first N bases or with a mean base quality lower than " +
-                    "MIN_MEAN_QUALITY across either the first or second read.\n\n" +
-                    "Unpaired reads are ignored in this computation.\n\n" +
-                    "The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes " +
-                    "these in the calculation of library size. Also, since there is no alignment to screen out technical " +
-                    "reads one further filter is applied on the data.  After examining all reads a Histogram is built of " +
-                    "[#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are " +
-                    "then removed from the Histogram as outliers before library size is estimated.";
+@CommandLineProgramProperties(
+        usage = "Attempts to estimate library complexity from sequence of read pairs alone. Does so by sorting all reads " +
+                "by the first N bases (5 by default) of each read and then comparing reads with the first " +
+                "N bases identical to each other for duplicates.  Reads are considered to be duplicates if " +
+                "they match each other with no gaps and an overall mismatch rate less than or equal to " +
+                "MAX_DIFF_RATE (0.03 by default).\n\n" +
+                "Reads of poor quality are filtered out so as to provide a more accurate estimate. The filtering " +
+                "removes reads with any no-calls in the first N bases or with a mean base quality lower than " +
+                "MIN_MEAN_QUALITY across either the first or second read.\n\n" +
+                "Unpaired reads are ignored in this computation.\n\n" +
+                "The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes " +
+                "these in the calculation of library size. Also, since there is no alignment to screen out technical " +
+                "reads one further filter is applied on the data.  After examining all reads a Histogram is built of " +
+                "[#reads in duplicate set -> #of duplicate sets] all bins that contain exactly one duplicate set are " +
+                "then removed from the Histogram as outliers before library size is estimated.",
+        usageShort = "Estimates library complexity from the sequence of read pairs",
+        programGroup = Metrics.class
+)
+            public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "One or more files to combine and " +
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more files to combine and " +
             "estimate library complexity from. Reads can be mapped or unmapped.")
     public List<File> INPUT;
 

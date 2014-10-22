@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2013 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.cmdline;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package picard.analysis;
+
+import htsjdk.samtools.metrics.MetricBase;
+
+import java.util.List;
 
 /**
- * Annotates the field that contains text to be displayed in a usage message.
+ * Holds per-MetricAccumulationLevel metric information for the RRBS metrics. Required as the MultiLevelCollector
+ * is designed around having a single metrics object and we have two being calculated so RrbsMetricsCollector builds
+ * this object which can be teased apart downstream
+ *
+ * NB: This is purely for internal use, if used as a proper metric object it likely won't do what you want it to
+ *
+ * @author jgentry@broadinstitute.org
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-@Documented
-public @interface Usage {
-    String programVersion() default "";
+class RrbsMetrics extends MetricBase {
+	private final RrbsSummaryMetrics summaryMetrics;
+	private final List<RrbsCpgDetailMetrics> detailMetrics;
+
+	public RrbsMetrics(final RrbsSummaryMetrics summaryMetrics, final List<RrbsCpgDetailMetrics> detailMetrics) {
+		this.summaryMetrics = summaryMetrics;
+		this.detailMetrics = detailMetrics;
+	}
+
+	public List<RrbsCpgDetailMetrics> getDetailMetrics() {
+		return detailMetrics;
+	}
+
+	public RrbsSummaryMetrics getSummaryMetrics() {
+		return summaryMetrics;
+	}
 }

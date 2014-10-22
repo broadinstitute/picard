@@ -28,12 +28,16 @@ package picard.vcf;
 import htsjdk.tribble.Tribble;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class VcfFormatConverterTest {
+public class VcfFormatConverterTest extends CommandLineProgramTest {
     private static final String TEST_DATA_PATH = "testdata/picard/vcf/";
     private static final String TEST_FILE_BASE = "vcfFormatTest";
 
@@ -43,6 +47,10 @@ public class VcfFormatConverterTest {
 
     private static final File TEST_VCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + VCF);
     private static final File TEST_BCF = new File(TEST_DATA_PATH, TEST_FILE_BASE + BCF);
+
+    public String getCommandLineProgramName() {
+        return VcfFormatConverter.class.getSimpleName();
+    }
 
     @Test
     public void testVcfToVcf() {
@@ -93,17 +101,18 @@ public class VcfFormatConverterTest {
 
         outputFile.deleteOnExit();
         new File(outputFile.getAbsolutePath() + Tribble.STANDARD_INDEX_EXTENSION).deleteOnExit();
-        final VcfFormatConverter vcfFormatConverter = new VcfFormatConverter();
-        vcfFormatConverter.INPUT = input;
-        vcfFormatConverter.OUTPUT = outputFile;
+
+        final List<String> args = new ArrayList<String>(Arrays.asList(
+                    "INPUT=" + input.getAbsolutePath(),
+                    "OUTPUT=" + outputFile.getAbsolutePath()
+        ));
         if (VCF_GZ.equals(format)) {
-            vcfFormatConverter.CREATE_INDEX = false;
+            args.add("CREATE_INDEX=false");
         }
         if (input.getName().endsWith(VCF_GZ)) {
-            vcfFormatConverter.REQUIRE_INDEX = false;
+            args.add("REQUIRE_INDEX=false");
         }
-
-        Assert.assertEquals(vcfFormatConverter.doWork(), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         return outputFile;
     }
 

@@ -36,11 +36,11 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
-import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.VcfOrBcf;
 import picard.vcf.GenotypeConcordanceStates.*;
 
 import java.io.File;
@@ -60,15 +60,15 @@ import static htsjdk.variant.variantcontext.VariantContext.Type.*;
  * @author Tim Fennell
  * @author George Grant
  */
+@CommandLineProgramProperties(
+        usage = "Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference) " +
+                "the other being considered the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics are reported\n\n" +
+                "Note that for any pair of variants to compare, only the alleles for the samples under interrogation are considered " +
+                "and MNP, Symbolic, and Mixed classes of variants are not included.",
+        usageShort = "Calculates the concordance between genotype data for two samples in two different VCFs",
+        programGroup = VcfOrBcf.class
+)
 public class GenotypeConcordance extends CommandLineProgram {
-    @Usage
-    public final String USAGE =
-            CommandLineParser.getStandardUsagePreamble(getClass()) +
-                    "Calculates the concordance between genotype data for two samples in two different VCFs - one being considered the truth (or reference) " +
-                    "the other being considered the call.  The concordance is broken into separate results sections for SNPs and indels.  Summary and detailed statistics are reported\n\n" +
-                    "Note that for any pair of variants to compare, only the alleles for the samples under interrogation are considered " +
-                    "and MNP, Symbolic, and Mixed classes of variants are not included.";
-
     @Option(shortName = "TV", doc="The VCF containing the truth sample")
     public File TRUTH_VCF;
 

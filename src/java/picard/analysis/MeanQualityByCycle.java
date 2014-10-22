@@ -34,7 +34,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -49,13 +51,16 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Program to generate a data table and pdf chart of " +
+                "mean base quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
+                "merged BAMs. Uses R to generate chart output.",
+        usageShort = "Writes mean quality by cycle for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class MeanQualityByCycle extends SinglePassSamProgram {
 
-	public final String USAGE = getStandardUsagePreamble() + "Program to generate a data table and chart of " +
-			"mean quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
-			"merged BAMs.";
-
-	@Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
+    @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
     @Option(doc="If set to true, calculate mean quality over aligned reads only.")
@@ -123,7 +128,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             }
         }
 
-
         Histogram<Integer> getMeanQualityHistogram() {
             final String label = useOriginalQualities ? "MEAN_ORIGINAL_QUALITY" : "MEAN_QUALITY";
             final Histogram<Integer> meanQualities = new Histogram<Integer>("CYCLE", label);
@@ -151,7 +155,6 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             return maxLengthSoFar == 0;
         }
     }
-
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {

@@ -36,11 +36,11 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 
@@ -50,13 +50,13 @@ import java.io.File;
  * @author George Grant
  *
  */
+@CommandLineProgramProperties(
+        usage = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
+        usageShort = "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.",
+        programGroup = VcfOrBcf.class
+)
 public class UpdateVcfSequenceDictionary extends CommandLineProgram {
-    @Usage
-    public String USAGE =
-            CommandLineParser.getStandardUsagePreamble(getClass()) +
-                    "Takes a VCF and a second file that contains a sequence dictionary and updates the VCF with the new sequence dictionary.";
-
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
+     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input VCF")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output VCF to be written.")

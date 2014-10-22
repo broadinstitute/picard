@@ -27,6 +27,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.programgroups.Testing;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -45,9 +46,11 @@ public class CommandLineParserTest {
         FOO, BAR, BAZ
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n",
+            usageShort = "Read input-file, frobnicate it, and write frobnicated results to output-file"
+    )
     class FrobnicateOptions {
-        @Usage
-        public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
         @PositionalArguments(minElements=2, maxElements=2)
         public List<File> positionalArguments = new ArrayList<File>();
@@ -65,9 +68,11 @@ public class CommandLineParserTest {
         public Boolean TRUTHINESS;
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n",
+            usageShort = "Read input-file, frobnicate it, and write frobnicated results to output-file"
+    )
     class FrobnicateOptionsWithNullList {
-        @Usage
-        public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
         @PositionalArguments(minElements=2, maxElements=2)
         public List<File> positionalArguments = new ArrayList<File>();
@@ -85,9 +90,11 @@ public class CommandLineParserTest {
         public Boolean TRUTHINESS;
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n",
+            usageShort = "ompute the plebnick of the freebozzle"
+    )
     class OptionsWithoutPositional {
-        @Usage
-        public static final String USAGE = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n";
         public static final int DEFAULT_FROBNICATION_THRESHOLD = 20;
         @Option(shortName="T", doc="Frobnication threshold setting.")
         public Integer FROBNICATION_THRESHOLD = DEFAULT_FROBNICATION_THRESHOLD;
@@ -583,9 +590,11 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.LIST, CollectionUtil.makeList("foo", "bar", "baz", "frob"));
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested option",
+            usageShort = "Class with nested option"
+    )
     class OptionsWithNested {
-        @Usage
-        public String USAGE = "Class with nested options.";
         @Option
         public Integer AN_INT;
         @NestedOptions(doc="Doc for FROB")
@@ -663,9 +672,13 @@ public class CommandLineParserTest {
         System.out.println(clp.getCommandLine());
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested options.",
+            usageShort = "Class with nested options",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class ClpOptionsWithNested extends CommandLineProgram {
-        @Usage
-        public String USAGE = "Class with nested options.";
         @Option
         public Integer AN_INT;
         @NestedOptions(doc="This will be ignored")
@@ -697,6 +710,12 @@ public class CommandLineParserTest {
         }
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested options again.",
+            usageShort = "Class with nested options again",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class ClpOptionsWithNestedAgain extends CommandLineProgram {
         private final OptionsWithoutPositional FROB = new OptionsWithoutPositional();
 
@@ -712,7 +731,6 @@ public class CommandLineParserTest {
             return 0;
         }
     }
-
 
     @Test
     public void testDynamicNestedOptions() {
@@ -832,6 +850,12 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.CHILD.COLLECTION, new ArrayList<String>());
     }
 
+    @CommandLineProgramProperties(
+            usage = "",
+            usageShort = "",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class DynamicPropagationParent extends CommandLineProgram {
         @Option
         public String STRING1 = "String1ParentDefault";

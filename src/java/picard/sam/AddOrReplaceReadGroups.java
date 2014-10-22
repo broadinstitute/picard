@@ -13,9 +13,10 @@ import htsjdk.samtools.util.Iso8601Date;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.Arrays;
@@ -25,10 +26,13 @@ import java.util.Arrays;
  *
  * @author mdepristo
  */
+@CommandLineProgramProperties(
+        usage = "Replaces all read groups in the INPUT file with a single new read group and assigns " +
+                "all reads to this read group in the OUTPUT BAM",
+        usageShort = "Replaces read groups in a BAM or SAM file with a single new read group",
+        programGroup = SamOrBam.class
+)
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-    @Usage(programVersion="1.0")
-    public String USAGE = "Replaces all read groups in the INPUT file with a new read group and assigns " +
-                          "all reads to this read group in the OUTPUT BAM";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam).")
     public File INPUT = null;

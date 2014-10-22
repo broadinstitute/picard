@@ -34,8 +34,9 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -46,10 +47,13 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Program to chart " +
+                "quality score distributions in a SAM or BAM file.",
+        usageShort = "Charts quality score distributions for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class QualityScoreDistribution extends SinglePassSamProgram {
-	@Usage
-	public final String USAGE = getStandardUsagePreamble() + "Program to chart " +
-			"quality score distributions in a SAM or BAM file.";
 
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
@@ -71,14 +75,12 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
      */
     private String plotSubtitle = "";
 
-
     private final Log log = Log.getInstance(QualityScoreDistribution.class);
 
     /** Required main method. */
     public static void main(final String[] args) {
         System.exit(new QualityScoreDistribution().instanceMain(args));
     }
-
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {

@@ -30,6 +30,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
@@ -47,7 +48,7 @@ import java.util.List;
 /**
  * @author alecw@broadinstitute.org
  */
-public class ExtractIlluminaBarcodesTest {
+public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     private static final File SINGLE_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final String[] BARCODES = {
@@ -69,6 +70,10 @@ public class ExtractIlluminaBarcodesTest {
     private File basecallsDir;
     private File dual;
     private File qual;
+
+    public String getCommandLineProgramName() {
+        return ExtractIlluminaBarcodes.class.getSimpleName();
+    }
 
     @BeforeTest
     private void setUp() throws Exception {
@@ -138,7 +143,7 @@ public class ExtractIlluminaBarcodesTest {
             for (final String barcode : BARCODES) {
                 args.add("BARCODE=" + barcode);
             }
-            Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 4);
+            Assert.assertEquals(runPicardCommandLine(args), 4);
         }
         finally {
             existingFile.setWritable(true);
@@ -219,16 +224,15 @@ public class ExtractIlluminaBarcodesTest {
         final File metricsFile = File.createTempFile("dual.", ".metrics");
         metricsFile.deleteOnExit();
 
-        final List<String> args = new ArrayList<String>(Arrays.asList(
+        final String[] args = new String[] {
                 "BASECALLS_DIR=" + dual.getAbsolutePath(),
                 "LANE=" + 1,
                 "METRICS_FILE=" + metricsFile.getPath(),
-                "READ_STRUCTURE=" + "25T8B8B25T"
-                ));
+                "READ_STRUCTURE=" + "25T8B8B25T",
+                "BARCODE=" + "CAATAGTCCGACTCTC"
+        };
 
-        args.add("BARCODE=" + "CAATAGTCCGACTCTC");
-
-        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> result =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, 1, "Got wrong number of perfect matches");
@@ -245,7 +249,7 @@ public class ExtractIlluminaBarcodesTest {
         final File metricsFile = File.createTempFile("qual.", ".metrics");
         metricsFile.deleteOnExit();
 
-        final List<String> args = new ArrayList<String>(Arrays.asList(
+        final String[] args = new String[] {
                 "BASECALLS_DIR=" + qual.getPath(),
                 "LANE=" + 1,
                 "READ_STRUCTURE=25T8B25T",
@@ -253,9 +257,9 @@ public class ExtractIlluminaBarcodesTest {
                 "MINIMUM_BASE_QUALITY=" + quality,
                 "MAX_MISMATCHES=" + maxMismatches,
                 "BARCODE=CAATAGTC"
-        ));
+        };
 
-        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> result =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
         result.read(new FileReader(metricsFile));
         Assert.assertEquals(result.getMetrics().get(0).PERFECT_MATCHES, perfectMatches, "Got wrong number of perfect matches for test: '" + testName + "'");
@@ -307,9 +311,8 @@ public class ExtractIlluminaBarcodesTest {
     }
 
     private MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> runIt(final List<String> args, final File metricsFile) throws Exception {
-
         // Generate _barcode.txt files and metrics file.
-        Assert.assertEquals(new ExtractIlluminaBarcodes().instanceMain(args.toArray(new String[args.size()])), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer> retval =  new MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric,Integer>();
         retval.read(new FileReader(metricsFile));

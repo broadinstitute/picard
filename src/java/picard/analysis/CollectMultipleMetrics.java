@@ -2,9 +2,10 @@ package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.programgroups.Metrics;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,6 +19,13 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Takes an input BAM and reference sequence and runs one or more Picard " +
+                "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
+                "default options and fixed output extesions, but this may become more flexible in future.",
+        usageShort = "A \"meta-metrics\" calculating program that produces multiple metrics for the provided SAM/BAM",
+        programGroup = Metrics.class
+)
 public class CollectMultipleMetrics extends CommandLineProgram {
 
     /**
@@ -70,12 +78,6 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         };
 
     }
-
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() +
-			"Takes an input BAM and reference sequence and runs one or more Picard " +
-            "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
-            "default options and fixed output extesions, but this may become more flexible in future.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM or BAM file.")
     public File INPUT;

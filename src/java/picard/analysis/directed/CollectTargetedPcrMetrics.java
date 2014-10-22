@@ -4,8 +4,9 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.IntervalList;
 import picard.analysis.MetricAccumulationLevel;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 
 import java.io.File;
 import java.util.List;
@@ -15,14 +16,16 @@ import java.util.Set;
  * Collect metric information for target pcr metrics runs.  See CollectTargetedMetrics and TargetPcrMetricsCollector for
  * more information
  */
+@CommandLineProgramProperties(
+        usage = "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
+                "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
+                "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
+                "mean coverage information for every target.",
+        usageShort = "Produces Targeted PCR-related metrics given the provided SAM/BAM",
+        programGroup = Metrics.class
+)
 public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPcrMetrics, TargetedPcrMetricsCollector> {
 
-    @Usage
-    public final String USAGE =
-            "Calculates a set of metrics to Illumina Truseq Custom Amplicon sequencing from an aligned SAM" +
-                    "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +
-                    "be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and " +
-                    "mean coverage information for every target.";
     @Option(shortName = "AI", doc = "An interval list file that contains the locations of the baits used.")
     public File AMPLICON_INTERVALS;
 

@@ -32,9 +32,10 @@ import htsjdk.samtools.util.AsciiWriter;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,11 +47,15 @@ import java.io.PrintStream;
  *
  * @author tfennell@broad.mit.edu
  */
+@CommandLineProgramProperties(
+        usage = "Prints a SAM or BAM file to the screen.",
+        usageShort = "Prints a SAM or BAM file to the screen",
+        programGroup = SamOrBam.class
+)
 public class ViewSam extends CommandLineProgram {
     public static enum AlignmentStatus { Aligned, Unaligned, All }
     public static enum PfStatus { PF, NonPF, All }
 
-    @Usage public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The SAM or BAM file to view.")
     public File INPUT;
 
