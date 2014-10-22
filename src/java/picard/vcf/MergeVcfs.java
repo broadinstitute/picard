@@ -40,11 +40,11 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import picard.PicardException;
-import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -62,16 +62,16 @@ import java.util.List;
  * An index file is created for the output file by default. Using an output file name with a
  * ".gz" extension will create gzip-compressed output.
  */
+@CommandLineProgramProperties(
+        usage = "Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
+                "and, within contigs, by start position. The input files must have the same sample and " +
+                "contig lists. An index file is created and a sequence dictionary is required by default.",
+        usageShort = "Merges multiple VCF or BCF files into one VCF file or BCF",
+        programGroup = VcfOrBcf.class
+)
 public class MergeVcfs extends CommandLineProgram {
 
-	@Usage
-	public final String USAGE =
-			CommandLineParser.getStandardUsagePreamble(getClass()) +
-			"Merges multiple VCF or BCF files into one VCF file. Input files must be sorted by their contigs " +
-			"and, within contigs, by start position. The input files must have the same sample and " +
-			"contig lists. An index file is created and a sequence dictionary is required by default.";
-
-	@Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
 	public List<File> INPUT;
 
 	@Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The merged VCF or BCF file. File format is determined by file extension.")
@@ -80,7 +80,7 @@ public class MergeVcfs extends CommandLineProgram {
 	@Option(shortName="D", doc="The index sequence dictionary to use instead of the sequence dictionary in the input file", optional = true)
 	public File SEQUENCE_DICTIONARY;
 
-	private final Log log = Log.getInstance(MergeVcfs.class);
+    private final Log log = Log.getInstance(MergeVcfs.class);
 
 	public static void main(final String[] argv) {
 		new MergeVcfs().instanceMainWithExit(argv);

@@ -35,9 +35,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -48,12 +49,13 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Merges multiple SAM/BAM files into one file.",
+        usageShort = "Merges multiple SAM or BAM files into one file",
+        programGroup = SamOrBam.class
+)
 public class MergeSamFiles extends CommandLineProgram {
     private static final Log log = Log.getInstance(MergeSamFiles.class);
-
-    // Usage and parameters
-    @Usage
-    public String USAGE = "Merges multiple SAM/BAM files into one file.\n";
 
     @Option(shortName="I", doc="SAM or BAM input file", minElements=1)
     public List<File> INPUT = new ArrayList<File>();

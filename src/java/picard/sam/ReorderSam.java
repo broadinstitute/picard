@@ -38,9 +38,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.HashMap;
@@ -51,12 +52,15 @@ import java.util.Map;
  *
  * @author mdepristo
  */
+@CommandLineProgramProperties(
+        usage = "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, " +
+                "ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, " +
+                "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
+                "reference are dropped. Runs substantially faster if the input is an indexed BAM file.",
+        usageShort = "Reorders reads in a SAM or BAM file to match ordering in reference",
+        programGroup = SamOrBam.class
+)
 public class ReorderSam extends CommandLineProgram {
-    @Usage(programVersion="1.0")
-    public String USAGE = "Not to be confused with SortSam which sorts a SAM or BAM file with a valid sequence dictionary, " +
-                          "ReorderSam reorders reads in a SAM/BAM file to match the contig ordering in a provided reference file, " +
-                          "as determined by exact name matching of contigs.  Reads mapped to contigs absent in the new " +
-                          "reference are dropped. Runs substantially faster if the input is an indexed BAM file.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam) to extract reads from.")
     public File INPUT;

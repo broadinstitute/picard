@@ -30,6 +30,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.File;
@@ -40,8 +41,12 @@ import java.util.List;
 /**
  * Tests for FastqToBam
  */
-public class FastqToSamTest {
+public class FastqToSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/fastq2bam");
+
+    public String getCommandLineProgramName() {
+        return FastqToSam.class.getSimpleName();
+    }
 
     // fastq files with legal values for each fastq version
     @DataProvider(name = "okVersionFiles")
@@ -180,8 +185,7 @@ public class FastqToSamTest {
         if(fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
         if(permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
 
-        final FastqToSam fqToSam = new FastqToSam();
-        Assert.assertEquals(fqToSam.instanceMain(args.toArray(new String[args.size()])), 0);
+        Assert.assertEquals(runPicardCommandLine(args), 0);
         return samFile ;
     }
 
@@ -201,6 +205,7 @@ public class FastqToSamTest {
 //  We create a dummy file to test the getBaseName() method since it expects 
 //  an existing file.
 
+    // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the tests using this are accessing class members directly.
     private static final FastqToSam fastqToSam = new FastqToSam();
     private static FastqReader freader1 ;
     private static FastqReader freader2 ;

@@ -26,6 +26,7 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.io.FileReader;
@@ -34,9 +35,12 @@ import java.io.IOException;
 /**
  * Tests multi-level CollectInsertSizeMetrics
  */
-public class CollectInsertSizeMetricsTest {
+public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
-    private static File TEST_DATA_DIR = new File("testdata/picard/sam/");
+    public String getCommandLineProgramName() {
+        return CollectInsertSizeMetrics.class.getSimpleName();
+    }
 
     @Test
     public void test() throws IOException {
@@ -45,12 +49,12 @@ public class CollectInsertSizeMetricsTest {
         final File pdf   = File.createTempFile("test", ".pdf");
         outfile.deleteOnExit();
         pdf.deleteOnExit();
-        final int result = new CollectInsertSizeMetrics().instanceMain(new String[] {
+        final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "HISTOGRAM_FILE=" + pdf.getAbsolutePath()
-        });
-        Assert.assertEquals(result, 0);
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));

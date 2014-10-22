@@ -14,13 +14,17 @@ import java.util.List;
 
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
+@CommandLineProgramProperties(
+        usage = "Program to chart the nucleotide distribution per cycle in a SAM or BAM file.",
+        usageShort = "Program to chart the nucleotide distribution per cycle in a SAM or BAM file.",
+        programGroup = Metrics.class
+)
 public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() + "Program to chart the nucleotide distribution per cycle in a SAM or BAM file.";
 
     @Option(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;

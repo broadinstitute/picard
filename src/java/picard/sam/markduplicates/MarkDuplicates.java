@@ -24,7 +24,9 @@
 
 package picard.sam.markduplicates;
 
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.util.Log;
@@ -52,6 +54,12 @@ import java.util.*;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
+                "All records are then written to the output file with the duplicate records flagged.",
+        usageShort = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
+        programGroup = SamOrBam.class
+)
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private final Log log = Log.getInstance(MarkDuplicates.class);
 

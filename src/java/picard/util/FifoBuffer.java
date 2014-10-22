@@ -4,8 +4,9 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.RuntimeIOException;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.None;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,11 +25,13 @@ import java.text.NumberFormat;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
+                "streams between programs with a buffer size that is larger than that offered by native unix FIFOs (usually 64k).",
+        usageShort = "FIFO buffer used to buffer input and output streams with a customizable buffer size ",
+        programGroup = None.class
+)
 public class FifoBuffer extends CommandLineProgram {
-    @Usage
-    public final String USAGE = "Provides a large, configurable, FIFO buffer that can be used to buffer input and output " +
-            "streams between programs with a buffer size that is larger than that offered by native unix FIFOs (usually 64k).";
-
     @Option(doc="The size of the memory buffer in bytes.")
     public int BUFFER_SIZE = 512 * 1024 * 1024;
 

@@ -8,9 +8,10 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.HashMap;
@@ -21,11 +22,15 @@ import java.util.Random;
  * Class to randomly downsample a BAM file while respecting that we should either get rid
  * of both ends of a pair or neither end of the pair!
  */
+@CommandLineProgramProperties(
+        usage = "Randomly down-sample a SAM or BAM file to retain " +
+                "a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary " +
+                "alignments are all discarded. Each read is given a probability P of being retained - results with the exact " +
+                "same input in the same order and with the same value for RANDOM_SEED will produce the same results.",
+        usageShort = "Down-sample a SAM or BAM file to retain a random subset of the reads",
+        programGroup = SamOrBam.class
+)
 public class DownsampleSam extends CommandLineProgram {
-    @Usage public final String USAGE = getStandardUsagePreamble() + " Randomly down-sample a SAM or BAM file to retain " +
-            "a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary " +
-            "alignments are all discarded. Each read is given a probability P of being retained - results with the exact " +
-            "same input in the same order and with the same value for RANDOM_SEED will produce the same results.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file to downsample.")
     public File INPUT;

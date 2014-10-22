@@ -3,12 +3,14 @@ package picard.sam;
 import htsjdk.samtools.BamFileIoUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GatherBamFilesTest {
+public class GatherBamFilesTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/GatherBamFiles");
     private static final File ORIG_BAM = new File(TEST_DATA_DIR, "orig.bam");
     private static final List<File> SPLIT_BAMS = Arrays.asList(
@@ -23,26 +25,38 @@ public class GatherBamFilesTest {
             new File(TEST_DATA_DIR, "indchr8.bam")
     );
 
+    public String getCommandLineProgramName() {
+        return GatherBamFiles.class.getSimpleName();
+    }
+
     @Test
     public void testTheGathering() throws Exception {
-        final GatherBamFiles gatherBamFiles = new GatherBamFiles();
-        gatherBamFiles.INPUT = SPLIT_BAMS;
-        gatherBamFiles.OUTPUT = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
-        gatherBamFiles.doWork();
+        final File outputFile = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        final List<String> args = new ArrayList<String>();
+        for (final File splitBam : SPLIT_BAMS) {
+            args.add("INPUT=" + splitBam.getAbsolutePath());
+        }
+        args.add("OUTPUT=" + outputFile);
+        runPicardCommandLine(args);
 
+        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         final CompareSAMs compareSAMs = new CompareSAMs();
-        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, gatherBamFiles.OUTPUT);
+        compareSAMs.samFiles = Arrays.asList(ORIG_BAM, outputFile);
         compareSAMs.doWork();
         Assert.assertTrue(compareSAMs.areEqual());
     }
 
     @Test
     public void sanityCheckTheGathering() throws Exception {
-        final GatherBamFiles gatherBamFiles = new GatherBamFiles();
-        gatherBamFiles.INPUT = SPLIT_BAMS;
-        gatherBamFiles.OUTPUT = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
-        gatherBamFiles.doWork();
+        final File outputFile = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        final List<String> args = new ArrayList<String>();
+        for (final File splitBam : SPLIT_BAMS) {
+            args.add("INPUT=" + splitBam.getAbsolutePath());
+        }
+        args.add("OUTPUT=" + outputFile);
+        runPicardCommandLine(args);
 
+        // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         final CompareSAMs compareSAMs = new CompareSAMs();
         compareSAMs.samFiles = Arrays.asList(ORIG_BAM, SPLIT_BAMS.get(0));
         compareSAMs.doWork();

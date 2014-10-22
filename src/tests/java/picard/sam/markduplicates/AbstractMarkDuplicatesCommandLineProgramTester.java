@@ -66,6 +66,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         this(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
     }
 
+    @Override
+    public String getCommandLineProgramName() { return getProgram().getClass().getSimpleName(); }
+
     /**
      * Fill in expected duplication metrics directly from the input records given to this tester
      */
@@ -160,7 +163,6 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         }
     }
 
-    @Override
     abstract protected CommandLineProgram getProgram();
 }
 

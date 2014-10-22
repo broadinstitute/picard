@@ -25,16 +25,16 @@
 package picard.sam.markduplicates.util;
 
 import picard.PicardException;
-import picard.cmdline.CommandLineParser;
+    import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloseableIterator;
+import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 
@@ -48,12 +48,6 @@ import java.util.*;
  * @author Nils Homer
  */
 public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractOpticalDuplicateFinderCommandLineProgram {
-
-    @Usage
-    public final String USAGE =
-            CommandLineParser.getStandardUsagePreamble(getClass()) +
-                    "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
-                    "All records are then written to the output file with the duplicate records flagged.";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")

@@ -149,7 +149,7 @@ public class CommandLineParser {
                 field.setAccessible(true);
                 try {
                     ret.put(field.getName(), field.get(callerOptions));
-                } catch (IllegalAccessException e) {
+                } catch (final IllegalAccessException e) {
                     throw new RuntimeException("Should never happen.", e);
                 }
             }
@@ -167,7 +167,6 @@ public class CommandLineParser {
     // For non-nested, empty string.  For nested, prefix + "."
     private final String prefixDot;
 
-    private String usagePreamble;
     // null if no @PositionalArguments annotation
     private Field positionalArguments;
     private int minPositionalArguments;
@@ -194,7 +193,7 @@ public class CommandLineParser {
     // In case implementation wants to get at arg for some reason.
     private String[] argv;
 
-    private String programVersion = "";
+    private String programVersion = null;
 
     // The command line used to launch this program, including non-null default options that
     // weren't explicitly specified. This is used for logging and debugging.
@@ -205,6 +204,9 @@ public class CommandLineParser {
      */
     public File IGNORE_THIS_PROPERTY;
 
+    // The associated program properties using the CommandLineProgramProperties annotation
+    private final CommandLineProgramProperties programProperties;
+
     /**
      * Prepare for parsing command line arguments, by validating annotations.
      * @param callerOptions This object contains annotations that define the acceptable command-line options,
@@ -212,6 +214,23 @@ public class CommandLineParser {
      */
     public CommandLineParser(final Object callerOptions) {
         this(callerOptions, "");
+    }
+
+    private String getUsagePreamble() {
+        String usagePreamble = "";
+        if (null != programProperties) {
+            usagePreamble += programProperties.usage();
+        }
+        else if (positionalArguments == null) {
+            usagePreamble += defaultUsagePreamble;
+        }
+        else {
+            usagePreamble += defaultUsagePreambleWithPositionalArguments;
+        }
+        if (null != this.programVersion && 0 < this.programVersion.length()) {
+            usagePreamble += "Version: " + getVersion() + "\n";
+        }
+        return usagePreamble;
     }
 
     /**
@@ -229,9 +248,6 @@ public class CommandLineParser {
             if (field.getAnnotation(PositionalArguments.class) != null) {
                 handlePositionalArgumentAnnotation(field);
             }
-            if (field.getAnnotation(Usage.class) != null) {
-                handleUsageAnnotation(field);
-            }
             if (field.getAnnotation(Option.class) != null) {
                 handleOptionAnnotation(field);
             } else if (!isCommandLineProgram() && field.getAnnotation(NestedOptions.class) != null) {
@@ -242,13 +258,7 @@ public class CommandLineParser {
             }
         }
 
-        if (usagePreamble == null) {
-            if (positionalArguments == null) {
-                usagePreamble = defaultUsagePreamble;
-            } else {
-                usagePreamble = defaultUsagePreambleWithPositionalArguments;
-            }
-        }
+        this.programProperties = this.callerOptions.getClass().getAnnotation(CommandLineProgramProperties.class);
     }
 
     private boolean isCommandLineProgram() {
@@ -274,7 +284,7 @@ public class CommandLineParser {
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
         if (prefix.isEmpty()) {
-            stream.print(usagePreamble);
+            stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
             stream.println("\nVersion: " + getVersion());
             stream.println("\n\nOptions:\n");
 
@@ -293,7 +303,7 @@ public class CommandLineParser {
             final Field fileField;
             try {
                 fileField = getClass().getField("IGNORE_THIS_PROPERTY");
-            } catch (NoSuchFieldException e) {
+            } catch (final NoSuchFieldException e) {
                 throw new PicardException("Should never happen", e);
             }
             final OptionDefinition optionsFileOptionDefinition =
@@ -336,7 +346,7 @@ public class CommandLineParser {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a id=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
-        stream.println("<p>" + htmlEscape(usagePreamble) + "</p>");
+        stream.println("<p>" + htmlEscape(getUsagePreamble()) + "</p>");
         boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!optionDefinition.isCommon || printCommon) {
@@ -466,7 +476,7 @@ public class CommandLineParser {
                 for (final String mutexOption : optionDefinition.mutuallyExclusive) {
                     final OptionDefinition mutextOptionDef = optionMap.get(mutexOption);
                     if (mutextOptionDef != null && mutextOptionDef.hasBeenSet) {
-                        mutextOptionNames.append(" ").append(prefixDot + mutextOptionDef.name);
+                        mutextOptionNames.append(" ").append(prefixDot).append(mutextOptionDef.name);
                     }
                 }
                 if (optionDefinition.hasBeenSet && mutextOptionNames.length() > 0) {
@@ -503,13 +513,13 @@ public class CommandLineParser {
                     return false;
                 }
                 for( final Object posArg : c ) {
-                    commandLineString.append(" " + posArg.toString());
+                    commandLineString.append(" ").append(posArg.toString());
                 }
             }
             //first, append args that were explicitly set
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if(optionDefinition.hasBeenSet) {
-                    commandLineString.append(" " + prefixDot + optionDefinition.name + "=" +
+                    commandLineString.append(" ").append(prefixDot).append(optionDefinition.name).append("=").append(
                             optionDefinition.field.get(callerOptions));
                 }
             }
@@ -517,13 +527,13 @@ public class CommandLineParser {
             //next, append args that weren't explicitly set, but have a default value
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if(!optionDefinition.hasBeenSet && !optionDefinition.defaultValue.equals("null")) {
-                    commandLineString.append(" " + prefixDot + optionDefinition.name + "=" +
+                    commandLineString.append(" ").append(prefixDot).append(optionDefinition.name).append("=").append(
                             optionDefinition.defaultValue);
                 }
             }
             this.commandLine += commandLineString.toString();
             return true;
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             // Should never happen because lack of publicness has already been checked.
             throw new RuntimeException(e);
         }
@@ -539,14 +549,14 @@ public class CommandLineParser {
         final Object value;
         try {
             value = constructFromString(getUnderlyingType(positionalArguments), stringValue);
-        } catch (CommandLineParseException e) {
+        } catch (final CommandLineParseException e) {
             messageStream.println("ERROR: " + e.getMessage());
             return false;
         }
         final Collection c;
         try {
             c = (Collection)positionalArguments.get(callerOptions);
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new RuntimeException(e);
         }
         if (c.size() >= maxPositionalArguments) {
@@ -631,7 +641,7 @@ public class CommandLineParser {
                 value = constructFromString(getUnderlyingType(optionDefinition.field), stringValue);
             }
 
-        } catch (CommandLineParseException e) {
+        } catch (final CommandLineParseException e) {
             messageStream.println("ERROR: " + e.getMessage());
             return false;
         }
@@ -655,7 +665,7 @@ public class CommandLineParser {
                 optionDefinition.hasBeenSet = true;
                 optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
             }
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             // Should never happen because we only iterate through public fields.
             throw new RuntimeException(e);
         }
@@ -695,7 +705,7 @@ public class CommandLineParser {
             reader.close();
             return true;
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new PicardException("I/O error loading OPTIONS_FILE=" + optionsFile, e);
         } finally {
             CloserUtil.close(reader);
@@ -780,7 +790,7 @@ public class CommandLineParser {
                 sb.append(enumConstants[i].toString());
 
                 if(isClpEnum){
-                    sb.append(" (" + ((ClpEnum)enumConstants[i]).getHelpDoc() + ")\n");
+                    sb.append(" (").append(((ClpEnum)enumConstants[i]).getHelpDoc()).append(")\n");
                 }
             }
             sb.append("} ");
@@ -790,14 +800,14 @@ public class CommandLineParser {
                 if (optionDefinition.maxElements == Integer.MAX_VALUE) {
                     sb.append("This option may be specified 0 or more times. ");
                 } else {
-                    sb.append("This option must be specified no more than " + optionDefinition.maxElements +
+                    sb.append("This option must be specified no more than ").append(optionDefinition.maxElements).append(
                             " times. ");
                 }
             } else  if (optionDefinition.maxElements == Integer.MAX_VALUE) {
-                sb.append("This option must be specified at least " + optionDefinition.minElements + " times. ");
+                sb.append("This option must be specified at least ").append(optionDefinition.minElements).append(" times. ");
             } else {
-                sb.append("This option may be specified between " + optionDefinition.minElements +
-                " and " + optionDefinition.maxElements + " times. ");
+                sb.append("This option may be specified between ").append(optionDefinition.minElements).append(
+                " and ").append(optionDefinition.maxElements).append(" times. ");
             }
 
             if(!optionDefinition.defaultValue.equals("null")) {
@@ -881,30 +891,9 @@ public class CommandLineParser {
                 optionMap.put(optionDefinition.shortName, optionDefinition);
             }
             optionDefinitions.add(optionDefinition);
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new CommandLineParserDefinitionException(field.getName() +
                     " must have public visibility to have @Option annotation");
-        }
-    }
-
-    private void handleUsageAnnotation(final Field field) {
-        if (usagePreamble != null) {
-            throw new CommandLineParserDefinitionException
-                    ("@Usage cannot be used more than once in an option class.");
-        }
-        try {
-            field.setAccessible(true);
-            usagePreamble = (String)field.get(callerOptions);
-            final Usage usageAnnotation = field.getAnnotation(Usage.class);
-            if (usageAnnotation.programVersion().length() > 0) {
-                this.programVersion = usageAnnotation.programVersion();
-                usagePreamble += "Version: " + usageAnnotation.programVersion() + "\n";
-            }
-        } catch (IllegalAccessException e) {
-            throw new CommandLineParserDefinitionException("@Usage data member must be public");
-        } catch (ClassCastException e) {
-            throw new CommandLineParserDefinitionException
-                    ("@Usage can only be applied to a String data member.");
         }
     }
 
@@ -934,7 +923,7 @@ public class CommandLineParser {
             if (field.get(callerOptions) == null) {
                 createCollection(field, callerOptions, "@PositionalParameters");
             }
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new CommandLineParserDefinitionException(field.getName() +
                     " must have public visibility to have @PositionalParameters annotation");
 
@@ -946,7 +935,7 @@ public class CommandLineParser {
         try {
             childOptionsMap.put(field.getName(),
                     new CommandLineParser(field.get(this.callerOptions), prefixDot + field.getName()));
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new CommandLineParserDefinitionException("Should never happen.", e);
         }
     }
@@ -955,7 +944,7 @@ public class CommandLineParser {
         try {
             field.getType().asSubclass(Collection.class);
             return true;
-        } catch (ClassCastException e) {
+        } catch (final ClassCastException e) {
             return false;
         }
     }
@@ -964,10 +953,10 @@ public class CommandLineParser {
             throws IllegalAccessException {
         try {
             field.set(callerOptions, field.getType().newInstance());
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             try {
                 field.set(callerOptions, new ArrayList());
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 throw new CommandLineParserDefinitionException("In collection " + annotationType +
                   " member " + field.getName() +
                   " cannot be constructed or auto-initialized with ArrayList, so collection must be initialized explicitly.");
@@ -1015,7 +1004,7 @@ public class CommandLineParser {
         try {
             clazz.getConstructor(String.class);
             return true;
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             return false;
         }
     }
@@ -1025,23 +1014,23 @@ public class CommandLineParser {
             if (clazz.isEnum()) {
                 try {
                     return Enum.valueOf(clazz, s);
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     throw new CommandLineParseException("'" + s + "' is not a valid value for " +
                             clazz.getSimpleName() + ".", e);
                 }
             }
             final Constructor ctor = clazz.getConstructor(String.class);
             return ctor.newInstance(s);
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             // Shouldn't happen because we've checked for presence of ctor
             throw new CommandLineParseException("Cannot find string ctor for " + clazz.getName(), e);
-        } catch (InstantiationException e) {
+        } catch (final InstantiationException e) {
             throw new CommandLineParseException("Abstract class '" + clazz.getSimpleName() +
                     "'cannot be used for an option value type.", e);
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new CommandLineParseException("String constructor for option value type '" + clazz.getSimpleName() +
                     "' must be public.", e);
-        } catch (InvocationTargetException e) {
+        } catch (final InvocationTargetException e) {
             throw new CommandLineParseException("Problem constructing " + clazz.getSimpleName() +
                     " from the string '" + s + "'.", e.getCause());
         }
@@ -1158,7 +1147,7 @@ public class CommandLineParser {
                     maybePropagateValueToChild(childParser, optionDefinition, value);
                 }
             }
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new RuntimeException("Should never happen", e);
         }
 
@@ -1200,12 +1189,10 @@ public class CommandLineParser {
                     childOptionDefinition.hasBeenSetFromOptionsFile = optionDefinition.hasBeenSetFromOptionsFile;
                 }
             }
-        } catch (IllegalAccessException e) {
+        } catch (final IllegalAccessException e) {
             throw new RuntimeException("Should never happen", e);
         }
     }
-
-    public String getProgramVersion() { return programVersion; }
 
     /**
      * The commandline used to run this program, including any default args that

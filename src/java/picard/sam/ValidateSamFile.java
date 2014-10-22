@@ -33,9 +33,10 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,13 +49,13 @@ import java.util.List;
  *
  * @author Doug Voet
  */
+@CommandLineProgramProperties(
+        usage = "Read a SAM or BAM file and report on its validity.",
+        usageShort = "Validates a SAM or BAM file",
+        programGroup = SamOrBam.class
+)
 public class ValidateSamFile extends CommandLineProgram {
 
-    @Usage
-    public final String USAGE =
-		    getStandardUsagePreamble() +
-		    "Read a SAM or BAM file and report on its validity.";
-    
     public enum Mode { VERBOSE, SUMMARY }
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME,
 		    doc="Input SAM/BAM file")

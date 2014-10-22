@@ -34,9 +34,10 @@ import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.net.URL;
@@ -46,12 +47,14 @@ import java.net.URL;
  *
  * @author Martha Borkan
  */
+@CommandLineProgramProperties(
+        usage = "Generates a BAM index (.bai) file.",
+        usageShort = "Generates a BAM index (.bai) file",
+        programGroup = SamOrBam.class
+)
 public class BuildBamIndex extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(BuildBamIndex.class);
-
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file.";
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc="A BAM file or URL to process. Must be sorted in coordinate order.")

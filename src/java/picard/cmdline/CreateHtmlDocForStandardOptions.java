@@ -31,6 +31,11 @@ public class CreateHtmlDocForStandardOptions {
         clp.htmlPrintOptions(System.out, true);
     }
 
+    @CommandLineProgramProperties(
+            usage = "",
+            usageShort = "",
+            omitFromCommandLine = true
+    )
     static class DummyProgram extends CommandLineProgram {
         @Override
         protected int doWork() {

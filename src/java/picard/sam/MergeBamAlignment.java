@@ -29,9 +29,10 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,14 +46,18 @@ import java.util.List;
  *
  * @author ktibbett@broadinstitute.org
  */
+@CommandLineProgramProperties(
+        usage = "Merges alignment data from a SAM or BAM " +
+                "file with additional data stored in an unmapped BAM file and produces a third SAM " +
+                "or BAM file of aligned and unaligned reads. The purpose is to use information from the " +
+                "unmapped BAM to fix up aligner output, so that the resulting file is valid for use by other " +
+                "Picard programs. For simple BAM file merges, use MergeSamFiles. NOTE that MergeBamAlignment expects to " +
+                "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
+                "to have the same base name as the reference fasta except with the extension '.dict'",
+        usageShort = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file",
+        programGroup = SamOrBam.class
+)
 public class MergeBamAlignment extends CommandLineProgram {
-
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Merges alignment data from a SAM or BAM " +
-            "file with additional data stored in an unmapped BAM file and produces a third SAM " +
-            "or BAM file of aligned and unaligned reads. NOTE that this program expects to " +
-            "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
-            "to have the same base name as the reference fasta except with the extension '.dict'";
 
     @Option(shortName="UNMAPPED",
 		    doc="Original SAM or BAM file of unmapped reads, which must be in queryname order.")
