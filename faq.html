@@ -91,13 +91,13 @@
 					Q: What is meaning of the histogram produced by MarkDuplicates?
 					<div id="faq7" class="ans">
 						<p><strong>A:</strong> It estimates the return on investment for sequencing a library to a higher coverage than the observed coverage. The first column is the coverage multiple, and the second column is the multiple of additional actual coverage for the given coverage multiple. The first row (1x, i.e. the actual amount of sequencing done) should have ROI of approximately 1. The next row estimates the ROI for twice as much sequencing of the library. As one increases the amount of sequencing for a library, the ROI for additional sequencing diminishes because more and more of the reads are duplicates. 
-						The algorithm is described <a href="http://broadinstittute.github.io/picard/javadoc/picard/DuplicationMetrics.html#estimateRoi(long,%20double,%20long,%20long)">here</a>. The code can be found <a href="https://github.com/broadinstitute/picard/blob/master/src/java/picard/sam/DuplicationMetrics.java">here</a>.</p>
+						The algorithm is described <a href="http://broadinstitute.github.io/picard/javadoc/picard/DuplicationMetrics.html#estimateRoi(long,%20double,%20long,%20long)">here</a>. The code can be found <a href="https://github.com/broadinstitute/picard/blob/master/src/java/picard/sam/DuplicationMetrics.java">here</a>.</p>
 					</div>
 				</div>
 				<div class="faq" onclick="toggle('faq8')">
 					Q: MarkDuplicates (or ValidateSamFile) produces the error "Value was put into PairInfoMap more than once." What should I do?
 					<div id="faq8" class="ans">
-						<p><strong>A:</strong> Many aligners produce output that is not up to Picard standards. E.g. an aligner might not output unmapped reads, might drop some important tags, might not set mate information correctly, might produce multiple primary alignments, or other problems. To address this problem, <a href="http://broadinstittute.github.io/picard/command-line-overview.shtml#MergeBamAlignment">MergeBamAlignment</a> is designed to merge an aligned BAM produced directly by an aligner with an unmapped BAM. The input aligned BAM will not necessarily meet Picard validation standards but the output of MergeBamAlignment should work properly with other Picard programs. If you do not have an unmapped BAM because the input to your aligner is in FASTQ format, you can create one with <a href="http://broadinstittute.github.io/picard/command-line-overview.shtml#FastqToSam">FastqToSam</a>. </p>
+						<p><strong>A:</strong> Many aligners produce output that is not up to Picard standards. E.g. an aligner might not output unmapped reads, might drop some important tags, might not set mate information correctly, might produce multiple primary alignments, or other problems. To address this problem, <a href="http://broadinstitute.github.io/picard/command-line-overview.shtml#MergeBamAlignment">MergeBamAlignment</a> is designed to merge an aligned BAM produced directly by an aligner with an unmapped BAM. The input aligned BAM will not necessarily meet Picard validation standards but the output of MergeBamAlignment should work properly with other Picard programs. If you do not have an unmapped BAM because the input to your aligner is in FASTQ format, you can create one with <a href="http://broadinstitute.github.io/picard/command-line-overview.shtml#FastqToSam">FastqToSam</a>. </p>
 					</div>
 				</div>
 				<div class="faq" onclick="toggle('faq9')">
@@ -144,7 +144,7 @@
 				<div class="faq" onclick="toggle('faq15')">
 					Q: How should I cite Picard in my manuscript?
 					<div id="faq15" class="ans">
-						<p><strong>A:</strong> Currently there is no Picard paper. You can cite Picard by referring to the website, <a href="http://broadinstittute.github.io/picard">http://broadinstittute.github.io/picard</a>.</p>
+						<p><strong>A:</strong> Currently there is no Picard paper. You can cite Picard by referring to the website, <a href="http://broadinstitute.github.io/picard">http://broadinstitute.github.io/picard</a>.</p>
 					</div>
 				</div>
 				<div class="faq" onclick="toggle('faq16')">
