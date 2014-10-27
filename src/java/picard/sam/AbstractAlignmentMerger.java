@@ -26,6 +26,7 @@ package picard.sam;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
@@ -585,13 +586,15 @@ public abstract class AbstractAlignmentMerger {
             final int overhang = alignmentEnd - refseq.getSequenceLength();
             if (overhang > 0) {
                 // 1-based index of first base in read to clip.
-                final int clipFrom = readLength - overhang + 1;
+                int clipFrom = readLength - overhang + 1;
+                // we have to check if the last element is soft-clipping, so we can subtract that from clipFrom
+                final CigarElement cigarElement = oldCigar.getCigarElement(oldCigar.getCigarElements().size()-1);
+                if (CigarOperator.SOFT_CLIP == cigarElement.getOperator()) clipFrom -= cigarElement.getLength();
                 final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, oldCigar.getCigarElements());
                 newCigar = new Cigar(newCigarElements);
             }
         }
         return newCigar;
-
     }
 
     /**
