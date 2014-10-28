@@ -1,7 +1,7 @@
 <html>
 <head>
-	<title>Explain SAM Flags</title>
-	<script type="text/javascript">
+    <title>Explain SAM Flags</title>
+    <script type="text/javascript">
 		lstFlags = [["read paired", 0x1],
 			    ["read mapped in proper pair", 0x2],
 			    ["read unmapped", 0x4],
@@ -44,21 +44,45 @@
 			textbox.value = newFlagValue;
 			explainFlags();
 		}
-	</script>
 
-	<noscript>This page requires JavaScript. Please enable it in your browser settings.</noscript>
+		function switchToMate() {
+            swaps = [[2,3],[4,5],[6,7]]
+            for( var i = 0 ; i<swaps.length ; i++){
+                swap1=swaps[i][0]
+                swap2=swaps[i][1]
+
+                val1 = document.getElementById('cb' + swap1).checked;
+                val2 = document.getElementById('cb' + swap2).checked;
+
+                document.getElementById('cb' + swap1).checked=val2
+                document.getElementById('cb' + swap2).checked=val1
+
+                checkboxClicked()
+            }
+		}
+
+    </script>
+
+    <noscript>This page requires JavaScript. Please enable it in your browser settings.</noscript>
 </head>
 <body>
 
 This utility explains SAM flags in plain English. <br>
+It also allows switching easily from a read to its mate.
 <br>
+<p>
 
-<form onSubmit="explainFlags(); return false;">
+<form onSubmit="explainFlags(); return false;" action="">
 Flag: &nbsp;
 <input id="tb" type=text size=10 /> &nbsp; &nbsp; &nbsp;
 <input type=submit value="Explain" /><br>
 <br>
-Explanation:<br>
+<div id="button" align="left">
+    <button onclick="switchToMate()">Switch to mate</button>
+</div>
+<p>
+
+    Explanation:<br>
 <script type="text/javascript">
 for(var i = 0; i < lstFlags.length; i++) {
 	document.write("<input type=checkbox name=cb" + i + " id='cb" + i + "' onclick='checkboxClicked();'> &nbsp; " +lstFlags[i][0] + "</input><br>");
@@ -68,7 +92,7 @@ for(var i = 0; i < lstFlags.length; i++) {
 Summary:<br>
 <div id="summary">
 
+</div>
 </form>
-
 </body>
 </html>
