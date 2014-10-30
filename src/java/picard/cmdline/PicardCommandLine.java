@@ -157,7 +157,7 @@ public class PicardCommandLine {
         return null;
     }
 
-    private static CommandLineProgramProperties getProgramProperty(Class clazz) {
+    public static CommandLineProgramProperties getProgramProperty(Class clazz) {
         return (CommandLineProgramProperties)clazz.getAnnotation(CommandLineProgramProperties.class);
     }
 
