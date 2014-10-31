@@ -1,5 +1,6 @@
 package picard.vcf;
 
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.vcf.GenotypeConcordanceStates.*;
 
@@ -20,7 +21,7 @@ public class GenotypeConcordanceScheme {
 
     /** These are convenience variables for defining a scheme.  NA means that such a tuple should never be observed. */
     public static final ContingencyState[]    NA       = {ContingencyState.NA};
-    protected static final ContingencyState[] EMPTY    = {};
+    protected static final ContingencyState[] EMPTY    = {ContingencyState.EMPTY};
     protected static final ContingencyState[] TP_ONLY  = {ContingencyState.TP};
     protected static final ContingencyState[] FP_ONLY  = {ContingencyState.FP};
     protected static final ContingencyState[] TN_ONLY  = {ContingencyState.TN};
@@ -106,6 +107,14 @@ public class GenotypeConcordanceScheme {
      */
     public ContingencyState[] getConcordanceStateArray(final TruthAndCallStates truthAndCallStates) {
         return this.scheme.get(truthAndCallStates);
+    }
+
+    /**
+     * Get the contingency state array as a parse-able string
+     */
+    public String getContingencyStateString(final TruthState truthState, final CallState callState) {
+        final ContingencyState[] contingencyStateArray = getConcordanceStateArray(truthState, callState);
+        return (contingencyStateArray.length == 0) ? "EMPTY" : StringUtil.join(",", contingencyStateArray);
     }
 
     /**

@@ -102,8 +102,10 @@ public class GenotypeConcordanceTest {
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "actualGtConc");
         final File outputSummaryFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
         final File outputDetailsFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
+        final File outputContingencyFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION);
         outputSummaryFile.deleteOnExit();
         outputDetailsFile.deleteOnExit();
+        outputContingencyFile.deleteOnExit();
 
         final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
         genotypeConcordance.TRUTH_VCF = vcf1;
@@ -118,6 +120,7 @@ public class GenotypeConcordanceTest {
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
         assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
         assertMetricsFileEqual(outputDetailsFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION));
+        assertMetricsFileEqual(outputContingencyFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.CONTINGENCY_METRICS_FILE_EXTENSION));
     }
 
     private void assertMetricsFileEqual(final File actualMetricsFile, final File expectedMetricsFile) throws FileNotFoundException {
