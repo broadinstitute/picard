@@ -1,0 +1,5 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chrM	LN:16299	AS:mm9	UR:ftp://hgdownload.cse.ucsc.edu/goldenPath/Mus_musculus_assembly9/bigZips/chromFa.tar.gz	M5:11c8af2a2528b25f2c080ab7da42edda	SP:Mus	musculus
+chrM	1	1000	+	interval-1
+chrM	2001	3000	+	interval-2
+
