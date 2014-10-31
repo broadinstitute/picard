@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.mit.broad.picard.quality;
+package picard.illumina;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;

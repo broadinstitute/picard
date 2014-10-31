@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package edu.mit.broad.picard.quality;
+package picard.illumina;
 
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -38,7 +38,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static edu.mit.broad.picard.quality.CollectIlluminaSummaryMetrics.*;
+import static picard.illumina.CollectIlluminaSummaryMetrics.*;
 
 /**
  * @author farjoun@broadinstitute.org
@@ -64,7 +64,7 @@ public class CollectIlluminaSummaryMetricsTest {
 
     @Test(expectedExceptions = PicardException.class)
     public void testIlluminaSummaryReadLengthFail() throws Exception {
-        final MetricsFile<IlluminaSummaryMetrics, ?> metricsFile = getSummaryFile("null",TEST_DATA_DIR+"chrMReadsDiffereingLengths.sam", CHR_M_REFERENCE,"/dev/null");
+        getSummaryFile("null",TEST_DATA_DIR+"chrMReadsDiffereingLengths.sam", CHR_M_REFERENCE,"/dev/null");
     }
 
     @DataProvider(name="IlluminaSummaryData")
