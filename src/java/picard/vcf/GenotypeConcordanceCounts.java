@@ -197,7 +197,7 @@ public class GenotypeConcordanceCounts {
     public Map<ContingencyState, Integer> getContingencyStateCounts(final GenotypeConcordanceScheme scheme) {
         scheme.validateScheme();
 
-        final Map<ContingencyState, Integer> counts = new HashMap<>();
+        final Map<ContingencyState, Integer> counts = new HashMap<ContingencyState, Integer>();
         for (ContingencyState contingencyState : ContingencyState.values()) {
             counts.put(contingencyState, 0);
         }
