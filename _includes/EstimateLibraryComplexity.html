@@ -6,7 +6,7 @@
 <p>
 <p>Unpaired reads are ignored in this computation.
 <p>
-<p>The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes these in the calculation of library size. Also, since there is no alignment to screen out technical reads one further filter is applied on the data.  After examining all reads a Histogram is built of [#reads in duplicate set -> #of duplicate sets]; all bins that contain exactly one duplicate set are then removed from the Histogram as outliers before library size is estimated.</p>
+<p>The algorithm attempts to detect optical duplicates separately from PCR duplicates and excludes these in the calculation of library size. Also, since there is no alignment to screen out technical reads one further filter is applied on the data.  After examining all reads a Histogram is built of [#reads in duplicate set -> #of duplicate sets] all bins that contain exactly one duplicate set are then removed from the Histogram as outliers before library size is estimated.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT=File</td><td>One or more files to combine and estimate library complexity from. Reads can be mapped or unmapped.  This option may be specified 0 or more times. </td></tr>

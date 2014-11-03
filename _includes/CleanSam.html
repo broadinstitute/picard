@@ -1,10 +1,6 @@
 <a id="CleanSam"/>
 <h3>CleanSam</h3>
-<p>USAGE: CleanSam [options]
-<p>
-<p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#CleanSam
-<p>
-<p>Read SAM and perform various fix-ups.  Currently, the only fix-ups are 1: to soft-clip an alignment that hangs off the end of its reference sequence; and 2: to set MAPQ to 0 if a read is unmapped.</p>
+<p>Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT=File</td><td>Input SAM to be cleaned.  Required. </td></tr>
