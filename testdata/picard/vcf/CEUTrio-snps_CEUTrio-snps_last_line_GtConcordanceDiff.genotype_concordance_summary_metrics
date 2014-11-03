@@ -1,7 +1,7 @@
 ## htsjdk.samtools.metrics.StringHeader
-# picard.vcf.GenotypeConcordance TRUTH_VCF=testdata/picard/vcf/CEUTrio-snps.vcf CALL_VCF=testdata/picard/vcf/CEUTrio-snps_last_line_diff.vcf OUTPUT=testdata/picard/vcf/CEUTrio-snps_CEUTrio-snps_last_line_GtConcordanceDiff TRUTH_SAMPLE=NA12878 CALL_SAMPLE=NA12878    INTERSECT_INTERVALS=true MIN_GQ=0 MIN_DP=0 OUTPUT_ALL_ROWS=false USE_VCF_INDEX=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false
+# picard.vcf.GenotypeConcordance    TRUTH_VCF=testdata/picard/vcf/CEUTrio-snps.vcf CALL_VCF=testdata/picard/vcf/CEUTrio-snps_last_line_diff.vcf OUTPUT=/var/folders/c_/gb26gz6s6rngcxblwp1sb31h0000gp/T/GenotypeConcordanceTest5916114738616191703.tmp/CEUTrio-snps_CEUTrio-snps_last_line_GtConcordanceDiff TRUTH_SAMPLE=NA12878 CALL_SAMPLE=NA12878 INTERSECT_INTERVALS=true MIN_GQ=0 MIN_DP=0 OUTPUT_ALL_ROWS=false USE_VCF_INDEX=false VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false
 ## htsjdk.samtools.metrics.StringHeader
-# Started on: Tue Oct 07 16:12:45 EDT 2014
+# Started on: Thu Oct 30 17:33:07 EDT 2014
 
 ## METRICS CLASS	picard.vcf.GenotypeConcordanceSummaryMetrics
 VARIANT_TYPE	TRUTH_SAMPLE	CALL_SAMPLE	HET_SENSITIVITY	HET_PPV	HOMVAR_SENSITIVITY	HOMVAR_PPV	VAR_SENSITIVITY	VAR_PPV

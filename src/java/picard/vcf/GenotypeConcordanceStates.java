@@ -119,13 +119,16 @@ public class GenotypeConcordanceStates {
 
     /**
      * A specific state for a 2x2 contingency table.
+     * NA denotes an invalid state that should not be reachable by the code.
+     * EMPTY denotes that no conclusion could be drawn from the data.
      */
     enum ContingencyState {
         TP,
         FP,
         TN,
         FN,
-        NA
+        NA,
+        EMPTY
     }
 
     /**

@@ -2,8 +2,10 @@ package picard.vcf;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import htsjdk.samtools.util.Histogram;
@@ -113,7 +115,7 @@ public class GenotypeConcordanceCounts {
     }
 
     /**
-     * Returns the PPV defined by the scheme across the subset of truth states.
+     * Returns the PPV defined by the scheme across the subset of call states.
      */
     public double Ppv(final GenotypeConcordanceScheme scheme, final CallState[] callStateList) {
         /**
@@ -143,7 +145,7 @@ public class GenotypeConcordanceCounts {
     }
 
     /**
-     * Returns the PPV defined by the scheme across the all truth states.
+     * Returns the PPV defined by the scheme across all call states.
      */
     public double getPpv(final GenotypeConcordanceScheme scheme) {
         final List<CallState> listOfCallStates = Arrays.asList(CallState.values());
@@ -187,5 +189,30 @@ public class GenotypeConcordanceCounts {
      */
     public int getSum() {
         return getSum(new HashSet<TruthState>(Arrays.asList(TruthState.values())), new HashSet<CallState>(Arrays.asList(CallState.values())));
+    }
+
+    /**
+     * Returns the total number of times each contingency state is encountered, summed across all truth/call state pairs.
+     */
+    public Map<ContingencyState, Integer> getContingencyStateCounts(final GenotypeConcordanceScheme scheme) {
+        scheme.validateScheme();
+
+        final Map<ContingencyState, Integer> counts = new HashMap<ContingencyState, Integer>();
+        for (ContingencyState contingencyState : ContingencyState.values()) {
+            counts.put(contingencyState, 0);
+        }
+
+        for (TruthState truthState : TruthState.values()) {
+            for (CallState callState : CallState.values()) {
+                final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
+                final ContingencyState[] contingencyStateArray = scheme.getConcordanceStateArray(truthAndCallStates);
+                for (final ContingencyState contingencyState : contingencyStateArray) {
+                    int newCount = counts.get(contingencyState) + getCount(truthAndCallStates);
+                    counts.put(contingencyState, newCount);
+                }
+            }
+        }
+
+        return counts;
     }
 }
