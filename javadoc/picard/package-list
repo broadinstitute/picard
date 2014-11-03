@@ -3,6 +3,7 @@ picard.analysis
 picard.analysis.directed
 picard.annotation
 picard.cmdline
+picard.cmdline.programgroups
 picard.fastq
 picard.illumina
 picard.illumina.parser
@@ -17,3 +18,4 @@ picard.sam.markduplicates
 picard.sam.markduplicates.util
 picard.util
 picard.vcf
+picard.vcf.filter
