@@ -26,12 +26,15 @@ public class GenotypeConcordanceSummaryMetrics extends MetricBase {
 
         this.HET_SENSITIVITY = concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES);
         this.HET_PPV = concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES);
+        this.HET_SPECIFICITY = concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES);
 
         this.HOMVAR_SENSITIVITY = concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES);
         this.HOMVAR_PPV = concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES);
+        this.HOMVAR_SPECIFICITY = concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES);
 
         this.VAR_SENSITIVITY = concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES);
         this.VAR_PPV = concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES);
+        this.VAR_SPECIFICITY = concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES);
     }
 
     /** The type of the event (i.e. either SNP or INDEL) */
@@ -49,15 +52,24 @@ public class GenotypeConcordanceSummaryMetrics extends MetricBase {
     /** The ppv (positive predictive value) for all heterozygous variants (PPV is the TP / (TP + FP)) */
     public double HET_PPV;
 
+    /** The specificity for all heterozygous variants (Specificity is TN / (FP + TN)) */
+    public double HET_SPECIFICITY;
+
     /** The sensitivity for all homozygous variants (Sensitivity is TP / (TP + FN)) */
     public double HOMVAR_SENSITIVITY;
 
     /** The ppv (positive predictive value) for all homozygous variants (PPV is the TP / (TP + FP)) */
     public double HOMVAR_PPV;
 
+    /** The specificity for all homozygous variants (Specificity is TN / (FP + TN)) */
+    public double HOMVAR_SPECIFICITY;
+
     /** The sensitivity for all (heterozygous and homozygous) variants (Sensitivity is TP / (TP + FN)) */
     public double VAR_SENSITIVITY;
 
     /** The ppv (positive predictive value) for all (heterozygous and homozygous) variants (PPV is the TP / (TP + FP)) */
     public double VAR_PPV;
+
+    /** The specificity for all (heterozygous and homozygous) variants (Specificity is TN / (FP + TN)) */
+    public double VAR_SPECIFICITY;
 }
