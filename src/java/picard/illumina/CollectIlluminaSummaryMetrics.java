@@ -160,7 +160,10 @@ public class CollectIlluminaSummaryMetrics extends SinglePassSamProgram {
     protected void finish() {
         // Calculate some derived metrics
         metrics.READ_LENGTH = readLength;
-        metrics.AVERAGE_ILMN_DEPTH = metrics.TOTAL_ILLUMINA_BASES / (double) metrics.TARGET_TERRITORY;
+        metrics.MEAN_ILLUMINA_DEPTH = 0;
+        if (metrics.TARGET_TERRITORY != 0) {
+            metrics.MEAN_ILLUMINA_DEPTH = metrics.TOTAL_ILLUMINA_BASES / (double) metrics.TARGET_TERRITORY;
+        }
 
         // Output the file
         final MetricsFile<IlluminaSummaryMetrics, Integer> metricsFile = getMetricsFile();
@@ -189,8 +192,8 @@ public class CollectIlluminaSummaryMetrics extends SinglePassSamProgram {
         /** The number of bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once */
         public long TOTAL_ILLUMINA_BASES = 0;
 
-        /** The average depth considering only bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once */
-        public double AVERAGE_ILMN_DEPTH = 0;
+        /** The mean depth considering only bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once */
+        public double MEAN_ILLUMINA_DEPTH = 0;
 
         /** The read length */
         public long READ_LENGTH = 0;
@@ -200,14 +203,14 @@ public class CollectIlluminaSummaryMetrics extends SinglePassSamProgram {
 
         public IlluminaSummaryMetrics() {}
 
-        public IlluminaSummaryMetrics(final int TOTAL_READS, final int PF_READS, final int DUPLICATE_READS, final long TOTAL_BASES, final long PF_BASES, final long TOTAL_ILLUMINA_BASES, final double AVERAGE_ILMN_DEPTH, final long READ_LENGTH, final long TARGET_TERRITORY) {
+        public IlluminaSummaryMetrics(final int TOTAL_READS, final int PF_READS, final int DUPLICATE_READS, final long TOTAL_BASES, final long PF_BASES, final long TOTAL_ILLUMINA_BASES, final double MEAN_ILLUMINA_DEPTH, final long READ_LENGTH, final long TARGET_TERRITORY) {
             this.TOTAL_READS = TOTAL_READS;
             this.PF_READS = PF_READS;
             this.DUPLICATE_READS = DUPLICATE_READS;
             this.TOTAL_BASES = TOTAL_BASES;
             this.PF_BASES = PF_BASES;
             this.TOTAL_ILLUMINA_BASES = TOTAL_ILLUMINA_BASES;
-            this.AVERAGE_ILMN_DEPTH = AVERAGE_ILMN_DEPTH;
+            this.MEAN_ILLUMINA_DEPTH = MEAN_ILLUMINA_DEPTH;
             this.READ_LENGTH = READ_LENGTH;
             this.TARGET_TERRITORY = TARGET_TERRITORY;
         }

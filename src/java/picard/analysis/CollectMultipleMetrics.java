@@ -6,6 +6,7 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.illumina.CollectIlluminaSummaryMetrics;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,6 +41,13 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             @Override public SinglePassSamProgram makeInstance(final String outbase) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
                 program.OUTPUT = new File(outbase + ".alignment_summary_metrics");
+                return program;
+            }
+        },
+        CollectIlluminaSummaryMetrics {
+            @Override public SinglePassSamProgram makeInstance(final String outbase) {
+                final CollectIlluminaSummaryMetrics program = new CollectIlluminaSummaryMetrics();
+                program.OUTPUT = new File(outbase + ".illumina_summary_metrics");
                 return program;
             }
         },
