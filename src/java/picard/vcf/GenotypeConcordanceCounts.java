@@ -111,7 +111,6 @@ public class GenotypeConcordanceCounts {
         TruthState[] allTruthStates = new TruthState[listOfTruthStates.size()];
         allTruthStates = listOfTruthStates.toArray(allTruthStates);
         return getSensitivity(scheme, allTruthStates);
-
     }
 
     /**
@@ -152,6 +151,45 @@ public class GenotypeConcordanceCounts {
         CallState[] allCallStates = new CallState[listOfCallStates.size()];
         allCallStates = listOfCallStates.toArray(allCallStates);
         return Ppv(scheme, allCallStates);
+    }
+
+    /**
+     * Returns the specificity defined by the scheme across the subset of truth states.
+     */
+    public double getSpecificity(final GenotypeConcordanceScheme scheme, final TruthState[] truthStateArray) {
+        /**
+         * Specificity is the TN / N = TN / (FP + TN)
+         */
+        double numerator = 0.0;
+        double denominator = 0.0;
+
+        scheme.validateScheme();
+
+        for (final TruthState truthState : truthStateArray) {
+            for (final CallState callState : CallState.values()) {
+                final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
+                final int count = getCount(truthAndCallStates);
+                for (final ContingencyState contingencyState : scheme.getConcordanceStateArray(truthAndCallStates)) {
+                    if (ContingencyState.TN == contingencyState) {
+                        numerator += count;
+                        denominator += count;
+                    } else if (ContingencyState.FP == contingencyState) {
+                        denominator += count;
+                    }
+                }
+            }
+        }
+        return (numerator / denominator);
+    }
+
+    /**
+     * Returns the specificity defined by the scheme across all truth states.
+     */
+    public double getSpecificity(final GenotypeConcordanceScheme scheme) {
+        final List<TruthState> listOfTruthStates = Arrays.asList(TruthState.values());
+        TruthState[] allTruthStates = new TruthState[listOfTruthStates.size()];
+        allTruthStates = listOfTruthStates.toArray(allTruthStates);
+        return getSpecificity(scheme, allTruthStates);
     }
 
     /**
@@ -198,16 +236,16 @@ public class GenotypeConcordanceCounts {
         scheme.validateScheme();
 
         final Map<ContingencyState, Integer> counts = new HashMap<ContingencyState, Integer>();
-        for (ContingencyState contingencyState : ContingencyState.values()) {
+        for (final ContingencyState contingencyState : ContingencyState.values()) {
             counts.put(contingencyState, 0);
         }
 
-        for (TruthState truthState : TruthState.values()) {
-            for (CallState callState : CallState.values()) {
+        for (final TruthState truthState : TruthState.values()) {
+            for (final CallState callState : CallState.values()) {
                 final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
                 final ContingencyState[] contingencyStateArray = scheme.getConcordanceStateArray(truthAndCallStates);
                 for (final ContingencyState contingencyState : contingencyStateArray) {
-                    int newCount = counts.get(contingencyState) + getCount(truthAndCallStates);
+                    final int newCount = counts.get(contingencyState) + getCount(truthAndCallStates);
                     counts.put(contingencyState, newCount);
                 }
             }
