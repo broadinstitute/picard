@@ -31,7 +31,6 @@ import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.util.SamRecordTrackingBuffer;
 import picard.PicardException;
 import picard.sam.DuplicationMetrics;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
 
 import java.util.Comparator;
@@ -158,7 +157,7 @@ public class MarkQueue {
     /** Returns the nonDuplicateReadEndsSet of read ends that should be considered for tracking optical duplicates. */
     public Set<ReadEnds> getLocations(final ReadEndsForMateCigar current) {
         // NB: only needed for pairs!!!
-        if (!shouldBeInLocations(current)) throw new NotImplementedException();
+        if (!shouldBeInLocations(current)) throw new PicardException("Not implemented");
         final Set<ReadEnds> locationSet = current.getReadEndSetForOpticalDuplicates();
         if (null == locationSet) throw new PicardException("Locations was empty: unexpected error");
         return locationSet;
