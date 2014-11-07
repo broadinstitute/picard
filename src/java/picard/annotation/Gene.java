@@ -226,7 +226,7 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
 
         final Gene that = (Gene) o;
 
-        if (this.getSequence() != that.getSequence()) return false;
+        if (!this.getSequence().equals(that.getSequence())) return false;
         if (this.getStart() != that.getStart()) return false;
         if (this.getEnd() != that.getEnd()) return false;
         if (!this.getName().equals(that.getName())) return false;
