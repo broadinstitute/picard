@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -65,6 +66,12 @@ public class ViewSam extends CommandLineProgram {
     @Option(doc="Print out all reads, just the PF reads or just the non-PF reads.")
     public PfStatus PF_STATUS = PfStatus.All;
 
+    @Option(doc="Print the SAM header only.", optional = true)
+    public boolean HEADER_ONLY = false;
+
+    @Option(doc="Print the alignment records only.", optional = true)
+    public boolean RECORDS_ONLY = false;
+
     public static void main(final String[] args) {
         new ViewSam().instanceMain(args);
     }
@@ -73,6 +80,15 @@ public class ViewSam extends CommandLineProgram {
     protected int doWork() {
         return writeSamText(System.out);
     }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (HEADER_ONLY && RECORDS_ONLY) {
+            return new String[]{"Cannot specify both HEADER_ONLY=true and RECORDS_ONLY=true."};
+        }
+        return super.customCommandLineValidation();
+    }
+
 
     /**
      * This is factored out of doWork only for unit testing.
@@ -83,30 +99,35 @@ public class ViewSam extends CommandLineProgram {
             final SAMFileReader in = new SAMFileReader(INPUT);
             final AsciiWriter writer = new AsciiWriter(printStream);
             final SAMFileHeader header = in.getFileHeader();
-            if (header.getTextHeader() != null) {
-                writer.write(header.getTextHeader());
-            } else {
-                // Headers that are too large are not retained as text, so need to regenerate text
-                new SAMTextHeaderCodec().encode(writer, header, true);
-            }
-
-            for (final SAMRecord rec : in) {
-                if (printStream.checkError()) {
-                    return 1;
+            if (!RECORDS_ONLY) {
+                if (header.getTextHeader() != null) {
+                    writer.write(header.getTextHeader());
+                } else {
+                    // Headers that are too large are not retained as text, so need to regenerate text
+                    new SAMTextHeaderCodec().encode(writer, header, true);
                 }
+            }
+            if (!HEADER_ONLY) {
+                for (final SAMRecord rec : in) {
+                    if (printStream.checkError()) {
+                        return 1;
+                    }
 
-                if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned   && rec.getReadUnmappedFlag()) continue;
-                if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
+                    if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned && rec.getReadUnmappedFlag()) continue;
+                    if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
 
-                if (this.PF_STATUS == PfStatus.PF    && rec.getReadFailsVendorQualityCheckFlag()) continue;
-                if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
+                    if (this.PF_STATUS == PfStatus.PF && rec.getReadFailsVendorQualityCheckFlag()) continue;
+                    if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
 
-                writer.write(rec.getSAMString());
+                    writer.write(rec.getSAMString());
+                }
             }
             writer.flush();
             if (printStream.checkError()) {
                 return 1;
             }
+            CloserUtil.close(writer);
+            CloserUtil.close(in);
             return 0;
         } catch (IOException e) {
             throw new PicardException("Exception writing SAM text", e);
