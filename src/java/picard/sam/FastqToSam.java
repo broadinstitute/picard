@@ -355,7 +355,7 @@ public class FastqToSam extends CommandLineProgram {
 
         // NOTE: the while loop isn't necessarily the most efficient way to handle this but we don't
         // expect this to ever happen more than once, just trapping pathological cases
-        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && readName.endsWith("/1")) {
+        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && (readName.endsWith("/1") || readName.endsWith("/2"))) {
             // If this is an unpaired run we want to make sure that "/1" isn't tacked on the end of the read name,
             // as this can cause problems down the road in MergeBamAlignment
             readName = readName.substring(0, readName.length() - 2);
