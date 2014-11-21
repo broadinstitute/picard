@@ -371,21 +371,25 @@ public class GenotypeConcordance extends CommandLineProgram {
         String truthAllele2 = null;
         if (null == truthState) {
             // Truth State not yet determined - will need to use truth genotypes below
-            if (truthGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + truthContext + " does not have exactly 2 alleles");
+            if ((truthGenotype.getAlleles().size() >= 1) && (truthGenotype.getAlleles().size() <= 2)) {
+                truthAllele1 = truthGenotype.getAllele(0).getBaseString();
+                truthAllele2 = truthGenotype.getAlleles().size() == 2 ? truthGenotype.getAllele(1).getBaseString() : truthAllele1;
             }
-            truthAllele1 = truthGenotype.getAllele(0).getBaseString();
-            truthAllele2 = truthGenotype.getAllele(1).getBaseString();
+            else {
+                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 1 or 2 alleles");
+            }
         }
 
         String callAllele1 = null;
         String callAllele2 = null;
         if (null == callState) {
-            if (callGenotype.getAlleles().size() != 2) {
-                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 2 alleles");
+            if ((callGenotype.getAlleles().size() >= 1) && (callGenotype.getAlleles().size() <= 2)) {
+                callAllele1 = callGenotype.getAllele(0).getBaseString();
+                callAllele2 = callGenotype.getAlleles().size() == 2 ? callGenotype.getAllele(1).getBaseString() : callAllele1;
             }
-            callAllele1 = callGenotype.getAllele(0).getBaseString();
-            callAllele2 = callGenotype.getAllele(1).getBaseString();
+            else {
+                throw new IllegalStateException("Genotype for Variant Context: " + callContext + " does not have exactly 1 or 2 alleles");
+            }
         }
 
         if ((truthRef != null && callRef != null) && (!truthRef.equals(callRef))) {
@@ -496,8 +500,9 @@ public class GenotypeConcordance extends CommandLineProgram {
     }
 }
 
-/** like a list, but if you ask for an index of an item, it will first add that item.
-also, same item cannot be added more than once (like a set)
+/**
+ *  like a list, but if you ask for an index of an item, it will first add that item.
+ *  also, same item cannot be added more than once (like a set)
  */
 class OrderedSet<T> extends ArrayList<T> {
 
