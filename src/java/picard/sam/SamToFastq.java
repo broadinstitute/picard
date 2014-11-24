@@ -398,12 +398,12 @@ public class SamToFastq extends CommandLineProgram {
                             "If "};
         }
 
-        if (OUTPUT_PER_RG && RG_TAG != null) {
-	    if (! (RG_TAG.equalsIgnoreCase("PU") || RG_TAG.equalsIgnoreCase("ID")) ){
+        if (OUTPUT_PER_RG) {
+	    if (RG_TAG == null) {
+		return new String[]{"If OUTPUT_PER_RG is true, then RG_TAG should be set."};
+	    } else if (! (RG_TAG.equalsIgnoreCase("PU") || RG_TAG.equalsIgnoreCase("ID")) ){
 		return new String[]{"RG_TAG must be: PU or ID"};
 	    }
-	} else {
-            return new String[]{"If OUTPUT_PER_RG is true, then RG_TAG should be set."};
         }
 
         return null;
