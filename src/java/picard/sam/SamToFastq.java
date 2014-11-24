@@ -88,6 +88,9 @@ public class SamToFastq extends CommandLineProgram {
             optional = true, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public boolean OUTPUT_PER_RG;
 
+    @Option(shortName="RGT", doc = "The read group tag (PU or ID) to be used to output a fastq file per read group.")
+    public String RG_TAG = "PU";
+
     @Option(shortName = "ODIR", doc = "Directory in which to output the fastq file(s).  Used only when OUTPUT_PER_RG is true.",
             optional = true)
     public File OUTPUT_DIR;
@@ -253,8 +256,12 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
-        String fileName = readGroup.getPlatformUnit();
-        if (fileName == null) fileName = readGroup.getReadGroupId();
+        String fileName = "";
+        if (RG_TAG.equalsIgnoreCase("PU")){
+	    fileName = readGroup.getPlatformUnit();
+	} else if (RG_TAG.equalsIgnoreCase("ID")){
+	    fileName = readGroup.getReadGroupId();
+	}
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
@@ -389,6 +396,14 @@ public class SamToFastq extends CommandLineProgram {
             return new String[]{
                     "If OUTPUT_PER_RG is true, then OUTPUT_DIR should be set. " +
                             "If "};
+        }
+
+        if (OUTPUT_PER_RG && RG_TAG != null) {
+	    if (! (RG_TAG.equalsIgnoreCase("PU") || RG_TAG.equalsIgnoreCase("ID")) ){
+		return new String[]{"RG_TAG must be: PU or ID"};
+	    }
+	} else {
+            return new String[]{"If OUTPUT_PER_RG is true, then RG_TAG should be set."};
         }
 
         return null;
