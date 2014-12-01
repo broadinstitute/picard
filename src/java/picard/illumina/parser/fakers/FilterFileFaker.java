@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
  * Bytes 0-3  : 0
  * Bytes 4-7  : unsigned int version
  * Bytes 8-11 : unsigned int numClusters
+ * Bytes 12...: boolean encoded in a byte representing whether the cluster passing or failing.
  */
 public class FilterFileFaker extends FileFaker {
 
@@ -17,7 +18,8 @@ public class FilterFileFaker extends FileFaker {
     protected void fakeFile(final ByteBuffer buffer) {
         buffer.putInt(0);       // 0
         buffer.putInt(3);       // Version number
-        buffer.putInt(0);       // Number of clusters
+        buffer.putInt(1);       // Number of clusters
+        buffer.put((byte) 0);   // Byte representing a cluster failing filter(not a PF read)
     }
 
     @Override
