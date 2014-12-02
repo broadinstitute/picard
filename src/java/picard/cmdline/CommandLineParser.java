@@ -346,6 +346,7 @@ public class CommandLineParser {
         // TODO: Should HTML escape usage preamble and option usage, including line breaks
         stream.println("<a id=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
+        stream.println("<section>");
         stream.println("<p>" + htmlEscape(getUsagePreamble()) + "</p>");
         boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
@@ -357,7 +358,7 @@ public class CommandLineParser {
         if (hasOptions) {
             htmlPrintOptions(stream, printCommon);
         }
-        stream.println("<br/>");
+        stream.println("</section>");
     }
 
     public void htmlPrintOptions(final PrintStream stream, final boolean printCommon) {
@@ -367,7 +368,6 @@ public class CommandLineParser {
             for (final String[] optionDoc : FRAMEWORK_OPTION_DOC) {
                 stream.println("<tr><td>" + optionDoc[0] + "</td><td>" +
                         htmlEscape(optionDoc[2]) + "</td></tr>");
-
             }
         }
         htmlPrintOptionTableRows(stream, printCommon);
@@ -375,6 +375,7 @@ public class CommandLineParser {
     }
 
     /**
+     * Prints options as rows in an HTML table.
      *
      * @param stream
      * @param printCommon
@@ -714,7 +715,7 @@ public class CommandLineParser {
 
     private void printHtmlOptionUsage(final PrintStream stream, final OptionDefinition optionDefinition) {
         final String type = getUnderlyingType(optionDefinition.field).getSimpleName();
-        final String optionLabel = prefixDot + optionDefinition.name + "=" + type;
+        final String optionLabel = prefixDot + optionDefinition.name + " (" + type + ")";
         stream.println("<tr><td>" + optionLabel + "</td><td>" +
                 htmlEscape(makeOptionDescription(optionDefinition)) + "</td></tr>");
     }
