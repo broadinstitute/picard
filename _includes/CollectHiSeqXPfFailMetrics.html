@@ -1,5 +1,6 @@
 <a id="CollectHiSeqXPfFailMetrics"/>
 <h3>CollectHiSeqXPfFailMetrics</h3>
+<section>
 <p>USAGE: CollectHiSeqXPfFailMetrics [options]
 <p>
 <p>Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#CollectHiSeqXPfFailMetrics
@@ -14,4 +15,4 @@
 <tr><td>NUM_PROCESSORS=Integer</td><td>Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to the number of cores available on the machine. If NUM_PROCESSORS &lt; 0 then the number of cores used will be the number available on the machine less NUM_PROCESSORS.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>N_CYCLES=Integer</td><td>Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.  Default value: 24. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>

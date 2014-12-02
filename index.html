@@ -43,12 +43,18 @@
 			</p>
 			<pre>git clone git@github.com:broadinstitute/picard.git</pre>
 
-
 			<p>The source code for HTSJDK is available on GitHub <a href="https://github.com/samtools/htsjdk">here</a>.
 			You can check out the latest source code with:
 			</p>
 			<pre>git clone git@github.com:samtools/htsjdk.git</pre>
 			<p>Enjoy!</p>
+			</section>
+
+			<h2>Quick Start</h2>
+			<section>
+			<p>See <a href="building.html">Building</a> and <a href="command-line-overview.html">Overview</a> for details.</p>
+			<!--TODO figure out how to make multi-line <pre> formatting work without resorting to the <br> tag.-->
+			<pre>export $JAVA_HOME=<i>Java_6_or_7_install_path</i><br>ant -lib lib/ant package-commands<br>java <i>jvm-args</i> -jar dist/picard.jar <i>PicardCommandName</i> OPTION1=value1 OPTION2=value2...</pre>
 			</section>
 
 			<a id="GettingHelp"></a>

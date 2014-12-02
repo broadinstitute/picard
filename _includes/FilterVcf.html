@@ -1,14 +1,15 @@
 <a id="FilterVcf"/>
 <h3>FilterVcf</h3>
+<section>
 <p>Applies one or more hard filters to a VCF file to filter out genotypes and variants.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>The INPUT VCF or BCF file.  Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>The output VCF or BCF.  Required. </td></tr>
-<tr><td>MIN_AB=Double</td><td>The minimum allele balance acceptable before filtering a site. Allele balance is calculated for heterozygotes as the number of bases supporting the least-represented allele over the total number of base observations. Different heterozygote genotypes at the same locus are measured independently. The locus is filtered if any allele balance is below the limit.  Default value: 0.0. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MIN_DP=Integer</td><td>The minimum sequencing depth supporting a genotype before the genotype will be filtered out.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MIN_GQ=Integer</td><td>The minimum genotype quality that must be achieved for a sample otherwise the genotype will be filtered out.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MAX_FS=Double</td><td>The maximum phred scaled fisher strand value before a site will be filtered out.  Default value: 1.7976931348623157E308. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MIN_QD=Double</td><td>The minimum QD value to accept or otherwise filter out the variant.  Default value: 0.0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INPUT (File)</td><td>The INPUT VCF or BCF file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output VCF or BCF.  Required. </td></tr>
+<tr><td>MIN_AB (Double)</td><td>The minimum allele balance acceptable before filtering a site. Allele balance is calculated for heterozygotes as the number of bases supporting the least-represented allele over the total number of base observations. Different heterozygote genotypes at the same locus are measured independently. The locus is filtered if any allele balance is below the limit.  Default value: 0.0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_DP (Integer)</td><td>The minimum sequencing depth supporting a genotype before the genotype will be filtered out.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_GQ (Integer)</td><td>The minimum genotype quality that must be achieved for a sample otherwise the genotype will be filtered out.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MAX_FS (Double)</td><td>The maximum phred scaled fisher strand value before a site will be filtered out.  Default value: 1.7976931348623157E308. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_QD (Double)</td><td>The minimum QD value to accept or otherwise filter out the variant.  Default value: 0.0. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>
