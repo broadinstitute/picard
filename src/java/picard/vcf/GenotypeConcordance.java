@@ -31,6 +31,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.tribble.Tribble;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
@@ -85,7 +86,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     @Option(shortName = "CS", doc="The name of the call sample within the call VCF")
     public String CALL_SAMPLE;
 
-    @Option(doc="One or more interval list files that will be used to limit the genotype concordance.")
+    @Option(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.")
     public List<File> INTERVALS;
 
     @Option(doc="If true, multiple interval lists will be intersected. If false multiple lists will be unioned.")
@@ -124,9 +125,32 @@ public class GenotypeConcordance extends CommandLineProgram {
         new GenotypeConcordance().instanceMainWithExit(args);
     }
 
-    @Override protected int doWork() {
+    @Override
+    protected String[] customCommandLineValidation() {
+        // Note - If the user specifies to use INTERVALS, the code will fail if the vcfs are not indexed, so we set USE_VCF_INDEX to true and check that the vcfs are indexed.
         IOUtil.assertFileIsReadable(TRUTH_VCF);
         IOUtil.assertFileIsReadable(CALL_VCF);
+        final boolean usingIntervals = this.INTERVALS != null && this.INTERVALS.size() > 0;
+        final List<String> errors = new ArrayList<String>();
+        if (usingIntervals) {
+            USE_VCF_INDEX = true;
+        }
+        if (USE_VCF_INDEX) {
+            // Index file is required either because we are using intervals, or because user-set parameter
+            if ((!Tribble.indexFile(TRUTH_VCF).exists() || (!Tribble.indexFile(CALL_VCF).exists()))) {
+                errors.add("Index file(s) not found for one or both of the VCFs.  Note - if intervals are specified, the VCF files must be indexed.");
+            }
+        }
+
+        if (errors.isEmpty()) {
+            return null;
+        } else {
+            return errors.toArray(new String[errors.size()]);
+        }
+    }
+
+
+    @Override protected int doWork() {
         final File summaryMetricsFile = new File(OUTPUT + SUMMARY_METRICS_FILE_EXTENSION);
         final File detailedMetricsFile = new File(OUTPUT + DETAILED_METRICS_FILE_EXTENSION);
         final File contingencyMetricsFile = new File(OUTPUT + CONTINGENCY_METRICS_FILE_EXTENSION);
@@ -138,7 +162,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         IntervalList intervals = null;
         SAMSequenceDictionary intervalsSamSequenceDictionary = null;
         if (usingIntervals) {
-            log.info("Loading up region lists.");
+            log.info("Starting to load intervals list(s).");
             long genomeBaseCount = 0;
             for (final File f : INTERVALS) {
                 IOUtil.assertFileIsReadable(f);
@@ -155,7 +179,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             if (intervals != null) {
                 intervals = intervals.uniqued();
             }
-            log.info("Finished loading up region lists.");
+            log.info("Finished loading up intervals list(s).");
         }
 
         final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF, USE_VCF_INDEX);
@@ -251,7 +275,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
 
             final VariantContext variantContextForLogging = tuple.truthVariantContext != null ? tuple.truthVariantContext : tuple.callVariantContext;
-            progress.record(variantContextForLogging.getChr(), variantContextForLogging.getStart());
+            progress.record(variantContextForLogging.getContig(), variantContextForLogging.getStart());
         }
 
         // Calculate and store the summary-level metrics
