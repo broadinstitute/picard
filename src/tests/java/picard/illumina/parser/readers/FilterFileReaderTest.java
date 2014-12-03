@@ -5,6 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.illumina.parser.fakers.FilterFileFaker;
 
 import java.io.File;
 import java.util.NoSuchElementException;
@@ -30,6 +31,18 @@ public class FilterFileReaderTest {
         }
 
         Assert.assertEquals(false, reader.hasNext());
+    }
+
+    @Test void readFakedFile() throws Exception {
+        final File fakeFile = File.createTempFile("FilterFileFakerTest", ".filter");
+        fakeFile.deleteOnExit();
+
+        new FilterFileFaker().fakeFile(fakeFile, 100);
+        final FilterFileReader reader = new FilterFileReader(fakeFile);
+        Assert.assertEquals(reader.numClusters, 1);         // A faked file has one cluster - with PF = false.
+        Assert.assertTrue(reader.hasNext());
+        Assert.assertFalse(reader.next());
+        Assert.assertFalse(reader.hasNext());
     }
 
     @Test(expectedExceptions = NoSuchElementException.class)
