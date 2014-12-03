@@ -1,11 +1,12 @@
 <a id="DownsampleSam"/>
 <h3>DownsampleSam</h3>
+<section>
 <p>Randomly down-sample a SAM or BAM file to retain a random subset of the reads. Mate-pairs are either both kept or both discarded. Reads marked as not primary alignments are all discarded. Each read is given a probability P of being retained - results with the exact same input in the same order and with the same value for RANDOM_SEED will produce the same results.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>The input SAM or BAM file to downsample.  Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>The output, downsampled, SAM or BAM file to write.  Required. </td></tr>
-<tr><td>RANDOM_SEED=Long</td><td>Random seed to use if reproducibilty is desired.  Setting to null will cause multiple invocations to produce different results.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>PROBABILITY=Double</td><td>The probability of keeping any individual read, between 0 and 1.  Default value: 1.0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INPUT (File)</td><td>The input SAM or BAM file to downsample.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output, downsampled, SAM or BAM file to write.  Required. </td></tr>
+<tr><td>RANDOM_SEED (Long)</td><td>Random seed to use if reproducibilty is desired.  Setting to null will cause multiple invocations to produce different results.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PROBABILITY (Double)</td><td>The probability of keeping any individual read, between 0 and 1.  Default value: 1.0. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>

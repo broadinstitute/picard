@@ -1,12 +1,13 @@
 <a id="FixMateInformation"/>
 <h3>FixMateInformation</h3>
+<section>
 <p>Ensure that all mate-pair information is in sync between each read and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written to the output file unchanged.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>The input file to fix.  This option may be specified 0 or more times. </td></tr>
-<tr><td>OUTPUT=File</td><td>The output file to write to. If no output file is supplied, the input file is overwritten.  Default value: null. </td></tr>
-<tr><td>SORT_ORDER=SortOrder</td><td>Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.  Default value: null. Possible values: {unsorted, queryname, coordinate} </td></tr>
-<tr><td>ASSUME_SORTED=Boolean</td><td>If true, assume that the input file is queryname sorted, even if the header says otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>ADD_MATE_CIGAR=Boolean</td><td>Adds the mate CIGAR tag (MC) if true, does not if false.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INPUT (File)</td><td>The input file to fix.  This option may be specified 0 or more times. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output file to write to. If no output file is supplied, the input file is overwritten.  Default value: null. </td></tr>
+<tr><td>SORT_ORDER (SortOrder)</td><td>Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.  Default value: null. Possible values: {unsorted, queryname, coordinate} </td></tr>
+<tr><td>ASSUME_SORTED (Boolean)</td><td>If true, assume that the input file is queryname sorted, even if the header says otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>ADD_MATE_CIGAR (Boolean)</td><td>Adds the mate CIGAR tag (MC) if true, does not if false.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
-<br/>
+</section>

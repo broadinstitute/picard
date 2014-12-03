@@ -1,15 +1,16 @@
 <a id="CreateSequenceDictionary"/>
 <h3>CreateSequenceDictionary</h3>
+<section>
 <p>Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.
 <p></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>REFERENCE=File</td><td>Input reference fasta or fasta.gz  Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>Output SAM or BAM file containing only the sequence dictionary  Required. </td></tr>
-<tr><td>GENOME_ASSEMBLY=String</td><td>Put into AS field of sequence dictionary entry if supplied  Default value: null. </td></tr>
-<tr><td>URI=String</td><td>Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used  Default value: null. </td></tr>
-<tr><td>SPECIES=String</td><td>Put into SP field of sequence dictionary entry  Default value: null. </td></tr>
-<tr><td>TRUNCATE_NAMES_AT_WHITESPACE=Boolean</td><td>Make sequence name the first word from the > line in the fasta file.  By default the entire contents of the > line is used, excluding leading and trailing whitespace.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>NUM_SEQUENCES=Integer</td><td>Stop after writing this many sequences.  For testing.  Default value: 2147483647. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>REFERENCE (File)</td><td>Input reference fasta or fasta.gz  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output SAM or BAM file containing only the sequence dictionary  Required. </td></tr>
+<tr><td>GENOME_ASSEMBLY (String)</td><td>Put into AS field of sequence dictionary entry if supplied  Default value: null. </td></tr>
+<tr><td>URI (String)</td><td>Put into UR field of sequence dictionary entry.  If not supplied, input reference file is used  Default value: null. </td></tr>
+<tr><td>SPECIES (String)</td><td>Put into SP field of sequence dictionary entry  Default value: null. </td></tr>
+<tr><td>TRUNCATE_NAMES_AT_WHITESPACE (Boolean)</td><td>Make sequence name the first word from the > line in the fasta file.  By default the entire contents of the > line is used, excluding leading and trailing whitespace.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>NUM_SEQUENCES (Integer)</td><td>Stop after writing this many sequences.  For testing.  Default value: 2147483647. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>

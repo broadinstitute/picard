@@ -1,12 +1,13 @@
 <a id="SplitVcfs"/>
 <h3>SplitVcfs</h3>
+<section>
 <p>Splits an input VCF or BCF file into two VCF files, one for indel records and one for SNPs. Theheaders of the two output files will be identical. An index file is created and asequence dictionary is required by default.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>The VCF or BCF input file  Required. </td></tr>
-<tr><td>SNP_OUTPUT=File</td><td>The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.  Required. </td></tr>
-<tr><td>INDEL_OUTPUT=File</td><td>The VCF or BCF file to which indel records should be written. The file format is determined by file extension.  Required. </td></tr>
-<tr><td>SEQUENCE_DICTIONARY=File</td><td>The index sequence dictionary to use instead of the sequence dictionaries in the input files  Default value: null. </td></tr>
-<tr><td>STRICT=Boolean</td><td>If true an exception will be thrown if an event type other than SNP or indel is encountered  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INPUT (File)</td><td>The VCF or BCF input file  Required. </td></tr>
+<tr><td>SNP_OUTPUT (File)</td><td>The VCF or BCF file to which SNP records should be written. The file format is determined by file extension.  Required. </td></tr>
+<tr><td>INDEL_OUTPUT (File)</td><td>The VCF or BCF file to which indel records should be written. The file format is determined by file extension.  Required. </td></tr>
+<tr><td>SEQUENCE_DICTIONARY (File)</td><td>The index sequence dictionary to use instead of the sequence dictionaries in the input files  Default value: null. </td></tr>
+<tr><td>STRICT (Boolean)</td><td>If true an exception will be thrown if an event type other than SNP or indel is encountered  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
-<br/>
+</section>

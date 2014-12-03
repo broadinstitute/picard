@@ -1,20 +1,21 @@
 <a id="BamToBfq"/>
 <h3>BamToBfq</h3>
+<section>
 <p>Create BFQ files from a BAM file for use by the Maq aligner.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>The BAM file to parse.  Required. </td></tr>
-<tr><td>ANALYSIS_DIR=File</td><td>The analysis directory for the binary output file.   Required. </td></tr>
-<tr><td>FLOWCELL_BARCODE=String</td><td>Flowcell barcode (e.g. 30PYMAAXX).    Required.  Cannot be used in conjuction with option(s) OUTPUT_FILE_PREFIX</td></tr>
-<tr><td>LANE=Integer</td><td>Lane number.   Default value: null.  Cannot be used in conjuction with option(s) OUTPUT_FILE_PREFIX</td></tr>
-<tr><td>OUTPUT_FILE_PREFIX=String</td><td>Prefix for all output files  Required.  Cannot be used in conjuction with option(s) FLOWCELL_BARCODE (F) LANE (L)</td></tr>
-<tr><td>READS_TO_ALIGN=Integer</td><td>Number of reads to align (null = all).  Default value: null. </td></tr>
-<tr><td>READ_CHUNK_SIZE=Integer</td><td>Number of reads to break into individual groups for alignment  Default value: 2000000. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>PAIRED_RUN=Boolean</td><td>Whether this is a paired-end run.   Required. Possible values: {true, false} </td></tr>
-<tr><td>RUN_BARCODE=String</td><td>Deprecated option; use READ_NAME_PREFIX instead  Default value: null.  Cannot be used in conjuction with option(s) READ_NAME_PREFIX</td></tr>
-<tr><td>READ_NAME_PREFIX=String</td><td>Prefix to be stripped off the beginning of all read names  (to make them short enough to run in Maq)  Default value: null. </td></tr>
-<tr><td>INCLUDE_NON_PF_READS=Boolean</td><td>Whether to include non-PF reads  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>CLIP_ADAPTERS=Boolean</td><td>Whether to clip adapters from the reads  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>BASES_TO_WRITE=Integer</td><td>The number of bases from each read to write to the bfq file.  If this is non-null, then only the first BASES_TO_WRITE bases from each read will be written.  Default value: null. </td></tr>
+<tr><td>INPUT (File)</td><td>The BAM file to parse.  Required. </td></tr>
+<tr><td>ANALYSIS_DIR (File)</td><td>The analysis directory for the binary output file.   Required. </td></tr>
+<tr><td>FLOWCELL_BARCODE (String)</td><td>Flowcell barcode (e.g. 30PYMAAXX).    Required.  Cannot be used in conjuction with option(s) OUTPUT_FILE_PREFIX</td></tr>
+<tr><td>LANE (Integer)</td><td>Lane number.   Default value: null.  Cannot be used in conjuction with option(s) OUTPUT_FILE_PREFIX</td></tr>
+<tr><td>OUTPUT_FILE_PREFIX (String)</td><td>Prefix for all output files  Required.  Cannot be used in conjuction with option(s) FLOWCELL_BARCODE (F) LANE (L)</td></tr>
+<tr><td>READS_TO_ALIGN (Integer)</td><td>Number of reads to align (null = all).  Default value: null. </td></tr>
+<tr><td>READ_CHUNK_SIZE (Integer)</td><td>Number of reads to break into individual groups for alignment  Default value: 2000000. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PAIRED_RUN (Boolean)</td><td>Whether this is a paired-end run.   Required. Possible values: {true, false} </td></tr>
+<tr><td>RUN_BARCODE (String)</td><td>Deprecated option; use READ_NAME_PREFIX instead  Default value: null.  Cannot be used in conjuction with option(s) READ_NAME_PREFIX</td></tr>
+<tr><td>READ_NAME_PREFIX (String)</td><td>Prefix to be stripped off the beginning of all read names  (to make them short enough to run in Maq)  Default value: null. </td></tr>
+<tr><td>INCLUDE_NON_PF_READS (Boolean)</td><td>Whether to include non-PF reads  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>CLIP_ADAPTERS (Boolean)</td><td>Whether to clip adapters from the reads  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>BASES_TO_WRITE (Integer)</td><td>The number of bases from each read to write to the bfq file.  If this is non-null, then only the first BASES_TO_WRITE bases from each read will be written.  Default value: null. </td></tr>
 </table>
-<br/>
+</section>

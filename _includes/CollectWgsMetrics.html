@@ -1,14 +1,15 @@
 <a id="CollectWgsMetrics"/>
 <h3>CollectWgsMetrics</h3>
+<section>
 <p>Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>Input SAM or BAM file.  Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>Output metrics file.  Required. </td></tr>
-<tr><td>REFERENCE_SEQUENCE=File</td><td>The reference sequence fasta aligned to.  Required. </td></tr>
-<tr><td>MINIMUM_MAPPING_QUALITY=Integer</td><td>Minimum mapping quality for a read to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MINIMUM_BASE_QUALITY=Integer</td><td>Minimum base quality for a base to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>COVERAGE_CAP=Integer</td><td>Treat bases with coverage exceeding this value as if they had coverage at this value.  Default value: 250. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>STOP_AFTER=Long</td><td>For debugging purposes, stop after processing this many genomic bases.  Default value: -1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output metrics file.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>The reference sequence fasta aligned to.  Required. </td></tr>
+<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>COVERAGE_CAP (Integer)</td><td>Treat bases with coverage exceeding this value as if they had coverage at this value.  Default value: 250. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>STOP_AFTER (Long)</td><td>For debugging purposes, stop after processing this many genomic bases.  Default value: -1. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>

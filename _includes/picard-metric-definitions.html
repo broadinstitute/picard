@@ -1,625 +1,377 @@
-<head>
-  <title>Picard Metrics Definitions</title>
-  <style>
-    body { font-family: Arial; background-color: white; font-size: 10pt; }
-    h2 { color: red; }
-    .class_description { font-style: italic; }
-    .metric_column_def { padding-bottom: 0px; margin-bottom: 8px; }
-    .metric_column_def span { font-weight: bold; color: #222222; font-style: italic; }
-  </style>
-</head>
-<h1>Picard Metrics Definitions</h1>
-<h2>Table Of Contents</h2>
-<ol>
-<li><a href="#AlignmentSummaryMetrics">AlignmentSummaryMetrics</a>: High level metrics about the alignment of reads within a SAM file, produced by
- the CollectAlignmentSummaryMetrics program and usually stored in a file with
- the extension ".alignment_summary_metrics".</li>
-<li><a href="#BaseDistributionByCycleMetrics">BaseDistributionByCycleMetrics</a>: </li>
-<li><a href="#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric">CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</a>: a metric class for describing FP failing reads from an Illumina HiSeqX lane *</li>
-<li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
-<li><a href="#CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics">CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
-<li><a href="#CollectOxoGMetrics.CpcgMetrics">CollectOxoGMetrics.CpcgMetrics</a>: Metrics class for outputs.</li>
-<li><a href="#CollectQualityYieldMetrics.QualityYieldMetrics">CollectQualityYieldMetrics.QualityYieldMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
-<li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
-<li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
- within a stream of SAMRecords.</li>
-<li><a href="#ExtractIlluminaBarcodes.BarcodeMetric">ExtractIlluminaBarcodes.BarcodeMetric</a>: Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
- the basecalls directory and determine to which barcode each read should be assigned.</li>
-<li><a href="#GcBiasDetailMetrics">GcBiasDetailMetrics</a>: Class that holds detailed metrics about reads that fall within windows of a certain
- GC bin on the reference genome.</li>
-<li><a href="#GcBiasSummaryMetrics">GcBiasSummaryMetrics</a>: High level metrics that capture how biased the coverage in a certain lane is.</li>
-<li><a href="#GenotypeConcordanceContingencyMetrics">GenotypeConcordanceContingencyMetrics</a>: Class that holds metrics about the Genotype Concordance contingency tables.</li>
-<li><a href="#GenotypeConcordanceDetailMetrics">GenotypeConcordanceDetailMetrics</a>: Class that holds detail metrics about Genotype Concordance</li>
-<li><a href="#GenotypeConcordanceSummaryMetrics">GenotypeConcordanceSummaryMetrics</a>: Class that holds summary metrics about Genotype Concordance</li>
-<li><a href="#HsMetrics">HsMetrics</a>: The set of metrics captured that are specific to a hybrid selection analysis.</li>
-<li><a href="#IlluminaBasecallingMetrics">IlluminaBasecallingMetrics</a>: Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.</li>
-<li><a href="#IlluminaLaneMetrics">IlluminaLaneMetrics</a>: Embodies characteristics that describe a lane.</li>
-<li><a href="#IlluminaPhasingMetrics">IlluminaPhasingMetrics</a>: Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.</li>
-<li><a href="#InsertSizeMetrics">InsertSizeMetrics</a>: Metrics about the insert size distribution of a paired-end library, created by the
- CollectInsertSizeMetrics program and usually written to a file with the extension
- ".insert_size_metrics".</li>
-<li><a href="#JumpingLibraryMetrics">JumpingLibraryMetrics</a>: High level metrics about the presence of  outward- and inward-facing pairs
- within a SAM file generated with a jumping library, produced by
- the CollectJumpingLibraryMetrics program and usually stored in a file with
- the extension ".jump_metrics".</li>
-<li><a href="#MultilevelMetrics">MultilevelMetrics</a>: </li>
-<li><a href="#RnaSeqMetrics">RnaSeqMetrics</a>: Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
- program and usually stored in a file with the extension ".rna_metrics".</li>
-<li><a href="#RrbsCpgDetailMetrics">RrbsCpgDetailMetrics</a>: Holds information about CpG sites encountered for RRBS processing QC</li>
-<li><a href="#RrbsSummaryMetrics">RrbsSummaryMetrics</a>: Holds summary statistics from RRBS processing QC</li>
-<li><a href="#SamFileValidator.ValidationMetrics">SamFileValidator.ValidationMetrics</a>: </li>
-<li><a href="#TargetedPcrMetrics">TargetedPcrMetrics</a>: Metrics class for targeted pcr runs such as TSCA runs</li>
-</ol>
-<a id="AlignmentSummaryMetrics"
+<h2>Picard Metrics Definitions</h2>
+<section>
+ <p> Click on a metric to see a description of its fields.</p>
+ <ol>
+  <li><a href="#AlignmentSummaryMetrics">AlignmentSummaryMetrics</a>: High level metrics about the alignment of reads within a SAM file, produced by
+   the CollectAlignmentSummaryMetrics program and usually stored in a file with
+   the extension ".alignment_summary_metrics".</li>
+  <li><a href="#BaseDistributionByCycleMetrics">BaseDistributionByCycleMetrics</a>: </li>
+  <li><a href="#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric">CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</a>: a metric class for describing FP failing reads from an Illumina HiSeqX lane *</li>
+  <li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
+  <li><a href="#CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics">CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
+  <li><a href="#CollectOxoGMetrics.CpcgMetrics">CollectOxoGMetrics.CpcgMetrics</a>: Metrics class for outputs.</li>
+  <li><a href="#CollectQualityYieldMetrics.QualityYieldMetrics">CollectQualityYieldMetrics.QualityYieldMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
+  <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
+  <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
+   within a stream of SAMRecords.</li>
+  <li><a href="#ExtractIlluminaBarcodes.BarcodeMetric">ExtractIlluminaBarcodes.BarcodeMetric</a>: Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
+   the basecalls directory and determine to which barcode each read should be assigned.</li>
+  <li><a href="#GcBiasDetailMetrics">GcBiasDetailMetrics</a>: Class that holds detailed metrics about reads that fall within windows of a certain
+   GC bin on the reference genome.</li>
+  <li><a href="#GcBiasSummaryMetrics">GcBiasSummaryMetrics</a>: High level metrics that capture how biased the coverage in a certain lane is.</li>
+  <li><a href="#GenotypeConcordanceContingencyMetrics">GenotypeConcordanceContingencyMetrics</a>: Class that holds metrics about the Genotype Concordance contingency tables.</li>
+  <li><a href="#GenotypeConcordanceDetailMetrics">GenotypeConcordanceDetailMetrics</a>: Class that holds detail metrics about Genotype Concordance</li>
+  <li><a href="#GenotypeConcordanceSummaryMetrics">GenotypeConcordanceSummaryMetrics</a>: Class that holds summary metrics about Genotype Concordance</li>
+  <li><a href="#HsMetrics">HsMetrics</a>: The set of metrics captured that are specific to a hybrid selection analysis.</li>
+  <li><a href="#IlluminaBasecallingMetrics">IlluminaBasecallingMetrics</a>: Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.</li>
+  <li><a href="#IlluminaLaneMetrics">IlluminaLaneMetrics</a>: Embodies characteristics that describe a lane.</li>
+  <li><a href="#IlluminaPhasingMetrics">IlluminaPhasingMetrics</a>: Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.</li>
+  <li><a href="#InsertSizeMetrics">InsertSizeMetrics</a>: Metrics about the insert size distribution of a paired-end library, created by the
+   CollectInsertSizeMetrics program and usually written to a file with the extension
+   ".insert_size_metrics".</li>
+  <li><a href="#JumpingLibraryMetrics">JumpingLibraryMetrics</a>: High level metrics about the presence of  outward- and inward-facing pairs
+   within a SAM file generated with a jumping library, produced by
+   the CollectJumpingLibraryMetrics program and usually stored in a file with
+   the extension ".jump_metrics".</li>
+  <li><a href="#MultilevelMetrics">MultilevelMetrics</a>: </li>
+  <li><a href="#RnaSeqMetrics">RnaSeqMetrics</a>: Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
+   program and usually stored in a file with the extension ".rna_metrics".</li>
+  <li><a href="#RrbsCpgDetailMetrics">RrbsCpgDetailMetrics</a>: Holds information about CpG sites encountered for RRBS processing QC</li>
+  <li><a href="#RrbsSummaryMetrics">RrbsSummaryMetrics</a>: Holds summary statistics from RRBS processing QC</li>
+  <li><a href="#SamFileValidator.ValidationMetrics">SamFileValidator.ValidationMetrics</a>: </li>
+  <li><a href="#TargetedPcrMetrics">TargetedPcrMetrics</a>: Metrics class for targeted pcr runs such as TSCA runs</li>
+ </ol>
+</section>
+<a id="AlignmentSummaryMetrics"></a>
 <h2>AlignmentSummaryMetrics</h2>
-<p class="class_description">High level metrics about the alignment of reads within a SAM file, produced by
- the CollectAlignmentSummaryMetrics program and usually stored in a file with
- the extension ".alignment_summary_metrics".</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>CATEGORY: </span>One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
- first read in a paired run, SECOND_OF_PAIR when the metrics are for only the second read
- in a paired run or PAIR when the metrics are aggregated for both first and second reads
- in a pair.</div>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads including all PF and non-PF reads. When CATEGORY equals PAIR
- this value will be 2x the number of clusters.</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of PF reads where PF is defined as passing Illumina's filter.</div>
-<div class="metric_column_def"><span>PCT_PF_READS: </span>The percentage of reads that are PF (PF_READS / TOTAL_READS)</div>
-<div class="metric_column_def"><span>PF_NOISE_READS: </span>The number of PF reads that are marked as noise reads.  A noise read is one which is composed
- entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
- are of no use in downstream analysis.</div>
-<div class="metric_column_def"><span>PF_READS_ALIGNED: </span>The number of PF reads that were aligned to the reference sequence. This includes reads that
- aligned with low quality (i.e. their alignments are ambiguous).</div>
-<div class="metric_column_def"><span>PCT_PF_READS_ALIGNED: </span>The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS</div>
-<div class="metric_column_def"><span>PF_ALIGNED_BASES: </span>The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.</div>
-<div class="metric_column_def"><span>PF_HQ_ALIGNED_READS: </span>The number of PF reads that were aligned to the reference sequence with a mapping quality of
- Q20 or higher signifying that the aligner estimates a 1/100 (or smaller) chance that the
- alignment is wrong.</div>
-<div class="metric_column_def"><span>PF_HQ_ALIGNED_BASES: </span>The number of bases aligned to the reference sequence in reads that were mapped at high
- quality.  Will usually approximate PF_HQ_ALIGNED_READS * READ_LENGTH but may differ when
- either mixed read lengths are present or many reads are aligned with gaps.</div>
-<div class="metric_column_def"><span>PF_HQ_ALIGNED_Q20_BASES: </span>The subset of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.</div>
-<div class="metric_column_def"><span>PF_HQ_MEDIAN_MISMATCHES: </span>The median number of mismatches versus the reference sequence in reads that were aligned
- to the reference at high quality (i.e. PF_HQ_ALIGNED READS).</div>
-<div class="metric_column_def"><span>PF_MISMATCH_RATE: </span>The rate of bases mismatching the reference for all bases aligned to the reference sequence.</div>
-<div class="metric_column_def"><span>PF_HQ_ERROR_RATE: </span>The percentage of bases that mismatch the reference in PF HQ aligned reads.</div>
-<div class="metric_column_def"><span>PF_INDEL_RATE: </span>The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
- as the numerator, not the number of inserted or deleted bases.</div>
-<div class="metric_column_def"><span>MEAN_READ_LENGTH: </span>The mean read length of the set of reads examined.  When looking at the data for a single lane with
- equal length reads this number is just the read length.  When looking at data for merged lanes with
- differing read lengths this is the mean read length of all reads.</div>
-<div class="metric_column_def"><span>READS_ALIGNED_IN_PAIRS: </span>The number of aligned reads whose mate pair was also aligned to the reference.</div>
-<div class="metric_column_def"><span>PCT_READS_ALIGNED_IN_PAIRS: </span>The percentage of reads whose mate pair was also aligned to the reference.
- READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED</div>
-<div class="metric_column_def"><span>BAD_CYCLES: </span>The number of instrument cycles in which 80% or more of base calls were no-calls.</div>
-<div class="metric_column_def"><span>STRAND_BALANCE: </span>The number of PF reads aligned to the positive strand of the genome divided by the number of
- PF reads aligned to the genome.</div>
-<div class="metric_column_def"><span>PCT_CHIMERAS: </span>The percentage of reads that map outside of a maximum insert size (usually 100kb) or that have
- the two ends mapping to different chromosomes.</div>
-<div class="metric_column_def"><span>PCT_ADAPTER: </span>The percentage of PF reads that are unaligned and match to a known adapter sequence right from the
- start of the read.</div>
-<a id="BaseDistributionByCycleMetrics"
+<section>
+ <p>High level metrics about the alignment of reads within a SAM file, produced by
+  the CollectAlignmentSummaryMetrics program and usually stored in a file with
+  the extension ".alignment_summary_metrics".</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>CATEGORY</td><td>One of either UNPAIRED (for a fragment run), FIRST_OF_PAIR when metrics are for only the
+   first read in a paired run, SECOND_OF_PAIR when the metrics are for only the second read
+   in a paired run or PAIR when the metrics are aggregated for both first and second reads
+   in a pair.</td></tr><tr><td>TOTAL_READS</td><td>The total number of reads including all PF and non-PF reads. When CATEGORY equals PAIR
+  this value will be 2x the number of clusters.</td></tr><tr><td>PF_READS</td><td>The number of PF reads where PF is defined as passing Illumina's filter.</td></tr><tr><td>PCT_PF_READS</td><td>The percentage of reads that are PF (PF_READS / TOTAL_READS)</td></tr><tr><td>PF_NOISE_READS</td><td>The number of PF reads that are marked as noise reads.  A noise read is one which is composed
+  entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
+  are of no use in downstream analysis.</td></tr><tr><td>PF_READS_ALIGNED</td><td>The number of PF reads that were aligned to the reference sequence. This includes reads that
+  aligned with low quality (i.e. their alignments are ambiguous).</td></tr><tr><td>PCT_PF_READS_ALIGNED</td><td>The percentage of PF reads that aligned to the reference sequence. PF_READS_ALIGNED / PF_READS</td></tr><tr><td>PF_ALIGNED_BASES</td><td>The total number of aligned bases, in all mapped PF reads, that are aligned to the reference sequence.</td></tr><tr><td>PF_HQ_ALIGNED_READS</td><td>The number of PF reads that were aligned to the reference sequence with a mapping quality of
+  Q20 or higher signifying that the aligner estimates a 1/100 (or smaller) chance that the
+  alignment is wrong.</td></tr><tr><td>PF_HQ_ALIGNED_BASES</td><td>The number of bases aligned to the reference sequence in reads that were mapped at high
+  quality.  Will usually approximate PF_HQ_ALIGNED_READS * READ_LENGTH but may differ when
+  either mixed read lengths are present or many reads are aligned with gaps.</td></tr><tr><td>PF_HQ_ALIGNED_Q20_BASES</td><td>The subset of PF_HQ_ALIGNED_BASES where the base call quality was Q20 or higher.</td></tr><tr><td>PF_HQ_MEDIAN_MISMATCHES</td><td>The median number of mismatches versus the reference sequence in reads that were aligned
+  to the reference at high quality (i.e. PF_HQ_ALIGNED READS).</td></tr><tr><td>PF_MISMATCH_RATE</td><td>The rate of bases mismatching the reference for all bases aligned to the reference sequence.</td></tr><tr><td>PF_HQ_ERROR_RATE</td><td>The percentage of bases that mismatch the reference in PF HQ aligned reads.</td></tr><tr><td>PF_INDEL_RATE</td><td>The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
+  as the numerator, not the number of inserted or deleted bases.</td></tr><tr><td>MEAN_READ_LENGTH</td><td>The mean read length of the set of reads examined.  When looking at the data for a single lane with
+  equal length reads this number is just the read length.  When looking at data for merged lanes with
+  differing read lengths this is the mean read length of all reads.</td></tr><tr><td>READS_ALIGNED_IN_PAIRS</td><td>The number of aligned reads whose mate pair was also aligned to the reference.</td></tr><tr><td>PCT_READS_ALIGNED_IN_PAIRS</td><td>The percentage of reads whose mate pair was also aligned to the reference.
+  READS_ALIGNED_IN_PAIRS / PF_READS_ALIGNED</td></tr><tr><td>BAD_CYCLES</td><td>The number of instrument cycles in which 80% or more of base calls were no-calls.</td></tr><tr><td>STRAND_BALANCE</td><td>The number of PF reads aligned to the positive strand of the genome divided by the number of
+  PF reads aligned to the genome.</td></tr><tr><td>PCT_CHIMERAS</td><td>The percentage of reads that map outside of a maximum insert size (usually 100kb) or that have
+  the two ends mapping to different chromosomes.</td></tr><tr><td>PCT_ADAPTER</td><td>The percentage of PF reads that are unaligned and match to a known adapter sequence right from the
+  start of the read.</td></tr></table>
+</section>
+<a id="BaseDistributionByCycleMetrics"></a>
 <h2>BaseDistributionByCycleMetrics</h2>
-<p class="class_description"></p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>READ_END: </span></div>
-<div class="metric_column_def"><span>CYCLE: </span></div>
-<div class="metric_column_def"><span>PCT_A: </span></div>
-<div class="metric_column_def"><span>PCT_C: </span></div>
-<div class="metric_column_def"><span>PCT_G: </span></div>
-<div class="metric_column_def"><span>PCT_T: </span></div>
-<div class="metric_column_def"><span>PCT_N: </span></div>
-<a id="CollectHiSeqXPfFailMetrics.PFFailDetailedMetric"
+<section>
+ <p></p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>READ_END</td><td></td></tr><tr><td>CYCLE</td><td></td></tr><tr><td>PCT_A</td><td></td></tr><tr><td>PCT_C</td><td></td></tr><tr><td>PCT_G</td><td></td></tr><tr><td>PCT_T</td><td></td></tr><tr><td>PCT_N</td><td></td></tr></table>
+</section>
+<a id="CollectHiSeqXPfFailMetrics.PFFailDetailedMetric"></a>
 <h2>CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</h2>
-<p class="class_description">a metric class for describing FP failing reads from an Illumina HiSeqX lane *</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>TILE: </span></div>
-<div class="metric_column_def"><span>X: </span></div>
-<div class="metric_column_def"><span>Y: </span></div>
-<div class="metric_column_def"><span>NUM_N: </span></div>
-<div class="metric_column_def"><span>NUM_Q_GT_TWO: </span></div>
-<div class="metric_column_def"><span>CLASSIFICATION: </span>The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
- (See PFFailSummaryMetric for explanation regarding the possible classification.)</div>
-<a id="CollectHiSeqXPfFailMetrics.PFFailSummaryMetric"
+<section>
+ <p>a metric class for describing FP failing reads from an Illumina HiSeqX lane *</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>TILE</td><td></td></tr><tr><td>X</td><td></td></tr><tr><td>Y</td><td></td></tr><tr><td>NUM_N</td><td></td></tr><tr><td>NUM_Q_GT_TWO</td><td></td></tr><tr><td>CLASSIFICATION</td><td>The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
+  (See PFFailSummaryMetric for explanation regarding the possible classification.)</td></tr></table>
+</section>
+<a id="CollectHiSeqXPfFailMetrics.PFFailSummaryMetric"></a>
 <h2>CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</h2>
-<p class="class_description">Metrics produced by the GetHiSeqXPFFailMetrics program. Used to diagnose lanes from HiSeqX
- Sequencing, providing the number and fraction of each of the reasons that reads could have not passed PF.
- Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
- cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>TILE: </span>The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. *</div>
-<div class="metric_column_def"><span>READS: </span>The total number of reads examined</div>
-<div class="metric_column_def"><span>PF_FAIL_READS: </span>The number of non-PF reads in this tile.</div>
-<div class="metric_column_def"><span>PCT_PF_FAIL_READS: </span>The fraction of PF_READS</div>
-<div class="metric_column_def"><span>PF_FAIL_EMPTY: </span>The number of non-PF reads in this tile that are deemed empty.</div>
-<div class="metric_column_def"><span>PCT_PF_FAIL_EMPTY: </span>The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF reads).</div>
-<div class="metric_column_def"><span>PF_FAIL_POLYCLONAL: </span>The number of non-PF reads in this tile that are deemed multiclonal.</div>
-<div class="metric_column_def"><span>PCT_PF_FAIL_POLYCLONAL: </span>The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all non-PF reads).</div>
-<div class="metric_column_def"><span>PF_FAIL_MISALIGNED: </span>The number of non-PF reads in this tile that are deemed "misaligned".</div>
-<div class="metric_column_def"><span>PCT_PF_FAIL_MISALIGNED: </span>The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all non-PF reads).</div>
-<div class="metric_column_def"><span>PF_FAIL_UNKNOWN: </span>The number of non-PF reads in this tile that have not been classified.</div>
-<div class="metric_column_def"><span>PCT_PF_FAIL_UNKNOWN: </span>The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads).</div>
-<a id="CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics"
+<section>
+ <p>Metrics produced by the GetHiSeqXPFFailMetrics program. Used to diagnose lanes from HiSeqX
+  Sequencing, providing the number and fraction of each of the reasons that reads could have not passed PF.
+  Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
+  cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>TILE</td><td>The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. *</td></tr><tr><td>READS</td><td>The total number of reads examined</td></tr><tr><td>PF_FAIL_READS</td><td>The number of non-PF reads in this tile.</td></tr><tr><td>PCT_PF_FAIL_READS</td><td>The fraction of PF_READS</td></tr><tr><td>PF_FAIL_EMPTY</td><td>The number of non-PF reads in this tile that are deemed empty.</td></tr><tr><td>PCT_PF_FAIL_EMPTY</td><td>The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_POLYCLONAL</td><td>The number of non-PF reads in this tile that are deemed multiclonal.</td></tr><tr><td>PCT_PF_FAIL_POLYCLONAL</td><td>The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_MISALIGNED</td><td>The number of non-PF reads in this tile that are deemed "misaligned".</td></tr><tr><td>PCT_PF_FAIL_MISALIGNED</td><td>The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_UNKNOWN</td><td>The number of non-PF reads in this tile that have not been classified.</td></tr><tr><td>PCT_PF_FAIL_UNKNOWN</td><td>The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads).</td></tr></table>
+</section>
+<a id="CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics"></a>
 <h2>CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics</h2>
-<p class="class_description">A set of metrics used to describe the general quality of a BAM file</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads in the input file</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of reads that are PF - pass filter</div>
-<div class="metric_column_def"><span>DUPLICATE_READS: </span>The number of duplicate, PF reads</div>
-<div class="metric_column_def"><span>TOTAL_BASES: </span>The total number of bases in all reads</div>
-<div class="metric_column_def"><span>PF_BASES: </span>The total number of bases in all PF reads</div>
-<div class="metric_column_def"><span>TOTAL_ILLUMINA_BASES: </span>The number of bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</div>
-<div class="metric_column_def"><span>AVERAGE_ILMN_DEPTH: </span>The average depth considering only bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</div>
-<div class="metric_column_def"><span>READ_LENGTH: </span>The read length</div>
-<div class="metric_column_def"><span>TARGET_TERRITORY: </span>The size of the target region</div>
-<a id="CollectOxoGMetrics.CpcgMetrics"
+<section>
+ <p>A set of metrics used to describe the general quality of a BAM file</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>DUPLICATE_READS</td><td>The number of duplicate, PF reads</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>TOTAL_ILLUMINA_BASES</td><td>The number of bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</td></tr><tr><td>AVERAGE_ILMN_DEPTH</td><td>The average depth considering only bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</td></tr><tr><td>READ_LENGTH</td><td>The read length</td></tr><tr><td>TARGET_TERRITORY</td><td>The size of the target region</td></tr></table>
+</section>
+<a id="CollectOxoGMetrics.CpcgMetrics"></a>
 <h2>CollectOxoGMetrics.CpcgMetrics</h2>
-<p class="class_description">Metrics class for outputs.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>SAMPLE_ALIAS: </span>The name of the sample being assayed.</div>
-<div class="metric_column_def"><span>LIBRARY: </span>The name of the library being assayed.</div>
-<div class="metric_column_def"><span>CONTEXT: </span>The sequence context being reported on.</div>
-<div class="metric_column_def"><span>TOTAL_SITES: </span>The total number of sites that had at least one base covering them.</div>
-<div class="metric_column_def"><span>TOTAL_BASES: </span>The total number of basecalls observed at all sites.</div>
-<div class="metric_column_def"><span>REF_NONOXO_BASES: </span>The number of reference alleles observed as C in read 1 and G in read 2.</div>
-<div class="metric_column_def"><span>REF_OXO_BASES: </span>The number of reference alleles observed as G in read 1 and C in read 2.</div>
-<div class="metric_column_def"><span>REF_TOTAL_BASES: </span>The total number of reference alleles observed</div>
-<div class="metric_column_def"><span>ALT_NONOXO_BASES: </span>The count of observed A basecalls at C reference positions and T basecalls
- at G reference bases that are correlated to instrument read number in a way
- that rules out oxidation as the cause</div>
-<div class="metric_column_def"><span>ALT_OXO_BASES: </span>The count of observed A basecalls at C reference positions and T basecalls
- at G reference bases that are correlated to instrument read number in a way
- that is consistent with oxidative damage.</div>
-<div class="metric_column_def"><span>OXIDATION_ERROR_RATE: </span>The oxo error rate, calculated as max(ALT_OXO_BASES - ALT_NONOXO_BASES, 1) / TOTAL_BASES</div>
-<div class="metric_column_def"><span>OXIDATION_Q: </span>-10 * log10(OXIDATION_ERROR_RATE)</div>
-<div class="metric_column_def"><span>C_REF_REF_BASES: </span>The number of ref basecalls observed at sites where the genome reference == C.</div>
-<div class="metric_column_def"><span>G_REF_REF_BASES: </span>The number of ref basecalls observed at sites where the genome reference == G.</div>
-<div class="metric_column_def"><span>C_REF_ALT_BASES: </span>The number of alt (A/T) basecalls observed at sites where the genome reference == C.</div>
-<div class="metric_column_def"><span>G_REF_ALT_BASES: </span>The number of alt (A/T) basecalls observed at sites where the genome reference == G.</div>
-<div class="metric_column_def"><span>C_REF_OXO_ERROR_RATE: </span>The rate at which C>A and G>T substitutions are observed at C reference sites above the expected rate if there
- were no bias between sites with a C reference base vs. a G reference base.</div>
-<div class="metric_column_def"><span>C_REF_OXO_Q: </span>C_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</div>
-<div class="metric_column_def"><span>G_REF_OXO_ERROR_RATE: </span>The rate at which C>A and G>T substitutions are observed at G reference sites above the expected rate if there
- were no bias between sites with a C reference base vs. a G reference base.</div>
-<div class="metric_column_def"><span>G_REF_OXO_Q: </span>G_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</div>
-<a id="CollectQualityYieldMetrics.QualityYieldMetrics"
+<section>
+ <p>Metrics class for outputs.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed.</td></tr><tr><td>LIBRARY</td><td>The name of the library being assayed.</td></tr><tr><td>CONTEXT</td><td>The sequence context being reported on.</td></tr><tr><td>TOTAL_SITES</td><td>The total number of sites that had at least one base covering them.</td></tr><tr><td>TOTAL_BASES</td><td>The total number of basecalls observed at all sites.</td></tr><tr><td>REF_NONOXO_BASES</td><td>The number of reference alleles observed as C in read 1 and G in read 2.</td></tr><tr><td>REF_OXO_BASES</td><td>The number of reference alleles observed as G in read 1 and C in read 2.</td></tr><tr><td>REF_TOTAL_BASES</td><td>The total number of reference alleles observed</td></tr><tr><td>ALT_NONOXO_BASES</td><td>The count of observed A basecalls at C reference positions and T basecalls
+  at G reference bases that are correlated to instrument read number in a way
+  that rules out oxidation as the cause</td></tr><tr><td>ALT_OXO_BASES</td><td>The count of observed A basecalls at C reference positions and T basecalls
+  at G reference bases that are correlated to instrument read number in a way
+  that is consistent with oxidative damage.</td></tr><tr><td>OXIDATION_ERROR_RATE</td><td>The oxo error rate, calculated as max(ALT_OXO_BASES - ALT_NONOXO_BASES, 1) / TOTAL_BASES</td></tr><tr><td>OXIDATION_Q</td><td>-10 * log10(OXIDATION_ERROR_RATE)</td></tr><tr><td>C_REF_REF_BASES</td><td>The number of ref basecalls observed at sites where the genome reference == C.</td></tr><tr><td>G_REF_REF_BASES</td><td>The number of ref basecalls observed at sites where the genome reference == G.</td></tr><tr><td>C_REF_ALT_BASES</td><td>The number of alt (A/T) basecalls observed at sites where the genome reference == C.</td></tr><tr><td>G_REF_ALT_BASES</td><td>The number of alt (A/T) basecalls observed at sites where the genome reference == G.</td></tr><tr><td>C_REF_OXO_ERROR_RATE</td><td>The rate at which C>A and G>T substitutions are observed at C reference sites above the expected rate if there
+  were no bias between sites with a C reference base vs. a G reference base.</td></tr><tr><td>C_REF_OXO_Q</td><td>C_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</td></tr><tr><td>G_REF_OXO_ERROR_RATE</td><td>The rate at which C>A and G>T substitutions are observed at G reference sites above the expected rate if there
+  were no bias between sites with a C reference base vs. a G reference base.</td></tr><tr><td>G_REF_OXO_Q</td><td>G_REF_OXO_ERROR_RATE expressed as a phred-scaled quality score.</td></tr></table>
+</section>
+<a id="CollectQualityYieldMetrics.QualityYieldMetrics"></a>
 <h2>CollectQualityYieldMetrics.QualityYieldMetrics</h2>
-<p class="class_description">A set of metrics used to describe the general quality of a BAM file</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads in the input file</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of reads that are PF - pass filter</div>
-<div class="metric_column_def"><span>READ_LENGTH: </span>The average read length of all the reads (will be fixed for a lane)</div>
-<div class="metric_column_def"><span>TOTAL_BASES: </span>The total number of bases in all reads</div>
-<div class="metric_column_def"><span>PF_BASES: </span>The total number of bases in all PF reads</div>
-<div class="metric_column_def"><span>Q20_BASES: </span>The number of bases in all reads that achieve quality score 20 or higher</div>
-<div class="metric_column_def"><span>PF_Q20_BASES: </span>The number of bases in PF reads that achieve quality score 20 or higher</div>
-<div class="metric_column_def"><span>Q30_BASES: </span>The number of bases in all reads that achieve quality score 20 or higher</div>
-<div class="metric_column_def"><span>PF_Q30_BASES: </span>The number of bases in PF reads that achieve quality score 20 or higher</div>
-<div class="metric_column_def"><span>Q20_EQUIVALENT_YIELD: </span>The sum of quality scores of all bases divided by 20</div>
-<div class="metric_column_def"><span>PF_Q20_EQUIVALENT_YIELD: </span>The sum of quality scores of all bases divided by 20</div>
-<a id="CollectWgsMetrics.WgsMetrics"
+<section>
+ <p>A set of metrics used to describe the general quality of a BAM file</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>READ_LENGTH</td><td>The average read length of all the reads (will be fixed for a lane)</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>Q20_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q20_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q30_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q30_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr><tr><td>PF_Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr></table>
+</section>
+<a id="CollectWgsMetrics.WgsMetrics"></a>
 <h2>CollectWgsMetrics.WgsMetrics</h2>
-<p class="class_description">Metrics for evaluating the performance of whole genome sequencing experiments.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>GENOME_TERRITORY: </span>The number of non-N bases in the genome reference over which coverage will be evaluated.</div>
-<div class="metric_column_def"><span>MEAN_COVERAGE: </span>The mean coverage in bases of the genome territory, after all filters are applied.</div>
-<div class="metric_column_def"><span>SD_COVERAGE: </span>The standard deviation of coverage of the genome after all filters are applied.</div>
-<div class="metric_column_def"><span>MEDIAN_COVERAGE: </span>The median coverage in bases of the genome territory, after all filters are applied.</div>
-<div class="metric_column_def"><span>MAD_COVERAGE: </span>The median absolute deviation of coverage of the genome after all filters are applied.</div>
-<div class="metric_column_def"><span>PCT_EXC_MAPQ: </span>The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20).</div>
-<div class="metric_column_def"><span>PCT_EXC_DUPE: </span>The fraction of aligned bases that were filtered out because they were in reads marked as duplicates.</div>
-<div class="metric_column_def"><span>PCT_EXC_UNPAIRED: </span>The fraction of aligned bases that were filtered out because they were in reads without a mapped mate pair.</div>
-<div class="metric_column_def"><span>PCT_EXC_BASEQ: </span>The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20).</div>
-<div class="metric_column_def"><span>PCT_EXC_OVERLAP: </span>The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.</div>
-<div class="metric_column_def"><span>PCT_EXC_CAPPED: </span>The fraction of aligned bases that were filtered out because they would have raised coverage above the capped value (default cap = 250x).</div>
-<div class="metric_column_def"><span>PCT_EXC_TOTAL: </span>The total fraction of aligned bases excluded due to all filters.</div>
-<div class="metric_column_def"><span>PCT_5X: </span>The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_10X: </span>The fraction of bases that attained at least 10X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_15X: </span>The fraction of bases that attained at least 15X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_20X: </span>The fraction of bases that attained at least 20X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_25X: </span>The fraction of bases that attained at least 25X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_30X: </span>The fraction of bases that attained at least 30X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_40X: </span>The fraction of bases that attained at least 40X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_50X: </span>The fraction of bases that attained at least 50X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_60X: </span>The fraction of bases that attained at least 60X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_70X: </span>The fraction of bases that attained at least 70X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_80X: </span>The fraction of bases that attained at least 80X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_90X: </span>The fraction of bases that attained at least 90X sequence coverage in post-filtering bases.</div>
-<div class="metric_column_def"><span>PCT_100X: </span>The fraction of bases that attained at least 100X sequence coverage in post-filtering bases.</div>
-<a id="DuplicationMetrics"
+<section>
+ <p>Metrics for evaluating the performance of whole genome sequencing experiments.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>GENOME_TERRITORY</td><td>The number of non-N bases in the genome reference over which coverage will be evaluated.</td></tr><tr><td>MEAN_COVERAGE</td><td>The mean coverage in bases of the genome territory, after all filters are applied.</td></tr><tr><td>SD_COVERAGE</td><td>The standard deviation of coverage of the genome after all filters are applied.</td></tr><tr><td>MEDIAN_COVERAGE</td><td>The median coverage in bases of the genome territory, after all filters are applied.</td></tr><tr><td>MAD_COVERAGE</td><td>The median absolute deviation of coverage of the genome after all filters are applied.</td></tr><tr><td>PCT_EXC_MAPQ</td><td>The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20).</td></tr><tr><td>PCT_EXC_DUPE</td><td>The fraction of aligned bases that were filtered out because they were in reads marked as duplicates.</td></tr><tr><td>PCT_EXC_UNPAIRED</td><td>The fraction of aligned bases that were filtered out because they were in reads without a mapped mate pair.</td></tr><tr><td>PCT_EXC_BASEQ</td><td>The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20).</td></tr><tr><td>PCT_EXC_OVERLAP</td><td>The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.</td></tr><tr><td>PCT_EXC_CAPPED</td><td>The fraction of aligned bases that were filtered out because they would have raised coverage above the capped value (default cap = 250x).</td></tr><tr><td>PCT_EXC_TOTAL</td><td>The total fraction of aligned bases excluded due to all filters.</td></tr><tr><td>PCT_5X</td><td>The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_10X</td><td>The fraction of bases that attained at least 10X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_15X</td><td>The fraction of bases that attained at least 15X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_20X</td><td>The fraction of bases that attained at least 20X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_25X</td><td>The fraction of bases that attained at least 25X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_30X</td><td>The fraction of bases that attained at least 30X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_40X</td><td>The fraction of bases that attained at least 40X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_50X</td><td>The fraction of bases that attained at least 50X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_60X</td><td>The fraction of bases that attained at least 60X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_70X</td><td>The fraction of bases that attained at least 70X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_80X</td><td>The fraction of bases that attained at least 80X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_90X</td><td>The fraction of bases that attained at least 90X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_100X</td><td>The fraction of bases that attained at least 100X sequence coverage in post-filtering bases.</td></tr></table>
+</section>
+<a id="DuplicationMetrics"></a>
 <h2>DuplicationMetrics</h2>
-<p class="class_description">Metrics that are calculated during the process of marking duplicates
- within a stream of SAMRecords.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>LIBRARY: </span>The library on which the duplicate marking was performed.</div>
-<div class="metric_column_def"><span>UNPAIRED_READS_EXAMINED: </span>The number of mapped reads examined which did not have a mapped mate pair,
- either because the read is unpaired, or the read is paired to an unmapped mate.</div>
-<div class="metric_column_def"><span>READ_PAIRS_EXAMINED: </span>The number of mapped read pairs examined.</div>
-<div class="metric_column_def"><span>UNMAPPED_READS: </span>The total number of unmapped reads examined.</div>
-<div class="metric_column_def"><span>UNPAIRED_READ_DUPLICATES: </span>The number of fragments that were marked as duplicates.</div>
-<div class="metric_column_def"><span>READ_PAIR_DUPLICATES: </span>The number of read pairs that were marked as duplicates.</div>
-<div class="metric_column_def"><span>READ_PAIR_OPTICAL_DUPLICATES: </span>The number of read pairs duplicates that were caused by optical duplication.
- Value is always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.</div>
-<div class="metric_column_def"><span>PERCENT_DUPLICATION: </span>The percentage of mapped sequence that is marked as duplicate.</div>
-<div class="metric_column_def"><span>ESTIMATED_LIBRARY_SIZE: </span>The estimated number of unique molecules in the library based on PE duplication.</div>
-<a id="ExtractIlluminaBarcodes.BarcodeMetric"
+<section>
+ <p>Metrics that are calculated during the process of marking duplicates
+  within a stream of SAMRecords.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>LIBRARY</td><td>The library on which the duplicate marking was performed.</td></tr><tr><td>UNPAIRED_READS_EXAMINED</td><td>The number of mapped reads examined which did not have a mapped mate pair,
+  either because the read is unpaired, or the read is paired to an unmapped mate.</td></tr><tr><td>READ_PAIRS_EXAMINED</td><td>The number of mapped read pairs examined.</td></tr><tr><td>UNMAPPED_READS</td><td>The total number of unmapped reads examined.</td></tr><tr><td>UNPAIRED_READ_DUPLICATES</td><td>The number of fragments that were marked as duplicates.</td></tr><tr><td>READ_PAIR_DUPLICATES</td><td>The number of read pairs that were marked as duplicates.</td></tr><tr><td>READ_PAIR_OPTICAL_DUPLICATES</td><td>The number of read pairs duplicates that were caused by optical duplication.
+  Value is always < READ_PAIR_DUPLICATES, which counts all duplicates regardless of source.</td></tr><tr><td>PERCENT_DUPLICATION</td><td>The percentage of mapped sequence that is marked as duplicate.</td></tr><tr><td>ESTIMATED_LIBRARY_SIZE</td><td>The estimated number of unique molecules in the library based on PE duplication.</td></tr></table>
+</section>
+<a id="ExtractIlluminaBarcodes.BarcodeMetric"></a>
 <h2>ExtractIlluminaBarcodes.BarcodeMetric</h2>
-<p class="class_description">Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
- the basecalls directory and determine to which barcode each read should be assigned.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>BARCODE: </span>The barcode (from the set of expected barcodes) for which the following metrics apply.
- Note that the "symbolic" barcode of NNNNNN is used to report metrics for all reads that
- do not match a barcode.</div>
-<div class="metric_column_def"><span>BARCODE_NAME: </span></div>
-<div class="metric_column_def"><span>LIBRARY_NAME: </span></div>
-<div class="metric_column_def"><span>READS: </span>The total number of reads matching the barcode.</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of PF reads matching this barcode (always less than or equal to READS).</div>
-<div class="metric_column_def"><span>PERFECT_MATCHES: </span>The number of all reads matching this barcode that matched with 0 errors or no-calls.</div>
-<div class="metric_column_def"><span>PF_PERFECT_MATCHES: </span>The number of PF reads matching this barcode that matched with 0 errors or no-calls.</div>
-<div class="metric_column_def"><span>ONE_MISMATCH_MATCHES: </span>The number of all reads matching this barcode that matched with 1 error or no-call.</div>
-<div class="metric_column_def"><span>PF_ONE_MISMATCH_MATCHES: </span>The number of PF reads matching this barcode that matched with 1 error or no-call.</div>
-<div class="metric_column_def"><span>PCT_MATCHES: </span>The percentage of all reads in the lane that matched to this barcode.</div>
-<div class="metric_column_def"><span>RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT: </span>The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
- most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
- exception of when there are more orphan reads than for any other barcode, in which case the value
- may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
- in representation between barcodes.</div>
-<div class="metric_column_def"><span>PF_PCT_MATCHES: </span>The percentage of PF reads in the lane that matched to this barcode.</div>
-<div class="metric_column_def"><span>PF_RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT: </span>The rate of PF reads matching this barcode to PF reads matching the most prevelant barcode. For the
- most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
- exception of when there are more orphan reads than for any other barcode, in which case the value
- may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
- in representation of PF reads between barcodes.</div>
-<div class="metric_column_def"><span>PF_NORMALIZED_MATCHES: </span>The "normalized" matches to each barcode. This is calculated as the number of pf reads matching
- this barcode over the sum of all pf reads matching any barcode (excluding orphans). If all barcodes
- are represented equally this will be 1.</div>
-<a id="GcBiasDetailMetrics"
+<section>
+ <p>Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
+  the basecalls directory and determine to which barcode each read should be assigned.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>BARCODE</td><td>The barcode (from the set of expected barcodes) for which the following metrics apply.
+   Note that the "symbolic" barcode of NNNNNN is used to report metrics for all reads that
+   do not match a barcode.</td></tr><tr><td>BARCODE_NAME</td><td></td></tr><tr><td>LIBRARY_NAME</td><td></td></tr><tr><td>READS</td><td>The total number of reads matching the barcode.</td></tr><tr><td>PF_READS</td><td>The number of PF reads matching this barcode (always less than or equal to READS).</td></tr><tr><td>PERFECT_MATCHES</td><td>The number of all reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>PF_PERFECT_MATCHES</td><td>The number of PF reads matching this barcode that matched with 0 errors or no-calls.</td></tr><tr><td>ONE_MISMATCH_MATCHES</td><td>The number of all reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PF_ONE_MISMATCH_MATCHES</td><td>The number of PF reads matching this barcode that matched with 1 error or no-call.</td></tr><tr><td>PCT_MATCHES</td><td>The percentage of all reads in the lane that matched to this barcode.</td></tr><tr><td>RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT</td><td>The rate of all reads matching this barcode to all reads matching the most prevelant barcode. For the
+  most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+  exception of when there are more orphan reads than for any other barcode, in which case the value
+  may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
+  in representation between barcodes.</td></tr><tr><td>PF_PCT_MATCHES</td><td>The percentage of PF reads in the lane that matched to this barcode.</td></tr><tr><td>PF_RATIO_THIS_BARCODE_TO_BEST_BARCODE_PCT</td><td>The rate of PF reads matching this barcode to PF reads matching the most prevelant barcode. For the
+  most prevelant barcode this will be 1, for all others it will be less than 1 (except for the possible
+  exception of when there are more orphan reads than for any other barcode, in which case the value
+  may be arbitrarily large).  One over the lowest number in this column gives you the fold-difference
+  in representation of PF reads between barcodes.</td></tr><tr><td>PF_NORMALIZED_MATCHES</td><td>The "normalized" matches to each barcode. This is calculated as the number of pf reads matching
+  this barcode over the sum of all pf reads matching any barcode (excluding orphans). If all barcodes
+  are represented equally this will be 1.</td></tr></table>
+</section>
+<a id="GcBiasDetailMetrics"></a>
 <h2>GcBiasDetailMetrics</h2>
-<p class="class_description">Class that holds detailed metrics about reads that fall within windows of a certain
- GC bin on the reference genome.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>GC: </span>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100%</div>
-<div class="metric_column_def"><span>WINDOWS: </span>The number of windows on the reference genome that have this G+C content.</div>
-<div class="metric_column_def"><span>READ_STARTS: </span>The number of reads whose start position is at the start of a window of this GC.</div>
-<div class="metric_column_def"><span>MEAN_BASE_QUALITY: </span>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC.</div>
-<div class="metric_column_def"><span>NORMALIZED_COVERAGE: </span>The ration of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
- 1 represents mean coverage, a number less than one represents lower than mean coverage (e.g. 0.5
- means half as much coverage as average) while a number greater than one represents higher than
- mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).</div>
-<div class="metric_column_def"><span>ERROR_BAR_WIDTH: </span>The radius of error bars in this bin based on the number of observations made. For example if
- the normalized coverage is 0.75 and the error bar width is 0.1 then the error bars would be
- drawn from 0.65 to 0.85.</div>
-<a id="GcBiasSummaryMetrics"
+<section>
+ <p>Class that holds detailed metrics about reads that fall within windows of a certain
+  GC bin on the reference genome.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>GC</td><td>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100%</td></tr><tr><td>WINDOWS</td><td>The number of windows on the reference genome that have this G+C content.</td></tr><tr><td>READ_STARTS</td><td>The number of reads whose start position is at the start of a window of this GC.</td></tr><tr><td>MEAN_BASE_QUALITY</td><td>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC.</td></tr><tr><td>NORMALIZED_COVERAGE</td><td>The ration of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
+  1 represents mean coverage, a number less than one represents lower than mean coverage (e.g. 0.5
+  means half as much coverage as average) while a number greater than one represents higher than
+  mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).</td></tr><tr><td>ERROR_BAR_WIDTH</td><td>The radius of error bars in this bin based on the number of observations made. For example if
+  the normalized coverage is 0.75 and the error bar width is 0.1 then the error bars would be
+  drawn from 0.65 to 0.85.</td></tr></table>
+</section>
+<a id="GcBiasSummaryMetrics"></a>
 <h2>GcBiasSummaryMetrics</h2>
-<p class="class_description">High level metrics that capture how biased the coverage in a certain lane is.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>WINDOW_SIZE: </span>The window size on the genome used to calculate the GC of the sequence.</div>
-<div class="metric_column_def"><span>TOTAL_CLUSTERS: </span>The total number of clusters that were seen in the gc bias calculation.</div>
-<div class="metric_column_def"><span>ALIGNED_READS: </span>The total number of aligned reads used to compute the gc bias metrics.</div>
-<div class="metric_column_def"><span>AT_DROPOUT: </span>Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
- (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].</div>
-<div class="metric_column_def"><span>GC_DROPOUT: </span>Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
- (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].</div>
-<a id="GenotypeConcordanceContingencyMetrics"
+<section>
+ <p>High level metrics that capture how biased the coverage in a certain lane is.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>WINDOW_SIZE</td><td>The window size on the genome used to calculate the GC of the sequence.</td></tr><tr><td>TOTAL_CLUSTERS</td><td>The total number of clusters that were seen in the gc bias calculation.</td></tr><tr><td>ALIGNED_READS</td><td>The total number of aligned reads used to compute the gc bias metrics.</td></tr><tr><td>AT_DROPOUT</td><td>Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
+  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].</td></tr><tr><td>GC_DROPOUT</td><td>Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
+  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].</td></tr></table>
+</section>
+<a id="GenotypeConcordanceContingencyMetrics"></a>
 <h2>GenotypeConcordanceContingencyMetrics</h2>
-<p class="class_description">Class that holds metrics about the Genotype Concordance contingency tables.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>VARIANT_TYPE: </span>The type of the event (i.e. either SNP or INDEL)</div>
-<div class="metric_column_def"><span>TRUTH_SAMPLE: </span>The name of the 'truth' sample</div>
-<div class="metric_column_def"><span>CALL_SAMPLE: </span>The name of the 'call' sample</div>
-<div class="metric_column_def"><span>TP_COUNT: </span>The TP (true positive) count across all variants</div>
-<div class="metric_column_def"><span>TN_COUNT: </span>The TN (true negative) count across all variants</div>
-<div class="metric_column_def"><span>FP_COUNT: </span>The FP (false positive) count across all variants</div>
-<div class="metric_column_def"><span>FN_COUNT: </span>The FN (false negative) count across all variants</div>
-<div class="metric_column_def"><span>EMPTY_COUNT: </span>The empty (no contingency info) count across all variants</div>
-<a id="GenotypeConcordanceDetailMetrics"
+<section>
+ <p>Class that holds metrics about the Genotype Concordance contingency tables.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>VARIANT_TYPE</td><td>The type of the event (i.e. either SNP or INDEL)</td></tr><tr><td>TRUTH_SAMPLE</td><td>The name of the 'truth' sample</td></tr><tr><td>CALL_SAMPLE</td><td>The name of the 'call' sample</td></tr><tr><td>TP_COUNT</td><td>The TP (true positive) count across all variants</td></tr><tr><td>TN_COUNT</td><td>The TN (true negative) count across all variants</td></tr><tr><td>FP_COUNT</td><td>The FP (false positive) count across all variants</td></tr><tr><td>FN_COUNT</td><td>The FN (false negative) count across all variants</td></tr><tr><td>EMPTY_COUNT</td><td>The empty (no contingency info) count across all variants</td></tr></table>
+</section>
+<a id="GenotypeConcordanceDetailMetrics"></a>
 <h2>GenotypeConcordanceDetailMetrics</h2>
-<p class="class_description">Class that holds detail metrics about Genotype Concordance</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>VARIANT_TYPE: </span>The type of the event (i.e. either SNP or INDEL)</div>
-<div class="metric_column_def"><span>TRUTH_SAMPLE: </span>The name of the 'truth' sample</div>
-<div class="metric_column_def"><span>CALL_SAMPLE: </span>The name of the 'call' sample</div>
-<div class="metric_column_def"><span>TRUTH_STATE: </span>The state of the 'truth' sample (i.e. HOM_REF, HET_REF_VAR1, HET_VAR1_VAR2...)</div>
-<div class="metric_column_def"><span>CALL_STATE: </span>The state of the 'call' sample (i.e. HOM_REF, HET_REF_VAR1...)</div>
-<div class="metric_column_def"><span>COUNT: </span>The number of events of type TRUTH_STATE and CALL_STATE for the EVENT_TYPE and SAMPLEs</div>
-<div class="metric_column_def"><span>CONTINGENCY_VALUES: </span>The list of contingency table values (TP, TN, FP, FN) that are deduced from the truth/call state comparison, given the reference.
+<section>
+ <p>Class that holds detail metrics about Genotype Concordance</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>VARIANT_TYPE</td><td>The type of the event (i.e. either SNP or INDEL)</td></tr><tr><td>TRUTH_SAMPLE</td><td>The name of the 'truth' sample</td></tr><tr><td>CALL_SAMPLE</td><td>The name of the 'call' sample</td></tr><tr><td>TRUTH_STATE</td><td>The state of the 'truth' sample (i.e. HOM_REF, HET_REF_VAR1, HET_VAR1_VAR2...)</td></tr><tr><td>CALL_STATE</td><td>The state of the 'call' sample (i.e. HOM_REF, HET_REF_VAR1...)</td></tr><tr><td>COUNT</td><td>The number of events of type TRUTH_STATE and CALL_STATE for the EVENT_TYPE and SAMPLEs</td></tr><tr><td>CONTINGENCY_VALUES</td><td>The list of contingency table values (TP, TN, FP, FN) that are deduced from the truth/call state comparison, given the reference.
 
- In general, we are comparing two sets of alleles.  Therefore, we can have zero or more contingency table values represented in one comparison.  For example, if the truthset is
- a heterozygous call with both alleles non-reference (HET_VAR1_VAR2), and the callset is a heterozygous call with both alleles non-reference with one of the alternate alleles
- matching an alternate allele in the callset, we would have a true positive, false positive, and false negative.  The true positive is from the matching alternate alleles, the
- false positive is the alternate allele found in the callset but not found in the truthset, and the false negative is the alternate in the truthset not found in the callset.
+  In general, we are comparing two sets of alleles.  Therefore, we can have zero or more contingency table values represented in one comparison.  For example, if the truthset is
+  a heterozygous call with both alleles non-reference (HET_VAR1_VAR2), and the callset is a heterozygous call with both alleles non-reference with one of the alternate alleles
+  matching an alternate allele in the callset, we would have a true positive, false positive, and false negative.  The true positive is from the matching alternate alleles, the
+  false positive is the alternate allele found in the callset but not found in the truthset, and the false negative is the alternate in the truthset not found in the callset.
 
- We also include a true negative in cases where the reference allele is found in both the truthset and callset.</div>
-<a id="GenotypeConcordanceSummaryMetrics"
+  We also include a true negative in cases where the reference allele is found in both the truthset and callset.</td></tr></table>
+</section>
+<a id="GenotypeConcordanceSummaryMetrics"></a>
 <h2>GenotypeConcordanceSummaryMetrics</h2>
-<p class="class_description">Class that holds summary metrics about Genotype Concordance</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>VARIANT_TYPE: </span>The type of the event (i.e. either SNP or INDEL)</div>
-<div class="metric_column_def"><span>TRUTH_SAMPLE: </span>The name of the 'truth' sample</div>
-<div class="metric_column_def"><span>CALL_SAMPLE: </span>The name of the 'call' sample</div>
-<div class="metric_column_def"><span>HET_SENSITIVITY: </span>The sensitivity for all heterozygous variants (Sensitivity is TP / (TP + FN))</div>
-<div class="metric_column_def"><span>HET_PPV: </span>The ppv (positive predictive value) for all heterozygous variants (PPV is the TP / (TP + FP))</div>
-<div class="metric_column_def"><span>HET_SPECIFICITY: </span>The specificity for all heterozygous variants (Specificity is TN / (FP + TN))</div>
-<div class="metric_column_def"><span>HOMVAR_SENSITIVITY: </span>The sensitivity for all homozygous variants (Sensitivity is TP / (TP + FN))</div>
-<div class="metric_column_def"><span>HOMVAR_PPV: </span>The ppv (positive predictive value) for all homozygous variants (PPV is the TP / (TP + FP))</div>
-<div class="metric_column_def"><span>HOMVAR_SPECIFICITY: </span>The specificity for all homozygous variants (Specificity is TN / (FP + TN))</div>
-<div class="metric_column_def"><span>VAR_SENSITIVITY: </span>The sensitivity for all (heterozygous and homozygous) variants (Sensitivity is TP / (TP + FN))</div>
-<div class="metric_column_def"><span>VAR_PPV: </span>The ppv (positive predictive value) for all (heterozygous and homozygous) variants (PPV is the TP / (TP + FP))</div>
-<div class="metric_column_def"><span>VAR_SPECIFICITY: </span>The specificity for all (heterozygous and homozygous) variants (Specificity is TN / (FP + TN))</div>
-<a id="HsMetrics"
+<section>
+ <p>Class that holds summary metrics about Genotype Concordance</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>VARIANT_TYPE</td><td>The type of the event (i.e. either SNP or INDEL)</td></tr><tr><td>TRUTH_SAMPLE</td><td>The name of the 'truth' sample</td></tr><tr><td>CALL_SAMPLE</td><td>The name of the 'call' sample</td></tr><tr><td>HET_SENSITIVITY</td><td>The sensitivity for all heterozygous variants (Sensitivity is TP / (TP + FN))</td></tr><tr><td>HET_PPV</td><td>The ppv (positive predictive value) for all heterozygous variants (PPV is the TP / (TP + FP))</td></tr><tr><td>HET_SPECIFICITY</td><td>The specificity for all heterozygous variants (Specificity is TN / (FP + TN))</td></tr><tr><td>HOMVAR_SENSITIVITY</td><td>The sensitivity for all homozygous variants (Sensitivity is TP / (TP + FN))</td></tr><tr><td>HOMVAR_PPV</td><td>The ppv (positive predictive value) for all homozygous variants (PPV is the TP / (TP + FP))</td></tr><tr><td>HOMVAR_SPECIFICITY</td><td>The specificity for all homozygous variants (Specificity is TN / (FP + TN))</td></tr><tr><td>VAR_SENSITIVITY</td><td>The sensitivity for all (heterozygous and homozygous) variants (Sensitivity is TP / (TP + FN))</td></tr><tr><td>VAR_PPV</td><td>The ppv (positive predictive value) for all (heterozygous and homozygous) variants (PPV is the TP / (TP + FP))</td></tr><tr><td>VAR_SPECIFICITY</td><td>The specificity for all (heterozygous and homozygous) variants (Specificity is TN / (FP + TN))</td></tr></table>
+</section>
+<a id="HsMetrics"></a>
 <h2>HsMetrics</h2>
-<p class="class_description">The set of metrics captured that are specific to a hybrid selection analysis.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>BAIT_SET: </span>The name of the bait set used in the hybrid selection.</div>
-<div class="metric_column_def"><span>GENOME_SIZE: </span>The number of bases in the reference genome used for alignment.</div>
-<div class="metric_column_def"><span>BAIT_TERRITORY: </span>The number of bases which have one or more baits on top of them.</div>
-<div class="metric_column_def"><span>TARGET_TERRITORY: </span>The unique number of target bases in the experiment where target is usually exons etc.</div>
-<div class="metric_column_def"><span>BAIT_DESIGN_EFFICIENCY: </span>Target terrirtoy / bait territory.  1 == perfectly efficient, 0.5 = half of baited bases are not target.</div>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads in the SAM or BAM file examine.</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of reads that pass the vendor's filter.</div>
-<div class="metric_column_def"><span>PF_UNIQUE_READS: </span>The number of PF reads that are not marked as duplicates.</div>
-<div class="metric_column_def"><span>PCT_PF_READS: </span>PF reads / total reads.  The percent of reads passing filter.</div>
-<div class="metric_column_def"><span>PCT_PF_UQ_READS: </span>PF Unique Reads / Total Reads.</div>
-<div class="metric_column_def"><span>PF_UQ_READS_ALIGNED: </span>The number of PF unique reads that are aligned with mapping score > 0 to the reference genome.</div>
-<div class="metric_column_def"><span>PCT_PF_UQ_READS_ALIGNED: </span>PF Reads Aligned / PF Reads.</div>
-<div class="metric_column_def"><span>PF_UQ_BASES_ALIGNED: </span>The number of bases in the PF aligned reads that are mapped to a reference base. Accounts for clipping and gaps.</div>
-<div class="metric_column_def"><span>ON_BAIT_BASES: </span>The number of PF aligned bases that mapped to a baited region of the genome.</div>
-<div class="metric_column_def"><span>NEAR_BAIT_BASES: </span>The number of PF aligned bases that mapped to within a fixed interval of a baited region, but not on a baited region.</div>
-<div class="metric_column_def"><span>OFF_BAIT_BASES: </span>The number of PF aligned bases that mapped to neither on or near a bait.</div>
-<div class="metric_column_def"><span>ON_TARGET_BASES: </span>The number of PF aligned bases that mapped to a targeted region of the genome.</div>
-<div class="metric_column_def"><span>PCT_SELECTED_BASES: </span>On+Near Bait Bases / PF Bases Aligned.</div>
-<div class="metric_column_def"><span>PCT_OFF_BAIT: </span>The percentage of aligned PF bases that mapped neither on or near a bait.</div>
-<div class="metric_column_def"><span>ON_BAIT_VS_SELECTED: </span>The percentage of on+near bait bases that are on as opposed to near.</div>
-<div class="metric_column_def"><span>MEAN_BAIT_COVERAGE: </span>The mean coverage of all baits in the experiment.</div>
-<div class="metric_column_def"><span>MEAN_TARGET_COVERAGE: </span>The mean coverage of targets that received at least coverage depth = 2 at one base.</div>
-<div class="metric_column_def"><span>PCT_USABLE_BASES_ON_BAIT: </span>The number of aligned, de-duped, on-bait bases out of the PF bases available.</div>
-<div class="metric_column_def"><span>PCT_USABLE_BASES_ON_TARGET: </span>The number of aligned, de-duped, on-target bases out of the PF bases available.</div>
-<div class="metric_column_def"><span>FOLD_ENRICHMENT: </span>The fold by which the baited region has been amplified above genomic background.</div>
-<div class="metric_column_def"><span>ZERO_CVG_TARGETS_PCT: </span>The number of targets that did not reach coverage=2 over any base.</div>
-<div class="metric_column_def"><span>FOLD_80_BASE_PENALTY: </span>The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
- the mean coverage level in those targets.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_2X: </span>The percentage of ALL target bases achieving 2X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_10X: </span>The percentage of ALL target bases achieving 10X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_20X: </span>The percentage of ALL target bases achieving 20X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_30X: </span>The percentage of ALL target bases achieving 30X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_40X: </span>The percentage of ALL target bases achieving 40X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_50X: </span>The percentage of ALL target bases achieving 50X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_100X: </span>The percentage of ALL target bases achieving 100X or greater coverage.</div>
-<div class="metric_column_def"><span>HS_LIBRARY_SIZE: </span>The estimated number of unique molecules in the selected part of the library.</div>
-<div class="metric_column_def"><span>HS_PENALTY_10X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.</div>
-<div class="metric_column_def"><span>HS_PENALTY_20X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 20X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.</div>
-<div class="metric_column_def"><span>HS_PENALTY_30X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 30X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.</div>
-<div class="metric_column_def"><span>HS_PENALTY_40X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 40X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.</div>
-<div class="metric_column_def"><span>HS_PENALTY_50X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 50X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.</div>
-<div class="metric_column_def"><span>HS_PENALTY_100X: </span>The "hybrid selection penalty" incurred to get 80% of target bases to 100X. This metric
- should be interpreted as: if I have a design with 10 megabases of target, and want to get
- 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.</div>
-<div class="metric_column_def"><span>AT_DROPOUT: </span>A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
- we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
- AT DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
- reads that should have mapped to GC<=50% regions mapped elsewhere.</div>
-<div class="metric_column_def"><span>GC_DROPOUT: </span>A measure of how undercovered >= 50% GC regions are relative to the mean. For each GC bin [50..100]
- we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
- GC DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
- reads that should have mapped to GC>=50% regions mapped elsewhere.</div>
-<a id="IlluminaBasecallingMetrics"
+<section>
+ <p>The set of metrics captured that are specific to a hybrid selection analysis.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>BAIT_SET</td><td>The name of the bait set used in the hybrid selection.</td></tr><tr><td>GENOME_SIZE</td><td>The number of bases in the reference genome used for alignment.</td></tr><tr><td>BAIT_TERRITORY</td><td>The number of bases which have one or more baits on top of them.</td></tr><tr><td>TARGET_TERRITORY</td><td>The unique number of target bases in the experiment where target is usually exons etc.</td></tr><tr><td>BAIT_DESIGN_EFFICIENCY</td><td>Target terrirtoy / bait territory.  1 == perfectly efficient, 0.5 = half of baited bases are not target.</td></tr><tr><td>TOTAL_READS</td><td>The total number of reads in the SAM or BAM file examine.</td></tr><tr><td>PF_READS</td><td>The number of reads that pass the vendor's filter.</td></tr><tr><td>PF_UNIQUE_READS</td><td>The number of PF reads that are not marked as duplicates.</td></tr><tr><td>PCT_PF_READS</td><td>PF reads / total reads.  The percent of reads passing filter.</td></tr><tr><td>PCT_PF_UQ_READS</td><td>PF Unique Reads / Total Reads.</td></tr><tr><td>PF_UQ_READS_ALIGNED</td><td>The number of PF unique reads that are aligned with mapping score > 0 to the reference genome.</td></tr><tr><td>PCT_PF_UQ_READS_ALIGNED</td><td>PF Reads Aligned / PF Reads.</td></tr><tr><td>PF_UQ_BASES_ALIGNED</td><td>The number of bases in the PF aligned reads that are mapped to a reference base. Accounts for clipping and gaps.</td></tr><tr><td>ON_BAIT_BASES</td><td>The number of PF aligned bases that mapped to a baited region of the genome.</td></tr><tr><td>NEAR_BAIT_BASES</td><td>The number of PF aligned bases that mapped to within a fixed interval of a baited region, but not on a baited region.</td></tr><tr><td>OFF_BAIT_BASES</td><td>The number of PF aligned bases that mapped to neither on or near a bait.</td></tr><tr><td>ON_TARGET_BASES</td><td>The number of PF aligned bases that mapped to a targeted region of the genome.</td></tr><tr><td>PCT_SELECTED_BASES</td><td>On+Near Bait Bases / PF Bases Aligned.</td></tr><tr><td>PCT_OFF_BAIT</td><td>The percentage of aligned PF bases that mapped neither on or near a bait.</td></tr><tr><td>ON_BAIT_VS_SELECTED</td><td>The percentage of on+near bait bases that are on as opposed to near.</td></tr><tr><td>MEAN_BAIT_COVERAGE</td><td>The mean coverage of all baits in the experiment.</td></tr><tr><td>MEAN_TARGET_COVERAGE</td><td>The mean coverage of targets that received at least coverage depth = 2 at one base.</td></tr><tr><td>PCT_USABLE_BASES_ON_BAIT</td><td>The number of aligned, de-duped, on-bait bases out of the PF bases available.</td></tr><tr><td>PCT_USABLE_BASES_ON_TARGET</td><td>The number of aligned, de-duped, on-target bases out of the PF bases available.</td></tr><tr><td>FOLD_ENRICHMENT</td><td>The fold by which the baited region has been amplified above genomic background.</td></tr><tr><td>ZERO_CVG_TARGETS_PCT</td><td>The number of targets that did not reach coverage=2 over any base.</td></tr><tr><td>FOLD_80_BASE_PENALTY</td><td>The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
+  the mean coverage level in those targets.</td></tr><tr><td>PCT_TARGET_BASES_2X</td><td>The percentage of ALL target bases achieving 2X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_10X</td><td>The percentage of ALL target bases achieving 10X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_20X</td><td>The percentage of ALL target bases achieving 20X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_30X</td><td>The percentage of ALL target bases achieving 30X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_40X</td><td>The percentage of ALL target bases achieving 40X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_50X</td><td>The percentage of ALL target bases achieving 50X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_100X</td><td>The percentage of ALL target bases achieving 100X or greater coverage.</td></tr><tr><td>HS_LIBRARY_SIZE</td><td>The estimated number of unique molecules in the selected part of the library.</td></tr><tr><td>HS_PENALTY_10X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 10X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.</td></tr><tr><td>HS_PENALTY_20X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 20X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.</td></tr><tr><td>HS_PENALTY_30X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 30X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.</td></tr><tr><td>HS_PENALTY_40X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 40X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.</td></tr><tr><td>HS_PENALTY_50X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 50X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.</td></tr><tr><td>HS_PENALTY_100X</td><td>The "hybrid selection penalty" incurred to get 80% of target bases to 100X. This metric
+  should be interpreted as: if I have a design with 10 megabases of target, and want to get
+  100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.</td></tr><tr><td>AT_DROPOUT</td><td>A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
+  we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
+  AT DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+  reads that should have mapped to GC<=50% regions mapped elsewhere.</td></tr><tr><td>GC_DROPOUT</td><td>A measure of how undercovered >= 50% GC regions are relative to the mean. For each GC bin [50..100]
+  we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
+  GC DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+  reads that should have mapped to GC>=50% regions mapped elsewhere.</td></tr></table>
+</section>
+<a id="IlluminaBasecallingMetrics"></a>
 <h2>IlluminaBasecallingMetrics</h2>
-<p class="class_description">Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.  Averages
- and means are taken over all tiles.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>LANE: </span>The lane for which the metrics were calculated.</div>
-<div class="metric_column_def"><span>MOLECULAR_BARCODE_SEQUENCE_1: </span>The barcode sequence for which the metrics were calculated.</div>
-<div class="metric_column_def"><span>MOLECULAR_BARCODE_NAME: </span>The barcode name for which the metrics were calculated.</div>
-<div class="metric_column_def"><span>TOTAL_BASES: </span>The total number of bases assigned to the index.</div>
-<div class="metric_column_def"><span>PF_BASES: </span>The total number of passing-filter bases assigned to the index.</div>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads assigned to the index.</div>
-<div class="metric_column_def"><span>PF_READS: </span>The total number of passing-filter reads assigned to the index.</div>
-<div class="metric_column_def"><span>TOTAL_CLUSTERS: </span>The total number of clusters assigned to the index.</div>
-<div class="metric_column_def"><span>PF_CLUSTERS: </span>The total number of PF clusters assigned to the index.</div>
-<div class="metric_column_def"><span>MEAN_CLUSTERS_PER_TILE: </span>The mean number of clusters per tile.</div>
-<div class="metric_column_def"><span>SD_CLUSTERS_PER_TILE: </span>The standard deviation of clusters per tile.</div>
-<div class="metric_column_def"><span>MEAN_PCT_PF_CLUSTERS_PER_TILE: </span>The mean percentage of pf clusters per tile.</div>
-<div class="metric_column_def"><span>SD_PCT_PF_CLUSTERS_PER_TILE: </span>The standard deviation in percentage of pf clusters per tile.</div>
-<div class="metric_column_def"><span>MEAN_PF_CLUSTERS_PER_TILE: </span>The mean number of pf clusters per tile.</div>
-<div class="metric_column_def"><span>SD_PF_CLUSTERS_PER_TILE: </span>The standard deviation in number of pf clusters per tile.</div>
-<a id="IlluminaLaneMetrics"
+<section>
+ <p>Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.  Averages
+  and means are taken over all tiles.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>LANE</td><td>The lane for which the metrics were calculated.</td></tr><tr><td>MOLECULAR_BARCODE_SEQUENCE_1</td><td>The barcode sequence for which the metrics were calculated.</td></tr><tr><td>MOLECULAR_BARCODE_NAME</td><td>The barcode name for which the metrics were calculated.</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases assigned to the index.</td></tr><tr><td>PF_BASES</td><td>The total number of passing-filter bases assigned to the index.</td></tr><tr><td>TOTAL_READS</td><td>The total number of reads assigned to the index.</td></tr><tr><td>PF_READS</td><td>The total number of passing-filter reads assigned to the index.</td></tr><tr><td>TOTAL_CLUSTERS</td><td>The total number of clusters assigned to the index.</td></tr><tr><td>PF_CLUSTERS</td><td>The total number of PF clusters assigned to the index.</td></tr><tr><td>MEAN_CLUSTERS_PER_TILE</td><td>The mean number of clusters per tile.</td></tr><tr><td>SD_CLUSTERS_PER_TILE</td><td>The standard deviation of clusters per tile.</td></tr><tr><td>MEAN_PCT_PF_CLUSTERS_PER_TILE</td><td>The mean percentage of pf clusters per tile.</td></tr><tr><td>SD_PCT_PF_CLUSTERS_PER_TILE</td><td>The standard deviation in percentage of pf clusters per tile.</td></tr><tr><td>MEAN_PF_CLUSTERS_PER_TILE</td><td>The mean number of pf clusters per tile.</td></tr><tr><td>SD_PF_CLUSTERS_PER_TILE</td><td>The standard deviation in number of pf clusters per tile.</td></tr></table>
+</section>
+<a id="IlluminaLaneMetrics"></a>
 <h2>IlluminaLaneMetrics</h2>
-<p class="class_description">Embodies characteristics that describe a lane.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>CLUSTER_DENSITY: </span>The number of clusters per unit area on the this lane expressed in units of [cluster / mm^2].</div>
-<div class="metric_column_def"><span>LANE: </span>This lane's number.</div>
-<a id="IlluminaPhasingMetrics"
+<section>
+ <p>Embodies characteristics that describe a lane.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>CLUSTER_DENSITY</td><td>The number of clusters per unit area on the this lane expressed in units of [cluster / mm^2].</td></tr><tr><td>LANE</td><td>This lane's number.</td></tr></table>
+</section>
+<a id="IlluminaPhasingMetrics"></a>
 <h2>IlluminaPhasingMetrics</h2>
-<p class="class_description">Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.
- For each lane/template read # (i.e. FIRST, SECOND) combination we will store the median values of both the phasing and prephasing
- values for every tile in that lane/template read pair.</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>LANE: </span></div>
-<div class="metric_column_def"><span>TYPE_NAME: </span></div>
-<div class="metric_column_def"><span>PHASING_APPLIED: </span></div>
-<div class="metric_column_def"><span>PREPHASING_APPLIED: </span></div>
-<a id="InsertSizeMetrics"
+<section>
+ <p>Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.
+  For each lane/template read # (i.e. FIRST, SECOND) combination we will store the median values of both the phasing and prephasing
+  values for every tile in that lane/template read pair.</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>LANE</td><td></td></tr><tr><td>TYPE_NAME</td><td></td></tr><tr><td>PHASING_APPLIED</td><td></td></tr><tr><td>PREPHASING_APPLIED</td><td></td></tr></table>
+</section>
+<a id="InsertSizeMetrics"></a>
 <h2>InsertSizeMetrics</h2>
-<p class="class_description">Metrics about the insert size distribution of a paired-end library, created by the
- CollectInsertSizeMetrics program and usually written to a file with the extension
- ".insert_size_metrics".  In addition the insert size distribution is plotted to
- a file with the extension ".insert_size_Histogram.pdf".</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>MEDIAN_INSERT_SIZE: </span>The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome.</div>
-<div class="metric_column_def"><span>MEDIAN_ABSOLUTE_DEVIATION: </span>The median absolute deviation of the distribution.  If the distribution is essentially normal then
- the standard deviation can be estimated as ~1.4826 * MAD.</div>
-<div class="metric_column_def"><span>MIN_INSERT_SIZE: </span>The minimum measured insert size.  This is usually 1 and not very useful as it is likely artifactual.</div>
-<div class="metric_column_def"><span>MAX_INSERT_SIZE: </span>The maximum measure insert size by alignment. This is usually very high representing either an artifact
- or possibly the presence of a structural re-arrangement.</div>
-<div class="metric_column_def"><span>MEAN_INSERT_SIZE: </span>The mean insert size of the "core" of the distribution. Artefactual outliers in the distribution often
- cause calculation of nonsensical mean and stdev values.  To avoid this the distribution is first trimmed
- to a "core" distribution of +/- N median absolute deviations around the median insert size. By default
- N=10, but this is configurable.</div>
-<div class="metric_column_def"><span>STANDARD_DEVIATION: </span>Standard deviation of insert sizes over the "core" of the distribution.</div>
-<div class="metric_column_def"><span>READ_PAIRS: </span>The total number of read pairs that were examined in the entire distribution.</div>
-<div class="metric_column_def"><span>PAIR_ORIENTATION: </span>The pair orientation of the reads in this data category.</div>
-<div class="metric_column_def"><span>WIDTH_OF_10_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 10% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_20_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 20% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_30_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 30% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_40_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 40% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_50_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 50% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_60_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 60% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_70_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 70% of all read pairs.
- This metric divided by 2 should approximate the standard deviation when the insert size
- distribution is a normal distribution.</div>
-<div class="metric_column_def"><span>WIDTH_OF_80_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 80% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_90_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 90% of all read pairs.</div>
-<div class="metric_column_def"><span>WIDTH_OF_99_PERCENT: </span>The "width" of the bins, centered around the median, that encompass 100% of all read pairs.</div>
-<a id="JumpingLibraryMetrics"
+<section>
+ <p>Metrics about the insert size distribution of a paired-end library, created by the
+  CollectInsertSizeMetrics program and usually written to a file with the extension
+  ".insert_size_metrics".  In addition the insert size distribution is plotted to
+  a file with the extension ".insert_size_Histogram.pdf".</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>MEDIAN_INSERT_SIZE</td><td>The MEDIAN insert size of all paired end reads where both ends mapped to the same chromosome.</td></tr><tr><td>MEDIAN_ABSOLUTE_DEVIATION</td><td>The median absolute deviation of the distribution.  If the distribution is essentially normal then
+  the standard deviation can be estimated as ~1.4826 * MAD.</td></tr><tr><td>MIN_INSERT_SIZE</td><td>The minimum measured insert size.  This is usually 1 and not very useful as it is likely artifactual.</td></tr><tr><td>MAX_INSERT_SIZE</td><td>The maximum measure insert size by alignment. This is usually very high representing either an artifact
+  or possibly the presence of a structural re-arrangement.</td></tr><tr><td>MEAN_INSERT_SIZE</td><td>The mean insert size of the "core" of the distribution. Artefactual outliers in the distribution often
+  cause calculation of nonsensical mean and stdev values.  To avoid this the distribution is first trimmed
+  to a "core" distribution of +/- N median absolute deviations around the median insert size. By default
+  N=10, but this is configurable.</td></tr><tr><td>STANDARD_DEVIATION</td><td>Standard deviation of insert sizes over the "core" of the distribution.</td></tr><tr><td>READ_PAIRS</td><td>The total number of read pairs that were examined in the entire distribution.</td></tr><tr><td>PAIR_ORIENTATION</td><td>The pair orientation of the reads in this data category.</td></tr><tr><td>WIDTH_OF_10_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 10% of all read pairs.</td></tr><tr><td>WIDTH_OF_20_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 20% of all read pairs.</td></tr><tr><td>WIDTH_OF_30_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 30% of all read pairs.</td></tr><tr><td>WIDTH_OF_40_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 40% of all read pairs.</td></tr><tr><td>WIDTH_OF_50_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 50% of all read pairs.</td></tr><tr><td>WIDTH_OF_60_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 60% of all read pairs.</td></tr><tr><td>WIDTH_OF_70_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 70% of all read pairs.
+  This metric divided by 2 should approximate the standard deviation when the insert size
+  distribution is a normal distribution.</td></tr><tr><td>WIDTH_OF_80_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 80% of all read pairs.</td></tr><tr><td>WIDTH_OF_90_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 90% of all read pairs.</td></tr><tr><td>WIDTH_OF_99_PERCENT</td><td>The "width" of the bins, centered around the median, that encompass 100% of all read pairs.</td></tr></table>
+</section>
+<a id="JumpingLibraryMetrics"></a>
 <h2>JumpingLibraryMetrics</h2>
-<p class="class_description">High level metrics about the presence of  outward- and inward-facing pairs
- within a SAM file generated with a jumping library, produced by
- the CollectJumpingLibraryMetrics program and usually stored in a file with
- the extension ".jump_metrics".</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>JUMP_PAIRS: </span>The number of outward-facing pairs in the SAM file</div>
-<div class="metric_column_def"><span>JUMP_DUPLICATE_PAIRS: </span>The number of outward-facing pairs that are duplicates</div>
-<div class="metric_column_def"><span>JUMP_DUPLICATE_PCT: </span>The percentage of outward-facing pairs that are marked as duplicates</div>
-<div class="metric_column_def"><span>JUMP_LIBRARY_SIZE: </span>The estimated library size for outward-facing pairs</div>
-<div class="metric_column_def"><span>JUMP_MEAN_INSERT_SIZE: </span>The mean insert size for outward-facing pairs</div>
-<div class="metric_column_def"><span>JUMP_STDEV_INSERT_SIZE: </span>The standard deviation on the insert size for outward-facing pairs</div>
-<div class="metric_column_def"><span>NONJUMP_PAIRS: </span>The number of inward-facing pairs in the SAM file</div>
-<div class="metric_column_def"><span>NONJUMP_DUPLICATE_PAIRS: </span>The number of inward-facing pais that are duplicates</div>
-<div class="metric_column_def"><span>NONJUMP_DUPLICATE_PCT: </span>The percentage of inward-facing pairs that are marked as duplicates</div>
-<div class="metric_column_def"><span>NONJUMP_LIBRARY_SIZE: </span>The estimated library size for inward-facing pairs</div>
-<div class="metric_column_def"><span>NONJUMP_MEAN_INSERT_SIZE: </span>The mean insert size for inward-facing pairs</div>
-<div class="metric_column_def"><span>NONJUMP_STDEV_INSERT_SIZE: </span>The standard deviation on the insert size for inward-facing pairs</div>
-<div class="metric_column_def"><span>CHIMERIC_PAIRS: </span>The number of pairs where either (a) the ends fall on different chromosomes or (b) the insert size
- is greater than the maximum of 100000 or 2 times the mode of the insert size for outward-facing pairs.</div>
-<div class="metric_column_def"><span>FRAGMENTS: </span>The number of fragments in the SAM file</div>
-<div class="metric_column_def"><span>PCT_JUMPS: </span>The number of outward-facing pairs expressed as a percentage of the total of all outward facing pairs,
- inward-facing pairs, and chimeric pairs.</div>
-<div class="metric_column_def"><span>PCT_NONJUMPS: </span>The number of inward-facing pairs expressed as a percentage of the total of all outward facing pairs,
- inward-facing pairs, and chimeric pairs.</div>
-<div class="metric_column_def"><span>PCT_CHIMERAS: </span>The number of chimeric pairs expressed as a percentage of the total of all outward facing pairs,
- inward-facing pairs, and chimeric pairs.</div>
-<a id="MultilevelMetrics"
+<section>
+ <p>High level metrics about the presence of  outward- and inward-facing pairs
+  within a SAM file generated with a jumping library, produced by
+  the CollectJumpingLibraryMetrics program and usually stored in a file with
+  the extension ".jump_metrics".</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>JUMP_PAIRS</td><td>The number of outward-facing pairs in the SAM file</td></tr><tr><td>JUMP_DUPLICATE_PAIRS</td><td>The number of outward-facing pairs that are duplicates</td></tr><tr><td>JUMP_DUPLICATE_PCT</td><td>The percentage of outward-facing pairs that are marked as duplicates</td></tr><tr><td>JUMP_LIBRARY_SIZE</td><td>The estimated library size for outward-facing pairs</td></tr><tr><td>JUMP_MEAN_INSERT_SIZE</td><td>The mean insert size for outward-facing pairs</td></tr><tr><td>JUMP_STDEV_INSERT_SIZE</td><td>The standard deviation on the insert size for outward-facing pairs</td></tr><tr><td>NONJUMP_PAIRS</td><td>The number of inward-facing pairs in the SAM file</td></tr><tr><td>NONJUMP_DUPLICATE_PAIRS</td><td>The number of inward-facing pais that are duplicates</td></tr><tr><td>NONJUMP_DUPLICATE_PCT</td><td>The percentage of inward-facing pairs that are marked as duplicates</td></tr><tr><td>NONJUMP_LIBRARY_SIZE</td><td>The estimated library size for inward-facing pairs</td></tr><tr><td>NONJUMP_MEAN_INSERT_SIZE</td><td>The mean insert size for inward-facing pairs</td></tr><tr><td>NONJUMP_STDEV_INSERT_SIZE</td><td>The standard deviation on the insert size for inward-facing pairs</td></tr><tr><td>CHIMERIC_PAIRS</td><td>The number of pairs where either (a) the ends fall on different chromosomes or (b) the insert size
+  is greater than the maximum of 100000 or 2 times the mode of the insert size for outward-facing pairs.</td></tr><tr><td>FRAGMENTS</td><td>The number of fragments in the SAM file</td></tr><tr><td>PCT_JUMPS</td><td>The number of outward-facing pairs expressed as a percentage of the total of all outward facing pairs,
+  inward-facing pairs, and chimeric pairs.</td></tr><tr><td>PCT_NONJUMPS</td><td>The number of inward-facing pairs expressed as a percentage of the total of all outward facing pairs,
+  inward-facing pairs, and chimeric pairs.</td></tr><tr><td>PCT_CHIMERAS</td><td>The number of chimeric pairs expressed as a percentage of the total of all outward facing pairs,
+  inward-facing pairs, and chimeric pairs.</td></tr></table>
+</section>
+<a id="MultilevelMetrics"></a>
 <h2>MultilevelMetrics</h2>
-<p class="class_description"></p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>SAMPLE: </span>The sample to which these metrics apply.  If null, it means they apply
- to all reads in the file.</div>
-<div class="metric_column_def"><span>LIBRARY: </span>The library to which these metrics apply.  If null, it means that the
- metrics were accumulated at the sample level.</div>
-<div class="metric_column_def"><span>READ_GROUP: </span>The read group to which these metrics apply.  If null, it means that
- the metrics were accumulated at the library or sample level.</div>
-<a id="RnaSeqMetrics"
+<section>
+ <p></p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>SAMPLE</td><td>The sample to which these metrics apply.  If null, it means they apply
+   to all reads in the file.</td></tr><tr><td>LIBRARY</td><td>The library to which these metrics apply.  If null, it means that the
+  metrics were accumulated at the sample level.</td></tr><tr><td>READ_GROUP</td><td>The read group to which these metrics apply.  If null, it means that
+  the metrics were accumulated at the library or sample level.</td></tr></table>
+</section>
+<a id="RnaSeqMetrics"></a>
 <h2>RnaSeqMetrics</h2>
-<p class="class_description">Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
- program and usually stored in a file with the extension ".rna_metrics".</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>PF_BASES: </span>The total number of PF bases including non-aligned reads.</div>
-<div class="metric_column_def"><span>PF_ALIGNED_BASES: </span>The total number of aligned PF bases.  Non-primary alignments are not counted. Bases in aligned reads that
- do not correspond to reference (e.g. soft clips, insertions) are not counted.</div>
-<div class="metric_column_def"><span>RIBOSOMAL_BASES: </span>Number of bases in primary aligments that align to ribosomal sequence.</div>
-<div class="metric_column_def"><span>CODING_BASES: </span>Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence.</div>
-<div class="metric_column_def"><span>UTR_BASES: </span>Number of bases in primary aligments that align to a UTR base for some gene, and not a coding base.</div>
-<div class="metric_column_def"><span>INTRONIC_BASES: </span>Number of bases in primary aligments that align to an intronic base for some gene, and not a coding or UTR base.</div>
-<div class="metric_column_def"><span>INTERGENIC_BASES: </span>Number of bases in primary aligments that do not align to any gene.</div>
-<div class="metric_column_def"><span>IGNORED_READS: </span>Number of primary alignments that map to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
- counted in PF_ALIGNED_BASES, CORRECT_STRAND_READS, INCORRECT_STRAND_READS, or any of the base-counting metrics.
- These reads are counted in PF_BASES.</div>
-<div class="metric_column_def"><span>CORRECT_STRAND_READS: </span>Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.</div>
-<div class="metric_column_def"><span>INCORRECT_STRAND_READS: </span>Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.</div>
-<div class="metric_column_def"><span>PCT_RIBOSOMAL_BASES: </span>RIBOSOMAL_BASES / PF_ALIGNED_BASES</div>
-<div class="metric_column_def"><span>PCT_CODING_BASES: </span>CODING_BASES / PF_ALIGNED_BASES</div>
-<div class="metric_column_def"><span>PCT_UTR_BASES: </span>UTR_BASES / PF_ALIGNED_BASES</div>
-<div class="metric_column_def"><span>PCT_INTRONIC_BASES: </span>INTRONIC_BASES / PF_ALIGNED_BASES</div>
-<div class="metric_column_def"><span>PCT_INTERGENIC_BASES: </span>INTERGENIC_BASES / PF_ALIGNED_BASES</div>
-<div class="metric_column_def"><span>PCT_MRNA_BASES: </span>PCT_UTR_BASES + PCT_CODING_BASES</div>
-<div class="metric_column_def"><span>PCT_USABLE_BASES: </span>The percentage of bases mapping to mRNA divided by the total number of PF bases.</div>
-<div class="metric_column_def"><span>PCT_CORRECT_STRAND_READS: </span>CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.</div>
-<div class="metric_column_def"><span>MEDIAN_CV_COVERAGE: </span>The median CV of coverage of the 1000 most highly expressed transcripts. Ideal value = 0.</div>
-<div class="metric_column_def"><span>MEDIAN_5PRIME_BIAS: </span>The median 5 prime bias of the 1000 most highly expressed transcripts, where 5 prime bias is calculated per
- transcript as: mean coverage of the 5' most 100 bases divided by the mean coverage of the whole transcript.</div>
-<div class="metric_column_def"><span>MEDIAN_3PRIME_BIAS: </span>The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per
- transcript as: mean coverage of the 3' most 100 bases divided by the mean coverage of the whole transcript.</div>
-<div class="metric_column_def"><span>MEDIAN_5PRIME_TO_3PRIME_BIAS: </span>The ratio of coverage at the 5' end of to the 3' end based on the 1000 most highly expressed transcripts.</div>
-<a id="RrbsCpgDetailMetrics"
+<section>
+ <p>Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
+  program and usually stored in a file with the extension ".rna_metrics".</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>PF_BASES</td><td>The total number of PF bases including non-aligned reads.</td></tr><tr><td>PF_ALIGNED_BASES</td><td>The total number of aligned PF bases.  Non-primary alignments are not counted. Bases in aligned reads that
+  do not correspond to reference (e.g. soft clips, insertions) are not counted.</td></tr><tr><td>RIBOSOMAL_BASES</td><td>Number of bases in primary aligments that align to ribosomal sequence.</td></tr><tr><td>CODING_BASES</td><td>Number of bases in primary aligments that align to a non-UTR coding base for some gene, and not ribosomal sequence.</td></tr><tr><td>UTR_BASES</td><td>Number of bases in primary aligments that align to a UTR base for some gene, and not a coding base.</td></tr><tr><td>INTRONIC_BASES</td><td>Number of bases in primary aligments that align to an intronic base for some gene, and not a coding or UTR base.</td></tr><tr><td>INTERGENIC_BASES</td><td>Number of bases in primary aligments that do not align to any gene.</td></tr><tr><td>IGNORED_READS</td><td>Number of primary alignments that map to a sequence specified on command-line as IGNORED_SEQUENCE.  These are not
+  counted in PF_ALIGNED_BASES, CORRECT_STRAND_READS, INCORRECT_STRAND_READS, or any of the base-counting metrics.
+  These reads are counted in PF_BASES.</td></tr><tr><td>CORRECT_STRAND_READS</td><td>Number of aligned reads that map to the correct strand.  0 if library is not strand-specific.</td></tr><tr><td>INCORRECT_STRAND_READS</td><td>Number of aligned reads that map to the incorrect strand.  0 if library is not strand-specific.</td></tr><tr><td>PCT_RIBOSOMAL_BASES</td><td>RIBOSOMAL_BASES / PF_ALIGNED_BASES</td></tr><tr><td>PCT_CODING_BASES</td><td>CODING_BASES / PF_ALIGNED_BASES</td></tr><tr><td>PCT_UTR_BASES</td><td>UTR_BASES / PF_ALIGNED_BASES</td></tr><tr><td>PCT_INTRONIC_BASES</td><td>INTRONIC_BASES / PF_ALIGNED_BASES</td></tr><tr><td>PCT_INTERGENIC_BASES</td><td>INTERGENIC_BASES / PF_ALIGNED_BASES</td></tr><tr><td>PCT_MRNA_BASES</td><td>PCT_UTR_BASES + PCT_CODING_BASES</td></tr><tr><td>PCT_USABLE_BASES</td><td>The percentage of bases mapping to mRNA divided by the total number of PF bases.</td></tr><tr><td>PCT_CORRECT_STRAND_READS</td><td>CORRECT_STRAND_READS/(CORRECT_STRAND_READS + INCORRECT_STRAND_READS).  0 if library is not strand-specific.</td></tr><tr><td>MEDIAN_CV_COVERAGE</td><td>The median CV of coverage of the 1000 most highly expressed transcripts. Ideal value = 0.</td></tr><tr><td>MEDIAN_5PRIME_BIAS</td><td>The median 5 prime bias of the 1000 most highly expressed transcripts, where 5 prime bias is calculated per
+  transcript as: mean coverage of the 5' most 100 bases divided by the mean coverage of the whole transcript.</td></tr><tr><td>MEDIAN_3PRIME_BIAS</td><td>The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per
+  transcript as: mean coverage of the 3' most 100 bases divided by the mean coverage of the whole transcript.</td></tr><tr><td>MEDIAN_5PRIME_TO_3PRIME_BIAS</td><td>The ratio of coverage at the 5' end of to the 3' end based on the 1000 most highly expressed transcripts.</td></tr></table>
+</section>
+<a id="RrbsCpgDetailMetrics"></a>
 <h2>RrbsCpgDetailMetrics</h2>
-<p class="class_description">Holds information about CpG sites encountered for RRBS processing QC</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>SEQUENCE_NAME: </span>Sequence the CpG is seen in</div>
-<div class="metric_column_def"><span>POSITION: </span>Position within the sequence of the CpG site</div>
-<div class="metric_column_def"><span>TOTAL_SITES: </span>Number of times this CpG site was encountered</div>
-<div class="metric_column_def"><span>CONVERTED_SITES: </span>Number of times this CpG site was converted (TG for + strand, CA for - strand)</div>
-<div class="metric_column_def"><span>PCT_CONVERTED: </span>TOTAL_BASES / CONVERTED_BASES</div>
-<a id="RrbsSummaryMetrics"
+<section>
+ <p>Holds information about CpG sites encountered for RRBS processing QC</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>SEQUENCE_NAME</td><td>Sequence the CpG is seen in</td></tr><tr><td>POSITION</td><td>Position within the sequence of the CpG site</td></tr><tr><td>TOTAL_SITES</td><td>Number of times this CpG site was encountered</td></tr><tr><td>CONVERTED_SITES</td><td>Number of times this CpG site was converted (TG for + strand, CA for - strand)</td></tr><tr><td>PCT_CONVERTED</td><td>TOTAL_BASES / CONVERTED_BASES</td></tr></table>
+</section>
+<a id="RrbsSummaryMetrics"></a>
 <h2>RrbsSummaryMetrics</h2>
-<p class="class_description">Holds summary statistics from RRBS processing QC</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>READS_ALIGNED: </span>Number of mapped reads processed</div>
-<div class="metric_column_def"><span>NON_CPG_BASES: </span>Number of times a non-CpG cytosine was encountered</div>
-<div class="metric_column_def"><span>NON_CPG_CONVERTED_BASES: </span>Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)</div>
-<div class="metric_column_def"><span>PCT_NON_CPG_BASES_CONVERTED: </span>NON_CPG_BASES / NON_CPG_CONVERTED_BASES</div>
-<div class="metric_column_def"><span>CPG_BASES_SEEN: </span>Number of CpG sites encountered</div>
-<div class="metric_column_def"><span>CPG_BASES_CONVERTED: </span>Number of CpG sites that were converted (TG for +, CA for -)</div>
-<div class="metric_column_def"><span>PCT_CPG_BASES_CONVERTED: </span>CPG_BASES_SEEN / CPG_BASES_CONVERTED</div>
-<div class="metric_column_def"><span>MEAN_CPG_COVERAGE: </span>Mean coverage of CpG sites</div>
-<div class="metric_column_def"><span>MEDIAN_CPG_COVERAGE: </span>Median coverage of CpG sites</div>
-<div class="metric_column_def"><span>READS_WITH_NO_CPG: </span>Number of reads discarded for having no CpG sites</div>
-<div class="metric_column_def"><span>READS_IGNORED_SHORT: </span>Number of reads discarded due to being too short</div>
-<div class="metric_column_def"><span>READS_IGNORED_MISMATCHES: </span>Number of reads discarded for exceeding the mismatch threshold</div>
-<a id="SamFileValidator.ValidationMetrics"
+<section>
+ <p>Holds summary statistics from RRBS processing QC</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>READS_ALIGNED</td><td>Number of mapped reads processed</td></tr><tr><td>NON_CPG_BASES</td><td>Number of times a non-CpG cytosine was encountered</td></tr><tr><td>NON_CPG_CONVERTED_BASES</td><td>Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)</td></tr><tr><td>PCT_NON_CPG_BASES_CONVERTED</td><td>NON_CPG_BASES / NON_CPG_CONVERTED_BASES</td></tr><tr><td>CPG_BASES_SEEN</td><td>Number of CpG sites encountered</td></tr><tr><td>CPG_BASES_CONVERTED</td><td>Number of CpG sites that were converted (TG for +, CA for -)</td></tr><tr><td>PCT_CPG_BASES_CONVERTED</td><td>CPG_BASES_SEEN / CPG_BASES_CONVERTED</td></tr><tr><td>MEAN_CPG_COVERAGE</td><td>Mean coverage of CpG sites</td></tr><tr><td>MEDIAN_CPG_COVERAGE</td><td>Median coverage of CpG sites</td></tr><tr><td>READS_WITH_NO_CPG</td><td>Number of reads discarded for having no CpG sites</td></tr><tr><td>READS_IGNORED_SHORT</td><td>Number of reads discarded due to being too short</td></tr><tr><td>READS_IGNORED_MISMATCHES</td><td>Number of reads discarded for exceeding the mismatch threshold</td></tr></table>
+</section>
+<a id="SamFileValidator.ValidationMetrics"></a>
 <h2>SamFileValidator.ValidationMetrics</h2>
-<p class="class_description"></p>
-<h3>Column Definitions</h3>
-<a id="TargetedPcrMetrics"
+<section>
+ <p></p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+ </table>
+</section>
+<a id="TargetedPcrMetrics"></a>
 <h2>TargetedPcrMetrics</h2>
-<p class="class_description">Metrics class for targeted pcr runs such as TSCA runs</p>
-<h3>Column Definitions</h3>
-<div class="metric_column_def"><span>CUSTOM_AMPLICON_SET: </span>The name of the amplicon set used in this metrics collection run</div>
-<div class="metric_column_def"><span>GENOME_SIZE: </span>The number of bases in the reference genome used for alignment.</div>
-<div class="metric_column_def"><span>AMPLICON_TERRITORY: </span>The number of unique bases covered by the intervals of all amplicons in the amplicon set</div>
-<div class="metric_column_def"><span>TARGET_TERRITORY: </span>The number of unique bases covered by the intervals of all targets that should be covered</div>
-<div class="metric_column_def"><span>TOTAL_READS: </span>The total number of reads in the SAM or BAM file examine.</div>
-<div class="metric_column_def"><span>PF_READS: </span>The number of reads that pass the vendor's filter.</div>
-<div class="metric_column_def"><span>PF_BASES: </span>THe number of bases in the SAM or BAM file to be examined</div>
-<div class="metric_column_def"><span>PF_UNIQUE_READS: </span>The number of PF reads that are not marked as duplicates.</div>
-<div class="metric_column_def"><span>PCT_PF_READS: </span>PF reads / total reads.  The percent of reads passing filter.</div>
-<div class="metric_column_def"><span>PCT_PF_UQ_READS: </span>PF Unique Reads / Total Reads.</div>
-<div class="metric_column_def"><span>PF_UQ_READS_ALIGNED: </span>The number of PF unique reads that are aligned with mapping score > 0 to the reference genome.</div>
-<div class="metric_column_def"><span>PF_SELECTED_PAIRS: </span>Tracks the number of read pairs that we see that are PF (used to calculate library size)</div>
-<div class="metric_column_def"><span>PF_SELECTED_UNIQUE_PAIRS: </span>Tracks the number of unique PF reads pairs we see (used to calc library size)</div>
-<div class="metric_column_def"><span>PCT_PF_UQ_READS_ALIGNED: </span>PF Reads Aligned / PF Reads.</div>
-<div class="metric_column_def"><span>PF_UQ_BASES_ALIGNED: </span>The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.</div>
-<div class="metric_column_def"><span>ON_AMPLICON_BASES: </span>The number of PF aligned amplified that mapped to an amplified region of the genome.</div>
-<div class="metric_column_def"><span>NEAR_AMPLICON_BASES: </span>The number of PF aligned bases that mapped to within a fixed interval of an amplified region, but not on a baited region.</div>
-<div class="metric_column_def"><span>OFF_AMPLICON_BASES: </span>The number of PF aligned bases that mapped to neither on or near an amplicon.</div>
-<div class="metric_column_def"><span>ON_TARGET_BASES: </span>The number of PF aligned bases that mapped to a targeted region of the genome.</div>
-<div class="metric_column_def"><span>ON_TARGET_FROM_PAIR_BASES: </span>The number of PF aligned bases that are mapped in pair to a targeted region of the genome.</div>
-<div class="metric_column_def"><span>PCT_AMPLIFIED_BASES: </span>On+Near Amplicon Bases / PF Bases Aligned.</div>
-<div class="metric_column_def"><span>PCT_OFF_AMPLICON: </span>The percentage of aligned PF bases that mapped neither on or near an amplicon.</div>
-<div class="metric_column_def"><span>ON_AMPLICON_VS_SELECTED: </span>The percentage of on+near amplicon bases that are on as opposed to near.</div>
-<div class="metric_column_def"><span>MEAN_AMPLICON_COVERAGE: </span>The mean coverage of all amplicons in the experiment.</div>
-<div class="metric_column_def"><span>MEAN_TARGET_COVERAGE: </span>The mean coverage of targets that recieved at least coverage depth = 2 at one base.</div>
-<div class="metric_column_def"><span>FOLD_ENRICHMENT: </span>The fold by which the amplicon region has been amplified above genomic background.</div>
-<div class="metric_column_def"><span>ZERO_CVG_TARGETS_PCT: </span>The number of targets that did not reach coverage=2 over any base.</div>
-<div class="metric_column_def"><span>FOLD_80_BASE_PENALTY: </span>The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
- the mean coverage level in those targets.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_2X: </span>The percentage of ALL target bases achieving 2X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_10X: </span>The percentage of ALL target bases achieving 10X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_20X: </span>The percentage of ALL target bases achieving 20X or greater coverage.</div>
-<div class="metric_column_def"><span>PCT_TARGET_BASES_30X: </span>The percentage of ALL target bases achieving 30X or greater coverage.</div>
-<div class="metric_column_def"><span>AT_DROPOUT: </span>A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
- we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
- AT DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
- reads that should have mapped to GC<=50% regions mapped elsewhere.</div>
-<div class="metric_column_def"><span>GC_DROPOUT: </span>A measure of how undercovered >= 50% GC regions are relative to the mean. For each GC bin [50..100]
- we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
- GC DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
- reads that should have mapped to GC>=50% regions mapped elsewhere.</div>
+<section>
+ <p>Metrics class for targeted pcr runs such as TSCA runs</p>
+ <table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>CUSTOM_AMPLICON_SET</td><td>The name of the amplicon set used in this metrics collection run</td></tr><tr><td>GENOME_SIZE</td><td>The number of bases in the reference genome used for alignment.</td></tr><tr><td>AMPLICON_TERRITORY</td><td>The number of unique bases covered by the intervals of all amplicons in the amplicon set</td></tr><tr><td>TARGET_TERRITORY</td><td>The number of unique bases covered by the intervals of all targets that should be covered</td></tr><tr><td>TOTAL_READS</td><td>The total number of reads in the SAM or BAM file examine.</td></tr><tr><td>PF_READS</td><td>The number of reads that pass the vendor's filter.</td></tr><tr><td>PF_BASES</td><td>THe number of bases in the SAM or BAM file to be examined</td></tr><tr><td>PF_UNIQUE_READS</td><td>The number of PF reads that are not marked as duplicates.</td></tr><tr><td>PCT_PF_READS</td><td>PF reads / total reads.  The percent of reads passing filter.</td></tr><tr><td>PCT_PF_UQ_READS</td><td>PF Unique Reads / Total Reads.</td></tr><tr><td>PF_UQ_READS_ALIGNED</td><td>The number of PF unique reads that are aligned with mapping score > 0 to the reference genome.</td></tr><tr><td>PF_SELECTED_PAIRS</td><td>Tracks the number of read pairs that we see that are PF (used to calculate library size)</td></tr><tr><td>PF_SELECTED_UNIQUE_PAIRS</td><td>Tracks the number of unique PF reads pairs we see (used to calc library size)</td></tr><tr><td>PCT_PF_UQ_READS_ALIGNED</td><td>PF Reads Aligned / PF Reads.</td></tr><tr><td>PF_UQ_BASES_ALIGNED</td><td>The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.</td></tr><tr><td>ON_AMPLICON_BASES</td><td>The number of PF aligned amplified that mapped to an amplified region of the genome.</td></tr><tr><td>NEAR_AMPLICON_BASES</td><td>The number of PF aligned bases that mapped to within a fixed interval of an amplified region, but not on a baited region.</td></tr><tr><td>OFF_AMPLICON_BASES</td><td>The number of PF aligned bases that mapped to neither on or near an amplicon.</td></tr><tr><td>ON_TARGET_BASES</td><td>The number of PF aligned bases that mapped to a targeted region of the genome.</td></tr><tr><td>ON_TARGET_FROM_PAIR_BASES</td><td>The number of PF aligned bases that are mapped in pair to a targeted region of the genome.</td></tr><tr><td>PCT_AMPLIFIED_BASES</td><td>On+Near Amplicon Bases / PF Bases Aligned.</td></tr><tr><td>PCT_OFF_AMPLICON</td><td>The percentage of aligned PF bases that mapped neither on or near an amplicon.</td></tr><tr><td>ON_AMPLICON_VS_SELECTED</td><td>The percentage of on+near amplicon bases that are on as opposed to near.</td></tr><tr><td>MEAN_AMPLICON_COVERAGE</td><td>The mean coverage of all amplicons in the experiment.</td></tr><tr><td>MEAN_TARGET_COVERAGE</td><td>The mean coverage of targets that recieved at least coverage depth = 2 at one base.</td></tr><tr><td>FOLD_ENRICHMENT</td><td>The fold by which the amplicon region has been amplified above genomic background.</td></tr><tr><td>ZERO_CVG_TARGETS_PCT</td><td>The number of targets that did not reach coverage=2 over any base.</td></tr><tr><td>FOLD_80_BASE_PENALTY</td><td>The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
+  the mean coverage level in those targets.</td></tr><tr><td>PCT_TARGET_BASES_2X</td><td>The percentage of ALL target bases achieving 2X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_10X</td><td>The percentage of ALL target bases achieving 10X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_20X</td><td>The percentage of ALL target bases achieving 20X or greater coverage.</td></tr><tr><td>PCT_TARGET_BASES_30X</td><td>The percentage of ALL target bases achieving 30X or greater coverage.</td></tr><tr><td>AT_DROPOUT</td><td>A measure of how undercovered <= 50% GC regions are relative to the mean. For each GC bin [0..50]
+  we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
+  AT DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+  reads that should have mapped to GC<=50% regions mapped elsewhere.</td></tr><tr><td>GC_DROPOUT</td><td>A measure of how undercovered >= 50% GC regions are relative to the mean. For each GC bin [50..100]
+  we calculate a = % of target territory, and b = % of aligned reads aligned to these targets.
+  GC DROPOUT is then abs(sum(a-b when a-b < 0)). E.g. if the value is 5% this implies that 5% of total
+  reads that should have mapped to GC>=50% regions mapped elsewhere.</td></tr></table>
+</section>

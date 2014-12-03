@@ -1,5 +1,6 @@
 <a id="MarkIlluminaAdapters"/>
 <h3>MarkIlluminaAdapters</h3>
+<section>
 <p>Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.
 <p>Clear any existing adapter-trimming tags (XT:i:).
 <p>Only works for unaligned files in query-name order.
@@ -7,19 +8,19 @@
 <p></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT=File</td><td>Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>If output is not specified, just the metrics are generated  Default value: null. </td></tr>
-<tr><td>METRICS=File</td><td>Histogram showing counts of bases_clipped in how many reads  Required. </td></tr>
-<tr><td>MIN_MATCH_BASES_SE=Integer</td><td>The minimum number of bases to match over when clipping single-end reads.  Default value: 12. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MIN_MATCH_BASES_PE=Integer</td><td>The minimum number of bases to match over (per-read) when clipping paired-end reads.  Default value: 6. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MAX_ERROR_RATE_SE=Double</td><td>The maximum mismatch error rate to tolerate when clipping single-end reads.  Default value: 0.1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MAX_ERROR_RATE_PE=Double</td><td>The maximum mismatch error rate to tolerate when clipping paired-end reads.  Default value: 0.1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>PAIRED_RUN=Boolean</td><td>DEPRECATED. Whether this is a paired-end run. No longer used.  Default value: null. Possible values: {true, false} </td></tr>
-<tr><td>ADAPTERS=IlluminaAdapterPair</td><td>Which adapters sequences to attempt to identify and clip.  Possible values: {PAIRED_END, INDEXED, SINGLE_END, NEXTERA_V1, NEXTERA_V2, DUAL_INDEXED, FLUIDIGM, TRUSEQ_SMALLRNA, ALTERNATIVE_SINGLE_END} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
-<tr><td>FIVE_PRIME_ADAPTER=String</td><td>For specifying adapters other than standard Illumina  Default value: null. </td></tr>
-<tr><td>THREE_PRIME_ADAPTER=String</td><td>For specifying adapters other than standard Illumina  Default value: null. </td></tr>
-<tr><td>ADAPTER_TRUNCATION_LENGTH=Integer</td><td>Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.  Default value: 30. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN=Integer</td><td>If looking for multiple adapter sequences, then after having seen this many adapters, shorten the list of sequences. Keep the adapters that were found most frequently in the input so far. Set to -1 if the input has a heterogeneous mix of adapters so shortening is undesirable.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>NUM_ADAPTERS_TO_KEEP=Integer</td><td>If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that were tied with the adapters being kept).  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INPUT (File)</td><td>Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>If output is not specified, just the metrics are generated  Default value: null. </td></tr>
+<tr><td>METRICS (File)</td><td>Histogram showing counts of bases_clipped in how many reads  Required. </td></tr>
+<tr><td>MIN_MATCH_BASES_SE (Integer)</td><td>The minimum number of bases to match over when clipping single-end reads.  Default value: 12. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MIN_MATCH_BASES_PE (Integer)</td><td>The minimum number of bases to match over (per-read) when clipping paired-end reads.  Default value: 6. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MAX_ERROR_RATE_SE (Double)</td><td>The maximum mismatch error rate to tolerate when clipping single-end reads.  Default value: 0.1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MAX_ERROR_RATE_PE (Double)</td><td>The maximum mismatch error rate to tolerate when clipping paired-end reads.  Default value: 0.1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PAIRED_RUN (Boolean)</td><td>DEPRECATED. Whether this is a paired-end run. No longer used.  Default value: null. Possible values: {true, false} </td></tr>
+<tr><td>ADAPTERS (IlluminaAdapterPair)</td><td>Which adapters sequences to attempt to identify and clip.  Possible values: {PAIRED_END, INDEXED, SINGLE_END, NEXTERA_V1, NEXTERA_V2, DUAL_INDEXED, FLUIDIGM, TRUSEQ_SMALLRNA, ALTERNATIVE_SINGLE_END} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>FIVE_PRIME_ADAPTER (String)</td><td>For specifying adapters other than standard Illumina  Default value: null. </td></tr>
+<tr><td>THREE_PRIME_ADAPTER (String)</td><td>For specifying adapters other than standard Illumina  Default value: null. </td></tr>
+<tr><td>ADAPTER_TRUNCATION_LENGTH (Integer)</td><td>Adapters are truncated to this length to speed adapter matching.  Set to a large number to effectively disable truncation.  Default value: 30. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PRUNE_ADAPTER_LIST_AFTER_THIS_MANY_ADAPTERS_SEEN (Integer)</td><td>If looking for multiple adapter sequences, then after having seen this many adapters, shorten the list of sequences. Keep the adapters that were found most frequently in the input so far. Set to -1 if the input has a heterogeneous mix of adapters so shortening is undesirable.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>NUM_ADAPTERS_TO_KEEP (Integer)</td><td>If pruning the adapter list, keep only this many adapter sequences when pruning the list (plus any adapters that were tied with the adapters being kept).  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>

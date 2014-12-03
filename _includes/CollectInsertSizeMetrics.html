@@ -1,17 +1,18 @@
 <a id="CollectInsertSizeMetrics"/>
 <h3>CollectInsertSizeMetrics</h3>
+<section>
 <p>Reads a SAM or BAM file and writes a file containing metrics about the statistical distribution of insert size (excluding duplicates) and generates a Histogram plot.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>HISTOGRAM_FILE=File</td><td>File to write insert size Histogram chart to.  Required. </td></tr>
-<tr><td>DEVIATIONS=Double</td><td>Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. This is done because insert size data typically includes enough anomalous values from chimeras and other artifacts to make the mean and sd grossly misleading regarding the real distribution.  Default value: 10.0. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>HISTOGRAM_WIDTH=Integer</td><td>Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. Also, when calculating mean and standard deviation, only bins &lt;= Histogram_WIDTH will be included.  Default value: null. </td></tr>
-<tr><td>MINIMUM_PCT=Float</td><td>When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this percentage of overall reads. (Range: 0 to 1).  Default value: 0.05. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>METRIC_ACCUMULATION_LEVEL=MetricAccumulationLevel</td><td>The level(s) at which to accumulate metrics.    Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
-<tr><td>INPUT=File</td><td>Input SAM or BAM file.  Required. </td></tr>
-<tr><td>OUTPUT=File</td><td>File to write the output to.  Required. </td></tr>
-<tr><td>REFERENCE_SEQUENCE=File</td><td>Reference sequence fasta  Default value: null. </td></tr>
-<tr><td>ASSUME_SORTED=Boolean</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>STOP_AFTER=Long</td><td>Stop after processing N reads, mainly for debugging.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>HISTOGRAM_FILE (File)</td><td>File to write insert size Histogram chart to.  Required. </td></tr>
+<tr><td>DEVIATIONS (Double)</td><td>Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION. This is done because insert size data typically includes enough anomalous values from chimeras and other artifacts to make the mean and sd grossly misleading regarding the real distribution.  Default value: 10.0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>HISTOGRAM_WIDTH (Integer)</td><td>Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. Also, when calculating mean and standard deviation, only bins &lt;= Histogram_WIDTH will be included.  Default value: null. </td></tr>
+<tr><td>MINIMUM_PCT (Float)</td><td>When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this percentage of overall reads. (Range: 0 to 1).  Default value: 0.05. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>METRIC_ACCUMULATION_LEVEL (MetricAccumulationLevel)</td><td>The level(s) at which to accumulate metrics.    Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>File to write the output to.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>Reference sequence fasta  Default value: null. </td></tr>
+<tr><td>ASSUME_SORTED (Boolean)</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>STOP_AFTER (Long)</td><td>Stop after processing N reads, mainly for debugging.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
-<br/>
+</section>
