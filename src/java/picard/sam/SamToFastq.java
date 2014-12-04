@@ -88,6 +88,9 @@ public class SamToFastq extends CommandLineProgram {
             optional = true, mutex = {"FASTQ", "SECOND_END_FASTQ", "UNPAIRED_FASTQ"})
     public boolean OUTPUT_PER_RG;
 
+    @Option(shortName="RGT", doc = "The read group tag (PU or ID) to be used to output a fastq file per read group.")
+    public String RG_TAG = "PU";
+
     @Option(shortName = "ODIR", doc = "Directory in which to output the fastq file(s).  Used only when OUTPUT_PER_RG is true.",
             optional = true)
     public File OUTPUT_DIR;
@@ -224,7 +227,7 @@ public class SamToFastq extends CommandLineProgram {
             }
 
             /** Prepare the writer that will accept unpaired reads.  If we're emitting a single fastq - and assuming single-ended reads -
-             * then this is simply that one fastq writer.  Otherwise, if we're doing paired-end, we emit to a third new writer, since 
+             * then this is simply that one fastq writer.  Otherwise, if we're doing paired-end, we emit to a third new writer, since
              * the other two fastqs are accepting only paired end reads. */
             final FastqWriter unpairedWriter = UNPAIRED_FASTQ == null ? firstOfPairWriter : factory.newWriter(UNPAIRED_FASTQ);
             fastqWriters = new FastqWriters(firstOfPairWriter, secondOfPairWriter, unpairedWriter);
@@ -238,7 +241,7 @@ public class SamToFastq extends CommandLineProgram {
             // When we're creating a fastq-group per readgroup, by convention we do not emit a special fastq for unpaired reads.
             for (final SAMReadGroupRecord rg : samReadGroupRecords) {
                 final FastqWriter firstOfPairWriter = factory.newWriter(makeReadGroupFile(rg, "_1"));
-                // Create this writer on-the-fly; if we find no second-of-pair reads, don't bother making a writer (or delegating, 
+                // Create this writer on-the-fly; if we find no second-of-pair reads, don't bother making a writer (or delegating,
                 // if we're interleaving).
                 final Lazy<FastqWriter> lazySecondOfPairWriter = new Lazy<FastqWriter>(new Lazy.LazyInitializer<FastqWriter>() {
                     @Override
@@ -253,8 +256,15 @@ public class SamToFastq extends CommandLineProgram {
     }
 
     private File makeReadGroupFile(final SAMReadGroupRecord readGroup, final String preExtSuffix) {
-        String fileName = readGroup.getPlatformUnit();
-        if (fileName == null) fileName = readGroup.getReadGroupId();
+        String fileName = null;
+        if (RG_TAG.equalsIgnoreCase("PU")){
+            fileName = readGroup.getPlatformUnit();
+        } else if (RG_TAG.equalsIgnoreCase("ID")){
+            fileName = readGroup.getReadGroupId();
+        }
+        if (fileName == null) {
+            throw new PicardException("The selected RG_TAG: "+RG_TAG+" is not present in the bam header.");
+        }
         fileName = IOUtil.makeFileNameSafe(fileName);
         if (preExtSuffix != null) fileName += preExtSuffix;
         fileName += ".fastq";
@@ -391,6 +401,13 @@ public class SamToFastq extends CommandLineProgram {
                             "If "};
         }
 
+        if (OUTPUT_PER_RG) {
+            if (RG_TAG == null) {
+                return new String[]{"If OUTPUT_PER_RG is true, then RG_TAG should be set."};
+            } else if (! (RG_TAG.equalsIgnoreCase("PU") || RG_TAG.equalsIgnoreCase("ID")) ){
+                return new String[]{"RG_TAG must be: PU or ID"};
+            }
+        }
         return null;
     }
 
