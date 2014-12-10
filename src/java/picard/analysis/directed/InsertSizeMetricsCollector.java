@@ -132,6 +132,10 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                     metrics.MIN_INSERT_SIZE    = (int) Histogram.getMin();
                     metrics.MEDIAN_INSERT_SIZE = Histogram.getMedian();
                     metrics.MEDIAN_ABSOLUTE_DEVIATION = Histogram.getMedianAbsoluteDeviation();
+                    metrics.PERCENT_02_5_INSERT_SIZE = Histogram.getPercentile(0.025);
+                    metrics.PERCENT_25_INSERT_SIZE = Histogram.getPercentile(0.25);
+                    metrics.PERCENT_75_INSERT_SIZE = Histogram.getPercentile(0.75);
+                    metrics.PERCENT_97_5_INSERT_SIZE = Histogram.getPercentile(0.975);
 
                     final double median  = Histogram.getMedian();
                     double covered = 0;
