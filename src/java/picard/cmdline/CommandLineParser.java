@@ -682,6 +682,15 @@ public class CommandLineParser {
      * @return false if a fatal error occurred
      */
     private boolean parseOptionsFile(final String optionsFile) {
+        return parseOptionsFile(optionsFile, true);
+    }
+
+    /**
+     * @param optionFileStyleValidation true: unrecognized options are silently ignored; and a single-valued option may be overridden.
+     *                                  false: standard rules as if the options in the file were on the command line directly.
+     * @return
+     */
+    public boolean parseOptionsFile(final String optionsFile, final boolean optionFileStyleValidation) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(optionsFile));
@@ -692,7 +701,7 @@ public class CommandLineParser {
                 }
                 final String[] pair = line.split("=", 2);
                 if (pair.length == 2) {
-                    if (!parseOption(pair[0], pair[1], true)) {
+                    if (!parseOption(pair[0], pair[1], optionFileStyleValidation)) {
                         messageStream.println();
                         usage(messageStream, true);
                         return false;
@@ -1206,4 +1215,11 @@ public class CommandLineParser {
      * hasn't yet been called, or didn't complete successfully.
      */
     public String getCommandLine() { return commandLine; }
+
+    /**
+     * This method is only needed when calling one of the public methods that doesn't take a messageStream argument.
+     */
+    public void setMessageStream(final PrintStream messageStream) {
+        this.messageStream = messageStream;
+    }
 }
