@@ -2,7 +2,6 @@ package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -58,10 +57,8 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
         try {
-            final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY);
-            final SAMFileHeader header = samReader.getFileHeader();
+            final SAMFileHeader header = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY);
             final IntervalList intervalList = new IntervalList(header);
-            CloserUtil.close(samReader);
 
             /**
              * NB: BED is zero-based, but a BEDCodec by default (since it is returns tribble Features) has an offset of one,

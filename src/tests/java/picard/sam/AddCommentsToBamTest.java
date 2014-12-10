@@ -31,7 +31,7 @@ public class AddCommentsToBamTest extends CommandLineProgramTest {
         final File outputFile = File.createTempFile("addCommentsToBamTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
         runIt(INPUT_FILE, outputFile, commentList);
 
-        final SAMFileHeader newHeader = SamReaderFactory.makeDefault().open(outputFile).getFileHeader();
+        final SAMFileHeader newHeader = SamReaderFactory.makeDefault().getFileHeader(outputFile);
 
         // The original comments are massaged when they're added to the header. Perform the same massaging here,
         // and then compare the lists

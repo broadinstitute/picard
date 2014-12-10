@@ -322,6 +322,7 @@ public class RevertSam extends CommandLineProgram {
             }
         }
 
+        CloserUtil.close(in);
         return 0;
     }
 

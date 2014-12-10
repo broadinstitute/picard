@@ -37,6 +37,7 @@ import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
@@ -247,6 +248,7 @@ public class FixMateInformation extends CommandLineProgram {
 
         }
 
+        CloserUtil.close(readers);
         return 0;
     }
 

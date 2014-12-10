@@ -28,11 +28,12 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.Arrays;
@@ -87,7 +88,7 @@ public class RevertSamTest extends CommandLineProgramTest {
         }
         runPicardCommandLine(args);
 
-        SamReader reader = SamReaderFactory.makeDefault().open(output);
+        final SamReader reader = SamReaderFactory.makeDefault().open(output);
         final SAMFileHeader header = reader.getFileHeader();
         Assert.assertEquals(header.getSortOrder(), SAMFileHeader.SortOrder.queryname);
         Assert.assertEquals(header.getProgramRecords().size(), removeAlignmentInfo ? 0 : 1);
@@ -132,6 +133,7 @@ public class RevertSamTest extends CommandLineProgramTest {
                 }
             }
         }
+        CloserUtil.close(reader);
     }
 
 

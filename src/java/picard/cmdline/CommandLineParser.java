@@ -380,6 +380,7 @@ public class CommandLineParser {
 
     /**
      * Prints options as rows in an HTML table.
+     *
      * @param stream
      * @param printCommon
      */

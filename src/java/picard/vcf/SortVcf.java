@@ -73,7 +73,7 @@ public class SortVcf extends CommandLineProgram {
 
         SAMSequenceDictionary samSequenceDictionary = null;
         if (SEQUENCE_DICTIONARY != null) {
-            samSequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+            samSequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY).getSequenceDictionary();
             CloserUtil.close(SEQUENCE_DICTIONARY);
         }
 

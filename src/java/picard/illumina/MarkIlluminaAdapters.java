@@ -33,6 +33,7 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.IOUtil;
@@ -44,8 +45,8 @@ import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.cmdline.programgroups.Illumina;
 import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.ClippingUtility;
@@ -236,6 +237,7 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
         metricsFile.setHistogram(histo);
         metricsFile.write(METRICS);
 
+        CloserUtil.close(in);
         return 0;
     }
 

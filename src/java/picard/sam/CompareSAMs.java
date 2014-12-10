@@ -31,6 +31,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.SecondaryOrSupplementarySkippingIterator;
+import htsjdk.samtools.util.CloserUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -96,6 +97,7 @@ public class CompareSAMs extends CommandLineProgram {
         } else {
             System.out.println("SAM files match.");
         }
+        CloserUtil.close(samReaders);
         return 0;
     }
 

@@ -32,6 +32,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -159,6 +160,7 @@ public class MergeSamFiles extends CommandLineProgram {
         }
 
         log.info("Finished reading inputs.");
+        CloserUtil.close(readers);
         out.close();
         return 0;
     }

@@ -425,6 +425,7 @@ public abstract class AbstractAlignmentMerger {
         writer.close();
         sorted.cleanup();
 
+        CloserUtil.close(unmappedSam);
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 

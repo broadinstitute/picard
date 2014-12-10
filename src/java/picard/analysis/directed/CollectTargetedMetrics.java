@@ -7,6 +7,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
@@ -126,6 +127,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
 
         metrics.write(OUTPUT);
 
+        CloserUtil.close(reader);
         return 0;
     }
 

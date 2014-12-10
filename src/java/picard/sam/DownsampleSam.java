@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -91,7 +92,9 @@ public class DownsampleSam extends CommandLineProgram {
         }
 
         out.close();
+        CloserUtil.close(in);
         log.info("Finished! Kept " + kept + " out of " + total + " reads.");
+
 
         return 0;
     }

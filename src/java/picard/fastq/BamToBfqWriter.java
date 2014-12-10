@@ -35,6 +35,7 @@ import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.TagFilter;
 import htsjdk.samtools.filter.WholeReadClippedFilter;
 import htsjdk.samtools.util.BinaryCodec;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
@@ -130,7 +131,8 @@ public class BamToBfqWriter {
      */
     public void writeBfqFiles() {
 
-        final Iterator<SAMRecord> iterator = SamReaderFactory.makeDefault().open(bamFile).iterator();
+        final SamReader reader = SamReaderFactory.makeDefault().open(bamFile);
+        final Iterator<SAMRecord> iterator = reader.iterator();
 
         // Filter out noise reads and reads that fail the quality filter
         final TagFilter tagFilter = new TagFilter(ReservedTagConstants.XN, 1);
@@ -154,7 +156,7 @@ public class BamToBfqWriter {
             codec2.close();
         }
         log.info("Wrote " + wrote + " bfq records.");
-
+        CloserUtil.close(reader);
     }
 
     /**
@@ -380,8 +382,8 @@ public class BamToBfqWriter {
      */
     private int countWritableRecords() {
         int count = 0;
-        
-        SamReader reader = SamReaderFactory.makeDefault().open(this.bamFile);
+
+        final SamReader reader = SamReaderFactory.makeDefault().open(this.bamFile);
         if(!reader.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.queryname)) {
         	//this is a fix for issue PIC-274: It looks like BamToBfqWriter requires that the input BAM is queryname sorted, 
         	//but it doesn't check this early, nor produce an understandable error message."
@@ -421,6 +423,7 @@ public class BamToBfqWriter {
             }
         }
         it.close();
+        CloserUtil.close(reader);
         return count;
     }
 

@@ -86,9 +86,7 @@ public class GatherBamFiles extends CommandLineProgram {
                                        final File referenceFasta) {
         final SAMFileHeader header;
         {
-            final SamReader tmp = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(inputs.get(0));
-            header = tmp.getFileHeader();
-            CloserUtil.close(tmp);
+            header = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).getFileHeader(inputs.get(0));
         }
 
         final SAMFileWriter out = new SAMFileWriterFactory().setCreateIndex(createIndex).setCreateMd5File(createMd5).makeSAMOrBAMWriter(header, true, output);

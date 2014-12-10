@@ -30,6 +30,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -100,6 +101,7 @@ public class CleanSam extends CommandLineProgram {
 
         writer.close();
         it.close();
+        CloserUtil.close(reader);
         return 0;
     }
 }

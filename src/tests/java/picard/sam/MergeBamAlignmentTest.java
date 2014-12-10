@@ -242,6 +242,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
         );
 
+        CloserUtil.close(result);
+
         result = SamReaderFactory.makeDefault().open(output);
         pg = result.getFileHeader().getProgramRecords().get(0);
         Assert.assertEquals(pg.getProgramGroupId(), "1",
@@ -253,6 +255,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         Assert.assertEquals(pg.getProgramName(), "Hey!",
                 "Program name not picked up correctly from aligned BAM");
 
+        CloserUtil.close(result);
     }
 
 
@@ -360,8 +363,6 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         SamReaderFactory factory = SamReaderFactory.makeDefault();
         final SamReader result = factory.open(output);
-         final SAMProgramRecord pg = result.getFileHeader().getProgramRecords().get(0);
-
          for (final SAMRecord sam : result) {
             // Get the alignment record
             final List<File> rFiles = sam.getFirstOfPairFlag() ? r1Align : r2Align;
@@ -575,7 +576,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
         final SAMFileHeader alignedHeader = new SAMFileHeader();
         alignedHeader.setSortOrder(SAMFileHeader.SortOrder.queryname);
-        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().open(sequenceDict).getFileHeader().getSequenceDictionary());
+        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
         final SAMFileWriter alignedWriter = new SAMFileWriterFactory().makeSAMWriter(alignedHeader, true, alignedSam);
         for (int i = 0; i < Math.max(firstOfPair.size(), secondOfPair.size()); ++i) {
             final HitSpec firstHitSpec = firstOfPair.isEmpty()? null: firstOfPair.get(i);
@@ -846,7 +847,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
         final SAMFileHeader alignedHeader = new SAMFileHeader();
         alignedHeader.setSortOrder(SAMFileHeader.SortOrder.queryname);
-        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().open(sequenceDict).getFileHeader().getSequenceDictionary());
+        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
         final SAMFileWriter alignedWriter = new SAMFileWriterFactory().makeSAMWriter(alignedHeader, true, alignedSam);
         for (int i = 0; i < hitSpecs.size(); ++i) {
             final HitSpec hitSpec = hitSpecs.get(i);
@@ -1469,9 +1470,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File alignedSam = File.createTempFile("aligned.", ".sam");
         alignedSam.deleteOnExit();
 
-        final SamReader dictReader = SamReaderFactory.makeDefault().open(sequenceDict);
-        header.setSequenceDictionary(dictReader.getFileHeader().getSequenceDictionary());
-        dictReader.close();
+        header.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
+
 
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 

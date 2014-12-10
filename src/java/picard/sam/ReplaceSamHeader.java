@@ -82,10 +82,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
         IOUtil.assertFileIsReadable(HEADER);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final SamReader headerReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(HEADER);
-        final SAMFileHeader replacementHeader = headerReader.getFileHeader();
-        CloserUtil.close(headerReader);
-
+        final SAMFileHeader replacementHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(HEADER);
 
         if (BamFileIoUtils.isBamFile(INPUT)) {
             blockCopyReheader(replacementHeader);

@@ -10,6 +10,7 @@ import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.ListMap;
@@ -320,6 +321,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         }
 
         file.write(OUTPUT);
+        CloserUtil.close(in);
         return 0;
     }
 

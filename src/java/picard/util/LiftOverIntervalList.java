@@ -89,7 +89,7 @@ public class LiftOverIntervalList extends CommandLineProgram {
         liftOver.setLiftOverMinMatch(MIN_LIFTOVER_PCT);
 
         final IntervalList fromIntervals = IntervalList.fromFile(INPUT);
-        final SAMFileHeader toHeader = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY).getFileHeader();
+        final SAMFileHeader toHeader = SamReaderFactory.makeDefault().getFileHeader(SEQUENCE_DICTIONARY);
         liftOver.validateToSequences(toHeader.getSequenceDictionary());
         final IntervalList toIntervals = new IntervalList(toHeader);
         boolean anyFailed = false;

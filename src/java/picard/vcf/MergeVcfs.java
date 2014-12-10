@@ -100,8 +100,9 @@ public class MergeVcfs extends CommandLineProgram {
         VariantContextComparator variantContextComparator = null;
         SAMSequenceDictionary sequenceDictionary = null;
 
-        if (SEQUENCE_DICTIONARY != null)
+        if (SEQUENCE_DICTIONARY != null) {
             sequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
+        }
 
         for (final File file : INPUT) {
             IOUtil.assertFileIsReadable(file);
@@ -139,8 +140,9 @@ public class MergeVcfs extends CommandLineProgram {
                 .setOutputFile(OUTPUT)
                 .setReferenceDictionary(sequenceDictionary)
                 .clearOptions();
-        if (CREATE_INDEX)
+        if (CREATE_INDEX) {
             builder.setOption(Options.INDEX_ON_THE_FLY);
+        }
         final VariantContextWriter writer = builder.build();
 
         writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, false), sampleList));

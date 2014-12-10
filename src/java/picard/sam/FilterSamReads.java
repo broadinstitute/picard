@@ -36,7 +36,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.AlignedFilter;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.ReadNameFilter;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -114,19 +113,18 @@ public class FilterSamReads extends CommandLineProgram {
 
     private void filterReads(final FilteringIterator filteringIterator) {
 
-        // get OUTPUT header from INPUT and owerwrite it if necessary
-        final SamReader inputReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-        final SAMFileHeader.SortOrder inputSortOrder = inputReader.getFileHeader().getSortOrder();
-        final SAMFileHeader outputHeader = inputReader.getFileHeader();
+        // get OUTPUT header from INPUT and overwrite it if necessary
+        final SAMFileHeader fileHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(INPUT);
+        final SAMFileHeader.SortOrder inputSortOrder = fileHeader.getSortOrder();
         if (SORT_ORDER != null) {
-            outputHeader.setSortOrder(SORT_ORDER);
+            fileHeader.setSortOrder(SORT_ORDER);
         }
-        final boolean presorted = inputSortOrder.equals(outputHeader.getSortOrder());
+        final boolean presorted = inputSortOrder.equals(fileHeader.getSortOrder());
         log.info("Filtering [presorted=" + presorted + "] " + INPUT.getName() + " -> OUTPUT=" +
-                OUTPUT.getName() + " [sortorder=" + outputHeader.getSortOrder().name() + "]");
+                OUTPUT.getName() + " [sortorder=" + fileHeader.getSortOrder().name() + "]");
 
         // create OUTPUT file
-        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader, presorted, OUTPUT);
+        final SAMFileWriter outputWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(fileHeader, presorted, OUTPUT);
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Written");
 
@@ -138,7 +136,6 @@ public class FilterSamReads extends CommandLineProgram {
 
         filteringIterator.close();
         outputWriter.close();
-        CloserUtil.close(inputReader);
         log.info(new DecimalFormat("#,###").format(progress.getCount()) + " SAMRecords written to " + OUTPUT.getName());
     }
 

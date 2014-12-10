@@ -7,6 +7,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -189,5 +190,6 @@ public class MultiLevelCollectorTest {
 
         Assert.assertEquals(collector.getUnitsToMetrics().size(), totalMetrics);
         Assert.assertEquals(totalProcessed, collector.getNumProcessed());
+        CloserUtil.close(in);
     }
 }
