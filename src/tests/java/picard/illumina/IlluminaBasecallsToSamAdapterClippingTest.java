@@ -24,8 +24,9 @@
 package picard.illumina;
 
 import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -68,7 +69,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
         System.out.println ("Ouput Sam file is in " + samFile.getAbsolutePath());
 
         // Read the file and confirm it contains what is expected
-        final SAMFileReader samReader = new SAMFileReader(samFile);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
 
         // look for clipped adaptor attribute in lane 3 PE (2) and in lane 6 (1) non-PE
         int count = 0;

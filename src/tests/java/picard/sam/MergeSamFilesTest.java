@@ -25,7 +25,9 @@ package picard.sam;
 
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -55,9 +57,10 @@ public class MergeSamFilesTest extends CommandLineProgramTest {
         };
         final int mergeExitStatus = runPicardCommandLine(args);
         Assert.assertEquals(mergeExitStatus, 0);
-        final SAMFileReader reader = new SAMFileReader(mergedOutput);
+        final SamReader reader = SamReaderFactory.makeDefault().open(mergedOutput);
         Assert.assertEquals(reader.getFileHeader().getSortOrder(), SAMFileHeader.SortOrder.coordinate);
 
         new ValidateSamTester().assertSamValid(mergedOutput);
+        CloserUtil.close(reader);
     }
 }

@@ -138,5 +138,4 @@ public class CompareSAMsTest extends CommandLineProgramTest {
         testHelper("unmapped_first.sam", "unmapped_first.sam", 1, 0, 1, 0, 0, 0, 0, true);
     }
 
-
 }

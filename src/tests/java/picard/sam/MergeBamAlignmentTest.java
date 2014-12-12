@@ -27,8 +27,8 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
@@ -38,12 +38,14 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.ValidateSamTester;
 
 import java.io.File;
@@ -106,7 +108,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
         );
 
-        final SAMFileReader result = new SAMFileReader(outputWithSupplemental);
+        final SamReader result = SamReaderFactory.makeDefault().open(outputWithSupplemental);
 
         final List<Integer> clipAdapterFlags = new ArrayList<Integer>(Arrays.asList(99, 2147, 147, 2195));
         final List<Integer> foundClipAdapterFlags = new ArrayList<Integer>();
@@ -178,7 +180,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
         );
 
-        SAMFileReader result = new SAMFileReader(output);
+        SamReader result = SamReaderFactory.makeDefault().open(output);
         Assert.assertEquals(result.getFileHeader().getSequenceDictionary().getSequences().size(), 8,
                 "Number of sequences did not match");
         SAMProgramRecord pg = result.getFileHeader().getProgramRecords().get(0);
@@ -240,7 +242,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
         );
 
-        result = new SAMFileReader(output);
+        CloserUtil.close(result);
+
+        result = SamReaderFactory.makeDefault().open(output);
         pg = result.getFileHeader().getProgramRecords().get(0);
         Assert.assertEquals(pg.getProgramGroupId(), "1",
                 "Program group ID not picked up correctly from aligned BAM");
@@ -251,6 +255,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         Assert.assertEquals(pg.getProgramName(), "Hey!",
                 "Program name not picked up correctly from aligned BAM");
 
+        CloserUtil.close(result);
     }
 
 
@@ -267,7 +272,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
         );
 
-        final SAMFileReader result = new SAMFileReader(output);
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
 
         for (final SAMRecord sam : result) {
             // This tests that we clip both (a) when the adapter is marked in the unmapped BAM file and
@@ -319,9 +324,9 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 Arrays.asList(SamPairUtil.PairOrientation.FR), SAMFileHeader.SortOrder.coordinate,
                 new BestMapqPrimaryAlignmentSelectionStrategy(), false);
 
-        merger.mergeAlignment();
+        merger.mergeAlignment(Defaults.REFERENCE_FASTA);
         Assert.assertEquals(sorted, !merger.getForceSort());
-        final SAMRecordIterator it = new SAMFileReader(target).iterator();
+        final SAMRecordIterator it = SamReaderFactory.makeDefault().open(target).iterator();
         int aln = 0;
         while (it.hasNext()) {
             final SAMRecord rec = it.next();
@@ -356,15 +361,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null, null, null
                 );
 
-         final SAMFileReader result = new SAMFileReader(output);
-         final SAMProgramRecord pg = result.getFileHeader().getProgramRecords().get(0);
-
+        SamReaderFactory factory = SamReaderFactory.makeDefault();
+        final SamReader result = factory.open(output);
          for (final SAMRecord sam : result) {
             // Get the alignment record
             final List<File> rFiles = sam.getFirstOfPairFlag() ? r1Align : r2Align;
             SAMRecord alignment = null;
             for (final File f : rFiles) {
-                for (final SAMRecord tmp : new SAMFileReader(f)) {
+                for (final SAMRecord tmp : factory.open(f)) {
                     if (tmp.getReadName().equals(sam.getReadName())) {
                         alignment = tmp;
                         break;
@@ -443,7 +447,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         // Iterate over the merged output and gather some statistics
         final Map<String, AlignmentAccumulator> accumulatorMap = new HashMap<String, AlignmentAccumulator>();
 
-        final SAMFileReader reader = new SAMFileReader(merged);
+        final SamReader reader = SamReaderFactory.makeDefault().open(merged);
         for (final SAMRecord rec : reader) {
             final String readName;
             if (!rec.getReadPairedFlag()) readName = rec.getReadName();
@@ -564,7 +568,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         // Create the aligned file by copying bases, quals, readname from the unmapped read, and conforming to each HitSpec.
         final File unmappedSam = new File(TEST_DATA_DIR, "multihit.filter.unmapped.sam");
-        final SAMRecordIterator unmappedSamFileIterator = new SAMFileReader(unmappedSam).iterator();
+        final SAMRecordIterator unmappedSamFileIterator = SamReaderFactory.makeDefault().open(unmappedSam).iterator();
         final SAMRecord firstUnmappedRec = unmappedSamFileIterator.next();
         final SAMRecord secondUnmappedRec = unmappedSamFileIterator.next();
         unmappedSamFileIterator.close();
@@ -572,7 +576,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         alignedSam.deleteOnExit();
         final SAMFileHeader alignedHeader = new SAMFileHeader();
         alignedHeader.setSortOrder(SAMFileHeader.SortOrder.queryname);
-        alignedHeader.setSequenceDictionary(new SAMFileReader(sequenceDict).getFileHeader().getSequenceDictionary());
+        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
         final SAMFileWriter alignedWriter = new SAMFileWriterFactory().makeSAMWriter(alignedHeader, true, alignedSam);
         for (int i = 0; i < Math.max(firstOfPair.size(), secondOfPair.size()); ++i) {
             final HitSpec firstHitSpec = firstOfPair.isEmpty()? null: firstOfPair.get(i);
@@ -606,7 +610,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         assertSamValid(mergedSam);
 
         // Tally metrics and check for agreement with expected.
-        final SAMFileReader mergedReader = new SAMFileReader(mergedSam);
+        final SamReader mergedReader = SamReaderFactory.makeDefault().open(mergedSam);
         int numFirst = 0;
         int numSecond = 0;
         Integer primaryHitIndex = null;
@@ -836,14 +840,14 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
 
         // Create the aligned file by copying bases, quals, readname from the unmapped read, and conforming to each HitSpec.
         final File unmappedSam = new File(TEST_DATA_DIR, "multihit.filter.fragment.unmapped.sam");
-        final SAMRecordIterator unmappedSamFileIterator = new SAMFileReader(unmappedSam).iterator();
+        final SAMRecordIterator unmappedSamFileIterator = SamReaderFactory.makeDefault().open(unmappedSam).iterator();
         final SAMRecord unmappedRec = unmappedSamFileIterator.next();
         unmappedSamFileIterator.close();
         final File alignedSam = File.createTempFile("aligned.", ".sam");
         alignedSam.deleteOnExit();
         final SAMFileHeader alignedHeader = new SAMFileHeader();
         alignedHeader.setSortOrder(SAMFileHeader.SortOrder.queryname);
-        alignedHeader.setSequenceDictionary(new SAMFileReader(sequenceDict).getFileHeader().getSequenceDictionary());
+        alignedHeader.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
         final SAMFileWriter alignedWriter = new SAMFileWriterFactory().makeSAMWriter(alignedHeader, true, alignedSam);
         for (int i = 0; i < hitSpecs.size(); ++i) {
             final HitSpec hitSpec = hitSpecs.get(i);
@@ -868,7 +872,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         assertSamValid(mergedSam);
 
         // Tally metrics and check for agreement with expected.
-        final SAMFileReader mergedReader = new SAMFileReader(mergedSam);
+        final SamReader mergedReader = SamReaderFactory.makeDefault().open(mergedSam);
         int numReads = 0;
         Integer primaryHitIndex = null;
         int primaryMapq = 0;
@@ -1037,7 +1041,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         );
 
 
-        final SAMFileReader mergedReader = new SAMFileReader(output);
+        final SamReader mergedReader = SamReaderFactory.makeDefault().open(output);
         boolean seenPrimary = false;
         for (final SAMRecord rec : mergedReader) {
             if (!rec.getNotPrimaryAlignmentFlag()) {
@@ -1178,7 +1182,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, null,
                 null, null);
 
-        final SAMFileReader result = new SAMFileReader(output);
+        final SamReader result = SamReaderFactory.makeDefault().open(output);
         final Map<String, SAMRecord> firstReadEncountered = new HashMap<String, SAMRecord>();
 
         for (final SAMRecord rec : result) {
@@ -1268,7 +1272,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 MergeBamAlignment.PrimaryAlignmentStrategy.BestEndMapq,
                 null, includeSecondary
         );
-        final SAMFileReader reader = new SAMFileReader(output);
+        final SamReader reader = SamReaderFactory.makeDefault().open(output);
 
         int numFirstRecords = 0;
         int numSecondRecords = 0;
@@ -1466,9 +1470,8 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File alignedSam = File.createTempFile("aligned.", ".sam");
         alignedSam.deleteOnExit();
 
-        final SAMFileReader dictReader = new SAMFileReader(sequenceDict);
-        header.setSequenceDictionary(dictReader.getFileHeader().getSequenceDictionary());
-        dictReader.close();
+        header.setSequenceDictionary(SamReaderFactory.makeDefault().getFileHeader(sequenceDict).getSequenceDictionary());
+
 
         final SAMFileWriter alignedWriter = factory.makeSAMWriter(header, false, alignedSam);
 
@@ -1508,7 +1511,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 SamPairUtil.PairOrientation.FR, MergeBamAlignment.PrimaryAlignmentStrategy.MostDistant,
                 null, includeSecondary);
 
-        final SAMFileReader reader = new SAMFileReader(output);
+        final SamReader reader = SamReaderFactory.makeDefault().open(output);
         int numFirstRecords = 0;
         int numSecondRecords = 0;
         String firstPrimarySequence = null;
@@ -1534,7 +1537,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
                 Assert.assertTrue(rec.getMateUnmappedFlag());
             }
         }
-        reader.close();
+        CloserUtil.close(reader);
         Assert.assertEquals(firstPrimarySequence, expectedFirstPrimarySequence);
         Assert.assertEquals(firstPrimaryAlignmentStart, expectedFirstPrimaryAlignmentStart);
         Assert.assertEquals(secondPrimarySequence, expectedSecondPrimarySequence);

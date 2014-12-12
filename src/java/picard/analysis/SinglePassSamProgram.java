@@ -2,10 +2,12 @@ package picard.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -27,20 +29,17 @@ import java.util.Collection;
  * @author Tim Fennell
  */
 public abstract class SinglePassSamProgram extends CommandLineProgram {
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input SAM or BAM file.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Option(shortName="O", doc="File to write the output to.")
+    @Option(shortName = "O", doc = "File to write the output to.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence fasta", optional=true)
-    public File REFERENCE_SEQUENCE;
-
-    @Option(doc="If true (default), then the sort order in the header file will be ignored.",
+    @Option(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = true;
 
-    @Option(doc="Stop after processing N reads, mainly for debugging.")
+    @Option(doc = "Stop after processing N reads, mainly for debugging.")
     public long STOP_AFTER = 0;
 
     private static final Log log = Log.getInstance(SinglePassSamProgram.class);
@@ -49,33 +48,33 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
      * Final implementation of doWork() that checks and loads the input and optionally reference
      * sequence files and the runs the sublcass through the setup() acceptRead() and finish() steps.
      */
-    @Override protected final int doWork() {
+    @Override
+    protected final int doWork() {
         makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, Arrays.asList(this));
         return 0;
     }
 
     public static void makeItSo(final File input,
-                                   final File referenceSequence,
-                                   final boolean assumeSorted,
-                                   final long stopAfter,
-                                   final Collection<SinglePassSamProgram> programs) {
+                                final File referenceSequence,
+                                final boolean assumeSorted,
+                                final long stopAfter,
+                                final Collection<SinglePassSamProgram> programs) {
 
         // Setup the standard inputs
         IOUtil.assertFileIsReadable(input);
-        final SAMFileReader in = new SAMFileReader(input);
+        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).open(input);
 
         // Optionally load up the reference sequence and double check sequence dictionaries
         final ReferenceSequenceFileWalker walker;
         if (referenceSequence == null) {
             walker = null;
-        }
-        else {
+        } else {
             IOUtil.assertFileIsReadable(referenceSequence);
             walker = new ReferenceSequenceFileWalker(referenceSequence);
 
             if (!in.getFileHeader().getSequenceDictionary().isEmpty()) {
                 SequenceUtil.assertSequenceDictionariesEqual(in.getFileHeader().getSequenceDictionary(),
-                                                             walker.getSequenceDictionary());
+                        walker.getSequenceDictionary());
             }
         }
 
@@ -85,11 +84,10 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             if (sort != SortOrder.coordinate) {
                 if (assumeSorted) {
                     log.warn("File reports sort order '" + sort + "', assuming it's coordinate sorted anyway.");
-                }
-                else {
+                } else {
                     throw new PicardException("File " + input.getAbsolutePath() + " should be coordinate sorted but " +
-                                              "the header says the sort order is " + sort + ". If you believe the file " +
-                                              "to be coordinate sorted you may pass ASSUME_SORTED=true");
+                            "the header says the sort order is " + sort + ". If you believe the file " +
+                            "to be coordinate sorted you may pass ASSUME_SORTED=true");
                 }
             }
         }
@@ -108,8 +106,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             final ReferenceSequence ref;
             if (walker == null || rec.getReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
                 ref = null;
-            }
-            else {
+            } else {
                 ref = walker.get(rec.getReferenceIndex());
             }
 
@@ -130,7 +127,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
             }
         }
 
-        in.close();
+        CloserUtil.close(in);
 
         for (final SinglePassSamProgram program : programs) {
             program.finish();

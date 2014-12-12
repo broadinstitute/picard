@@ -24,18 +24,20 @@
 
 package picard.sam.markduplicates;
 
-import htsjdk.samtools.SAMRecordSetBuilder;
-import picard.sam.DuplicationMetrics;
-import picard.cmdline.CommandLineProgram;
-import htsjdk.samtools.metrics.MetricsFile;
-import picard.sam.testers.SamFileTester;
-import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.TestUtil;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordSetBuilder;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
+import picard.cmdline.CommandLineProgram;
+import picard.sam.DuplicationMetrics;
+import picard.sam.testers.SamFileTester;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -119,7 +121,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
             // Read the output and check the duplicate flag
             int outputRecords = 0;
-            final SAMFileReader reader = new SAMFileReader(getOutput());
+            final SamReader reader = SamReaderFactory.makeDefault().open(getOutput());
             for (final SAMRecord record : reader) {
                 outputRecords++;
                 final String key = samRecordToDuplicatesFlagsKey(record);
@@ -135,7 +137,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 }
                 Assert.assertEquals(record.getDuplicateReadFlag(), value);
             }
-            reader.close();
+            CloserUtil.close(reader);
 
             // Ensure the program output the same number of records as were read in
             Assert.assertEquals(outputRecords, this.getNumberOfRecords(), ("saw " + outputRecords + " output records, vs. " + this.getNumberOfRecords() + " input records"));

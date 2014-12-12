@@ -192,12 +192,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         this.allProbes  = probeIntervals;
         this.allTargets = targetIntervals;
 
-        final List<Interval> uniqueBaits = this.allProbes.getUniqueIntervals();
+        final List<Interval> uniqueBaits = this.allProbes.uniqued().getIntervals();
         this.probeDetector = new OverlapDetector<Interval>(-NEAR_PROBE_DISTANCE, 0);
         this.probeDetector.addAll(uniqueBaits, uniqueBaits);
         this.probeTerritory = Interval.countBases(uniqueBaits);
 
-        final List<Interval> uniqueTargets = this.allTargets.getUniqueIntervals();
+        final List<Interval> uniqueTargets = this.allTargets.uniqued().getIntervals();
         targetDetector = new OverlapDetector<Interval>(0,0);
         this.targetDetector.addAll(uniqueTargets, uniqueTargets);
         this.targetTerritory = Interval.countBases(uniqueTargets);

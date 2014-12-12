@@ -24,28 +24,41 @@
 
 package picard.sam.markduplicates;
 
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.samtools.util.SortingCollection;
+import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.Log;
 import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.SequenceUtil;
-import htsjdk.samtools.util.SortingCollection;
-import htsjdk.samtools.util.StringUtil;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
-import java.io.*;
-import java.util.*;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.Math.pow;
 
@@ -86,9 +99,9 @@ import static java.lang.Math.pow;
         usageShort = "Estimates library complexity from the sequence of read pairs",
         programGroup = Metrics.class
 )
-            public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
+public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="One or more files to combine and " +
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "One or more files to combine and " +
             "estimate library complexity from. Reads can be mapped or unmapped.")
     public List<File> INPUT;
 
@@ -259,7 +272,7 @@ import static java.lang.Math.pow;
         log.info("Will store " + MAX_RECORDS_IN_RAM + " read pairs in memory before sorting.");
 
         final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
-        int recordsRead = 0;
+        final int recordsRead = 0;
         final SortingCollection<PairedReadSequence> sorter = SortingCollection.newInstance(PairedReadSequence.class,
                 new PairedReadCodec(),
                 new PairedReadComparator(),
@@ -270,7 +283,7 @@ import static java.lang.Math.pow;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         for (final File f : INPUT) {
             final Map<String, PairedReadSequence> pendingByName = new HashMap<String, PairedReadSequence>();
-            final SAMFileReader in = new SAMFileReader(f);
+            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(f);
             readGroups.addAll(in.getFileHeader().getReadGroups());
 
             for (final SAMRecord rec : in) {
@@ -314,6 +327,7 @@ import static java.lang.Math.pow;
 
                 progress.record(rec);
             }
+            CloserUtil.close(in);
         }
 
         log.info("Finished reading - moving on to scanning for duplicates.");
