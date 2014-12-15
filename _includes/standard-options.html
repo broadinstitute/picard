@@ -11,4 +11,5 @@
 <tr><td>MAX_RECORDS_IN_RAM (Integer)</td><td>When writing SAM files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort a SAM file, and increases the amount of RAM needed.  Default value: 500000. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>CREATE_INDEX (Boolean)</td><td>Whether to create a BAM index when writing a coordinate-sorted BAM file.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>CREATE_MD5_FILE (Boolean)</td><td>Whether to create an MD5 digest for any BAM or FASTQ files created.    Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>Reference sequence file.  Default value: null. </td></tr>
 </table>
