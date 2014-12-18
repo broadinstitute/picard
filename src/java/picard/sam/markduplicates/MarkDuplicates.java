@@ -280,7 +280,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, index, rec);
                 this.fragSort.add(fragmentEnd);
 
-                if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
+                if (considerPair(rec, log)) {
                     final String key = rec.getAttribute(ReservedTagConstants.READ_GROUP_ID) + ":" + rec.getReadName();
                     ReadEndsForMarkDuplicates pairedEnds = tmp.remove(rec.getReferenceIndex(), key);
 

@@ -77,6 +77,12 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         tester.runTest();
     }
 
+    @Test
+    public void testMappedPairWithLowQualityEnd() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.addArg("MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE=10");
+    }
+
     /**
      * Test that PG header records are created & chained appropriately (or not created), and that the PG record chains
      * are as expected.  MarkDuplicates is used both to merge and to mark dupes in this case.

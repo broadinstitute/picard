@@ -84,6 +84,20 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
         new MarkDuplicatesWithMateCigar().instanceMainWithExit(args);
     }
 
+    protected String[] customCommandLineValidation() {
+        final List<String> errors = new ArrayList<String>();
+
+        if (0 <= MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE) {
+            errors.add("MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE not supported in " + MarkDuplicatesWithMateCigar.class.getSimpleName());
+        }
+
+        if (errors.size() > 0) {
+            return errors.toArray(new String[errors.size()]);
+        } else {
+            return super.customCommandLineValidation();
+        }
+    }
+
     /**
      * Main work method.
      */

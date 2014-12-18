@@ -29,12 +29,14 @@ import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
     import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -106,8 +108,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     @Option(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
     public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
 
+    @Option(shortName = "MM", doc = "Mates of pairs will be considered not mapped as a pair when their mapping quality is equal to  or below this threshold.")
+    public int MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE = -1;
+
     /** The program groups that have been seen during the course of examining the input records. */
     protected final Set<String> pgIdsSeen = new HashSet<String>();
+
+    // For warning when mapped paired records are missing mate mapping qualities
+    private boolean warnedForMissingMQ = false;
 
     /**
      * We have to re-chain the program groups based on this algorithm.  This returns the map from existing program group ID
@@ -312,5 +320,31 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         if (opticalDuplicates > 0) {
             opticalDuplicatesByLibraryId.increment(list.get(0).getLibraryId(), opticalDuplicates);
         }
+    }
+
+    /**
+     * Assumes that the record is mapped, paired, and neither secondary nor supplementary.
+     * Returns true if we should consider this record and its mate as a valid mapped pair.
+     */
+    protected boolean considerPair(final SAMRecord rec, final Log log) {
+        if (!rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) {
+            return false;
+        }
+        if (0 <= MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE) {
+            // check its mate's mapping quality, but we want both this records mapping quality and its mate for consistency
+            final Integer mateMappingQuality = rec.getIntegerAttribute(SAMTag.MQ.name());
+            if (null == mateMappingQuality) { // cannot rule out, so consider the pair
+                if (!warnedForMissingMQ) {
+                    log.warn("Missing mate mapping quality (MQ) tag in record: " + rec.getSAMString());
+                    warnedForMissingMQ = true;
+                }
+                return true;
+            }
+            // either end too low?
+            if (rec.getMappingQuality() <= MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE || mateMappingQuality <= MAXIMUM_MAPPING_QUALITY_FOR_IGNORING_MATE) {
+                return false;
+            }
+        }
+        return true;
     }
 }
