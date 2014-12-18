@@ -1,5 +1,6 @@
 package picard.cmdline;
 
+import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 
@@ -51,18 +52,23 @@ import java.util.TreeMap;
  */
 public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
+    
+    private static String initializeColor(final String color) {
+        if (CommandLineDefaults.COLOR_STATUS) return color;
+        else return "";
+    }
 
     /** Provides ANSI colors for the terminal output **/
-    private final static String KNRM = "\u001B[0m"; // reset
-    private final static String KBLD = "\u001B[1m"; // Bold
-    private final static String KRED = "\u001B[31m";
-    private final static String KGRN = "\u001B[32m";
-    private final static String KYEL = "\u001B[33m";
-    private final static String KBLU = "\u001B[34m";
-    private final static String KMAG = "\u001B[35m";
-    private final static String KCYN = "\u001B[36m";
-    private final static String KWHT = "\u001B[37m";
-    private final static String KBLDRED = "\u001B[1m\u001B[31m";
+    private final static String KNRM = initializeColor("\u001B[0m"); // reset
+    private final static String KBLD = initializeColor("\u001B[1m"); // Bold
+    private final static String KRED = initializeColor("\u001B[31m");
+    private final static String KGRN = initializeColor("\u001B[32m");
+    private final static String KYEL = initializeColor("\u001B[33m");
+    private final static String KBLU = initializeColor("\u001B[34m");
+    private final static String KMAG = initializeColor("\u001B[35m");
+    private final static String KCYN = initializeColor("\u001B[36m");
+    private final static String KWHT = initializeColor("\u001B[37m");
+    private final static String KBLDRED = initializeColor("\u001B[1m\u001B[31m");
 
     /** The name of this unified command line program **/
     private final static String COMMAND_LINE_NAME = PicardCommandLine.class.getSimpleName();
@@ -284,6 +290,5 @@ public class PicardCommandLine {
             }
         }
     }
-
 
 }
