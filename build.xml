@@ -421,7 +421,7 @@
     </target>
 
     <!-- ALL -->
-    <target name="all" depends="compile, picard-lib-jar, package-commands, document-standard-options, copy-html, build-timestamp"
+    <target name="all" depends="compile, picard-lib-jar, package-commands, document-standard-options, build-timestamp"
             description="Default build target">
         <zip zipfile="${dist}/picard-tools-${picard-version}.zip">
             <zipfileset dir="${dist}" includes="*.jar" prefix="picard-tools-${picard-version}"/>
@@ -452,12 +452,6 @@
                 </classpath>
             </java>
         </sequential>
-    </target>
-
-    <target name="copy-html">
-        <copy todir="${command-line-html-dir}">
-            <fileset dir="${src.www}"/>
-        </copy>
     </target>
 
     <!-- generate HTML documentation for command-line program -->
