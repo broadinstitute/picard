@@ -1,5 +1,6 @@
 package picard.cmdline;
 
+import htsjdk.samtools.Defaults;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 
@@ -51,18 +52,23 @@ import java.util.TreeMap;
  */
 public class PicardCommandLine {
     private static final Log log = Log.getInstance(PicardCommandLine.class);
+    
+    private static String initializeColor(final String color) {
+        if (CommandLineDefaults.COLOR_STATUS) return color;
+        else return "";
+    }
 
     /** Provides ANSI colors for the terminal output **/
-    private final static String KNRM = "\u001B[0m"; // reset
-    private final static String KBLD = "\u001B[1m"; // Bold
-    private final static String KRED = "\u001B[31m";
-    private final static String KGRN = "\u001B[32m";
-    private final static String KYEL = "\u001B[33m";
-    private final static String KBLU = "\u001B[34m";
-    private final static String KMAG = "\u001B[35m";
-    private final static String KCYN = "\u001B[36m";
-    private final static String KWHT = "\u001B[37m";
-    private final static String KBLDRED = "\u001B[1m\u001B[31m";
+    private final static String KNRM = initializeColor("\u001B[0m"); // reset
+    private final static String KBLD = initializeColor("\u001B[1m"); // Bold
+    private final static String KRED = initializeColor("\u001B[31m");
+    private final static String KGRN = initializeColor("\u001B[32m");
+    private final static String KYEL = initializeColor("\u001B[33m");
+    private final static String KBLU = initializeColor("\u001B[34m");
+    private final static String KMAG = initializeColor("\u001B[35m");
+    private final static String KCYN = initializeColor("\u001B[36m");
+    private final static String KWHT = initializeColor("\u001B[37m");
+    private final static String KBLDRED = initializeColor("\u001B[1m\u001B[31m");
 
     /** The name of this unified command line program **/
     private final static String COMMAND_LINE_NAME = PicardCommandLine.class.getSimpleName();
@@ -139,6 +145,8 @@ public class PicardCommandLine {
         } else {
             if (args[0].equals("-h")) {
                 printUsage(classes, commandLineName);
+            } else if(args[0].equals("--list-commands")) {
+                printCommandList(classes);
             } else {
                 if (simpleNameToClass.containsKey(args[0])) {
                     final Class clazz = simpleNameToClass.get(args[0]);
@@ -168,10 +176,20 @@ public class PicardCommandLine {
         }
     }
 
+    private static void printCommandList(final Set<Class<?>> classes) {
+        printUsage(classes, null, true);
+    }
+
     private static void printUsage(final Set<Class<?>> classes, final String commandLineName) {
+        printUsage(classes, commandLineName, false);
+    }
+
+    private static void printUsage(final Set<Class<?>> classes, final String commandLineName, boolean commandListOnly) {
         final StringBuilder builder = new StringBuilder();
-        builder.append(KBLDRED + "USAGE: " + commandLineName + " " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
-        builder.append(KBLDRED + "Available Programs:\n" + KNRM);
+        if (!commandListOnly) {
+            builder.append(KBLDRED + "USAGE: " + commandLineName + " " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
+            builder.append(KBLDRED + "Available Programs:\n" + KNRM);
+        }
 
         /** Group CommandLinePrograms by CommandLineProgramGroup **/
         final Map<Class<? extends CommandLineProgramGroup>, CommandLineProgramGroup> programGroupClassToProgramGroupInstance = new HashMap<Class<? extends CommandLineProgramGroup>, CommandLineProgramGroup>();
@@ -208,8 +226,10 @@ public class PicardCommandLine {
         for (final Map.Entry<CommandLineProgramGroup, List<Class>> entry : programsByGroup.entrySet()) {
             final CommandLineProgramGroup programGroup = entry.getKey();
 
-            builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
-            builder.append(String.format("%s%-48s %-45s%s\n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
+            if (!commandListOnly) {
+                builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
+                builder.append(String.format("%s%-48s %-45s%s\n", KRED, programGroup.getName() + ":", programGroup.getDescription(), KNRM));
+            }
 
             final List<Class> sortedClasses = new ArrayList<Class>();
             sortedClasses.addAll(entry.getValue());
@@ -220,17 +240,21 @@ public class PicardCommandLine {
                 if (null == property) {
                     throw new RuntimeException(String.format("Unexpected error: did not find the CommandLineProgramProperties annotation for '%s'", clazz.getSimpleName()));
                 }
-                if (clazz.getSimpleName().length() >= 45) {
-                    builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                if (!commandListOnly) {
+                    if (clazz.getSimpleName().length() >= 45) {
+                        builder.append(String.format("%s    %s    %s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                    } else {
+                        builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                    }
                 }
                 else {
-                    builder.append(String.format("%s    %-45s%s%s%s\n", KGRN, clazz.getSimpleName(), KCYN, property.usageShort(), KNRM));
+                    builder.append(clazz.getSimpleName() + "\n");
                 }
             }
-            builder.append(String.format("\n"));
+            if (!commandListOnly) builder.append(String.format("\n"));
         }
-        builder.append(KWHT + "--------------------------------------------------------------------------------------\n" + KNRM);
-        System.err.println(builder.toString());
+        if (!commandListOnly) builder.append(KWHT + "--------------------------------------------------------------------------------------\n\n" + KNRM);
+        System.err.print(builder.toString());
     }
 
     /** similarity floor for matching in printUnknown **/
@@ -284,6 +308,4 @@ public class PicardCommandLine {
             }
         }
     }
-
-
 }
