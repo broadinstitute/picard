@@ -218,4 +218,28 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
             return result;
         }
     }
+    
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final Gene that = (Gene) o;
+
+        if (!this.getSequence().equals(that.getSequence())) return false;
+        if (this.getStart() != that.getStart()) return false;
+        if (this.getEnd() != that.getEnd()) return false;
+        if (!this.getName().equals(that.getName())) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = this.getSequence().hashCode();
+        result = 31 * result + this.getStart();
+        result = 31 * result + this.getEnd();
+        result = 31 * result + this.getName().hashCode();
+        return result;
+    }
 }
