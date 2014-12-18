@@ -86,13 +86,21 @@ public class CollectIlluminaSummaryMetricsTest {
 
     @Test(dataProvider = "IlluminaSummaryData")
     public void testIlluminaSummary(final String intervalFile, final String fileBAM, final Integer TOTAL_READS, final Integer PF_READS, final Integer DUPLICATE_READS,
-                                    final Long TOTAL_BASES, final Long PF_BASES, final Long TOTAL_ILMN_BASES, final Double AVERAGE_ILMN_DEPTH, final Long READ_LENGTH, final Long TARGET_REGION) throws Exception {
+                                    final Long TOTAL_BASES, final Long PF_BASES, final Long TOTAL_ILLUMINA_BASES, final Double MEAN_ILLUMINA_DEPTH, final Long READ_LENGTH, final Long TARGET_REGION) throws Exception {
 
-        final IlluminaSummaryMetrics expectedMetric=new IlluminaSummaryMetrics( TOTAL_READS,  PF_READS,  DUPLICATE_READS, TOTAL_BASES,  PF_BASES,  TOTAL_ILMN_BASES,  AVERAGE_ILMN_DEPTH,  READ_LENGTH, TARGET_REGION);
-
-            final MetricsFile<IlluminaSummaryMetrics, ?> metricsFile = getSummaryFile(intervalFile,fileBAM, CHR_M_REFERENCE, rootTestDir + "/READ_TEST");
+        final IlluminaSummaryMetrics expectedMetric=new IlluminaSummaryMetrics( TOTAL_READS,  PF_READS,  DUPLICATE_READS, TOTAL_BASES,  PF_BASES,  TOTAL_ILLUMINA_BASES,  MEAN_ILLUMINA_DEPTH,  READ_LENGTH, TARGET_REGION);
+        final MetricsFile<IlluminaSummaryMetrics, ?> metricsFile = getSummaryFile(intervalFile,fileBAM, CHR_M_REFERENCE, rootTestDir + "/READ_TEST");
         final IlluminaSummaryMetrics metrics = metricsFile.getMetrics().get(0);
+        Assert.assertEquals(metrics.toString(), expectedMetric.toString());
+    }
 
+    @Test(dataProvider = "IlluminaSummaryData")
+    public void testIlluminaSummaryNoReference(final String intervalFile, final String fileBAM, final Integer TOTAL_READS, final Integer PF_READS, final Integer DUPLICATE_READS,
+                                    final Long TOTAL_BASES, final Long PF_BASES, final Long TOTAL_ILLUMINA_BASES, final Double MEAN_ILLUMINA_DEPTH, final Long READ_LENGTH, final Long TARGET_REGION) throws Exception {
+
+        final IlluminaSummaryMetrics expectedMetric=new IlluminaSummaryMetrics( TOTAL_READS,  PF_READS,  DUPLICATE_READS, TOTAL_BASES,  PF_BASES,  TOTAL_ILLUMINA_BASES,  MEAN_ILLUMINA_DEPTH,  READ_LENGTH, TARGET_REGION);
+        final MetricsFile<IlluminaSummaryMetrics, ?> metricsFile = getSummaryFile(intervalFile,fileBAM, null, rootTestDir + "/READ_TEST");
+        final IlluminaSummaryMetrics metrics = metricsFile.getMetrics().get(0);
         Assert.assertEquals(metrics.toString(), expectedMetric.toString());
     }
 
@@ -100,7 +108,9 @@ public class CollectIlluminaSummaryMetricsTest {
         final List<String> argList = new ArrayList<String>();
         argList.add("I=" + input);
         argList.add("O=" + outputFile);
-        argList.add("R=" + reference);
+        if (reference != null) {
+            argList.add("R=" + reference);
+        }
         if(!intervalFile.equals("")) argList.add("TARGET_REGION="+intervalFile);
 
         final String[] args = new String[argList.size()];
