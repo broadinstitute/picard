@@ -667,7 +667,14 @@ public class CommandLineParser {
                 optionDefinition.hasBeenSet = true;
                 optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
             } else {
-                optionDefinition.field.set(callerOptions, value);
+                //get all fields with this name and set them to the argument.
+                final String fieldName = optionDefinition.field.getName();
+                final Field[] fields = callerOptions.getClass().getFields();
+                for (final Field field : fields) {
+                    if (field.getName().equals(fieldName)) {
+                        field.set(callerOptions, value);
+                    }
+                }
                 optionDefinition.hasBeenSet = true;
                 optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
             }
@@ -912,6 +919,10 @@ public class CommandLineParser {
             if (!(optionDefinition.overridable && optionMap.containsKey(optionDefinition.name))) {
                 optionDefinitions.add(optionDefinition);
                 optionMap.put(optionDefinition.name, optionDefinition);
+            }
+            //we are overridable but we already exist in the map so we need to update the hidden field value
+            else if (optionMap.containsKey(optionDefinition.name)) {
+                field.set(this.callerOptions, optionMap.get(optionDefinition.name).field.get(callerOptions));
             }
         } catch (final IllegalAccessException e) {
             throw new CommandLineParserDefinitionException(field.getName() +
@@ -1234,5 +1245,9 @@ public class CommandLineParser {
      */
     public void setMessageStream(final PrintStream messageStream) {
         this.messageStream = messageStream;
+    }
+
+    public Object getCallerOptions() {
+        return callerOptions;
     }
 }
