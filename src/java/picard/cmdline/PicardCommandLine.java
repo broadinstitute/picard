@@ -177,14 +177,14 @@ public class PicardCommandLine {
     }
 
     private static void printCommandList(final Set<Class<?>> classes) {
-        printUsage(classes, null, true);
+        printUsage(classes, null, true, true);
     }
 
     private static void printUsage(final Set<Class<?>> classes, final String commandLineName) {
-        printUsage(classes, commandLineName, false);
+        printUsage(classes, commandLineName, false, false);
     }
 
-    private static void printUsage(final Set<Class<?>> classes, final String commandLineName, boolean commandListOnly) {
+    private static void printUsage(final Set<Class<?>> classes, final String commandLineName, boolean commandListOnly, boolean toStdout) {
         final StringBuilder builder = new StringBuilder();
         if (!commandListOnly) {
             builder.append(KBLDRED + "USAGE: " + commandLineName + " " + KGRN + "<program name>" + KBLDRED + " [-h]\n\n" + KNRM);
@@ -254,7 +254,12 @@ public class PicardCommandLine {
             if (!commandListOnly) builder.append(String.format("\n"));
         }
         if (!commandListOnly) builder.append(KWHT + "--------------------------------------------------------------------------------------\n\n" + KNRM);
-        System.err.print(builder.toString());
+        if (toStdout) {
+            System.out.print(builder.toString());
+        }
+        else {
+            System.err.print(builder.toString());
+        }
     }
 
     /** similarity floor for matching in printUnknown **/
