@@ -49,17 +49,20 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta aligned to.")
     public File REFERENCE_SEQUENCE;
 
-    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.")
+    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
     public int MINIMUM_MAPPING_QUALITY = 20;
 
-    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.")
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 20;
 
-    @Option(shortName = "CAP", doc = "Treat bases with coverage exceeding this value as if they had coverage at this value.")
+    @Option(shortName = "CAP", doc = "Treat bases with coverage exceeding this value as if they had coverage at this value.", overridable = true)
     public int COVERAGE_CAP = 250;
 
     @Option(doc = "For debugging purposes, stop after processing this many genomic bases.")
     public long STOP_AFTER = -1;
+
+    @Option(doc = "Determines whether to include the base quality histogram in the metrics file.")
+    public boolean INCLUDE_BQ_HISTOGRAM = false;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
 
@@ -151,6 +154,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
         final int max = COVERAGE_CAP;
         final long[] HistogramArray = new long[max + 1];
+        final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
         final boolean usingStopAfter = STOP_AFTER > 0;
         final long stopAfter = STOP_AFTER - 1;
         long counter = 0;
@@ -170,14 +174,14 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
             // Figure out the coverage while not counting overlapping reads twice, and excluding various things
             final HashSet<String> readNames = new HashSet<String>(info.getRecordAndPositions().size());
+            int pileupSize = 0;
             for (final SamLocusIterator.RecordAndOffset recs : info.getRecordAndPositions()) {
-                if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY) {
-                    ++basesExcludedByBaseq;
-                    continue;
-                }
-                if (!readNames.add(recs.getRecord().getReadName())) {
-                    ++basesExcludedByOverlap;
-                    continue;
+
+                if (recs.getBaseQuality() < MINIMUM_BASE_QUALITY)                   { ++basesExcludedByBaseq;   continue; }
+                if (!readNames.add(recs.getRecord().getReadName()))                 { ++basesExcludedByOverlap; continue; }
+                pileupSize++;
+                if (pileupSize <= max) {
+                    baseQHistogramArray[recs.getRecord().getBaseQualities()[recs.getOffset()]]++;
                 }
             }
 
@@ -196,7 +200,13 @@ public class CollectWgsMetrics extends CommandLineProgram {
             histo.increment(i, HistogramArray[i]);
         }
 
-        final WgsMetrics metrics = new WgsMetrics();
+        // Construct and write the outputs
+        final Histogram<Integer> baseQHisto = new Histogram<Integer>("value", "baseq_count");
+        for (int i=0; i<baseQHistogramArray.length; ++i) {
+            baseQHisto.increment(i, baseQHistogramArray[i]);
+        }
+
+        final WgsMetrics metrics = generateWgsMetrics();
         metrics.GENOME_TERRITORY = (long) histo.getSumOfValues();
         metrics.MEAN_COVERAGE = histo.getMean();
         metrics.SD_COVERAGE = histo.getStandardDeviation();
@@ -233,9 +243,16 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final MetricsFile<WgsMetrics, Integer> out = getMetricsFile();
         out.addMetric(metrics);
         out.addHistogram(histo);
+        if (INCLUDE_BQ_HISTOGRAM) {
+            out.addHistogram(baseQHisto);
+        }
         out.write(OUTPUT);
 
         return 0;
+    }
+
+    protected WgsMetrics generateWgsMetrics() {
+        return new WgsMetrics();
     }
 }
 
