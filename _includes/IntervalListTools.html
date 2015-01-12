@@ -4,7 +4,7 @@
 <p> General tool for manipulating interval lists, including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to merge and sort them.  Other options are controlled by arguments.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT (File)</td><td>One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs.  This option must be specified at least 1 times. </td></tr>
+<tr><td>INPUT (File)</td><td>One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs. Supported formats are interval_list and VCF.  This option must be specified at least 1 times. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)  Default value: null. </td></tr>
 <tr><td>PADDING (Integer)</td><td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals &lt; 0 bases long will be removed. Padding is applied to the interval lists &lt;b> before &lt;/b> the ACTION is performed.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>UNIQUE (Boolean)</td><td>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
@@ -19,6 +19,7 @@
 <tr><td>SECOND_INPUT (File)</td><td>Second set of intervals for SUBTRACT and DIFFERENCE operations.  This option may be specified 0 or more times. </td></tr>
 <tr><td>COMMENT (String)</td><td>One or more lines of comment to add to the header of the output file.  This option may be specified 0 or more times. </td></tr>
 <tr><td>SCATTER_COUNT (Integer)</td><td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INCLUDE_FILTERED (Boolean)</td><td>Whether to include filtered variants in the vcf when generating an interval list from vcf  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>SUBDIVISION_MODE (Mode)</td><td>Do not subdivide   Default value: INTERVAL_SUBDIVISION. This option can be set to 'null' to clear the default value. Possible values: {INTERVAL_SUBDIVISION, BALANCING_WITHOUT_INTERVAL_SUBDIVISION} </td></tr>
 <tr><td>INVERT (Boolean)</td><td>Produce the inverse list  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>

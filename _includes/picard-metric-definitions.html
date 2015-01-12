@@ -8,9 +8,9 @@
 <li><a href="#BaseDistributionByCycleMetrics">BaseDistributionByCycleMetrics</a>: </li>
 <li><a href="#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric">CollectHiSeqXPfFailMetrics.PFFailDetailedMetric</a>: a metric class for describing FP failing reads from an Illumina HiSeqX lane *</li>
 <li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
-<li><a href="#CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics">CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
 <li><a href="#CollectOxoGMetrics.CpcgMetrics">CollectOxoGMetrics.CpcgMetrics</a>: Metrics class for outputs.</li>
 <li><a href="#CollectQualityYieldMetrics.QualityYieldMetrics">CollectQualityYieldMetrics.QualityYieldMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
+<li><a href="#CollectRawWGSMetrics.RawWgsMetrics">CollectRawWGSMetrics.RawWgsMetrics</a>: </li>
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
@@ -99,14 +99,6 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>TILE</td><td>The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. *</td></tr><tr><td>READS</td><td>The total number of reads examined</td></tr><tr><td>PF_FAIL_READS</td><td>The number of non-PF reads in this tile.</td></tr><tr><td>PCT_PF_FAIL_READS</td><td>The fraction of PF_READS</td></tr><tr><td>PF_FAIL_EMPTY</td><td>The number of non-PF reads in this tile that are deemed empty.</td></tr><tr><td>PCT_PF_FAIL_EMPTY</td><td>The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_POLYCLONAL</td><td>The number of non-PF reads in this tile that are deemed multiclonal.</td></tr><tr><td>PCT_PF_FAIL_POLYCLONAL</td><td>The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_MISALIGNED</td><td>The number of non-PF reads in this tile that are deemed "misaligned".</td></tr><tr><td>PCT_PF_FAIL_MISALIGNED</td><td>The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all non-PF reads).</td></tr><tr><td>PF_FAIL_UNKNOWN</td><td>The number of non-PF reads in this tile that have not been classified.</td></tr><tr><td>PCT_PF_FAIL_UNKNOWN</td><td>The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads).</td></tr></table>
 </section>
-<a id="CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics"></a>
-<h2>CollectIlluminaSummaryMetrics.IlluminaSummaryMetrics</h2>
-<section>
-<p>A set of metrics used to describe the general quality of a BAM file</p>
-<table>
-<tr><th>Field</th><th>Description</th></tr>
-<tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>DUPLICATE_READS</td><td>The number of duplicate, PF reads</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>TOTAL_ILLUMINA_BASES</td><td>The number of bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</td></tr><tr><td>AVERAGE_ILMN_DEPTH</td><td>The average depth considering only bases from PF, unique (non-duplicate) reads, only counting for overlapping bases once</td></tr><tr><td>READ_LENGTH</td><td>The read length</td></tr><tr><td>TARGET_TERRITORY</td><td>The size of the target region</td></tr></table>
-</section>
 <a id="CollectOxoGMetrics.CpcgMetrics"></a>
 <h2>CollectOxoGMetrics.CpcgMetrics</h2>
 <section>
@@ -128,6 +120,14 @@
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>READ_LENGTH</td><td>The average read length of all the reads (will be fixed for a lane)</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>Q20_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q20_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q30_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q30_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr><tr><td>PF_Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr></table>
+</section>
+<a id="CollectRawWGSMetrics.RawWgsMetrics"></a>
+<h2>CollectRawWGSMetrics.RawWgsMetrics</h2>
+<section>
+<p></p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+</table>
 </section>
 <a id="CollectWgsMetrics.WgsMetrics"></a>
 <h2>CollectWgsMetrics.WgsMetrics</h2>
