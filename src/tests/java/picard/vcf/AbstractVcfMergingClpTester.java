@@ -133,6 +133,25 @@ public abstract class AbstractVcfMergingClpTester {
         runClp(inputs, output, indexing, 0);
         validateResultsForMultipleInputs(output, positionQueues);
 	}
+	
+	@Test
+	private void testMergeListOfVcf() throws IOException {
+	    final List<File> list = Arrays.asList(new File(TEST_DATA_PATH, "vcf.list"));
+	    final File output = File.createTempFile("merge-list-output.", ".vcf");
+	    output.deleteOnExit();
+	    final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
+	    runClp(list, output, indexing, 0);
+	} 
+
+    @Test (expectedExceptions = htsjdk.samtools.SAMException.class)
+	private void testMergeListOfVcfMissing() throws IOException {
+	    final List<File> list = Arrays.asList(new File(TEST_DATA_PATH, "vcf-missing.list"));
+	    final File output = File.createTempFile("merge-list-output.", ".vcf");
+	    output.deleteOnExit();
+	    final List<String> indexing = Arrays.asList("CREATE_INDEX=false");
+	    runClp(list, output, indexing, 0);
+	} 
+
 
     private void validateResultsForMultipleInputs(final File output, final List<Queue<String>> positionQueues) {
         final VCFFileReader outputReader = new VCFFileReader(output, false);
