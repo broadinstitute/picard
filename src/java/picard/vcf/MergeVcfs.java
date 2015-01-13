@@ -46,11 +46,15 @@ import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Combines multiple VCF files into a single file. Input files must be sorted by their contigs
@@ -71,8 +75,9 @@ import java.util.List;
 )
 public class MergeVcfs extends CommandLineProgram {
 
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension.", minElements=1)
-    public List<File> INPUT;
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension."+
+        "A suffix \'.list\' is interpreted as a text file containing the paths to the input file.  ", minElements=1)
+    public List<String> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
     public File OUTPUT;
@@ -89,7 +94,39 @@ public class MergeVcfs extends CommandLineProgram {
     public MergeVcfs() {
         this.CREATE_INDEX = true;
     }
-
+    
+    /** read the input file. if a INPUT ends with '*.list' the
+        file is interpreted as a list of VCF files */
+    private Set<File> getInputFiles()
+        {
+        Set<File> input_files = new LinkedHashSet<File>();
+        for (final String filename : this.INPUT) {
+            if(filename.endsWith(".list")) {/*suffix is list: read the paths */
+                BufferedReader br = null;
+                try {
+                    br = IOUtil.openFileForBufferedReading(new File(filename));
+                    String line;
+                    while((line = br.readLine())!=null)
+                        {
+                        if(line.isEmpty() || line.startsWith("#")) continue;
+                        input_files.add(new File(line));
+                        }
+                    }
+                catch(IOException err) {
+                    throw new PicardException("Error while reading "+ filename +
+                        " : "+err.getMessage());
+                    }
+                finally {
+                    CloserUtil.close(br);
+                    }
+                }
+            else { /* BCF or VCF file */
+                input_files.add(new File(filename));
+                }
+            }
+        return input_files;
+        }
+    
     @Override
     protected int doWork() {
         final ProgressLogger progress = new ProgressLogger(log, 10000);
@@ -104,7 +141,7 @@ public class MergeVcfs extends CommandLineProgram {
             sequenceDictionary = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(SEQUENCE_DICTIONARY).getFileHeader().getSequenceDictionary();
         }
 
-        for (final File file : INPUT) {
+        for (final File file : this.getInputFiles()) {
             IOUtil.assertFileIsReadable(file);
             final VCFFileReader fileReader = new VCFFileReader(file, false);
             final VCFHeader fileHeader = fileReader.getFileHeader();
