@@ -77,7 +77,7 @@ public class MergeVcfs extends CommandLineProgram {
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="VCF or BCF input files File format is determined by file extension."+
         "A suffix \'.list\' is interpreted as a text file containing the paths to the input file.  ", minElements=1)
-    public List<String> INPUT;
+    public List<File> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The merged VCF or BCF file. File format is determined by file extension.")
     public File OUTPUT;
@@ -100,11 +100,12 @@ public class MergeVcfs extends CommandLineProgram {
     private Set<File> getInputFiles()
         {
         Set<File> input_files = new LinkedHashSet<File>();
-        for (final String filename : this.INPUT) {
-            if(filename.endsWith(".list")) {/*suffix is list: read the paths */
+        for (final File file : this.INPUT) {
+            IOUtil.assertFileIsReadable(file);
+            if(file.getName().endsWith(".list")) {/*suffix is list: read the paths */
                 BufferedReader br = null;
                 try {
-                    br = IOUtil.openFileForBufferedReading(new File(filename));
+                    br = IOUtil.openFileForBufferedReading(file);
                     String line;
                     while((line = br.readLine())!=null)
                         {
@@ -113,7 +114,7 @@ public class MergeVcfs extends CommandLineProgram {
                         }
                     }
                 catch(IOException err) {
-                    throw new PicardException("Error while reading "+ filename +
+                    throw new PicardException("Error while reading "+ file +
                         " : "+err.getMessage());
                     }
                 finally {
@@ -121,7 +122,7 @@ public class MergeVcfs extends CommandLineProgram {
                     }
                 }
             else { /* BCF or VCF file */
-                input_files.add(new File(filename));
+                input_files.add(file);
                 }
             }
         return input_files;
