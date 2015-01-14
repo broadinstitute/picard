@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2015 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,15 +55,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Collect metrics regarding the reason for reads (sequenced by HiSeqX) not passing the Illumina PF Filter. (BETA)
  *
- * @author Yossi Farjoun
+ * @author David Benjamin
  */
 @CommandLineProgramProperties(
-        usage = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories. The classification is based on a heuristic that was derived by looking at a few titration experiments.",
-        usageShort = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.",
+        usage = "Detect pad-hopping duplication in HiSeqX.",
+        usageShort = "Detect pad-hopping duplication in HiSeqX.",
         programGroup = Metrics.class
 )
 
-public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
+public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
@@ -71,13 +71,13 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             " <OUTPUT>" + summaryMetricsExtension, optional = false)
     public File OUTPUT;
 
-    @Option(shortName = "P", doc = "The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_READS != 0)", optional = true)
-    public double PROB_EXPLICIT_READS = 0;
+    @Option(shortName = "P", doc = "The fraction of pad-hopping events to output explicitly. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_OUTPUT != 0)", optional = true)
+    public double PROB_EXPLICIT_OUTPUT = 0;
 
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(shortName = "NP", doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
+    @Option(shortName = "NP", doc = "Run this many PerTilePadHoppingMetricsExtractor in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.", optional = true)
     public int NUM_PROCESSORS = 1;
@@ -86,16 +86,16 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
 
-    private static final Log LOG = Log.getInstance(CollectHiSeqXPfFailMetrics.class);
+    private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
-    private final Map<Integer, PFFailSummaryMetric> tileToSummaryMetrics = new LinkedHashMap<Integer, PFFailSummaryMetric>();
-    private final Map<Integer, List<PFFailDetailedMetric>> tileToDetailedMetrics = new LinkedHashMap<Integer, List<PFFailDetailedMetric>>();
+    private final Map<Integer, PadHoppingSummaryMetric> tileToSummaryMetrics = new LinkedHashMap<Integer, PadHoppingSummaryMetric>();
+    private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new LinkedHashMap<Integer, List<PadHoppingDetailMetric>>();
 
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(N_CYCLES + "T");
 
-    public final static String detailedMetricsExtension = ".pffail_detailed_metrics";
-    public final static String summaryMetricsExtension = ".pffail_summary_metrics";
+    public final static String detailedMetricsExtension = ".pad_hopping_detailed_metrics";
+    public final static String summaryMetricsExtension = ".pad_hopping_summary_metrics";
 
     @Override
     protected String[] customCommandLineValidation() {
@@ -105,8 +105,8 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             errors.add("Number of Cycles to look at must be greater than 0");
         }
 
-        if (PROB_EXPLICIT_READS > 1 || PROB_EXPLICIT_READS < 0) {
-            errors.add("PROB_EXPLICIT_READS must be a probability, i.e., 0 <= PROB_EXPLICIT_READS <= 1");
+        if (PROB_EXPLICIT_OUTPUT > 1 || PROB_EXPLICIT_OUTPUT < 0) {
+            errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
         }
 
         if (errors.size() > 0) {
@@ -118,12 +118,16 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
     /** Stock main method. */
     public static void main(final String[] args) {
-        new CollectHiSeqXPfFailMetrics().instanceMainWithExit(args);
+        new CollectPadHoppingMetrics().instanceMainWithExit(args);
     }
 
     @Override
     protected int doWork() {
 
+        //A factory gives a provider for every tile in the flowcell lane
+        //A provider is an iterator for ClusterData
+        //An extractor is a Runnable wrapper for a provider
+        //ClusterData corresponds to a single BAM record (read)
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
                 IlluminaDataType.BaseCalls,
@@ -135,7 +139,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
 
         IOUtil.assertFileIsWritable(summaryMetricsFileName);
-        if (PROB_EXPLICIT_READS != 0) {
+        if (PROB_EXPLICIT_OUTPUT != 0) {
             IOUtil.assertFileIsWritable(detailedMetricsFileName);
         }
 
@@ -149,25 +153,25 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
 
         // Create thread-pool submit jobs and what for their completion
-        LOG.info("Processing with " + numProcessors + " PerTilePFMetricsExtractor(s).");
+        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
-        final List<PerTilePFMetricsExtractor> extractors = new ArrayList<PerTilePFMetricsExtractor>(factory.getAvailableTiles().size());
+        final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(factory.getAvailableTiles().size());
         for (final int tile : factory.getAvailableTiles()) {
-            tileToSummaryMetrics.put(tile, new PFFailSummaryMetric(Integer.toString(tile)));
-            tileToDetailedMetrics.put(tile, new ArrayList<PFFailDetailedMetric>());
+            tileToSummaryMetrics.put(tile, new PadHoppingSummaryMetric(Integer.toString(tile)));
+            tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
-            final PerTilePFMetricsExtractor extractor = new PerTilePFMetricsExtractor(
+            final PerTilePadHoppingMetricsExtractor extractor = new PerTilePadHoppingMetricsExtractor(
                     tile,
                     tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile),
                     factory,
-                    PROB_EXPLICIT_READS
+                    PROB_EXPLICIT_OUTPUT
             );
             extractors.add(extractor);
         }
         try {
-            for (final PerTilePFMetricsExtractor extractor : extractors) {
+            for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
                 pool.submit(extractor);
             }
             pool.shutdown();
@@ -183,7 +187,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         LOG.info("Processed " + extractors.size() + " tiles.");
 
         // Check for exceptions from extractors
-        for (final PerTilePFMetricsExtractor extractor : extractors) {
+        for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
             if (extractor.getException() != null) {
                 LOG.error("Abandoning metrics calculation because one or more PerTilePFMetricsExtractors failed.");
                 return 4;
@@ -191,31 +195,31 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
 
         // Add detailed metrics to file
-        final MetricsFile<PFFailDetailedMetric, ?> detailedMetrics = getMetricsFile();
-        for (final Collection<PFFailDetailedMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
-            for (final PFFailDetailedMetric metric : detailedMetricCollection) {
+        final MetricsFile<PadHoppingDetailMetric, ?> detailedMetrics = getMetricsFile();
+        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
+            for (final PadHoppingDetailMetric metric : detailedMetricCollection) {
                 detailedMetrics.addMetric(metric);
             }
         }
 
         // If detailed metrics were requested, write them now.
-        if (PROB_EXPLICIT_READS > 0) {
+        if (PROB_EXPLICIT_OUTPUT > 0) {
             detailedMetrics.write(detailedMetricsFileName);
         }
 
         // Finish metrics tallying. Looping twice so that the "All" metrics will come out on top.
-        final PFFailSummaryMetric totalMetric = new PFFailSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final PFFailSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
+        final PadHoppingSummaryMetric totalMetric = new PadHoppingSummaryMetric("All"); // a "fake" tile that will contain the total tally
+        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             totalMetric.merge(summaryMetric);
         }
 
         // Derive fields for total metric and add to file
         totalMetric.calculateDerivedFields();
-        final MetricsFile<PFFailSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
+        final MetricsFile<PadHoppingSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
         summaryMetricsFile.addMetric(totalMetric);
 
         // Prepare each tile's derived fields and add it to the file
-        for (final PFFailSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
+        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             summaryMetric.calculateDerivedFields();
             summaryMetricsFile.addMetric(summaryMetric);
         }
@@ -227,11 +231,11 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
     }
 
     /** Extracts metrics from a HiSeqX tile. */
-    private static class PerTilePFMetricsExtractor implements Runnable {
+    private static class PerTilePadHoppingMetricsExtractor implements Runnable {
 
         private final int tile;
-        private final PFFailSummaryMetric summaryMetric;
-        final Collection<PFFailDetailedMetric> detailedMetrics;
+        private final PadHoppingSummaryMetric summaryMetric;
+        final Collection<PadHoppingDetailMetric> detailedMetrics;
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         final private double pWriteDetailed;
@@ -245,10 +249,10 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
          * @param detailedMetrics A set of metrics for collecting the classification data in.
          * @param factory A dataprovider for IlluminaData
          */
-        public PerTilePFMetricsExtractor(
+        public PerTilePadHoppingMetricsExtractor(
                 final int tile,
-                final PFFailSummaryMetric summaryMetric,
-                final Collection<PFFailDetailedMetric> detailedMetrics,
+                final PadHoppingSummaryMetric summaryMetric,
+                final Collection<PadHoppingDetailMetric> detailedMetrics,
                 final IlluminaDataProviderFactory factory,
                 final double pWriteDetailed
         ) {
@@ -281,7 +285,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
                         final ReadClassifier readClassifier = new ReadClassifier(cluster.getRead(0));
 
                         if (random.nextDouble() < pWriteDetailed) {
-                            detailedMetrics.add(new PFFailDetailedMetric(tile, cluster.getX(), cluster.getY(), readClassifier.numNs, readClassifier.numQGtTwo, readClassifier.failClass));
+                            detailedMetrics.add(new PadHoppingDetailMetric(tile, cluster.getX(), cluster.getY(), readClassifier.numNs, readClassifier.numQGtTwo, readClassifier.failClass));
                         }
                         switch (readClassifier.failClass) {
                             case EMPTY:
@@ -364,7 +368,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
     }
 
     /** a metric class for describing FP failing reads from an Illumina HiSeqX lane * */
-    public static class PFFailDetailedMetric extends MetricBase {
+    public static class PadHoppingDetailMetric extends MetricBase {
         // The Tile that is described by this metric.
         public Integer TILE;
 
@@ -382,11 +386,11 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
         /**
          * The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
-         * (See PFFailSummaryMetric for explanation regarding the possible classification.)
+         * (See PadHoppingSummaryMetric for explanation regarding the possible classification.)
          */
         public ReadClassifier.PfFailReason CLASSIFICATION;
 
-        public PFFailDetailedMetric(final Integer TILE, final int x, final int y, final int NUM_N, final int NUM_Q_GT_TWO, final ReadClassifier.PfFailReason CLASSIFICATION) {
+        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y, final int NUM_N, final int NUM_Q_GT_TWO, final ReadClassifier.PfFailReason CLASSIFICATION) {
             this.TILE = TILE;
             X = x;
             Y = y;
@@ -396,7 +400,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
 
         /** This ctor is necessary for when reading metrics from file */
-        public PFFailDetailedMetric() {
+        public PadHoppingDetailMetric() {
         }
     }
 
@@ -406,7 +410,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
      * Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
      * cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)
      */
-    public static class PFFailSummaryMetric extends MetricBase {
+    public static class PadHoppingSummaryMetric extends MetricBase {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;
 
@@ -444,12 +448,12 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         public double PCT_PF_FAIL_UNKNOWN = 0.0;
 
         // constructor takes a String for tile since we want to have one instance with tile="All". This tile will contain the summary of all the tiles
-        public PFFailSummaryMetric(final String tile) {
+        public PadHoppingSummaryMetric(final String tile) {
             TILE = tile;
         }
 
         /** This ctor is necessary for when reading metrics from file */
-        public PFFailSummaryMetric() {
+        public PadHoppingSummaryMetric() {
         }
 
         /**
@@ -457,7 +461,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
          *
          * @param metric
          */
-        public void merge(final PFFailSummaryMetric metric) {
+        public void merge(final PadHoppingSummaryMetric metric) {
             this.READS += metric.READS;
             this.PF_FAIL_READS += metric.PF_FAIL_READS;
             this.PF_FAIL_EMPTY += metric.PF_FAIL_EMPTY;
