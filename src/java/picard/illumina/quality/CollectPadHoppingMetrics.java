@@ -241,6 +241,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final private double pWriteDetailed;
         final private Random random = new Random();
 
+        //PAD-HOPPING-SPECIFIC FIELDS
+        //Need to initialize an array of all x/y/bases/hash data and the union-find data structures
+
         /**
          * Constructor
          *
@@ -268,7 +271,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** run method which extracts accumulates metrics for a tile */
         public void run() {
             try {
-                LOG.info("Extracting PF metrics for tile " + tile);
+                LOG.info("Extracting pad-hopping metrics for tile " + tile);
 
                 /**
                  *   Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
@@ -276,35 +279,25 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                  *   so they are not all waiting for each others file operations
                  */
                 while (provider.hasNext()) {
-                    // Extract the PF status and infer reason if FAIL from the cluster and update the summaryMetric for the tile
                     final ClusterData cluster = provider.next();
-                    this.summaryMetric.READS++;
-                    if (!cluster.isPf()) {
-                        this.summaryMetric.PF_FAIL_READS++;
 
-                        final ReadClassifier readClassifier = new ReadClassifier(cluster.getRead(0));
+                    //BEGINNING OF PAD-HOPPING-SPECIFIC CODE
+                    //fill arrays of x/y/bases/hash data from cluster data
+                    //union-find processing occurs after this while loop
+                    // if (cluster.isPf()) . . . only deal with Pf reads??
+                    //this.summaryMetric.READS++;
 
-                        if (random.nextDouble() < pWriteDetailed) {
-                            detailedMetrics.add(new PadHoppingDetailMetric(tile, cluster.getX(), cluster.getY(), readClassifier.numNs, readClassifier.numQGtTwo, readClassifier.failClass));
-                        }
-                        switch (readClassifier.failClass) {
-                            case EMPTY:
-                                this.summaryMetric.PF_FAIL_EMPTY++;
-                                break;
-                            case MISALIGNED:
-                                this.summaryMetric.PF_FAIL_MISALIGNED++;
-                                break;
-                            case POLYCLONAL:
-                                this.summaryMetric.PF_FAIL_POLYCLONAL++;
-                                break;
-                            case UNKNOWN:
-                                this.summaryMetric.PF_FAIL_UNKNOWN++;
-                                break;
-                            default:
-                                LOG.error("Got unexpected fail Reason");
-                        }
-                    }
-                }
+                }   //end of while -- all clusters have been processed
+
+                //MORE PAD-HOPPING-SPECIFIC CODE
+                //do union-find processing
+
+                //randomly add pad-hopping events to detailed metrics
+                //if (random.nextDouble() < pWriteDetailed) {
+                //    detailedMetrics.add(new PadHoppingDetailMetric(. . .));
+                //}
+
+
             } catch (final Exception e) {
                 LOG.error(e, "Error processing tile ", this.tile);
                 this.exception = e;
@@ -314,60 +307,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
-    protected static class ReadClassifier {
-        public enum PfFailReason {
-            EMPTY,
-            POLYCLONAL,
-            MISALIGNED,
-            UNKNOWN
-        }
-
-        private final int numNs; // The number of Ns in the base calls
-        private final int numQGtTwo; // The number of quality scores greater than 2
-        private PfFailReason failClass = null; // The classification of the failure mode
-
-        /**
-         * Heart of CLP.
-         * This class actually classifies ReadData into the reason why it failed PF
-         * classification is based on a small set of titrated flowcells sequenced at the Broad Institute by the Genomics Platform.
-         * Three cluster were observed:
-         * - numNs~24 and was found only near the boundaries of tiles. it didn't seem to depend on concentration. For this reason it
-         * was classified as MISALIGNED
-         * <p/>
-         * - numNs~0 and numQGtTwo<=8 these were found throughout the tiles and _decreased_ in number as the concentration of the library increased
-         * Thus it was concluded that these correspond to the EMPTY wells
-         * <p/>
-         * - numNs~0 and numQGtTwo>=12 there were found throughout the tiles and _increased_ in number as the concentration of the library increased
-         * Thus it was concluded that these correspond to the POLYCLONAL wells
-         * <p/>
-         * - the remaining reads were few in number the classification for them wasn't clear. Thus they are left as UNKNOWN.
-         * <p/>
-         * We use the length of the read as a parameter and scale the 8 and the 12 accordingly as length/3 and length/2, but in reality this has only
-         * been tested on length=24.
-         *
-         * @param read The read to classify.
-         */
-        public ReadClassifier(final ReadData read) {
-
-            final int length = read.getBases().length;
-
-            numNs = countEquals(read.getBases(), (byte) '.'); // Ns are returned as periods from Illumina
-            numQGtTwo = countGreaterThan(read.getQualities(), (byte) 2);
-
-            failClass = PfFailReason.UNKNOWN; //for cases not covered below
-            if (numNs >= (length - 1)) {
-                failClass = PfFailReason.MISALIGNED;
-            } else if (numNs <= 1) {
-                if (numQGtTwo <= length / 3) {
-                    failClass = PfFailReason.EMPTY;
-                } else if (numQGtTwo >= length / 2) {
-                    failClass = PfFailReason.POLYCLONAL;
-                }
-            }
-        }
-    }
 
     /** a metric class for describing FP failing reads from an Illumina HiSeqX lane * */
+    //PAD-HOPPING-SPECIFIC: ENLARGE THIS CLASS!!!!
     public static class PadHoppingDetailMetric extends MetricBase {
         // The Tile that is described by this metric.
         public Integer TILE;
@@ -378,25 +320,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         //The Y coordinate of the read within the tile
         public int Y;
 
-        //The number of Ns found in this read.
-        public int NUM_N;
-
-        //The number of Quality scores greater than 2 found in this read
-        public int NUM_Q_GT_TWO;
-
-        /**
-         * The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
-         * (See PadHoppingSummaryMetric for explanation regarding the possible classification.)
-         */
-        public ReadClassifier.PfFailReason CLASSIFICATION;
-
-        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y, final int NUM_N, final int NUM_Q_GT_TWO, final ReadClassifier.PfFailReason CLASSIFICATION) {
+        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y) {
             this.TILE = TILE;
             X = x;
             Y = y;
-            this.NUM_N = NUM_N;
-            this.NUM_Q_GT_TWO = NUM_Q_GT_TWO;
-            this.CLASSIFICATION = CLASSIFICATION;
         }
 
         /** This ctor is necessary for when reading metrics from file */
@@ -410,6 +337,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
      * Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
      * cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)
      */
+    //PAD-HOPPING-SPECIFIC: CHANGE THIS CLASS!!!!
     public static class PadHoppingSummaryMetric extends MetricBase {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;
@@ -482,33 +410,5 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
-    /**
-     * a simple function that counts how many elements in array are equal to 'toCount'
-     *
-     * @param array
-     * @param toCount
-     * @return number of elements in array that == 'toCount'
-     */
-    static private int countEquals(final byte[] array, final byte toCount) {
-        int count = 0;
-        for (final byte t : array) {
-            if (t == toCount) count++;
-        }
-        return count;
-    }
 
-    /**
-     * a simple function that counts how many elements in array are greater-than-or-equal-to 'value'
-     *
-     * @param array
-     * @param value
-     * @return number of elements in array that >= 'value'
-     */
-    static private int countGreaterThan(final byte[] array, final byte value) {
-        int count = 0;
-        for (final int t : array) {
-            if (t > value) count++;
-        }
-        return count;
-    }
 }
