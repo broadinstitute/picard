@@ -77,6 +77,9 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
+    @Option(doc = "Maximum number of clusters per tile to output.", shortName = "MC")
+    public static long MAX_CLUSTERS = Long.MAX_VALUE;
+
     @Option(shortName = "NP", doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.", optional = true)
@@ -271,7 +274,9 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
                  *   is non-overlapping sets of files so make the data providers in the individual threads for Extractors
                  *   so they are not all waiting for each others file operations
                  */
-                while (provider.hasNext()) {
+            long clusterCount = Long.valueOf(0);
+                while (provider.hasNext() && ++clusterCount < MAX_CLUSTERS) {
+                    clusterCount++;
                     // Extract the PF status and infer reason if FAIL from the cluster and update the summaryMetric for the tile
                     final ClusterData cluster = provider.next();
                     this.summaryMetric.READS++;
