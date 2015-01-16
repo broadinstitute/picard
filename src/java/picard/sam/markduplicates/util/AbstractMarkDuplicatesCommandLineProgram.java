@@ -30,13 +30,14 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamFileHeaderMerger;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
-    import picard.cmdline.CommandLineProgramProperties;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
@@ -60,7 +61,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more input SAM or BAM files to analyze. Must be coordinate sorted.")
-    public List<File> INPUT;
+    public List<String> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
             doc = "The output file to write marked records to")
@@ -234,12 +235,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(INPUT.size());
         final List<SamReader> readers = new ArrayList<SamReader>(INPUT.size());
 
-        for (final File f : INPUT) {
-            final SamReader reader = SamReaderFactory.makeDefault().enable(SamReaderFactory.Option.EAGERLY_DECODE).open(f); // eager decode
+        for (final String input : INPUT) {
+            SamReader reader = SamReaderFactory.makeDefault()
+                .enable(SamReaderFactory.Option.EAGERLY_DECODE)
+                .open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
 
             if (!ASSUME_SORTED && header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-                throw new PicardException("Input file " + f.getAbsolutePath() + " is not coordinate sorted.");
+                throw new PicardException("Input file " + input + " is not coordinate sorted.");
             }
 
             headers.add(header);

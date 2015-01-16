@@ -7,6 +7,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
@@ -36,8 +37,8 @@ import java.util.Arrays;
 )
 public class AddOrReplaceReadGroups extends CommandLineProgram {
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input file (bam or sam).")
-    public File INPUT = null;
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam or a GA4GH url).")
+    public String INPUT = null;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (bam or sam).")
     public File OUTPUT = null;
@@ -81,10 +82,12 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     }
 
     protected int doWork() {
-        IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertInputIsValid(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SamReader in = SamReaderFactory.makeDefault()
+            .referenceSequence(REFERENCE_SEQUENCE)
+            .open(SamInputResource.of(INPUT));
 
         // create the read group we'll be using
         final SAMReadGroupRecord rg = new SAMReadGroupRecord(RGID);

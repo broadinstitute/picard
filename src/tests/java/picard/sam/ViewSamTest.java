@@ -50,7 +50,7 @@ public class ViewSamTest {
         final File viewSamOutputFile = File.createTempFile("ViewSamTest.output.", ".sam");
         viewSamOutputFile.deleteOnExit();
         final ViewSam viewSam = new ViewSam();
-        viewSam.INPUT = inputSam;
+        viewSam.INPUT = inputSam.getAbsolutePath();
         final PrintStream viewSamPrintStream = new PrintStream(viewSamOutputFile);
         // TODO - Should switch over to using invocation via new PicardCommandLine() - BUT the test here is accessing class members directly.
         Assert.assertEquals(viewSam.writeSamText(viewSamPrintStream), 0);

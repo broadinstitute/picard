@@ -188,7 +188,7 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         // record creation according to suppressPg.
         final MarkDuplicates markDuplicates = new MarkDuplicates();
         markDuplicates.setupOpticalDuplicateFinder();
-        markDuplicates.INPUT = CollectionUtil.makeList(sam);
+        markDuplicates.INPUT = CollectionUtil.makeList(sam.getAbsolutePath());
         markDuplicates.OUTPUT = outputSam;
         markDuplicates.METRICS_FILE = metricsFile;
         markDuplicates.TMP_DIR = CollectionUtil.makeList(outputDir);
