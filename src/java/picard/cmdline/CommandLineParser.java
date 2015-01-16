@@ -673,10 +673,14 @@ public class CommandLineParser {
                 for (final Field field : fields) {
                     if (field.getName().equals(fieldName)) {
                         field.set(callerOptions, value);
+                        optionDefinition.hasBeenSet = true;
                     }
                 }
-                optionDefinition.hasBeenSet = true;
-                optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
+                if (!optionDefinition.hasBeenSet) {
+                    optionDefinition.field.set(callerOptions, value);
+                    optionDefinition.hasBeenSet = true;
+                }
+               optionDefinition.hasBeenSetFromOptionsFile = optionsFile;
             }
         } catch (final IllegalAccessException e) {
             // Should never happen because we only iterate through public fields.
