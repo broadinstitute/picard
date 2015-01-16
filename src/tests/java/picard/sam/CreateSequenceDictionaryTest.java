@@ -25,6 +25,7 @@ package picard.sam;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.File;
@@ -32,10 +33,14 @@ import java.io.File;
 /**
  * @author alecw@broadinstitute.org
  */
-public class CreateSequenceDictionaryTest {
+public class CreateSequenceDictionaryTest extends CommandLineProgramTest {
     public static File TEST_DATA_DIR = new File("testdata/picard/sam");
     public static File BASIC_FASTA = new File(TEST_DATA_DIR, "basic.fasta");
     public static File DUPLICATE_FASTA = new File(TEST_DATA_DIR, "duplicate_sequence_names.fasta");
+
+    public String getCommandLineProgramName() {
+        return CreateSequenceDictionary.class.getSimpleName();
+    }
 
     @Test
     public void testBasic() throws Exception {
@@ -47,7 +52,7 @@ public class CreateSequenceDictionaryTest {
                 "OUTPUT=" + outputDict,
                 "TRUNCATE_NAMES_AT_WHITESPACE=false"
         };
-        Assert.assertEquals(new CreateSequenceDictionary().instanceMain(argv), 0);
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
     }
 
     /**
@@ -62,7 +67,7 @@ public class CreateSequenceDictionaryTest {
                 "OUTPUT=" + outputDict,
                 "TRUNCATE_NAMES_AT_WHITESPACE=true"
         };
-        Assert.assertEquals(new CreateSequenceDictionary().instanceMain(argv), 0);
+        Assert.assertEquals(runPicardCommandLine(argv), 0);
         Assert.fail("Exception should have been thrown.");
     }
 }

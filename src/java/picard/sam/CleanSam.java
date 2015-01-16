@@ -23,31 +23,37 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
 /**
  * @author alecw@broadinstitute.org
  */
+@CommandLineProgramProperties(
+        usage = CleanSam.USAGE,
+        usageShort = CleanSam.USAGE,
+        programGroup = SamOrBam.class
+)
 public class CleanSam extends CommandLineProgram {
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Read SAM and perform various fix-ups.  " +
-            "Currently, the only fix-ups are 1: to soft-clip an alignment that hangs off the end of its reference sequence; " +
-            "and 2: to set MAPQ to 0 if a read is unmapped.";
 
+    static final String USAGE = "Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads";
+    
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM to be cleaned.")
     public File INPUT;
 
@@ -68,38 +74,34 @@ public class CleanSam extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
-        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
+        final SamReaderFactory factory = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE);
         if (VALIDATION_STRINGENCY == ValidationStringency.STRICT) {
-            SAMFileReader.setDefaultValidationStringency(ValidationStringency.LENIENT);
+            factory.validationStringency(ValidationStringency.LENIENT);
         }
-        try {
-            final SAMFileReader reader = new SAMFileReader(INPUT);
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
-            final CloseableIterator<SAMRecord> it = reader.iterator();
-            final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
+        final SamReader reader = factory.open(INPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
+        final CloseableIterator<SAMRecord> it = reader.iterator();
+        final ProgressLogger progress = new ProgressLogger(Log.getInstance(CleanSam.class));
+
+        // If the read (or its mate) maps off the end of the alignment, clip it
+        while (it.hasNext()) {
+            final SAMRecord rec = it.next();
 
             // If the read (or its mate) maps off the end of the alignment, clip it
-            while(it.hasNext()) {
-                final SAMRecord rec = it.next();
+            AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(rec);
 
-                // If the read (or its mate) maps off the end of the alignment, clip it
-                AbstractAlignmentMerger.createNewCigarsIfMapsOffEndOfReference(rec);
-
-                // check the read's mapping quality
-                if (rec.getReadUnmappedFlag() && 0 != rec.getMappingQuality()) {
-                    rec.setMappingQuality(0);
-                }
-
-                writer.addAlignment(rec);
-                progress.record(rec);
+            // check the read's mapping quality
+            if (rec.getReadUnmappedFlag() && 0 != rec.getMappingQuality()) {
+                rec.setMappingQuality(0);
             }
 
-            writer.close();
-            it.close();
+            writer.addAlignment(rec);
+            progress.record(rec);
         }
-        finally {
-            SAMFileReader.setDefaultValidationStringency(originalStringency);
-        }
+
+        writer.close();
+        it.close();
+        CloserUtil.close(reader);
         return 0;
     }
 }

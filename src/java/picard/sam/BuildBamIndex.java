@@ -29,14 +29,17 @@ import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.net.URL;
@@ -46,23 +49,25 @@ import java.net.URL;
  *
  * @author Martha Borkan
  */
+@CommandLineProgramProperties(
+        usage = "Generates a BAM index (.bai) file.",
+        usageShort = "Generates a BAM index (.bai) file",
+        programGroup = SamOrBam.class
+)
 public class BuildBamIndex extends CommandLineProgram {
 
     private static final Log log = Log.getInstance(BuildBamIndex.class);
 
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Generates a BAM index (.bai) file.";
-
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc="A BAM file or URL to process. Must be sorted in coordinate order.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "A BAM file or URL to process. Must be sorted in coordinate order.")
     public String INPUT;
 
     URL inputUrl = null;   // INPUT as URL
     File inputFile = null; // INPUT as File, if it can't be interpreted as a valid URL
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc="The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
-                "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional=true)
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.\n" +
+                    "If INPUT is a URL and OUTPUT is unspecified, defaults to a file in the current directory.", optional = true)
     public File OUTPUT;
 
     /** Stock main method for a command line program. */
@@ -106,18 +111,18 @@ public class BuildBamIndex extends CommandLineProgram {
         }
 
         IOUtil.assertFileIsWritable(OUTPUT);
-        final SAMFileReader bam;
+        final SamReader bam;
 
         if (inputUrl != null) {
             // remote input
-            bam = new SAMFileReader(inputUrl, null, false);
+            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).disable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(inputUrl));
         } else {
             // input from a normal file
             IOUtil.assertFileIsReadable(inputFile);
-            bam = new SAMFileReader(inputFile);
+            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inputFile);
         }
 
-        if (!bam.isBinary()) {
+        if (bam.type() != SamReader.Type.BAM_TYPE) {
             throw new SAMException("Input file must be bam file, not sam file.");
         }
 

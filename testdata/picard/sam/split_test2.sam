@@ -1,0 +1,9 @@
+@HD	VN:1.0	SO:queryname
+@RG	ID:1	SM:foo	LB:lib-1
+@RG	ID:3	SM:bar2	LB:lib-3
+A	77	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:1
+A	141	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:1
+B	77	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:3
+B	141	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:3
+D	77	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:1
+D	141	*	0	0	*	*	0	0	CAACAGAAGC	)'.*.+2,))	RG:Z:1

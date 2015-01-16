@@ -31,8 +31,9 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.IlluminaUtil;
 
 import java.io.File;
@@ -60,13 +61,17 @@ import java.util.Set;
  * 
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
+@CommandLineProgramProperties(
+        usage = CollectAlignmentSummaryMetrics.USAGE,
+        usageShort = CollectAlignmentSummaryMetrics.USAGE,
+        programGroup = Metrics.class
+)
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
-
+    static final String USAGE = "Produces from a SAM or BAM a file containing summary alignment metrics";
+    
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     // Usage and parameters
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Reads a SAM or BAM file and writes a file containing summary alignment metrics.\n";
 
     @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;

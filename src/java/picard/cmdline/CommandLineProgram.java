@@ -24,7 +24,6 @@
 package picard.cmdline;
 
 import htsjdk.samtools.Defaults;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFileWriterImpl;
 import htsjdk.samtools.SamReaderFactory;
@@ -40,6 +39,8 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.zip.DeflaterFactory;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ import java.util.Map;
  * 4. Implement the following static method in the concrete class:
  *
  *     public static void main(String[] argv) {
-        new MyConcreteClass().instanceMainWithExit(argv);
+        new MyConcreteClass().instanceMain(argv);
     }
 
 
@@ -97,6 +98,9 @@ public abstract class CommandLineProgram {
 
     @Option(doc="Whether to create an MD5 digest for any BAM or FASTQ files created.  ", common=true)
     public boolean CREATE_MD5_FILE = Defaults.CREATE_MD5;
+
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = true, optional = true, overridable = true)
+    public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
@@ -140,8 +144,6 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
-        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
-        SAMFileReader.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
@@ -184,7 +186,6 @@ public abstract class CommandLineProgram {
         try {
             ret = doWork();
         } finally {
-            SAMFileReader.setDefaultValidationStringency(originalStringency);
             try {
                 // Emit the time even if program throws
                 if (!QUIET) {
@@ -268,13 +269,6 @@ public abstract class CommandLineProgram {
 
     public CommandLineParser getCommandLineParser() {
         return commandLineParser;
-    }
-
-    /**
-     * @return This is a little-used version string that can be put in the @Usage annotation
-     */
-    public String getProgramVersion() {
-        return commandLineParser.getProgramVersion();
     }
 
 

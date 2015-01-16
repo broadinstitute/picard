@@ -29,6 +29,7 @@ import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ReadStructure;
 
 import java.io.File;
@@ -38,12 +39,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class IlluminaBasecallsToFastqTest {
+public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
 
     private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/fastq");
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
+
+    public String getCommandLineProgramName() {
+        return IlluminaBasecallsToFastq.class.getSimpleName();
+    }
 
     @Test
     public void testNonBarcoded() throws Exception {
@@ -54,7 +59,7 @@ public class IlluminaBasecallsToFastqTest {
         final File outputFastq2 = new File(outputPrefix + ".2.fastq");
         outputFastq2.deleteOnExit();
         final int lane = 1;
-        new IlluminaBasecallsToFastq().instanceMain(new String[]{
+        runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25T8B25T",
@@ -78,7 +83,7 @@ public class IlluminaBasecallsToFastqTest {
             final String filePrefix = "testMultiplexRH";
             final File outputPrefix = new File(outputDir, filePrefix);
 
-            new IlluminaBasecallsToFastq().instanceMain(new String[]{
+            runPicardCommandLine(new String[]{
                     "BASECALLS_DIR=" + BASECALLS_DIR,
                     "LANE=" + 1,
                     "RUN_BARCODE=HiMom",
@@ -93,7 +98,7 @@ public class IlluminaBasecallsToFastqTest {
                 filePrefix + ".1.fastq",
                 filePrefix + ".barcode_1.fastq"
             };
-            for (String filename : filenames) {
+            for (final String filename : filenames) {
                 IOUtil.assertFilesEqual(new File(outputDir, filename), new File(TEST_DATA_DIR, filename));
             }
 
@@ -151,7 +156,7 @@ public class IlluminaBasecallsToFastqTest {
             writer.close();
             reader.close();
 
-            new IlluminaBasecallsToFastq().instanceMain(new String[]{
+            runPicardCommandLine(new String[]{
                     "BASECALLS_DIR=" + baseCallsDir,
                     "LANE=" + lane,
                     "RUN_BARCODE=HiMom",
@@ -164,11 +169,11 @@ public class IlluminaBasecallsToFastqTest {
             final ReadStructure readStructure = new ReadStructure(readStructureString);
             for (final File outputSam : outputPrefixes) {
                 for (int i = 1; i <= readStructure.templates.length(); ++i) {
-                    String filename = outputSam.getName() + "." + i + ".fastq";
+                    final String filename = outputSam.getName() + "." + i + ".fastq";
                     IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
                 for (int i = 1; i <= readStructure.barcodes.length(); ++i) {
-                    String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
+                    final String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
                     IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
             }

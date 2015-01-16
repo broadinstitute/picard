@@ -1,12 +1,14 @@
 package picard.sam.testers;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import picard.cmdline.CommandLineProgram;
@@ -20,7 +22,9 @@ import java.util.Arrays;
  */
 public class CleanSamTester extends SamFileTester {
     private final String expectedCigar;
-    private final CleanSam program = new CleanSam();
+
+    @Override
+    public String getCommandLineProgramName() { return CleanSam.class.getSimpleName(); }
 
     public CleanSamTester(final String expectedCigar, final int readLength, final int defaultChromosomeLength) {
         super(readLength, true, defaultChromosomeLength);
@@ -36,8 +40,8 @@ public class CleanSamTester extends SamFileTester {
             validator.setIgnoreWarnings(true);
             validator.setVerbose(true, 1000);
             validator.setErrorsToIgnore(Arrays.asList(SAMValidationError.Type.MISSING_READ_GROUP));
-            SAMFileReader samReader = new SAMFileReader(getOutput());
-            samReader.setValidationStringency(ValidationStringency.LENIENT);
+            SamReaderFactory factory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT);
+            SamReader samReader = factory.open(getOutput());
             final SAMRecordIterator iterator = samReader.iterator();
             while (iterator.hasNext()) {
                 final SAMRecord rec = iterator.next();
@@ -46,21 +50,16 @@ public class CleanSamTester extends SamFileTester {
                     Assert.assertEquals(SAMUtils.getMateCigarString(rec), expectedCigar);
                 }
             }
-            samReader.close();
+            CloserUtil.close(samReader);
 
             // Run validation on the output file
-            samReader = new SAMFileReader(getOutput());
+            samReader = factory.open(getOutput());
             final boolean validated = validator.validateSamFileVerbose(samReader, null);
-            samReader.close();
+            CloserUtil.close(samReader);
+
             Assert.assertTrue(validated, "ValidateSamFile failed");
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
         }
     }
-
-    @Override
-    protected CommandLineProgram getProgram() {
-        return program;
-    }
-
 }

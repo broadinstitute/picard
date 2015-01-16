@@ -24,11 +24,13 @@
 package picard.illumina;
 
 import htsjdk.samtools.ReservedTagConstants;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 
@@ -36,11 +38,15 @@ import java.io.File;
 /**
  * Run IlluminaBasecallsToSam on a sample tests, then sanity-check the generated SAM file
  */
-public class IlluminaBasecallsToSamAdapterClippingTest {
+public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/125T125T/Data/Intensities/BaseCalls");
     private static final String ALIAS = "myalias";
     private static final String RUN_BARCODE = "305PJAAXX080716";
+
+    public String getCommandLineProgramName() {
+        return IlluminaBasecallsToSam.class.getSimpleName();
+    }
 
     /**
      * Run IlluminaBasecallsToSam on a few test cases, and verify that results agree with hand-checked expectation.
@@ -58,24 +64,22 @@ public class IlluminaBasecallsToSamAdapterClippingTest {
                 "OUTPUT=" + samFile,
                 "ALIAS=" + ALIAS
         };
-        Assert.assertEquals(new IlluminaBasecallsToSam().instanceMain(illuminaArgv), 0);
+        Assert.assertEquals(runPicardCommandLine(illuminaArgv), 0);
 
         System.out.println ("Ouput Sam file is in " + samFile.getAbsolutePath());
 
         // Read the file and confirm it contains what is expected
-        final SAMFileReader samReader = new SAMFileReader(samFile);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
 
         // look for clipped adaptor attribute in lane 3 PE (2) and in lane 6 (1) non-PE
-        int count = 0;   int matchCount = 0;
+        int count = 0;
         for (final SAMRecord record : samReader) {
             if (record.getIntegerAttribute(ReservedTagConstants.XT) != null) {
-                count ++;
+                count++;
                 if ((count == 1 || count == 2) && LANE.equals("2")){
                     Assert.assertEquals (114, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
-                    matchCount++;
                 } else if (count == 1 || count == 2 && LANE.equals("1")) {
                     Assert.assertEquals(68, (int) record.getIntegerAttribute(ReservedTagConstants.XT));
-                    matchCount++;
                 }
             }
         }

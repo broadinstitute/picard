@@ -26,10 +26,10 @@ package picard.sam;
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
@@ -42,6 +42,8 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
@@ -56,8 +58,6 @@ import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 
 import java.io.File;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,21 +65,20 @@ import java.util.List;
  * Abstract class that coordinates the general task of taking in a set of alignment information,
  * possibly in SAM format, possibly in other formats, and merging that with the set of all reads
  * for which alignment was attempted, stored in an unmapped SAM file.
- *
+ * <p/>
  * The order of processing is as follows:
- *
- *   1.  Get records from the unmapped bam and the alignment data
- *   2.  Merge the alignment information and public tags ONLY from the aligned SAMRecords
- *   3.  Do additional modifications -- handle clipping, trimming, etc.
- *   4.  Fix up mate information on paired reads
- *   5.  Do a final calculation of the NM and UQ tags.
- *   6.  Write the records to the output file.
- *
+ * <p/>
+ * 1.  Get records from the unmapped bam and the alignment data
+ * 2.  Merge the alignment information and public tags ONLY from the aligned SAMRecords
+ * 3.  Do additional modifications -- handle clipping, trimming, etc.
+ * 4.  Fix up mate information on paired reads
+ * 5.  Do a final calculation of the NM and UQ tags.
+ * 6.  Write the records to the output file.
+ * <p/>
  * Concrete subclasses which extend AbstractAlignmentMerger should implement getQueryNameSortedAlignedRecords.
  * If these records are not in queryname order, mergeAlignment will throw an IllegalStateException.
- *
+ * <p/>
  * Subclasses may optionally implement ignoreAlignment(), which can be used to skip over certain alignments.
- *
  *
  * @author ktibbett@broadinstitute.org
  */
@@ -87,8 +86,7 @@ public abstract class AbstractAlignmentMerger {
 
     public static final int MAX_RECORDS_IN_RAM = 500000;
 
-    private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X','Y', 'Z'};
-    private final NumberFormat FMT = new DecimalFormat("#,###");
+    private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
     private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Written to sorting collection in queryname order", "records");
@@ -104,7 +102,7 @@ public abstract class AbstractAlignmentMerger {
     private final SAMFileHeader header;
     private final List<String> attributesToRetain = new ArrayList<String>();
     private final List<String> attributesToRemove = new ArrayList<String>();
-    private final File referenceFasta;
+    protected final File referenceFasta;
     private final Integer read1BasesTrimmed;
     private final Integer read2BasesTrimmed;
     private final List<SamPairUtil.PairOrientation> expectedOrientations;
@@ -120,6 +118,7 @@ public abstract class AbstractAlignmentMerger {
         public boolean filterOut(final SAMRecord record) {
             return ignoreAlignment(record);
         }
+
         public boolean filterOut(final SAMRecord first, final SAMRecord second) {
             throw new UnsupportedOperationException("Paired SamRecordFilter not implemented!");
         }
@@ -127,38 +126,38 @@ public abstract class AbstractAlignmentMerger {
     private boolean includeSecondaryAlignments = true;
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
-    
+
     protected boolean ignoreAlignment(final SAMRecord sam) { return false; } // default implementation
 
     /**
      * Constructor
      *
-     * @param unmappedBamFile   The BAM file that was used as the input to the aligner, which will
-     *                          include info on all the reads that did not map.  Required.
-     * @param targetBamFile     The file to which to write the merged SAM records. Required.
-     * @param referenceFasta    The reference sequence for the map files. Required.
-     * @param clipAdapters      Whether adapters marked in unmapped BAM file should be marked as
-     *                          soft clipped in the merged bam. Required.
-     * @param bisulfiteSequence Whether the reads are bisulfite sequence (used when calculating the
-     *                          NM and UQ tags). Required.
-     * @param alignedReadsOnly  Whether to output only those reads that have alignment data
-     * @param programRecord     Program record for target file SAMRecords created.
-     * @param attributesToRetain  private attributes from the alignment record that should be
-     *                          included when merging.  This overrides the exclusion of
-     *                          attributes whose tags start with the reserved characters
-     *                          of X, Y, and Z
-     * @param attributesToRemove  attributes from the alignment record that should be
-     *                          removed when merging.  This overrides attributesToRetain if they share
-     *                           common tags.
-     * @param read1BasesTrimmed The number of bases trimmed from start of read 1 prior to alignment.  Optional.
-     * @param read2BasesTrimmed The number of bases trimmed from start of read 2 prior to alignment.  Optional.
-     * @param expectedOrientations A List of SamPairUtil.PairOrientations that are expected for
-     *                          aligned pairs.  Used to determine the properPair flag.
-     * @param sortOrder           The order in which the merged records should be output.  If null,
-     *                            output will be coordinate-sorted
+     * @param unmappedBamFile                   The BAM file that was used as the input to the aligner, which will
+     *                                          include info on all the reads that did not map.  Required.
+     * @param targetBamFile                     The file to which to write the merged SAM records. Required.
+     * @param referenceFasta                    The reference sequence for the map files. Required.
+     * @param clipAdapters                      Whether adapters marked in unmapped BAM file should be marked as
+     *                                          soft clipped in the merged bam. Required.
+     * @param bisulfiteSequence                 Whether the reads are bisulfite sequence (used when calculating the
+     *                                          NM and UQ tags). Required.
+     * @param alignedReadsOnly                  Whether to output only those reads that have alignment data
+     * @param programRecord                     Program record for target file SAMRecords created.
+     * @param attributesToRetain                private attributes from the alignment record that should be
+     *                                          included when merging.  This overrides the exclusion of
+     *                                          attributes whose tags start with the reserved characters
+     *                                          of X, Y, and Z
+     * @param attributesToRemove                attributes from the alignment record that should be
+     *                                          removed when merging.  This overrides attributesToRetain if they share
+     *                                          common tags.
+     * @param read1BasesTrimmed                 The number of bases trimmed from start of read 1 prior to alignment.  Optional.
+     * @param read2BasesTrimmed                 The number of bases trimmed from start of read 2 prior to alignment.  Optional.
+     * @param expectedOrientations              A List of SamPairUtil.PairOrientations that are expected for
+     *                                          aligned pairs.  Used to determine the properPair flag.
+     * @param sortOrder                         The order in which the merged records should be output.  If null,
+     *                                          output will be coordinate-sorted
      * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
      *                                          alignments but none primary, for a read or read pair.
-     * @param addMateCigar      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
+     * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
@@ -229,22 +228,32 @@ public abstract class AbstractAlignmentMerger {
      * Do this unconditionally, not just for aligned records, for two reasons:
      * - An unaligned read has been processed by the aligner, so it is more truthful.
      * - When chaining additional PG records, having all the records in the output file refer to the same PG
-     *   record means that only one chain will need to be created, rather than a chain for the mapped reads
-     *   and a separate chain for the unmapped reads.
+     * record means that only one chain will need to be created, rather than a chain for the mapped reads
+     * and a separate chain for the unmapped reads.
      */
     private void maybeSetPgTag(final SAMRecord rec) {
         if (this.programRecord != null) {
             rec.setAttribute(ReservedTagConstants.PROGRAM_GROUP_ID, this.programRecord.getProgramGroupId());
         }
     }
-    /**
 
     /**
+     * /**
      * Merges the alignment data with the non-aligned records from the source BAM file.
      */
-    public void mergeAlignment() {
+    public void mergeAlignment(final File referenceFasta) {
         // Open the file of unmapped records and write the read groups to the the header for the merged file
-        final SAMFileReader unmappedSam = new SAMFileReader(this.unmappedBamFile);
+        final SamReader unmappedSam = SamReaderFactory.makeDefault().referenceSequence(referenceFasta).open(this.unmappedBamFile);
+
+        // Check that the program record we are going to insert is not already used in the unmapped SAM
+        if (getProgramRecord() != null) {
+            for (final SAMProgramRecord pg : unmappedSam.getFileHeader().getProgramRecords()) {
+                if (pg.getId().equals(getProgramRecord().getId())) {
+                    throw new PicardException("Program Record ID already in use in unmapped BAM file.");
+                }
+            }
+        }
+
         final CloseableIterator<SAMRecord> unmappedIterator = unmappedSam.iterator();
         this.header.setReadGroups(unmappedSam.getFileHeader().getReadGroups());
 
@@ -252,16 +261,14 @@ public abstract class AbstractAlignmentMerger {
         int unmapped = 0;
 
         // Get the aligned records and set up the first one
-        alignedIterator = new MultiHitAlignedReadIterator(
-                new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter),
-                primaryAlignmentSelectionStrategy);
+        alignedIterator = new MultiHitAlignedReadIterator(new FilteringIterator(getQuerynameSortedAlignedRecords(), alignmentFilter), primaryAlignmentSelectionStrategy);
         HitsForInsert nextAligned = nextAligned();
 
         // Create the sorting collection that will write the records in the coordinate order
         // to the final bam file
         final SortingCollection<SAMRecord> sorted = SortingCollection.newInstance(
-            SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
-            MAX_RECORDS_IN_RAM);
+                SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
+                MAX_RECORDS_IN_RAM);
 
         while (unmappedIterator.hasNext()) {
             // Load next unaligned read or read pair.
@@ -280,11 +287,13 @@ public abstract class AbstractAlignmentMerger {
                 if (!rec.getReadName().equals(secondOfPair.getReadName()))
                     throw new PicardException("Second read from pair not found in unmapped bam: " + rec.getReadName() + ", " + secondOfPair.getReadName());
 
-                if (!rec.getFirstOfPairFlag()) throw new PicardException("First record in unmapped bam is not first of pair: " + rec.getReadName());
-                if (!secondOfPair.getReadPairedFlag())  throw new PicardException("Second record in unmapped bam is not marked as paired: " + secondOfPair.getReadName());
-                if (!secondOfPair.getSecondOfPairFlag())  throw new PicardException("Second record in unmapped bam is not second of pair: " + secondOfPair.getReadName());
-            }
-            else {
+                if (!rec.getFirstOfPairFlag())
+                    throw new PicardException("First record in unmapped bam is not first of pair: " + rec.getReadName());
+                if (!secondOfPair.getReadPairedFlag())
+                    throw new PicardException("Second record in unmapped bam is not marked as paired: " + secondOfPair.getReadName());
+                if (!secondOfPair.getSecondOfPairFlag())
+                    throw new PicardException("Second record in unmapped bam is not second of pair: " + secondOfPair.getReadName());
+            } else {
                 secondOfPair = null;
             }
 
@@ -337,10 +346,10 @@ public abstract class AbstractAlignmentMerger {
                     }
 
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
-                    for (final boolean isRead1 : new boolean[]{true,false}) {
+                    for (final boolean isRead1 : new boolean[]{true, false}) {
                         final List<SAMRecord> supplementals = isRead1 ? nextAligned.getSupplementalFirstOfPairOrFragment() : nextAligned.getSupplementalSecondOfPair();
-                        final SAMRecord sourceRec           = isRead1 ? rec                                                : secondOfPair;
-                        final SAMRecord matePrimary         = isRead1 ? r2Primary                                          : r1Primary;
+                        final SAMRecord sourceRec = isRead1 ? rec : secondOfPair;
+                        final SAMRecord matePrimary = isRead1 ? r2Primary : r1Primary;
 
                         for (final SAMRecord supp : supplementals) {
                             final SAMRecord out = clone(sourceRec);
@@ -350,8 +359,7 @@ public abstract class AbstractAlignmentMerger {
                             addIfNotFiltered(sorted, out);
                         }
                     }
-                }
-                else {
+                } else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
@@ -396,8 +404,8 @@ public abstract class AbstractAlignmentMerger {
         header.setSortOrder(this.sortOrder);
         final boolean presorted = this.sortOrder == SortOrder.coordinate;
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, this.targetBamFile);
-	    writer.setProgressLogger(
-			    new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
+        writer.setProgressLogger(
+                new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
         final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
 
         for (final SAMRecord rec : sorted) {
@@ -417,6 +425,7 @@ public abstract class AbstractAlignmentMerger {
         writer.close();
         sorted.cleanup();
 
+        CloserUtil.close(unmappedSam);
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
@@ -432,11 +441,12 @@ public abstract class AbstractAlignmentMerger {
 
     private SAMRecord clone(final SAMRecord rec) {
         try {
-            return (SAMRecord)rec.clone();
+            return (SAMRecord) rec.clone();
         } catch (CloneNotSupportedException e) {
             throw new PicardException("Should never happen.");
         }
     }
+
     /**
      * @return Next read's alignment(s) from aligned input or null, if there are no more.
      * The alignments are run through ignoreAlignment() filter before being returned, which may result
@@ -449,8 +459,9 @@ public abstract class AbstractAlignmentMerger {
 
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
+     *
      * @param unaligned Original SAMRecord, and object into which values are copied.
-     * @param aligned Holds alignment info that will be copied into unaligned.
+     * @param aligned   Holds alignment info that will be copied into unaligned.
      */
     private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned) {
         setValuesFromAlignment(unaligned, aligned);
@@ -465,10 +476,11 @@ public abstract class AbstractAlignmentMerger {
 
     /**
      * Copies alignment info from aligned to unaligned read, if there is an alignment, and sets mate information.
-     * @param firstUnaligned Original first of pair, into which alignment and pair info will be written.
+     *
+     * @param firstUnaligned  Original first of pair, into which alignment and pair info will be written.
      * @param secondUnaligned Original second of pair, into which alignment and pair info will be written.
-     * @param firstAligned Aligned first of pair, or null if no alignment.
-     * @param secondAligned Aligned second of pair, or null if no alignment.
+     * @param firstAligned    Aligned first of pair, or null if no alignment.
+     * @param secondAligned   Aligned second of pair, or null if no alignment.
      */
     private void transferAlignmentInfoToPairedRead(final SAMRecord firstUnaligned, final SAMRecord secondUnaligned, final SAMRecord firstAligned, final SAMRecord secondAligned) {
         if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
@@ -481,7 +493,6 @@ public abstract class AbstractAlignmentMerger {
     }
 
 
-
     /**
      * Checks to see whether the ends of the reads overlap and soft clips reads
      * them if necessary.
@@ -491,8 +502,7 @@ public abstract class AbstractAlignmentMerger {
         // insert size
         if (!(read1.getReadUnmappedFlag() || read2.getReadUnmappedFlag())) {
 
-            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag())
-            {
+            if (read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag()) {
                 final SAMRecord pos = (read1.getReadNegativeStrandFlag()) ? read2 : read1;
                 final SAMRecord neg = (read1.getReadNegativeStrandFlag()) ? read1 : read2;
 
@@ -512,27 +522,26 @@ public abstract class AbstractAlignmentMerger {
                     }
 
                 }
-            }
-            else {
+            } else {
                 // TODO: What about RR/FF pairs?
             }
-         }
+        }
 
     }
 
     /**
      * Sets the values from the alignment record on the unaligned BAM record.  This
      * preserves all data from the unaligned record (ReadGroup, NoiseRead status, etc)
-     * and adds all the alignment info 
+     * and adds all the alignment info
      *
-     * @param rec           The unaligned read record
-     * @param alignment     The alignment record
+     * @param rec       The unaligned read record
+     * @param alignment The alignment record
      */
     protected void setValuesFromAlignment(final SAMRecord rec, final SAMRecord alignment) {
         for (final SAMRecord.SAMTagAndValue attr : alignment.getAttributes()) {
             // Copy over any non-reserved attributes.  attributesToRemove overrides attributesToRetain.
             if ((!isReservedTag(attr.tag) || this.attributesToRetain.contains(attr.tag)) && !this.attributesToRemove.contains(attr.tag)) {
-               rec.setAttribute(attr.tag, attr.value);
+                rec.setAttribute(attr.tag, attr.value);
             }
         }
         rec.setReadUnmappedFlag(alignment.getReadUnmappedFlag());
@@ -548,7 +557,7 @@ public abstract class AbstractAlignmentMerger {
         if (!alignment.getReadUnmappedFlag()) {
             // only aligned reads should have cigar and mapping quality set
             rec.setCigar(alignment.getCigar());  // cigar may change when a
-                                                 // clipCigar called below
+            // clipCigar called below
             rec.setMappingQuality(alignment.getMappingQuality());
         }
         if (rec.getReadPairedFlag()) {
@@ -565,29 +574,32 @@ public abstract class AbstractAlignmentMerger {
     }
 
     private static Cigar createNewCigarIfMapsOffEndOfReference(SAMFileHeader header,
-                                                              boolean isUnmapped,
-                                                              int referenceIndex,
-                                                              int alignmentEnd,
-                                                              int readLength,
-                                                              Cigar oldCigar) {
+                                                               boolean isUnmapped,
+                                                               int referenceIndex,
+                                                               int alignmentEnd,
+                                                               int readLength,
+                                                               Cigar oldCigar) {
         Cigar newCigar = null;
         if (!isUnmapped) {
             final SAMSequenceRecord refseq = header.getSequence(referenceIndex);
             final int overhang = alignmentEnd - refseq.getSequenceLength();
             if (overhang > 0) {
                 // 1-based index of first base in read to clip.
-                final int clipFrom = readLength - overhang + 1;
-                final List<CigarElement> newCigarElements  = CigarUtil.softClipEndOfRead(clipFrom, oldCigar.getCigarElements());
+                int clipFrom = readLength - overhang + 1;
+                // we have to check if the last element is soft-clipping, so we can subtract that from clipFrom
+                final CigarElement cigarElement = oldCigar.getCigarElement(oldCigar.getCigarElements().size()-1);
+                if (CigarOperator.SOFT_CLIP == cigarElement.getOperator()) clipFrom -= cigarElement.getLength();
+                final List<CigarElement> newCigarElements = CigarUtil.softClipEndOfRead(clipFrom, oldCigar.getCigarElements());
                 newCigar = new Cigar(newCigarElements);
             }
         }
         return newCigar;
-
     }
 
     /**
      * Soft-clip an alignment that hangs off the end of its reference sequence.  Checks both the read and its mate,
      * if available.
+     *
      * @param rec
      */
     public static void createNewCigarsIfMapsOffEndOfReference(final SAMRecord rec) {
@@ -623,15 +635,15 @@ public abstract class AbstractAlignmentMerger {
                 ? this.read1BasesTrimmed != null ? this.read1BasesTrimmed : 0
                 : this.read2BasesTrimmed != null ? this.read2BasesTrimmed : 0;
         final int notWritten = originalReadLength - (alignmentReadLength + trimmed);
-       
+
         // Update cigar if the mate maps off the reference
         createNewCigarsIfMapsOffEndOfReference(rec);
 
         rec.setCigar(CigarUtil.addSoftClippedBasesToEndsOfCigar(
-            rec.getCigar(), rec.getReadNegativeStrandFlag(), notWritten, trimmed));
+                rec.getCigar(), rec.getReadNegativeStrandFlag(), notWritten, trimmed));
 
         // If the adapter sequence is marked and clipAdapter is true, clip it
-        if (this.clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null){
+        if (this.clipAdapters && rec.getAttribute(ReservedTagConstants.XT) != null) {
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
         }
     }
@@ -641,7 +653,7 @@ public abstract class AbstractAlignmentMerger {
 
     protected SAMProgramRecord getProgramRecord() { return this.programRecord; }
 
-    protected void setProgramRecord(final SAMProgramRecord pg ) {
+    protected void setProgramRecord(final SAMProgramRecord pg) {
         if (this.programRecord != null) {
             throw new IllegalStateException("Cannot set program record more than once on alignment merger.");
         }

@@ -2,7 +2,6 @@ package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -18,9 +17,10 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Intervals;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,10 +28,12 @@ import java.io.IOException;
 /**
  * @author nhomer
  */
+@CommandLineProgramProperties(
+        usage = "Converts a BED file to an Picard Interval List.",
+        usageShort = "Converts a BED file to an Picard Interval List.",
+        programGroup = Intervals.class
+)
 public class BedToIntervalList extends CommandLineProgram {
-
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() + "Converts a BED file to an Picard Interval List.";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input BED file")
     public File INPUT;
@@ -55,10 +57,8 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
         try {
-            final SamReader samReader = SamReaderFactory.makeDefault().open(SEQUENCE_DICTIONARY);
-            final SAMFileHeader header = samReader.getFileHeader();
+            final SAMFileHeader header = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY);
             final IntervalList intervalList = new IntervalList(header);
-            CloserUtil.close(samReader);
 
             /**
              * NB: BED is zero-based, but a BEDCodec by default (since it is returns tribble Features) has an offset of one,
@@ -89,20 +89,15 @@ public class BedToIntervalList extends CommandLineProgram {
                 // Do some validation
                 if (null == sequenceRecord) {
                     throw new PicardException(String.format("Sequence '%s' was not found in the sequence dictionary", sequenceName));
-                }
-                else if (start < 1) {
+                } else if (start < 1) {
                     throw new PicardException(String.format("Start on sequence '%s' was less than one: %d", sequenceName, start));
-                }
-                else if (sequenceRecord.getSequenceLength() < start) {
+                } else if (sequenceRecord.getSequenceLength() < start) {
                     throw new PicardException(String.format("Start on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), start));
-                }
-                else if (end < 1) {
+                } else if (end < 1) {
                     throw new PicardException(String.format("End on sequence '%s' was less than one: %d", sequenceName, end));
-                }
-                else if (sequenceRecord.getSequenceLength() < end) {
+                } else if (sequenceRecord.getSequenceLength() < end) {
                     throw new PicardException(String.format("End on sequence '%s' was past the end: %d < %d", sequenceName, sequenceRecord.getSequenceLength(), end));
-                }
-                else if (end < start - 1) {
+                } else if (end < start - 1) {
                     throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
                 }
 

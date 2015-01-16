@@ -38,8 +38,9 @@ import picard.PicardException;
 import picard.analysis.directed.RnaSeqMetricsCollector;
 import picard.annotation.Gene;
 import picard.annotation.GeneAnnotationReader;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.Metrics;
 import picard.util.RExecutor;
 
 import java.io.File;
@@ -47,22 +48,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@CommandLineProgramProperties(
+        usage = "Collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
+                "coding, intronic, UTR, intergenic, ribosomal. Also determines strand-specificity for strand-specific libraries.",
+        usageShort = "Produces RNA alignment metrics for a SAM or BAM file",
+        programGroup = Metrics.class
+)
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
-
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() +
-            "Program to collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
-            " coding, intronic, UTR, intergenic, ribosomal.\n" +
-            "Also determines strand-specificity for strand-specific libraries.";
-
 
     @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
     public File REF_FLAT;
 
     @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
-            "Format described here: http://picard.sourceforge.net/javadoc/net/sf/picard/util/IntervalList.html", optional = true)
+            "Format described here: http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
@@ -152,6 +152,5 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
             }
         }
     }
-
 
 }

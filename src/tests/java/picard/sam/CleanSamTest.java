@@ -23,14 +23,16 @@
  */
 package picard.sam;
 
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMValidationError;
 import htsjdk.samtools.SamFileValidator;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.sam.testers.CleanSamTester;
 
 import java.io.File;
@@ -38,29 +40,33 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-public class CleanSamTest {
-
+public class CleanSamTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/CleanSam");
     private static final String qualityScore = "&/,&-.1/6/&&)&).)/,&0768)&/.,/874,&.4137572)&/&&,&1-&.0/&&*,&&&&&&&&&&18775799,&16:8775-56256/69::;0";
+
+    public String getCommandLineProgramName() {
+        return CleanSam.class.getSimpleName();
+    }
 
     @Test(dataProvider = "testCleanSamDataProvider")
     public void testCleanSam(final String samFile, final String expectedCigar) throws IOException {
         final File cleanedFile = File.createTempFile(samFile + ".", ".sam");
         cleanedFile.deleteOnExit();
-        final CleanSam cleanSam = new CleanSam();
-        cleanSam.INPUT = new File(TEST_DATA_DIR, samFile);
-        cleanSam.OUTPUT = cleanedFile;
-        Assert.assertEquals(cleanSam.doWork(), 0);
+        final String[] args = new String[]{
+                "INPUT=" + new File(TEST_DATA_DIR, samFile).getAbsolutePath(),
+                "OUTPUT=" + cleanedFile.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
         final SamFileValidator validator = new SamFileValidator(new PrintWriter(System.out), 8000);
         validator.setIgnoreWarnings(true);
         validator.setVerbose(true, 1000);
         validator.setErrorsToIgnore(Arrays.asList(SAMValidationError.Type.MISSING_READ_GROUP));
-        SAMFileReader samReader = new SAMFileReader(cleanedFile);
-        samReader.setValidationStringency(ValidationStringency.LENIENT);
+        SamReader samReader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(cleanedFile);
         final SAMRecord rec = samReader.iterator().next();
         samReader.close();
         Assert.assertEquals(rec.getCigarString(), expectedCigar);
-        samReader = new SAMFileReader(cleanedFile);
+        samReader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(cleanedFile);
         final boolean validated = validator.validateSamFileVerbose(samReader, null);
         samReader.close();
         Assert.assertTrue(validated, "ValidateSamFile failed");

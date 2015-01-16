@@ -37,9 +37,10 @@ import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 import picard.fastq.Casava18ReadNameEncoder;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
@@ -66,15 +67,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@CommandLineProgramProperties(
+        usage = "Generate fastq file(s) from data in an Illumina basecalls output directory.\n" +
+                "Separate fastq file(s) are created for each template read, and for each barcode read, in the basecalls.\n" +
+                "Template fastqs have extensions like .<number>.fastq, where <number> is the number of the template read,\n" +
+                "starting with 1.  Barcode fastqs have extensions like .barcode_<number>.fastq, where <number> is the number\n" +
+                "of the barcode read, starting with 1.",
+        usageShort = "Generate fastq file(s) from data in an Illumina basecalls output directory",
+        programGroup = Illumina.class
+)
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE =
-            getStandardUsagePreamble() + "Generate fastq file(s) from data in an Illumina basecalls output directory.\n" +
-            "Separate fastq file(s) are created for each template read, and for each barcode read, in the basecalls.\n" +
-            "Template fastqs have extensions like .<number>.fastq, where <number> is the number of the template read,\n" +
-            "starting with 1.  Barcode fastqs have extensions like .barcode_<number>.fastq, where <number> is the number\n" +
-            "of the barcode read, starting with 1.";
 
     @Option(doc = "The basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -156,7 +159,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
     @Option(shortName = "GZIP", doc = "Compress output FASTQ files using gzip and append a .gz extension to the file names.")
     public boolean COMPRESS_OUTPUTS = false;
-    
+
     /** Simple switch to control the read name format to emit. */
     public enum ReadNameFormat {
         CASAVA_1_8, ILLUMINA
@@ -175,7 +178,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                     r2.templateRecords[0].getReadHeader());
         }
     };
-
 
     @Override
     protected int doWork() {
@@ -296,7 +298,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS file " +
                         MULTIPLEX_PARAMS);
             }
-
 
             final FastqRecordsWriter writer = buildWriter(new File(row.getField("OUTPUT_PREFIX")));
             barcodeFastqWriterMap.put(key, writer);

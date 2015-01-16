@@ -25,16 +25,19 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTextHeaderCodec;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,19 +49,31 @@ import java.io.PrintStream;
  *
  * @author tfennell@broad.mit.edu
  */
+@CommandLineProgramProperties(
+        usage = "Prints a SAM or BAM file to the screen.",
+        usageShort = "Prints a SAM or BAM file to the screen",
+        programGroup = SamOrBam.class
+)
 public class ViewSam extends CommandLineProgram {
-    public static enum AlignmentStatus { Aligned, Unaligned, All }
-    public static enum PfStatus { PF, NonPF, All }
+    public static enum AlignmentStatus {Aligned, Unaligned, All}
 
-    @Usage public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The SAM or BAM file to view.")
+    public static enum PfStatus {PF, NonPF, All}
+
+    public final String USAGE = getStandardUsagePreamble() + "Prints a SAM or BAM file to the screen.";
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The SAM or BAM file to view.")
     public File INPUT;
 
-    @Option(doc="Print out all reads, just the aligned reads or just the unaligned reads.")
+    @Option(doc = "Print out all reads, just the aligned reads or just the unaligned reads.")
     public AlignmentStatus ALIGNMENT_STATUS = AlignmentStatus.All;
 
-    @Option(doc="Print out all reads, just the PF reads or just the non-PF reads.")
+    @Option(doc = "Print out all reads, just the PF reads or just the non-PF reads.")
     public PfStatus PF_STATUS = PfStatus.All;
+
+    @Option(doc="Print the SAM header only.", optional = true)
+    public boolean HEADER_ONLY = false;
+
+    @Option(doc="Print the alignment records only.", optional = true)
+    public boolean RECORDS_ONLY = false;
 
     public static void main(final String[] args) {
         new ViewSam().instanceMain(args);
@@ -69,39 +84,53 @@ public class ViewSam extends CommandLineProgram {
         return writeSamText(System.out);
     }
 
+    @Override
+    protected String[] customCommandLineValidation() {
+        if (HEADER_ONLY && RECORDS_ONLY) {
+            return new String[]{"Cannot specify both HEADER_ONLY=true and RECORDS_ONLY=true."};
+        }
+        return super.customCommandLineValidation();
+    }
+
+
     /**
      * This is factored out of doWork only for unit testing.
      */
     int writeSamText(PrintStream printStream) {
         try {
             IOUtil.assertFileIsReadable(INPUT);
-            final SAMFileReader in = new SAMFileReader(INPUT);
+            final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
             final AsciiWriter writer = new AsciiWriter(printStream);
             final SAMFileHeader header = in.getFileHeader();
-            if (header.getTextHeader() != null) {
-                writer.write(header.getTextHeader());
-            } else {
-                // Headers that are too large are not retained as text, so need to regenerate text
-                new SAMTextHeaderCodec().encode(writer, header, true);
-            }
-
-            for (final SAMRecord rec : in) {
-                if (printStream.checkError()) {
-                    return 1;
+            if (!RECORDS_ONLY) {
+                if (header.getTextHeader() != null) {
+                    writer.write(header.getTextHeader());
+                } else {
+                    // Headers that are too large are not retained as text, so need to regenerate text
+                    new SAMTextHeaderCodec().encode(writer, header, true);
                 }
+            }
+            if (!HEADER_ONLY) {
+                for (final SAMRecord rec : in) {
+                    if (printStream.checkError()) {
+                        return 1;
+                    }
 
-                if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned   && rec.getReadUnmappedFlag()) continue;
-                if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
+                    if (this.ALIGNMENT_STATUS == AlignmentStatus.Aligned && rec.getReadUnmappedFlag()) continue;
+                    if (this.ALIGNMENT_STATUS == AlignmentStatus.Unaligned && !rec.getReadUnmappedFlag()) continue;
 
-                if (this.PF_STATUS == PfStatus.PF    && rec.getReadFailsVendorQualityCheckFlag()) continue;
-                if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
+                    if (this.PF_STATUS == PfStatus.PF && rec.getReadFailsVendorQualityCheckFlag()) continue;
+                    if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
 
-                writer.write(rec.getSAMString());
+                    writer.write(rec.getSAMString());
+                }
             }
             writer.flush();
             if (printStream.checkError()) {
                 return 1;
             }
+            CloserUtil.close(writer);
+            CloserUtil.close(in);
             return 0;
         } catch (IOException e) {
             throw new PicardException("Exception writing SAM text", e);

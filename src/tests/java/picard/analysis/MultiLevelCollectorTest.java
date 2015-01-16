@@ -1,11 +1,13 @@
 package picard.analysis;
 
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -164,7 +166,7 @@ public class MultiLevelCollectorTest {
 
     @Test(dataProvider = "variedAccumulationLevels")
     public void multilevelCollectorTest(final Set<MetricAccumulationLevel> accumulationLevels) {
-        final SAMFileReader in = new SAMFileReader(TESTFILE);
+        final SamReader in = SamReaderFactory.makeDefault().open(TESTFILE);
         final RecordCountMultiLevelCollector collector = new RecordCountMultiLevelCollector(accumulationLevels, in.getFileHeader().getReadGroups());
 
         for (final SAMRecord rec : in) {
@@ -188,5 +190,6 @@ public class MultiLevelCollectorTest {
 
         Assert.assertEquals(collector.getUnitsToMetrics().size(), totalMetrics);
         Assert.assertEquals(totalProcessed, collector.getNumProcessed());
+        CloserUtil.close(in);
     }
 }

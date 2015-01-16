@@ -25,35 +25,42 @@ package picard.sam;
 
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
+import picard.sam.testers.ValidateSamTester;
 
 import java.io.File;
 
-public class MergeSamFilesTest {
-    private static File TEST_DATA_DIR = new File("testdata/picard/sam/MergeSamFiles");
+public class MergeSamFilesTest extends CommandLineProgramTest {
+    private static final File TEST_DATA_DIR = new File("testdata/picard/sam/MergeSamFiles");
 
+    public String getCommandLineProgramName() {
+        return MergeSamFiles.class.getSimpleName();
+    }
     /**
      * Confirm that unsorted input can result in coordinate sorted output, with index created.
      */
     @Test
     public void unsortedInputSortedOutputTest() throws Exception {
-        File unsortedInputTestDataDir = new File(TEST_DATA_DIR, "unsorted_input");
-        File mergedOutput = File.createTempFile("unsortedInputSortedOutputTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        final File unsortedInputTestDataDir = new File(TEST_DATA_DIR, "unsorted_input");
+        final File mergedOutput = File.createTempFile("unsortedInputSortedOutputTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
         mergedOutput.deleteOnExit();
-        String[] args = {
+        final String[] args = {
                 "I=" + new File(unsortedInputTestDataDir, "1.sam").getAbsolutePath(),
                 "I=" + new File(unsortedInputTestDataDir, "2.sam").getAbsolutePath(),
                 "O=" + mergedOutput.getAbsolutePath(),
                 "SO=coordinate"
         };
-        final int mergeExitStatus = new MergeSamFiles().instanceMain(args);
+        final int mergeExitStatus = runPicardCommandLine(args);
         Assert.assertEquals(mergeExitStatus, 0);
-        final SAMFileReader reader = new SAMFileReader(mergedOutput);
+        final SamReader reader = SamReaderFactory.makeDefault().open(mergedOutput);
         Assert.assertEquals(reader.getFileHeader().getSortOrder(), SAMFileHeader.SortOrder.coordinate);
 
-        final int validateExitStatus = new ValidateSamFile().instanceMain(new String[] {"I=" + mergedOutput.getAbsolutePath()});
-        Assert.assertEquals(validateExitStatus, 0);
+        new ValidateSamTester().assertSamValid(mergedOutput);
+        CloserUtil.close(reader);
     }
 }

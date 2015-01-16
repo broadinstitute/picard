@@ -25,38 +25,44 @@ package picard.sam;
 
 import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
 /**
  * @author alecw@broadinstitute.org
  */
+@CommandLineProgramProperties(
+        usage = "Replace the SAMFileHeader in a SAM file with the given header. " +
+                "Validation is minimal.  It is up to the user to ensure that all the elements referred to in the SAMRecords " +
+                "are present in the new header.  Sort order of the two input files must be the same.",
+        usageShort = "Replace the SAMFileHeader in a SAM file with the given header",
+        programGroup = SamOrBam.class
+)
 public class ReplaceSamHeader extends CommandLineProgram {
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Replace the SAMFileHeader in a SAM file with the given header. " +
-            "Validation is minimal.  It is up to the user to ensure that all the elements referred to in the SAMRecords " +
-            "are present in the new header.  Sort order of the two input files must be the same.";
 
-    @Option(doc="SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Option(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc="SAM file from which SAMFileHeader will be read.")
+    @Option(doc = "SAM file from which SAMFileHeader will be read.")
     public File HEADER;
 
-    @Option(doc="SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
+    @Option(doc = "SAMFileHeader from HEADER file will be written to this file, followed by SAMRecords from INPUT file",
             shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
@@ -76,31 +82,22 @@ public class ReplaceSamHeader extends CommandLineProgram {
         IOUtil.assertFileIsReadable(HEADER);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final SAMFileReader headerReader = new SAMFileReader(HEADER);
-        final SAMFileHeader replacementHeader = headerReader.getFileHeader();
-        headerReader.close();
+        final SAMFileHeader replacementHeader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(HEADER);
 
-        final ValidationStringency originalStringency = SAMFileReader.getDefaultValidationStringency();
-        SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
-
-        try {
-            if (BamFileIoUtils.isBamFile(INPUT)) {
-                blockCopyReheader(replacementHeader);
-            } else {
-                standardReheader(replacementHeader);
-            }
-        } finally {
-            SAMFileReader.setDefaultValidationStringency(originalStringency);
+        if (BamFileIoUtils.isBamFile(INPUT)) {
+            blockCopyReheader(replacementHeader);
+        } else {
+            standardReheader(replacementHeader);
         }
 
         return 0;
     }
 
     private void standardReheader(final SAMFileHeader replacementHeader) {
-        final SAMFileReader recordReader = new SAMFileReader(INPUT);
+        final SamReader recordReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).validationStringency(ValidationStringency.SILENT).open(INPUT);
         if (replacementHeader.getSortOrder() != recordReader.getFileHeader().getSortOrder()) {
             throw new PicardException("Sort orders of INPUT (" + recordReader.getFileHeader().getSortOrder().name() +
-            ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
+                    ") and HEADER (" + replacementHeader.getSortOrder().name() + ") do not agree.");
         }
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(replacementHeader, true, OUTPUT);
 
@@ -111,7 +108,7 @@ public class ReplaceSamHeader extends CommandLineProgram {
             progress.record(rec);
         }
         writer.close();
-        recordReader.close();
+        CloserUtil.close(recordReader);
     }
 
     private void blockCopyReheader(final SAMFileHeader replacementHeader) {

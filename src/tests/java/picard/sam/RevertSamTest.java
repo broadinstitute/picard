@@ -24,14 +24,16 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
 import java.util.Arrays;
@@ -45,8 +47,7 @@ import java.util.List;
  * Time: 10:27:58 AM
  * To change this template use File | Settings | File Templates.
  */
-public class RevertSamTest {
-
+public class RevertSamTest extends CommandLineProgramTest {
     public static final String basicSamToRevert = "testdata/picard/sam/revert_sam_basic.sam";
     public static final String negativeTestSamToRevert = "testdata/picard/sam/revert_sam_negative.sam";
 
@@ -55,14 +56,18 @@ public class RevertSamTest {
 
     private static final String unmappedRead = "both_reads_present_only_first_aligns/2";
 
-    @Test(dataProvider="positiveTestData")
-    public void basicPositiveTests(SAMFileHeader.SortOrder so, boolean removeDuplicates, boolean removeAlignmentInfo,
-                                   boolean restoreOriginalQualities, String sample, String library,
-                                   List<String> attributesToClear) throws Exception {
+    public String getCommandLineProgramName() {
+        return RevertSam.class.getSimpleName();
+    }
 
-        File output = File.createTempFile("reverted", ".sam");
-        RevertSam reverter = new RevertSam();
-        String args[] = new String[5 + (so != null ? 1 : 0) + attributesToClear.size() + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
+    @Test(dataProvider="positiveTestData")
+    public void basicPositiveTests(final SAMFileHeader.SortOrder so, final boolean removeDuplicates, final boolean removeAlignmentInfo,
+                                   final boolean restoreOriginalQualities, final String sample, final String library,
+                                   final List<String> attributesToClear) throws Exception {
+
+        final File output = File.createTempFile("reverted", ".sam");
+        final RevertSam reverter = new RevertSam();
+        final String args[] = new String[5 + (so != null ? 1 : 0) + attributesToClear.size() + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;
         args[index++] = "INPUT=" + basicSamToRevert;
         args[index++] = "OUTPUT=" + output.getAbsolutePath();
@@ -78,16 +83,16 @@ public class RevertSamTest {
         if (library != null) {
             args[index++] = "LIBRARY_NAME=" + library;
         }
-        for (String attr : attributesToClear) {
+        for (final String attr : attributesToClear) {
             args[index++] = "ATTRIBUTE_TO_CLEAR=" + attr;
         }
-        reverter.instanceMain(args);
+        runPicardCommandLine(args);
 
-        SAMFileReader reader = new SAMFileReader(output);
-        SAMFileHeader header = reader.getFileHeader();
+        final SamReader reader = SamReaderFactory.makeDefault().open(output);
+        final SAMFileHeader header = reader.getFileHeader();
         Assert.assertEquals(header.getSortOrder(), SAMFileHeader.SortOrder.queryname);
         Assert.assertEquals(header.getProgramRecords().size(), removeAlignmentInfo ? 0 : 1);
-        for (SAMReadGroupRecord rg : header.getReadGroups()) {
+        for (final SAMReadGroupRecord rg : header.getReadGroups()) {
             if (sample != null) {
                 Assert.assertEquals(rg.getSample(), sample);
             }
@@ -101,37 +106,34 @@ public class RevertSamTest {
                 Assert.assertEquals(rg.getLibrary(), "my-library");
             }
         }
-        SAMRecordIterator it = reader.iterator();
-        while (it.hasNext()) {
-            SAMRecord rec = it.next();
-
+        for (final SAMRecord rec : reader) {
             if (removeDuplicates) {
                 Assert.assertFalse(rec.getDuplicateReadFlag(),
-                    "Duplicates should have been removed: " + rec.getReadName());
+                        "Duplicates should have been removed: " + rec.getReadName());
             }
 
             if (removeAlignmentInfo) {
                 Assert.assertTrue(rec.getReadUnmappedFlag(),
-                     "Alignment info should have been removed: " + rec.getReadName());
+                        "Alignment info should have been removed: " + rec.getReadName());
             }
 
             if (restoreOriginalQualities && !unmappedRead.equals(
                     rec.getReadName() + "/" + (rec.getFirstOfPairFlag() ? "1" : "2"))) {
 
                 Assert.assertEquals(rec.getBaseQualityString(), revertedQualities);
-            }
-            else {
+            } else {
                 Assert.assertNotSame(rec.getBaseQualityString(), revertedQualities);
             }
 
-            for (SAMRecord.SAMTagAndValue attr : rec.getAttributes()) {
+            for (final SAMRecord.SAMTagAndValue attr : rec.getAttributes()) {
                 if (removeAlignmentInfo || (!attr.tag.equals("PG") && !attr.tag.equals("NM")
-                    && !attr.tag.equals("MQ"))) {
+                        && !attr.tag.equals("MQ"))) {
                     Assert.assertFalse(reverter.ATTRIBUTE_TO_CLEAR.contains(attr.tag),
                             attr.tag + " should have been cleared.");
                 }
             }
         }
+        CloserUtil.close(reader);
     }
 
 
@@ -147,11 +149,11 @@ public class RevertSamTest {
 
 
     @Test(dataProvider="negativeTestData", expectedExceptions = {PicardException.class})
-    public void basicNegativeTest(String sample, String library) throws Exception {
+    public void basicNegativeTest(final String sample, final String library) throws Exception {
 
-        File output = File.createTempFile("bad", ".sam");
-        RevertSam reverter = new RevertSam();
-        String args[] = new String[2 + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
+        final File output = File.createTempFile("bad", ".sam");
+        final RevertSam reverter = new RevertSam();
+        final String args[] = new String[2 + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;
         args[index++] = "INPUT=" + negativeTestSamToRevert;
         args[index++] = "OUTPUT=" + output.getAbsolutePath();
@@ -161,7 +163,7 @@ public class RevertSamTest {
         if (library != null) {
             args[index++] = "LIBRARY_NAME=" + library;
         }
-        reverter.instanceMain(args);
+        runPicardCommandLine(args);
         Assert.fail("Negative test should have thrown an exception and didn't");
     }
 

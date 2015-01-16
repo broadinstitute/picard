@@ -25,9 +25,10 @@
 package picard.fastq;
 
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 
@@ -36,13 +37,14 @@ import java.io.File;
  *
  * @author ktibbett@broadinstitute.org
  */
+@CommandLineProgramProperties(
+        usage = "Create BFQ files from a BAM file for use by the Maq aligner.",
+        usageShort = "Create BFQ files from a BAM file for use by the Maq aligner.",
+        programGroup = SamOrBam.class
+)
 public class BamToBfq extends CommandLineProgram {
 
-    private static final String PROGRAM_VERSION = "1.0";
-
     // The following attributes define the command-line arguments
-    @Usage
-    public String USAGE = getStandardUsagePreamble() + "Create BFQ files for use by the Maq aligner.";
 
     @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;
     @Option(doc="The analysis directory for the binary output file. ") public File ANALYSIS_DIR;

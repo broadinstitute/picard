@@ -43,9 +43,10 @@ import htsjdk.samtools.util.SolexaQualityConverter;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -57,13 +58,14 @@ import java.util.List;
  * Three fastq versions are supported: FastqSanger, FastqSolexa and FastqIllumina.
  * Input files can be in GZip format (end in .gz).
  */
+@CommandLineProgramProperties(
+        usage = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
+                + " Input files can be in GZip format (end in .gz).\n",
+        usageShort = "Converts a fastq file to an unaligned BAM or SAM file",
+        programGroup = SamOrBam.class
+)
 public class FastqToSam extends CommandLineProgram {
     private static final Log LOG = Log.getInstance(FastqToSam.class);
-
-    @Usage 
-    public String USAGE = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
-        + " Input files can be in GZip format (end in .gz).\n" 
-        ;
 
     @Option(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
     public File FASTQ;
@@ -120,7 +122,6 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(doc="If true and this is an unpaired fastq any occurance of '/1' will be removed from the end of a read name.")
     public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
-
 
     @Option(doc="Allow (and ignore) empty lines")
     public Boolean ALLOW_AND_IGNORE_EMPTY_LINES = false;
@@ -354,7 +355,7 @@ public class FastqToSam extends CommandLineProgram {
 
         // NOTE: the while loop isn't necessarily the most efficient way to handle this but we don't
         // expect this to ever happen more than once, just trapping pathological cases
-        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && readName.endsWith("/1")) {
+        while (STRIP_UNPAIRED_MATE_NUMBER && !paired && (readName.endsWith("/1") || readName.endsWith("/2"))) {
             // If this is an unpaired run we want to make sure that "/1" isn't tacked on the end of the read name,
             // as this can cause problems down the road in MergeBamAlignment
             readName = readName.substring(0, readName.length() - 2);

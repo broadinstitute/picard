@@ -1,22 +1,27 @@
 package picard.util;
 
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
+import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.cmdline.CommandLineParser;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.programgroups.Intervals;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,15 +31,18 @@ import java.util.Set;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = " General tool for manipulating interval lists, " +
+                "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
+                "merge and sort them.  Other options are controlled by arguments.",
+        usageShort = "General tool for manipulating interval lists",
+        programGroup = Intervals.class
+)
 public class IntervalListTools extends CommandLineProgram {
-    @Usage
-    public final String USAGE = getStandardUsagePreamble() + " General tool for manipulating interval lists, " +
-            "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
-            "merge and sort them.  Other options are controlled by arguments.";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
-                    "result of merging the inputs.", minElements = 1)
+                    "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)
     public List<File> INPUT;
 
     @Option(doc = "The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which " +
@@ -62,6 +70,9 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Option(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.")
     public int SCATTER_COUNT = 1;
+
+    @Option(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
+    public boolean INCLUDE_FILTERED=false;
 
     @Option(shortName = "M", doc = "Do not subdivide ")
     public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
@@ -111,7 +122,6 @@ public class IntervalListTools extends CommandLineProgram {
             }
         };
 
-
         String helpdoc;
 
         Action(final String helpdoc) {
@@ -147,46 +157,10 @@ public class IntervalListTools extends CommandLineProgram {
         }
 
         // Read in the interval lists and apply any padding
-        final List<IntervalList> lists = new ArrayList<IntervalList>();
-        for (final File f : INPUT) {
-            final IntervalList list = IntervalList.fromFile(f);
-            if (PADDING != 0) {
-                final IntervalList out = new IntervalList(list.getHeader());
-                for (final Interval i : list) {
-                    final int start = i.getStart() - PADDING;
-                    final int end = i.getEnd() + PADDING;
-                    if (start <= end) {
-                        final Interval i2 = new Interval(i.getSequence(), start, end, i.isNegativeStrand(), i.getName());
-                        out.add(i2);
-                    }
-                }
-
-                lists.add(out);
-            } else {
-                lists.add(list);
-            }
-        }
+        final List<IntervalList> lists = openIntervalLists(INPUT);
 
         // same for the second list
-        final List<IntervalList> secondLists = new ArrayList<IntervalList>();
-        for (final File f : SECOND_INPUT) {
-            final IntervalList list = IntervalList.fromFile(f);
-            if (PADDING != 0) {
-                final IntervalList out = new IntervalList(list.getHeader());
-                for (final Interval i : list) {
-                    final int start = i.getStart() - PADDING;
-                    final int end = i.getEnd() + PADDING;
-                    if (start <= end) {
-                        final Interval i2 = new Interval(i.getSequence(), start, end, i.isNegativeStrand(), i.getName());
-                        out.add(i2);
-                    }
-                }
-
-                secondLists.add(out);
-            } else {
-                secondLists.add(list);
-            }
-        }
+        final List<IntervalList> secondLists = openIntervalLists(SECOND_INPUT);
 
         if (UNIQUE && !SORT) {
             LOG.warn("UNIQUE=true requires sorting but SORT=false was specified.  Results will be sorted!");
@@ -204,7 +178,6 @@ public class IntervalListTools extends CommandLineProgram {
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
         final List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
-
 
         // Decide on a PG ID and make a program group
         final SAMFileHeader header = result.getHeader();
@@ -266,6 +239,30 @@ public class IntervalListTools extends CommandLineProgram {
         return 0;
     }
 
+
+    private List<IntervalList> openIntervalLists(final List<File> files){
+        final List<IntervalList> lists = new ArrayList<IntervalList>();
+        for (final File f : files) {
+
+            final IntervalList list = TYPE.getIntervalList(f, INCLUDE_FILTERED);
+            if (PADDING != 0) {
+                final IntervalList out = new IntervalList(list.getHeader());
+                for (final Interval i : list) {
+                    final int start = i.getStart() - PADDING;
+                    final int end = i.getEnd() + PADDING;
+                    if (start <= end) {
+                        final Interval i2 = new Interval(i.getSequence(), start, end, i.isNegativeStrand(), i.getName());
+                        out.add(i2);
+                    }
+                }
+                lists.add(out);
+            } else {
+                lists.add(list);
+            }
+        }
+        return lists;
+    }
+
     @Override
     protected String[] customCommandLineValidation() {
         if (SCATTER_COUNT < 1) {
@@ -313,4 +310,52 @@ public class IntervalListTools extends CommandLineProgram {
             }
         }
     }
+
+    enum TYPE {
+        VCF(IOUtil.VCF_EXTENSIONS) {
+            @Override
+            protected IntervalList getIntervalListInternal(final File vcf, final boolean includeFiltered) {
+                return VCFFileReader.fromVcf(vcf, includeFiltered);
+            }
+        },
+        INTERVAL_LIST(IOUtil.INTERVAL_LIST_FILE_EXTENSION) {
+            @Override
+            protected IntervalList getIntervalListInternal(final File intervalList, final boolean includeFiltered) {
+                return IntervalList.fromFile(intervalList);
+            }
+        };
+
+        final Collection<String> applicableExtensions;
+
+        TYPE(final String... s) {
+            applicableExtensions = CollectionUtil.makeSet(s);
+        }
+
+        TYPE(final Collection<String> extensions) {
+            applicableExtensions = extensions;
+        }
+
+        abstract protected IntervalList getIntervalListInternal(final File file, final boolean includeFiltered);
+
+        static TYPE forFile(final File intervalListExtractable) {
+            for (final TYPE type : TYPE.values()) {
+                for (final String s : type.applicableExtensions) {
+                    if (intervalListExtractable.getName().endsWith(s)) {
+                        return type;
+                    }
+                }
+            }
+            throw new SAMException("Cannot figure out type of file " + intervalListExtractable.getAbsolutePath() + " from extension. Current implementation understands the following types: " + Arrays.toString(TYPE.values()));
+        }
+
+        static public IntervalList getIntervalList(final  File file, final boolean includeFiltered){
+            return forFile(file).getIntervalListInternal(file, includeFiltered);
+        }
+
+        @Override
+        public String toString() {
+            return super.toString() + ": " + applicableExtensions.toString();
+        }
+    }
+
 }

@@ -24,15 +24,17 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMException;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 import picard.PicardException;
 
 import java.io.File;
@@ -47,9 +49,13 @@ import java.util.Set;
 /**
  * Tests for SamToFastq
  */
-public class SamToFastqTest {
+public class SamToFastqTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/bam2fastq/paired");
     private static final String CLIPPING_TEST_DATA = "ok/clipping_test.sam";
+
+    public String getCommandLineProgramName() {
+        return SamToFastq.class.getSimpleName();
+    }
 
     @DataProvider(name = "okFiles")
     public Object[][] okFiles() {
@@ -69,14 +75,13 @@ public class SamToFastqTest {
         };
     }
 
-    private void convertFile(String [] args) {
-        SamToFastq samToFq = new SamToFastq();
-        Assert.assertEquals(samToFq.instanceMain(args),0);
+    private void convertFile(final String [] args) {
+        Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
     @Test(dataProvider = "clippingTests")
-    public void testClipping(String clippingAction, String bases1_1, String quals1_1, String bases1_2, String quals1_2,
-                             String bases2_1, String quals2_1, String bases2_2, String quals2_2, String testName) throws IOException {
+    public void testClipping(final String clippingAction, final String bases1_1, final String quals1_1, final String bases1_2, final String quals1_2,
+                             final String bases2_1, final String quals2_1, final String bases2_2, final String quals2_2, final String testName) throws IOException {
         final File samFile = new File(TEST_DATA_DIR, CLIPPING_TEST_DATA) ;
         final File f1 = File.createTempFile("clippingtest1", "fastq");
         final File f2 = File.createTempFile("clippingtest2", "fastq");
@@ -222,14 +227,13 @@ public class SamToFastqTest {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
         final Map<String, Set<String>> outputSets = new HashMap<String, Set<String>>(groupFiles.length);
 
-        SamToFastq samToFq = new SamToFastq();
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
-        String [] args = new String[]{
+        final String [] args = new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",
               "OUTPUT_DIR=" + tmpDir,
         };
-        samToFq.instanceMain(args);
+        runPicardCommandLine(args);
 
         File f1;
         File f2;
@@ -285,14 +289,13 @@ public class SamToFastqTest {
     public void testBadGroupedFile(final String samFilename, final String fastq, final String secondEndFastq,
                                    final String [] groupFiles) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
-        SamToFastq samToFq = new SamToFastq();
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
         final String [] args = new String[]{
               "INPUT=" + samFile.getAbsolutePath(),
               "OUTPUT_PER_RG=true",
               "OUTPUT_DIR=" + tmpDir,
         };
-        samToFq.instanceMain(args);
+        runPicardCommandLine(args);
 
         File f1;
         File f2;
@@ -330,13 +333,11 @@ public class SamToFastqTest {
               "READ2_MAX_BASES_TO_WRITE=" + read2MaxBases
         });
 
-        for (Iterator<FastqRecord> it = new FastqReader(pair1File).iterator(); it.hasNext();) {
-            FastqRecord first = it.next();
+        for (final FastqRecord first : new FastqReader(pair1File)) {
             Assert.assertEquals(first.getReadString().length(), expectedRead1Length, "Incorrect read length");
             Assert.assertEquals(first.getBaseQualityString().length(), expectedRead1Length, "Incorrect quality string length");
         }
-        for (Iterator<FastqRecord> it = new FastqReader(pair2File).iterator(); it.hasNext();) {
-            FastqRecord second = it.next();
+        for (final FastqRecord second : new FastqReader(pair2File)) {
             Assert.assertEquals(second.getReadString().length(), expectedRead2Length, "Incorrect read length");
             Assert.assertEquals(second.getBaseQualityString().length(), expectedRead2Length, "Incorrect quality string length");
         }
@@ -363,7 +364,7 @@ public class SamToFastqTest {
 
     private Map<String,MatePair> createSamMatePairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
+        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
 
         final Map<String,MatePair> map = new LinkedHashMap<String,MatePair>();
         for (final SAMRecord record : reader ) {
@@ -381,12 +382,12 @@ public class SamToFastqTest {
 
     private Map<String, Map<String, MatePair>> createPUPairsMap(final File samFile) throws IOException {
         IOUtil.assertFileIsReadable(samFile);
-        final SAMFileReader reader = new SAMFileReader(IOUtil.openFileForReading(samFile));
+        final SamReader reader = SamReaderFactory.makeDefault().open(samFile);
         final Map<String, Map<String, MatePair>> map = new LinkedHashMap<String, Map<String,MatePair>>();
 
         Map<String,MatePair> curFileMap;
         for (final SAMRecord record : reader ) {
-            String platformUnit = record.getReadGroup().getPlatformUnit();
+            final String platformUnit = record.getReadGroup().getPlatformUnit();
             curFileMap = map.get(platformUnit);
             if(curFileMap == null)
             {

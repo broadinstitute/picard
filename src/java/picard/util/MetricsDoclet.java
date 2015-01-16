@@ -69,42 +69,38 @@ public class MetricsDoclet {
         final PrintStream out = getOutput(root);
         if (out == null) return false;
 
-        // Write the headings
-        out.println("<head>");
-        out.println("  <title>Picard Metrics Definitions</title>");
-        out.println("  <style>");
-        out.println("    body { font-family: Arial; background-color: white; font-size: 10pt; }");
-        out.println("    h2 { color: red; }");
-        out.println("    .class_description { font-style: italic; }");
-        out.println("    .metric_column_def { padding-bottom: 0px; margin-bottom: 8px; }");
-        out.println("    .metric_column_def span { font-weight: bold; color: #222222; font-style: italic; }");
-        out.println("  </style>");
-        out.println("</head>");
-        out.println("<h1>Picard Metrics Definitions</h1>");
-
         // Write out the TOC
-        out.println("<h2>Table Of Contents</h2>");
+        out.println("<h2>Picard Metrics Definitions</h2>");
+        out.println("<section>");
+        out.println("<p> Click on a metric to see a description of its fields.</p>");
         out.println("<ol>");
         for (final ClassDoc doc : metricsClasses.values()) {
             out.println("<li><a href=\"#" + doc.name() + "\">" + doc.name() + "</a>: " +
                         firstSentence(doc) + "</li>");
         }
         out.println("</ol>");
+        out.println("</section>");
 
         // Now print out each class
         for (final ClassDoc doc : metricsClasses.values()) {
-            out.println("<a id=\"" + doc.name() + "\"");
+            out.println("<a id=\"" + doc.name() + "\"></a>");
             out.println("<h2>" + doc.name() + "</h2>");
-            out.println("<p class=\"class_description\">" + doc.commentText() + "</p>");
-            out.println("<h3>Column Definitions</h3>");
+            out.println("<section>");
+            out.println("<p>" + doc.commentText() + "</p>");
+            out.println("<table>");
+            out.println("<tr><th>Field</th><th>Description</th></tr>");
 
             for (final FieldDoc field : doc.fields()) {
                 if (field.isPublic() && !field.isStatic()) {
-                    out.append("<div class=\"metric_column_def\"><span>" + field.name() + ": </span>");
-                    out.append(field.commentText());
-                    out.println("</div>");
+                    out.append("<tr>");
+                    out.append("<td>" + field.name() + "</td>");
+                    out.append("<td>" + field.commentText() + "</td>");
+                    out.append("</tr>");
                 }
             }
+
+            out.println("</table>");
+            out.println("</section>");
         }
 
         out.close();

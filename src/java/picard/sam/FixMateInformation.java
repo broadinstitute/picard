@@ -29,13 +29,15 @@ import htsjdk.samtools.BamFileIoUtils;
 import htsjdk.samtools.MergingSamRecordIterator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordQueryNameComparator;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamPairUtil;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
@@ -44,9 +46,10 @@ import htsjdk.samtools.util.RuntimeIOException;
 import htsjdk.samtools.util.SortingCollection;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.Usage;
+import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,28 +63,32 @@ import java.util.List;
  *
  * @author Tim Fennell
  */
+@CommandLineProgramProperties(
+        usage = "Ensure that all mate-pair information is in sync between each read " +
+                "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
+                "and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
+                "to the output file unchanged.",
+        usageShort = "Ensure that all mate-pair information is in sync between each read and its mate pair",
+        programGroup = SamOrBam.class
+)
 public class FixMateInformation extends CommandLineProgram {
-    @Usage public final String USAGE = "Ensure that all mate-pair information is in sync between each read " +
-            " and it's mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
-            " and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
-            "to the output file unchanged.";
 
-    @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input file to fix.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to fix.")
     public List<File> INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
-            doc="The output file to write to. If no output file is supplied, the input file is overwritten.")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,
+            doc = "The output file to write to. If no output file is supplied, the input file is overwritten.")
     public File OUTPUT;
 
-    @Option(shortName=StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional=true,
-    doc="Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.")
+    @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
+            doc = "Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.")
     public SortOrder SORT_ORDER;
 
-    @Option(doc="If true, assume that the input file is queryname sorted, even if the header says otherwise.", 
-    shortName=StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
+    @Option(doc = "If true, assume that the input file is queryname sorted, even if the header says otherwise.",
+            shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
     public boolean ASSUME_SORTED = false;
 
-    @Option(shortName="MC", optional=true, doc="Adds the mate CIGAR tag (MC) if true, does not if false.")
+    @Option(shortName = "MC", optional = true, doc = "Adds the mate CIGAR tag (MC) if true, does not if false.")
     public Boolean ADD_MATE_CIGAR = true;
 
     private static final Log log = Log.getInstance(FixMateInformation.class);
@@ -95,10 +102,10 @@ public class FixMateInformation extends CommandLineProgram {
     protected int doWork() {
         // Open up the input
         boolean allQueryNameSorted = true;
-        final List<SAMFileReader> readers = new ArrayList<SAMFileReader>();
+        final List<SamReader> readers = new ArrayList<SamReader>();
         for (final File f : INPUT) {
             IOUtil.assertFileIsReadable(f);
-            final SAMFileReader reader = new SAMFileReader(f);
+            final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(f);
             readers.add(reader);
             if (reader.getFileHeader().getSortOrder() != SortOrder.queryname) allQueryNameSorted = false;
         }
@@ -110,19 +117,16 @@ public class FixMateInformation extends CommandLineProgram {
 
         if (differentOutputSpecified) {
             IOUtil.assertFileIsWritable(OUTPUT);
-        }
-        else if (INPUT.size() != 1) {
+        } else if (INPUT.size() != 1) {
             throw new PicardException("Must specify either an explicit OUTPUT file or a single INPUT file to be overridden.");
-        }
-        else {
+        } else {
             final File soleInput = INPUT.get(0).getAbsoluteFile();
-            final File dir       = soleInput.getParentFile().getAbsoluteFile();
+            final File dir = soleInput.getParentFile().getAbsoluteFile();
             try {
                 IOUtil.assertFileIsWritable(soleInput);
                 IOUtil.assertDirectoryIsWritable(dir);
                 OUTPUT = File.createTempFile(soleInput.getName() + ".being_fixed.", BamFileIoUtils.BAM_FILE_EXTENSION, dir);
-            }
-            catch (IOException ioe) {
+            } catch (final IOException ioe) {
                 throw new RuntimeIOException("Could not create tmp file in " + dir.getAbsolutePath());
             }
         }
@@ -136,42 +140,40 @@ public class FixMateInformation extends CommandLineProgram {
             final Iterator<SAMRecord> tmp;
             if (INPUT.size() > 1) {
                 final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(readers.size());
-                for (final SAMFileReader reader : readers) {
+                for (final SamReader reader : readers) {
                     headers.add(reader.getFileHeader());
                 }
-                final SortOrder sortOrder = (allQueryNameSorted? SortOrder.queryname: SortOrder.unsorted);
+                final SortOrder sortOrder = (allQueryNameSorted ? SortOrder.queryname : SortOrder.unsorted);
                 final SamFileHeaderMerger merger = new SamFileHeaderMerger(sortOrder, headers, false);
                 tmp = new MergingSamRecordIterator(merger, readers, false);
                 header = merger.getMergedHeader();
-            }
-            else {
+            } else {
                 tmp = readers.get(0).iterator();
                 header = readers.get(0).getFileHeader();
             }
 
             // And now deal with re-sorting if necessary
             if (ASSUME_SORTED || allQueryNameSorted) {
-                iterator = new PeekableIterator<SAMRecord>(tmp);
-            }
-            else {
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(tmp), ADD_MATE_CIGAR);
+            } else {
                 log.info("Sorting input into queryname order.");
                 final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class,
-                                                                                          new BAMRecordCodec(header),
-                                                                                          new SAMRecordQueryNameComparator(),
-                                                                                          MAX_RECORDS_IN_RAM,
-                                                                                          TMP_DIR);
+                        new BAMRecordCodec(header),
+                        new SAMRecordQueryNameComparator(),
+                        MAX_RECORDS_IN_RAM,
+                        TMP_DIR);
                 while (tmp.hasNext()) {
                     sorter.add(tmp.next());
 
                 }
 
-                iterator = new PeekableIterator<SAMRecord>(sorter.iterator()) {
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(sorter.iterator()) {
                     @Override
                     public void close() {
                         super.close();
                         sorter.cleanup();
                     }
-                };
+                }, ADD_MATE_CIGAR);
                 log.info("Sorting by queryname complete.");
             }
 
@@ -181,7 +183,7 @@ public class FixMateInformation extends CommandLineProgram {
             header.setSortOrder(outputSortOrder);
         }
 
-        if (CREATE_INDEX && header.getSortOrder() != SortOrder.coordinate){
+        if (CREATE_INDEX && header.getSortOrder() != SortOrder.coordinate) {
             throw new PicardException("Can't CREATE_INDEX unless sort order is coordinate");
         }
 
@@ -190,45 +192,15 @@ public class FixMateInformation extends CommandLineProgram {
         log.info("Traversing query name sorted records and fixing up mate pair information.");
         final ProgressLogger progress = new ProgressLogger(log);
         while (iterator.hasNext()) {
-            final SAMRecord rec1 = iterator.next();
-            if (rec1.isSecondaryOrSupplementary()) {
-                writeAlignment(rec1);
-                progress.record(rec1);
-                continue;
-            }
-            SAMRecord rec2 = null;
-            // Keep peeking at next SAMRecord until one is found that is not marked as secondary alignment,
-            // or until there are no more SAMRecords.
-            while (iterator.hasNext()) {
-                rec2 = iterator.peek();
-                if (rec2.isSecondaryOrSupplementary()) {
-                    iterator.next();
-                    writeAlignment(rec2);
-                    progress.record(rec2);
-                    rec2 = null;
-                } else {
-                    break;
-                }
-            }
-
-            if (rec2 != null && rec1.getReadName().equals(rec2.getReadName())) {
-                iterator.next(); // consume the peeked record
-                SamPairUtil.setMateInfo(rec1, rec2, header, ADD_MATE_CIGAR);
-                writeAlignment(rec1);
-                writeAlignment(rec2);
-                progress.record(rec1, rec2);
-            }
-            else {
-                writeAlignment(rec1);
-                progress.record(rec1);
-            }
+            final SAMRecord record = iterator.next();
+            out.addAlignment(record);
+            progress.record(record);
         }
         iterator.close();
 
         if (header.getSortOrder() == SortOrder.queryname) {
             log.info("Closing output file.");
-        }
-        else {
+        } else {
             log.info("Finished processing reads; re-sorting output file.");
         }
         closeWriter();
@@ -249,24 +221,22 @@ public class FixMateInformation extends CommandLineProgram {
 
                     if (CREATE_INDEX) {
                         final File newIndex = new File(OUTPUT.getParent(),
-                                                       OUTPUT.getName().substring(0, OUTPUT.getName().length()-4) + ".bai");
+                                OUTPUT.getName().substring(0, OUTPUT.getName().length() - 4) + ".bai");
                         final File oldIndex = new File(soleInput.getParent(),
-                                                       soleInput.getName().substring(0, soleInput.getName().length()-4) + ".bai");
+                                soleInput.getName().substring(0, soleInput.getName().length() - 4) + ".bai");
 
                         if (!newIndex.renameTo(oldIndex)) {
                             log.warn("Could not overwrite index file: " + oldIndex.getAbsolutePath());
                         }
                     }
 
-                }
-                else {
+                } else {
                     log.error("Could not move new file to " + soleInput.getAbsolutePath());
                     log.error("Input file preserved as: " + old.getAbsolutePath());
                     log.error("New file preserved as: " + OUTPUT.getAbsolutePath());
                     return 1;
                 }
-            }
-            else {
+            } else {
                 log.error("Could not move input file out of the way: " + soleInput.getAbsolutePath());
 
                 if (!OUTPUT.delete()) {
@@ -278,12 +248,13 @@ public class FixMateInformation extends CommandLineProgram {
 
         }
 
+        CloserUtil.close(readers);
         return 0;
     }
 
     protected void createSamFileWriter(final SAMFileHeader header) {
         out = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,
-                  header.getSortOrder() == SortOrder.queryname, OUTPUT);
+                header.getSortOrder() == SortOrder.queryname, OUTPUT);
 
     }
 

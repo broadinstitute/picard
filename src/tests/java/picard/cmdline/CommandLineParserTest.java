@@ -27,6 +27,7 @@ import htsjdk.samtools.util.CollectionUtil;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.cmdline.programgroups.Testing;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -41,61 +42,68 @@ import java.util.Map;
 import java.util.Set;
 
 public class CommandLineParserTest {
+
     enum FrobnicationFlavor {
         FOO, BAR, BAZ
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n",
+            usageShort = "Read input-file, frobnicate it, and write frobnicated results to output-file"
+    )
     class FrobnicateOptions {
-        @Usage
-        public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
-        @PositionalArguments(minElements=2, maxElements=2)
+        @PositionalArguments(minElements = 2, maxElements = 2)
         public List<File> positionalArguments = new ArrayList<File>();
 
-        @Option(shortName="T", doc="Frobnication threshold setting.")
+        @Option(shortName = "T", doc = "Frobnication threshold setting.")
         public Integer FROBNICATION_THRESHOLD = 20;
 
         @Option
         public FrobnicationFlavor FROBNICATION_FLAVOR;
 
-        @Option(doc="Allowed shmiggle types.", minElements=1, maxElements = 3)
+        @Option(doc = "Allowed shmiggle types.", minElements = 1, maxElements = 3)
         public List<String> SHMIGGLE_TYPE = new ArrayList<String>();
 
         @Option
         public Boolean TRUTHINESS;
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n",
+            usageShort = "Read input-file, frobnicate it, and write frobnicated results to output-file"
+    )
     class FrobnicateOptionsWithNullList {
-        @Usage
-        public static final String USAGE = "Usage: frobnicate [options] input-file output-file\n\nRead input-file, frobnicate it, and write frobnicated results to output-file\n";
 
-        @PositionalArguments(minElements=2, maxElements=2)
+        @PositionalArguments(minElements = 2, maxElements = 2)
         public List<File> positionalArguments = new ArrayList<File>();
 
-        @Option(shortName="T", doc="Frobnication threshold setting.")
+        @Option(shortName = "T", doc = "Frobnication threshold setting.")
         public Integer FROBNICATION_THRESHOLD = 20;
 
         @Option
         public FrobnicationFlavor FROBNICATION_FLAVOR;
 
-        @Option(doc="Allowed shmiggle types.", minElements=0, maxElements = 3)
+        @Option(doc = "Allowed shmiggle types.", minElements = 0, maxElements = 3)
         public List<String> SHMIGGLE_TYPE = new ArrayList<String>();
 
         @Option
         public Boolean TRUTHINESS;
     }
 
+    @CommandLineProgramProperties(
+            usage = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n",
+            usageShort = "ompute the plebnick of the freebozzle"
+    )
     class OptionsWithoutPositional {
-        @Usage
-        public static final String USAGE = "Usage: framistat [options]\n\nCompute the plebnick of the freebozzle.\n";
         public static final int DEFAULT_FROBNICATION_THRESHOLD = 20;
-        @Option(shortName="T", doc="Frobnication threshold setting.")
+        @Option(shortName = "T", doc = "Frobnication threshold setting.")
         public Integer FROBNICATION_THRESHOLD = DEFAULT_FROBNICATION_THRESHOLD;
 
         @Option
         public FrobnicationFlavor FROBNICATION_FLAVOR;
 
-        @Option(doc="Allowed shmiggle types.", minElements=1, maxElements = 3)
+        @Option(doc = "Allowed shmiggle types.", minElements = 1, maxElements = 3)
         public List<String> SHMIGGLE_TYPE = new ArrayList<String>();
 
         @Option
@@ -108,21 +116,21 @@ public class CommandLineParserTest {
         @Option
         public String frob;
     }
-    
+
     class MutexOptions {
-        @Option(mutex={"M", "N", "Y", "Z"})
+        @Option(mutex = {"M", "N", "Y", "Z"})
         public String A;
-        @Option(mutex={"M", "N", "Y", "Z"})
+        @Option(mutex = {"M", "N", "Y", "Z"})
         public String B;
-        @Option(mutex={"A", "B", "Y", "Z"})
+        @Option(mutex = {"A", "B", "Y", "Z"})
         public String M;
-        @Option(mutex={"A", "B", "Y", "Z"})
+        @Option(mutex = {"A", "B", "Y", "Z"})
         public String N;
-        @Option(mutex={"A", "B", "M", "N"})
+        @Option(mutex = {"A", "B", "M", "N"})
         public String Y;
-        @Option(mutex={"A", "B", "M", "N"})
+        @Option(mutex = {"A", "B", "M", "N"})
         public String Z;
-        
+
     }
 
 
@@ -169,7 +177,7 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertTrue(clp.parseOptions(System.err, args));
         Assert.assertEquals(fo.positionalArguments.size(), 2);
-        final File[] expectedPositionalArguments = { new File("positional1"), new File("positional2")};
+        final File[] expectedPositionalArguments = {new File("positional1"), new File("positional2")};
         Assert.assertEquals(fo.positionalArguments.toArray(), expectedPositionalArguments);
         Assert.assertEquals(fo.FROBNICATION_THRESHOLD.intValue(), 17);
         Assert.assertEquals(fo.FROBNICATION_FLAVOR, FrobnicationFlavor.BAR);
@@ -197,7 +205,7 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertTrue(clp.parseOptions(System.err, args));
         Assert.assertEquals(fo.positionalArguments.size(), 2);
-        final File[] expectedPositionalArguments = { new File("positional1"), new File("positional2")};
+        final File[] expectedPositionalArguments = {new File("positional1"), new File("positional2")};
         Assert.assertEquals(fo.positionalArguments.toArray(), expectedPositionalArguments);
         Assert.assertEquals(fo.FROBNICATION_THRESHOLD.intValue(), 17);
         Assert.assertEquals(fo.FROBNICATION_FLAVOR, FrobnicationFlavor.BAR);
@@ -406,38 +414,38 @@ public class CommandLineParserTest {
 
     @Test
     public void testNullValue() {
-    	final String[] args = {
-    			"FROBNICATION_THRESHOLD=null",  
+        final String[] args = {
+                "FROBNICATION_THRESHOLD=null",
                 "FROBNICATION_FLAVOR=BAR",
                 "TRUTHINESS=False",
-                "SHMIGGLE_TYPE=null",                
+                "SHMIGGLE_TYPE=null",
                 "positional1",
                 "positional2",
         };
-    	
+
         final FrobnicateOptionsWithNullList fownl = new FrobnicateOptionsWithNullList();
         fownl.SHMIGGLE_TYPE.add("shmiggle1"); //providing null value should clear this list
-        
+
         final CommandLineParser clp = new CommandLineParser(fownl);
         Assert.assertTrue(clp.parseOptions(System.err, args));
         Assert.assertEquals(fownl.positionalArguments.size(), 2);
-        final File[] expectedPositionalArguments = { new File("positional1"), new File("positional2")};
+        final File[] expectedPositionalArguments = {new File("positional1"), new File("positional2")};
         Assert.assertEquals(fownl.positionalArguments.toArray(), expectedPositionalArguments);
         Assert.assertEquals(fownl.FROBNICATION_THRESHOLD, null); //test null value         
         Assert.assertEquals(fownl.SHMIGGLE_TYPE.size(), 0); //test null value for list        
         Assert.assertFalse(fownl.TRUTHINESS);
-     
+
         //verify that required arg can't be set to null
-        args[2] = "TRUTHINESS=null"; 
+        args[2] = "TRUTHINESS=null";
         final CommandLineParser clp2 = new CommandLineParser(fownl);
         Assert.assertFalse(clp2.parseOptions(System.err, args));
 
         //verify that positional arg can't be set to null
-        args[2] = "TRUTHINESS=False"; 
+        args[2] = "TRUTHINESS=False";
         args[4] = "null";
         final CommandLineParser clp3 = new CommandLineParser(fownl);
         Assert.assertFalse(clp3.parseOptions(System.err, args));
-        
+
     }
 
 
@@ -466,7 +474,7 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertTrue(clp.parseOptions(System.err, args));
         Assert.assertEquals(fo.positionalArguments.size(), 2);
-        final File[] expectedPositionalArguments = { new File("positional1"), new File("positional2")};
+        final File[] expectedPositionalArguments = {new File("positional1"), new File("positional2")};
         Assert.assertEquals(fo.positionalArguments.toArray(), expectedPositionalArguments);
         Assert.assertEquals(fo.FROBNICATION_THRESHOLD.intValue(), 17);
         Assert.assertEquals(fo.FROBNICATION_FLAVOR, FrobnicationFlavor.BAR);
@@ -479,6 +487,7 @@ public class CommandLineParserTest {
 
     /**
      * In an options file, should not be allowed to override an option set on the command line
+     *
      * @throws Exception
      */
     @Test
@@ -496,19 +505,19 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         Assert.assertFalse(clp.parseOptions(System.err, args));
     }
-    
-    @DataProvider(name="mutexScenarios")
+
+    @DataProvider(name = "mutexScenarios")
     public Object[][] mutexScenarios() {
-        return new Object[][] {
-                { "pass", new String[] {"A=1", "B=2"}, true },
-                { "no args", new String[0], false },
-                { "1 of group required", new String[] {"A=1"}, false },
-                { "mutex", new String[]  {"A=1", "Y=3"}, false },
-                { "mega mutex", new String[]  {"A=1", "B=2", "Y=3", "Z=1", "M=2", "N=3"}, false }
+        return new Object[][]{
+                {"pass", new String[]{"A=1", "B=2"}, true},
+                {"no args", new String[0], false},
+                {"1 of group required", new String[]{"A=1"}, false},
+                {"mutex", new String[]{"A=1", "Y=3"}, false},
+                {"mega mutex", new String[]{"A=1", "B=2", "Y=3", "Z=1", "M=2", "N=3"}, false}
         };
     }
-    
-    @Test(dataProvider="mutexScenarios")
+
+    @Test(dataProvider = "mutexScenarios")
     public void testMutex(final String testName, final String[] args, final boolean expected) {
         final MutexOptions o = new MutexOptions();
         final CommandLineParser clp = new CommandLineParser(o);
@@ -583,12 +592,14 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.LIST, CollectionUtil.makeList("foo", "bar", "baz", "frob"));
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested option",
+            usageShort = "Class with nested option"
+    )
     class OptionsWithNested {
-        @Usage
-        public String USAGE = "Class with nested options.";
         @Option
         public Integer AN_INT;
-        @NestedOptions(doc="Doc for FROB")
+        @NestedOptions(doc = "Doc for FROB")
         public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
         @NestedOptions
         public OptionsWithNestedAgain NESTED = new OptionsWithNestedAgain();
@@ -597,7 +608,7 @@ public class CommandLineParserTest {
     }
 
     class OptionsWithNestedAgain {
-        @NestedOptions(doc="Doc for inner FROB")
+        @NestedOptions(doc = "Doc for inner FROB")
         public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
     }
 
@@ -647,7 +658,8 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.NESTED.FROB.TRUTHINESS.booleanValue(), innerTruthiness);
     }
 
-    @Test void testStaticNestedNegative() {
+    @Test
+    void testStaticNestedNegative() {
         final OptionsWithNested o = new OptionsWithNested();
         final CommandLineParser clp = new CommandLineParser(o);
         final int outerInt = 123;
@@ -663,12 +675,16 @@ public class CommandLineParserTest {
         System.out.println(clp.getCommandLine());
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested options.",
+            usageShort = "Class with nested options",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class ClpOptionsWithNested extends CommandLineProgram {
-        @Usage
-        public String USAGE = "Class with nested options.";
         @Option
         public Integer AN_INT;
-        @NestedOptions(doc="This will be ignored")
+        @NestedOptions(doc = "This will be ignored")
         public OptionsWithoutPositional FROB = new OptionsWithoutPositional();
 
         @Option
@@ -697,6 +713,12 @@ public class CommandLineParserTest {
         }
     }
 
+    @CommandLineProgramProperties(
+            usage = "Class with nested options again.",
+            usageShort = "Class with nested options again",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class ClpOptionsWithNestedAgain extends CommandLineProgram {
         private final OptionsWithoutPositional FROB = new OptionsWithoutPositional();
 
@@ -712,7 +734,6 @@ public class CommandLineParserTest {
             return 0;
         }
     }
-
 
     @Test
     public void testDynamicNestedOptions() {
@@ -765,7 +786,7 @@ public class CommandLineParserTest {
         @Option
         public String STRING2 = "String2ParentDefault";
 
-        @Option
+        @Option(overridable = true)
         public String STRING3 = "String3ParentDefault";
 
         @Option
@@ -832,6 +853,12 @@ public class CommandLineParserTest {
         Assert.assertEquals(o.CHILD.COLLECTION, new ArrayList<String>());
     }
 
+    @CommandLineProgramProperties(
+            usage = "",
+            usageShort = "",
+            programGroup = Testing.class,
+            omitFromCommandLine = true
+    )
     class DynamicPropagationParent extends CommandLineProgram {
         @Option
         public String STRING1 = "String1ParentDefault";
@@ -894,7 +921,6 @@ public class CommandLineParserTest {
         @Option
         public int STRING1 = 1;
 
-
         @Option
         public List<String> COLLECTION;
 
@@ -910,5 +936,45 @@ public class CommandLineParserTest {
         clp.usage(System.out, false);
 
         clp.parseOptions(System.err, new String[0]);
+    }
+
+    class StaticParent {
+
+        @Option
+        public String STRING1 = "String1ParentDefault";
+
+        @Option
+        public String STRING2 = "String2ParentDefault";
+
+        @Option(overridable = true)
+        public String STRING3 = "String3ParentDefault";
+
+        public void doSomething() {
+            System.out.println(STRING3);
+        }
+
+    }
+
+    class OverridePropagation extends StaticParent {
+        @Option
+        public String STRING3 = "String3Overriden";
+    }
+
+    @Test
+    public void testOveriddenOptions() {
+        final OverridePropagation overridden = new OverridePropagation();
+        final CommandLineParser overrideClp = new CommandLineParser(overridden);
+
+        overrideClp.parseOptions(System.err, new String[0]);
+
+        final OverridePropagation props = (OverridePropagation) overrideClp.getCallerOptions();
+        Assert.assertTrue(props.STRING3.equals("String3Overriden"));
+        Assert.assertTrue(((StaticParent) props).STRING3.equals("String3Overriden"));
+
+        overrideClp.parseOptions(System.err, new String[]{"STRING3=String3Supplied"});
+
+        final OverridePropagation propsSet = (OverridePropagation) overrideClp.getCallerOptions();
+        Assert.assertTrue(propsSet.STRING3.equals("String3Supplied"));
+        Assert.assertTrue(((StaticParent) propsSet).STRING3.equals("String3Supplied"));
     }
 }
