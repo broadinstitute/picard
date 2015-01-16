@@ -146,6 +146,7 @@ public abstract class CommandLineProgram {
         Log.setGlobalLogLevel(VERBOSITY);
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
+        IOUtil.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
         if (MAX_RECORDS_IN_RAM != null) {
             SAMFileWriterImpl.setDefaultMaxRecordsInRam(MAX_RECORDS_IN_RAM);
