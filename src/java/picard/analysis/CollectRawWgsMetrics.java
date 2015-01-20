@@ -15,7 +15,7 @@ import picard.cmdline.programgroups.Metrics;
         usageShort = "Writes whole genome sequencing-related metrics for a SAM or BAM file",
         programGroup = Metrics.class
 )
-public class CollectRawWGSMetrics extends CollectWgsMetrics{
+public class CollectRawWgsMetrics extends CollectWgsMetrics{
 
     @Option(shortName="MQ", doc="Minimum mapping quality for a read to contribute coverage.")
     public int MINIMUM_MAPPING_QUALITY = 0;
