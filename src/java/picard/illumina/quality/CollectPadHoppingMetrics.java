@@ -40,10 +40,13 @@ import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
+import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +84,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
             "the number available on the machine less NUM_PROCESSORS.", optional = true)
     public int NUM_PROCESSORS = 1;
+
+    @Option(shortName = "TP", doc = "Number of tiles on which to calculate pad-hopping metrics.", optional = true)
+    public int TILES_TO_PROCESS = Integer.MAX_VALUE;
 
     @Option(doc = "Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. " +
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
@@ -156,8 +162,15 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
-        final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(factory.getAvailableTiles().size());
-        for (final int tile : factory.getAvailableTiles()) {
+        //get a random subset of all tiles
+        final List<Integer> allTiles = factory.getAvailableTiles();
+        Collections.shuffle(allTiles);
+        List<Integer> tilesToProcess = new ArrayList<Integer>();
+        for (int n = 0; n < allTiles.size() && n < TILES_TO_PROCESS; n++)
+            tilesToProcess.add(allTiles.get(n));
+
+        final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
+        for (final int tile : tilesToProcess) {
             tileToSummaryMetrics.put(tile, new PadHoppingSummaryMetric(Integer.toString(tile)));
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
@@ -241,9 +254,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final private double pWriteDetailed;
         final private Random random = new Random();
 
-        //PAD-HOPPING-SPECIFIC FIELDS
-        //Need to initialize an array of all x/y/bases/hash data and the union-find data structures
-
         /**
          * Constructor
          *
@@ -278,16 +288,33 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                  *   is non-overlapping sets of files so make the data providers in the individual threads for Extractors
                  *   so they are not all waiting for each others file operations
                  */
+                Map<String, List<Point>> clusters = new HashMap<String, List<Point>>();
                 while (provider.hasNext()) {
                     final ClusterData cluster = provider.next();
-
-                    //BEGINNING OF PAD-HOPPING-SPECIFIC CODE
-                    //fill arrays of x/y/bases/hash data from cluster data
-                    //union-find processing occurs after this while loop
                     // if (cluster.isPf()) . . . only deal with Pf reads??
-                    //this.summaryMetric.READS++;
+                    this.summaryMetric.READS++;
 
-                }   //end of while -- all clusters have been processed
+                    //getBases() returns byte[].  Converting to String loses performance but
+                    //java arrays' hashing and comparison is by object identity, not value
+                    //Casting to String is simpler than writing a byte[] wrapper with overridden hashCode()
+                    final String bases = new String(cluster.getRead(0).getBases());
+
+                    List<Point> list = clusters.get(bases);
+                    if (list == null)
+                        clusters.put(bases, list = new ArrayList<Point>());
+                    list.add(new Point(cluster.getX(), cluster.getY()));
+                }
+
+                for (List<Point> points : clusters.values())
+                {
+                    if (points.size() > 1) {    //if there is duplication
+                        //this.summaryMetric.DUPLICATE_READS += points.size();
+
+                        //partition points into pad-hopping blobs
+                        //I should have a nested class that takes a list of points in its constructor
+                        //along with a cutoff distance or distance squared if I need to optimize
+                    }
+                }
 
                 //MORE PAD-HOPPING-SPECIFIC CODE
                 //do union-find processing
@@ -307,37 +334,52 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
+    private static class NeighboringPoints {
 
-    /** a metric class for describing FP failing reads from an Illumina HiSeqX lane * */
-    //PAD-HOPPING-SPECIFIC: ENLARGE THIS CLASS!!!!
+        private ArrayList<ArrayList<Point>> groups;
+
+        public NeighboringPoints(List<Point> points) {
+            groups = new ArrayList<ArrayList<Point>>();
+
+            int N = points.size();
+            boolean[] visited = new boolean[N];
+
+
+            for (int n = 0; n < N; n++)
+                if (!visited[n]) {
+                    visited[n] = true;
+                    ArrayList<Point> group = new ArrayList<Point>();
+                    group.add
+                }
+
+        }
+    }
+
+    /** a metric class for describing pad-hopping clusters **/
     public static class PadHoppingDetailMetric extends MetricBase {
         // The Tile that is described by this metric.
         public Integer TILE;
 
-        //The X coordinate of the read within the tile
+        //The X coordinate of the first read in the cluster within the tile
         public int X;
 
-        //The Y coordinate of the read within the tile
+        //The Y coordinate of the read in the cluster within the tile
         public int Y;
 
-        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y) {
+        //The number of reads in this pad-hopping cluster
+        public int SIZE;
+
+        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y, final int size) {
             this.TILE = TILE;
             X = x;
             Y = y;
+            SIZE = size;
         }
 
         /** This ctor is necessary for when reading metrics from file */
-        public PadHoppingDetailMetric() {
-        }
+        public PadHoppingDetailMetric() { }
     }
 
-    /**
-     * Metrics produced by the GetHiSeqXPFFailMetrics program. Used to diagnose lanes from HiSeqX
-     * Sequencing, providing the number and fraction of each of the reasons that reads could have not passed PF.
-     * Possible reasons are EMPTY (reads from empty wells with no template strand), POLYCLONAL (reads from wells that had more than one strand
-     * cloned in them), MISALIGNED (reads from wells that are near the edge of the tile), UNKNOWN (reads that didn't pass PF but couldn't be diagnosed)
-     */
-    //PAD-HOPPING-SPECIFIC: CHANGE THIS CLASS!!!!
     public static class PadHoppingSummaryMetric extends MetricBase {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;
@@ -345,35 +387,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** The total number of reads examined */
         public int READS = 0;
 
-        /** The number of non-PF reads in this tile. */
-        public int PF_FAIL_READS = 0;
+        /** The number of reads contained in pad-hopping clusters in this tile. */
+        public int PAD_HOPPING_READS = 0;
 
-        /** The fraction of PF_READS */
-        public double PCT_PF_FAIL_READS = 0.0;
-
-        /** The number of non-PF reads in this tile that are deemed empty. */
-        public int PF_FAIL_EMPTY = 0;
-
-        /** The fraction of non-PF reads in this tile that are deemed empty (as fraction of all non-PF reads). */
-        public double PCT_PF_FAIL_EMPTY = 0.0;
-
-        /** The number of non-PF reads in this tile that are deemed multiclonal. */
-        public int PF_FAIL_POLYCLONAL = 0;
-
-        /** The fraction of non-PF reads in this tile that are deemed multiclonal (as fraction of all non-PF reads). */
-        public double PCT_PF_FAIL_POLYCLONAL = 0.0;
-
-        /** The number of non-PF reads in this tile that are deemed "misaligned". */
-        public int PF_FAIL_MISALIGNED = 0;
-
-        /** The fraction of non-PF reads in this tile that are deemed "misaligned" (as fraction of all non-PF reads). */
-        public double PCT_PF_FAIL_MISALIGNED = 0.0;
-
-        /** The number of non-PF reads in this tile that have not been classified. */
-        public int PF_FAIL_UNKNOWN = 0;
-
-        /** The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads). */
-        public double PCT_PF_FAIL_UNKNOWN = 0.0;
+        public double PCT_PAD_HOPPING_READS = 0.0;
 
         // constructor takes a String for tile since we want to have one instance with tile="All". This tile will contain the summary of all the tiles
         public PadHoppingSummaryMetric(final String tile) {
@@ -381,8 +398,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
 
         /** This ctor is necessary for when reading metrics from file */
-        public PadHoppingSummaryMetric() {
-        }
+        public PadHoppingSummaryMetric() { }
 
         /**
          * Adds the non-calculated fields from the other metric to this one.
@@ -391,21 +407,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
          */
         public void merge(final PadHoppingSummaryMetric metric) {
             this.READS += metric.READS;
-            this.PF_FAIL_READS += metric.PF_FAIL_READS;
-            this.PF_FAIL_EMPTY += metric.PF_FAIL_EMPTY;
-            this.PF_FAIL_MISALIGNED += metric.PF_FAIL_MISALIGNED;
-            this.PF_FAIL_POLYCLONAL += metric.PF_FAIL_POLYCLONAL;
-            this.PF_FAIL_UNKNOWN += metric.PF_FAIL_UNKNOWN;
+            this.PAD_HOPPING_READS += metric.PAD_HOPPING_READS;
         }
 
         public void calculateDerivedFields() {
             //protect against divide by zero
             if (this.READS != 0) {
-                this.PCT_PF_FAIL_READS = (double) this.PF_FAIL_READS / this.READS;
-                this.PCT_PF_FAIL_EMPTY = (double) this.PF_FAIL_EMPTY / this.READS;
-                this.PCT_PF_FAIL_MISALIGNED = (double) this.PF_FAIL_MISALIGNED / this.READS;
-                this.PCT_PF_FAIL_POLYCLONAL = (double) this.PF_FAIL_POLYCLONAL / this.READS;
-                this.PCT_PF_FAIL_UNKNOWN = (double) this.PF_FAIL_UNKNOWN / this.READS;
+                this.PCT_PAD_HOPPING_READS = (double) this.PAD_HOPPING_READS / this.READS;
             }
         }
     }
