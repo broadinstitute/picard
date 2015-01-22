@@ -51,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -338,21 +339,39 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         private ArrayList<ArrayList<Point>> groups;
 
-        public NeighboringPoints(List<Point> points) {
+        public NeighboringPoints(List<Point> points, double cutoffDistance) {
             groups = new ArrayList<ArrayList<Point>>();
 
             int N = points.size();
             boolean[] visited = new boolean[N];
 
 
-            for (int n = 0; n < N; n++)
-                if (!visited[n]) {
-                    visited[n] = true;
+            for (int n = 0; n < N; n++) {
+                if (!visited[n]) {   //does this point not belong to an existing component
                     ArrayList<Point> group = new ArrayList<Point>();
-                    group.add
-                }
+                    groups.add(group);
 
+                    //do depth-first search
+                    Stack<Integer> stack = new Stack<Integer>();
+                    stack.push(n);
+                    while (!stack.isEmpty()) {
+                        int m = stack.pop();
+                        if (!visited[m]) {
+                            visited[m] = true;
+                            Point currentPoint = points.get(m);
+                            group.add(currentPoint);
+                            for (int p = m + 1; p < N; p++) {
+                                if (currentPoint.distance(points.get(p)) <= cutoffDistance)
+                                    stack.push(p);
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+    //add methods for getting number in clusters, number not in clusters, collection of detailed metrics
+    // for cluster center of mass and size etc
     }
 
     /** a metric class for describing pad-hopping clusters **/
