@@ -128,6 +128,36 @@ public class FastqToSam extends CommandLineProgram {
 
     private static final SolexaQualityConverter solexaQualityConverter = SolexaQualityConverter.getSingleton();
 
+    /**
+     * Looks at fastq input(s) and attempts to determine the proper quality format
+     *
+     * Closes the reader(s) by side effect
+     *
+     * @param reader1 The first fastq input
+     * @param reader2 The second fastq input, if necessary. To not use this input, set it to null
+     * @param expectedQuality If provided, will be used for sanity checking. If left null, autodetection will occur
+     */
+    public static FastqQualityFormat determineQualityFormat(final FastqReader reader1, final FastqReader reader2, final FastqQualityFormat expectedQuality) {
+        final QualityEncodingDetector detector = new QualityEncodingDetector();
+
+        if (reader2 == null) {
+            detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader1);
+        } else {
+            detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader1, reader2);
+            reader2.close();
+        }
+
+        reader1.close();
+
+        final FastqQualityFormat qualityFormat =  detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, expectedQuality);
+        if (detector.isDeterminationAmbiguous()) {
+            LOG.warn("Making ambiguous determination about fastq's quality encoding; more than one format possible based on observed qualities.");
+        }
+        LOG.info(String.format("Auto-detected quality format as: %s.", qualityFormat));
+
+        return qualityFormat;
+    }
+
     /** Stock main method. */
     public static void main(final String[] argv) {
         System.exit(new FastqToSam().instanceMain(argv));
@@ -135,41 +165,62 @@ public class FastqToSam extends CommandLineProgram {
 
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
-            final QualityEncodingDetector detector = new QualityEncodingDetector();
-            final FastqReader reader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
-            if (FASTQ2 == null) {
-                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader);
-            } else {
-                final FastqReader reader2 = new FastqReader(FASTQ2,ALLOW_AND_IGNORE_EMPTY_LINES);
-                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, reader, reader2);
-                reader2.close();
-            }
-            reader.close();
-            
-            QUALITY_FORMAT = detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, QUALITY_FORMAT);
-            if (detector.isDeterminationAmbiguous())
-                LOG.warn("Making ambiguous determination about fastq's quality encoding; more than one format possible based on observed qualities.");
-            LOG.info(String.format("Auto-detected quality format as: %s.", QUALITY_FORMAT));
+        IOUtil.assertFileIsReadable(FASTQ);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
-        final int readCount = (FASTQ2 == null) ?  doUnpaired() : doPaired();
-        LOG.info("Processed " + readCount + " fastq reads");
+        FastqReader reader = fileToFastqReader(FASTQ);
+
+        FastqReader reader2 = null;
+        if (FASTQ2 != null) {
+            IOUtil.assertFileIsReadable(FASTQ2);
+            reader2 = fileToFastqReader(FASTQ2);
+        }
+
+        QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader, reader2, QUALITY_FORMAT);
+
+        final SAMFileHeader header = createSamFileHeader();
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+
+        reader = fileToFastqReader(FASTQ);
+        if (FASTQ2 != null) {
+            reader2 = fileToFastqReader(FASTQ2);
+        }
+        makeItSo(reader, reader2, writer);
+
+        reader.close();
+
+        if (reader2 != null) {
+            reader2.close();
+        }
+
         return 0;
     }
 
-    /** Creates a simple SAM file from a single fastq file. */
-    protected int doUnpaired() {
-        IOUtil.assertFileIsReadable(FASTQ);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        
-        final FastqReader freader = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
-        final SAMFileHeader header = createFileHeader();
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
+    /**
+     * Handles the FastqToSam execution on the FastqReader(s).
+     *
+     * In some circumstances it might be useful to circumvent the command line based instantiation of this
+     * class, however note that there is no handholding or guardrails to running in this manner.
+     *
+     * It is the caller's responsibility to close the reader(s)
+     *
+     * @param reader1 The FastqReader for the first fastq file
+     * @param reader2 The second FastqReader if applicable. Pass in null if only using a single reader
+     * @param writer The SAMFileWriter where the new SAM file is written
+     *
+     */
+    public void makeItSo(final FastqReader reader1, final FastqReader reader2, final SAMFileWriter writer) {
+        final int readCount = (FASTQ2 == null) ?  doUnpaired(reader1, writer) : doPaired(reader1, reader2, writer);
+        LOG.info("Processed " + readCount + " fastq reads");
+    }
 
+    /** Creates a simple SAM file from a single fastq file. */
+    protected int doUnpaired(final FastqReader freader, final SAMFileWriter writer) {
         int readCount = 0;
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader.hasNext()  ; readCount++) {
             final FastqRecord frec = freader.next();
-            final SAMRecord srec = createSamRecord(header, getReadName(frec.getReadHeader(), false) , frec, false) ;
+            final SAMRecord srec = createSamRecord(writer.getFileHeader(), getReadName(frec.getReadHeader(), false) , frec, false) ;
             srec.setReadPairedFlag(false);
             writer.addAlignment(srec);
             progress.record(srec);
@@ -180,16 +231,7 @@ public class FastqToSam extends CommandLineProgram {
     }
 
     /** More complicated method that takes two fastq files and builds pairing information in the SAM. */
-    protected int doPaired() {
-        IOUtil.assertFileIsReadable(FASTQ);
-        IOUtil.assertFileIsReadable(FASTQ2);
-        IOUtil.assertFileIsWritable(OUTPUT);
-        
-        final FastqReader freader1 = new FastqReader(FASTQ,ALLOW_AND_IGNORE_EMPTY_LINES);
-        final FastqReader freader2 = new FastqReader(FASTQ2,ALLOW_AND_IGNORE_EMPTY_LINES);
-        final SAMFileHeader header = createFileHeader() ;
-        final SAMFileWriter writer = (new SAMFileWriterFactory()).makeSAMOrBAMWriter(header, false, OUTPUT);
-
+    protected int doPaired(final FastqReader freader1, final FastqReader freader2, final SAMFileWriter writer) {
         int readCount = 0;
         final ProgressLogger progress = new ProgressLogger(LOG);
         for ( ; freader1.hasNext() && freader2.hasNext() ; readCount++) {
@@ -200,13 +242,13 @@ public class FastqToSam extends CommandLineProgram {
             final String frec2Name = getReadName(frec2.getReadHeader(), true);
             final String baseName = getBaseName(frec1Name, frec2Name, freader1, freader2);
 
-            final SAMRecord srec1 = createSamRecord(header, baseName, frec1, true) ;
+            final SAMRecord srec1 = createSamRecord(writer.getFileHeader(), baseName, frec1, true) ;
             srec1.setFirstOfPairFlag(true);
             srec1.setSecondOfPairFlag(false);
             writer.addAlignment(srec1);
             progress.record(srec1);
 
-            final SAMRecord srec2 = createSamRecord(header, baseName, frec2, true) ;
+            final SAMRecord srec2 = createSamRecord(writer.getFileHeader(), baseName, frec2, true) ;
             srec2.setFirstOfPairFlag(false);
             srec2.setSecondOfPairFlag(true);
             writer.addAlignment(srec2);
@@ -220,6 +262,10 @@ public class FastqToSam extends CommandLineProgram {
         }
 
         return readCount;
+    }
+
+    private FastqReader fileToFastqReader(final File file) {
+        return new FastqReader(file, ALLOW_AND_IGNORE_EMPTY_LINES);
     }
 
     private SAMRecord createSamRecord(final SAMFileHeader header, final String baseName, final FastqRecord frec, final boolean paired) {
@@ -247,7 +293,7 @@ public class FastqToSam extends CommandLineProgram {
     }
 
     /** Creates a simple header with the values provided on the command line. */
-    private SAMFileHeader createFileHeader() {
+    public SAMFileHeader createSamFileHeader() {
         final SAMReadGroupRecord rgroup = new SAMReadGroupRecord(this.READ_GROUP_NAME);
         rgroup.setSample(this.SAMPLE_NAME);
         if (this.LIBRARY_NAME != null) rgroup.setLibrary(this.LIBRARY_NAME);
