@@ -36,7 +36,6 @@ import picard.illumina.parser.ClusterData;
 import picard.illumina.parser.IlluminaDataProvider;
 import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
-import picard.illumina.parser.ReadData;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
@@ -57,7 +56,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collect metrics regarding the reason for reads (sequenced by HiSeqX) not passing the Illumina PF Filter. (BETA)
+ * Collect metrics regarding pad-hopping in the Illumina Hi-Seq X.
+ * Terminology: in all Illumina Hi-Seq machines, a "cluster" is a discrete area on a flow cell that contains
+ * bridge-amplified DNA fragments, hopefully all clones of a single original insert  In the Hi-Seq X, each cluster
+ * is constrained within a hexagonal "pad".  In "pad-hopping", contiguous groups of pads have duplicate DNA fragments.
+ * In the following code, such a contiguous group will be called a "bunch".
  *
  * @author David Benjamin
  */
@@ -92,6 +95,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(doc = "Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. " +
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
+
+    @Option(shortName = "ND", doc = "Max distance (in Illumina's internal cluster coordinate units) for two custers " +
+            "to be considered adjacent.  The distance is 20 +/- 1 for all tiles of all Hi Seq X flowcells.", optional = true)
+    public double MAX_NEIGHBOR_DISTANCE = 22.0;
 
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
@@ -180,7 +187,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile),
                     factory,
-                    PROB_EXPLICIT_OUTPUT
+                    PROB_EXPLICIT_OUTPUT,
+                    MAX_NEIGHBOR_DISTANCE
             );
             extractors.add(extractor);
         }
@@ -253,6 +261,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         final private double pWriteDetailed;
+        final private double cutoffDistance;
         final private Random random = new Random();
 
         /**
@@ -268,12 +277,14 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics,
                 final IlluminaDataProviderFactory factory,
-                final double pWriteDetailed
+                final double pWriteDetailed,
+                final double cutoffDistance
         ) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.pWriteDetailed = pWriteDetailed;
+            this.cutoffDistance = cutoffDistance;
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
         }
 
@@ -289,7 +300,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                  *   is non-overlapping sets of files so make the data providers in the individual threads for Extractors
                  *   so they are not all waiting for each others file operations
                  */
-                Map<String, List<Point>> clusters = new HashMap<String, List<Point>>();
+                Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
                 while (provider.hasNext()) {
                     final ClusterData cluster = provider.next();
                     // if (cluster.isPf()) . . . only deal with Pf reads??
@@ -300,30 +311,32 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     //Casting to String is simpler than writing a byte[] wrapper with overridden hashCode()
                     final String bases = new String(cluster.getRead(0).getBases());
 
-                    List<Point> list = clusters.get(bases);
+                    List<Point> list = duplicateSets.get(bases);
                     if (list == null)
-                        clusters.put(bases, list = new ArrayList<Point>());
+                        duplicateSets.put(bases, list = new ArrayList<Point>());
                     list.add(new Point(cluster.getX(), cluster.getY()));
                 }
 
-                for (List<Point> points : clusters.values())
+                for (List<Point> points : duplicateSets.values())
                 {
                     if (points.size() > 1) {    //if there is duplication
-                        //this.summaryMetric.DUPLICATE_READS += points.size();
 
-                        //partition points into pad-hopping blobs
-                        //I should have a nested class that takes a list of points in its constructor
-                        //along with a cutoff distance or distance squared if I need to optimize
+                        BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
+                        this.summaryMetric.PAD_HOPPING_DUPLICATES += bunchFinder.numDuplicates();
+                        //randomly add pad-hopping events to detailed metrics
+                        if (random.nextDouble() < pWriteDetailed) {
+                            List<Integer> sizes = bunchFinder.bunchSizes();
+                            List<Point> centers = bunchFinder.bunchCenters();
+                            for (int i = 0; i < sizes.size(); i++) {
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, centers.get(i).getX(), centers.get(i).getY(), sizes.get(i)));
+                            }
+                        }
+
                     }
                 }
 
-                //MORE PAD-HOPPING-SPECIFIC CODE
-                //do union-find processing
 
-                //randomly add pad-hopping events to detailed metrics
-                //if (random.nextDouble() < pWriteDetailed) {
-                //    detailedMetrics.add(new PadHoppingDetailMetric(. . .));
-                //}
+
 
 
             } catch (final Exception e) {
@@ -335,40 +348,65 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
-    private static class NeighboringPoints {
+    private static class BunchFinder {
 
-        private ArrayList<ArrayList<Point>> groups;
+        private ArrayList<ArrayList<Point>> bunches; //list of connected components
+        private int N;  //total number of points
 
-        public NeighboringPoints(List<Point> points, double cutoffDistance) {
-            groups = new ArrayList<ArrayList<Point>>();
-
-            int N = points.size();
-            boolean[] visited = new boolean[N];
-
+        public BunchFinder(List<Point> points, double cutoffDistance) {
+            bunches = new ArrayList<ArrayList<Point>>();
+            N = points.size();
+            boolean[] visited = new boolean[N]; //tracks points considered in depth-first search
 
             for (int n = 0; n < N; n++) {
-                if (!visited[n]) {   //does this point not belong to an existing component
-                    ArrayList<Point> group = new ArrayList<Point>();
-                    groups.add(group);
-
-                    //do depth-first search
-                    Stack<Integer> stack = new Stack<Integer>();
-                    stack.push(n);
-                    while (!stack.isEmpty()) {
-                        int m = stack.pop();
-                        if (!visited[m]) {
-                            visited[m] = true;
-                            Point currentPoint = points.get(m);
-                            group.add(currentPoint);
-                            for (int p = m + 1; p < N; p++) {
-                                if (currentPoint.distance(points.get(p)) <= cutoffDistance)
-                                    stack.push(p);
-                            }
-                        }
+                if (visited[n]) continue;   //point belongs to a previously-counted component
+                ArrayList<Point> bunch = new ArrayList<Point>();
+                bunches.add(bunch);
+                //do depth-first search
+                Stack<Integer> DFSstack = new Stack<Integer>();
+                DFSstack.push(n);
+                while (!DFSstack.isEmpty()) {
+                    int m = DFSstack.pop();
+                    if (visited[m]) continue;
+                    visited[m] = true;
+                    Point currentPoint = points.get(m);
+                    bunch.add(currentPoint);
+                    for (int p = m + 1; p < N; p++) {
+                        if (currentPoint.distance(points.get(p)) <= cutoffDistance)
+                            DFSstack.push(p);
                     }
                 }
             }
         }
+
+        public int numDuplicates() { return N - bunches.size(); }
+
+        public List<Integer> bunchSizes() {
+            //this can be rewritten as a map in Java 8
+            ArrayList<Integer> result = new ArrayList<Integer>();
+            for (ArrayList<Point> bunch : bunches)
+                result.add(bunches.size());
+            return result;
+        }
+
+        public List<Point> bunchCenters() {
+            //this can be rewritten functionally in Java 8
+            ArrayList<Point> result = new ArrayList<Point>();
+            for (ArrayList<Point> bunch : bunches) {
+                int totalX = 0;
+                int totalY = 0;
+                for (Point p : bunch) {
+                    totalX += p.getX();
+                    totalY += p.getY();
+                }
+                int centerX = totalX / bunch.size();
+                int centerY = totalY / bunch.size();
+                result.add(new Point(centerX, centerY));
+            }
+            return result;
+        }
+
+
 
     //add methods for getting number in clusters, number not in clusters, collection of detailed metrics
     // for cluster center of mass and size etc
@@ -379,16 +417,16 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         // The Tile that is described by this metric.
         public Integer TILE;
 
-        //The X coordinate of the first read in the cluster within the tile
-        public int X;
+        //The X coordinate of the center of the bunch
+        public double X;
 
-        //The Y coordinate of the read in the cluster within the tile
-        public int Y;
+        //The Y coordinate of the center of the bunch
+        public double Y;
 
         //The number of reads in this pad-hopping cluster
         public int SIZE;
 
-        public PadHoppingDetailMetric(final Integer TILE, final int x, final int y, final int size) {
+        public PadHoppingDetailMetric(final Integer TILE, final double x, final double y, final int size) {
             this.TILE = TILE;
             X = x;
             Y = y;
@@ -406,10 +444,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** The total number of reads examined */
         public int READS = 0;
 
-        /** The number of reads contained in pad-hopping clusters in this tile. */
-        public int PAD_HOPPING_READS = 0;
+        /** The number of duplicates due to pad-hopping in this tile.  In a pad-hopping bunch of N reads, we
+         * count N - 1 duplicates */
+        public int PAD_HOPPING_DUPLICATES = 0;
 
-        public double PCT_PAD_HOPPING_READS = 0.0;
+        public double PCT_PAD_HOPPING_DUPLICATES = 0.0;
 
         // constructor takes a String for tile since we want to have one instance with tile="All". This tile will contain the summary of all the tiles
         public PadHoppingSummaryMetric(final String tile) {
@@ -426,13 +465,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
          */
         public void merge(final PadHoppingSummaryMetric metric) {
             this.READS += metric.READS;
-            this.PAD_HOPPING_READS += metric.PAD_HOPPING_READS;
+            this.PAD_HOPPING_DUPLICATES += metric.PAD_HOPPING_DUPLICATES;
         }
 
         public void calculateDerivedFields() {
             //protect against divide by zero
             if (this.READS != 0) {
-                this.PCT_PAD_HOPPING_READS = (double) this.PAD_HOPPING_READS / this.READS;
+                this.PCT_PAD_HOPPING_DUPLICATES = (double) this.PAD_HOPPING_DUPLICATES / this.READS;
             }
         }
     }
