@@ -335,10 +335,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     }
                 }
 
-
-
-
-
             } catch (final Exception e) {
                 LOG.error(e, "Error processing tile ", this.tile);
                 this.exception = e;

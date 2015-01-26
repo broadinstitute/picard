@@ -71,14 +71,11 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             " <OUTPUT>" + summaryMetricsExtension, optional = false)
     public File OUTPUT;
 
-    @Option(shortName = "P", doc = "The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_OUTPUT != 0)", optional = true)
+    @Option(shortName = "P", doc = "The fraction of (non-PF) reads for which to output explicit classification. Output file will be <OUTPUT>" + detailedMetricsExtension + " (if PROB_EXPLICIT_READS != 0)", optional = true)
     public double PROB_EXPLICIT_READS = 0;
 
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
-
-    @Option(doc = "Maximum number of clusters per tile to output.", shortName = "MC")
-    public static long MAX_CLUSTERS = Long.MAX_VALUE;
 
     @Option(shortName = "NP", doc = "Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to " +
             "the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be " +
@@ -89,7 +86,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
 
-    private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
+    private static final Log LOG = Log.getInstance(CollectHiSeqXPfFailMetrics.class);
 
     private final Map<Integer, PFFailSummaryMetric> tileToSummaryMetrics = new LinkedHashMap<Integer, PFFailSummaryMetric>();
     private final Map<Integer, List<PFFailDetailedMetric>> tileToDetailedMetrics = new LinkedHashMap<Integer, List<PFFailDetailedMetric>>();
@@ -109,7 +106,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
 
         if (PROB_EXPLICIT_READS > 1 || PROB_EXPLICIT_READS < 0) {
-            errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
+            errors.add("PROB_EXPLICIT_READS must be a probability, i.e., 0 <= PROB_EXPLICIT_READS <= 1");
         }
 
         if (errors.size() > 0) {
@@ -121,7 +118,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
     /** Stock main method. */
     public static void main(final String[] args) {
-        new CollectPadHoppingMetrics().instanceMainWithExit(args);
+        new CollectHiSeqXPfFailMetrics().instanceMainWithExit(args);
     }
 
     @Override
@@ -152,7 +149,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         }
 
         // Create thread-pool submit jobs and what for their completion
-        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
+        LOG.info("Processing with " + numProcessors + " PerTilePFMetricsExtractor(s).");
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
         final List<PerTilePFMetricsExtractor> extractors = new ArrayList<PerTilePFMetricsExtractor>(factory.getAvailableTiles().size());
@@ -274,9 +271,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
                  *   is non-overlapping sets of files so make the data providers in the individual threads for Extractors
                  *   so they are not all waiting for each others file operations
                  */
-            long clusterCount = Long.valueOf(0);
-                while (provider.hasNext() && ++clusterCount < MAX_CLUSTERS) {
-                    clusterCount++;
+                while (provider.hasNext()) {
                     // Extract the PF status and infer reason if FAIL from the cluster and update the summaryMetric for the tile
                     final ClusterData cluster = provider.next();
                     this.summaryMetric.READS++;
@@ -387,7 +382,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
         /**
          * The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
-         * (See PadHoppingSummaryMetric for explanation regarding the possible classification.)
+         * (See PFFailSummaryMetric for explanation regarding the possible classification.)
          */
         public ReadClassifier.PfFailReason CLASSIFICATION;
 
