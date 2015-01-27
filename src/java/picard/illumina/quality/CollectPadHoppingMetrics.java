@@ -331,7 +331,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                                 detailedMetrics.add(new PadHoppingDetailMetric(tile, centers.get(i).getX(), centers.get(i).getY(), sizes.get(i)));
                             }
                         }
-
                     }
                 }
 
@@ -344,6 +343,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
+    
     private static class BunchFinder {
 
         private ArrayList<ArrayList<Point>> bunches; //list of connected components
