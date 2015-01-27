@@ -353,25 +353,25 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private int N;  //total number of points
 
         public BunchFinder(List<Point> points, double cutoffDistance) {
-            List<VisitedPoint> visitedPoints = VisitedPoint.makeVisitedPointList(points);
             bunches = new ArrayList<Bunch>();
             N = points.size();
+            boolean[] visited = new boolean[N];
 
-            for (VisitedPoint root : visitedPoints) {
-                if (root.isVisited()) continue;   //point belongs to a previously-counted component
+            for (int root = 0; root < N; root++) {
+                if (visited[root]) continue;   //point belongs to a previously-counted component
                 Bunch bunch = new Bunch();
 
                 //do depth-first search
-                Stack<VisitedPoint> DFSstack = new Stack<VisitedPoint>();
-                DFSstack.push(root);
-                while (!DFSstack.isEmpty()) {
-                    VisitedPoint bud = DFSstack.pop();
-                    if (bud.isVisited()) continue;
-                    bud.visit();
-                    bunch.add(bud.getPoint());
-                    for (int p = m + 1; p < N; p++) {
-                        if (currentPoint.distance(points.get(p)) <= cutoffDistance)
-                            DFSstack.push(p);
+                Stack<Integer> DFS = new Stack<Integer>();
+                DFS.push(root);
+                while (!DFS.isEmpty()) {
+                    int bud = DFS.pop();
+                    bunch.add(points.get(bud));
+                    for (int shoot = bud + 1; shoot < N; shoot++) {
+                        if (!visited[shoot] && points.get(bud).distance(points.get(shoot)) <= cutoffDistance) {
+                            DFS.push(shoot);
+                            visited[shoot] = true;
+                        }
                     }
                 }
                 bunches.add(bunch);
