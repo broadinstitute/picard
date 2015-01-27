@@ -320,15 +320,14 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 for (List<Point> points : duplicateSets.values())
                 {
                     if (points.size() > 1) {    //if there is duplication
-
                         BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
-                        this.summaryMetric.PAD_HOPPING_DUPLICATES += bunchFinder.numDuplicates();
-                        //randomly add pad-hopping events to detailed metrics
-                        if (random.nextDouble() < pWriteDetailed) {
-                            List<Integer> sizes = bunchFinder.bunchSizes();
-                            List<Point> centers = bunchFinder.bunchCenters();
-                            for (int i = 0; i < sizes.size(); i++) {
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, centers.get(i).getX(), centers.get(i).getY(), sizes.get(i)));
+                        for (Bunch bunch : bunchFinder.getBunches()) {
+                            if (bunch.size() == 1) continue;
+                            this.summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
+                            //randomly add pad-hopping events to detailed metrics
+                            if (random.nextDouble() < pWriteDetailed) {
+                                Point center = bunch.center();
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, center.getX(), center.getY(), bunch.size()));
                             }
                         }
                     }
@@ -344,7 +343,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     }
 
     private static class Bunch extends ArrayList<Point> {
+        public int numDuplicates() { return size() - 1; }
 
+        public Point center() {
+            int totalX = 0;
+            int totalY = 0;
+            for (Point p : this) {
+                totalX += p.getX();
+                totalY += p.getY();
+            }
+            return new Point(totalX / size(), totalY / size());
+        }
     }
 
     private static class BunchFinder {
@@ -378,37 +387,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             }
         }
 
-        public int numDuplicates() { return N - bunches.size(); }
-
-        public List<Integer> bunchSizes() {
-            //this can be rewritten as a map in Java 8
-            ArrayList<Integer> result = new ArrayList<Integer>();
-            for (ArrayList<Point> bunch : bunches)
-                result.add(bunches.size());
-            return result;
-        }
-
-        public List<Point> bunchCenters() {
-            //this can be rewritten functionally in Java 8
-            ArrayList<Point> result = new ArrayList<Point>();
-            for (ArrayList<Point> bunch : bunches) {
-                int totalX = 0;
-                int totalY = 0;
-                for (Point p : bunch) {
-                    totalX += p.getX();
-                    totalY += p.getY();
-                }
-                int centerX = totalX / bunch.size();
-                int centerY = totalY / bunch.size();
-                result.add(new Point(centerX, centerY));
-            }
-            return result;
-        }
-
-
-
-    //add methods for getting number in clusters, number not in clusters, collection of detailed metrics
-    // for cluster center of mass and size etc
+        public List<Bunch> getBunches() { return bunches; }
     }
 
     /** a metric class for describing pad-hopping clusters **/
