@@ -171,7 +171,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
         //get a random subset of all tiles
-        List<Integer> allTiles = factory.getAvailableTiles();
+        List<Integer> allTiles = new ArrayList<Integer>();
+        Collections.copy(allTiles, factory.getAvailableTiles());
         Collections.shuffle(allTiles);
         List<Integer> tilesToProcess = new ArrayList<Integer>();
         for (int n = 0; n < allTiles.size() && n < TILES_TO_PROCESS; n++)
