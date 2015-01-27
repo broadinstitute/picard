@@ -343,35 +343,38 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
-    
+    private static class Bunch extends ArrayList<Point> {
+
+    }
+
     private static class BunchFinder {
 
-        private ArrayList<ArrayList<Point>> bunches; //list of connected components
+        private ArrayList<Bunch> bunches; //list of connected components
         private int N;  //total number of points
 
         public BunchFinder(List<Point> points, double cutoffDistance) {
-            bunches = new ArrayList<ArrayList<Point>>();
+            List<VisitedPoint> visitedPoints = VisitedPoint.makeVisitedPointList(points);
+            bunches = new ArrayList<Bunch>();
             N = points.size();
-            boolean[] visited = new boolean[N]; //tracks points considered in depth-first search
 
-            for (int n = 0; n < N; n++) {
-                if (visited[n]) continue;   //point belongs to a previously-counted component
-                ArrayList<Point> bunch = new ArrayList<Point>();
-                bunches.add(bunch);
+            for (VisitedPoint root : visitedPoints) {
+                if (root.isVisited()) continue;   //point belongs to a previously-counted component
+                Bunch bunch = new Bunch();
+
                 //do depth-first search
-                Stack<Integer> DFSstack = new Stack<Integer>();
-                DFSstack.push(n);
+                Stack<VisitedPoint> DFSstack = new Stack<VisitedPoint>();
+                DFSstack.push(root);
                 while (!DFSstack.isEmpty()) {
-                    int m = DFSstack.pop();
-                    if (visited[m]) continue;
-                    visited[m] = true;
-                    Point currentPoint = points.get(m);
-                    bunch.add(currentPoint);
+                    VisitedPoint bud = DFSstack.pop();
+                    if (bud.isVisited()) continue;
+                    bud.visit();
+                    bunch.add(bud.getPoint());
                     for (int p = m + 1; p < N; p++) {
                         if (currentPoint.distance(points.get(p)) <= cutoffDistance)
                             DFSstack.push(p);
                     }
                 }
+                bunches.add(bunch);
             }
         }
 
