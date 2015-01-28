@@ -192,41 +192,33 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             }
         }
 
-        // Add detailed metrics to file
         final MetricsFile<PadHoppingDetailMetric, ?> detailedMetrics = getMetricsFile();
         for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values())
             for (final PadHoppingDetailMetric metric : detailedMetricCollection)
                 detailedMetrics.addMetric(metric);
 
-        // If detailed metrics were requested, write them now.
         if (PROB_EXPLICIT_OUTPUT > 0)
             detailedMetrics.write(detailedMetricsFileName);
 
-        // Finish metrics tallying. Looping twice so that the "All" metrics will come out on top.
         final PadHoppingSummaryMetric totalMetric = new PadHoppingSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) 
+        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values())
             totalMetric.merge(summaryMetric);
-
-        // Derive fields for total metric and add to file
         totalMetric.calculateDerivedFields();
         final MetricsFile<PadHoppingSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
         summaryMetricsFile.addMetric(totalMetric);
 
-        // Prepare each tile's derived fields and add it to the file
         for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             summaryMetric.calculateDerivedFields();
             summaryMetricsFile.addMetric(summaryMetric);
         }
-
-        // Actually write the summary metrics to their file.
         summaryMetricsFile.write(summaryMetricsFileName);
 
         return 0;
     }
 
     /** Extracts metrics from a HiSeqX tile.
-     *   Different tiles use different files so make the data providers in the individual threads for Extractors
-     *   so they are not all waiting for each others file operations
+     * Different tiles use different files so each Extractor has its own thread to avoid waiting for
+     * each other's file I/O.
      */
     private static class PerTilePadHoppingMetricsExtractor implements Runnable {
 
@@ -239,22 +231,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final private double cutoffDistance;
         final private Random random = new Random();
 
-        /**
-         * Constructor
-         *
-         * @param tile The number of the tile being processed.
-         * @param summaryMetric A summaryMetric for collecting the tile data in.
-         * @param detailedMetrics A set of metrics for collecting the classification data in.
-         * @param factory A dataprovider for IlluminaData
-         */
-        public PerTilePadHoppingMetricsExtractor(
-                final int tile,
-                final PadHoppingSummaryMetric summaryMetric,
-                final Collection<PadHoppingDetailMetric> detailedMetrics,
-                final IlluminaDataProviderFactory factory,
-                final double pWriteDetailed,
-                final double cutoffDistance
-        ) {
+        public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
+                final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
+                final double pWriteDetailed, final double cutoffDistance) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
@@ -271,14 +250,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 LOG.info("Extracting pad-hopping metrics for tile " + tile);
 
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
-                while (provider.hasNext()) {
-                    final ClusterData cluster = provider.next();
+                for (final ClusterData cluster : provider) {
                     // if (cluster.isPf()) . . . only deal with Pf reads??
                     this.summaryMetric.READS++;
 
-                    //getBases() returns byte[].  Converting to String loses performance but
-                    //java arrays' hashing and comparison is by object identity, not value
-                    //Casting to String is simpler than writing a byte[] wrapper with overridden hashCode()
+                    //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
                     final String bases = new String(cluster.getRead(0).getBases());
 
                     List<Point> list = duplicateSets.get(bases);
