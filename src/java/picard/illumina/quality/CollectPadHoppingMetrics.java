@@ -157,12 +157,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         IOUtil.assertFileIsWritable(summaryMetricsFileName);
         if (PROB_EXPLICIT_OUTPUT > 0) IOUtil.assertFileIsWritable(detailedMetricsFileName);
 
-        final int numProcessors;
-        if (NUM_PROCESSORS <= 0) {
-            numProcessors = Runtime.getRuntime().availableProcessors() + NUM_PROCESSORS;
-        } else {
-            numProcessors = NUM_PROCESSORS;
-        }
+        final int numProcessors = NUM_PROCESSORS + ((NUM_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
         // Create thread-pool submit jobs and what for their completion
