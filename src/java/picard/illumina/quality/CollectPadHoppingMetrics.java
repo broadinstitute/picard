@@ -65,12 +65,13 @@ import java.util.concurrent.TimeUnit;
  * @author David Benjamin
  */
 @CommandLineProgramProperties(
-        usage = "Detect pad-hopping duplication in HiSeqX.",
-        usageShort = "Detect pad-hopping duplication in HiSeqX.",
+        usage = "Measure pad-hopping duplication in HiSeqX.",
+        usageShort = "Measure pad-hopping duplication in HiSeqX.",
         programGroup = Metrics.class
 )
 
 public class CollectPadHoppingMetrics extends CommandLineProgram {
+    //Command line options in addition to those inherited from CommandLineProgram
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
@@ -102,6 +103,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
+    //Set up a PadHoppingSummaryMetric and a List of PadHoppingDetailMetrics for each tile
     private final Map<Integer, PadHoppingSummaryMetric> tileToSummaryMetrics = new LinkedHashMap<Integer, PadHoppingSummaryMetric>();
     private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new LinkedHashMap<Integer, List<PadHoppingDetailMetric>>();
 
@@ -111,17 +113,19 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     public final static String detailedMetricsExtension = ".pad_hopping_detailed_metrics";
     public final static String summaryMetricsExtension = ".pad_hopping_summary_metrics";
 
+    //Add error-checking for the command line arguments specific to this program
     @Override
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<String>();
 
-        if (N_CYCLES < 0) {
+        if (N_CYCLES < 0)
             errors.add("Number of Cycles to look at must be greater than 0");
-        }
 
-        if (PROB_EXPLICIT_OUTPUT > 1 || PROB_EXPLICIT_OUTPUT < 0) {
+        if (TILES_TO_PROCESS < 1)
+            errors.add("Must process at least one tile");
+
+        if (PROB_EXPLICIT_OUTPUT > 1 || PROB_EXPLICIT_OUTPUT < 0)
             errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
-        }
 
         if (errors.size() > 0) {
             return errors.toArray(new String[errors.size()]);
@@ -130,18 +134,16 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
-    /** Stock main method. */
-    public static void main(final String[] args) {
-        new CollectPadHoppingMetrics().instanceMainWithExit(args);
-    }
+    /** Stock main method for any CommandLineProgram. */
+    public static void main(final String[] args) { new CollectPadHoppingMetrics().instanceMainWithExit(args); }
 
     @Override
     protected int doWork() {
-
-        //A factory gives a provider for every tile in the flowcell lane
-        //A provider is an iterator for ClusterData
-        //An extractor is a Runnable wrapper for a provider
-        //ClusterData corresponds to a single BAM record (read)
+        /**
+         * Each tile is processed on a single thread by a PerTilePadHoppingMetricsExtractor, which asks
+         * the IlluminaDataProviderFactory for an IlluminaDataProvider, which is an iterator for all the
+         * ClusterData on a single tile.  ClusterData contains the raw data of a read and its x-y coordinates.
+         */
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
                 IlluminaDataType.BaseCalls,
@@ -153,21 +155,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
 
         IOUtil.assertFileIsWritable(summaryMetricsFileName);
-        if (PROB_EXPLICIT_OUTPUT != 0) {
-            IOUtil.assertFileIsWritable(detailedMetricsFileName);
-        }
+        if (PROB_EXPLICIT_OUTPUT > 0) IOUtil.assertFileIsWritable(detailedMetricsFileName);
 
         final int numProcessors;
-        if (NUM_PROCESSORS == 0) {
-            numProcessors = Runtime.getRuntime().availableProcessors();
-        } else if (NUM_PROCESSORS < 0) {
+        if (NUM_PROCESSORS <= 0) {
             numProcessors = Runtime.getRuntime().availableProcessors() + NUM_PROCESSORS;
         } else {
             numProcessors = NUM_PROCESSORS;
         }
+        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
         // Create thread-pool submit jobs and what for their completion
-        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
 
         //get a random subset of all tiles
@@ -252,7 +250,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         return 0;
     }
 
-    /** Extracts metrics from a HiSeqX tile. */
+    /** Extracts metrics from a HiSeqX tile.
+     *   Different tiles use different files so make the data providers in the individual threads for Extractors
+     *   so they are not all waiting for each others file operations
+     */
     private static class PerTilePadHoppingMetricsExtractor implements Runnable {
 
         private final int tile;
@@ -295,11 +296,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             try {
                 LOG.info("Extracting pad-hopping metrics for tile " + tile);
 
-                /**
-                 *   Sometimes makeDataProvider takes a while waiting for slow file IO, for each tile the needed set of files
-                 *   is non-overlapping sets of files so make the data providers in the individual threads for Extractors
-                 *   so they are not all waiting for each others file operations
-                 */
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
                 while (provider.hasNext()) {
                     final ClusterData cluster = provider.next();
@@ -342,6 +338,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
     }
 
+    /**
+     * A Bunch is little more than a typedef for a list of Points.  It contains a few extra methods for characterizing
+     * pad-hopping.
+     *
+     * Depending on how much we deeply we wish to study pad-hopping, we could add more methods and add a string
+     * data member holding the read's bases.
+     */
     private static class Bunch extends ArrayList<Point> {
         public int numDuplicates() { return size() - 1; }
 
