@@ -146,10 +146,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
          */
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
-                IlluminaDataType.BaseCalls,
-                IlluminaDataType.PF,
-                IlluminaDataType.QualityScores,
-                IlluminaDataType.Position);
+                IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores, IlluminaDataType.Position);
 
         final File summaryMetricsFileName = new File(OUTPUT + summaryMetricsExtension);
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
@@ -158,43 +155,30 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         if (PROB_EXPLICIT_OUTPUT > 0) IOUtil.assertFileIsWritable(detailedMetricsFileName);
 
         final int numProcessors = NUM_PROCESSORS + ((NUM_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
-        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
-
-        // Create thread-pool submit jobs and what for their completion
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
+        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
         //get a random subset of all tiles
         List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.shuffle(allTiles);
-        List<Integer> tilesToProcess = new ArrayList<Integer>();
-        for (int n = 0; n < allTiles.size() && n < TILES_TO_PROCESS; n++)
-            tilesToProcess.add(allTiles.get(n));
+        final List<Integer> tilesToProcess = allTiles.subList(0, TILES_TO_PROCESS);
 
         final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
             tileToSummaryMetrics.put(tile, new PadHoppingSummaryMetric(Integer.toString(tile)));
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
-            final PerTilePadHoppingMetricsExtractor extractor = new PerTilePadHoppingMetricsExtractor(
-                    tile,
-                    tileToSummaryMetrics.get(tile),
-                    tileToDetailedMetrics.get(tile),
-                    factory,
-                    PROB_EXPLICIT_OUTPUT,
-                    MAX_NEIGHBOR_DISTANCE
-            );
-            extractors.add(extractor);
+            extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
+                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_NEIGHBOR_DISTANCE));
         }
         try {
-            for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
+            for (final PerTilePadHoppingMetricsExtractor extractor : extractors)
                 pool.submit(extractor);
-            }
             pool.shutdown();
-            // Wait forever for tasks to terminate
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (final Throwable e) {
             // Cancel if current thread also interrupted
-            LOG.error(e, "Parent thread encountered problem submitting extractors to thread pool or awaiting shutdown of threadpool.  Attempting to kill threadpool.");
+            LOG.error(e, "Problem submitting extractors to thread pool or awaiting shutdown of thread pool.  Attempting to kill thread pool.");
             pool.shutdownNow();
             return 2;
         }
