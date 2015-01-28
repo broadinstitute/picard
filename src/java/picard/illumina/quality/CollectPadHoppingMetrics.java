@@ -252,7 +252,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
                 for (final ClusterData cluster : provider) {
                     // if (cluster.isPf()) . . . only deal with Pf reads??
-                    this.summaryMetric.READS++;
+                    summaryMetric.READS++;
 
                     //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
                     final String bases = new String(cluster.getRead(0).getBases());
@@ -269,7 +269,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                         BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
                         for (Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
-                            this.summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
+                            summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
                             //randomly add pad-hopping events to detailed metrics
                             if (random.nextDouble() < pWriteDetailed) {
                                 Point center = bunch.center();
@@ -395,14 +395,14 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
          * @param metric
          */
         public void merge(final PadHoppingSummaryMetric metric) {
-            this.READS += metric.READS;
-            this.PAD_HOPPING_DUPLICATES += metric.PAD_HOPPING_DUPLICATES;
+            READS += metric.READS;
+            PAD_HOPPING_DUPLICATES += metric.PAD_HOPPING_DUPLICATES;
         }
 
         public void calculateDerivedFields() {
             //protect against divide by zero
-            if (this.READS != 0) {
-                this.PCT_PAD_HOPPING_DUPLICATES = (double) this.PAD_HOPPING_DUPLICATES / this.READS;
+            if (READS != 0) {
+                PCT_PAD_HOPPING_DUPLICATES = (double) PAD_HOPPING_DUPLICATES / this.READS;
             }
         }
     }
