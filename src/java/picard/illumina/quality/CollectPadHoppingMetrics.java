@@ -158,7 +158,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
-        //get a random subset of all tiles
+        //get a random subset tiles
         List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.shuffle(allTiles);
         final List<Integer> tilesToProcess = allTiles.subList(0, TILES_TO_PROCESS);
@@ -182,35 +182,30 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             pool.shutdownNow();
             return 2;
         }
-
         LOG.info("Processed " + extractors.size() + " tiles.");
 
         // Check for exceptions from extractors
         for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
             if (extractor.getException() != null) {
-                LOG.error("Abandoning metrics calculation because one or more PerTilePFMetricsExtractors failed.");
+                LOG.error("Abandoning calculation because one or more PerTilePadHoppingMetricsExtractors failed.");
                 return 4;
             }
         }
 
         // Add detailed metrics to file
         final MetricsFile<PadHoppingDetailMetric, ?> detailedMetrics = getMetricsFile();
-        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
-            for (final PadHoppingDetailMetric metric : detailedMetricCollection) {
+        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values())
+            for (final PadHoppingDetailMetric metric : detailedMetricCollection)
                 detailedMetrics.addMetric(metric);
-            }
-        }
 
         // If detailed metrics were requested, write them now.
-        if (PROB_EXPLICIT_OUTPUT > 0) {
+        if (PROB_EXPLICIT_OUTPUT > 0)
             detailedMetrics.write(detailedMetricsFileName);
-        }
 
         // Finish metrics tallying. Looping twice so that the "All" metrics will come out on top.
         final PadHoppingSummaryMetric totalMetric = new PadHoppingSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
+        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) 
             totalMetric.merge(summaryMetric);
-        }
 
         // Derive fields for total metric and add to file
         totalMetric.calculateDerivedFields();
