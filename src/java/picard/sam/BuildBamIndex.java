@@ -93,8 +93,8 @@ public class BuildBamIndex extends CommandLineProgram {
 
             final String baseFileName;
             if (inputUrl != null) {
-                String path = inputUrl.getPath();
-                int lastSlash = path.lastIndexOf("/");
+                final String path = inputUrl.getPath();
+                final int lastSlash = path.lastIndexOf("/");
                 baseFileName = path.substring(lastSlash + 1, path.length());
             } else {
                 baseFileName = inputFile.getAbsolutePath();
@@ -115,11 +115,16 @@ public class BuildBamIndex extends CommandLineProgram {
 
         if (inputUrl != null) {
             // remote input
-            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).disable(SamReaderFactory.Option.EAGERLY_DECODE).open(SamInputResource.of(inputUrl));
+            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
+                    .disable(SamReaderFactory.Option.EAGERLY_DECODE)
+                    .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
+                    .open(SamInputResource.of(inputUrl));
         } else {
             // input from a normal file
             IOUtil.assertFileIsReadable(inputFile);
-            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inputFile);
+            bam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE)
+                    .enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS)
+                    .open(inputFile);
         }
 
         if (bam.type() != SamReader.Type.BAM_TYPE) {
