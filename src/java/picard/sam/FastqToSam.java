@@ -210,7 +210,7 @@ public class FastqToSam extends CommandLineProgram {
      *
      */
     public void makeItSo(final FastqReader reader1, final FastqReader reader2, final SAMFileWriter writer) {
-        final int readCount = (FASTQ2 == null) ?  doUnpaired(reader1, writer) : doPaired(reader1, reader2, writer);
+        final int readCount = (reader2 == null) ?  doUnpaired(reader1, writer) : doPaired(reader1, reader2, writer);
         LOG.info("Processed " + readCount + " fastq reads");
     }
 
