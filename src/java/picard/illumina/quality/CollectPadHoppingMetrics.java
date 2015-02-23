@@ -158,10 +158,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
-        //get a random subset tiles
+        //if doing all tiles, keep original order, otherwise take random subset of tiles
         List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
-        Collections.shuffle(allTiles);
         int numberOfTiles = Math.min(allTiles.size(), TILES_TO_PROCESS);
+        if (numberOfTiles < allTiles.size())
+            Collections.shuffle(allTiles);
         final List<Integer> tilesToProcess = allTiles.subList(0, numberOfTiles);
         LOG.info("Computing pad hopping metrics for " + numberOfTiles + " tiles.");
 
