@@ -161,7 +161,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         //get a random subset tiles
         List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.shuffle(allTiles);
-        final List<Integer> tilesToProcess = allTiles.subList(0, TILES_TO_PROCESS);
+        int numberOfTiles = Math.min(allTiles.size(), TILES_TO_PROCESS);
+        final List<Integer> tilesToProcess = allTiles.subList(0, numberOfTiles);
+        LOG.info("Computing pad hopping metrics for " + numberOfTiles + " tiles.");
 
         final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
@@ -182,7 +184,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             pool.shutdownNow();
             return 2;
         }
-        LOG.info("Processed " + extractors.size() + " tiles.");
+        LOG.info("Processed all " + extractors.size() + " tiles.");
 
         // Check for exceptions from extractors
         for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
@@ -249,12 +251,15 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             try {
                 LOG.info("Extracting pad-hopping metrics for tile " + tile);
 
+                //a possible source of improved performance is that this sets up a List<Point> for
+                //EVERY read, even ones that are not duplicated
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
                 for (final ClusterData cluster : provider) {
                     // if (cluster.isPf()) . . . only deal with Pf reads??
                     summaryMetric.READS++;
 
                     //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
+                    //Someone who knows Java better could probably advise me on a better method
                     final String bases = new String(cluster.getRead(0).getBases());
 
                     List<Point> list = duplicateSets.get(bases);
@@ -262,18 +267,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                         duplicateSets.put(bases, list = new ArrayList<Point>());
                     list.add(new Point(cluster.getX(), cluster.getY()));
                 }
-
-                for (List<Point> points : duplicateSets.values())
-                {
+                for (Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
+                    List<Point> points = entry.getValue();
+                    String bases = entry.getKey();
                     if (points.size() > 1) {    //if there is duplication
-                        BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
+                        BunchFinder bunchFinder = new BunchFinder(bases, points, cutoffDistance);
                         for (Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
                             //randomly add pad-hopping events to detailed metrics
                             if (random.nextDouble() < pWriteDetailed) {
                                 Point center = bunch.center();
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, center.getX(), center.getY(), bunch.size()));
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, center.getX(), center.getY(), bunch.size()));
                             }
                         }
                     }
@@ -290,12 +295,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     /**
      * A Bunch is little more than a typedef for a list of Points.  It contains a few extra methods for characterizing
-     * pad-hopping.
+     * pad-hopping and stores the read common to all clusters in the bunch.
      *
-     * Depending on how much we deeply we wish to study pad-hopping, we could add more methods and add a string
-     * data member holding the read's bases.
+     * Depending on how much we deeply we wish to study pad-hopping, we could add more methods.
      */
     private static class Bunch extends ArrayList<Point> {
+        private final String bases;
+
+        public Bunch(String s) { bases = s; }
+
+        public String getBases() { return bases;}
+
         public int numDuplicates() { return size() - 1; }
 
         public Point center() {
@@ -310,20 +320,19 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     }
 
     private static class BunchFinder {
-
-        private ArrayList<Bunch> bunches; //list of connected components
+        private ArrayList<Bunch> bunches;
         private int N;  //total number of points
 
-        public BunchFinder(List<Point> points, double cutoffDistance) {
+        public BunchFinder(String bases, List<Point> points, double cutoffDistance) {
             bunches = new ArrayList<Bunch>();
             N = points.size();
             boolean[] visited = new boolean[N];
 
             for (int root = 0; root < N; root++) {
                 if (visited[root]) continue;   //point belongs to a previously-counted component
-                Bunch bunch = new Bunch();
+                Bunch bunch = new Bunch(bases);
 
-                //do depth-first search
+                //depth-first search for all points in same Bunch as root
                 Stack<Integer> DFS = new Stack<Integer>();
                 DFS.push(root);
                 while (!DFS.isEmpty()) {
@@ -343,28 +352,28 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         public List<Bunch> getBunches() { return bunches; }
     }
 
-    /** a metric class for describing pad-hopping clusters **/
+    /** a metric class for describing pad-hopping bunches **/
     public static class PadHoppingDetailMetric extends MetricBase {
-        // The Tile that is described by this metric.
         public Integer TILE;
 
-        //The X coordinate of the center of the bunch
-        public double X;
+        public String BASES;
 
-        //The Y coordinate of the center of the bunch
+        //The X and Y coordinates of the center of the bunch
+        public double X;
         public double Y;
 
-        //The number of reads in this pad-hopping cluster
+        //The number of clusters in this pad-hopping bunch
         public int SIZE;
 
-        public PadHoppingDetailMetric(final Integer TILE, final double x, final double y, final int size) {
-            this.TILE = TILE;
+        public PadHoppingDetailMetric(final Integer tile, final String bases, final double x, final double y, final int size) {
+            TILE = tile;
+            BASES = bases;
             X = x;
             Y = y;
             SIZE = size;
         }
 
-        /** This ctor is necessary for when reading metrics from file */
+        /** This constructor is necessary for reading metrics from file */
         public PadHoppingDetailMetric() { }
     }
 
@@ -375,8 +384,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** The total number of reads examined */
         public int READS = 0;
 
-        /** The number of duplicates due to pad-hopping in this tile.  In a pad-hopping bunch of N reads, we
-         * count N - 1 duplicates */
+        /** Duplicates due to pad-hopping in this tile.  In a bunch of N clusters, N - 1 are duplicates */
         public int PAD_HOPPING_DUPLICATES = 0;
 
         public double PCT_PAD_HOPPING_DUPLICATES = 0.0;
@@ -386,26 +394,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             TILE = tile;
         }
 
-        /** This ctor is necessary for when reading metrics from file */
+        /** This constructor is necessary for when reading metrics from file */
         public PadHoppingSummaryMetric() { }
 
-        /**
-         * Adds the non-calculated fields from the other metric to this one.
-         *
-         * @param metric
-         */
         public void merge(final PadHoppingSummaryMetric metric) {
             READS += metric.READS;
             PAD_HOPPING_DUPLICATES += metric.PAD_HOPPING_DUPLICATES;
         }
 
         public void calculateDerivedFields() {
-            //protect against divide by zero
-            if (READS != 0) {
+            if (READS != 0)
                 PCT_PAD_HOPPING_DUPLICATES = (double) PAD_HOPPING_DUPLICATES / this.READS;
-            }
         }
     }
-
 
 }
