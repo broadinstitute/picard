@@ -91,7 +91,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     public int NUM_PROCESSORS = 1;
 
     @Option(shortName = "TP", doc = "Number of tiles on which to calculate pad-hopping metrics.", optional = true)
-    public int TILES_TO_PROCESS = Integer.MAX_VALUE;
+    public int TILES_TO_PROCESS = 1;
+
+    @Option(shortName = "TI", doc = "Index of first tile (0 to 95)", optional = true)
+    public int TILE_INDEX = 0;
 
     @Option(doc = "Number of cycles to look at. At time of writing PF status gets determined at cycle 24 so numbers greater than this will yield strange results. " +
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
@@ -123,6 +126,15 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         if (TILES_TO_PROCESS < 1)
             errors.add("Must process at least one tile");
+
+        if (TILES_TO_PROCESS > 96)
+            errors.add("There are only 96 tiles per lane of the Illumina HiSeqX");
+
+        if (TILE_INDEX < 0)
+            errors.add("Must choose a non-negative tile index");
+
+        if (TILE_INDEX > 95)
+            errors.add("Tile index may be at most 95 (there are 96 tiles on the HiSeqX)");
 
         if (PROB_EXPLICIT_OUTPUT > 1 || PROB_EXPLICIT_OUTPUT < 0)
             errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
@@ -158,13 +170,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
-        //if doing all tiles, keep original order, otherwise take random subset of tiles
-        List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
-        int numberOfTiles = Math.min(allTiles.size(), TILES_TO_PROCESS);
-        if (numberOfTiles < allTiles.size())
-            Collections.shuffle(allTiles);
-        final List<Integer> tilesToProcess = allTiles.subList(0, numberOfTiles);
-        LOG.info("Computing pad hopping metrics for " + numberOfTiles + " tiles.");
+        List<Integer> allTiles = factory.getAvailableTiles();
+        int firstTile = TILE_INDEX;
+        int lastTile = Math.min(allTiles.size(), firstTile + TILES_TO_PROCESS);
+        final List<Integer> tilesToProcess = allTiles.subList(firstTile, lastTile);
+        LOG.info("Computing pad hopping metrics for " + tilesToProcess.size() + " tiles.");
 
         final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
