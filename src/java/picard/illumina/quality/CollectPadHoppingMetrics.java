@@ -171,6 +171,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
         List<Integer> allTiles = factory.getAvailableTiles();
+        Collections.sort(allTiles);
+        for (int tile : allTiles)
+            LOG.info("One tile is " + tile + ".");
+
         int firstTile = TILE_INDEX;
         int lastTile = Math.min(allTiles.size(), firstTile + TILES_TO_PROCESS);
         final List<Integer> tilesToProcess = allTiles.subList(firstTile, lastTile);
@@ -266,7 +270,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 //EVERY read, even ones that are not duplicated
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
                 for (final ClusterData cluster : provider) {
-                    // if (cluster.isPf()) . . . only deal with Pf reads??
+                    if (! cluster.isPf() ) continue; //only deal with PF reads
                     summaryMetric.READS++;
 
                     //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
