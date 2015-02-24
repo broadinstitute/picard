@@ -170,10 +170,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
         LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
 
-        List<Integer> allTiles = factory.getAvailableTiles();
+        List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.sort(allTiles);
-        for (int tile : allTiles)
-            LOG.info("One tile is " + tile + ".");
 
         int firstTile = TILE_INDEX;
         int lastTile = Math.min(allTiles.size(), firstTile + TILES_TO_PROCESS);
