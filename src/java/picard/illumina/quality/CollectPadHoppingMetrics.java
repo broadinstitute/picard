@@ -271,7 +271,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     if (! cluster.isPf() ) continue; //only deal with PF reads
                     summaryMetric.READS++;
 
-                    //getBases() returns byte[]. Converting to String loses performance but is more convenient for hashing
+                    //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
                     //Someone who knows Java better could probably advise me on a better method
                     final String bases = new String(cluster.getRead(0).getBases());
 
