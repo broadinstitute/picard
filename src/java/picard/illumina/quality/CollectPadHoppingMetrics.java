@@ -100,6 +100,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
 
+    @Option(shortName = "NB", doc = "Number of bases to use for comparing reads.  We might make this less" +
+            " than N_CYCLES to avoid masking duplicates by sequencing errors.", optional = true)
+    public int N_BASES = 24;
+
     @Option(shortName = "ND", doc = "Max distance (in Illumina's internal cluster coordinate units) for two custers " +
             "to be considered adjacent.  The distance is 20 +/- 1 for all tiles of all Hi Seq X flowcells.", optional = true)
     public double MAX_NEIGHBOR_DISTANCE = 22.0;
@@ -305,6 +309,38 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             }
         }
     }
+
+    /**
+     * cluster.getRead(0).getBases() returns a byte[], not a String.  A problem with this is that byte[] hashing
+     * is by object identity, not by value.  The simplest fix is just to use the String(byte[]) constructor, but
+     * that is really wasteful
+     */
+    private class BasesWrapper
+    {
+        private final byte[] bases;
+
+        public BasesWrapper(byte[] data) { this.bases = data; }
+
+        @Override
+        public boolean equals(Object other) {
+            if ( !(other instanceof BasesWrapper) ) return false;
+            for (int i = 0; i < N_BASES; i++) {
+                if ( ((BasesWrapper)other).bases[i] != bases[i]) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 173; // arbitrary seed value
+            int multiplier = 37; // arbitrary multiplier value
+            for (int i = 0; i < N_BASES; i++) {
+                hash = hash * multiplier + bases[i];
+            }
+            return hash;
+        }
+    }
+
 
     /**
      * A Bunch is little more than a typedef for a list of Points.  It contains a few extra methods for characterizing
