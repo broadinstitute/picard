@@ -188,7 +188,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
             extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
-                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_NEIGHBOR_DISTANCE));
+                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, N_BASES, MAX_NEIGHBOR_DISTANCE));
         }
         try {
             for (final PerTilePadHoppingMetricsExtractor extractor : extractors)
@@ -247,16 +247,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         final private double pWriteDetailed;
+        final private int nBases;
         final private double cutoffDistance;
         final private Random random = new Random();
 
         public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
-                final double pWriteDetailed, final double cutoffDistance) {
+                final double pWriteDetailed, final int nBases, final double cutoffDistance) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.pWriteDetailed = pWriteDetailed;
+            this.nBases = nBases;
             this.cutoffDistance = cutoffDistance;
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
         }
@@ -270,23 +272,24 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
                 //a possible source of improved performance is that this sets up a List<Point> for
                 //EVERY read, even ones that are not duplicated
-                Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
+                BasesWrapper.setSize(nBases);
+                Map<BasesWrapper, List<Point>> duplicateSets = new HashMap<BasesWrapper, List<Point>>();
                 for (final ClusterData cluster : provider) {
                     if (! cluster.isPf() ) continue; //only deal with PF reads
                     summaryMetric.READS++;
 
                     //getBases() returns byte[].  Converting to String loses performance but is more convenient for hashing
                     //Someone who knows Java better could probably advise me on a better method
-                    final String bases = new String(cluster.getRead(0).getBases());
+                    final BasesWrapper bases = new BasesWrapper(cluster.getRead(0).getBases());
 
                     List<Point> list = duplicateSets.get(bases);
                     if (list == null)
                         duplicateSets.put(bases, list = new ArrayList<Point>());
                     list.add(new Point(cluster.getX(), cluster.getY()));
                 }
-                for (Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
+                for (Map.Entry<BasesWrapper, List<Point>> entry : duplicateSets.entrySet()) {
                     List<Point> points = entry.getValue();
-                    String bases = entry.getKey();
+                    BasesWrapper bases = entry.getKey();
                     if (points.size() > 1) {    //if there is duplication
                         BunchFinder bunchFinder = new BunchFinder(bases, points, cutoffDistance);
                         for (Bunch bunch : bunchFinder.getBunches()) {
@@ -295,7 +298,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                             //randomly add pad-hopping events to detailed metrics
                             if (random.nextDouble() < pWriteDetailed) {
                                 Point center = bunch.center();
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, center.getX(), center.getY(), bunch.size()));
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases.asString(), center.getX(), center.getY(), bunch.size()));
                             }
                         }
                     }
@@ -315,30 +318,42 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
      * is by object identity, not by value.  The simplest fix is just to use the String(byte[]) constructor, but
      * that is really wasteful
      */
-    private class BasesWrapper
+    private static class BasesWrapper
     {
         private final byte[] bases;
+        private static int size;
+
+        public static void setSize(int N) { size = N; }
 
         public BasesWrapper(byte[] data) { this.bases = data; }
+
+        public String asString() {
+            return new String(bases);
+        }
+
 
         @Override
         public boolean equals(Object other) {
             if ( !(other instanceof BasesWrapper) ) return false;
-            for (int i = 0; i < N_BASES; i++) {
-                if ( ((BasesWrapper)other).bases[i] != bases[i]) return false;
-            }
-            return true;
+            return Arrays.equals( ((BasesWrapper)other).bases, bases);
+            //for (int i = 0; i < size; i++) {
+            //    if ( ((BasesWrapper)other).bases[i] != bases[i]) return false;
+            //}
+            //return true;
         }
 
         @Override
+        public int hashCode() { return Arrays.hashCode( bases); }
+        /*
         public int hashCode() {
             int hash = 173; // arbitrary seed value
             int multiplier = 37; // arbitrary multiplier value
-            for (int i = 0; i < N_BASES; i++) {
+            for (int i = 0; i < size; i++) {
                 hash = hash * multiplier + bases[i];
             }
             return hash;
         }
+        */
     }
 
 
@@ -349,11 +364,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
      * Depending on how much we deeply we wish to study pad-hopping, we could add more methods.
      */
     private static class Bunch extends ArrayList<Point> {
-        private final String bases;
+        private final BasesWrapper bases;
 
-        public Bunch(String s) { bases = s; }
+        public Bunch(BasesWrapper b) { bases = b; }
 
-        public String getBases() { return bases;}
+        public BasesWrapper getBases() { return bases;}
 
         public int numDuplicates() { return size() - 1; }
 
@@ -372,7 +387,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private ArrayList<Bunch> bunches;
         private int N;  //total number of points
 
-        public BunchFinder(String bases, List<Point> points, double cutoffDistance) {
+        public BunchFinder(BasesWrapper bases, List<Point> points, double cutoffDistance) {
             bunches = new ArrayList<Bunch>();
             N = points.size();
             boolean[] visited = new boolean[N];
