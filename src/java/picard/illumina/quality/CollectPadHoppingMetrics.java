@@ -233,7 +233,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     /** Extracts metrics from a HiSeqX tile.
      * Different tiles use different files so each Extractor has its own thread to avoid waiting for
-     * each other's file I/O.
+     * each other's file I/O. 
      */
     private static class PerTilePadHoppingMetricsExtractor implements Runnable {
 
