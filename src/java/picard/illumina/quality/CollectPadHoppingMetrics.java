@@ -194,7 +194,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
             extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
-                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_NEIGHBOR_DISTANCE));
+                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_NEIGHBOR_DISTANCE, N_BASES));
         }
         try {
             for (final PerTilePadHoppingMetricsExtractor extractor : extractors)
@@ -254,16 +254,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private final IlluminaDataProvider provider;
         final private double pWriteDetailed;
         final private double cutoffDistance;
+        final private int nBases;
         final private Random random = new Random();
 
         public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
-                final double pWriteDetailed, final double cutoffDistance) {
+                final double pWriteDetailed, final double cutoffDistance, final int nBases) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.pWriteDetailed = pWriteDetailed;
             this.cutoffDistance = cutoffDistance;
+            this.nBases = nBases;
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
         }
 
@@ -284,7 +286,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
                     //getBases() returns byte[]. Converting to String loses performance but is more convenient for hashing
                     //I profiled and creating a wrapper for byte[] using Arrays.hashcode gained very little
-                    final String bases = new String(cluster.getRead(0).getBases());
+                    final String allBases = new String(cluster.getRead(0).getBases());
+                    final String bases = allBases.substring(0, nBases);
 
                     List<Point> list = duplicateSets.get(bases);
                     if (list == null)
