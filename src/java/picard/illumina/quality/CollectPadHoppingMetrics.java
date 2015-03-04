@@ -168,7 +168,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
          */
         final IlluminaDataProviderFactory factory = new IlluminaDataProviderFactory(BASECALLS_DIR, LANE, READ_STRUCTURE,
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
-                IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores, IlluminaDataType.Position);
+                IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.Position);
 
         final File summaryMetricsFileName = new File(OUTPUT + summaryMetricsExtension);
         final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
