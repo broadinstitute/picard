@@ -290,8 +290,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
                             //randomly add pad-hopping events to detailed metrics
                             if (random.nextDouble() < pWriteDetailed) {
-                                Point center = bunch.center();
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, center.getX(), center.getY(), bunch.size()));
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch.size()));
                             }
                         }
                     }
@@ -368,18 +367,12 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         public String BASES;
 
-        //The X and Y coordinates of the center of the bunch
-        public double X;
-        public double Y;
-
         //The number of clusters in this pad-hopping bunch
         public int SIZE;
 
-        public PadHoppingDetailMetric(final Integer tile, final String bases, final double x, final double y, final int size) {
+        public PadHoppingDetailMetric(final Integer tile, final String bases, final int size) {
             TILE = tile;
             BASES = bases;
-            X = x;
-            Y = y;
             SIZE = size;
         }
 
