@@ -388,11 +388,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         public String BASES;
 
+        //The number of clusters in this pad-hopping bunch
+        public int SIZE;
+
         //represent all points as a single space-separated string
         public String POINTS_STRING;
 
-        //The number of clusters in this pad-hopping bunch
-        public int SIZE;
+
 
         public PadHoppingDetailMetric(final Integer tile, final String bases, final List<Point> points) {
             TILE = tile;
@@ -404,6 +406,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 builder.append(p.getX());
                 builder.append(' ');
                 builder.append(p.getY());
+                builder.append(' ');
             }
             POINTS_STRING = builder.toString();
         }
