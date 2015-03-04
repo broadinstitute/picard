@@ -102,7 +102,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     @Option(shortName = "ND", doc = "Max distance (in Illumina's internal cluster coordinate units) for two custers " +
             "to be considered adjacent.  The distance is 20 +/- 1 for all tiles of all Hi Seq X flowcells.", optional = true)
-    public double MAX_NEIGHBOR_DISTANCE = 22.0;
+    public double MAX_NEIGHBOR_DISTANCE = Double.POSITIVE_INFINITY;
 
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
@@ -233,7 +233,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     /** Extracts metrics from a HiSeqX tile.
      * Different tiles use different files so each Extractor has its own thread to avoid waiting for
-     * each other's file I/O. 
+     * each other's file I/O.
      */
     private static class PerTilePadHoppingMetricsExtractor implements Runnable {
 
@@ -284,7 +284,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     List<Point> points = entry.getValue();
                     String bases = entry.getKey();
                     if (points.size() > 1) {    //if there is duplication
-                        BunchFinder bunchFinder = new BunchFinder(bases, points, cutoffDistance);
+                        BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
                         for (Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
@@ -313,11 +313,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
      * Depending on how much we deeply we wish to study pad-hopping, we could add more methods.
      */
     private static class Bunch extends ArrayList<Point> {
-        private final String bases;
 
-        public Bunch(String s) { bases = s; }
-
-        public String getBases() { return bases;}
+        public Bunch() { }
 
         public int numDuplicates() { return size() - 1; }
 
@@ -336,14 +333,14 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private ArrayList<Bunch> bunches;
         private int N;  //total number of points
 
-        public BunchFinder(String bases, List<Point> points, double cutoffDistance) {
+        public BunchFinder(List<Point> points, double cutoffDistance) {
             bunches = new ArrayList<Bunch>();
             N = points.size();
             boolean[] visited = new boolean[N];
 
             for (int root = 0; root < N; root++) {
                 if (visited[root]) continue;   //point belongs to a previously-counted component
-                Bunch bunch = new Bunch(bases);
+                Bunch bunch = new Bunch();
 
                 //depth-first search for all points in same Bunch as root
                 Stack<Integer> DFS = new Stack<Integer>();
