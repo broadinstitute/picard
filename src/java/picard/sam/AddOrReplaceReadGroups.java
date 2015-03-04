@@ -73,6 +73,12 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
 
     @Option(shortName = "PI", doc = "Read Group predicted insert size", optional = true)
     public Integer RGPI;
+    
+    @Option(shortName = "PG", doc = "Read Group program group", optional = true)
+    public String RGPG;
+    
+    @Option(shortName = "PM", doc = "Read Group platform model", optional = true)
+    public String RGPM;
 
     private final Log log = Log.getInstance(AddOrReplaceReadGroups.class);
 
@@ -99,6 +105,8 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
         if (RGDS != null) rg.setDescription(RGDS);
         if (RGDT != null) rg.setRunDate(RGDT);
         if (RGPI != null) rg.setPredictedMedianInsertSize(RGPI);
+        if (RGPG != null) rg.setProgramGroup(RGPG);
+        if (RGPM != null) rg.setPlatformModel(RGPM);
 
         log.info(String.format("Created read group ID=%s PL=%s LB=%s SM=%s%n", rg.getId(), rg.getPlatform(), rg.getLibrary(), rg.getSample()));
 
