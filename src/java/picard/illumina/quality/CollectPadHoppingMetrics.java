@@ -404,9 +404,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             StringBuilder builder = new StringBuilder();
             for (final Point p : points) {
                 builder.append(p.getX());
-                builder.append(' ');
+                builder.append(',');
                 builder.append(p.getY());
-                builder.append(' ');
+                builder.append(';');
             }
             POINTS_STRING = builder.toString();
         }
