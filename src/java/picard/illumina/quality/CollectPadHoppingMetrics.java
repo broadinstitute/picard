@@ -282,18 +282,25 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 }
                 for (Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
                     List<Point> points = entry.getValue();
+                    if (points.size() == 1) continue; //if there is no duplication
                     String bases = entry.getKey();
-                    if (points.size() > 1) {    //if there is duplication
+
+                    if (cutoffDistance == Double.POSITIVE_INFINITY) {
+                        summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
+                        if (random.nextDouble() < pWriteDetailed)
+                            detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points.size()));
+                    }
+                    else {
                         BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
                         for (Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
                             //randomly add pad-hopping events to detailed metrics
-                            if (random.nextDouble() < pWriteDetailed) {
+                            if (random.nextDouble() < pWriteDetailed)
                                 detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch.size()));
-                            }
                         }
                     }
+
                 }
 
             } catch (final Exception e) {
