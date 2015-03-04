@@ -303,7 +303,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     if (cutoffDistance == Double.POSITIVE_INFINITY) {
                         summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
                         if (random.nextDouble() < pWriteDetailed)
-                            detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points.size()));
+                            detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points));
                     }
                     else {
                         BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
@@ -312,7 +312,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
                             //randomly add pad-hopping events to detailed metrics
                             if (random.nextDouble() < pWriteDetailed)
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch.size()));
+                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch));
                         }
                     }
                 }
@@ -391,10 +391,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         //The number of clusters in this pad-hopping bunch
         public int SIZE;
 
-        public PadHoppingDetailMetric(final Integer tile, final String bases, final int size) {
+        public PadHoppingDetailMetric(final Integer tile, final String bases, final List<Point> points) {
             TILE = tile;
             BASES = bases;
-            SIZE = size;
+            SIZE = points.size();
         }
 
         /** This constructor is necessary for reading metrics from file */
