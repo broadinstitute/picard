@@ -100,6 +100,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             "In addition, PF status is currently determined at cycle 24, so running this with any other value is neither tested nor recommended.", optional = true)
     public int N_CYCLES = 24;
 
+    @Option(shortName = "NB", doc = "Number of bases to look at.  Due to sequencing error comparing fewer bases" +
+            " may give a more correct estimate.", optional = true)
+    public int N_BASES = 24;
+
     @Option(shortName = "ND", doc = "Max distance (in Illumina's internal cluster coordinate units) for two custers " +
             "to be considered adjacent.  The distance is 20 +/- 1 for all tiles of all Hi Seq X flowcells.", optional = true)
     public double MAX_NEIGHBOR_DISTANCE = Double.POSITIVE_INFINITY;
@@ -123,6 +127,12 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         if (N_CYCLES < 0)
             errors.add("Number of Cycles to look at must be greater than 0");
+
+        if (N_BASES < 1)
+            errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
+
+        if (N_BASES > N_CYCLES)
+            errors.add("N_BASES cannot exceed N_CYCLES");
 
         if (TILES_TO_PROCESS < 1)
             errors.add("Must process at least one tile");
@@ -267,12 +277,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 //a possible source of improved performance is that this sets up a List<Point> for
                 //EVERY read, even ones that are not duplicated
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
+
                 for (final ClusterData cluster : provider) {
-                    if (! cluster.isPf() ) continue; //only deal with PF reads
+                    if (! cluster.isPf() ) continue;
                     summaryMetric.READS++;
 
                     //getBases() returns byte[]. Converting to String loses performance but is more convenient for hashing
-                    //Someone who knows Java better could probably advise me on a better method
+                    //I profiled and creating a wrapper for byte[] using Arrays.hashcode gained very little
                     final String bases = new String(cluster.getRead(0).getBases());
 
                     List<Point> list = duplicateSets.get(bases);
@@ -280,6 +291,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                         duplicateSets.put(bases, list = new ArrayList<Point>());
                     list.add(new Point(cluster.getX(), cluster.getY()));
                 }
+
                 for (Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
                     List<Point> points = entry.getValue();
                     if (points.size() == 1) continue; //if there is no duplication
@@ -300,7 +312,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                                 detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch.size()));
                         }
                     }
-
                 }
 
             } catch (final Exception e) {
