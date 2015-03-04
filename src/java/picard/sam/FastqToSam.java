@@ -102,6 +102,12 @@ public class FastqToSam extends CommandLineProgram {
     @Option(shortName = "PI", doc = "Predicted median insert size, to insert into the read group header", optional = true)
     public Integer PREDICTED_INSERT_SIZE;
 
+    @Option(shortName = "PG", doc = "Program group to insert into the read group header.", optional=true)
+    public String PROGRAM_GROUP;
+
+    @Option(shortName = "PM", doc = "Platform model to insert into the group header (free-form text providing further details of the platform/technology used)", optional=true)
+    public String PLATFORM_MODEL;
+
     @Option(doc="Comment(s) to include in the merged output file's header.", optional=true, shortName="CO")
     public List<String> COMMENT = new ArrayList<String>();
 
@@ -303,6 +309,8 @@ public class FastqToSam extends CommandLineProgram {
         if (this.PREDICTED_INSERT_SIZE != null) rgroup.setPredictedMedianInsertSize(PREDICTED_INSERT_SIZE);
         if (this.DESCRIPTION != null) rgroup.setDescription(this.DESCRIPTION);
         if (this.RUN_DATE != null) rgroup.setRunDate(this.RUN_DATE);
+        if (this.PLATFORM_MODEL != null) rgroup.setPlatformModel(this.PLATFORM_MODEL);
+        if (this.PROGRAM_GROUP != null) rgroup.setProgramGroup(this.PROGRAM_GROUP);
 
         final SAMFileHeader header = new SAMFileHeader();
         header.addReadGroup(rgroup);
