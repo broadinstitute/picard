@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
  * Collect metrics regarding pad-hopping in the Illumina Hi-Seq X.
  * Terminology: in all Illumina Hi-Seq machines, a "cluster" is a discrete area on a flow cell that contains
  * bridge-amplified DNA fragments, hopefully all clones of a single original insert  In the Hi-Seq X, each cluster
- * is constrained within a hexagonal "pad".  In "pad-hopping", contiguous groups of pads have duplicate DNA fragments.
+ * is constrained within a hexagonal "pad".  In "pad-hopping", groups of nearby pads have duplicate DNA fragments.
  * In the following code, such a contiguous group will be called a "bunch".
  *
  * @author David Benjamin
