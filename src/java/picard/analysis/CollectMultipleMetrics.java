@@ -49,7 +49,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             public SinglePassSamProgram makeInstance(final String outbase) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.OUTPUT = new File(outbase + ".insert_size_metrics");
-                program.Histogram_FILE = new File(outbase + ".insert_size_Histogram.pdf");
+                program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
                 return program;
             }
         },
