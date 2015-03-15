@@ -62,6 +62,7 @@
     <property environment="env"/>
     <property name="htsjdk" value="htsjdk"/>
     <property name="htsjdk_src" value="${htsjdk}/src/java"/>
+    <property name="jar_opt" value=".jar_opt"/>
     <condition property="isUnix">
         <os family="unix"/>
     </condition>
@@ -76,9 +77,6 @@
     <!-- INIT -->
     <target name="init">
         <path id="classpath">
-            <fileset dir="${lib}">
-                <include name="**/*.jar"/>
-            </fileset>
             <fileset dir="${htsjdk_lib_dir}">
                 <include name="*.jar"/>
                 <include name="**/*.jar"/>
@@ -88,6 +86,9 @@
                 <include name="*.jar"/>
                 <include name="**/*.jar"/>
             </fileset>
+            <fileset dir="${lib}">
+        	    <include name="**/*.jar"/>
+        	  </fileset>
         </path>
         <path id="metrics.classpath">
             <pathelement path="${classpath}"/>
@@ -98,7 +99,7 @@
     </target>
 
     <!-- CLEAN -->
-    <target name="clean-local" description="Delete local build products but not nested project">
+    <target name="clean-local" description="Delete local build products but not nested project" depends="clean-jar-opt">
         <delete dir="${classes}"/>
         <delete dir="${classes.test}"/>
         <delete dir="${test.output}"/>
@@ -240,25 +241,40 @@
         </testng>
     </target>
 
-    <target name="picard-jar" depends="compile"
-            description="Builds the main executable picard.jar">
-        <mkdir dir="${dist}"/>
-
-        <mkdir dir="${dist.tmp}"/>
-        <unjar dest="${dist.tmp}">
-            <fileset dir="${lib}">
-                <include name="*.jar"/>
-            </fileset>
-            <fileset dir="${htsjdk_lib_dir}">
-                <include name="*.jar"/>
-            </fileset>
-        </unjar>
+    <target name="process-external-jars" depends="clean-jar-opt, maybe-add-gatk-tools-java">
+    </target>
+	
+	  <target name="clean-jar-opt">
+      <delete dir="${jar_opt}"/>
+	  	<mkdir dir="${jar_opt}"/>
+    </target>
+	
+	  <target name="maybe-add-gatk-tools-java" if="addGATKToolsJava">
+    	<mkdir dir="${jar_opt}"/>
+      <unzip dest="${jar_opt}">
+    	  <fileset dir="${lib}/gatk-tools-java">
+    	    <include name="*.jar"/>
+    	  </fileset>
+    	</unzip>
+    </target>
+	
+    <target name="picard-jar" depends="compile, process-external-jars"
+        description="Builds the main executable picard.jar">
+       <mkdir dir="${dist}"/>
+       <mkdir dir="${dist.tmp}"/>
+       <unjar dest="${dist.tmp}">
+           <fileset dir="${lib}" />
+           <fileset dir="${htsjdk_lib_dir}">
+               <include name="*.jar"/>
+           </fileset>
+       </unjar>
 
         <jar destfile="${dist}/picard.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
             <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
             <fileset dir="${dist.tmp}" includes="**/*"/>
+	          <fileset dir="${jar_opt}" includes="**/*"/>
 
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
@@ -362,6 +378,12 @@
         </javadoc>
     </target>
 
+    <target name="add-ga4gh-support">
+    	<property name="addGATKToolsJava" value="1"/>	
+    </target>
+
+	  <target name="package-commands-ga4gh" depends="add-ga4gh-support, compile, picard-jar" />
+	
     <target name="package-commands" depends="compile, picard-jar">
         <delete dir="${command-line-html-dir}"/>
         <!-- If you don't want to generate on-line doc for a command, use package-command instead of document-command -->

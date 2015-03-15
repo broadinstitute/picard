@@ -72,7 +72,6 @@ import java.util.Map;
 
  */
 public abstract class CommandLineProgram {
-
     @Option(common=true, optional=true)
     public List<File> TMP_DIR = new ArrayList<File>();
 
@@ -102,8 +101,25 @@ public abstract class CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file.", common = true, optional = true, overridable = true)
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
+    @Option(doc="Google Genomics API client_secrets.json file path.", common = true)
+    public String GA4GH_CLIENT_SECRETS="client_secrets.json";
+    
     private final String standardUsagePreamble = CommandLineParser.getStandardUsagePreamble(getClass());
 
+    static {
+      // Register custom reader factory for reading data from Google Genomics 
+      // implementation of GA4GH API.
+      // With this it will be possible to pass these urls as INPUT params.
+      // E.g. java -jar dist/picard.jar ViewSam \
+      //    INPUT=https://www.googleapis.com/genomics/v1beta2/readgroupsets/CK256frpGBD44IWHwLP22R4/ \
+      //    GA4GH_CLIENT_SECRETS=../client_secrets.json
+      if (System.getProperty("samjdk.custom_reader") == null) {
+        System.setProperty("samjdk.custom_reader",
+            "https://www.googleapis.com/genomics," + 
+            "com.google.cloud.genomics.gatk.htsjdk.GA4GHReaderFactory");
+      }
+    }
+    
     /**
     * Initialized in parseArgs.  Subclasses may want to access this to do their
     * own validation, and then print usage using commandLineParser.
@@ -144,6 +160,9 @@ public abstract class CommandLineProgram {
         this.defaultHeaders.add(new StringHeader("Started on: " + startDate));
 
         Log.setGlobalLogLevel(VERBOSITY);
+        if (System.getProperty("ga4gh.client_secrets") == null) {
+          System.setProperty("ga4gh.client_secrets", GA4GH_CLIENT_SECRETS);
+        }
         SamReaderFactory.setDefaultValidationStringency(VALIDATION_STRINGENCY);
         BlockCompressedOutputStream.setDefaultCompressionLevel(COMPRESSION_LEVEL);
 
