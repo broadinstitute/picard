@@ -32,6 +32,7 @@
     <property name="src.www" value="src/www"/>
     <property name="lib" value="lib"/>
     <property name="dist" value="dist"/>
+    <property name="dist.tmp" value="dist/tmp"/>
     <property name="classes" value="classes"/>
     <property name="classes.test" value="testclasses"/>
     <property name="scripts" value="src/scripts"/>
@@ -240,23 +241,25 @@
     </target>
 
     <target name="picard-jar" depends="compile"
-        description="Builds the main executable picard.jar">
+            description="Builds the main executable picard.jar">
         <mkdir dir="${dist}"/>
+
+        <mkdir dir="${dist.tmp}"/>
+        <unjar dest="${dist.tmp}">
+            <fileset dir="${lib}">
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+            </fileset>
+        </unjar>
+
         <jar destfile="${dist}/picard.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
             <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
-            <fileset dir="${lib}">
-                <include name="**/*.jar"/>
-            </fileset>
-            <fileset dir="${htsjdk_lib_dir}">
-                <include name="*.jar"/>
-                <include name="**/*.jar"/>
-            </fileset>
-            <fileset dir="${htsjdk}/lib">
-                <include name="*.jar"/>
-                <include name="**/*.jar"/>
-            </fileset>
+            <fileset dir="${dist.tmp}" includes="**/*"/>
+
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
                 <attribute name="Implementation-Vendor" value="Broad Institute"/>
@@ -265,8 +268,10 @@
                 <attribute name="HTSJDK-Version" value="${htsjdk-version}"/>
             </manifest>
         </jar>
+
+        <delete dir="${dist.tmp}"/>
     </target>
-    
+
     <target name="picard-lib-jar" depends="compile"
         description="Builds the library: picard-lib.jar">
         <mkdir dir="${dist}"/>
