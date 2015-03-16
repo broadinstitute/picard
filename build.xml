@@ -397,6 +397,7 @@
         <document-command title="IlluminaBasecallsToSam"            main-class="picard.illumina.IlluminaBasecallsToSam"/>
         <document-command title="CheckIlluminaDirectory"            main-class="picard.illumina.CheckIlluminaDirectory"/>
         <document-command title="IntervalListTools"                 main-class="picard.util.IntervalListTools"/>
+        <document-command title="LiftoverVcf"                       main-class="picard.vcf.LiftoverVcf"/>
         <document-command title="MakeSitesOnlyVcf"                  main-class="picard.vcf.MakeSitesOnlyVcf"/>
         <document-command title="MarkDuplicates"                    main-class="picard.sam.markduplicates.MarkDuplicates"/>
         <document-command title="MarkDuplicatesWithMateCigar"       main-class="picard.sam.markduplicates.MarkDuplicatesWithMateCigar"/>
