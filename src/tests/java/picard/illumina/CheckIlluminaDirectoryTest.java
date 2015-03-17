@@ -51,28 +51,30 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         illuminaDir = IOUtil.createTempDir("ift_test", "IlluminaDir");
 
         interopDir = new File(illuminaDir, "InterOp");
-        if (!interopDir.mkdir()) {
+        if (!interopDir.exists() && !interopDir.mkdir()) {
             throw new RuntimeException("Couldn't make interop dir " + interopDir.getAbsolutePath());
         }
 
         dataDir = new File(illuminaDir, "Data");
-        if (!dataDir.mkdir()) {
+        if (!dataDir.exists() && !dataDir.mkdir()) {
             throw new RuntimeException("Couldn't make data dir " + dataDir.getAbsolutePath());
         }
 
         intensityDir = new File(dataDir, "Intensities");
-        if (!intensityDir.mkdir()) {
+        if (!intensityDir.exists() && !intensityDir.mkdir()) {
             throw new RuntimeException("Couldn't make intensity dir " + intensityDir.getAbsolutePath());
         }
 
         basecallDir = new File(intensityDir, "BaseCalls");
-        if (!basecallDir.mkdir()) {
+        if (!basecallDir.exists() && !basecallDir.mkdir()) {
             throw new RuntimeException("Couldn't make basecalls dir " + basecallDir.getAbsolutePath());
         }
     }
 
     @AfterMethod
     private void tearDown() {
+        IOUtil.deleteDirectoryTree(dataDir);
+        IOUtil.deleteDirectoryTree(basecallDir);
         IOUtil.deleteDirectoryTree(intensityDir);
     }
 
