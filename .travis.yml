@@ -6,7 +6,7 @@ before_install:
   - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
   - chmod 755 ./travis-tool.sh
   - ./travis-tool.sh bootstrap
-  - sed -e 's_git@github.com:_https://github.com/_' build.xml
+  - sed -i -e 's_git@github.com:_https://github.com/_' build.xml
 script:
   - ant -lib lib/ant clone-htsjdk 
   - ant test
