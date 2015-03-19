@@ -68,7 +68,8 @@ public class IntervalListTools extends CommandLineProgram {
     @Option(doc = "One or more lines of comment to add to the header of the output file.", optional = true)
     public List<String> COMMENT = null;
 
-    @Option(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.")
+    @Option(doc = "The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  " +
+            "Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.")
     public int SCATTER_COUNT = 1;
 
     @Option(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
@@ -171,9 +172,15 @@ public class IntervalListTools extends CommandLineProgram {
 
         final IntervalList result = ACTION.act(lists, secondLists);
 
+        if (SCATTER_COUNT > 1) {
+            // Scattering requires a uniqued, sorted interval list.  We want to do this up front (before BREAKING AT BANDS)
+            SORT = true;
+            UNIQUE = true;
+        }
+
         if (INVERT) {
             SORT = false; // no need to sort, since return will be sorted by definition.
-            UNIQUE = false; //no need to unique since invert will already return a unique list.
+            UNIQUE = true;
         }
 
         final IntervalList possiblySortedResult = SORT ? result.sorted() : result;
@@ -290,7 +297,7 @@ public class IntervalListTools extends CommandLineProgram {
      */
     private List<IntervalList> writeScatterIntervals(final IntervalList list) {
         final IntervalListScatterer scatterer = new IntervalListScatterer(SUBDIVISION_MODE);
-        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT);
+        final List<IntervalList> scattered = scatterer.scatter(list, SCATTER_COUNT, UNIQUE);
 
         final DecimalFormat fileNameFormatter = new DecimalFormat("0000");
         int fileIndex = 1;

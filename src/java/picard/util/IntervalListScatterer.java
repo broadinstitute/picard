@@ -60,10 +60,14 @@ public class IntervalListScatterer {
         }
     }
 
-    public List<IntervalList> scatter(final IntervalList sourceIntervalList, final int scatterCount) {
+    public List<IntervalList> scatter(final IntervalList uniquedIntervalList, final int scatterCount) {
+        return scatter(uniquedIntervalList, scatterCount, false);
+    }
+
+    public List<IntervalList> scatter(final IntervalList sourceIntervalList, final int scatterCount, final boolean isUniqued) {
         if (scatterCount < 1) throw new IllegalArgumentException("scatterCount < 1");
 
-        final IntervalList uniquedList = sourceIntervalList.uniqued();
+        final IntervalList uniquedList = isUniqued ? sourceIntervalList : sourceIntervalList.uniqued();
         final long idealSplitLength = deduceIdealSplitLength(uniquedList, scatterCount);
 
         final List<IntervalList> accumulatedIntervalLists = new ArrayList<IntervalList>();
@@ -77,19 +81,18 @@ public class IntervalListScatterer {
             if (projectedSize <= idealSplitLength) {
                 runningIntervalList.add(interval);
             } else {
-                final Interval intervalToAdd;
                 switch (mode) {
                     case INTERVAL_SUBDIVISION:
                         final int amountToConsume = (int) (idealSplitLength - runningIntervalList.getBaseCount());
                         final Interval left = new Interval(
-                                interval.getSequence(),
+                                interval.getContig(),
                                 interval.getStart(),
                                 interval.getStart() + amountToConsume - 1,
                                 interval.isNegativeStrand(),
                                 interval.getName()
                         );
                         final Interval right = new Interval(
-                                interval.getSequence(),
+                                interval.getContig(),
                                 interval.getStart() + amountToConsume,
                                 interval.getEnd(),
                                 interval.isNegativeStrand(),
@@ -107,7 +110,7 @@ public class IntervalListScatterer {
                         } else {
                             // Push this interval into the next scatter; re-inject it into the queue, then advance the scatter.
                             intervalQueue.addFirst(interval);
-                            accumulatedIntervalLists.add(runningIntervalList);
+                            accumulatedIntervalLists.add(runningIntervalList.uniqued());
                             runningIntervalList = new IntervalList(uniquedList.getHeader());
                         }
                         break;
@@ -115,7 +118,7 @@ public class IntervalListScatterer {
             }
 
             if (runningIntervalList.getBaseCount() >= idealSplitLength) {
-                accumulatedIntervalLists.add(runningIntervalList);
+                accumulatedIntervalLists.add(runningIntervalList.uniqued());
                 runningIntervalList = new IntervalList(uniquedList.getHeader());
             }
         }
@@ -125,7 +128,7 @@ public class IntervalListScatterer {
             runningIntervalList.add(intervalQueue.pollFirst());
         }
         if (!runningIntervalList.getIntervals().isEmpty()) {
-            accumulatedIntervalLists.add(runningIntervalList);
+            accumulatedIntervalLists.add(runningIntervalList.uniqued());
         }
 
         return accumulatedIntervalLists;
