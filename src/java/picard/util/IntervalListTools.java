@@ -74,6 +74,9 @@ public class IntervalListTools extends CommandLineProgram {
     @Option(doc = "Whether to include filtered variants in the vcf when generating an interval list from vcf", optional = true)
     public boolean INCLUDE_FILTERED=false;
 
+    @Option(shortName = "BRK", doc = "If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals", optional = true)
+    public int BREAK_BANDS_AT_MULTIPLES_OF = 0;
+
     @Option(shortName = "M", doc = "Do not subdivide ")
     public IntervalListScatterer.Mode SUBDIVISION_MODE = IntervalListScatterer.Mode.INTERVAL_SUBDIVISION;
 
@@ -177,7 +180,11 @@ public class IntervalListTools extends CommandLineProgram {
         final IntervalList possiblyInvertedResult = INVERT ? IntervalList.invert(possiblySortedResult) : possiblySortedResult;
 
         //only get unique if this has been asked unless inverting (since the invert will return a unique list)
-        final List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+        List<Interval> finalIntervals = UNIQUE ? possiblyInvertedResult.uniqued().getIntervals() : possiblyInvertedResult.getIntervals();
+
+        if (BREAK_BANDS_AT_MULTIPLES_OF > 0) {
+            finalIntervals = IntervalList.breakIntervalsAtBandMultiples(finalIntervals, BREAK_BANDS_AT_MULTIPLES_OF);
+        }
 
         // Decide on a PG ID and make a program group
         final SAMFileHeader header = result.getHeader();
@@ -265,10 +272,14 @@ public class IntervalListTools extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        final List<String> errorMsgs = new ArrayList<String>();
         if (SCATTER_COUNT < 1) {
-            return new String[]{"SCATTER_COUNT must be greater than 0."};
+            errorMsgs.add("SCATTER_COUNT must be greater than 0.");
         }
-        return null;
+        if (BREAK_BANDS_AT_MULTIPLES_OF < 0) {
+            errorMsgs.add("BREAK_BANDS_AT_MULTIPLES_OF must be greater than or equal to 0.");
+        }
+        return errorMsgs.size() == 0 ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     /**
