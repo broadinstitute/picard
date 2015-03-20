@@ -110,8 +110,8 @@ public class MergeBamAlignment extends CommandLineProgram {
     public String PROGRAM_GROUP_NAME;
 
     @Deprecated
-    @Option(doc = "This argument is ignored and will be removed.", shortName = "PE")
-    public Boolean PAIRED_RUN;
+    @Option(doc = "This argument is ignored and will be removed.", shortName = "PE", optional=true)
+    public Boolean PAIRED_RUN = true;
 
     @Option(doc = "The expected jump size (required if this is a jumping library). Deprecated. Use EXPECTED_ORIENTATIONS instead",
             shortName = "JUMP",
