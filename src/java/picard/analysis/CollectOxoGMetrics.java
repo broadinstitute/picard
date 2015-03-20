@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.DuplicateReadFilter;
+import htsjdk.samtools.filter.InsertSizeFilter;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.metrics.MetricBase;
@@ -27,12 +28,12 @@ import picard.util.DbSnpBitSetUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import static htsjdk.samtools.util.CodeUtil.getOrElse;
+import static htsjdk.samtools.util.SequenceUtil.generateAllKmers;
 import static java.lang.Math.log10;
 
 /**
@@ -162,38 +163,6 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         public double G_REF_OXO_Q;
     }
 
-    /**
-     * SAM filter for insert size range.
-     */
-    static class InsertSizeFilter implements SamRecordFilter {
-        final int minInsertSize;
-        final int maxInsertSize;
-
-        InsertSizeFilter(final int minInsertSize, final int maxInsertSize) {
-            this.minInsertSize = minInsertSize;
-            this.maxInsertSize = maxInsertSize;
-        }
-
-        @Override
-        public boolean filterOut(final SAMRecord rec) {
-            // Treat both parameters == 0 as not filtering
-            if (minInsertSize == 0 && maxInsertSize == 0) return false;
-
-            if (rec.getReadPairedFlag()) {
-                final int ins = Math.abs(rec.getInferredInsertSize());
-                return ins < minInsertSize || ins > maxInsertSize;
-            }
-
-            // If the read isn't paired and either min or max is specified filter it out
-            return minInsertSize != 0 || maxInsertSize != 0;
-        }
-
-        @Override
-        public boolean filterOut(final SAMRecord r1, final SAMRecord r2) {
-            return filterOut(r1) || filterOut(r2);
-        }
-    }
-
     // Stock main method
     public static void main(final String[] args) {
         new CollectOxoGMetrics().instanceMainWithExit(args);
@@ -212,13 +181,13 @@ public class CollectOxoGMetrics extends CommandLineProgram {
             }
         }
 
-        return messages.isEmpty() ? null : messages.toArray(new String[messages.size()]);
-    }
+        if (MINIMUM_INSERT_SIZE < 0) messages.add("MINIMUM_INSERT_SIZE cannot be negative");
+        if (MAXIMUM_INSERT_SIZE < 0) messages.add("MAXIMUM_INSERT_SIZE cannot be negative");
+        if (MAXIMUM_INSERT_SIZE < MINIMUM_INSERT_SIZE) {
+            messages.add("MAXIMUM_INSERT_SIZE cannot be less than MINIMUM_INSERT_SIZE");
+        }
 
-    /** Mimic of Oracle's nvl() - returns the first value if not null, otherwise the second value. */
-    private final <T> T nvl(final T value1, final T value2) {
-        if (value1 != null) return value1;
-        else return value2;
+        return messages.isEmpty() ? null : messages.toArray(new String[messages.size()]);
     }
 
     @Override
@@ -234,8 +203,8 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         final Set<String> samples = new HashSet<String>();
         final Set<String> libraries = new HashSet<String>();
         for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
-            samples.add(nvl(rec.getSample(), UNKNOWN_SAMPLE));
-            libraries.add(nvl(rec.getLibrary(), UNKNOWN_LIBRARY));
+            samples.add(getOrElse(rec.getSample(), UNKNOWN_SAMPLE));
+            libraries.add(getOrElse(rec.getLibrary(), UNKNOWN_LIBRARY));
         }
 
         // Setup the calculators
@@ -263,11 +232,14 @@ public class CollectOxoGMetrics extends CommandLineProgram {
         }
         iterator.setEmitUncoveredLoci(false);
         iterator.setMappingQualityScoreCutoff(MINIMUM_MAPPING_QUALITY);
-        iterator.setSamFilters(Arrays.asList(
-                new NotPrimaryAlignmentFilter(),
-                new DuplicateReadFilter(),
-                new InsertSizeFilter(MINIMUM_INSERT_SIZE, MAXIMUM_INSERT_SIZE)
-        ));
+
+        final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
+        filters.add(new NotPrimaryAlignmentFilter());
+        filters.add(new DuplicateReadFilter());
+        if (MINIMUM_INSERT_SIZE > 0 || MAXIMUM_INSERT_SIZE > 0) {
+            filters.add(new InsertSizeFilter(MINIMUM_INSERT_SIZE, MAXIMUM_INSERT_SIZE));
+        }
+        iterator.setSamFilters(filters);
 
         log.info("Starting iteration.");
         long nextLogTime = 0;
@@ -336,43 +308,6 @@ public class CollectOxoGMetrics extends CommandLineProgram {
 
         log.info("Generated " + contexts.size() + " context strings.");
         return contexts;
-    }
-
-    /** Generates all possible kmers of length and returns them as byte[]s. */
-    private List<byte[]> generateAllKmers(final int length) {
-        final List<byte[]> sofar = new LinkedList<byte[]>();
-        final byte[] bases = {'A', 'C', 'G', 'T'};
-
-        if (sofar.size() == 0) {
-            sofar.add(new byte[length]);
-        }
-
-        while (true) {
-            final byte[] bs = sofar.remove(0);
-            final int indexOfNextBase = findIndexOfNextBase(bs);
-
-            if (indexOfNextBase == -1) {
-                sofar.add(bs);
-                break;
-            } else {
-                for (final byte b : bases) {
-                    final byte[] next = Arrays.copyOf(bs, bs.length);
-                    next[indexOfNextBase] = b;
-                    sofar.add(next);
-                }
-            }
-        }
-
-        return sofar;
-    }
-
-    /** Finds the first non-zero character in the array, or returns -1 if all are non-zero. */
-    private int findIndexOfNextBase(final byte[] bs) {
-        for (int i = 0; i < bs.length; ++i) {
-            if (bs[i] == 0) return i;
-        }
-
-        return -1;
     }
 
     /** A little class for counting alleles. */
@@ -491,7 +426,7 @@ public class CollectOxoGMetrics extends CommandLineProgram {
 
                 // Skip if below qual, or if library isn't a match
                 if (qual < MINIMUM_QUALITY_SCORE) continue;
-                if (!this.library.equals(nvl(samrec.getReadGroup().getLibrary(), UNKNOWN_LIBRARY))) continue;
+                if (!this.library.equals(getOrElse(samrec.getReadGroup().getLibrary(), UNKNOWN_LIBRARY))) continue;
 
                 // Get the read base, and get it in "as read" orientation
                 final byte base = rec.getReadBase();
