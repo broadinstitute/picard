@@ -27,23 +27,12 @@ package picard.analysis;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
-import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
-import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
-import picard.PicardException;
-import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
@@ -73,21 +62,11 @@ import java.util.List;
         usageShort = "Collects information about GC bias in the reads in the provided SAM or BAM",
         programGroup = Metrics.class
 )
-public class CollectGcBiasMetrics extends CommandLineProgram {
+public class CollectGcBiasMetrics extends SinglePassSamProgram {
     /** The location of the R script to do the plotting. */
     private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     // Usage and parameters
-
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "The reference sequence fasta file.")
-    public File REFERENCE_SEQUENCE;
-
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The BAM or SAM file containing aligned reads.  " +
-            "Must be coordinate-sorted.")
-    public File INPUT;
-
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The text file to write the metrics table to.")
-    public File OUTPUT;
 
     @Option(shortName = "CHART", doc = "The PDF file to render the chart to.")
     public File CHART_OUTPUT;
@@ -101,107 +80,76 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
     @Option(doc = "For summary metrics, exclude GC windows that include less than this fraction of the genome.")
     public double MINIMUM_GENOME_FRACTION = 0.00001;
 
-    @Option(doc = "If true, assume that the input file is coordinate sorted, even if the header says otherwise.",
-            shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
-    public boolean ASSUME_SORTED = false;
-
     @Option(shortName = "BS", doc = "Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
-
-    private static final Log log = Log.getInstance(CollectGcBiasMetrics.class);
 
     // Used to keep track of the total clusters as this is kinda important for bias
     private int totalClusters = 0;
     private int totalAlignedReads = 0;
+    // Histograms to track the number of windows at each GC, and the number of read starts
+    // at windows of each GC. Need 101 to get from 0-100.
+    private static final int WINDOWS = 101;
+    private final int[] windowsByGc = new int[WINDOWS];
+    private final int[] readsByGc = new int[WINDOWS];
+    private final long[] basesByGc = new long[WINDOWS];
+    private final long[] errorsByGc = new long[WINDOWS];
+    private static int lastContig = SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX;
+    private byte[] gc;
+    private byte[] refBases;
+    private String saveHeader;
 
     /** Stock main method. */
     public static void main(final String[] args) {
         System.exit(new CollectGcBiasMetrics().instanceMain(args));
     }
 
-    protected int doWork() {
-        IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+    @Override
+    protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
         if (SUMMARY_OUTPUT != null) IOUtil.assertFileIsWritable(SUMMARY_OUTPUT);
+        saveHeader = header.getReadGroups().get(0).getLibrary();
+    }
 
-        // Histograms to track the number of windows at each GC, and the number of read starts
-        // at windows of each GC
-        final int[] windowsByGc = new int[101];
-        final int[] readsByGc = new int[101];
-        final long[] basesByGc = new long[101];
-        final long[] errorsByGc = new long[101];
-
-        final SamReader sam = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-
-        if (!ASSUME_SORTED && sam.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new PicardException("Header of input file " + INPUT.getAbsolutePath() + " indicates that it is not coordinate sorted.  " +
-                    "If you believe the records are in coordinate order, pass option ASSUME_SORTED=true.  If not, sort the file with SortSam.");
-        }
-        final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(sam.iterator());
-        final ReferenceSequenceFile referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(REFERENCE_SEQUENCE);
-
-        {
-            // Check that the sequence dictionaries match if present
-            final SAMSequenceDictionary referenceDictionary = referenceFile.getSequenceDictionary();
-            final SAMSequenceDictionary samFileDictionary = sam.getFileHeader().getSequenceDictionary();
-            if (referenceDictionary != null && samFileDictionary != null) {
-                SequenceUtil.assertSequenceDictionariesEqual(referenceDictionary, samFileDictionary);
+    ////////////////////////////////////////////////////////////////////////////
+    // Loop over the reference and the reads and calculate the basic metrics
+    ////////////////////////////////////////////////////////////////////////////
+    @Override
+    protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        //if read is unaligned then ref is passed in as null
+        if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
+        if (ref!=null) {
+            //only do the recalculation of gc if current ref is different from last ref
+            if (ref.getContigIndex() != lastContig) {
+                refBases = ref.getBases();
+                StringUtil.toUpperCase(refBases);
+                final int refLength = refBases.length;
+                final int lastWindowStart = refLength - WINDOW_SIZE;
+                gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
+                lastContig = ref.getContigIndex();
             }
-        }
-
-        ////////////////////////////////////////////////////////////////////////////
-        // Loop over the reference and the reads and calculate the basic metrics
-        ////////////////////////////////////////////////////////////////////////////
-        ReferenceSequence ref = null;
-        final ProgressLogger
-                progress = new ProgressLogger(log);
-        while ((ref = referenceFile.nextSequence()) != null) {
-            final byte[] refBases = ref.getBases();
-            StringUtil.toUpperCase(refBases);
-            final int refLength = refBases.length;
-            final int lastWindowStart = refLength - WINDOW_SIZE;
-
-            final byte[] gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
-            while (iterator.hasNext() && iterator.peek().getReferenceIndex() == ref.getContigIndex()) {
-                final SAMRecord rec = iterator.next();
-
-                if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
-
-                if (!rec.getReadUnmappedFlag()) {
-                    final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - WINDOW_SIZE : rec.getAlignmentStart();
-                    ++this.totalAlignedReads;
-
-                    if (pos > 0) {
-                        final int windowGc = gc[pos];
-
-                        if (windowGc >= 0) {
-                            ++readsByGc[windowGc];
-                            basesByGc[windowGc] += rec.getReadLength();
-                            errorsByGc[windowGc] +=
-                                    SequenceUtil.countMismatches(rec, refBases, IS_BISULFITE_SEQUENCED) +
-                                            SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
-                        }
+            if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
+            if (!rec.getReadUnmappedFlag()) {
+                final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - WINDOW_SIZE : rec.getAlignmentStart();
+                ++this.totalAlignedReads;
+                if (pos > 0) {
+                    final int windowGc = gc[pos];
+                    if (windowGc >= 0) {
+                        ++readsByGc[windowGc];
+                        basesByGc[windowGc] += rec.getReadLength();
+                        errorsByGc[windowGc] +=
+                                SequenceUtil.countMismatches(rec, refBases, IS_BISULFITE_SEQUENCED) +
+                                        SequenceUtil.countInsertedBases(rec) + SequenceUtil.countDeletedBases(rec);
                     }
                 }
-
-                progress.record(rec);
             }
-
-            log.info("Processed reference sequence: " + ref.getName());
         }
+    }
 
-        // Finish up the reads, presumably all unaligned
-        while (iterator.hasNext()) {
-            final SAMRecord rec = iterator.next();
-            if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
-
-        }
-
-        /////////////////////////////////////////////////////////////////////////////
-        // Synthesize the normalized coverage metrics and write it all out to a file
-        /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    // Synthesize the normalized coverage metrics and write it all out to a file
+    /////////////////////////////////////////////////////////////////////////////
+    @Override
+    protected void finish () {
         final MetricsFile<GcBiasDetailMetrics, ?> metricsFile = getMetricsFile();
         final double totalWindows = sum(windowsByGc);
         final double totalReads = sum(readsByGc);
@@ -211,7 +159,7 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         for (int i = 0; i < windowsByGc.length; ++i) {
             if (windowsByGc[i] == 0) continue;
 
-            GcBiasDetailMetrics m = new GcBiasDetailMetrics();
+            final GcBiasDetailMetrics m = new GcBiasDetailMetrics();
             m.GC = i;
             m.WINDOWS = windowsByGc[i];
             m.READ_STARTS = readsByGc[i];
@@ -243,21 +191,14 @@ public class CollectGcBiasMetrics extends CommandLineProgram {
         final String subtitle = "Total clusters: " + fmt.format(this.totalClusters) +
                 ", Aligned reads: " + fmt.format(this.totalAlignedReads);
         String title = INPUT.getName().replace(".duplicates_marked", "").replace(".aligned.bam", "");
+        title += "." + saveHeader;
 
-        // Qualify the title with the library name iff it's for a single sample
-        final List<SAMReadGroupRecord> readGroups = sam.getFileHeader().getReadGroups();
-        if (readGroups.size() == 1) {
-            title += "." + readGroups.get(0).getLibrary();
-        }
         RExecutor.executeFromClasspath(R_SCRIPT,
                 OUTPUT.getAbsolutePath(),
                 CHART_OUTPUT.getAbsolutePath(),
                 title,
                 subtitle,
                 String.valueOf(WINDOW_SIZE));
-
-        CloserUtil.close(sam);
-        return 0;
     }
 
     /** Sums the values in an int[]. */
