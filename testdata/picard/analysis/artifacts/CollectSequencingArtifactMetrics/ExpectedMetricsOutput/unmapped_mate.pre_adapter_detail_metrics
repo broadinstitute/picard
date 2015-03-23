@@ -1,0 +1,21 @@
+## htsjdk.samtools.metrics.StringHeader
+# picard.analysis.artifacts.CollectSequencingArtifactMetrics MINIMUM_INSERT_SIZE=0 MAXIMUM_INSERT_SIZE=0 CONTEXT_SIZE=0 INPUT=/Users/msooknah/Documents/gp_projects/picard-private/Picard-public/testdata/picard/analysis/CollectSequencingArtifactMetrics/test.sam OUTPUT=/Users/msooknah/Documents/scratch/picardgroup/oxog/unit/tmp_output/unmapped_mate REFERENCE_SEQUENCE=/Users/msooknah/Documents/gp_projects/picard-private/Picard-public/testdata/picard/analysis/CollectSequencingArtifactMetrics/test.fasta    MINIMUM_QUALITY_SCORE=20 MINIMUM_MAPPING_QUALITY=30 INCLUDE_UNPAIRED=false TANDEM_READS=false USE_OQ=true ASSUME_SORTED=true STOP_AFTER=0 VERBOSITY=INFO QUIET=false VALIDATION_STRINGENCY=STRICT COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=500000 CREATE_INDEX=false CREATE_MD5_FILE=false
+## htsjdk.samtools.metrics.StringHeader
+# Started on: Thu Mar 19 17:31:02 EDT 2015
+
+## METRICS CLASS	picard.analysis.artifacts.SequencingArtifactMetrics$PreAdapterDetailMetrics
+SAMPLE_ALIAS	LIBRARY	REF_BASE	ALT_BASE	CONTEXT	PRO_REF_BASES	PRO_ALT_BASES	CON_REF_BASES	CON_ALT_BASES	ERROR_RATE	QSCORE
+sample1	library1	A	C	A	31	0	38	0	0	100
+sample1	library1	A	G	A	31	0	38	0	0	100
+sample1	library1	A	T	A	31	0	38	0	0	100
+sample1	library1	C	A	C	33	0	16	11	0	100
+sample1	library1	C	G	C	33	0	16	0	0	100
+sample1	library1	C	T	C	33	8	16	8	0	100
+sample1	library1	G	A	G	16	8	33	8	0	100
+sample1	library1	G	C	G	16	0	33	0	0	100
+sample1	library1	G	T	G	16	11	33	0	0.183333	7
+sample1	library1	T	A	T	38	0	31	0	0	100
+sample1	library1	T	C	T	38	0	31	0	0	100
+sample1	library1	T	G	T	38	0	31	0	0	100
+
+

@@ -1,7 +1,9 @@
 package picard.cmdline;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for CommandLine Program testing.
@@ -26,6 +28,14 @@ public abstract class CommandLineProgramTest {
         return picardCommandLineArgs;
     }
 
+    public String[] makePicardCommandLineArgs(final Map<String, String> kwargs) {
+        final List<String> args = new ArrayList<String>();
+        for (final String key : kwargs.keySet()) {
+            args.add(key + "=" + kwargs.get(key));
+        }
+        return makePicardCommandLineArgs(args);
+    }
+
     public String[] makePicardCommandLineArgs(final String[] args) {
         return makePicardCommandLineArgs(Arrays.asList(args));
     }
@@ -36,5 +46,9 @@ public abstract class CommandLineProgramTest {
 
     public int runPicardCommandLine(final String[] args) {
         return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(args));
+    }
+
+    public int runPicardCommandLine(final Map<String, String> kwargs) {
+        return new PicardCommandLine().instanceMain(makePicardCommandLineArgs(kwargs));
     }
 }
