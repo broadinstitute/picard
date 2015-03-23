@@ -6,6 +6,8 @@ name := "picard"
 
 version := "1.129"
 
+organization := "com.github.broadinstitute"
+
 javaSource in Compile := baseDirectory.value / "src/java"
 
 javaSource in Test := baseDirectory.value / "src/tests"
@@ -34,9 +36,11 @@ javacOptions in(Compile, compile) ++= Seq("-target", "1.6")
 
 versionWithGit
 
-lazy val picard = project in file(".") dependsOn htsjdk
+assemblyJarName := s"${name.value}-${version.value}.jar"
 
-lazy val htsjdk = project in file("htsjdk")
+val PicardOpt = config("picardopt") extend Compile
+
+lazy val htsjdk = uri("git://github.com/samtools/htsjdk")
 
 val gitVersion = settingKey[String]("The picard head commit git hash.")
 
@@ -44,13 +48,6 @@ gitVersion := git.gitHeadCommit.value.get
 
 unmanagedJars in Compile ~= { uj =>
   Seq(Attributed.blank(file(System.getProperty("java.home").dropRight(3) + "lib/tools.jar"))) ++ uj
-}
-
-assemblyExcludedJars in assembly := {
-  val cp = (fullClasspath in assembly).value
-  cp filter {
-    _.data.getName == "tools.jar"
-  }
 }
 
 test in assembly := {}
@@ -61,6 +58,14 @@ packageOptions := Seq(ManifestAttributes(
   ("Main-Class", "picard.cmdline.PicardCommandLine"),
   ("Implementation-Title", "PICARD Tools")
 ))
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
 
 pomExtra := <url>http://samtools.github.io/htsjdk/</url>
   <licenses>
@@ -81,8 +86,6 @@ pomExtra := <url>http://samtools.github.io/htsjdk/</url>
       <url>http://broadinstitute.github.io/picard/</url>
     </developer>
   </developers>
-
-assemblyJarName := s"${name.value}-${version.value}.jar"
 
 assemblyMergeStrategy in assembly := {
   case x if Assembly.isConfigFile(x) =>
@@ -110,4 +113,28 @@ assemblyMergeStrategy in assembly := {
   case "asm-license.txt" | "overview.html" =>
     MergeStrategy.discard
   case _ => MergeStrategy.deduplicate
+}
+
+val root = project.in(file(".")).
+  configs(PicardOpt).
+  settings(inConfig(PicardOpt)(
+  Classpaths.configSettings ++ Defaults.configTasks ++ baseAssemblySettings ++ Seq(
+    assemblyJarName := s"${name.value}-opt-${version.value}.jar",
+    //this is where we would put in the maven dependency for gatk-tools-java-picard
+    //currently it expects it to be in opt and you can't build picard-opt jar without it there
+    unmanagedJars in Compile += baseDirectory.value / "opt/gatk-tools-java-picard-1.0.jar",
+    assemblyExcludedJars in assembly := {
+      val cp = (fullClasspath in assembly).value
+      cp filter { jar =>
+        jar.data.getName == "tools.jar"
+      }
+    }
+  )): _*) dependsOn htsjdk
+
+
+assemblyExcludedJars in assembly := {
+  val cp = (fullClasspath in assembly).value
+  cp filter { jar =>
+    jar.data.getName == "gatk-tools-java-picard-1.0.jar" || jar.data.getName == "tools.jar"
+  }
 }
