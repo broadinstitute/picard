@@ -6,6 +6,8 @@ name := "picard"
 
 version := "1.129"
 
+organization := "com.github.broadinstitute"
+
 javaSource in Compile := baseDirectory.value / "src/java"
 
 javaSource in Test := baseDirectory.value / "src/tests"
@@ -56,6 +58,14 @@ packageOptions := Seq(ManifestAttributes(
   ("Main-Class", "picard.cmdline.PicardCommandLine"),
   ("Implementation-Title", "PICARD Tools")
 ))
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
 
 pomExtra := <url>http://samtools.github.io/htsjdk/</url>
   <licenses>
