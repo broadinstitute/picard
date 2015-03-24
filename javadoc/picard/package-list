@@ -1,5 +1,6 @@
 picard
 picard.analysis
+picard.analysis.artifacts
 picard.analysis.directed
 picard.annotation
 picard.cmdline
