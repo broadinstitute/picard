@@ -138,7 +138,7 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(final SAMFileHeader header, final File samFile) {
+    protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
         preAdapterSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT);
         preAdapterDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT);
         baitBiasSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT);

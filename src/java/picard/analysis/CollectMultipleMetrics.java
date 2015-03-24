@@ -9,6 +9,7 @@ import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -103,6 +104,27 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
                 program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
+                return program;
+            }
+        },
+        CollectGcBiasMetrics {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+                final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
+                program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics");
+                program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics");
+                program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
+
+                program.INPUT = input;
+                program.METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS,
+                        MetricAccumulationLevel.LIBRARY);
+                program.WINDOW_SIZE = 100;
+                program.MINIMUM_GENOME_FRACTION = 1.0E-5;
+                program.IS_BISULFITE_SEQUENCED = false;
+                program.ASSUME_SORTED = false;
+
+                //GC_Bias actually uses the class-level REFERENCE_SEQUENCE variable.
                 program.REFERENCE_SEQUENCE = reference;
 
                 return program;
