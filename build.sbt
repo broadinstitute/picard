@@ -14,7 +14,9 @@ javaSource in Test := baseDirectory.value / "src/tests"
 
 unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "src/scripts", baseDirectory.value / "testdata", baseDirectory.value / "src/tests/scripts")
 
-libraryDependencies += "org.testng" % "testng" % "6.8.8"
+libraryDependencies += "com.github.samtools" % "htsjdk" % "1.130"
+
+libraryDependencies += "org.testng" % "testng" % "6.8.8" % Test
 
 testNGSettings
 
@@ -40,8 +42,6 @@ assemblyJarName := s"${name.value}-${version.value}.jar"
 
 val PicardOpt = config("picardopt") extend Compile
 
-lazy val htsjdk = uri("git://github.com/samtools/htsjdk")
-
 val gitVersion = settingKey[String]("The picard head commit git hash.")
 
 gitVersion := git.gitHeadCommit.value.get
@@ -66,26 +66,6 @@ publishTo := {
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
-
-pomExtra := <url>http://samtools.github.io/htsjdk/</url>
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>http://opensource.org/licenses/MIT</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>git@github.com:samtools/htsjdk.git</url>
-    <connection>scm:git:git@github.com:samtools/htsjdk.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>picard</id>
-      <name>Picard Team</name>
-      <url>http://broadinstitute.github.io/picard/</url>
-    </developer>
-  </developers>
 
 assemblyMergeStrategy in assembly := {
   case x if Assembly.isConfigFile(x) =>
@@ -129,8 +109,7 @@ val root = project.in(file(".")).
         jar.data.getName == "tools.jar"
       }
     }
-  )): _*) dependsOn htsjdk
-
+  )): _*)
 
 assemblyExcludedJars in assembly := {
   val cp = (fullClasspath in assembly).value
@@ -138,3 +117,23 @@ assemblyExcludedJars in assembly := {
     jar.data.getName == "gatk-tools-java-picard-1.0.jar" || jar.data.getName == "tools.jar"
   }
 }
+
+pomExtra := <url>http://samtools.github.io/htsjdk/</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:samtools/htsjdk.git</url>
+    <connection>scm:git:git@github.com:samtools/htsjdk.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>picard</id>
+      <name>Picard Team</name>
+      <url>http://broadinstitute.github.io/picard/</url>
+    </developer>
+  </developers>
