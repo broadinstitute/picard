@@ -83,7 +83,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(final SAMFileHeader header, final File samFile) {
+    protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
 

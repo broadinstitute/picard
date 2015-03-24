@@ -104,7 +104,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Override protected boolean usesNoRefReads() { return false; }
 
-    @Override protected void setup(final SAMFileHeader header, final File samFile) {
+    @Override protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(Histogram_FILE);
 

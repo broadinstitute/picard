@@ -44,7 +44,7 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(final SAMFileHeader header, final File samFile) {
+    protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
         final List<SAMReadGroupRecord> readGroups = header.getReadGroups();
         if (readGroups.size() == 1) {
