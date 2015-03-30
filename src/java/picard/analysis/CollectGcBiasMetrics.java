@@ -127,7 +127,6 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
                 gc = calculateAllGcs(refBases, windowsByGc, lastWindowStart);
                 lastContig = ref.getContigIndex();
             }
-            if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++this.totalClusters;
             if (!rec.getReadUnmappedFlag()) {
                 final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - WINDOW_SIZE : rec.getAlignmentStart();
                 ++this.totalAlignedReads;
