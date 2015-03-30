@@ -83,9 +83,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = "Run this many PerTilePadHoppingMetricsExtractor in parallel.  If N_PROCESSORS = 0, use all available cores. " +
-            "If N_PROCESSORS < 0 use all but |N_PROCESSORS| cores.", optional = true)
-    public int N_PROCESSORS = 1;
+    @Option(doc = "Run this many PerTilePadHoppingMetricsExtractor in parallel.  If NUM_PROCESSORS = 0, use all available cores. " +
+            "If NUM_PROCESSORS < 0 use all but |NUM_PROCESSORS| cores.", optional = true)
+    public int NUM_PROCESSORS = 1;
 
     @Option(doc = "Number of tiles on which to calculate pad-hopping metrics.  Default of 8 gives a good lane average.", optional = true)
     public int N_TILES = 8;
@@ -111,8 +111,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
 
-    public final static String DETAILED_METRICS_EXTENSION = ".pad_hopping_detailed_metrics";
-    public final static String SUMMARY_METRICS_EXTENSION = ".pad_hopping_summary_metrics";
+    public final static String DETAILED_METRICS_EXTENSION = "pad_hopping_detailed_metrics";
+    public final static String SUMMARY_METRICS_EXTENSION = "pad_hopping_summary_metrics";
 
     public final static int TILES_PER_LANE = 96;
 
@@ -150,13 +150,13 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
                 IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.Position);
 
-        final File summaryMetricsFileName = new File(OUTPUT + SUMMARY_METRICS_EXTENSION);
-        final File detailedMetricsFileName = new File(OUTPUT + DETAILED_METRICS_EXTENSION);
+        final File summaryMetricsFileName = new File(OUTPUT + "." + SUMMARY_METRICS_EXTENSION);
+        final File detailedMetricsFileName = new File(OUTPUT + "." + DETAILED_METRICS_EXTENSION);
 
         IOUtil.assertFileIsWritable(summaryMetricsFileName);
         if (PROB_EXPLICIT_OUTPUT > 0) IOUtil.assertFileIsWritable(detailedMetricsFileName);
 
-        final int numProcessors = N_PROCESSORS + ((N_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
+        final int numProcessors = NUM_PROCESSORS + ((NUM_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
         LOG.info("Processing with " + numProcessors + " thread(s).");
 
