@@ -74,7 +74,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     public File BASECALLS_DIR;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for metrics file. Resulting file will be" +
-            " <OUTPUT>" + summaryMetricsExtension, optional = false)
+            " <OUTPUT>" + SUMMARY_METRICS_EXTENSION, optional = false)
     public File OUTPUT;
 
     @Option(doc = "The fraction of pad-hopping events to output in detailed metrics.", optional = true)
@@ -111,8 +111,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
 
-    public final static String detailedMetricsExtension = ".pad_hopping_detailed_metrics";
-    public final static String summaryMetricsExtension = ".pad_hopping_summary_metrics";
+    public final static String DETAILED_METRICS_EXTENSION = ".pad_hopping_detailed_metrics";
+    public final static String SUMMARY_METRICS_EXTENSION = ".pad_hopping_summary_metrics";
+
+    public final static int TILES_PER_LANE = 96;
 
     //Add error-checking for the command line arguments specific to this program
     @Override
@@ -121,19 +123,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         if (NUM_BASES < 1) errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
 
-        if (N_TILES < 1 || N_TILES > 96) errors.add("Must process at least 1 and at most 96 tiles");
+        if (N_TILES < 1 || N_TILES > TILES_PER_LANE) errors.add("Must process at least 1 and at most 96 tiles");
 
         if (TILE_INDEX < -1) errors.add("Must choose a non-negative tile index or -1 to take a lane average");
-        if (TILE_INDEX > 95) errors.add("Tile index may be at most 95 (there are 96 tiles on the HiSeqX)");
+        if (TILE_INDEX >= TILES_PER_LANE ) errors.add("Tile index may be at most 95 (there are 96 tiles on the HiSeqX)");
 
-        if (PROB_EXPLICIT_OUTPUT > 1 || PROB_EXPLICIT_OUTPUT < 0)
+        if ( PROB_EXPLICIT_OUTPUT < 0 || PROB_EXPLICIT_OUTPUT > 1 ) {
             errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
-
-        if (errors.size() > 0) {
-            return errors.toArray(new String[errors.size()]);
-        } else {
-            return super.customCommandLineValidation();
         }
+
+        if (errors.size() > 0) return errors.toArray(new String[errors.size()]);
+        else return super.customCommandLineValidation();
     }
 
     /** Stock main method for any CommandLineProgram. */
@@ -150,31 +150,31 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 new BclQualityEvaluationStrategy(BclQualityEvaluationStrategy.ILLUMINA_ALLEGED_MINIMUM_QUALITY),
                 IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.Position);
 
-        final File summaryMetricsFileName = new File(OUTPUT + summaryMetricsExtension);
-        final File detailedMetricsFileName = new File(OUTPUT + detailedMetricsExtension);
+        final File summaryMetricsFileName = new File(OUTPUT + SUMMARY_METRICS_EXTENSION);
+        final File detailedMetricsFileName = new File(OUTPUT + DETAILED_METRICS_EXTENSION);
 
         IOUtil.assertFileIsWritable(summaryMetricsFileName);
         if (PROB_EXPLICIT_OUTPUT > 0) IOUtil.assertFileIsWritable(detailedMetricsFileName);
 
         final int numProcessors = N_PROCESSORS + ((N_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
-        LOG.info("Processing with " + numProcessors + " PerTilePadHoppingMetricsExtractor(s).");
+        LOG.info("Processing with " + numProcessors + " thread(s).");
 
-        List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
+        final List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.sort(allTiles);
 
         List<Integer> tilesToProcess;
         //default case of evenly-spaced tiles to average over the lane
         if (TILE_INDEX == -1) {
-            int TOTAL_TILES = 96;
-            int offset = TOTAL_TILES/(N_TILES * 2);
+            int offset = TILES_PER_LANE/(N_TILES * 2);
             tilesToProcess = new ArrayList<Integer>();
-            for (int i = 0; i < N_TILES; i++)
-                tilesToProcess.add(allTiles.get(offset + (TOTAL_TILES*i)/ N_TILES));
+            for (int i = 0; i < N_TILES; i++) {
+                tilesToProcess.add(allTiles.get(offset + ((TILES_PER_LANE * i) / N_TILES)));
+            }
         }
         else {
-            int firstTile = TILE_INDEX;
-            int lastTile = Math.min(allTiles.size(), firstTile + N_TILES);
+            final int firstTile = TILE_INDEX;
+            final int lastTile = Math.min(allTiles.size(), firstTile + N_TILES);
             tilesToProcess = allTiles.subList(firstTile, lastTile);
         }
 
