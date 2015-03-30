@@ -24,6 +24,7 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -33,6 +34,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
+import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.IlluminaUtil;
 
@@ -91,6 +93,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
     public boolean IS_BISULFITE_SEQUENCED = false;
+
+    //overridden to make it visible on the commandline and to change the doc.
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated.",  optional = true, overridable = true)
+    public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     private AlignmentSummaryMetricsCollector collector;
 
