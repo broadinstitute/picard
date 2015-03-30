@@ -243,18 +243,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final Collection<PadHoppingDetailMetric> detailedMetrics;
         private Exception exception = null;
         private final IlluminaDataProvider provider;
-        private final double pWriteDetailed;
+        private final double probWriteDetailed;
         private final double cutoffDistance;
         private final int nBases;
-        private final Random random = new Random();
+        private final Random random = new Random(1);
 
         public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
-                final double pWriteDetailed, final double cutoffDistance, final int nBases) {
+                final double probWriteDetailed, final double cutoffDistance, final int nBases) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
-            this.pWriteDetailed = pWriteDetailed;
+            this.probWriteDetailed = probWriteDetailed;
             this.cutoffDistance = cutoffDistance;
             this.nBases = nBases;
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
@@ -289,7 +289,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
                     if (cutoffDistance == Double.POSITIVE_INFINITY) {
                         summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
-                        if (random.nextDouble() < pWriteDetailed) {
+                        if (random.nextDouble() < probWriteDetailed) {
                             detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points));
                         }
                     }
@@ -298,7 +298,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                         for (final Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
-                            if (random.nextDouble() < pWriteDetailed) {
+                            if (random.nextDouble() < probWriteDetailed) {
                                 detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch));
                             }
                         }
@@ -315,32 +315,31 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     }
 
     private class Bunch extends ArrayList<Point> {
-        public Bunch() { }
         public int numDuplicates() { return size() - 1; }
     }
 
     private class BunchFinder {
         private ArrayList<Bunch> bunches;
-        private int N;  //total number of points
+        private int numPoints;
 
         public BunchFinder(List<Point> points, double cutoffDistance) {
             bunches = new ArrayList<Bunch>();
-            N = points.size();
-            boolean[] visited = new boolean[N];
+            numPoints = points.size();
+            boolean[] visited = new boolean[numPoints];
 
-            for (int root = 0; root < N; root++) {
+            for (int root = 0; root < numPoints; root++) {
                 if (visited[root]) continue;   //point belongs to a previously-counted component
                 Bunch bunch = new Bunch();
 
                 //depth-first search for all points in same Bunch as root
-                Stack<Integer> DFS = new Stack<Integer>();
-                DFS.push(root);
-                while (!DFS.isEmpty()) {
-                    int bud = DFS.pop();
+                Stack<Integer> pointStack = new Stack<Integer>();
+                pointStack.push(root);
+                while (!pointStack.isEmpty()) {
+                    int bud = pointStack.pop();
                     bunch.add(points.get(bud));
-                    for (int shoot = bud + 1; shoot < N; shoot++) {
+                    for (int shoot = bud + 1; shoot < numPoints; shoot++) {
                         if (!visited[shoot] && points.get(bud).distance(points.get(shoot)) <= cutoffDistance) {
-                            DFS.push(shoot);
+                            pointStack.push(shoot);
                             visited[shoot] = true;
                         }
                     }
