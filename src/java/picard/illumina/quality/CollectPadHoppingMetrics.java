@@ -111,10 +111,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
 
-    public final static String DETAILED_METRICS_EXTENSION = "pad_hopping_detailed_metrics";
-    public final static String SUMMARY_METRICS_EXTENSION = "pad_hopping_summary_metrics";
+    public static final String DETAILED_METRICS_EXTENSION = "pad_hopping_detailed_metrics";
+    public static final String SUMMARY_METRICS_EXTENSION = "pad_hopping_summary_metrics";
 
-    public final static int TILES_PER_LANE = 96;
+    public static final int TILES_PER_LANE = 96;
 
     //Add error-checking for the command line arguments specific to this program
     @Override
@@ -189,8 +189,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, CUTOFF, NUM_BASES));
         }
         try {
-            for (final PerTilePadHoppingMetricsExtractor extractor : extractors)
-                pool.submit(extractor);
+            for (final PerTilePadHoppingMetricsExtractor extractor : extractors) pool.submit(extractor);
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (final Throwable e) {
@@ -210,16 +209,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
 
         final MetricsFile<PadHoppingDetailMetric, ?> detailedMetrics = getMetricsFile();
-        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values())
-            for (final PadHoppingDetailMetric metric : detailedMetricCollection)
+        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
+            for (final PadHoppingDetailMetric metric : detailedMetricCollection) {
                 detailedMetrics.addMetric(metric);
+            }
+        }
 
-        if (PROB_EXPLICIT_OUTPUT > 0)
-            detailedMetrics.write(detailedMetricsFileName);
+        if (PROB_EXPLICIT_OUTPUT > 0) detailedMetrics.write(detailedMetricsFileName);
 
         final PadHoppingSummaryMetric totalMetric = new PadHoppingSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values())
+        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             totalMetric.merge(summaryMetric);
+        }
         totalMetric.calculateDerivedFields();
         final MetricsFile<PadHoppingSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
         summaryMetricsFile.addMetric(totalMetric);
@@ -242,10 +243,10 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         final Collection<PadHoppingDetailMetric> detailedMetrics;
         private Exception exception = null;
         private final IlluminaDataProvider provider;
-        final private double pWriteDetailed;
-        final private double cutoffDistance;
-        final private int nBases;
-        final private Random random = new Random();
+        private final double pWriteDetailed;
+        private final double cutoffDistance;
+        private final int nBases;
+        private final Random random = new Random();
 
         public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
@@ -277,28 +278,29 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     final String bases = allBases.substring(0, nBases);
 
                     List<Point> list = duplicateSets.get(bases);
-                    if (list == null)
-                        duplicateSets.put(bases, list = new ArrayList<Point>());
+                    if (list == null) duplicateSets.put(bases, list = new ArrayList<Point>());
                     list.add(new Point(cluster.getX(), cluster.getY()));
                 }
 
-                for (Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
-                    List<Point> points = entry.getValue();
+                for (final Map.Entry<String, List<Point>> entry : duplicateSets.entrySet()) {
+                    final List<Point> points = entry.getValue();
                     if (points.size() == 1) continue; //if there is no duplication
-                    String bases = entry.getKey();
+                    final String bases = entry.getKey();
 
                     if (cutoffDistance == Double.POSITIVE_INFINITY) {
                         summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
-                        if (random.nextDouble() < pWriteDetailed)
+                        if (random.nextDouble() < pWriteDetailed) {
                             detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points));
+                        }
                     }
                     else {
                         BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
-                        for (Bunch bunch : bunchFinder.getBunches()) {
+                        for (final Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
-                            if (random.nextDouble() < pWriteDetailed)
+                            if (random.nextDouble() < pWriteDetailed) {
                                 detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch));
+                            }
                         }
                     }
                 }
@@ -361,7 +363,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** The number of reads (clusters) in this bunch. */
         public int SIZE;
 
-        /**All the points in this bunch in a spaceless format x1,y1;x2,y2; etc. */
+        /**All the points in this bunch in a space-free format x1,y1;x2,y2; etc. */
         public String POINTS_STRING;
 
         public PadHoppingDetailMetric(final Integer tile, final String bases, final List<Point> points) {
@@ -369,7 +371,6 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             BASES = bases;
             SIZE = points.size();
 
-            //Output points as a space-free string for easy parsing
             StringBuilder builder = new StringBuilder();
             for (final Point p : points) {
                 builder.append(p.getX());
