@@ -40,14 +40,12 @@ import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 
-import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -111,8 +109,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
     //Set up a PadHoppingSummaryMetric and a List of PadHoppingDetailMetrics for each tile
-    private final Map<Integer, PadHoppingSummaryMetric> tileToSummaryMetrics = new LinkedHashMap<Integer, PadHoppingSummaryMetric>();
-    private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new LinkedHashMap<Integer, List<PadHoppingDetailMetric>>();
+    private final Map<Integer, PadHoppingSummaryMetric> tileToSummaryMetrics = new HashMap<Integer, PadHoppingSummaryMetric>();
+    private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new HashMap<Integer, List<PadHoppingDetailMetric>>();
 
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(N_CYCLES + "T");
@@ -359,12 +357,16 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     /** a metric class for describing pad-hopping bunches **/
     public class PadHoppingDetailMetric extends MetricBase {
+        /** The Tile that is described by this metric. */
         public Integer TILE;
 
+         /** The sequence of bases common to duplicates in this bunch. */
         public String BASES;
 
+        /** The number of reads (clusters) in this bunch. */
         public int SIZE;
 
+        /**All the points in this bunch in a spaceless format x1,y1;x2,y2; etc. */
         public String POINTS_STRING;
 
         public PadHoppingDetailMetric(final Integer tile, final String bases, final List<Point> points) {
@@ -391,18 +393,20 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;
 
-        public int READS = 0;
+        /** The total number of PF reads on this tile. */
+        public long READS = 0;
 
-        /** Duplicates due to pad-hopping in this tile.  In a bunch of N clusters, N - 1 are duplicates */
-        public int PAD_HOPPING_DUPLICATES = 0;
+        /** Duplicates due to pad-hopping in this tile.  In a bunch of N clusters, N - 1 are duplicates. */
+        public long PAD_HOPPING_DUPLICATES = 0;
 
+        /** The rate (not the percentage!) of pad-hopping duplication. */
         public double PCT_PAD_HOPPING_DUPLICATES = 0.0;
 
         public PadHoppingSummaryMetric(final String tile) {
             TILE = tile;
         }
 
-        /** This constructor is necessary for when reading metrics from file */
+        /** This constructor is necessary for reading metrics from file. */
         public PadHoppingSummaryMetric() { }
 
         public void merge(final PadHoppingSummaryMetric metric) {
@@ -411,9 +415,29 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
 
         public void calculateDerivedFields() {
-            if (READS != 0)
-                PCT_PAD_HOPPING_DUPLICATES = (double) PAD_HOPPING_DUPLICATES / READS;
+            if (READS != 0) PCT_PAD_HOPPING_DUPLICATES = ((double) PAD_HOPPING_DUPLICATES) / READS;
+        }
+    }
+
+    public class Point {
+        private int x;
+        private int y;
+
+        public Point(final int x, final int y) {
+            this.x=x;
+            this.y=y;
+        }
+
+        public int getX() { return x; }
+        public int getY() { return y; }
+
+        public double distance(Point p) {
+            final int dx = p.x - x;
+            final int dy = p.y - y;
+            return Math.sqrt(dx*dx + dy*dy);
         }
     }
 
 }
+
+
