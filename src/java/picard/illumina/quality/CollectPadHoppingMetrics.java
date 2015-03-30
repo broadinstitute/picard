@@ -68,7 +68,6 @@ import java.util.concurrent.TimeUnit;
         usageShort = "Measure pad-hopping duplication in HiSeqX.",
         programGroup = Metrics.class
 )
-
 public class CollectPadHoppingMetrics extends CommandLineProgram {
     //Command line options in addition to those inherited from CommandLineProgram
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
@@ -94,12 +93,9 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(doc = "Index of first tile (0 to 95).  Default -1 is an evenly-spaced sample over the lane", optional = true)
     public int TILE_INDEX = -1;
 
-    @Option(doc = "Number of cycles for these basecalls. PF status gets determined at cycle 24." , optional = true)
-    public int N_CYCLES = 24;
-
     @Option(shortName = "NB", doc = "Number of bases to look at.  Due to sequencing error comparing fewer bases" +
             " may give a more correct estimate.", optional = true)
-    public int N_BASES = 24;
+    public int NUM_BASES = 24;
 
     @Option(shortName = "ND", doc = "Max distance in pixels between duplicate clusters to be considered pad-hopping." +
             "Adjacent clusters are separated by ~20 on the HiSeqX.  An accurate and fast approximation is to" +
@@ -113,7 +109,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new HashMap<Integer, List<PadHoppingDetailMetric>>();
 
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
-    private final ReadStructure READ_STRUCTURE = new ReadStructure(N_CYCLES + "T");
+    private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
 
     public final static String detailedMetricsExtension = ".pad_hopping_detailed_metrics";
     public final static String summaryMetricsExtension = ".pad_hopping_summary_metrics";
@@ -123,8 +119,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     protected String[] customCommandLineValidation() {
         final List<String> errors = new ArrayList<String>();
 
-        if (N_BASES < 1) errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
-        if (N_BASES > N_CYCLES) errors.add("N_BASES cannot exceed N_CYCLES");
+        if (NUM_BASES < 1) errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
 
         if (N_TILES < 1 || N_TILES > 96) errors.add("Must process at least 1 and at most 96 tiles");
 
@@ -191,7 +186,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
             extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
-                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, CUTOFF, N_BASES));
+                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, CUTOFF, NUM_BASES));
         }
         try {
             for (final PerTilePadHoppingMetricsExtractor extractor : extractors)
