@@ -73,10 +73,11 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
     public File BASECALLS_DIR;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Basename for metrics file. Resulting file will be" +
-            " <OUTPUT>" + SUMMARY_METRICS_EXTENSION, optional = false)
+            " <OUTPUT>" + SUMMARY_METRICS_EXTENSION)
     public File OUTPUT;
 
-    @Option(doc = "The fraction of local duplicate bunches to output in detailed metrics.", optional = true)
+    @Option(doc = "The fraction of local duplicate bunches to output in detailed metrics.  Setting to 0 " +
+            "means no detailed metrics file will be created.", optional = true)
     public double PROB_EXPLICIT_OUTPUT = 0;
 
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
@@ -87,7 +88,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
     public int NUM_PROCESSORS = 1;
 
     @Option(doc = "Number of tiles on which to calculate metrics.  Default of 8 gives a good lane average.", optional = true)
-    public int N_TILES = 8;
+    public int NUM_TILES = 8;
 
     @Option(doc = "Index of first tile (0 to 95).  Default -1 is an evenly-spaced sample over the lane", optional = true)
     public int TILE_INDEX = -1;
@@ -124,7 +125,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
         if (NUM_BASES < 1) errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
 
-        if (N_TILES < 1 || N_TILES > TILES_PER_LANE) {
+        if (NUM_TILES < 1 || NUM_TILES > TILES_PER_LANE) {
             errors.add(String.format("Must process at least 1 and at most %d tiles", TILES_PER_LANE));
         }
 
@@ -146,6 +147,11 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
     @Override
     protected int doWork() {
+        // File and Directory Validation
+        IOUtil.assertDirectoryIsReadable(BASECALLS_DIR);
+        if (OUTPUT == null) OUTPUT = new File(BASECALLS_DIR, String.format("LANE%s_local_duplication_metrics", LANE));
+        IOUtil.assertFileIsWritable(OUTPUT);
+
         /**
          * Each tile is processed on a single thread by a PerTileLocalDuplicationMetricsExtractor, which asks
          * the IlluminaDataProviderFactory for an IlluminaDataProvider, which is an iterator for all the
@@ -171,15 +177,15 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
         List<Integer> tilesToProcess;
         //default case of evenly-spaced tiles to average over the lane
         if (TILE_INDEX == -1) {
-            int offset = TILES_PER_LANE/(N_TILES * 2);
+            int offset = TILES_PER_LANE/(NUM_TILES * 2);
             tilesToProcess = new ArrayList<Integer>();
-            for (int i = 0; i < N_TILES; i++) {
-                tilesToProcess.add(allTiles.get(offset + ((TILES_PER_LANE * i) / N_TILES)));
+            for (int i = 0; i < NUM_TILES; i++) {
+                tilesToProcess.add(allTiles.get(offset + ((TILES_PER_LANE * i) / NUM_TILES)));
             }
         }
         else {
             final int firstTile = TILE_INDEX;
-            final int lastTile = Math.min(allTiles.size(), firstTile + N_TILES);
+            final int lastTile = Math.min(allTiles.size(), firstTile + NUM_TILES);
             tilesToProcess = allTiles.subList(firstTile, lastTile);
         }
 
