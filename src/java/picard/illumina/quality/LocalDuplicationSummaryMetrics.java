@@ -5,6 +5,9 @@ import java.lang.Override;
 import java.lang.String;
 
 public class LocalDuplicationSummaryMetrics extends MetricBase {
+    /** The lane on the flowcell. */
+    public int LANE;
+
     /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
     public String TILE = null;
 
@@ -17,7 +20,8 @@ public class LocalDuplicationSummaryMetrics extends MetricBase {
     /** The rate (not the percentage!) of local duplication. */
     public double PCT_LOCAL_DUPLICATES = 0.0;
 
-    public LocalDuplicationSummaryMetrics(final String tile) {
+    public LocalDuplicationSummaryMetrics(final int lane, final String tile) {
+        LANE = lane;
         TILE = tile;
     }
 

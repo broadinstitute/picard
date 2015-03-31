@@ -7,6 +7,9 @@ import java.util.List;
 
 /** a metric class for describing a single bunch of local duplicates **/
 public class LocalDuplicationDetailMetrics extends MetricBase {
+    /** The lane on the flowcell. */
+    public int LANE;
+
     /** The Tile that is described by this metric. */
     public Integer TILE;
 
@@ -19,7 +22,8 @@ public class LocalDuplicationDetailMetrics extends MetricBase {
     /**All the points in this bunch in a space-free format x1,y1;x2,y2; etc. */
     public String POINTS_STRING;
 
-    public LocalDuplicationDetailMetrics(final Integer tile, final String bases, final List<Point> points) {
+    public LocalDuplicationDetailMetrics(final int lane, final Integer tile, final String bases, final List<Point> points) {
+        LANE = lane;
         TILE = tile;
         BASES = bases;
         SIZE = points.size();

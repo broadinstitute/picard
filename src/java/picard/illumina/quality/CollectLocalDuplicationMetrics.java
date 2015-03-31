@@ -187,10 +187,10 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
         final List<PerTileLocalDuplicationMetricsExtractor> extractors = new ArrayList<PerTileLocalDuplicationMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
-            tileToSummaryMetrics.put(tile, new LocalDuplicationSummaryMetrics(Integer.toString(tile)));
+            tileToSummaryMetrics.put(tile, new LocalDuplicationSummaryMetrics(LANE, Integer.toString(tile)));
             tileToDetailedMetrics.put(tile, new ArrayList<LocalDuplicationDetailMetrics>());
 
-            extractors.add(new PerTileLocalDuplicationMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
+            extractors.add(new PerTileLocalDuplicationMetricsExtractor(LANE, tile, tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_SEPARATION, NUM_BASES));
         }
         try {
@@ -222,7 +222,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
         if (PROB_EXPLICIT_OUTPUT > 0) detailedMetrics.write(detailedMetricsFileName);
 
-        final LocalDuplicationSummaryMetrics totalMetrics = new LocalDuplicationSummaryMetrics("All"); // a "fake" tile that will contain the total tally
+        final LocalDuplicationSummaryMetrics totalMetrics = new LocalDuplicationSummaryMetrics(LANE, "All"); // a "fake" tile that will contain the total tally
         for (final LocalDuplicationSummaryMetrics summaryMetrics : tileToSummaryMetrics.values()) {
             totalMetrics.merge(summaryMetrics);
         }
@@ -242,7 +242,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
     /** Extracts metrics from a single tile on its own thread
      */
     private class PerTileLocalDuplicationMetricsExtractor implements Runnable {
-
+        private final int lane;
         private final int tile;
         private final LocalDuplicationSummaryMetrics summaryMetrics;
         final Collection<LocalDuplicationDetailMetrics> detailedMetrics;
@@ -253,9 +253,10 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
         private final int nBases;
         private final Random random = new Random(1);
 
-        public PerTileLocalDuplicationMetricsExtractor(final int tile, final LocalDuplicationSummaryMetrics summaryMetrics,
+        public PerTileLocalDuplicationMetricsExtractor(final int lane, final int tile, final LocalDuplicationSummaryMetrics summaryMetrics,
                 final Collection<LocalDuplicationDetailMetrics> detailedMetrics, final IlluminaDataProviderFactory factory,
                 final double probWriteDetailed, final double maxSeparation, final int nBases) {
+            this.lane = lane;
             this.tile = tile;
             this.summaryMetrics = summaryMetrics;
             this.detailedMetrics = detailedMetrics;
@@ -295,7 +296,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
                     if (maxSeparation == Double.POSITIVE_INFINITY) {
                         summaryMetrics.LOCAL_DUPLICATES += points.size() - 1;
                         if (random.nextDouble() < probWriteDetailed) {
-                            detailedMetrics.add(new LocalDuplicationDetailMetrics(tile, bases, points));
+                            detailedMetrics.add(new LocalDuplicationDetailMetrics(lane, tile, bases, points));
                         }
                     }
                     else {
@@ -304,7 +305,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
                             if (bunch.size() == 1) continue;
                             summaryMetrics.LOCAL_DUPLICATES += bunch.numDuplicates();
                             if (random.nextDouble() < probWriteDetailed) {
-                                detailedMetrics.add(new LocalDuplicationDetailMetrics(tile, bases, bunch));
+                                detailedMetrics.add(new LocalDuplicationDetailMetrics(lane, tile, bases, bunch));
                             }
                         }
                     }
