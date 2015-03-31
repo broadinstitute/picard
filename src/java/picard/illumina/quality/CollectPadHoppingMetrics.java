@@ -100,7 +100,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(shortName = "ND", doc = "Max distance in pixels between duplicate clusters to be considered pad-hopping." +
             "Adjacent clusters are separated by ~20 on the HiSeqX.  An accurate and fast approximation is to" +
             " consider all duplicates on the same tile to be pad-hopping, hence the infinite default.", optional = true)
-    public double CUTOFF = Double.POSITIVE_INFINITY;
+    public double MAX_SEPARATION = Double.POSITIVE_INFINITY;
 
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
 
@@ -123,13 +123,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         if (NUM_BASES < 1) errors.add("Must consider at least one base (and really fewer than 6 is nonsensical)");
 
-        if (N_TILES < 1 || N_TILES > TILES_PER_LANE) errors.add("Must process at least 1 and at most 96 tiles");
+        if (N_TILES < 1 || N_TILES > TILES_PER_LANE) {
+            errors.add(String.format("Must process at least 1 and at most %d tiles", TILES_PER_LANE));
+        }
 
         if (TILE_INDEX < -1) errors.add("Must choose a non-negative tile index or -1 to take a lane average");
-        if (TILE_INDEX >= TILES_PER_LANE ) errors.add("Tile index may be at most 95 (there are 96 tiles on the HiSeqX)");
+        if (TILE_INDEX >= TILES_PER_LANE ) {
+            errors.add(String.format("Tile index may be at most %d", TILES_PER_LANE - 1));
+        }
 
         if ( PROB_EXPLICIT_OUTPUT < 0 || PROB_EXPLICIT_OUTPUT > 1 ) {
-            errors.add("PROB_EXPLICIT_OUTPUT must be a probability, i.e., 0 <= PROB_EXPLICIT_OUTPUT <= 1");
+            errors.add("PROB_EXPLICIT_OUTPUT must be a probability (from 0 to 1).");
         }
 
         if (errors.size() > 0) return errors.toArray(new String[errors.size()]);
@@ -158,7 +162,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
         final int numProcessors = NUM_PROCESSORS + ((NUM_PROCESSORS > 0) ? 0 : Runtime.getRuntime().availableProcessors());
         final ExecutorService pool = Executors.newFixedThreadPool(numProcessors);
-        LOG.info("Processing with " + numProcessors + " thread(s).");
+        LOG.info(String.format("Processing with %d threads.", numProcessors));
 
         final List<Integer> allTiles = new ArrayList<Integer>(factory.getAvailableTiles());
         Collections.sort(allTiles);
@@ -178,7 +182,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tilesToProcess = allTiles.subList(firstTile, lastTile);
         }
 
-        LOG.info("Computing pad hopping metrics for " + tilesToProcess.size() + " tiles.");
+        LOG.info(String.format("Computing pad hopping metrics for %d tiles.", + tilesToProcess.size()));
 
         final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
@@ -186,7 +190,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
 
             extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
-                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, CUTOFF, NUM_BASES));
+                    tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_SEPARATION, NUM_BASES));
         }
         try {
             for (final PerTilePadHoppingMetricsExtractor extractor : extractors) pool.submit(extractor);
@@ -198,7 +202,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             pool.shutdownNow();
             return 2;
         }
-        LOG.info("Processed all " + extractors.size() + " tiles.");
+        LOG.info(String.format("Processed all %d tiles.", extractors.size()));
 
         // Check for exceptions from extractors
         for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
@@ -244,18 +248,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         private final double probWriteDetailed;
-        private final double cutoffDistance;
+        private final double maxSeparation;
         private final int nBases;
         private final Random random = new Random(1);
 
         public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
                 final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
-                final double probWriteDetailed, final double cutoffDistance, final int nBases) {
+                final double probWriteDetailed, final double maxSeparation, final int nBases) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
             this.detailedMetrics = detailedMetrics;
             this.probWriteDetailed = probWriteDetailed;
-            this.cutoffDistance = cutoffDistance;
+            this.maxSeparation = maxSeparation;
             this.nBases = nBases;
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
         }
@@ -265,7 +269,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** run method which extracts accumulates metrics for a tile */
         public void run() {
             try {
-                LOG.info("Extracting pad-hopping metrics for tile " + tile);
+                LOG.info(String.format("Extracting pad-hopping metrics for tile %d.", tile));
 
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
 
@@ -287,14 +291,14 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     if (points.size() == 1) continue; //if there is no duplication
                     final String bases = entry.getKey();
 
-                    if (cutoffDistance == Double.POSITIVE_INFINITY) {
+                    if (maxSeparation == Double.POSITIVE_INFINITY) {
                         summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
                         if (random.nextDouble() < probWriteDetailed) {
                             detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points));
                         }
                     }
                     else {
-                        BunchFinder bunchFinder = new BunchFinder(points, cutoffDistance);
+                        BunchFinder bunchFinder = new BunchFinder(points, maxSeparation);
                         for (final Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
                             summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
@@ -306,7 +310,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                 }
 
             } catch (final Exception e) {
-                LOG.error(e, "Error processing tile ", this.tile);
+                LOG.error(e, String.format("Error processing tile %d.", tile));
                 this.exception = e;
             } finally {
                 provider.close();
@@ -322,7 +326,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private ArrayList<Bunch> bunches;
         private int numPoints;
 
-        public BunchFinder(List<Point> points, double cutoffDistance) {
+        public BunchFinder(List<Point> points, double maxSeparation) {
             bunches = new ArrayList<Bunch>();
             numPoints = points.size();
             boolean[] visited = new boolean[numPoints];
@@ -338,7 +342,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     int bud = pointStack.pop();
                     bunch.add(points.get(bud));
                     for (int shoot = bud + 1; shoot < numPoints; shoot++) {
-                        if (!visited[shoot] && points.get(bud).distance(points.get(shoot)) <= cutoffDistance) {
+                        if (!visited[shoot] && points.get(bud).distance(points.get(shoot)) <= maxSeparation) {
                             pointStack.push(shoot);
                             visited[shoot] = true;
                         }
