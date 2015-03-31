@@ -38,6 +38,7 @@ import picard.illumina.parser.IlluminaDataProviderFactory;
 import picard.illumina.parser.IlluminaDataType;
 import picard.illumina.parser.ReadStructure;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
+import picard.PicardException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -199,24 +200,23 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
             extractors.add(new PerTileLocalDuplicationMetricsExtractor(LANE, tile, tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_SEPARATION, NUM_BASES));
         }
+
         try {
             for (final PerTileLocalDuplicationMetricsExtractor extractor : extractors) pool.submit(extractor);
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (final Throwable e) {
-            // Cancel if current thread also interrupted
-            LOG.error(e, "Problem submitting extractors to thread pool or awaiting shutdown of thread pool.  Attempting to kill thread pool.");
+            throw new PicardException("Thread pool has failed.  Attempting to kill thread pool.", e);
+        } finally {
             pool.shutdownNow();
-            return 2;
         }
+
         LOG.info(String.format("Processed all %d tiles.", extractors.size()));
 
         // Check for exceptions from extractors
         for (final PerTileLocalDuplicationMetricsExtractor extractor : extractors) {
-            if (extractor.getException() != null) {
-                LOG.error("Abandoning calculation because one or more PerTileLocalDuplicationMetricsExtractors failed.");
-                return 4;
-            }
+            final Exception e = extractor.getException();
+            if (e != null) throw new PicardException("A PerTileLocalDuplicationMetricsExtractor has failed.", e);
         }
 
         final MetricsFile<LocalDuplicationDetailMetrics, ?> detailedMetrics = getMetricsFile();
