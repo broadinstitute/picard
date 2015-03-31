@@ -24,7 +24,6 @@
 
 package picard.illumina.quality;
 
-import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -106,9 +105,9 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
     private static final Log LOG = Log.getInstance(CollectLocalDuplicationMetrics.class);
 
-    //Set up a LocalDuplicationSummaryMetric and a List of LocalDuplicationDetailMetrics for each tile
-    private final Map<Integer, LocalDuplicationSummaryMetric> tileToSummaryMetrics = new HashMap<Integer, LocalDuplicationSummaryMetric>();
-    private final Map<Integer, List<LocalDuplicationDetailMetric>> tileToDetailedMetrics = new HashMap<Integer, List<LocalDuplicationDetailMetric>>();
+    //Set up a LocalDuplicationSummaryMetrics and a List of LocalDuplicationDetailMetrics for each tile
+    private final Map<Integer, LocalDuplicationSummaryMetrics> tileToSummaryMetrics = new HashMap<Integer, LocalDuplicationSummaryMetrics>();
+    private final Map<Integer, List<LocalDuplicationDetailMetrics>> tileToDetailedMetrics = new HashMap<Integer, List<LocalDuplicationDetailMetrics>>();
 
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
@@ -188,8 +187,8 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
         final List<PerTileLocalDuplicationMetricsExtractor> extractors = new ArrayList<PerTileLocalDuplicationMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
-            tileToSummaryMetrics.put(tile, new LocalDuplicationSummaryMetric(Integer.toString(tile)));
-            tileToDetailedMetrics.put(tile, new ArrayList<LocalDuplicationDetailMetric>());
+            tileToSummaryMetrics.put(tile, new LocalDuplicationSummaryMetrics(Integer.toString(tile)));
+            tileToDetailedMetrics.put(tile, new ArrayList<LocalDuplicationDetailMetrics>());
 
             extractors.add(new PerTileLocalDuplicationMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_SEPARATION, NUM_BASES));
@@ -214,26 +213,26 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
             }
         }
 
-        final MetricsFile<LocalDuplicationDetailMetric, ?> detailedMetrics = getMetricsFile();
-        for (final Collection<LocalDuplicationDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
-            for (final LocalDuplicationDetailMetric metric : detailedMetricCollection) {
-                detailedMetrics.addMetric(metric);
+        final MetricsFile<LocalDuplicationDetailMetrics, ?> detailedMetrics = getMetricsFile();
+        for (final Collection<LocalDuplicationDetailMetrics> detailedMetricCollection : tileToDetailedMetrics.values()) {
+            for (final LocalDuplicationDetailMetrics metrics : detailedMetricCollection) {
+                detailedMetrics.addMetric(metrics);
             }
         }
 
         if (PROB_EXPLICIT_OUTPUT > 0) detailedMetrics.write(detailedMetricsFileName);
 
-        final LocalDuplicationSummaryMetric totalMetric = new LocalDuplicationSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final LocalDuplicationSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
-            totalMetric.merge(summaryMetric);
+        final LocalDuplicationSummaryMetrics totalMetrics = new LocalDuplicationSummaryMetrics("All"); // a "fake" tile that will contain the total tally
+        for (final LocalDuplicationSummaryMetrics summaryMetrics : tileToSummaryMetrics.values()) {
+            totalMetrics.merge(summaryMetrics);
         }
-        totalMetric.calculateDerivedFields();
-        final MetricsFile<LocalDuplicationSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
-        summaryMetricsFile.addMetric(totalMetric);
+        totalMetrics.calculateDerivedFields();
+        final MetricsFile<LocalDuplicationSummaryMetrics, ?> summaryMetricsFile = getMetricsFile();
+        summaryMetricsFile.addMetric(totalMetrics);
 
-        for (final LocalDuplicationSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
-            summaryMetric.calculateDerivedFields();
-            summaryMetricsFile.addMetric(summaryMetric);
+        for (final LocalDuplicationSummaryMetrics summaryMetrics : tileToSummaryMetrics.values()) {
+            summaryMetrics.calculateDerivedFields();
+            summaryMetricsFile.addMetric(summaryMetrics);
         }
         summaryMetricsFile.write(summaryMetricsFileName);
 
@@ -245,8 +244,8 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
     private class PerTileLocalDuplicationMetricsExtractor implements Runnable {
 
         private final int tile;
-        private final LocalDuplicationSummaryMetric summaryMetric;
-        final Collection<LocalDuplicationDetailMetric> detailedMetrics;
+        private final LocalDuplicationSummaryMetrics summaryMetrics;
+        final Collection<LocalDuplicationDetailMetrics> detailedMetrics;
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         private final double probWriteDetailed;
@@ -254,11 +253,11 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
         private final int nBases;
         private final Random random = new Random(1);
 
-        public PerTileLocalDuplicationMetricsExtractor(final int tile, final LocalDuplicationSummaryMetric summaryMetric,
-                final Collection<LocalDuplicationDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
+        public PerTileLocalDuplicationMetricsExtractor(final int tile, final LocalDuplicationSummaryMetrics summaryMetrics,
+                final Collection<LocalDuplicationDetailMetrics> detailedMetrics, final IlluminaDataProviderFactory factory,
                 final double probWriteDetailed, final double maxSeparation, final int nBases) {
             this.tile = tile;
-            this.summaryMetric = summaryMetric;
+            this.summaryMetrics = summaryMetrics;
             this.detailedMetrics = detailedMetrics;
             this.probWriteDetailed = probWriteDetailed;
             this.maxSeparation = maxSeparation;
@@ -277,7 +276,7 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
 
                 for (final ClusterData cluster : provider) {
                     if (! cluster.isPf() ) continue;
-                    summaryMetric.READS++;
+                    summaryMetrics.READS++;
 
                     //getBases() returns byte[]. Converting to String costs some speed but makes hashing easier
                     final String allBases = new String(cluster.getRead(0).getBases());
@@ -294,18 +293,18 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
                     final String bases = entry.getKey();
 
                     if (maxSeparation == Double.POSITIVE_INFINITY) {
-                        summaryMetric.LOCAL_DUPLICATES += points.size() - 1;
+                        summaryMetrics.LOCAL_DUPLICATES += points.size() - 1;
                         if (random.nextDouble() < probWriteDetailed) {
-                            detailedMetrics.add(new LocalDuplicationDetailMetric(tile, bases, points));
+                            detailedMetrics.add(new LocalDuplicationDetailMetrics(tile, bases, points));
                         }
                     }
                     else {
                         BunchFinder bunchFinder = new BunchFinder(points, maxSeparation);
                         for (final Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
-                            summaryMetric.LOCAL_DUPLICATES += bunch.numDuplicates();
+                            summaryMetrics.LOCAL_DUPLICATES += bunch.numDuplicates();
                             if (random.nextDouble() < probWriteDetailed) {
-                                detailedMetrics.add(new LocalDuplicationDetailMetric(tile, bases, bunch));
+                                detailedMetrics.add(new LocalDuplicationDetailMetrics(tile, bases, bunch));
                             }
                         }
                     }
@@ -355,88 +354,6 @@ public class CollectLocalDuplicationMetrics extends CommandLineProgram {
         }
 
         public List<Bunch> getBunches() { return bunches; }
-    }
-
-    /** a metric class for describing a single bunch of local duplicates **/
-    public class LocalDuplicationDetailMetric extends MetricBase {
-        /** The Tile that is described by this metric. */
-        public Integer TILE;
-
-         /** The sequence of bases common to duplicates in this bunch. */
-        public String BASES;
-
-        /** The number of reads (clusters) in this bunch. */
-        public int SIZE;
-
-        /**All the points in this bunch in a space-free format x1,y1;x2,y2; etc. */
-        public String POINTS_STRING;
-
-        public LocalDuplicationDetailMetric(final Integer tile, final String bases, final List<Point> points) {
-            TILE = tile;
-            BASES = bases;
-            SIZE = points.size();
-
-            StringBuilder builder = new StringBuilder();
-            for (final Point p : points) {
-                builder.append(p.getX());
-                builder.append(',');
-                builder.append(p.getY());
-                builder.append(';');
-            }
-            POINTS_STRING = builder.toString();
-        }
-
-        /** This constructor is necessary for reading metrics from file */
-        public LocalDuplicationDetailMetric() { }
-    }
-
-    public class LocalDuplicationSummaryMetric extends MetricBase {
-        /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
-        public String TILE = null;
-
-        /** The total number of PF reads on this tile. */
-        public long READS = 0;
-
-        /** Local duplicates in this tile.  In a bunch of N clusters, N - 1 are duplicates. */
-        public long LOCAL_DUPLICATES = 0;
-
-        /** The rate (not the percentage!) of local duplication. */
-        public double PCT_LOCAL_DUPLICATES = 0.0;
-
-        public LocalDuplicationSummaryMetric(final String tile) {
-            TILE = tile;
-        }
-
-        /** This constructor is necessary for reading metrics from file. */
-        public LocalDuplicationSummaryMetric() { }
-
-        public void merge(final LocalDuplicationSummaryMetric metric) {
-            READS += metric.READS;
-            LOCAL_DUPLICATES += metric.LOCAL_DUPLICATES;
-        }
-
-        public void calculateDerivedFields() {
-            if (READS != 0) PCT_LOCAL_DUPLICATES = ((double) LOCAL_DUPLICATES) / READS;
-        }
-    }
-
-    public class Point {
-        private int x;
-        private int y;
-
-        public Point(final int x, final int y) {
-            this.x=x;
-            this.y=y;
-        }
-
-        public int getX() { return x; }
-        public int getY() { return y; }
-
-        public double distance(Point p) {
-            final int dx = p.x - x;
-            final int dy = p.y - y;
-            return Math.sqrt(dx*dx + dy*dy);
-        }
     }
 
 }
