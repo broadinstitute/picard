@@ -55,17 +55,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collect metrics regarding pad-hopping in the Illumina Hi-Seq X.
- * In all Illumina Hi-Seq machines, a "cluster" is a discrete area on a flow cell that contains
- * bridge-amplified clones of a DNA fragment.  In the Hi-Seq X, clusters are constrained to pads
- * arranged in a hexagonal lattice.  In pad-hopping, groups of nearby pads have duplicate DNA.
- * In the following, such groups will be called a "bunches".
+ * In Illumina flowcells, a "cluster" is a contiguous region containing
+ * bridge-amplified clones of a DNA fragment.  In the following, groups of
+ * duplicate clusters will be called "bunches".
  *
  * @author David Benjamin
  */
 @CommandLineProgramProperties(
-        usage = "Measure pad-hopping duplication in HiSeqX.",
-        usageShort = "Measure pad-hopping duplication in HiSeqX.",
+        usage = "Measure duplication between clusters within a specified maximum separation." +
+                "  Input is an Illumina basecalls directory and this tool may be run before sequencing is complete." +
+                "  One important application is pad-hopping in HiSeqX flowcells.",
+        usageShort = "Measure local duplication in Illumina sequencing from a basecalls directory.",
         programGroup = Metrics.class
 )
 public class CollectPadHoppingMetrics extends CommandLineProgram {
@@ -93,13 +93,15 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     @Option(doc = "Index of first tile (0 to 95).  Default -1 is an evenly-spaced sample over the lane", optional = true)
     public int TILE_INDEX = -1;
 
-    @Option(shortName = "NB", doc = "Number of bases to look at.  Due to sequencing error comparing fewer bases" +
-            " may give a more correct estimate.", optional = true)
+    @Option(doc = "Number of bases to look at.  Due to sequencing error comparing too many bases" +
+            " may yield an underestimate of duplication.", optional = true)
     public int NUM_BASES = 24;
 
-    @Option(shortName = "ND", doc = "Max distance in pixels between duplicate clusters to be considered pad-hopping." +
-            "Adjacent clusters are separated by ~20 on the HiSeqX.  An accurate and fast approximation is to" +
-            " consider all duplicates on the same tile to be pad-hopping, hence the infinite default.", optional = true)
+    @Option(doc = "Max distance in pixels between duplicate clusters in the same bunch." +
+            "  If two clusters are farther than MAX_SEPARATION from one another but within MAX_SEPRATION " +
+            "from a third cluster, all three belong to the same bunch.  Pads in the HiSeqX are " +
+            "separated by 20 pixels and for the purpose of measuring pad-hopping an accurate and fast " +
+            "approximation is to consider all duplicates on the same tile to be pad-hopping, hence the infinite default.", optional = true)
     public double MAX_SEPARATION = Double.POSITIVE_INFINITY;
 
     private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
@@ -238,7 +240,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         return 0;
     }
 
-    /** Extracts metrics from a HiSeqX tile on its own thread
+    /** Extracts metrics from a single tile on its own thread
      */
     private class PerTilePadHoppingMetricsExtractor implements Runnable {
 
@@ -355,7 +357,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         public List<Bunch> getBunches() { return bunches; }
     }
 
-    /** a metric class for describing pad-hopping bunches **/
+    /** a metric class for describing a single bunch of local duplicates **/
     public class PadHoppingDetailMetric extends MetricBase {
         /** The Tile that is described by this metric. */
         public Integer TILE;
