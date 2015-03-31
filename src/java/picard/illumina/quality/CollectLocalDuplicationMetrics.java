@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
         usageShort = "Measure local duplication in Illumina sequencing from a basecalls directory.",
         programGroup = Metrics.class
 )
-public class CollectPadHoppingMetrics extends CommandLineProgram {
+public class CollectLocalDuplicationMetrics extends CommandLineProgram {
     //Command line options in addition to those inherited from CommandLineProgram
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
@@ -77,17 +77,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             " <OUTPUT>" + SUMMARY_METRICS_EXTENSION, optional = false)
     public File OUTPUT;
 
-    @Option(doc = "The fraction of pad-hopping events to output in detailed metrics.", optional = true)
+    @Option(doc = "The fraction of local duplicate bunches to output in detailed metrics.", optional = true)
     public double PROB_EXPLICIT_OUTPUT = 0;
 
     @Option(doc = "Lane number.", shortName = StandardOptionDefinitions.LANE_SHORT_NAME)
     public Integer LANE;
 
-    @Option(doc = "Run this many PerTilePadHoppingMetricsExtractor in parallel.  If NUM_PROCESSORS = 0, use all available cores. " +
+    @Option(doc = "Run this many PerTileLocalDuplicationMetricsExtractor in parallel.  If NUM_PROCESSORS = 0, use all available cores. " +
             "If NUM_PROCESSORS < 0 use all but |NUM_PROCESSORS| cores.", optional = true)
     public int NUM_PROCESSORS = 1;
 
-    @Option(doc = "Number of tiles on which to calculate pad-hopping metrics.  Default of 8 gives a good lane average.", optional = true)
+    @Option(doc = "Number of tiles on which to calculate metrics.  Default of 8 gives a good lane average.", optional = true)
     public int N_TILES = 8;
 
     @Option(doc = "Index of first tile (0 to 95).  Default -1 is an evenly-spaced sample over the lane", optional = true)
@@ -104,17 +104,17 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             "approximation is to consider all duplicates on the same tile to be pad-hopping, hence the infinite default.", optional = true)
     public double MAX_SEPARATION = Double.POSITIVE_INFINITY;
 
-    private static final Log LOG = Log.getInstance(CollectPadHoppingMetrics.class);
+    private static final Log LOG = Log.getInstance(CollectLocalDuplicationMetrics.class);
 
-    //Set up a PadHoppingSummaryMetric and a List of PadHoppingDetailMetrics for each tile
-    private final Map<Integer, PadHoppingSummaryMetric> tileToSummaryMetrics = new HashMap<Integer, PadHoppingSummaryMetric>();
-    private final Map<Integer, List<PadHoppingDetailMetric>> tileToDetailedMetrics = new HashMap<Integer, List<PadHoppingDetailMetric>>();
+    //Set up a LocalDuplicationSummaryMetric and a List of LocalDuplicationDetailMetrics for each tile
+    private final Map<Integer, LocalDuplicationSummaryMetric> tileToSummaryMetrics = new HashMap<Integer, LocalDuplicationSummaryMetric>();
+    private final Map<Integer, List<LocalDuplicationDetailMetric>> tileToDetailedMetrics = new HashMap<Integer, List<LocalDuplicationDetailMetric>>();
 
     //Add "T" to the number of cycles to create a "TemplateRead" of the desired length.
     private final ReadStructure READ_STRUCTURE = new ReadStructure(NUM_BASES + "T");
 
-    public static final String DETAILED_METRICS_EXTENSION = "pad_hopping_detailed_metrics";
-    public static final String SUMMARY_METRICS_EXTENSION = "pad_hopping_summary_metrics";
+    public static final String DETAILED_METRICS_EXTENSION = "local_duplication_detailed_metrics";
+    public static final String SUMMARY_METRICS_EXTENSION = "local_duplication_summary_metrics";
 
     public static final int TILES_PER_LANE = 96;
 
@@ -143,12 +143,12 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     }
 
     /** Stock main method for any CommandLineProgram. */
-    public static void main(final String[] args) { new CollectPadHoppingMetrics().instanceMainWithExit(args); }
+    public static void main(final String[] args) { new CollectLocalDuplicationMetrics().instanceMainWithExit(args); }
 
     @Override
     protected int doWork() {
         /**
-         * Each tile is processed on a single thread by a PerTilePadHoppingMetricsExtractor, which asks
+         * Each tile is processed on a single thread by a PerTileLocalDuplicationMetricsExtractor, which asks
          * the IlluminaDataProviderFactory for an IlluminaDataProvider, which is an iterator for all the
          * ClusterData on a single tile.  ClusterData contains the raw data of a read and its x-y coordinates.
          */
@@ -184,18 +184,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
             tilesToProcess = allTiles.subList(firstTile, lastTile);
         }
 
-        LOG.info(String.format("Computing pad hopping metrics for %d tiles.", + tilesToProcess.size()));
+        LOG.info(String.format("Computing metrics for %d tiles.", + tilesToProcess.size()));
 
-        final List<PerTilePadHoppingMetricsExtractor> extractors = new ArrayList<PerTilePadHoppingMetricsExtractor>(tilesToProcess.size());
+        final List<PerTileLocalDuplicationMetricsExtractor> extractors = new ArrayList<PerTileLocalDuplicationMetricsExtractor>(tilesToProcess.size());
         for (final int tile : tilesToProcess) {
-            tileToSummaryMetrics.put(tile, new PadHoppingSummaryMetric(Integer.toString(tile)));
-            tileToDetailedMetrics.put(tile, new ArrayList<PadHoppingDetailMetric>());
+            tileToSummaryMetrics.put(tile, new LocalDuplicationSummaryMetric(Integer.toString(tile)));
+            tileToDetailedMetrics.put(tile, new ArrayList<LocalDuplicationDetailMetric>());
 
-            extractors.add(new PerTilePadHoppingMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
+            extractors.add(new PerTileLocalDuplicationMetricsExtractor(tile, tileToSummaryMetrics.get(tile),
                     tileToDetailedMetrics.get(tile), factory, PROB_EXPLICIT_OUTPUT, MAX_SEPARATION, NUM_BASES));
         }
         try {
-            for (final PerTilePadHoppingMetricsExtractor extractor : extractors) pool.submit(extractor);
+            for (final PerTileLocalDuplicationMetricsExtractor extractor : extractors) pool.submit(extractor);
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (final Throwable e) {
@@ -207,31 +207,31 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         LOG.info(String.format("Processed all %d tiles.", extractors.size()));
 
         // Check for exceptions from extractors
-        for (final PerTilePadHoppingMetricsExtractor extractor : extractors) {
+        for (final PerTileLocalDuplicationMetricsExtractor extractor : extractors) {
             if (extractor.getException() != null) {
-                LOG.error("Abandoning calculation because one or more PerTilePadHoppingMetricsExtractors failed.");
+                LOG.error("Abandoning calculation because one or more PerTileLocalDuplicationMetricsExtractors failed.");
                 return 4;
             }
         }
 
-        final MetricsFile<PadHoppingDetailMetric, ?> detailedMetrics = getMetricsFile();
-        for (final Collection<PadHoppingDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
-            for (final PadHoppingDetailMetric metric : detailedMetricCollection) {
+        final MetricsFile<LocalDuplicationDetailMetric, ?> detailedMetrics = getMetricsFile();
+        for (final Collection<LocalDuplicationDetailMetric> detailedMetricCollection : tileToDetailedMetrics.values()) {
+            for (final LocalDuplicationDetailMetric metric : detailedMetricCollection) {
                 detailedMetrics.addMetric(metric);
             }
         }
 
         if (PROB_EXPLICIT_OUTPUT > 0) detailedMetrics.write(detailedMetricsFileName);
 
-        final PadHoppingSummaryMetric totalMetric = new PadHoppingSummaryMetric("All"); // a "fake" tile that will contain the total tally
-        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
+        final LocalDuplicationSummaryMetric totalMetric = new LocalDuplicationSummaryMetric("All"); // a "fake" tile that will contain the total tally
+        for (final LocalDuplicationSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             totalMetric.merge(summaryMetric);
         }
         totalMetric.calculateDerivedFields();
-        final MetricsFile<PadHoppingSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
+        final MetricsFile<LocalDuplicationSummaryMetric, ?> summaryMetricsFile = getMetricsFile();
         summaryMetricsFile.addMetric(totalMetric);
 
-        for (final PadHoppingSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
+        for (final LocalDuplicationSummaryMetric summaryMetric : tileToSummaryMetrics.values()) {
             summaryMetric.calculateDerivedFields();
             summaryMetricsFile.addMetric(summaryMetric);
         }
@@ -242,11 +242,11 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
 
     /** Extracts metrics from a single tile on its own thread
      */
-    private class PerTilePadHoppingMetricsExtractor implements Runnable {
+    private class PerTileLocalDuplicationMetricsExtractor implements Runnable {
 
         private final int tile;
-        private final PadHoppingSummaryMetric summaryMetric;
-        final Collection<PadHoppingDetailMetric> detailedMetrics;
+        private final LocalDuplicationSummaryMetric summaryMetric;
+        final Collection<LocalDuplicationDetailMetric> detailedMetrics;
         private Exception exception = null;
         private final IlluminaDataProvider provider;
         private final double probWriteDetailed;
@@ -254,8 +254,8 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         private final int nBases;
         private final Random random = new Random(1);
 
-        public PerTilePadHoppingMetricsExtractor(final int tile, final PadHoppingSummaryMetric summaryMetric,
-                final Collection<PadHoppingDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
+        public PerTileLocalDuplicationMetricsExtractor(final int tile, final LocalDuplicationSummaryMetric summaryMetric,
+                final Collection<LocalDuplicationDetailMetric> detailedMetrics, final IlluminaDataProviderFactory factory,
                 final double probWriteDetailed, final double maxSeparation, final int nBases) {
             this.tile = tile;
             this.summaryMetric = summaryMetric;
@@ -271,7 +271,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /** run method which extracts accumulates metrics for a tile */
         public void run() {
             try {
-                LOG.info(String.format("Extracting pad-hopping metrics for tile %d.", tile));
+                LOG.info(String.format("Extracting metrics for tile %d.", tile));
 
                 Map<String, List<Point>> duplicateSets = new HashMap<String, List<Point>>();
 
@@ -294,18 +294,18 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
                     final String bases = entry.getKey();
 
                     if (maxSeparation == Double.POSITIVE_INFINITY) {
-                        summaryMetric.PAD_HOPPING_DUPLICATES += points.size() - 1;
+                        summaryMetric.LOCAL_DUPLICATES += points.size() - 1;
                         if (random.nextDouble() < probWriteDetailed) {
-                            detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, points));
+                            detailedMetrics.add(new LocalDuplicationDetailMetric(tile, bases, points));
                         }
                     }
                     else {
                         BunchFinder bunchFinder = new BunchFinder(points, maxSeparation);
                         for (final Bunch bunch : bunchFinder.getBunches()) {
                             if (bunch.size() == 1) continue;
-                            summaryMetric.PAD_HOPPING_DUPLICATES += bunch.numDuplicates();
+                            summaryMetric.LOCAL_DUPLICATES += bunch.numDuplicates();
                             if (random.nextDouble() < probWriteDetailed) {
-                                detailedMetrics.add(new PadHoppingDetailMetric(tile, bases, bunch));
+                                detailedMetrics.add(new LocalDuplicationDetailMetric(tile, bases, bunch));
                             }
                         }
                     }
@@ -358,7 +358,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
     }
 
     /** a metric class for describing a single bunch of local duplicates **/
-    public class PadHoppingDetailMetric extends MetricBase {
+    public class LocalDuplicationDetailMetric extends MetricBase {
         /** The Tile that is described by this metric. */
         public Integer TILE;
 
@@ -371,7 +371,7 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         /**All the points in this bunch in a space-free format x1,y1;x2,y2; etc. */
         public String POINTS_STRING;
 
-        public PadHoppingDetailMetric(final Integer tile, final String bases, final List<Point> points) {
+        public LocalDuplicationDetailMetric(final Integer tile, final String bases, final List<Point> points) {
             TILE = tile;
             BASES = bases;
             SIZE = points.size();
@@ -387,36 +387,36 @@ public class CollectPadHoppingMetrics extends CommandLineProgram {
         }
 
         /** This constructor is necessary for reading metrics from file */
-        public PadHoppingDetailMetric() { }
+        public LocalDuplicationDetailMetric() { }
     }
 
-    public class PadHoppingSummaryMetric extends MetricBase {
+    public class LocalDuplicationSummaryMetric extends MetricBase {
         /** The Tile that is described by this metric. Can be a string (like "All") to mean some marginal over tiles. * */
         public String TILE = null;
 
         /** The total number of PF reads on this tile. */
         public long READS = 0;
 
-        /** Duplicates due to pad-hopping in this tile.  In a bunch of N clusters, N - 1 are duplicates. */
-        public long PAD_HOPPING_DUPLICATES = 0;
+        /** Local duplicates in this tile.  In a bunch of N clusters, N - 1 are duplicates. */
+        public long LOCAL_DUPLICATES = 0;
 
-        /** The rate (not the percentage!) of pad-hopping duplication. */
-        public double PCT_PAD_HOPPING_DUPLICATES = 0.0;
+        /** The rate (not the percentage!) of local duplication. */
+        public double PCT_LOCAL_DUPLICATES = 0.0;
 
-        public PadHoppingSummaryMetric(final String tile) {
+        public LocalDuplicationSummaryMetric(final String tile) {
             TILE = tile;
         }
 
         /** This constructor is necessary for reading metrics from file. */
-        public PadHoppingSummaryMetric() { }
+        public LocalDuplicationSummaryMetric() { }
 
-        public void merge(final PadHoppingSummaryMetric metric) {
+        public void merge(final LocalDuplicationSummaryMetric metric) {
             READS += metric.READS;
-            PAD_HOPPING_DUPLICATES += metric.PAD_HOPPING_DUPLICATES;
+            LOCAL_DUPLICATES += metric.LOCAL_DUPLICATES;
         }
 
         public void calculateDerivedFields() {
-            if (READS != 0) PCT_PAD_HOPPING_DUPLICATES = ((double) PAD_HOPPING_DUPLICATES) / READS;
+            if (READS != 0) PCT_LOCAL_DUPLICATES = ((double) LOCAL_DUPLICATES) / READS;
         }
     }
 
