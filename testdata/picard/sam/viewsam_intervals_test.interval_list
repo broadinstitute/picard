@@ -1,0 +1,7 @@
+@HD	VN:1.4	SO:coordinate
+@SQ	SN:chr1	LN:101
+@SQ	SN:chr6	LN:303
+@SQ	SN:chr7	LN:404
+chr1	500	502	+	CHR1_NO_MATCH
+chr7	1	2	+	CHR7_MATCH
+chr7	305	306	+	CHR7_MATCH

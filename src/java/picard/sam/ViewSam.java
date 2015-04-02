@@ -31,8 +31,12 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.AsciiWriter;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -40,12 +44,15 @@ import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 
 /**
  * Very simple command that just reads a SAM or BAM file and writes out the header
- * and each records to standard out.
+ * and each records to standard out.  When an (optional) intervals file is specified, 
+ * only records overlapping those intervals will be output.
  *
  * @author tfennell@broad.mit.edu
  */
@@ -75,6 +82,9 @@ public class ViewSam extends CommandLineProgram {
     @Option(doc="Print the alignment records only.", optional = true)
     public boolean RECORDS_ONLY = false;
 
+    @Option(doc = "An intervals file used to restrict what records are output.", optional = true)
+    public File INTERVAL_LIST;
+
     public static void main(final String[] args) {
         new ViewSam().instanceMain(args);
     }
@@ -98,11 +108,23 @@ public class ViewSam extends CommandLineProgram {
      */
     int writeSamText(PrintStream printStream) {
         try {
-            final SamReader in = SamReaderFactory.makeDefault()
-                .referenceSequence(REFERENCE_SEQUENCE)
-                .open(SamInputResource.of(INPUT.toString()));
+            final CloseableIterator<SAMRecord> samRecordsIterator;
+            final SamReader samReader = SamReaderFactory.makeDefault()
+                    .referenceSequence(REFERENCE_SEQUENCE)
+                    .open(SamInputResource.of(INPUT));
+
+            // if we are only using the header or we aren't using intervals, then use the reader as the iterator.
+            // otherwise use the SamRecordIntervalIteratorFactory to make an interval-ed iterator
+            if (HEADER_ONLY || INTERVAL_LIST == null) {
+                samRecordsIterator = samReader.iterator();
+            } else {
+                IOUtil.assertFileIsReadable(INTERVAL_LIST);
+
+                final List<Interval> intervals = IntervalList.fromFile(INTERVAL_LIST).uniqued().getIntervals();
+                samRecordsIterator = new SamRecordIntervalIteratorFactory().makeSamRecordIntervalIterator(samReader, intervals, samReader.hasIndex());
+            }
             final AsciiWriter writer = new AsciiWriter(printStream);
-            final SAMFileHeader header = in.getFileHeader();
+            final SAMFileHeader header = samReader.getFileHeader();
             if (!RECORDS_ONLY) {
                 if (header.getTextHeader() != null) {
                     writer.write(header.getTextHeader());
@@ -112,7 +134,9 @@ public class ViewSam extends CommandLineProgram {
                 }
             }
             if (!HEADER_ONLY) {
-                for (final SAMRecord rec : in) {
+                while (samRecordsIterator.hasNext()) {
+                    final SAMRecord rec = samRecordsIterator.next();
+
                     if (printStream.checkError()) {
                         return 1;
                     }
@@ -122,7 +146,6 @@ public class ViewSam extends CommandLineProgram {
 
                     if (this.PF_STATUS == PfStatus.PF && rec.getReadFailsVendorQualityCheckFlag()) continue;
                     if (this.PF_STATUS == PfStatus.NonPF && !rec.getReadFailsVendorQualityCheckFlag()) continue;
-
                     writer.write(rec.getSAMString());
                 }
             }
@@ -131,7 +154,7 @@ public class ViewSam extends CommandLineProgram {
                 return 1;
             }
             CloserUtil.close(writer);
-            CloserUtil.close(in);
+            CloserUtil.close(samRecordsIterator);
             return 0;
         } catch (IOException e) {
             throw new PicardException("Exception writing SAM text", e);
