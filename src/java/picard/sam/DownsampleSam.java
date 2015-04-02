@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.DownsamplingIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -16,8 +17,6 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -61,40 +60,17 @@ public class DownsampleSam extends CommandLineProgram {
         final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(in.getFileHeader(), true, OUTPUT);
-        final Map<String, Boolean> decisions = new HashMap<String, Boolean>();
+        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Wrote");
+        final DownsamplingIterator iterator = new DownsamplingIterator(in.iterator(), r, PROBABILITY);
 
-        long total = 0;
-        long kept = 0;
-
-        final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
-
-        for (final SAMRecord rec : in) {
-            if (rec.isSecondaryOrSupplementary()) continue;
-            ++total;
-
-            final String key = rec.getReadName();
-            final Boolean previous = decisions.remove(key);
-            final boolean keeper;
-
-            if (previous == null) {
-                keeper = r.nextDouble() <= PROBABILITY;
-                if (rec.getReadPairedFlag()) decisions.put(key, keeper);
-            } else {
-                keeper = previous;
-            }
-
-            if (keeper) {
-                out.addAlignment(rec);
-                ++kept;
-            }
-
+        for (final SAMRecord rec : iterator) {
+            out.addAlignment(rec);
             progress.record(rec);
         }
 
         out.close();
         CloserUtil.close(in);
-        log.info("Finished! Kept " + kept + " out of " + total + " reads.");
-
+        log.info("Finished! Kept " + iterator.getKeptReads() + " out of " + iterator.getTotalReads() + " reads.");
 
         return 0;
     }
