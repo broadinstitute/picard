@@ -2,6 +2,7 @@ package picard.util;
 
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import picard.PicardException;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -33,7 +34,16 @@ public class IntervalListScatterer {
          * which is one of the objectives of scattering.</li>
          * </ol>
          */
-        BALANCING_WITHOUT_INTERVAL_SUBDIVISION
+        BALANCING_WITHOUT_INTERVAL_SUBDIVISION,
+        /**
+         * A scatter approach that differs from {@link Mode#BALANCING_WITHOUT_INTERVAL_SUBDIVISION}.
+         * <ol>
+         * <li>We try to balance the number of unique bases in each interval list by estimating the remaining interval lists sizes.  This is 
+         * computed from the total number of unique bases and the bases we have consumed.  This means that the interval list with the most
+         * number of unique bases is at most the ideal split length larger than the smallest interval list (unique # of bases).</li>
+         * </ol>         
+         */
+        BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW
     }
 
     private final Mode mode;
@@ -46,6 +56,7 @@ public class IntervalListScatterer {
             case INTERVAL_SUBDIVISION:
                 return splitWidth;
             case BALANCING_WITHOUT_INTERVAL_SUBDIVISION:
+            case BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW:
                 final int widestIntervalLength = Collections.max(uniquedList.getIntervals(), new Comparator<Interval>() {
                     @Override
                     public int compare(final Interval o1, final Interval o2) {
@@ -63,24 +74,45 @@ public class IntervalListScatterer {
     public List<IntervalList> scatter(final IntervalList uniquedIntervalList, final int scatterCount) {
         return scatter(uniquedIntervalList, scatterCount, false);
     }
+    
+    /** Helper for the scatter method */
+    private boolean shouldAddToRunningIntervalList(final long idealSplitLength, final long projectedSize, final double projectedSizeOfRemainingDivisions) {
+        switch (mode) {
+            case BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW:
+                return (projectedSize <= idealSplitLength || idealSplitLength < projectedSizeOfRemainingDivisions);
+            default:
+                return (projectedSize <= idealSplitLength);
+        }
+    }
+
 
     public List<IntervalList> scatter(final IntervalList sourceIntervalList, final int scatterCount, final boolean isUniqued) {
         if (scatterCount < 1) throw new IllegalArgumentException("scatterCount < 1");
 
         final IntervalList uniquedList = isUniqued ? sourceIntervalList : sourceIntervalList.uniqued();
         final long idealSplitLength = deduceIdealSplitLength(uniquedList, scatterCount);
+        System.err.println("idealSplitLength=" + idealSplitLength);
 
         final List<IntervalList> accumulatedIntervalLists = new ArrayList<IntervalList>();
 
         IntervalList runningIntervalList = new IntervalList(uniquedList.getHeader());
         final ArrayDeque<Interval> intervalQueue = new ArrayDeque<Interval>(uniquedList.getIntervals());
+        
+        long numBaseLeft = uniquedList.getBaseCount();
+        int numDivisionsLeft = scatterCount;
 
         while (!intervalQueue.isEmpty() && accumulatedIntervalLists.size() < scatterCount - 1) {
             final Interval interval = intervalQueue.pollFirst();
             final long projectedSize = runningIntervalList.getBaseCount() + interval.length();
-            if (projectedSize <= idealSplitLength) {
+
+            // the mean expected size of the remaining divisions
+            final double projectedSizeOfRemainingDivisions = (numBaseLeft - runningIntervalList.getBaseCount()) / ((double)numDivisionsLeft);
+            
+            // should we add this interval to the list of running intervals?
+            if (shouldAddToRunningIntervalList(idealSplitLength, projectedSize, projectedSizeOfRemainingDivisions)) {
                 runningIntervalList.add(interval);
-            } else {
+            }
+            else {
                 switch (mode) {
                     case INTERVAL_SUBDIVISION:
                         final int amountToConsume = (int) (idealSplitLength - runningIntervalList.getBaseCount());
@@ -105,6 +137,7 @@ public class IntervalListScatterer {
                         break;
 
                     case BALANCING_WITHOUT_INTERVAL_SUBDIVISION:
+                    case BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW:
                         if (runningIntervalList.getIntervals().isEmpty()) {
                             runningIntervalList.add(interval);
                         } else {
@@ -118,9 +151,13 @@ public class IntervalListScatterer {
             }
 
             if (runningIntervalList.getBaseCount() >= idealSplitLength) {
+                numBaseLeft -= runningIntervalList.getBaseCount(); // keep track of the number of *unique* bases left
                 accumulatedIntervalLists.add(runningIntervalList.uniqued());
                 runningIntervalList = new IntervalList(uniquedList.getHeader());
             }
+            
+            // for projecting the size of the remaining sub-divisions
+            numDivisionsLeft = scatterCount - accumulatedIntervalLists.size();
         }
 
         // Flush the remaining intervals into the last split.
@@ -129,6 +166,20 @@ public class IntervalListScatterer {
         }
         if (!runningIntervalList.getIntervals().isEmpty()) {
             accumulatedIntervalLists.add(runningIntervalList.uniqued());
+        }
+        
+        long maximumIntervalSize = -1, minimumIntervalSize = Integer.MAX_VALUE;
+        for (final IntervalList intervalList : accumulatedIntervalLists) {
+            final long baseCount = intervalList.getBaseCount();
+            if (baseCount < minimumIntervalSize) minimumIntervalSize = baseCount;
+            if (maximumIntervalSize < baseCount) maximumIntervalSize = baseCount;
+        }
+
+        // Since we are projecting out the interval size as we move forward, we should reasonably expect the smallest interval be no smaller than
+        // idealSplitLength bases than the maximum interval size
+        if (mode == Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW && idealSplitLength < (maximumIntervalSize - minimumIntervalSize)) {
+            throw new PicardException(String.format("Maximum interval list size (%d) was %d bases larger than minimum list interval size (%d); expected at most %d bases",
+                    maximumIntervalSize, (maximumIntervalSize - minimumIntervalSize), minimumIntervalSize, idealSplitLength));
         }
 
         return accumulatedIntervalLists;
