@@ -1,8 +1,6 @@
 package picard.illumina.quality;
 
 import htsjdk.samtools.metrics.MetricBase;
-import java.lang.Override;
-import java.lang.String;
 import java.util.List;
 
 /** a metric class for describing a single bunch of local duplicates **/

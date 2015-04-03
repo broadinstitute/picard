@@ -39,32 +39,33 @@ public class CollectLocalDuplicationMetricsTest {
     private void tearDown() { IOUtil.deleteDirectoryTree(rootTestDir); }
 
     @Test
-    public void testSummaryMetrics() throws Exception {
+    public void testLocalDuplicationSummaryMetrics() throws Exception {
         final MetricsFile<LocalDuplicationSummaryMetrics, Integer> metricsFile0 = runSummaryMetrics(1, 24, "125T125T/Data/Intensities/BaseCalls",0);
         final MetricsFile<LocalDuplicationSummaryMetrics, Integer> metricsFile1000 = runSummaryMetrics(1, 24, "125T125T/Data/Intensities/BaseCalls",1000);
         final MetricsFile<LocalDuplicationSummaryMetrics, Integer> metricsFileWholeTile = runSummaryMetrics(1, 24, "125T125T/Data/Intensities/BaseCalls",Double.POSITIVE_INFINITY);
 
         //getMetrics().get(0) returns the first ("All") metric
+        final double DELTA = 0.0001;
         final LocalDuplicationSummaryMetrics metric0 = metricsFile0.getMetrics().get(0);
         Assert.assertEquals(metric0.LANE, 1);
         Assert.assertEquals(metric0.TILE, "All");
         Assert.assertEquals(metric0.READS, 1863);
         Assert.assertEquals(metric0.LOCAL_DUPLICATES, 0);
-        Assert.assertEquals(metric0.PCT_LOCAL_DUPLICATES, ((double) metric0.LOCAL_DUPLICATES) / metric0.READS);
+        Assert.assertEquals(metric0.PCT_LOCAL_DUPLICATES, ((double) metric0.LOCAL_DUPLICATES) / metric0.READS, DELTA);
 
         final LocalDuplicationSummaryMetrics metric1000 = metricsFile1000.getMetrics().get(0);
         Assert.assertEquals(metric1000.LANE, 1);
         Assert.assertEquals(metric1000.TILE, "All");
         Assert.assertEquals(metric1000.READS, 1863);
         Assert.assertEquals(metric1000.LOCAL_DUPLICATES, 45);
-        Assert.assertEquals(metric1000.PCT_LOCAL_DUPLICATES, ((double) metric1000.LOCAL_DUPLICATES) / metric1000.READS);
+        Assert.assertEquals(metric1000.PCT_LOCAL_DUPLICATES, ((double) metric1000.LOCAL_DUPLICATES) / metric1000.READS, DELTA);
 
         final LocalDuplicationSummaryMetrics metricWholeTile = metricsFileWholeTile.getMetrics().get(0);
         Assert.assertEquals(metricWholeTile.LANE, 1);
         Assert.assertEquals(metricWholeTile.TILE, "All");
         Assert.assertEquals(metricWholeTile.READS, 1863);
         Assert.assertEquals(metricWholeTile.LOCAL_DUPLICATES, 118);
-        Assert.assertEquals(metricWholeTile.PCT_LOCAL_DUPLICATES, ((double) metricWholeTile.LOCAL_DUPLICATES) / metricWholeTile.READS);
+        Assert.assertEquals(metricWholeTile.PCT_LOCAL_DUPLICATES, ((double) metricWholeTile.LOCAL_DUPLICATES) / metricWholeTile.READS, DELTA);
     }
 
 
