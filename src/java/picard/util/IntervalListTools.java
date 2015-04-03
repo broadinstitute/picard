@@ -232,7 +232,7 @@ public class IntervalListTools extends CommandLineProgram {
                             "Requested scatter width of %s, but only emitted %s.  (This may be an expected consequence of running in %s mode.)",
                             SCATTER_COUNT,
                             scattered.size(),
-                            IntervalListScatterer.Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION
+                            SUBDIVISION_MODE
                     ));
                 }
                 resultIntervals = scattered;
