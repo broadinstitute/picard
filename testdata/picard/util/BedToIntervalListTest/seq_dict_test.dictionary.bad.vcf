@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##fileDate=20150406
+##source=bedToIntervalListTest
+##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta
+##contig=<ID=chr1,length=249250621,assembly=b37>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA12878
+chr1	109	.	A	T	0	FDRtranche2.00to10.00+	AC=1;AF=0.50;AN=2;DP=1019;Dels=0.00;HRun=0;HaplotypeScore=686.65;MQ=19.20;MQ0=288;OQ=2175.54;QD=2.13;SB=-1042.18	GT:AD:DP:GL:GQ	0/1:610,327:308:-316.30,-95.47,-803.03:99
