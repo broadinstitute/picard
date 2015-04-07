@@ -83,10 +83,12 @@ class ArtifactCounter {
      * Add a record to all the accumulators.
      */
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
-        this.fullContextAccumulator.countRecord(refContext, calledBase, rec);
-        this.halfContextAccumulator.countRecord(this.leadingContextMap.get(refContext), calledBase, rec);
-        this.halfContextAccumulator.countRecord(this.trailingContextMap.get(refContext), calledBase, rec);
-        this.zeroContextAccumulator.countRecord(this.zeroContextMap.get(refContext), calledBase, rec);
+        if (this.fullContexts.contains(refContext)) {
+            this.fullContextAccumulator.countRecord(refContext, calledBase, rec);
+            this.halfContextAccumulator.countRecord(this.leadingContextMap.get(refContext), calledBase, rec);
+            this.halfContextAccumulator.countRecord(this.trailingContextMap.get(refContext), calledBase, rec);
+            this.zeroContextAccumulator.countRecord(this.zeroContextMap.get(refContext), calledBase, rec);
+        }
     }
 
     /**
