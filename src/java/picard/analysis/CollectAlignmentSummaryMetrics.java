@@ -116,6 +116,10 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
                     "in the file are aligned then alignment summary metrics collection will fail.");
         }
 
+        if (super.REFERENCE_SEQUENCE != null && this.REFERENCE_SEQUENCE == null) {
+            this.REFERENCE_SEQUENCE = super.REFERENCE_SEQUENCE;
+        }
+
         final boolean doRefMetrics = REFERENCE_SEQUENCE != null;
         collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), doRefMetrics,
                 ADAPTER_SEQUENCE, MAX_INSERT_SIZE,  IS_BISULFITE_SEQUENCED);
