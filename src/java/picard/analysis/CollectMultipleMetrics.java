@@ -32,48 +32,79 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * This interface allows developers to create Programs to run in addition to the ones defined in the Program enum.
      */
     public static interface ProgramInterface {
-        SinglePassSamProgram makeInstance(final String outbase);
+        SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference);
     }
 
     public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase) {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
                 program.OUTPUT = new File(outbase + ".alignment_summary_metrics");
+
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
                 return program;
             }
         },
         CollectInsertSizeMetrics {
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase) {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.OUTPUT = new File(outbase + ".insert_size_metrics");
                 program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
                 return program;
             }
         },
         QualityScoreDistribution {
-            public SinglePassSamProgram makeInstance(final String outbase) {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
                 program.OUTPUT = new File(outbase + ".quality_distribution_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".quality_distribution.pdf");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
                 return program;
             }
         },
         MeanQualityByCycle {
-            public SinglePassSamProgram makeInstance(final String outbase) {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
                 program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
                 return program;
             }
         },
         CollectBaseDistributionByCycle {
-            public SinglePassSamProgram makeInstance(final String outbase) {
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
                 program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+
                 return program;
             }
         };
@@ -130,8 +161,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         }
 
         final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
-        for (ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
-            SinglePassSamProgram instance = program.makeInstance(OUTPUT);
+        for (final ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
+            final SinglePassSamProgram instance = program.makeInstance(OUTPUT , INPUT, REFERENCE_SEQUENCE);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway
