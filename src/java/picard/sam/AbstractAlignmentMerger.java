@@ -89,7 +89,7 @@ public abstract class AbstractAlignmentMerger {
     private static final char[] RESERVED_ATTRIBUTE_STARTS = {'X', 'Y', 'Z'};
 
     private final Log log = Log.getInstance(AbstractAlignmentMerger.class);
-    private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Written to sorting collection in queryname order", "records");
+    private final ProgressLogger progress = new ProgressLogger(this.log, 1000000, "Merged", "records");
 
     private final File unmappedBamFile;
     private final File targetBamFile;
@@ -124,6 +124,37 @@ public abstract class AbstractAlignmentMerger {
         }
     };
     private boolean includeSecondaryAlignments = true;
+
+    /** Class that allows a Sorting Collection and a SAMFileWriter to be treated identically. */
+    private static class Sink {
+        private final SAMFileWriter writer;
+        private final SortingCollection<SAMRecord> sorter;
+
+        /** Constructs a sink that outputs to a SAMFileWriter. */
+        public Sink(final SAMFileWriter writer) {
+            this.writer = writer;
+            this.sorter = null;
+        }
+
+        /** Constructs a sink that outputs to a Sorting Collection. */
+        public Sink(final SortingCollection<SAMRecord> sorter) {
+            this.writer = null;
+            this.sorter = sorter;
+        }
+
+        /** Adds a record to the sink. */
+        void add(final SAMRecord rec) {
+            if (writer != null) writer.addAlignment(rec);
+            if (sorter != null) sorter.add(rec);
+        }
+
+        /** Closes the underlying resource. */
+        void close() {
+            if (this.writer != null) this.writer.close();
+            if (this.sorter != null) this.sorter.doneAdding();
+        }
+    }
+
 
     protected abstract CloseableIterator<SAMRecord> getQuerynameSortedAlignedRecords();
 
@@ -266,11 +297,23 @@ public abstract class AbstractAlignmentMerger {
             }
         }
 
-        // Create the sorting collection that will write the records in the coordinate order
-        // to the final bam file
-        final SortingCollection<SAMRecord> sorted = SortingCollection.newInstance(
-                SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
-                MAX_RECORDS_IN_RAM);
+        // If the output requested is coordinate order then run everything through a sorting collection
+        // in order to have access to the records in coordinate order prior to outputting them. Otherwise
+        // write directly to the output BAM file in queryname order.
+        final Sink sink;
+        if (this.sortOrder == SortOrder.coordinate) {
+            final SortingCollection<SAMRecord> sorted1 = SortingCollection.newInstance(
+                    SAMRecord.class, new BAMRecordCodec(header), new SAMRecordCoordinateComparator(),
+                    MAX_RECORDS_IN_RAM);
+            sink = new Sink(sorted1);
+        }
+        else { // catches queryname and unsorted
+            final SAMFileHeader header = this.header.clone();
+            header.setSortOrder(this.sortOrder);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+            writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records to output in queryname order"));
+            sink = new Sink(writer);
+        }
 
         while (unmappedIterator.hasNext()) {
             // Load next unaligned read or read pair.
@@ -336,12 +379,12 @@ public abstract class AbstractAlignmentMerger {
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
                         if (!firstToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            addIfNotFiltered(sorted, firstToWrite);
+                            addIfNotFiltered(sink, firstToWrite);
                             if (firstToWrite.getReadUnmappedFlag()) ++unmapped;
                             else ++aligned;
                         }
                         if (!secondToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
-                            addIfNotFiltered(sorted, secondToWrite);
+                            addIfNotFiltered(sink, secondToWrite);
                             if (!secondToWrite.getReadUnmappedFlag()) ++aligned;
                             else ++unmapped;
                         }
@@ -358,14 +401,14 @@ public abstract class AbstractAlignmentMerger {
                             transferAlignmentInfoToFragment(out, supp);
                             if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary, addMateCigar);
                             ++aligned;
-                            addIfNotFiltered(sorted, out);
+                            addIfNotFiltered(sink, out);
                         }
                     }
                 } else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
-                        addIfNotFiltered(sorted, recToWrite);
+                        addIfNotFiltered(sink, recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
                         else ++aligned;
                     }
@@ -373,7 +416,7 @@ public abstract class AbstractAlignmentMerger {
                     for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
                         final SAMRecord recToWrite = clone(rec);
                         transferAlignmentInfoToFragment(recToWrite, supplementalRec);
-                        addIfNotFiltered(sorted, recToWrite);
+                        addIfNotFiltered(sink, recToWrite);
                         ++aligned;
                     }
                 }
@@ -387,10 +430,10 @@ public abstract class AbstractAlignmentMerger {
                 }
                 // No matching read from alignedIterator -- just output reads as is.
                 if (!alignedReadsOnly) {
-                    sorted.add(rec);
+                    sink.add(rec);
                     ++unmapped;
                     if (secondOfPair != null) {
-                        sorted.add(secondOfPair);
+                        sink.add(secondOfPair);
                         ++unmapped;
                     }
                 }
@@ -401,31 +444,32 @@ public abstract class AbstractAlignmentMerger {
             throw new IllegalStateException("Reads remaining on alignment iterator: " + alignedIterator.next().getReadName() + "!");
         }
         alignedIterator.close();
+        sink.close();
 
         // Write the records to the output file in specified sorted order,
-        header.setSortOrder(this.sortOrder);
-        final boolean presorted = this.sortOrder == SortOrder.coordinate;
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, presorted, this.targetBamFile);
-        writer.setProgressLogger(
-                new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
-        final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
+        if (this.sortOrder == SortOrder.coordinate) {
+            header.setSortOrder(this.sortOrder);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
+            writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
+            final ProgressLogger finalProgress = new ProgressLogger(log, 10000000, "Written in coordinate order to output", "records");
 
-        for (final SAMRecord rec : sorted) {
-            if (!rec.getReadUnmappedFlag()) {
-                if (refSeq != null) {
-                    final byte[] referenceBases = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
-                    rec.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
+            for (final SAMRecord rec : sink.sorter) {
+                if (!rec.getReadUnmappedFlag()) {
+                    if (refSeq != null) {
+                        final byte[] referenceBases = refSeq.get(sequenceDictionary.getSequenceIndex(rec.getReferenceName())).getBases();
+                        rec.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(rec, referenceBases, 0, bisulfiteSequence));
 
-                    if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
-                        rec.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
+                        if (rec.getBaseQualities() != SAMRecord.NULL_QUALS) {
+                            rec.setAttribute(SAMTag.UQ.name(), SequenceUtil.sumQualitiesOfMismatches(rec, referenceBases, 0, bisulfiteSequence));
+                        }
                     }
                 }
+                writer.addAlignment(rec);
+                finalProgress.record(rec);
             }
-            writer.addAlignment(rec);
-            finalProgress.record(rec);
+            writer.close();
+            sink.sorter.cleanup();
         }
-        writer.close();
-        sorted.cleanup();
 
         CloserUtil.close(unmappedSam);
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
@@ -434,9 +478,9 @@ public abstract class AbstractAlignmentMerger {
     /**
      * Add record if it is primary or optionally secondary.
      */
-    private void addIfNotFiltered(final SortingCollection<SAMRecord> sorted, final SAMRecord rec) {
+    private void addIfNotFiltered(final Sink out, final SAMRecord rec) {
         if (includeSecondaryAlignments || !rec.getNotPrimaryAlignmentFlag()) {
-            sorted.add(rec);
+            out.add(rec);
             this.progress.record(rec);
         }
     }
