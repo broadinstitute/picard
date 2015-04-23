@@ -126,6 +126,7 @@ public class CompareSAMs extends CommandLineProgram {
                 return compareCoordinateSortedAlignments();
             case queryname:
                 return compareQueryNameSortedAlignments();
+            case duplicate:
             case unsorted:
                 return compareUnsortedAlignments();
             default:

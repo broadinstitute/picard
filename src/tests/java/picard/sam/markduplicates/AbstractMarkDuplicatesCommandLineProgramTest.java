@@ -50,6 +50,14 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     }
 
     @Test
+    public void testTwoUnmappedFragments() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.addUnmappedFragment(-1, DEFAULT_BASE_QUALITY);
+        tester.addUnmappedFragment(-1, DEFAULT_BASE_QUALITY);
+        tester.runTest();
+    }
+
+    @Test
     public void testSingleUnmappedPair() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
         tester.addUnmappedPair(-1, DEFAULT_BASE_QUALITY);
@@ -120,7 +128,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addUnmappedFragment(-1, DEFAULT_BASE_QUALITY); // unmapped fragment at end of file
         tester.runTest();
     }
-
+    
     @Test
     public void testTwoMappedPairsAndTerminalUnmappedPair() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -155,7 +163,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMatePair("RUNID:7:1203:2884:16834", 1, 485253, 485253, false, false, false, false, "59S42M", "42M59S", true, false, false, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
-
+    
     @Test
     public void testOpticalDuplicateClusterSamePositionNoOpticalDuplicatesWithinPixelDistance() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -234,11 +242,13 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     @Test
     public void testTwoMappedPairsWithSoftClippingBoth() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        // mapped reference length: 73 + 42 = 115
         tester.addMappedPair(1, 10046, 10002, true, true, "3S73M", "6S42M28S", true, false, false, DEFAULT_BASE_QUALITY);
+        // mapped reference length: 68 + 48 = 116
         tester.addMappedPair(1, 10051, 10002, false, false, "8S68M", "6S48M22S", true, false, false, DEFAULT_BASE_QUALITY);
         tester.runTest();
     }
-
+    
     @Test
     public void testMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -260,7 +270,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMappedFragment(1, 10049, true, DEFAULT_BASE_QUALITY); // duplicate
         tester.runTest();
     }
-
+    
     @Test
     public void testMappedFragmentAndMatePairFirstUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -298,6 +308,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
+
     @Test
     public void testMappedPairAndMappedFragmentAndMatePairSecondUnmapped() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -333,7 +344,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMappedPair(1, 10182, 10038, true, true, "32S44M", "66M10S", true, false, false, DEFAULT_BASE_QUALITY); // -/+
         tester.runTest();
     }
-
+    
     @Test
     public void testThreeMappedPairsWithMatchingSecondMate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -346,7 +357,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMappedPair(1, 10180, 10058, false, false, "36S40M", "50M26S", true, false, false, DEFAULT_BASE_QUALITY); // -/+, both are duplicates
         tester.runTest();
     }
-
+    
     @Test
     public void testMappedPairWithSamePosition() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -403,7 +414,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.runTest();
     }
 
-
     @Test
     public void testTwoGroupsOnDifferentChromosomesOfTwoMappedPairs() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -440,7 +450,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMappedPair(2, 1, 100, true, true, DEFAULT_BASE_QUALITY); // duplicate!!!
         tester.runTest();
     }
-
+    
     @Test
     public void testBulkFragmentsNoDuplicates() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -467,8 +477,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
     public void testStackOverFlowPairSetSwap() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
 
-        File input = new File("testdata/picard/sam/MarkDuplicates/markDuplicatesWithMateCigar.pairSet.swap.sam");
-        SamReader reader = SamReaderFactory.makeDefault().open(input);
+        final File input = new File("testdata/picard/sam/MarkDuplicates/markDuplicatesWithMateCigar.pairSet.swap.sam");
+        final SamReader reader = SamReaderFactory.makeDefault().open(input);
         tester.setHeader(reader.getFileHeader());
         for (final SAMRecord record : reader) {
             tester.addRecord(record);
@@ -477,7 +487,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.setExpectedOpticalDuplicate(1);
         tester.runTest();
     }
-
+    
     @Test
     public void testSecondEndIsBeforeFirstInCoordinate() {
         final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
@@ -495,12 +505,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgramTest {
         tester.addMatePair("RUNID:3:1:15029:113060", 0, 129384554, 129384554, false, false, true, true, "68M", "68M", false, false, false, false, false, DEFAULT_BASE_QUALITY);
 
         // Create the pathology
-        CloseableIterator<SAMRecord> iterator = tester.getRecordIterator();
-        int[] qualityOffset = {20, 30, 10, 40}; // creates an interesting pathological ordering
+        final CloseableIterator<SAMRecord> iterator = tester.getRecordIterator();
+        final int[] qualityOffset = {20, 30, 10, 40}; // creates an interesting pathological ordering
         int index = 0;
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
-            byte[] quals = new byte[record.getReadLength()];
+            final byte[] quals = new byte[record.getReadLength()];
             for (int i = 0; i < record.getReadLength(); i++) {
                 quals[i] = (byte)(qualityOffset[index] + 10);
             }

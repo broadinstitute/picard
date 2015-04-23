@@ -87,7 +87,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     private SortingLongCollection duplicateIndexes;
     private int numDuplicateIndices = 0;
 
-    private LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
+    protected LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
 
     public MarkDuplicates() {
         DUPLICATE_SCORING_STRATEGY = ScoringStrategy.SUM_OF_BASE_QUALITIES;
