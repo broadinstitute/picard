@@ -259,7 +259,10 @@ public class IlluminaDataProviderTest {
     }
 
     @Test(dataProvider = "badData", expectedExceptions = {PicardException.class, IllegalArgumentException.class})
-    public void testIlluminaDataProviderMissingDatas(final int lane,
+    public void testIlluminaDataProviderMissingDatas(final String testName,
+                                                     final int lane,
+                                                     final int size,
+                                                     final List<Integer> tiles,
                                                      final IlluminaDataType[] actualDts,
                                                      final String illuminaConfigStr,
                                                      final File basecallsDirectory)
