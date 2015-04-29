@@ -133,7 +133,7 @@ public class CreateSequenceDictionary extends CommandLineProgram {
      * @param referenceFile fasta or fasta.gz
      * @return SAMSequenceRecords containing info from the fasta, plus from cmd-line arguments.
      */
-    SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
+    public SAMSequenceDictionary makeSequenceDictionary(final File referenceFile) {
         final ReferenceSequenceFile refSeqFile =
                 ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, TRUNCATE_NAMES_AT_WHITESPACE);
         ReferenceSequence refSeq;
