@@ -37,10 +37,8 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
 import picard.PicardException;
-import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import picard.cmdline.programgroups.SamOrBam;
 import picard.sam.DuplicationMetrics;
 
 import java.io.File;
@@ -118,7 +116,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         final Map<String, String> chainedPgIds;
         // Generate new PG record(s)
         if (PROGRAM_RECORD_ID != null) {
-            final PgIdGenerator pgIdGenerator = new PgIdGenerator(outputHeader);
+            final SAMFileHeader.PgIdGenerator pgIdGenerator = new SAMFileHeader.PgIdGenerator(outputHeader);
             if (PROGRAM_GROUP_VERSION == null) {
                 PROGRAM_GROUP_VERSION = this.getVersion();
             }
@@ -178,42 +176,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         }
 
         file.write(METRICS_FILE);
-    }
-
-    /** Little class to generate program group IDs */
-    static class PgIdGenerator {
-        private int recordCounter;
-
-        private final Set<String> idsThatAreAlreadyTaken = new HashSet<String>();
-
-        PgIdGenerator(final SAMFileHeader header) {
-            for (final SAMProgramRecord pgRecord : header.getProgramRecords()) {
-                idsThatAreAlreadyTaken.add(pgRecord.getProgramGroupId());
-            }
-            recordCounter = idsThatAreAlreadyTaken.size();
-        }
-
-        String getNonCollidingId(final String recordId) {
-            if (!idsThatAreAlreadyTaken.contains(recordId)) {
-                // don't remap 1st record. If there are more records
-                // with this id, they will be remapped in the 'else'.
-                idsThatAreAlreadyTaken.add(recordId);
-                ++recordCounter;
-                return recordId;
-            } else {
-                String newId;
-                // Below we tack on one of roughly 1.7 million possible 4 digit base36 at random. We do this because
-                // our old process of just counting from 0 upward and adding that to the previous id led to 1000s of
-                // calls idsThatAreAlreadyTaken.contains() just to resolve 1 collision when merging 1000s of similarly
-                // processed bams.
-                while (idsThatAreAlreadyTaken.contains(newId = recordId + "." + SamFileHeaderMerger.positiveFourDigitBase36Str(recordCounter++)))
-                    ;
-
-                idsThatAreAlreadyTaken.add(newId);
-                return newId;
-            }
-
-        }
     }
 
     /** Little class used to package up a header and an iterable/iterator. */
