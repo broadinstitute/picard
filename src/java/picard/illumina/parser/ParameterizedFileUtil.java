@@ -44,14 +44,22 @@ public abstract class ParameterizedFileUtil {
     protected final File base;
     protected final FileFaker faker;
 
+    protected static final boolean DefaultSkipEmptyFiles = true;
+    protected final boolean skipEmptyFiles;
+
     public ParameterizedFileUtil(final boolean laneTileRegex, final String extension, final File base,
-                                 final FileFaker faker, final int lane) {
-        this(extension, base, faker, lane);
+                                 final FileFaker faker, final int lane, final boolean skipEmptyFiles) {
+        this(extension, base, faker, lane, skipEmptyFiles);
         if (laneTileRegex) {
             matchPattern = Pattern.compile(escapePeriods(makeLaneTileRegex(processTxtExtension(extension), lane)));
         } else {
             matchPattern = Pattern.compile(escapePeriods(makeLaneRegex(extension, lane)));
         }
+    }
+
+    public ParameterizedFileUtil(final boolean laneTileRegex, final String extension, final File base,
+                                 final FileFaker faker, final int lane) {
+        this(laneTileRegex, extension, base, faker, lane, DefaultSkipEmptyFiles);
     }
 
     public ParameterizedFileUtil(final String pattern, final String extension, final File base, final FileFaker faker,
@@ -62,10 +70,16 @@ public abstract class ParameterizedFileUtil {
 
     private ParameterizedFileUtil(final String extension, final File base, final FileFaker faker,
                                   final int lane) {
+        this(extension, base, faker, lane, DefaultSkipEmptyFiles);
+    }
+
+    private ParameterizedFileUtil(final String extension, final File base, final FileFaker faker,
+                                  final int lane, final boolean skipEmptyFiles) {
         this.faker = faker;
         this.extension = extension;
         this.base = base;
         this.lane = lane;
+        this.skipEmptyFiles = skipEmptyFiles;
     }
 
     /**
@@ -162,7 +176,7 @@ public abstract class ParameterizedFileUtil {
             IOUtil.assertDirectoryIsReadable(baseDirectory);
             final File[] files = IOUtil.getFilesMatchingRegexp(baseDirectory, pattern);
             for (final File file : files) {
-                if (file.length() > 0) {
+                if (!skipEmptyFiles || file.length() > 0) {
                     fileMap.put(fileToTile(file.getName()), file);
                 }
             }
