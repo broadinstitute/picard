@@ -257,22 +257,7 @@ public class IntervalListTools extends CommandLineProgram {
     private List<IntervalList> openIntervalLists(final List<File> files){
         final List<IntervalList> lists = new ArrayList<IntervalList>();
         for (final File f : files) {
-
-            final IntervalList list = TYPE.getIntervalList(f, INCLUDE_FILTERED);
-            if (PADDING != 0) {
-                final IntervalList out = new IntervalList(list.getHeader());
-                for (final Interval i : list) {
-                    final int start = i.getStart() - PADDING;
-                    final int end = i.getEnd() + PADDING;
-                    if (start <= end) {
-                        final Interval i2 = new Interval(i.getSequence(), start, end, i.isNegativeStrand(), i.getName());
-                        out.add(i2);
-                    }
-                }
-                lists.add(out);
-            } else {
-                lists.add(list);
-            }
+            lists.add(TYPE.getIntervalList(f, INCLUDE_FILTERED).padded(PADDING));
         }
         return lists;
     }
