@@ -7,7 +7,7 @@
 <tr><td>MINIMUM_DISTANCE (Integer)</td><td>The minimum distance to buffer records to account for clipping on the 5' end of the records.Set this number to -1 to use twice the first read's read length (or 100, whichever is smaller).  Default value: -1. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>SKIP_PAIRS_WITH_NO_MATE_CIGAR (Boolean)</td><td>Skip record pairs with no mate cigar and include them in the output.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>BLOCK_SIZE (Integer)</td><td>The block size for use in the coordinate-sorted record buffer.  Default value: 100000. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>INPUT (File)</td><td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.  This option may be specified 0 or more times. </td></tr>
+<tr><td>INPUT (String)</td><td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.  This option may be specified 0 or more times. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output file to write marked records to  Required. </td></tr>
 <tr><td>METRICS_FILE (File)</td><td>File to write duplication metrics to  Required. </td></tr>
 <tr><td>PROGRAM_RECORD_ID (String)</td><td>The program record ID for the @PG record(s) created by this program. Set to null to disable PG record creation.  This string may have a suffix appended to avoid collision with other program record IDs.  Default value: MarkDuplicates. This option can be set to 'null' to clear the default value. </td></tr>

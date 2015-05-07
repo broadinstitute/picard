@@ -1,0 +1,13 @@
+<a id="LiftoverVcf"/>
+<h3>LiftoverVcf</h3>
+<section>
+<p>Lifts a VCF over from one genome build to another using UCSC liftover. The output file will be sorted and indexed. Records may be rejected because they cannot be lifted over or because post-liftover the reference allele mismatches the target genome build.  Rejected records will be emitted with filters to the REJECT file, on the source genome.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>The input VCF/BCF file to be lifted over.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output location to write the lifted over VCF/BCF to.  Required. </td></tr>
+<tr><td>CHAIN (File)</td><td>The liftover chain file. See https://genome.ucsc.edu/goldenPath/help/chain.html for a description of chain files.  See http://hgdownload.soe.ucsc.edu/downloads.html#terms for where to download chain files.  Required. </td></tr>
+<tr><td>REJECT (File)</td><td>File to which to write rejected records.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>The reference sequence (fasta) for the TARGET genome build.  The fasta file must have an accompanying sqeuence dictionary (.dict file).  Required. </td></tr>
+</table>
+</section>

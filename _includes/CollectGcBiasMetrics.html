@@ -5,14 +5,14 @@
 <p></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>REFERENCE_SEQUENCE (File)</td><td>The reference sequence fasta file.  Required. </td></tr>
-<tr><td>INPUT (File)</td><td>The BAM or SAM file containing aligned reads.  Must be coordinate-sorted.  Required. </td></tr>
-<tr><td>OUTPUT (File)</td><td>The text file to write the metrics table to.  Required. </td></tr>
 <tr><td>CHART_OUTPUT (File)</td><td>The PDF file to render the chart to.  Required. </td></tr>
 <tr><td>SUMMARY_OUTPUT (File)</td><td>The text file to write summary metrics to.  Default value: null. </td></tr>
 <tr><td>WINDOW_SIZE (Integer)</td><td>The size of windows on the genome that are used to bin reads.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MINIMUM_GENOME_FRACTION (Double)</td><td>For summary metrics, exclude GC windows that include less than this fraction of the genome.  Default value: 1.0E-5. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>ASSUME_SORTED (Boolean)</td><td>If true, assume that the input file is coordinate sorted, even if the header says otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>IS_BISULFITE_SEQUENCED (Boolean)</td><td>Whether the SAM or BAM file consists of bisulfite sequenced reads.    Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>File to write the output to.  Required. </td></tr>
+<tr><td>ASSUME_SORTED (Boolean)</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>STOP_AFTER (Long)</td><td>Stop after processing N reads, mainly for debugging.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
 </section>

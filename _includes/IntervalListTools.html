@@ -18,9 +18,10 @@
 <p>} </td></tr>
 <tr><td>SECOND_INPUT (File)</td><td>Second set of intervals for SUBTRACT and DIFFERENCE operations.  This option may be specified 0 or more times. </td></tr>
 <tr><td>COMMENT (String)</td><td>One or more lines of comment to add to the header of the output file.  This option may be specified 0 or more times. </td></tr>
-<tr><td>SCATTER_COUNT (Integer)</td><td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>SCATTER_COUNT (Integer)</td><td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>INCLUDE_FILTERED (Boolean)</td><td>Whether to include filtered variants in the vcf when generating an interval list from vcf  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>SUBDIVISION_MODE (Mode)</td><td>Do not subdivide   Default value: INTERVAL_SUBDIVISION. This option can be set to 'null' to clear the default value. Possible values: {INTERVAL_SUBDIVISION, BALANCING_WITHOUT_INTERVAL_SUBDIVISION} </td></tr>
+<tr><td>BREAK_BANDS_AT_MULTIPLES_OF (Integer)</td><td>If set to a positive value will create a new interval list with the original intervals broken up at integer multiples of this value.  Set to 0 to NOT break up intervals  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>SUBDIVISION_MODE (Mode)</td><td>Do not subdivide   Default value: INTERVAL_SUBDIVISION. This option can be set to 'null' to clear the default value. Possible values: {INTERVAL_SUBDIVISION, BALANCING_WITHOUT_INTERVAL_SUBDIVISION, BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW} </td></tr>
 <tr><td>INVERT (Boolean)</td><td>Produce the inverse list  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>

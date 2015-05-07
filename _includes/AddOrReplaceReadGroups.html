@@ -4,7 +4,7 @@
 <p>Replaces all read groups in the INPUT file with a single new read group and assigns all reads to this read group in the OUTPUT BAM</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT (File)</td><td>Input file (bam or sam).  Required. </td></tr>
+<tr><td>INPUT (String)</td><td>Input file (bam or sam or a GA4GH url).  Required. </td></tr>
 <tr><td>OUTPUT (File)</td><td>Output file (bam or sam).  Required. </td></tr>
 <tr><td>SORT_ORDER (SortOrder)</td><td>Optional sort order to output in. If not supplied OUTPUT is in the same order as INPUT.  Default value: null. Possible values: {unsorted, queryname, coordinate} </td></tr>
 <tr><td>RGID (String)</td><td>Read Group ID  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
@@ -16,5 +16,7 @@
 <tr><td>RGDS (String)</td><td>Read Group description  Default value: null. </td></tr>
 <tr><td>RGDT (Iso8601Date)</td><td>Read Group run date  Default value: null. </td></tr>
 <tr><td>RGPI (Integer)</td><td>Read Group predicted insert size  Default value: null. </td></tr>
+<tr><td>RGPG (String)</td><td>Read Group program group  Default value: null. </td></tr>
+<tr><td>RGPM (String)</td><td>Read Group platform model  Default value: null. </td></tr>
 </table>
 </section>

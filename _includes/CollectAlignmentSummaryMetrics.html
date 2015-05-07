@@ -8,6 +8,7 @@
 <tr><td>ADAPTER_SEQUENCE (String)</td><td>List of adapter sequences to use when processing the alignment metrics  This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
 <tr><td>METRIC_ACCUMULATION_LEVEL (MetricAccumulationLevel)</td><td>The level(s) at which to accumulate metrics.    Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
 <tr><td>IS_BISULFITE_SEQUENCED (Boolean)</td><td>Whether the SAM or BAM file consists of bisulfite sequenced reads.    Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated.  Default value: null. </td></tr>
 <tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
 <tr><td>OUTPUT (File)</td><td>File to write the output to.  Required. </td></tr>
 <tr><td>ASSUME_SORTED (Boolean)</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>

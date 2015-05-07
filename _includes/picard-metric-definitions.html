@@ -10,7 +10,9 @@
 <li><a href="#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a>: Metrics produced by the GetHiSeqXPFFailMetrics program.</li>
 <li><a href="#CollectOxoGMetrics.CpcgMetrics">CollectOxoGMetrics.CpcgMetrics</a>: Metrics class for outputs.</li>
 <li><a href="#CollectQualityYieldMetrics.QualityYieldMetrics">CollectQualityYieldMetrics.QualityYieldMetrics</a>: A set of metrics used to describe the general quality of a BAM file</li>
-<li><a href="#CollectRawWGSMetrics.RawWgsMetrics">CollectRawWGSMetrics.RawWgsMetrics</a>: </li>
+<li><a href="#CollectRawWgsMetrics.RawWgsMetrics">CollectRawWgsMetrics.RawWgsMetrics</a>: </li>
+<li><a href="#CollectVariantCallingMetrics.VariantCallingDetailMetrics">CollectVariantCallingMetrics.VariantCallingDetailMetrics</a>: A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample.</li>
+<li><a href="#CollectVariantCallingMetrics.VariantCallingSummaryMetrics">CollectVariantCallingMetrics.VariantCallingSummaryMetrics</a>: A collection of metrics relating to snps and indels within a variant-calling file (VCF).</li>
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
@@ -39,6 +41,10 @@
 <li><a href="#RrbsCpgDetailMetrics">RrbsCpgDetailMetrics</a>: Holds information about CpG sites encountered for RRBS processing QC</li>
 <li><a href="#RrbsSummaryMetrics">RrbsSummaryMetrics</a>: Holds summary statistics from RRBS processing QC</li>
 <li><a href="#SamFileValidator.ValidationMetrics">SamFileValidator.ValidationMetrics</a>: </li>
+<li><a href="#SequencingArtifactMetrics.BaitBiasDetailMetrics">SequencingArtifactMetrics.BaitBiasDetailMetrics</a>: Bait bias artifacts broken down by context.</li>
+<li><a href="#SequencingArtifactMetrics.BaitBiasSummaryMetrics">SequencingArtifactMetrics.BaitBiasSummaryMetrics</a>: Summary analysis of a single bait bias artifact, also known as a reference bias artifact.</li>
+<li><a href="#SequencingArtifactMetrics.PreAdapterDetailMetrics">SequencingArtifactMetrics.PreAdapterDetailMetrics</a>: Pre-adapter artifacts broken down by context.</li>
+<li><a href="#SequencingArtifactMetrics.PreAdapterSummaryMetrics">SequencingArtifactMetrics.PreAdapterSummaryMetrics</a>: Summary analysis of a single pre-adapter artifact.</li>
 <li><a href="#TargetedPcrMetrics">TargetedPcrMetrics</a>: Metrics class for targeted pcr runs such as TSCA runs</li>
 </ol>
 </section>
@@ -121,13 +127,30 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>TOTAL_READS</td><td>The total number of reads in the input file</td></tr><tr><td>PF_READS</td><td>The number of reads that are PF - pass filter</td></tr><tr><td>READ_LENGTH</td><td>The average read length of all the reads (will be fixed for a lane)</td></tr><tr><td>TOTAL_BASES</td><td>The total number of bases in all reads</td></tr><tr><td>PF_BASES</td><td>The total number of bases in all PF reads</td></tr><tr><td>Q20_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q20_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q30_BASES</td><td>The number of bases in all reads that achieve quality score 20 or higher</td></tr><tr><td>PF_Q30_BASES</td><td>The number of bases in PF reads that achieve quality score 20 or higher</td></tr><tr><td>Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr><tr><td>PF_Q20_EQUIVALENT_YIELD</td><td>The sum of quality scores of all bases divided by 20</td></tr></table>
 </section>
-<a id="CollectRawWGSMetrics.RawWgsMetrics"></a>
-<h2>CollectRawWGSMetrics.RawWgsMetrics</h2>
+<a id="CollectRawWgsMetrics.RawWgsMetrics"></a>
+<h2>CollectRawWgsMetrics.RawWgsMetrics</h2>
 <section>
 <p></p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 </table>
+</section>
+<a id="CollectVariantCallingMetrics.VariantCallingDetailMetrics"></a>
+<h2>CollectVariantCallingMetrics.VariantCallingDetailMetrics</h2>
+<section>
+<p>A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed</td></tr><tr><td>HET_HOMVAR_RATIO</td><td>(count of hets)/(count of homozygous non-ref) for this sample</td></tr></table>
+</section>
+<a id="CollectVariantCallingMetrics.VariantCallingSummaryMetrics"></a>
+<h2>CollectVariantCallingMetrics.VariantCallingSummaryMetrics</h2>
+<section>
+<p>A collection of metrics relating to snps and indels within a variant-calling file (VCF).</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>TOTAL_SNPS</td><td>The number of high confidence SNPs calls (i.e. non-reference genotypes) that were examined</td></tr><tr><td>NUM_IN_DB_SNP</td><td>The number of high confidence SNPs found in dbSNP</td></tr><tr><td>NOVEL_SNPS</td><td>The number of high confidence SNPS called that were not found in dbSNP</td></tr><tr><td>FILTERED_SNPS</td><td>The number of SNPs that are also filtered</td></tr><tr><td>PCT_DBSNP</td><td>The percentage of high confidence SNPs in dbSNP</td></tr><tr><td>DBSNP_TITV</td><td>The Transition/Transversion ratio of the SNP calls made at dbSNP sites</td></tr><tr><td>NOVEL_TITV</td><td>The Transition/Transversion ratio of the SNP calls made at non-dbSNP sites</td></tr><tr><td>TOTAL_INDELS</td><td>The number of high confidence Indel calls that were examined</td></tr><tr><td>NOVEL_INDELS</td><td>The number of high confidence Indels called that were not found in dbSNP</td></tr><tr><td>FILTERED_INDELS</td><td>The number of indels that are also filtered</td></tr><tr><td>PCT_DBSNP_INDELS</td><td>The percentage of high confidence Indels in dbSNP</td></tr><tr><td>NUM_IN_DB_SNP_INDELS</td><td>The number of high confidence Indels found in dbSNP</td></tr><tr><td>DBSNP_INS_DEL_RATIO</td><td>The Insertion/Deletion ratio of the Indel calls made at dbSNP sites</td></tr><tr><td>NOVEL_INS_DEL_RATIO</td><td>The Insertion/Deletion ratio of the Indel calls made at non-dbSNP sites</td></tr><tr><td>TOTAL_MULTIALLELIC_SNPS</td><td>The number of high confidence multiallelic SNP calls that were examined</td></tr><tr><td>NUM_IN_DB_SNP_MULTIALLELIC</td><td>The number of high confidence multiallelic SNPs found in dbSNP</td></tr><tr><td>TOTAL_COMPLEX_INDELS</td><td>The number of high confidence complex Indel calls that were examined</td></tr><tr><td>NUM_IN_DB_SNP_COMPLEX_INDELS</td><td>The number of high confidence complex Indels found in dbSNP</td></tr><tr><td>SNP_REFERENCE_BIAS</td><td>The rate at which reference bases are observed at ref/alt heterozygous SNP sites.</td></tr><tr><td>NUM_SINGLETONS</td><td>For summary metrics, the number of variants that appear in only one sample.
+ For detail metrics, the number of variants that appear only in the current sample.</td></tr></table>
 </section>
 <a id="CollectWgsMetrics.WgsMetrics"></a>
 <h2>CollectWgsMetrics.WgsMetrics</h2>
@@ -359,6 +382,68 @@
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 </table>
+</section>
+<a id="SequencingArtifactMetrics.BaitBiasDetailMetrics"></a>
+<h2>SequencingArtifactMetrics.BaitBiasDetailMetrics</h2>
+<section>
+<p>Bait bias artifacts broken down by context.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed.</td></tr><tr><td>LIBRARY</td><td>The name of the library being assayed.</td></tr><tr><td>REF_BASE</td><td>The (upper-case) original base on the reference strand.</td></tr><tr><td>ALT_BASE</td><td>The (upper-case) alternative base that is called as a result of DNA damage.</td></tr><tr><td>CONTEXT</td><td>The sequence context to which the analysis is constrained.</td></tr><tr><td>FWD_CXT_REF_BASES</td><td>The number of REF_BASE:REF_BASE alignments at sites with the given reference context.</td></tr><tr><td>FWD_CXT_ALT_BASES</td><td>The number of REF_BASE:ALT_BASE alignments at sites with the given reference context.</td></tr><tr><td>REV_CXT_REF_BASES</td><td>The number of ~REF_BASE:~REF_BASE alignments at sites complementary to the given reference context.</td></tr><tr><td>REV_CXT_ALT_BASES</td><td>The number of ~REF_BASE:~ALT_BASE alignments at sites complementary to the given reference context.</td></tr><tr><td>FWD_ERROR_RATE</td><td>The substitution rate of REF_BASE:ALT_BASE, calculated as max(1e-10, FWD_CXT_ALT_BASES / (FWD_CXT_ALT_BASES + FWD_CXT_REF_BASES)).</td></tr><tr><td>REV_ERROR_RATE</td><td>The substitution rate of ~REF_BASE:~ALT_BASE, calculated as max(1e-10, REV_CXT_ALT_BASES / (REV_CXT_ALT_BASES + REV_CXT_REF_BASES)).</td></tr><tr><td>ERROR_RATE</td><td>The bait bias error rate, calculated as max(1e-10, FWD_ERROR_RATE - REV_ERROR_RATE).</td></tr><tr><td>QSCORE</td><td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE).</td></tr></table>
+</section>
+<a id="SequencingArtifactMetrics.BaitBiasSummaryMetrics"></a>
+<h2>SequencingArtifactMetrics.BaitBiasSummaryMetrics</h2>
+<section>
+<p>Summary analysis of a single bait bias artifact, also known as a reference bias artifact.
+
+ These artifacts occur during or after the target selection step, and correlate with substitution
+ rates that are "biased", or higher for sites having one base on the reference/positive strand
+ relative to sites having the complementary base on that strand.
+
+ For example, a G>T artifact during the target selection step might result in a higher
+ G>T / C>A substitution rate at sites with a G on the positive strand (and C on the negative),
+ relative to sites with the flip (C positive / G negative). This is known as the "G-Ref" artifact.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed.</td></tr><tr><td>LIBRARY</td><td>The name of the library being assayed.</td></tr><tr><td>REF_BASE</td><td>The (upper-case) original base on the reference strand.</td></tr><tr><td>ALT_BASE</td><td>The (upper-case) alternative base that is called as a result of DNA damage.</td></tr><tr><td>TOTAL_QSCORE</td><td>The total Phred-scaled Q-score for this artifact. A lower Q-score
+ means a higher probability that a REF_BASE:ALT_BASE observation
+ randomly picked from the data will be due to this artifact, rather
+ than a true variant.</td></tr><tr><td>WORST_CXT</td><td>The sequence context (reference bases surrounding the locus of interest) having the lowest Q-score among all contexts for this artifact.</td></tr><tr><td>WORST_CXT_QSCORE</td><td>The Q-score for the worst context.</td></tr><tr><td>WORST_PRE_CXT</td><td>The pre-context (reference bases leading up to the locus of interest) with the lowest Q-score.</td></tr><tr><td>WORST_PRE_CXT_QSCORE</td><td>The Q-score for the worst pre-context.</td></tr><tr><td>WORST_POST_CXT</td><td>The post-context (reference bases trailing after the locus of interest) with the lowest Q-score.</td></tr><tr><td>WORST_POST_CXT_QSCORE</td><td>The Q-score for the worst post-context.</td></tr><tr><td>ARTIFACT_NAME</td><td>A "nickname" of this artifact, if it is a known error mode.</td></tr></table>
+</section>
+<a id="SequencingArtifactMetrics.PreAdapterDetailMetrics"></a>
+<h2>SequencingArtifactMetrics.PreAdapterDetailMetrics</h2>
+<section>
+<p>Pre-adapter artifacts broken down by context.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed.</td></tr><tr><td>LIBRARY</td><td>The name of the library being assayed.</td></tr><tr><td>REF_BASE</td><td>The (upper-case) original base on the reference strand.</td></tr><tr><td>ALT_BASE</td><td>The (upper-case) alternative base that is called as a result of DNA damage.</td></tr><tr><td>CONTEXT</td><td>The sequence context to which the analysis is constrained.</td></tr><tr><td>PRO_REF_BASES</td><td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that supports the presence of this artifact.</td></tr><tr><td>PRO_ALT_BASES</td><td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that supports the presence of this artifact.</td></tr><tr><td>CON_REF_BASES</td><td>The number of REF_BASE:REF_BASE alignments having a read number and orientation that refutes the presence of this artifact.</td></tr><tr><td>CON_ALT_BASES</td><td>The number of REF_BASE:ALT_BASE alignments having a read number and orientation that refutes the presence of this artifact.</td></tr><tr><td>ERROR_RATE</td><td>The estimated error rate due to this artifact.
+ Calculated as max(1e-10, (PRO_ALT_BASES - CON_ALT_BASES) / (PRO_ALT_BASES + PRO_REF_BASES + CON_ALT_BASES + CON_REF_BASES)).</td></tr><tr><td>QSCORE</td><td>The Phred-scaled quality score of the artifact, calculated as -10 * log10(ERROR_RATE).</td></tr></table>
+</section>
+<a id="SequencingArtifactMetrics.PreAdapterSummaryMetrics"></a>
+<h2>SequencingArtifactMetrics.PreAdapterSummaryMetrics</h2>
+<section>
+<p>Summary analysis of a single pre-adapter artifact.
+
+ These artifacts occur on the original template strand, before the addition of adapters,
+ so they correlate with read number / orientation in a specific way.
+
+ For example, the well-known "Oxo-G" artifact occurs when a G on the template
+ strand is oxidized, giving it an affinity for binding to A rather than the usual C.
+ Thus PCR will introduce apparent G>T substitutions in read 1 and C>A in read 2.
+ In the resulting alignments, a given G>T or C>A observation could either be:
+
+ 1. a true mutation
+ 2. an OxoG artifact
+ 3. some other kind of artifact
+
+ On average, we assume that 1 and 3 will not display this read number / orientation bias, so
+ their contributions will cancel out in the calculation.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>SAMPLE_ALIAS</td><td>The name of the sample being assayed.</td></tr><tr><td>LIBRARY</td><td>The name of the library being assayed.</td></tr><tr><td>REF_BASE</td><td>The (upper-case) original base on the reference strand.</td></tr><tr><td>ALT_BASE</td><td>The (upper-case) alternative base that is called as a result of DNA damage.</td></tr><tr><td>TOTAL_QSCORE</td><td>The total Phred-scaled Q-score for this artifact. A lower Q-score
+ means a higher probability that a REF_BASE:ALT_BASE observation
+ randomly picked from the data will be due to this artifact, rather
+ than a true variant.</td></tr><tr><td>WORST_CXT</td><td>The sequence context (reference bases surrounding the locus of interest) having the lowest Q-score among all contexts for this artifact.</td></tr><tr><td>WORST_CXT_QSCORE</td><td>The Q-score for the worst context.</td></tr><tr><td>WORST_PRE_CXT</td><td>The pre-context (reference bases leading up to the locus of interest) with the lowest Q-score.</td></tr><tr><td>WORST_PRE_CXT_QSCORE</td><td>The Q-score for the worst pre-context.</td></tr><tr><td>WORST_POST_CXT</td><td>The post-context (reference bases trailing after the locus of interest) with the lowest Q-score.</td></tr><tr><td>WORST_POST_CXT_QSCORE</td><td>The Q-score for the worst post-context.</td></tr><tr><td>ARTIFACT_NAME</td><td>A "nickname" of this artifact, if it is a known error mode.</td></tr></table>
 </section>
 <a id="TargetedPcrMetrics"></a>
 <h2>TargetedPcrMetrics</h2>
