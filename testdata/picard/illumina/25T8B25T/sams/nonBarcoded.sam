@@ -1,5 +1,5 @@
 @HD	VN:1.4	SO:queryname
-@RG	ID:HiMom.1	PL:illumina	PU:HiMom.1	LB:Hello, World	SM:HiDad	CN:BI
+@RG	ID:HiMom.1	SM:HiDad	LB:Hello, World	PL:illumina	PU:HiMom.1	CN:BI
 HiMom:1:1101:1031:2224	516	*	0	0	*	*	0	0	.........................	#########################	RG:Z:HiMom.1	XN:i:1
 HiMom:1:1101:1039:2147	516	*	0	0	*	*	0	0	.........................	#########################	RG:Z:HiMom.1	XN:i:1
 HiMom:1:1101:1046:2175	516	*	0	0	*	*	0	0	..GGA....................	#########################	RG:Z:HiMom.1
