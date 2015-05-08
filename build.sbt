@@ -14,9 +14,13 @@ javaSource in Test := baseDirectory.value / "src/tests"
 
 unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "src/scripts", baseDirectory.value / "testdata", baseDirectory.value / "src/tests/scripts")
 
-libraryDependencies += "com.github.samtools" % "htsjdk" % "1.131"
+libraryDependencies ++= Seq(
+  "com.github.samtools" % "htsjdk" % "1.131",
+  ("com.google.cloud.genomics" % "gatk-tools-java" % "1.1" % "picardopt").
+    exclude("org.mortbay.jetty", "servlet-api"),
+  "org.testng" % "testng" % "6.8.8" % Test
+)
 
-libraryDependencies += "org.testng" % "testng" % "6.8.8" % Test
 
 testNGSettings
 
@@ -28,7 +32,7 @@ publishMavenStyle := true
 
 publishArtifact in Test := false
 
-pomIncludeRepository := { _ => false}
+pomIncludeRepository := { _ => false }
 
 crossPaths := false
 
@@ -95,28 +99,27 @@ assemblyMergeStrategy in assembly := {
   case _ => MergeStrategy.deduplicate
 }
 
+assemblyExcludedJars in assembly := {
+  val cp = (fullClasspath in assembly).value
+  cp filter { jar =>
+    jar.data.getName == "gatk-tools-java-picard-1.1.jar" || jar.data.getName == "tools.jar"
+  }
+}
+
 val root = project.in(file(".")).
   configs(PicardOpt).
   settings(inConfig(PicardOpt)(
   Classpaths.configSettings ++ Defaults.configTasks ++ baseAssemblySettings ++ Seq(
+    test in assembly := {},
     assemblyJarName := s"${name.value}-opt-${version.value}.jar",
-    //this is where we would put in the maven dependency for gatk-tools-java-picard
-    //currently it expects it to be in opt and you can't build picard-opt jar without it there
-    unmanagedJars in Compile += baseDirectory.value / "opt/gatk-tools-java-picard-1.0.jar",
     assemblyExcludedJars in assembly := {
       val cp = (fullClasspath in assembly).value
       cp filter { jar =>
-        jar.data.getName == "tools.jar"
+        jar.data.getName == "guava-15.0.jar" || jar.data.getName == "tools.jar"
       }
     }
   )): _*)
 
-assemblyExcludedJars in assembly := {
-  val cp = (fullClasspath in assembly).value
-  cp filter { jar =>
-    jar.data.getName == "gatk-tools-java-picard-1.0.jar" || jar.data.getName == "tools.jar"
-  }
-}
 
 pomExtra := <url>http://samtools.github.io/htsjdk/</url>
   <licenses>
