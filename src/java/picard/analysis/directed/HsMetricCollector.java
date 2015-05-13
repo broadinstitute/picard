@@ -53,8 +53,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final int nearProbeDistance,
                              final int minimumMappingQuality,
                              final int minimumBaseQuality,
-                             final boolean clipOverlappingReads) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
+                             final boolean clipOverlappingReads,
+                             final int coverageCap,
+                             final int sampleSize) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, coverageCap, sampleSize);
     }
 
     public HsMetricCollector(final Set<MetricAccumulationLevel> accumulationLevels,
@@ -68,8 +70,10 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final int minimumMappingQuality,
                              final int minimumBaseQuality,
                              final boolean clipOverlappingReads,
-                             final boolean noSideEffects) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects);
+                             final boolean noSideEffects,
+                             final int coverageCap,
+                             final int sampleSize) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
     }
 
     @Override

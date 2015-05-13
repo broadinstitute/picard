@@ -139,4 +139,10 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
      * reads that should have mapped to GC>=50% regions mapped elsewhere.
      */
     public double GC_DROPOUT;
+
+    /** The theoretical HET SNP sensitivity. */
+    public double HET_SNP_SENSITIVITY;
+
+    /** The Q Score of the theoretical HET SNP sensitivity. */
+    public double HET_SNP_Q;
 }

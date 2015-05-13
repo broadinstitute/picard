@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009 The Broad Institute
+ * Copyright (c) 2015 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,6 @@ import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SAMUtils;
-import htsjdk.samtools.filter.SamRecordFilter;
-import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -38,6 +36,8 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.QualityUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
@@ -51,12 +51,12 @@ import picard.filter.CountingMapQFilter;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
+import picard.analysis.TheoreticalSensitivity;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -112,6 +112,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     private final long targetTerritory;
 
     private final long genomeSize;
+
+    private final int coverageCap;
+
+    private final int sampleSize;
+
+    private final Histogram<Integer> baseQHistogram = new Histogram<Integer>("value", "baseq_count");
+    private final Histogram<Integer> depthHistogram = new Histogram<Integer>("coverage", "count");
+
+    private static final double LOG_ODDS_THRESHOLD = 3.0;
 
     private final int minimumMappingQuality;
     private final int minimumBaseQuality;
@@ -237,8 +246,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final int nearProbeDistance,
                                   final int minimumMappingQuality,
                                   final int minimumBaseQuality,
-                                  final boolean clipOverlappingReads) {
-        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false);
+                                  final boolean clipOverlappingReads,
+                                  final int coverageCap,
+                                  final int sampleSize) {
+        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false, coverageCap, sampleSize);
     }
 
     public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
@@ -252,13 +263,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final int minimumMappingQuality,
                                   final int minimumBaseQuality,
                                   final boolean clipOverlappingReads,
-                                  final boolean noSideEffects) {
+                                  final boolean noSideEffects,
+                                  final int coverageCap,
+                                  final int sampleSize) {
         this.perTargetCoverage = perTargetCoverage;
         this.probeSetName = probeSetName;
         this.nearProbeDistance = nearProbeDistance;
 
         this.allProbes  = probeIntervals;
         this.allTargets = targetIntervals;
+        this.coverageCap = coverageCap;
+        this.sampleSize = sampleSize;
 
         final List<Interval> uniqueBaits = this.allProbes.uniqued().getIntervals();
         this.probeDetector = new OverlapDetector<Interval>(-this.nearProbeDistance, 0);
@@ -329,14 +344,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
      * Collect the Target Metrics for one unit of "accumulation" (i.e. for one sample, or for one library ...)
      */
     public class PerUnitTargetMetricCollector implements PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> {
-        private final Map<Interval,Double> intervalToGc;
+        private final Map<Interval, Double> intervalToGc;
         private File perTargetOutput;
+        final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
 
         // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage. */
         private final Map<Interval, Coverage> coverageByTarget;
 
         private final TargetMetrics metrics = new TargetMetrics();
-
         private final int minimumBaseQuality;
         private final CountingMapQFilter mapQFilter;
         private final boolean clipOverlappingReads;
@@ -352,10 +367,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                             final int minimumMappingQuality,
                                             final int minimumBaseQuality,
                                             final boolean clipOverlappingReads) {
-            this.metrics.SAMPLE           = sample;
-            this.metrics.LIBRARY          = library;
-            this.metrics.READ_GROUP       = readGroup;
-            this.metrics.PROBE_SET        = probeSetName;
+            this.metrics.SAMPLE      = sample;
+            this.metrics.LIBRARY     = library;
+            this.metrics.READ_GROUP  = readGroup;
+            this.metrics.PROBE_SET   = probeSetName;
 
             metrics.PROBE_TERRITORY  = probeTerritory;
             metrics.TARGET_TERRITORY = targetTerritory;
@@ -363,7 +378,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             this.coverageByTarget = new LinkedHashMap<Interval, Coverage>(coverageTargets.size() * 2, 0.5f);
             for (final Interval target : coverageTargets) {
-                this.coverageByTarget.put(target, new Coverage(target,0));
+                this.coverageByTarget.put(target, new Coverage(target, 0));
             }
 
             this.mapQFilter = new CountingMapQFilter(minimumMappingQuality);
@@ -471,16 +486,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                         for (final AlignmentBlock block : record.getAlignmentBlocks()) {
                             final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
 
-                            for (int pos=block.getReferenceStart(); pos<=end; ++pos) {
+                            for (int pos = block.getReferenceStart(); pos <= end; ++pos) {
                                 if (pos >= bait.getStart() && pos <= bait.getEnd()) ++onBaitBases;
                             }
                         }
                     }
 
-                    this.metrics.ON_PROBE_BASES   += onBaitBases;
+                    this.metrics.ON_PROBE_BASES += onBaitBases;
                     this.metrics.NEAR_PROBE_BASES += (mappedBases - onBaitBases);
-                }
-                else {
+                } else {
                     this.metrics.OFF_PROBE_BASES += mappedBases;
                 }
             }
@@ -496,8 +510,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final int numOverlappingBasesToClip = SAMUtils.getNumOverlappingAlignedBasesToClip(record);
                 rec = SAMUtils.clipOverlappingAlignedBases(record, numOverlappingBasesToClip, noSideEffects);
                 metrics.PCT_EXC_OVERLAP += numOverlappingBasesToClip;
-            }
-            else rec = record;
+            } else rec = record;
 
             // Find the target overlaps
             for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
@@ -510,11 +523,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                     if (qual < minimumBaseQuality) {
                         this.metrics.PCT_EXC_BASEQ++;
-                    }
-                    else {
+                    } else {
                         boolean isOnTarget = false;
                         for (final Interval target : targets) {
-                            if (refPos >= target.getStart() && refPos<= target.getEnd()) {
+                            if (refPos >= target.getStart() && refPos <= target.getEnd()) {
                                 isOnTarget = true;
                                 ++this.metrics.ON_TARGET_BASES;
                                 if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
@@ -522,6 +534,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                 final int targetOffset = refPos - target.getStart();
                                 final Coverage coverage = this.coverageByTarget.get(target);
                                 coverage.addBase(targetOffset);
+                                baseQHistogramArray[baseQualities[offset]]++;
                             }
                         }
 
@@ -533,31 +546,49 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         @Override
         public void finish() {
-            metrics.PCT_PF_READS         = metrics.PF_READS / (double) metrics.TOTAL_READS;
-            metrics.PCT_PF_UQ_READS      = metrics.PF_UNIQUE_READS / (double) metrics.TOTAL_READS;
+            metrics.PCT_PF_READS            = metrics.PF_READS / (double) metrics.TOTAL_READS;
+            metrics.PCT_PF_UQ_READS         = metrics.PF_UNIQUE_READS / (double) metrics.TOTAL_READS;
             metrics.PCT_PF_UQ_READS_ALIGNED = metrics.PF_UQ_READS_ALIGNED / (double) metrics.PF_UNIQUE_READS;
 
-            final double denominator   = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES + metrics.OFF_PROBE_BASES);
+            final double denominator        = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES + metrics.OFF_PROBE_BASES);
 
-            metrics.PCT_SELECTED_BASES   = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES) / denominator;
-            metrics.PCT_OFF_PROBE        = metrics.OFF_PROBE_BASES / denominator;
-            metrics.ON_PROBE_VS_SELECTED = metrics.ON_PROBE_BASES / (double) (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES);
-            metrics.MEAN_PROBE_COVERAGE  = metrics.ON_PROBE_BASES / (double) metrics.PROBE_TERRITORY;
-            metrics.FOLD_ENRICHMENT      = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
+            metrics.PCT_SELECTED_BASES      = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES) / denominator;
+            metrics.PCT_OFF_PROBE           = metrics.OFF_PROBE_BASES / denominator;
+            metrics.ON_PROBE_VS_SELECTED    = metrics.ON_PROBE_BASES / (double) (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES);
+            metrics.MEAN_PROBE_COVERAGE     = metrics.ON_PROBE_BASES / (double) metrics.PROBE_TERRITORY;
+            metrics.FOLD_ENRICHMENT         = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
 
-            metrics.PCT_EXC_DUPE       /= (double) metrics.PF_BASES_ALIGNED;
-            metrics.PCT_EXC_MAPQ        = mapQFilter.getFilteredBases() / (double) metrics.PF_BASES_ALIGNED;
-            metrics.PCT_EXC_BASEQ      /= (double) metrics.PF_BASES_ALIGNED;
-            metrics.PCT_EXC_OVERLAP    /= (double) metrics.PF_BASES_ALIGNED;
-            metrics.PCT_EXC_OFF_TARGET /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_DUPE           /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_MAPQ            = mapQFilter.getFilteredBases() / (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_BASEQ          /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_OVERLAP        /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_OFF_TARGET     /= (double) metrics.PF_BASES_ALIGNED;
 
-            calculateTargetCoverageMetrics();
+            // Get Theoretical Het SNP Sensitivity and Calculate Target Coverage Metrics
+            final double[] coverageDistribution = calculateTargetCoverageMetrics();
+
+            // Construct and write the outputs
+            for (int i=0; i<baseQHistogramArray.length; ++i) {
+                baseQHistogram.increment(i, baseQHistogramArray[i]);
+            }
+
+            // Construct and write the outputs
+            for (int i = 0; i < coverageDistribution.length; ++i) {
+                depthHistogram.increment(i, coverageDistribution[i]);
+            }
+
+            final double [] depthDoubleArray = TheoreticalSensitivity.normalizeHistogram(depthHistogram);
+            final double [] baseQDoubleArray = TheoreticalSensitivity.normalizeHistogram(baseQHistogram);
+            metrics.HET_SNP_SENSITIVITY = TheoreticalSensitivity.hetSNPSensitivity(depthDoubleArray, baseQDoubleArray, sampleSize, LOG_ODDS_THRESHOLD);
+            metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
+
             calculateGcMetrics();
         }
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
-        private void calculateTargetCoverageMetrics() {
+        private double[] calculateTargetCoverageMetrics() {
             final int[] depths = new int[(int) this.metrics.TARGET_TERRITORY];
+            final double[] coverageDistribution = new double[coverageCap+1];
             int zeroCoverageTargets = 0;
             int depthIndex = 0;
             double totalCoverage = 0;
@@ -571,11 +602,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final boolean hasCoverage = c.hasCoverage();
                 final int[] targetDepths = c.getDepths();
 
-                if (!hasCoverage) zeroCoverageTargets++;
+                if (!hasCoverage) {
+                    zeroCoverageTargets++;
+                    coverageDistribution[0] += c.getDepths().length;
+                }
 
                 for (final int depth : targetDepths) {
                     if (0 < depth) totalCoverage += depth;
                     if (hasCoverage) depths[depthIndex++] = depth;
+                    coverageDistribution[Math.min(depth, coverageCap)]++;
 
                     // Add to the "how many bases at at-least X" calculations.
                     for (int i = 0; i < targetBasesDepth.length; i++) {
@@ -614,6 +649,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.metrics.PCT_TARGET_BASES_40X  = (double) targetBases[6] / (double) targetBases[0];
             this.metrics.PCT_TARGET_BASES_50X  = (double) targetBases[7] / (double) targetBases[0];
             this.metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
+
+            return coverageDistribution;
         }
 
         private void calculateGcMetrics() {
@@ -711,6 +748,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         @Override
         public void addMetricsToFile(final MetricsFile<METRIC_TYPE, Integer> hsMetricsComparableMetricsFile) {
             hsMetricsComparableMetricsFile.addMetric(convertMetric(this.metrics));
+            hsMetricsComparableMetricsFile.addHistogram(depthHistogram);
+            hsMetricsComparableMetricsFile.addHistogram(baseQHistogram);
         }
     }
 
@@ -911,4 +950,10 @@ class TargetMetrics extends MultilevelMetrics {
      * reads that should have mapped to GC>=50% regions mapped elsewhere.
      */
     public double GC_DROPOUT;
+
+    /** The theoretical HET SNP sensitivity. */
+    public double HET_SNP_SENSITIVITY;
+
+    /** The Phred Scaled Q Score of the theoretical HET SNP sensitivity. */
+    public double HET_SNP_Q;
 }

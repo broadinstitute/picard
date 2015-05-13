@@ -86,6 +86,12 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Option(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true, overridable = true)
     public boolean CLIP_OVERLAPPING_READS = false;
 
+    @Option(shortName = "covMax", doc = "Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.", optional = true)
+    public int COVERAGE_CAP = 200;
+
+    @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
+    public int SAMPLE_SIZE=10000;
+
     /**
      * Asserts that files are readable and writable and then fires off an
      * HsMetricsCalculator instance to do the real work.

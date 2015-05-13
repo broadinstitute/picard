@@ -7,14 +7,9 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
-import htsjdk.samtools.SAMTextHeaderCodec;
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -22,8 +17,6 @@ import picard.cmdline.CommandLineProgramTest;
 import picard.sam.SortSam;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Random;
@@ -127,14 +120,14 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
         final String singleIntervals = "testdata/picard/quality/chrM.single.interval_list";
 
         return new Object[][] {
-                {tempSamFile, outfile, perTargetOutfile, referenceFile, singleIntervals},
-                {tempSamFile, outfile, perTargetOutfile, referenceFile, emptyIntervals}
+                {tempSamFile, outfile, perTargetOutfile, referenceFile, singleIntervals, 1000},
+                {tempSamFile, outfile, perTargetOutfile, referenceFile, emptyIntervals, 1000}
         };
     }
 
     @Test(dataProvider = "targetedIntervalDataProvider")
     public void runCollectTargetedMetricsTest(final File input, final File outfile, final File perTargetOutfile, final String referenceFile,
-                                final String targetIntervals) throws IOException {
+                                final String targetIntervals, final int sampleSize) throws IOException {
 
         final String[] args = new String[] {
                 "TARGET_INTERVALS=" + targetIntervals,
@@ -143,7 +136,8 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
                 "REFERENCE_SEQUENCE=" + referenceFile,
                 "PER_TARGET_COVERAGE=" + perTargetOutfile.getAbsolutePath(),
                 "LEVEL=ALL_READS",
-                "AMPLICON_INTERVALS=" + targetIntervals
+                "AMPLICON_INTERVALS=" + targetIntervals,
+                "SAMPLE_SIZE=" + sampleSize
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -153,6 +147,7 @@ public class CollectTargetedMetricsTest extends CommandLineProgramTest {
 
         for (final TargetedPcrMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_READS, numReads * 2);
+            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, .997972, .02);
         }
     }
 }

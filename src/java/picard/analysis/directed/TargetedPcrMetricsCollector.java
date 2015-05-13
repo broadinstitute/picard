@@ -53,8 +53,10 @@ public class TargetedPcrMetricsCollector extends TargetMetricsCollector<Targeted
                                        final int nearProbeDistance,
                                        final int minimumMappingQuality,
                                        final int minimumBaseQuality,
-                                       final boolean clipOverlappingReads) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
+                                       final boolean clipOverlappingReads,
+                                       final int coverageCap,
+                                       final int sampleSize) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, coverageCap, sampleSize);
     }
 
     public TargetedPcrMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
@@ -68,12 +70,13 @@ public class TargetedPcrMetricsCollector extends TargetMetricsCollector<Targeted
                                        final int minimumMappingQuality,
                                        final int minimumBaseQuality,
                                        final boolean clipOverlappingReads,
-                                       final boolean noSideEffects) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects);
+                                       final boolean noSideEffects,
+                                       final int coverageCap,
+                                       final int sampleSize) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
     }
-
     @Override
-    public TargetedPcrMetrics convertMetric(TargetMetrics targetMetrics) {
+    public TargetedPcrMetrics convertMetric(final TargetMetrics targetMetrics) {
         final TargetedPcrMetrics pcrMetrics = new TargetedPcrMetrics();
         TargetMetricsCollector.reflectiveCopy(targetMetrics, pcrMetrics,
                 new String[]{"PROBE_SET",           "PROBE_TERRITORY",    "ON_PROBE_BASES",    "NEAR_PROBE_BASES",    "OFF_PROBE_BASES",    "PCT_SELECTED_BASES",  "PCT_OFF_PROBE",    "ON_PROBE_VS_SELECTED",    "MEAN_PROBE_COVERAGE"},
