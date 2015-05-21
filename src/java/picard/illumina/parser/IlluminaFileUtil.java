@@ -142,7 +142,7 @@ public class IlluminaFileUtil {
                     utils.put(SupportedIlluminaFormat.Filter, parameterizedFileUtil);
                     break;
                 case Barcode:
-                    parameterizedFileUtil = new PerTileFileUtil("_barcode.txt", barcodeDir != null ? barcodeDir : basecallDir, new BarcodeFileFaker(), lane);
+                    parameterizedFileUtil = new PerTileFileUtil("_barcode.txt", barcodeDir != null ? barcodeDir : basecallDir, new BarcodeFileFaker(), lane, false);
                     utils.put(SupportedIlluminaFormat.Barcode, parameterizedFileUtil);
                     break;
                 case MultiTileFilter:
