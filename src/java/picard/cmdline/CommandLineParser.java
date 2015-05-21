@@ -789,7 +789,7 @@ public class CommandLineParser {
             sb.append(optionDefinition.doc);
             sb.append("  ");
         }
-        if (optionDefinition.optional && !optionDefinition.isCollection) {
+        if (optionDefinition.optional) {
             sb.append("Default value: ");
             sb.append(optionDefinition.defaultValue);
             sb.append(". ");
