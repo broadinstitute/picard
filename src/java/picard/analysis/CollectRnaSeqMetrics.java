@@ -98,7 +98,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(final SAMFileHeader header, final File samFile) {
+    protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
 
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 

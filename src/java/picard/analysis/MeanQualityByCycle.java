@@ -157,7 +157,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
     }
 
     @Override
-    protected void setup(final SAMFileHeader header, final File samFile) {
+    protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
         IOUtil.assertFileIsWritable(CHART_OUTPUT);
         // If we're working with a single library, assign that library's name
         // as a suffix to the plot title

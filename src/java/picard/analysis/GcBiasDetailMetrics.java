@@ -24,7 +24,7 @@
 
 package picard.analysis;
 
-import htsjdk.samtools.metrics.MetricBase;
+import picard.metrics.MultilevelMetrics;
 
 /**
  * Class that holds detailed metrics about reads that fall within windows of a certain
@@ -32,7 +32,8 @@ import htsjdk.samtools.metrics.MetricBase;
  *
  * @author Tim Fennell
  */
-public class GcBiasDetailMetrics extends MetricBase {
+public class GcBiasDetailMetrics extends MultilevelMetrics {
+    public String ACCUMULATION_LEVEL;
     /** The G+C content of the reference sequence represented by this bin. Values are from 0% to 100% */
     public int GC;
 

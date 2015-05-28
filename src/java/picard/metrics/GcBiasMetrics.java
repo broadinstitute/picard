@@ -22,36 +22,19 @@
  * THE SOFTWARE.
  */
 
-package picard.analysis;
-
-import picard.metrics.MultilevelMetrics;
+package picard.metrics;
 
 /**
- * High level metrics that capture how biased the coverage in a certain lane is.
- *
- * @author Tim Fennell
+ * Created by kbergin on 3/23/15.
  */
-public class GcBiasSummaryMetrics extends MultilevelMetrics {
-    public String ACCUMULATION_LEVEL;
 
-    /** The window size on the genome used to calculate the GC of the sequence. */
-    public int WINDOW_SIZE;
+import htsjdk.samtools.metrics.MetricBase;
+import picard.analysis.GcBiasDetailMetrics;
+import picard.analysis.GcBiasSummaryMetrics;
+import htsjdk.samtools.metrics.MetricsFile;
 
-    /** The total number of clusters that were seen in the gc bias calculation. */
-    public int TOTAL_CLUSTERS;
+public class GcBiasMetrics extends MetricBase {
+    public MetricsFile<GcBiasDetailMetrics, ?> DETAILS = new MetricsFile<GcBiasDetailMetrics, Comparable>();
 
-    /** The total number of aligned reads used to compute the gc bias metrics. */
-    public int ALIGNED_READS;
-
-    /**
-     * Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
-     * (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].
-     */
-    public double AT_DROPOUT;
-
-    /**
-     * Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
-     * (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].
-     */
-    public double GC_DROPOUT;
+    public GcBiasSummaryMetrics SUMMARY;
 }
