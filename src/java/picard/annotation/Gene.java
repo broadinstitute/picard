@@ -57,6 +57,23 @@ public class Gene extends Interval implements Iterable<Gene.Transcript>  {
         return transcripts.values().iterator();
     }
 
+    public int compareTo(final Gene that) {
+        final int ret = super.compareTo(that);
+        if (ret != 0) return ret;
+        return Boolean.valueOf(this.isPositiveStrand()).compareTo(that.isPositiveStrand());
+    }
+
+    public boolean equals(final Object other) {
+        if (!(other instanceof Gene)) return false;
+        else if (this == other) return true;
+        else {
+            final Gene that = (Gene)other;
+            return (this.compareTo(that) == 0);
+        }
+    }
+
+
+
     /**
      * A single transcript of a gene.  Sequence name is stored in the enclosing object (class Gene).
      */
