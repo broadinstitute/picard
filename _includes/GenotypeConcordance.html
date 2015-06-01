@@ -11,7 +11,7 @@
 <tr><td>OUTPUT (File)</td><td>Basename for the two metrics files that are to be written. Resulting files will be &lt;OUTPUT>.genotype_concordance_summary_metrics  and &lt;OUTPUT>.genotype_concordance_detail_metrics.  Required. </td></tr>
 <tr><td>TRUTH_SAMPLE (String)</td><td>The name of the truth sample within the truth VCF  Required. </td></tr>
 <tr><td>CALL_SAMPLE (String)</td><td>The name of the call sample within the call VCF  Required. </td></tr>
-<tr><td>INTERVALS (File)</td><td>One or more interval list files that will be used to limit the genotype concordance.  This option may be specified 0 or more times. </td></tr>
+<tr><td>INTERVALS (File)</td><td>One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>INTERSECT_INTERVALS (Boolean)</td><td>If true, multiple interval lists will be intersected. If false multiple lists will be unioned.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>MIN_GQ (Integer)</td><td>Genotypes below this genotype quality will have genotypes classified as LowGq.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MIN_DP (Integer)</td><td>Genotypes below this depth will have genotypes classified as LowDp.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>

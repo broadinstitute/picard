@@ -18,10 +18,10 @@
 <tr><td>PREDICTED_INSERT_SIZE (Integer)</td><td>Predicted median insert size, to insert into the read group header  Default value: null. </td></tr>
 <tr><td>PROGRAM_GROUP (String)</td><td>Program group to insert into the read group header.  Default value: null. </td></tr>
 <tr><td>PLATFORM_MODEL (String)</td><td>Platform model to insert into the group header (free-form text providing further details of the platform/technology used)  Default value: null. </td></tr>
-<tr><td>COMMENT (String)</td><td>Comment(s) to include in the merged output file's header.  This option may be specified 0 or more times. </td></tr>
+<tr><td>COMMENT (String)</td><td>Comment(s) to include in the merged output file's header.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>DESCRIPTION (String)</td><td>Inserted into the read group header  Default value: null. </td></tr>
 <tr><td>RUN_DATE (Iso8601Date)</td><td>Date the run was produced, to insert into the read group header  Default value: null. </td></tr>
-<tr><td>SORT_ORDER (SortOrder)</td><td>The sort order for the output sam/bam file.  Default value: queryname. This option can be set to 'null' to clear the default value. Possible values: {unsorted, queryname, coordinate} </td></tr>
+<tr><td>SORT_ORDER (SortOrder)</td><td>The sort order for the output sam/bam file.  Default value: queryname. This option can be set to 'null' to clear the default value. Possible values: {unsorted, queryname, coordinate, duplicate} </td></tr>
 <tr><td>MIN_Q (Integer)</td><td>Minimum quality allowed in the input fastq.  An exception will be thrown if a quality is less than this value.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MAX_Q (Integer)</td><td>Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.  Default value: 93. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>STRIP_UNPAIRED_MATE_NUMBER (Boolean)</td><td>If true and this is an unpaired fastq any occurance of '/1' will be removed from the end of a read name.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
