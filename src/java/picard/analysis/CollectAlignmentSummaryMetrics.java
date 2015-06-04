@@ -108,7 +108,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     /** Silly method that is necessary to give unit test access to call doWork() */
     protected final int testDoWork() { return doWork(); }
 
-    @Override protected void setup(final SAMFileHeader header, final File samFile, final File referenceSequence) {
+    @Override protected void setup(final SAMFileHeader header, final File samFile) {
         IOUtil.assertFileIsWritable(OUTPUT);
 
         if (header.getSequenceDictionary().isEmpty()) {

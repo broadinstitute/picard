@@ -6,7 +6,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
@@ -60,6 +59,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
                                 final boolean assumeSorted,
                                 final long stopAfter,
                                 final Collection<SinglePassSamProgram> programs) {
+
         // Setup the standard inputs
         IOUtil.assertFileIsReadable(input);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(referenceSequence).open(input);
@@ -95,7 +95,7 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
         // Call the abstract setup method!
         boolean anyUseNoRefReads = false;
         for (final SinglePassSamProgram program : programs) {
-            program.setup(in.getFileHeader(), input, referenceSequence);
+            program.setup(in.getFileHeader(), input);
             anyUseNoRefReads = anyUseNoRefReads || program.usesNoRefReads();
         }
 
@@ -138,7 +138,8 @@ public abstract class SinglePassSamProgram extends CommandLineProgram {
     protected boolean usesNoRefReads() { return true; }
 
     /** Should be implemented by subclasses to do one-time initialization work. */
-    protected abstract void setup(final SAMFileHeader header, final File samFile, final File referenceSequence);
+    protected abstract void setup(final SAMFileHeader header, final File samFile);
+
     /**
      * Should be implemented by subclasses to accept SAMRecords one at a time.
      * If the read has a reference sequence and a reference sequence file was supplied to the program
