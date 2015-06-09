@@ -178,7 +178,7 @@ public class RefFlatReader {
         for (int i = 0; i < exonCount; ++i) {
             final Exon e = tx.addExon(Integer.parseInt(exonStarts[i]) + 1, Integer.parseInt(exonEnds[i]));
 
-            if (e.start >= e.end) {
+            if (e.start > e.end) {
                 throw new AnnotationException("Exon has 0 or negative extent for " + transcriptDescription);
             }
             if (i > 0 && tx.exons[i-1].end >= tx.exons[i].start) {
