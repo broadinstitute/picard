@@ -44,6 +44,12 @@ public class BedToIntervalList extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output Picard Interval List")
     public File OUTPUT;
 
+    @Option(doc="If true, sort the output interval list before writing it.")
+    public boolean SORT = true;
+
+    @Option(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
+    public boolean UNIQUE = true;
+
     final Log LOG = Log.getInstance(getClass());
 
     // Stock main method
@@ -109,7 +115,10 @@ public class BedToIntervalList extends CommandLineProgram {
             CloserUtil.close(bedReader);
 
             // Sort and write the output
-            intervalList.uniqued().write(OUTPUT);
+            IntervalList out = intervalList;
+            if (SORT) out = out.sorted();
+            if (UNIQUE) out = out.uniqued();
+            out.write(OUTPUT);
 
         } catch (final IOException e) {
             throw new RuntimeException(e);
