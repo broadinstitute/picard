@@ -20,6 +20,7 @@
  the basecalls directory and determine to which barcode each read should be assigned.</li>
 <li><a href="#GcBiasDetailMetrics">GcBiasDetailMetrics</a>: Class that holds detailed metrics about reads that fall within windows of a certain
  GC bin on the reference genome.</li>
+<li><a href="#GcBiasMetrics">GcBiasMetrics</a>: </li>
 <li><a href="#GcBiasSummaryMetrics">GcBiasSummaryMetrics</a>: High level metrics that capture how biased the coverage in a certain lane is.</li>
 <li><a href="#GenotypeConcordanceContingencyMetrics">GenotypeConcordanceContingencyMetrics</a>: Class that holds metrics about the Genotype Concordance contingency tables.</li>
 <li><a href="#GenotypeConcordanceDetailMetrics">GenotypeConcordanceDetailMetrics</a>: Class that holds detail metrics about Genotype Concordance</li>
@@ -199,12 +200,20 @@
  GC bin on the reference genome.</p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
-<tr><td>GC</td><td>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100%</td></tr><tr><td>WINDOWS</td><td>The number of windows on the reference genome that have this G+C content.</td></tr><tr><td>READ_STARTS</td><td>The number of reads whose start position is at the start of a window of this GC.</td></tr><tr><td>MEAN_BASE_QUALITY</td><td>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC.</td></tr><tr><td>NORMALIZED_COVERAGE</td><td>The ration of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
+<tr><td>ACCUMULATION_LEVEL</td><td></td></tr><tr><td>GC</td><td>The G+C content of the reference sequence represented by this bin. Values are from 0% to 100%</td></tr><tr><td>WINDOWS</td><td>The number of windows on the reference genome that have this G+C content.</td></tr><tr><td>READ_STARTS</td><td>The number of reads whose start position is at the start of a window of this GC.</td></tr><tr><td>MEAN_BASE_QUALITY</td><td>The mean quality (determined via the error rate) of all bases of all reads that are assigned to windows of this GC.</td></tr><tr><td>NORMALIZED_COVERAGE</td><td>The ration of "coverage" in this GC bin vs. the mean coverage of all GC bins. A number of
  1 represents mean coverage, a number less than one represents lower than mean coverage (e.g. 0.5
  means half as much coverage as average) while a number greater than one represents higher than
  mean coverage (e.g. 3.1 means this GC bin has 3.1 times more reads per window than average).</td></tr><tr><td>ERROR_BAR_WIDTH</td><td>The radius of error bars in this bin based on the number of observations made. For example if
  the normalized coverage is 0.75 and the error bar width is 0.1 then the error bars would be
  drawn from 0.65 to 0.85.</td></tr></table>
+</section>
+<a id="GcBiasMetrics"></a>
+<h2>GcBiasMetrics</h2>
+<section>
+<p></p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>DETAILS</td><td></td></tr><tr><td>SUMMARY</td><td></td></tr></table>
 </section>
 <a id="GcBiasSummaryMetrics"></a>
 <h2>GcBiasSummaryMetrics</h2>
@@ -212,7 +221,7 @@
 <p>High level metrics that capture how biased the coverage in a certain lane is.</p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
-<tr><td>WINDOW_SIZE</td><td>The window size on the genome used to calculate the GC of the sequence.</td></tr><tr><td>TOTAL_CLUSTERS</td><td>The total number of clusters that were seen in the gc bias calculation.</td></tr><tr><td>ALIGNED_READS</td><td>The total number of aligned reads used to compute the gc bias metrics.</td></tr><tr><td>AT_DROPOUT</td><td>Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
+<tr><td>ACCUMULATION_LEVEL</td><td></td></tr><tr><td>WINDOW_SIZE</td><td>The window size on the genome used to calculate the GC of the sequence.</td></tr><tr><td>TOTAL_CLUSTERS</td><td>The total number of clusters that were seen in the gc bias calculation.</td></tr><tr><td>ALIGNED_READS</td><td>The total number of aligned reads used to compute the gc bias metrics.</td></tr><tr><td>AT_DROPOUT</td><td>Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating
  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[0..50].</td></tr><tr><td>GC_DROPOUT</td><td>Illumina-style GC dropout metric.  Calculated by taking each GC bin independently and calculating
  (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].</td></tr></table>
 </section>
