@@ -1,12 +1,12 @@
 [![Build Status](https://travis-ci.org/broadinstitute/picard.svg?branch=master)](https://travis-ci.org/broadinstitute/picard)
 
-A set of Java command line tools for maniuplating high-throughput sequencing data (HTS) data and formats.  
+A set of Java command line tools for manipulating high-throughput sequencing (HTS) data and formats.  
 
 Picard is implemented using the HTSJDK Java library[HTSJDK][1], supporting
 accessing of common file formats, such as [SAM][2] and [VCF][3], used for high-throughput
 sequencing data.  
 
-Its also possible to build a version of Picard that supports reading from
+It's also possible to build a version of Picard that supports reading from
 GA4GH API, e.g. Google Genomics:
 1.Fetch gatk-tools-java library from https://github.com/iliat/gatk-tools-java
 2.Build: ant gatk-tools-java-picard-jar
