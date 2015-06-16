@@ -64,12 +64,21 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        usage = CollectAlignmentSummaryMetrics.USAGE,
-        usageShort = CollectAlignmentSummaryMetrics.USAGE,
+        usage = CollectAlignmentSummaryMetrics.USAGE_SUMMARY + CollectAlignmentSummaryMetrics.USAGE_DETAILS,
+        usageShort = CollectAlignmentSummaryMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
-    static final String USAGE = "Produces from a SAM or BAM a file containing summary alignment metrics";
+    static final String USAGE_SUMMARY = "Produces a file containing summary alignment metrics from a SAM or BAM.";
+    static final String USAGE_DETAILS = "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "    java -jar picard.jar CollectAlignmentMetrics \\<br />" +
+            "        R=reference.fasta \\<br />" +
+            "        I=input.bam \\<br />" +
+            "        O=output.txt" +
+            "</pre>" +
+            "<hr />";
     
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
