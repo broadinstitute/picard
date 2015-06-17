@@ -1,6 +1,7 @@
 package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -9,7 +10,6 @@ import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -31,13 +31,20 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     /**
      * This interface allows developers to create Programs to run in addition to the ones defined in the Program enum.
+     * Includes a method for determining whether or not a Program explicitly needs a reference sequence (i.e. cannot be null)
      */
     public static interface ProgramInterface {
         SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference);
+        public boolean needsReferenceSequence();
     }
 
     public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+
             @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
@@ -54,6 +61,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         },
         CollectInsertSizeMetrics {
             @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+
+            @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.OUTPUT = new File(outbase + ".insert_size_metrics");
@@ -68,6 +80,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
         },
         QualityScoreDistribution {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+            @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
                 program.OUTPUT = new File(outbase + ".quality_distribution_metrics");
@@ -82,6 +99,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
         },
         MeanQualityByCycle {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+            @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
                 program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics");
@@ -96,6 +118,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
         },
         CollectBaseDistributionByCycle {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+            @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
                 program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics");
@@ -110,6 +137,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             }
         },
         CollectGcBiasMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return true;
+            }
+            @Override
             public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
                 final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
                 program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics");
@@ -148,7 +180,8 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     public String OUTPUT;
 
     @Option(doc = "List of metrics programs to apply during the pass through the SAM file.")
-    public List<Program> PROGRAM = CollectionUtil.makeList(Program.values());
+    public List<Program> PROGRAM = CollectionUtil.makeList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
+            Program.CollectInsertSizeMetrics, Program.MeanQualityByCycle, Program.QualityScoreDistribution);
 
     /**
      * Contents of PROGRAM list is transferred to this list during command-line validation, so that an outside
@@ -184,7 +217,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
         final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
         for (final ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
-            final SinglePassSamProgram instance = program.makeInstance(OUTPUT , INPUT, REFERENCE_SEQUENCE);
+            if (program.needsReferenceSequence() && REFERENCE_SEQUENCE==null) {
+                throw new PicardException("A program you are trying to run needs a Reference Sequence, please set REFERENCE_SEQUENCE in the command line");
+            }
+            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway
@@ -195,7 +231,6 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
             programs.add(instance);
         }
-
         SinglePassSamProgram.makeItSo(INPUT, REFERENCE_SEQUENCE, ASSUME_SORTED, STOP_AFTER, programs);
 
         return 0;
