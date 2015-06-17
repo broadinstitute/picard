@@ -12,8 +12,8 @@
 			<p>A set of Java command line tools for manipulating high-throughput sequencing data (HTS) data and formats.  </p>
 
 			<p>Picard is implemented using the HTSJDK Java library <a href="http://github.com/samtools/htsjdk">HTSJDK</a>, supporting
-			accessing of common file formats, such as <a href="http://samtools.sourceforge.net">SAM</a> and <a href="http://vcftools.sourceforge.net/specs.html">VCF</a>, used for high-throughput
-			sequencing data.  </p>
+			accessing of common file formats, such as <a href="http://samtools.github.io/hts-specs/SAMv1.pdf">SAM</a> and <a href="http://samtools.github.io/hts-specs/VCFv4.1.pdf">VCF</a>, used for high-throughput
+			sequencing data.</p>
 			</section>
 
 			<!-- BEGIN OF THE MAIN BODY  -->
@@ -22,25 +22,23 @@
 
 			<section>
 			<p>SAM (Sequence Alignment/Map) format is a generic format for storing
-			large nucleotide sequence alignments. SAM is described in the
-			<a href="http://samtools.sourceforge.net/">SAMtools project page</a>.
+			large nucleotide sequence alignments. SAM and related file formats
+			are described in the <a href="https://samtools.github.io/hts-specs/">hts-specs</a> page.
 			</p>
 
 			<p>Picard comprises Java-based command-line utilities that manipulate SAM files,
 			and a Java API (HTSJDK) for creating new programs that read and write SAM files.
 			Both SAM text format and SAM binary (BAM) format are supported.</p>
 
-			<p>Picard does not have its own mailing lists. Please use the
-			<a href="http://sourceforge.net/mail/?group_id=246254">SAMTools mailing Lists</a>
-			for Picard-related correspondence.
+			<p>To get help using and developing Picard, please use the
+			<a href="http://gatkforums.broadinstitute.org/">GATK Forums</a>.
 			</p>
 
-			<p>Picard is hosted by <a target="_blank" href="http://github.com">Github.com</a>. The project page
-			is <a target="_blank" href="http://github.com/broadinstitute/picard">here</a>.
+			<p>Picard is hosted by <a target="_blank" href="http://github.com">Github.com</a>.
+			The source code is available at the Picard project page
+			<a target="_blank" href="http://github.com/broadinstitute/picard">here</a>.
 
-			<p>The source code for Picard is available on GitHub <a href="https://github.com/broadinstitute/picard">here</a>.
-			You can check out the latest source code with:
-			</p>
+			<p>You can check out the latest source code with:</p>
 			<pre>git clone git@github.com:broadinstitute/picard.git</pre>
 
 			<p>The source code for HTSJDK is available on GitHub <a href="https://github.com/samtools/htsjdk">here</a>.
@@ -62,17 +60,13 @@
 			<h2>Getting Help</h2>
 
 			<section>
-			<p>Picard is supported through
-			the <a href="http://sourceforge.net/mail/?group_id=246254">SAMTools mailing Lists</a>.
-			Join samtools-help to get support for Picard programs, and samtools-devel to get support
-			for Picard API.
-			</p>
+			<p>Picard is supported through the <a href="http://gatkforums.broadinstitute.org/">GATK Forums</a>.</p>
 			</section>
 
 			<h2>Before Asking For Help</h2>
 
 			<section>
-			<p>Before emailing the samtools-help list, please do the following:</p>
+			<p>Before posting on the forums, please do the following:</p>
 			<ul>
 				<li>Try the <a href="https://github.com/broadinstitute/picard/releases/latest">latest version of Picard</a></li>
 				<li>See if your problem is discussed in
@@ -98,14 +92,21 @@
 			<h2>General Information</h2>
 			<section>
 			<ul>
+				<li><a href="index.html#GettingHelp">Getting Help</a></li>
 				<li><a href="faq.html">Frequently Asked Questions</a></li>
 				<li><a href="http://github.com/broadinstitute/picard/releases">Download Page</a></li>
-				<li><a href="index.html#GettingHelp">Getting help</a></li>
-				<li><a href="http://github.com/broadinstitute/picard">Picard Github Project Page</a></li>
-				<li><a href="http://github.com/samtools/htsjdk">HTSJDK Github Project Page</a></li>
-				<li><a href="http://samtools.sourceforge.net/SAM1.pdf">SAM Format Specification</a></li>
-				<li><a href="http://sourceforge.net/mail/?group_id=246254">SAMTools mailing Lists</a></li>
-				<li><a href="http://samtools.sourceforge.net/">SAMTools Home Page</a></li>
+				<li>SAMtools</li>
+				<ul>
+					<li><a href="http://samtools.sourceforge.net/">SAMtools Home Page</a></li>
+					<li><a href="http://sourceforge.net/mail/?group_id=246254">SAMtools Mailing Lists</a></li>
+				</ul>
+				<li>Github Project Pages:</li>
+				<ul>
+					<li><a href="https://github.com/broadinstitute/picard">Picard</a></li>
+					<li><a href="https://github.com/samtools/htsjdk">HTSJDK</a></li>
+					<li><a href="https://github.com/samtools/samtools">SAMtools</a></li>
+				</ul>
+				<li><a href="https://samtools.github.io/hts-specs">SAM/BAM and Related File Format Specifications</a></li>
 			</ul>
 			</section>
 			<h2>Picard</h2>
