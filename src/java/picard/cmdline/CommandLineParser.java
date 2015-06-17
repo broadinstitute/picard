@@ -351,7 +351,7 @@ public class CommandLineParser {
         stream.println("<a id=\"" + programName + "\"/>");
         stream.println("<h3>" + programName + "</h3>");
         stream.println("<section>");
-        stream.println("<p>" + htmlEscape(getUsagePreamble()) + "</p>");
+        stream.println("<p>" + getUsagePreamble() + "</p>");
         boolean hasOptions = false;
         for (final OptionDefinition optionDefinition : optionDefinitions) {
             if (!optionDefinition.isCommon || printCommon) {
