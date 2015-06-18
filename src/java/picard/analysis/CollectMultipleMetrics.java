@@ -218,7 +218,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
         for (final ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
             if (program.needsReferenceSequence() && REFERENCE_SEQUENCE==null) {
-                throw new PicardException("A program you are trying to run needs a Reference Sequence, please set REFERENCE_SEQUENCE in the command line");
+                throw new PicardException("The " + program.toString() + " program needs a Reference Sequence, please set REFERENCE_SEQUENCE in the command line");
             }
             final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE);
 
