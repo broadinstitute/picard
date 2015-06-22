@@ -83,7 +83,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
-    private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+    private final Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     private RnaSeqMetricsCollector collector;
 
@@ -136,7 +136,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
         file.write(OUTPUT);
 
         boolean atLeastOneHistogram = false;
-        for (Histogram<Integer> histo : file.getAllHistograms()) {
+        for (final Histogram<Integer> histo : file.getAllHistograms()) {
             atLeastOneHistogram = atLeastOneHistogram || !histo.isEmpty();
         }
         // Generate the coverage by position plot
