@@ -37,7 +37,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference);
         public boolean needsReferenceSequence();
     }
-
+    
     public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
             @Override
@@ -161,8 +161,26 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
                 return program;
             }
-        };
-
+        },
+        RnaSeqMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return true;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+                final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
+                program.OUTPUT       = new File(outbase + ".rna_metrics");
+                program.CHART_OUTPUT = new File(outbase + ".rna_coverage.pdf");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+                
+                return program;
+            }
+        }
     }
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
@@ -189,7 +207,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * setProgramsToRun().
      */
     private List<ProgramInterface> programsToRun;
-
+    
     // Stock main method
     public static void main(final String[] args) {
         new CollectMultipleMetrics().instanceMainWithExit(args);
@@ -197,6 +215,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
+        if (PROGRAM.isEmpty()) {
+            return new String[]{"No programs specified with PROGRAM"};
+        }
         programsToRun = new ArrayList<ProgramInterface>(PROGRAM);
         return super.customCommandLineValidation();
     }
@@ -205,7 +226,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * Use this method when invoking CollectMultipleMetrics programmatically to run programs other than the ones
      * available via enum.  This must be called before doWork().
      */
-    public void setProgramsToRun(List<ProgramInterface> programsToRun) {
+    public void setProgramsToRun(final List<ProgramInterface> programsToRun) {
         this.programsToRun = programsToRun;
     }
 
