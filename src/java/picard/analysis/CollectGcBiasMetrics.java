@@ -69,7 +69,7 @@ import java.util.Set;
 )
 public class CollectGcBiasMetrics extends SinglePassSamProgram {
     /** The location of the R script to do the plotting. */
-    private static final File R_SCRIPT = new File("src/scripts/picard/analysis/","gcBias.R");
+    private static final String R_SCRIPT = "picard/analysis/gcBias.R";
 
     // Usage and parameters
 
@@ -172,7 +172,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
 
         final NumberFormat fmt = NumberFormat.getIntegerInstance();
         fmt.setGroupingUsed(true);
-        RExecutor.executeFromFile(R_SCRIPT,
+        RExecutor.executeFromClasspath(R_SCRIPT,
                 OUTPUT.getAbsolutePath(),
                 SUMMARY_OUTPUT.getAbsolutePath(),
                 CHART_OUTPUT.getAbsolutePath(),
