@@ -1,7 +1,7 @@
 <a id="CollectAlignmentSummaryMetrics"/>
 <h3>CollectAlignmentSummaryMetrics</h3>
 <section>
-<p>Produces from a SAM or BAM a file containing summary alignment metrics</p>
+<p>Produces a file containing summary alignment metrics from a SAM or BAM.<br /><h4>Usage example:</h4><pre>    java -jar picard.jar CollectAlignmentMetrics \<br />        R=reference.fasta \<br />        I=input.bam \<br />        O=output.txt</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>MAX_INSERT_SIZE (Integer)</td><td>Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.  Default value: 100000. This option can be set to 'null' to clear the default value. </td></tr>

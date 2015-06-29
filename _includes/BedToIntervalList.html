@@ -7,5 +7,7 @@
 <tr><td>INPUT (File)</td><td>The input BED file  Required. </td></tr>
 <tr><td>SEQUENCE_DICTIONARY (File)</td><td>The sequence dictionary  Required. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output Picard Interval List  Required. </td></tr>
+<tr><td>SORT (Boolean)</td><td>If true, sort the output interval list before writing it.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>UNIQUE (Boolean)</td><td>If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>

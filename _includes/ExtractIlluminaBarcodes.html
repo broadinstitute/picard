@@ -2,14 +2,14 @@
 <h3>ExtractIlluminaBarcodes</h3>
 <section>
 <p>Determine the barcode for each read in an Illumina lane.
-<p>For each tile, a file is written to the basecalls directory of the form s_&lt;lane>_&lt;tile>_barcode.txt. An output file contains a line for each read in the tile, aligned with the regular basecall output. 
-<p>The output file contains the following tab-separated columns: 
-<p>    * read subsequence at barcode position
-<p>    * Y or N indicating if there was a barcode match
-<p>    * matched barcode sequence
-<p>Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.
-<p>
-<p></p>
+For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. An output file contains a line for each read in the tile, aligned with the regular basecall output. 
+The output file contains the following tab-separated columns: 
+    * read subsequence at barcode position
+    * Y or N indicating if there was a barcode match
+    * matched barcode sequence
+Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.
+
+</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>BASECALLS_DIR (File)</td><td>The Illumina basecalls directory.   Required. </td></tr>
