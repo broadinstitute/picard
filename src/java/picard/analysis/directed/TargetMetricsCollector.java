@@ -47,6 +47,7 @@ import picard.analysis.MetricAccumulationLevel;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
+import picard.util.MathUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -509,7 +510,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 try {
                     if (perTargetOutput != null) {
                         out = new PrintWriter(perTargetOutput);
-                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage");
+                        out.println("chrom\tstart\tend\tlength\tname\t%gc\tmean_coverage\tnormalized_coverage\tmin_normalized_coverage");
                     }
                     else {
                         out = null;
@@ -533,6 +534,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                     if (out != null) {
                         final double coverage = cov.getTotal() / (double) interval.length();
+                        final double min = MathUtil.min(cov.getDepths());
 
                         out.println(interval.getSequence() + "\t" +
                                     interval.getStart() + "\t" +
@@ -541,7 +543,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                     interval.getName() + "\t" +
                                     fmt.format(gcDouble) + "\t" +
                                     fmt.format(coverage) + "\t" +
-                                    fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE)
+                                    fmt.format(coverage / this.metrics.MEAN_TARGET_COVERAGE) + "\t" +
+                                    fmt.format(min / this.metrics.MEAN_TARGET_COVERAGE)
                         );
                     }
                 }
