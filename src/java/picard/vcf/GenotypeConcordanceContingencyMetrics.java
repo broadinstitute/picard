@@ -17,12 +17,14 @@ public class GenotypeConcordanceContingencyMetrics extends MetricBase {
     }
 
     GenotypeConcordanceContingencyMetrics(final VariantContext.Type variantType, final GenotypeConcordanceCounts concordanceCounts,
-                                          final String truthSample, final String callSample) {
+                                          final String truthSample, final String callSample, final boolean missingSitesFlag) {
         this.VARIANT_TYPE = variantType;
         this.TRUTH_SAMPLE = truthSample;
         this.CALL_SAMPLE = callSample;
 
-        final GenotypeConcordanceScheme scheme = new GenotypeConcordanceScheme();
+        final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
+        final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(missingSitesFlag);
+        scheme.validateScheme();
         concordanceCounts.validateCountsAgainstScheme(scheme);
 
         Map<ContingencyState, Integer> counts = concordanceCounts.getContingencyStateCounts(scheme);
