@@ -98,16 +98,18 @@ public class IntervalListScatterer {
         IntervalList runningIntervalList = new IntervalList(uniquedList.getHeader());
         final ArrayDeque<Interval> intervalQueue = new ArrayDeque<Interval>(uniquedList.getIntervals());
         
-        long numBaseLeft = uniquedList.getBaseCount();
-        int numDivisionsLeft = scatterCount;
+        long numBasesLeft = uniquedList.getBaseCount();
 
         while (!intervalQueue.isEmpty() && accumulatedIntervalLists.size() < scatterCount - 1) {
             final Interval interval = intervalQueue.pollFirst();
             final long projectedSize = runningIntervalList.getBaseCount() + interval.length();
 
-            // the mean expected size of the remaining divisions
-            final double projectedSizeOfRemainingDivisions = (numBaseLeft - runningIntervalList.getBaseCount()) / ((double)numDivisionsLeft);
-            
+            // The mean expected size of the remaining divisions
+            // NOTE: that this looks like double counting but isn't, we subtract here the bases that are in the _current_ running intervalList,
+            // and when we create a new intervalList (below) we modify numBasesLeft.
+            // Another Note: the -1 in the denominator is for "runningIntervalList" that isn't yet counted in  accumulatedIntervalLists.size()
+            final double projectedSizeOfRemainingDivisions = (numBasesLeft - runningIntervalList.getBaseCount()) / ((double)(scatterCount - accumulatedIntervalLists.size() - 1));
+
             // should we add this interval to the list of running intervals?
             if (shouldAddToRunningIntervalList(idealSplitLength, projectedSize, projectedSizeOfRemainingDivisions)) {
                 runningIntervalList.add(interval);
@@ -143,6 +145,7 @@ public class IntervalListScatterer {
                         } else {
                             // Push this interval into the next scatter; re-inject it into the queue, then advance the scatter.
                             intervalQueue.addFirst(interval);
+                            numBasesLeft -= runningIntervalList.getBaseCount();
                             accumulatedIntervalLists.add(runningIntervalList.uniqued());
                             runningIntervalList = new IntervalList(uniquedList.getHeader());
                         }
@@ -151,13 +154,10 @@ public class IntervalListScatterer {
             }
 
             if (runningIntervalList.getBaseCount() >= idealSplitLength) {
-                numBaseLeft -= runningIntervalList.getBaseCount(); // keep track of the number of *unique* bases left
+                numBasesLeft -= runningIntervalList.getBaseCount(); // keep track of the number of *unique* bases left
                 accumulatedIntervalLists.add(runningIntervalList.uniqued());
                 runningIntervalList = new IntervalList(uniquedList.getHeader());
             }
-            
-            // for projecting the size of the remaining sub-divisions
-            numDivisionsLeft = scatterCount - accumulatedIntervalLists.size();
         }
 
         // Flush the remaining intervals into the last split.
@@ -173,13 +173,6 @@ public class IntervalListScatterer {
             final long baseCount = intervalList.getBaseCount();
             if (baseCount < minimumIntervalSize) minimumIntervalSize = baseCount;
             if (maximumIntervalSize < baseCount) maximumIntervalSize = baseCount;
-        }
-
-        // Since we are projecting out the interval size as we move forward, we should reasonably expect the smallest interval be no smaller than
-        // idealSplitLength bases than the maximum interval size
-        if (mode == Mode.BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW && idealSplitLength < (maximumIntervalSize - minimumIntervalSize)) {
-            throw new PicardException(String.format("Maximum interval list size (%d) was %d bases larger than minimum list interval size (%d); expected at most %d bases",
-                    maximumIntervalSize, (maximumIntervalSize - minimumIntervalSize), minimumIntervalSize, idealSplitLength));
         }
 
         return accumulatedIntervalLists;
