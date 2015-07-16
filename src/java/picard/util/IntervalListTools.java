@@ -295,7 +295,7 @@ public class IntervalListTools extends CommandLineProgram {
 
     public static File getScatteredFileName(final File scatterDirectory, final long scatterTotal, final String formattedIndex) {
         return new File(scatterDirectory.getAbsolutePath() + "/temp_" + formattedIndex + "_of_" +
-                scatterTotal + "/scattered.intervals");
+                scatterTotal + "/scattered" + IntervalList.INTERVAL_LIST_FILE_EXTENSION);
 
     }
 
