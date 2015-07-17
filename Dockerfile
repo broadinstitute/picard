@@ -19,6 +19,13 @@ WORKDIR /usr/picard
 RUN git config --global http.sslVerify false && git clone https://github.com/samtools/htsjdk.git
 
 # Build the distribution jar, clean up everything else
-RUN ant clean all && mv dist/picard.jar picard.jar && ant clean && rm -rf htsjdk && rm -rf src && rm -rf lib && rm build.xml
+RUN ant clean all && \
+    mv dist/picard.jar picard.jar && \
+    mv src/scripts/picard/docker_helper.sh docker_helper.sh && \
+    ant clean && \
+    rm -rf htsjdk && \
+    rm -rf src && \
+    rm -rf lib && \
+    rm build.xml
 
-ENTRYPOINT ["java", "-jar", "picard.jar"]
+ENTRYPOINT ["./docker_helper.sh"]
