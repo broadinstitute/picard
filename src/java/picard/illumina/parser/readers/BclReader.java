@@ -78,6 +78,7 @@ public class BclReader implements CloseableIterator<BclData> {
     private static final byte[] BASE_LOOKUP = new byte[]{'A', 'C', 'G', 'T'};
 
     private final InputStream[] streams;
+    private final File[] streamFiles;
     private final int[] outputLengths;
     int[] numClustersPerCycle;
 
@@ -95,6 +96,7 @@ public class BclReader implements CloseableIterator<BclData> {
                 cycles += outputLength;
             }
             this.streams = new InputStream[cycles];
+            this.streamFiles = new File[cycles];
             this.numClustersPerCycle = new int[cycles];
 
             final ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
@@ -120,6 +122,7 @@ public class BclReader implements CloseableIterator<BclData> {
                     assertProperFileStructure(bclFile, numClustersPerCycle[i], stream);
                 }
                 this.streams[i] = stream;
+                this.streamFiles[i] =  bclFile;
                 byteBuffer.clear();
             }
         } catch (final IOException ioe) {
@@ -174,6 +177,7 @@ public class BclReader implements CloseableIterator<BclData> {
 
             this.outputLengths = new int[]{1};
             this.streams = new InputStream[1];
+            this.streamFiles = new File[1];
             this.numClustersPerCycle = new int[]{1};
             this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
 
@@ -194,6 +198,7 @@ public class BclReader implements CloseableIterator<BclData> {
                 assertProperFileStructure(bclFile, this.numClustersPerCycle[0], stream);
             }
             this.streams[0] = stream;
+            this.streamFiles[0] = bclFile;
         } catch (final IOException ioe) {
             throw new PicardException("IOException opening file " + bclFile.getAbsoluteFile(), ioe);
         }
@@ -286,7 +291,16 @@ public class BclReader implements CloseableIterator<BclData> {
         for (int read = 0; read < outputLengths.length; read++) {
             for (int cycle = 0; cycle < outputLengths[read]; ++cycle) {
                 try {
-                    final int readByte = this.streams[totalCycleCount].read();
+
+                    final int readByte;
+                    try {
+                        readByte = this.streams[totalCycleCount].read();
+                    } catch (IOException e) {
+                        // when logging the error, increment cycle by 1, since totalCycleCount is zero-indexed but Illumina directories are 1-indexed.
+                        throw new IOException(String.format("Error while reading from BCL file for cycle %d. Offending file on disk is %s",
+                                (totalCycleCount+1), this.streamFiles[totalCycleCount].getAbsolutePath()), e);
+                    }
+
                     if (readByte == -1) {
                         queue = null;
                         return;
