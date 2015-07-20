@@ -292,7 +292,7 @@ public class BclReader implements CloseableIterator<BclData> {
             for (int cycle = 0; cycle < outputLengths[read]; ++cycle) {
                 try {
 
-                    int readByte;
+                    final int readByte;
                     try {
                         readByte = this.streams[totalCycleCount].read();
                     } catch (IOException e) {
