@@ -25,7 +25,6 @@
 package picard.vcf;
 
 import htsjdk.samtools.util.FormatUtil;
-import htsjdk.samtools.util.IOUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.vcf.GenotypeConcordanceStates.TruthAndCallStates;
@@ -47,42 +46,13 @@ public class GenotypeConcordanceGA4GHSchemeWithMissingTest{
     final List<File> intervalList = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
 
     @Test
-    public void testMissingHomRefScheme() throws Exception {
-        final GenotypeConcordanceCounts concordanceCounts = GenotypeConcordanceTest.getGenotypeConcordanceCounts(nistTruthVCF, ceuTrioSNPSVCF, "NA12878", true, null);
-        concordanceCounts.validateCountsAgainstScheme(scheme);
-
-        final Map<GenotypeConcordanceStates.TruthAndCallStates, Integer> nonZeroCounts = new HashMap<GenotypeConcordanceStates.TruthAndCallStates, Integer>();
-
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.HET_REF_VAR1), 80);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.HOM_VAR1), 38);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.VC_FILTERED), 40);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.HET_REF_VAR1, GenotypeConcordanceStates.CallState.MISSING), 1);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.HET_REF_VAR1, GenotypeConcordanceStates.CallState.HET_REF_VAR1), 24);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.HOM_VAR1, GenotypeConcordanceStates.CallState.MISSING), 5);
-        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.HOM_VAR1, GenotypeConcordanceStates.CallState.HOM_VAR1), 21);
-
-        GenotypeConcordanceTest.assertNonZeroCountsAgree(concordanceCounts, nonZeroCounts);
-
-        final FormatUtil fmt = new FormatUtil();
-
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.96");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.230769");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "0.807692");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "0.355932");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.882353");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.276074");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-    }
-
-    @Test
     public void testMissingHomRefSchemeWithIntervals() {
         final GenotypeConcordanceCounts concordanceCounts = GenotypeConcordanceTest.getGenotypeConcordanceCounts(nistTruthVCF, ceuTrioSNPSVCF, "NA12878", true, intervalList);
         concordanceCounts.validateCountsAgainstScheme(scheme);
 
         final Map<GenotypeConcordanceStates.TruthAndCallStates, Integer> nonZeroCounts = new HashMap<GenotypeConcordanceStates.TruthAndCallStates, Integer>();
 
+        nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.MISSING), 63001594);
         nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.HET_REF_VAR1), 1);
         nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.MISSING, GenotypeConcordanceStates.CallState.VC_FILTERED), 2);
         nonZeroCounts.put(new TruthAndCallStates(GenotypeConcordanceStates.TruthState.HET_REF_VAR1, GenotypeConcordanceStates.CallState.MISSING), 1);
@@ -96,13 +66,14 @@ public class GenotypeConcordanceGA4GHSchemeWithMissingTest{
 
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.916667");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.916667");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "0.555556");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.761905");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.941176");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateGenotypeConcordance(scheme, true)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateNonRefGenotypeConcordance(scheme, true)), "0.727273");
     }
 
 }
