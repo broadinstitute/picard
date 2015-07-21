@@ -30,30 +30,29 @@ import picard.vcf.GenotypeConcordanceStates.*;
 /**
  * The default scheme is derived from the GA4GH Benchmarking Work Group's proposed evaluation scheme. This scheme has been edited to count MISSING
  * sites in the truth set differently for use with truth sets where the HOM_REF sites are not included in the data set. The MISSING truth sites
- * are called similarly to NO_CALLs to prevent them from influencing other calculations. With the exception of sites that are MISSING in both
- * truth and call sets, which are considered true negatives.
+ * are called like they are HOM_REF sites.
  */
 
-public class GA4GHSchemeWithMissingAsNoCall extends GenotypeConcordanceScheme{
+public class GA4GHSchemeWithMissingAsHomRef extends GenotypeConcordanceScheme{
     @Override
     protected void initiateScheme() {
         /**          ROW STATE            MISSING       HOM_REF       HET_REF_VAR1       HET_VAR1_VAR2        HOM_VAR1        NO_CALL        LOW_GQ        LOW_DP        VC_FILTERED   GT_FILTERED   IS_MIXED    **/
         addRow(CallState.MISSING,         TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.HOM_REF,         EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.HET_REF_VAR1,    EMPTY,        FP_TN,        TP_TN,             TP_FN,               TP_FN,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.HOM_REF,         TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.HET_REF_VAR1,    FP_TN,        FP_TN,        TP_TN,             TP_FN,               TP_FN,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
         addRow(CallState.HET_REF_VAR2,    NA,           NA,           FP_TN_FN,          NA,                  FP_FN,          NA,            NA,           NA,           NA,           NA,           NA);
         addRow(CallState.HET_REF_VAR3,    NA,           NA,           NA,                FP_FN,               NA,             NA,            NA,           NA,           NA,           NA,           NA);
-        addRow(CallState.HET_VAR1_VAR2,   EMPTY,        FP_ONLY,      TP_FP,             TP_ONLY,             TP_FP_FN,       EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.HET_VAR1_VAR2,   FP_ONLY,      FP_ONLY,      TP_FP,             TP_ONLY,             TP_FP_FN,       EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
         addRow(CallState.HET_VAR1_VAR3,   NA,           NA,           NA,                TP_FP_FN,            NA,             NA,            NA,           NA,           NA,           NA,           NA);
-        addRow(CallState.HET_VAR3_VAR4,   NA,           FP_ONLY,      FP_FN,             FP_FN,               FP_FN,          NA,            NA,           NA,           NA,           NA,           NA);
-        addRow(CallState.HOM_VAR1,        EMPTY,        FP_ONLY,      TP_FP,             TP_FN,               TP_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.HET_VAR3_VAR4,   FP_ONLY,      FP_ONLY,      FP_FN,             FP_FN,               FP_FN,          NA,            NA,           NA,           NA,           NA,           NA);
+        addRow(CallState.HOM_VAR1,        FP_ONLY,      FP_ONLY,      TP_FP,             TP_FN,               TP_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
         addRow(CallState.HOM_VAR2,        NA,           NA,           FP_FN,             TP_FN,               FP_FN,          NA,            NA,           NA,           NA,           NA,           NA);
         addRow(CallState.HOM_VAR3,        NA,           NA,           NA,                FP_FN,               NA,             NA,            NA,           NA,           NA,           NA,           NA);
         addRow(CallState.NO_CALL,         EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.VC_FILTERED,     EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.GT_FILTERED,     EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.LOW_GQ,          EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
-        addRow(CallState.LOW_DP,          EMPTY,        TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.VC_FILTERED,     TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.GT_FILTERED,     TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.LOW_GQ,          TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
+        addRow(CallState.LOW_DP,          TN_ONLY,      TN_ONLY,      TN_FN,             FN_ONLY,             FN_ONLY,        EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
         addRow(CallState.IS_MIXED,        EMPTY,        EMPTY,        EMPTY,             EMPTY,               EMPTY,          EMPTY,         EMPTY,        EMPTY,        EMPTY,        EMPTY,        EMPTY);
     }
 }
