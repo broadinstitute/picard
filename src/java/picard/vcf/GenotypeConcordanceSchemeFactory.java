@@ -30,7 +30,7 @@ package picard.vcf;
 public class GenotypeConcordanceSchemeFactory {
     public GenotypeConcordanceScheme getScheme(final boolean isMissingHomRef) {
         if (isMissingHomRef) {
-            return new GA4GHSchemeWithMissingAsNoCall();
+            return new GA4GHSchemeWithMissingAsHomRef();
         }
         else {
             return new GA4GHScheme();
