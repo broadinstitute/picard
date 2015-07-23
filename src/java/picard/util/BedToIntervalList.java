@@ -1,6 +1,7 @@
 package picard.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
@@ -15,6 +16,7 @@ import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.annotation.Strand;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -63,7 +65,13 @@ public class BedToIntervalList extends CommandLineProgram {
         IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
         IOUtil.assertFileIsWritable(OUTPUT);
         try {
-            final SAMFileHeader header = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).getFileHeader(SEQUENCE_DICTIONARY);
+            // create a new header that we will assign the dictionary provided by the SAMSequenceDictionaryExtractor to.
+            final SAMFileHeader header = new SAMFileHeader();
+            final SAMSequenceDictionary samSequenceDictionary = SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY);
+            header.setSequenceDictionary(samSequenceDictionary);
+            // set the sort order to be sorted by coordinate, which is actually done below
+            // by getting the .uniqued() intervals list before we write out the file
+            header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
             final IntervalList intervalList = new IntervalList(header);
 
             /**
@@ -76,7 +84,7 @@ public class BedToIntervalList extends CommandLineProgram {
 
             while (iterator.hasNext()) {
                 final BEDFeature bedFeature = iterator.next();
-                final String sequenceName = bedFeature.getChr();
+                final String sequenceName = bedFeature.getContig();
                 /**
                  * NB: BED is zero-based, so we need to add one here to make it one-based.  Please observe we set the start
                  * offset to zero when creating the BEDCodec.

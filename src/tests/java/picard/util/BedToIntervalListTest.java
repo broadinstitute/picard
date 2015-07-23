@@ -38,9 +38,23 @@ public class BedToIntervalListTest {
         Assert.assertEquals(unexpectedException, null);
     }
 
+
     @Test(dataProvider = "testBedToIntervalListDataProvider")
     public void testBedToIntervalList(final String inputBed) throws IOException {
         doTest(inputBed, "header.sam");
+    }
+
+    // test a fixed bed file using different dictionaries
+    @Test(dataProvider = "testBedToIntervalListSequenceDictionaryDataProvider")
+    public void testBedToIntervalListSequenceDictionary(final String dictionary) throws IOException {
+        doTest("seq_dict_test.bed", dictionary);
+    }
+
+    // test for back dictionaries - we expect these to throw exceptions
+    @Test(dataProvider = "testBedToIntervalListSequenceDictionaryBadDataProvider",
+          expectedExceptions = {SAMException.class, PicardException.class})
+    public void testBedToIntervalListBadSequenceDictionary(final String dictionary) throws IOException {
+        doTest("seq_dict_test.bed", dictionary);
     }
 
     @Test(dataProvider = "testBedToIntervalListOutOfBoundsDataProvider", expectedExceptions = PicardException.class)
@@ -56,6 +70,28 @@ public class BedToIntervalListTest {
                 {"extended.bed"},
                 {"one_base_interval.bed"},
                 {"zero_base_interval.bed"}
+        };
+    }
+
+    // test for each of the file categories supported by SAMSequenceDictionaryExtractor
+    @DataProvider
+    public Object[][] testBedToIntervalListSequenceDictionaryDataProvider() {
+        return new Object[][]{
+                {"seq_dict_test.dictionary.interval_list"},
+                {"seq_dict_test.dictionary.fasta"},
+                {"seq_dict_test.dictionary.dict"},
+                {"seq_dict_test.dictionary.sam"},
+                {"seq_dict_test.dictionary.vcf"}
+        };
+    }
+
+    @DataProvider
+    public Object[][] testBedToIntervalListSequenceDictionaryBadDataProvider() {
+        return new Object[][]{
+                // a file that does not represent a dictionary
+                {"seq_dict_test.dictionary.bad"},
+                // a file that is a valid dictionary, but missing contigs in the dictionary
+                {"seq_dict_test.dictionary.bad.vcf"}
         };
     }
 
