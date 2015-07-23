@@ -18,7 +18,7 @@ public class BedToIntervalListTest {
 
     private final String TEST_DATA_DIR = "testdata/picard/util/BedToIntervalListTest";
 
-    private void doTest(final String inputBed, final String header) throws IOException {
+    private void doTest(final String inputBed, final String header) throws IOException, SAMException {
         final File outputFile  = File.createTempFile("bed_to_interval_list_test.", ".interval_list");
         outputFile.deleteOnExit();
         final BedToIntervalList program = new BedToIntervalList();
@@ -29,13 +29,7 @@ public class BedToIntervalListTest {
         program.doWork();
 
         // Assert they are equal
-        SAMException unexpectedException = null;
-        try {
-            IOUtil.assertFilesEqual(new File(inputBedFile.getAbsolutePath() + ".interval_list"), outputFile);
-        } catch (final SAMException e) {
-            unexpectedException = e;
-        }
-        Assert.assertEquals(unexpectedException, null);
+        IOUtil.assertFilesEqual(new File(inputBedFile.getAbsolutePath() + ".interval_list"), outputFile);
     }
 
     @Test(dataProvider = "testBedToIntervalListDataProvider")
