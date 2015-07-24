@@ -94,7 +94,7 @@ public class RExecutor {
             IOUtil.copyStream(scriptStream, scriptFileStream);
             return scriptFile;
         } catch (IOException e) {
-            throw new PicardException("Unexpected exception creating R script file", e);
+            throw new PicardException("Unexpected exception creating R script file [" + rScriptName + "]", e);
         } finally {
             if (scriptStream != null) {
                 try {
