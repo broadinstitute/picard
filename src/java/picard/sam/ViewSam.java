@@ -51,7 +51,7 @@ import java.util.List;
 
 /**
  * Very simple command that just reads a SAM or BAM file and writes out the header
- * and each records to standard out.  When an (optional) intervals file is specified, 
+ * and each records to standard out.  When an (optional) intervals file is specified,
  * only records overlapping those intervals will be output.
  *
  * @author tfennell@broad.mit.edu
