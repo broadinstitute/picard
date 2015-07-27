@@ -17,5 +17,6 @@ Note that for any pair of variants to compare, only the alleles for the samples 
 <tr><td>MIN_DP (Integer)</td><td>Genotypes below this depth will have genotypes classified as LowDp.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>OUTPUT_ALL_ROWS (Boolean)</td><td>If true, output all rows in detailed statistics even when count == 0.  When false only output rows with non-zero counts.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>USE_VCF_INDEX (Boolean)</td><td>If true, use the VCF index, else iterate over the entire VCF.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MISSING_SITES_HOM_REF (Boolean)</td><td>Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be treated as no call sites and sites missing in both the truth and call sets will be true negatives. Useful when hom ref sites are left out of the truth set.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>
