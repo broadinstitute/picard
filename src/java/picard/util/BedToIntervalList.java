@@ -115,7 +115,8 @@ public class BedToIntervalList extends CommandLineProgram {
                     throw new PicardException(String.format("On sequence '%s', end < start-1: %d <= %d", sequenceName, end, start));
                 }
 
-                final Interval interval = new Interval(sequenceName, start, end, bedFeature.getStrand() == Strand.POSITIVE, name);
+                final boolean isNegativeStrand = bedFeature.getStrand() == Strand.NEGATIVE;
+                final Interval interval = new Interval(sequenceName, start, end, isNegativeStrand, name);
                 intervalList.add(interval);
 
                 progressLogger.record(sequenceName, start);
