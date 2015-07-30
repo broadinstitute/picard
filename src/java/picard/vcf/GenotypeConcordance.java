@@ -140,8 +140,11 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
         if (USE_VCF_INDEX) {
             // Index file is required either because we are using intervals, or because user-set parameter
-            if ((!Tribble.indexFile(TRUTH_VCF).exists() || (!Tribble.indexFile(CALL_VCF).exists()))) {
-                errors.add("Index file(s) not found for one or both of the VCFs.  Note - if intervals are specified, the VCF files must be indexed.");
+            if (!indexExists(TRUTH_VCF)) {
+                errors.add("The index file was not found for the TRUTH VCF.  Note that if intervals are specified, the VCF files must be indexed.");
+            }
+            if (!indexExists(CALL_VCF)) {
+                errors.add("The index file was not found for the CALL VCF.  Note that if intervals are specified, the VCF files must be indexed.");
             }
         }
 
@@ -152,6 +155,15 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
     }
 
+    /**
+     * Determines whether an index file exists for the given vcf file using standard extension suffixes
+     *
+     * @param vcf  the vcf file to investigate
+     * @return true if an index file exists, false otherwise
+     */
+    private boolean indexExists(final File vcf) {
+        return Tribble.indexFile(vcf).exists() || Tribble.tabixIndexFile(vcf).exists();
+    }
 
     @Override protected int doWork() {
         final File summaryMetricsFile = new File(OUTPUT + SUMMARY_METRICS_FILE_EXTENSION);
