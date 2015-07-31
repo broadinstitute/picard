@@ -24,6 +24,9 @@
 package picard.sam;
 
 import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
 import org.testng.Assert;
@@ -128,7 +131,7 @@ public class FastqToSamTest extends CommandLineProgramTest {
 
     @Test(dataProvider = "permissiveFormatFiles")
     public void testPermissiveOk(final String filename1, final String filename2, final FastqQualityFormat version) throws IOException {
-        convertFile(filename1,filename2,version,true);
+        convertFile(filename1, filename2, version, true);
     }
 
     @Test(dataProvider = "permissiveFormatFiles",expectedExceptions = SAMException.class)
@@ -170,6 +173,14 @@ public class FastqToSamTest extends CommandLineProgramTest {
     }
 
     private File convertFile(final String fastqFilename1, final String fastqFilename2, final FastqQualityFormat version,final boolean permissiveFormat) throws IOException {
+        return convertFile(fastqFilename1, fastqFilename2, version, permissiveFormat, false);
+    }
+
+    private File convertFile(final String fastqFilename1,
+                             final String fastqFilename2, 
+                             final FastqQualityFormat version,
+                             final boolean permissiveFormat,
+                             final boolean useSequentialFastqs) throws IOException {
         final File fastq1 = new File(TEST_DATA_DIR, fastqFilename1);
         final File fastq2 = (fastqFilename2 != null) ? new File(TEST_DATA_DIR, fastqFilename2) : null;
         final File samFile = newTempSamFile(fastq1.getName());
@@ -182,11 +193,13 @@ public class FastqToSamTest extends CommandLineProgramTest {
         args.add("READ_GROUP_NAME=rg");
         args.add("SAMPLE_NAME=s1");
 
-        if(fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
-        if(permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
+        if (fastqFilename2 != null) args.add("FASTQ2=" + fastq2.getAbsolutePath());
+        if (permissiveFormat) args.add("ALLOW_AND_IGNORE_EMPTY_LINES=true");
+        if (useSequentialFastqs) args.add("USE_SEQUENTIAL_FASTQS=true");
 
         Assert.assertEquals(runPicardCommandLine(args), 0);
         return samFile ;
+    
     }
 
     private static File newTempSamFile(final String filename) throws IOException {
@@ -256,6 +269,41 @@ public class FastqToSamTest extends CommandLineProgramTest {
     @Test(dataProvider = "badPairNames", expectedExceptions= PicardException.class) 
     public void readPairNameBad(final String name1, final String name2) throws IOException {
         fastqToSam.getBaseName(name1, name2, freader1, freader2);
+    }
+
+    // TODO: convert other tests to use this too
+    private void convertFileAndVerifyRecordCount(final int expectedCount,
+                       final String fastqFilename1,
+                       final String fastqFilename2,
+                       final FastqQualityFormat version,
+                       final boolean permissiveFormat,
+                       final boolean useSequentialFastqs) throws IOException {
+        final File samFile = convertFile(fastqFilename1, fastqFilename2, version, permissiveFormat, useSequentialFastqs);
+        final SamReader samReader = SamReaderFactory.makeDefault().open(samFile);
+        final SAMRecordIterator iterator = samReader.iterator();
+        int actualCount = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            actualCount++;
+        }
+        samReader.close();
+        Assert.assertEquals(actualCount, expectedCount);
+    }
+    
+    @Test
+    public void testSequentialFiles() throws IOException {
+        final String singleEnd = "sequential-files/single_end_R1_001.fastq";
+        final String pairedEnd1 = "sequential-files/paired_end_R1_001.fastq";
+        final String pairedEnd2 = "sequential-files/paired_end_R2_001.fastq";
+        
+        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + singleEnd)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd1)).size(), 2);
+        Assert.assertEquals(FastqToSam.getSequentialFileList(new File(TEST_DATA_DIR, "/" + pairedEnd2)).size(), 2);
+
+        convertFileAndVerifyRecordCount(1, singleEnd, null, FastqQualityFormat.Illumina, true, false);
+        convertFileAndVerifyRecordCount(2, singleEnd, null, FastqQualityFormat.Illumina, true, true);
+        convertFileAndVerifyRecordCount(2, pairedEnd1, pairedEnd2, FastqQualityFormat.Illumina, true, false);
+        convertFileAndVerifyRecordCount(4, pairedEnd1, pairedEnd2, FastqQualityFormat.Illumina, true, true);
     }
 }
 

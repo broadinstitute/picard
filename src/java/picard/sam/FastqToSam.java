@@ -24,6 +24,7 @@
 package picard.sam;
 
 import htsjdk.samtools.ReservedTagConstants;
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
@@ -31,6 +32,8 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMUtils;
+import htsjdk.samtools.fastq.FastqConstants;
+import htsjdk.samtools.fastq.FastqConstants.FastqExtensions;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
@@ -72,6 +75,9 @@ public class FastqToSam extends CommandLineProgram {
 
     @Option(shortName="F2", doc="Input fastq file (optionally gzipped) for the second read of paired end data.", optional=true)
     public File FASTQ2;
+    
+    @Option(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz", optional=true)
+    public boolean USE_SEQUENTIAL_FASTQS = false;
 
     @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 " +
             "style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled " +
@@ -169,35 +175,104 @@ public class FastqToSam extends CommandLineProgram {
         System.exit(new FastqToSam().instanceMain(argv));
     }
 
+    /**
+     * Get a list of FASTQs that are sequentially numbered based on the first (base) fastq.
+     * The files should be named:
+     *   <prefix>_001.<extension>, <prefix>_002.<extension>, ..., <prefix>_XYZ.<extension>
+     * The base files should be:
+     *   <prefix>_001.<extension>
+     * An example would be:
+     *   RUNNAME_S8_L005_R1_001.fastq
+     *   RUNNAME_S8_L005_R1_002.fastq
+     *   RUNNAME_S8_L005_R1_003.fastq
+     *   RUNNAME_S8_L005_R1_004.fastq
+     * where `baseFastq` is the first in that list.
+     */
+    protected static List<File> getSequentialFileList(final File baseFastq) {
+        final List<File> files = new ArrayList<File>();
+        files.add(baseFastq);
+
+        // Find the correct extension used in the base FASTQ
+        FastqExtensions fastqExtensions = null;
+        String suffix = null; // store the suffix including the extension
+        for (final FastqExtensions ext : FastqExtensions.values()) {
+            suffix = "_001" + ext.getExtension();
+            if (baseFastq.getAbsolutePath().endsWith(suffix)) {
+                fastqExtensions = ext;
+                break;
+            }
+        }
+        if (null == fastqExtensions) {
+            throw new PicardException(String.format("Could not parse the FASTQ extension (expected '_001' + '%s'): %s", FastqExtensions.values().toString(), baseFastq));
+        }
+        
+        // Find all the files
+        for (int idx = 2; true; idx++) {
+            String fastq = baseFastq.getAbsolutePath();
+            fastq = String.format("%s_%03d%s", fastq.substring(0, fastq.length() - suffix.length()), idx, fastqExtensions.getExtension());
+            try {
+                IOUtil.assertFileIsReadable(new File(fastq));
+            } catch (final SAMException e) { // the file is not readable, so do not continue
+                break;
+            }
+            files.add(new File(fastq));
+        }
+        
+        return files;
+    }
+
     /* Simply invokes the right method for unpaired or paired data. */
     protected int doWork() {
         IOUtil.assertFileIsReadable(FASTQ);
-        IOUtil.assertFileIsWritable(OUTPUT);
-
-        FastqReader reader = fileToFastqReader(FASTQ);
-
-        FastqReader reader2 = null;
         if (FASTQ2 != null) {
             IOUtil.assertFileIsReadable(FASTQ2);
-            reader2 = fileToFastqReader(FASTQ2);
         }
-
-        QUALITY_FORMAT = FastqToSam.determineQualityFormat(reader, reader2, QUALITY_FORMAT);
+        IOUtil.assertFileIsWritable(OUTPUT);
 
         final SAMFileHeader header = createSamFileHeader();
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, OUTPUT);
 
-        reader = fileToFastqReader(FASTQ);
-        if (FASTQ2 != null) {
-            reader2 = fileToFastqReader(FASTQ2);
-        }
-        makeItSo(reader, reader2, writer);
+        // Set the quality format
+        QUALITY_FORMAT = FastqToSam.determineQualityFormat(fileToFastqReader(FASTQ),
+                (FASTQ2 == null) ? null : fileToFastqReader(FASTQ2),
+                QUALITY_FORMAT);
+        
+        // Lists for sequential files, but also used when not sequential
+        final List<FastqReader> readers1 = new ArrayList<FastqReader>();
+        final List<FastqReader> readers2 = new ArrayList<FastqReader>();
 
-        reader.close();
-
-        if (reader2 != null) {
-            reader2.close();
+        if (USE_SEQUENTIAL_FASTQS) {
+            // Get all the files
+            for (final File fastq : getSequentialFileList(FASTQ)) {
+                readers1.add(fileToFastqReader(fastq));
+            }
+            if (null != FASTQ2) {
+                for (final File fastq : getSequentialFileList(FASTQ2)) {
+                    readers2.add(fileToFastqReader(fastq));
+                }
+                if (readers1.size() != readers2.size()) {
+                    throw new PicardException(String.format("Found %d files for FASTQ and %d files for FASTQ2.", readers1.size(), readers2.size()));
+                }
+            }
         }
+        else {
+            readers1.add(fileToFastqReader(FASTQ));
+            if (FASTQ2 != null) {
+                readers2.add(fileToFastqReader(FASTQ2));
+            }
+        }
+
+        // Loop through the FASTQs
+        for (int idx = 0; idx < readers1.size(); idx++) {
+            makeItSo(readers1.get(idx),
+                    (readers2.isEmpty()) ? null : readers2.get(idx),
+                    writer);
+        }
+
+        // Close all the things
+        for (final FastqReader reader : readers1) reader.close();
+        for (final FastqReader reader : readers2) reader.close();
+        writer.close();
 
         return 0;
     }
@@ -232,7 +307,6 @@ public class FastqToSam extends CommandLineProgram {
             progress.record(srec);
         }
 
-        writer.close();
         return readCount;
     }
 
@@ -260,8 +334,6 @@ public class FastqToSam extends CommandLineProgram {
             writer.addAlignment(srec2);
             progress.record(srec2);
         }
-
-        writer.close();
 
         if (freader1.hasNext() || freader2.hasNext()) {
             throw new PicardException("Input paired fastq files must be the same length");
