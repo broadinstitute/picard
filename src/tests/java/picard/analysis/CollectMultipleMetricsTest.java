@@ -42,7 +42,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     public void testAlignmentSummaryViaMultipleMetrics() throws IOException {
         final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test.sam");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
-        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        final File outfile   = File.createTempFile("alignmentMetrics", "");
         outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
@@ -56,7 +56,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
-        output.read(new FileReader(outfile));
+        output.read(new FileReader(outfile + ".alignment_summary_metrics"));
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.MEAN_READ_LENGTH, 101.0);
@@ -104,7 +104,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
     @Test
     public void testInsertSize() throws IOException {
         final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
-        final File outfile   = File.createTempFile("test", ".insert_size_metrics");
+        final File outfile   = File.createTempFile("test", "");
         final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
         final File pdf   = File.createTempFile("test", ".pdf");
         outfile.deleteOnExit();
@@ -121,7 +121,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
-        output.read(new FileReader(outfile));
+        output.read(new FileReader(outfile + ".insert_size_metrics"));
 
         for (final InsertSizeMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.PAIR_ORIENTATION.name(), "FR");
@@ -261,14 +261,14 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
             }
         }
     }
-    
+
     @Test //test all gcBias collection levels
     public void testGcBiasMetrics() throws IOException{
         runGcTest(tempSamFile);
     }
 
     public void runGcTest(final File input) throws IOException {
-        final File outfile = File.createTempFile("test", ".gc_bias_summary_metrics");
+        final File outfile = File.createTempFile("test", "");
         final String referenceFile = "testdata/picard/quality/chrM.reference.fasta";
         outfile.deleteOnExit();
         final String[] args = new String[]{
@@ -284,7 +284,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
         final MetricsFile<GcBiasSummaryMetrics, Comparable<?>> output = new MetricsFile<GcBiasSummaryMetrics, Comparable<?>>();
-        output.read(new FileReader(outfile));
+        output.read(new FileReader(outfile + ".gc_bias.summary_metrics"));
 
         for (final GcBiasSummaryMetrics metrics : output.getMetrics()) {
             if (metrics.ACCUMULATION_LEVEL.equals("All Reads")) { //ALL_READS level
@@ -292,6 +292,11 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 7.234062);
                 Assert.assertEquals(metrics.GC_DROPOUT, 4.086217);
+                Assert.assertEquals(metrics.GC_NC_0_19, 0.0);
+                Assert.assertEquals(metrics.GC_NC_20_39, 1.06826);
+                Assert.assertEquals(metrics.GC_NC_40_59, 0.987036);
+                Assert.assertEquals(metrics.GC_NC_60_79, 0.0);
+                Assert.assertEquals(metrics.GC_NC_80_100, 0.0);
             } else {
                 Assert.fail("Unexpected metric: " + metrics);
             }
