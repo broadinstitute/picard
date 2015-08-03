@@ -28,4 +28,3 @@ RUN ant clean all && \
     rm -rf lib && \
     rm build.xml
 
-ENTRYPOINT ["./docker_helper.sh"]
