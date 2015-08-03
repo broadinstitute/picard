@@ -61,13 +61,14 @@ public class GenotypeConcordanceGA4GHSchemeTest{
 
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateGenotypeConcordance(scheme, true)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateNonRefGenotypeConcordance(scheme, true)), "1");
     }
 
     @Test
@@ -91,13 +92,14 @@ public class GenotypeConcordanceGA4GHSchemeTest{
 
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.711538");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.686869");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.769231");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "0.766234");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "0.730337");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.734807");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.707447");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.769231");
+        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.668675");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateGenotypeConcordance(scheme, true)), "0.576132");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateNonRefGenotypeConcordance(scheme, true)), "0.469072");
     }
 
     @Test
@@ -116,13 +118,14 @@ public class GenotypeConcordanceGA4GHSchemeTest{
 
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateGenotypeConcordance(scheme, true)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateNonRefGenotypeConcordance(scheme, true)), "1");
     }
 
     @Test
@@ -142,12 +145,13 @@ public class GenotypeConcordanceGA4GHSchemeTest{
 
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.5");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
         Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
         Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.5");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
+        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.666667");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateGenotypeConcordance(scheme, true)), "0.75");
+        Assert.assertEquals(fmt.format(concordanceCounts.calculateNonRefGenotypeConcordance(scheme, true)), "0.5");
     }
 }

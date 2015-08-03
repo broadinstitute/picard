@@ -44,6 +44,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,7 @@ public class GenotypeConcordanceTest {
         genotypeConcordance.OUTPUT_ALL_ROWS = outputAllRows;
         genotypeConcordance.OUTPUT = outputBaseFileName;
         genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
+        if (missingSitesFlag) genotypeConcordance.INTERVALS = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
 
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
         assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));

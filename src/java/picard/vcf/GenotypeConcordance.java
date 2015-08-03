@@ -104,7 +104,9 @@ public class GenotypeConcordance extends CommandLineProgram {
     @Option(doc="If true, use the VCF index, else iterate over the entire VCF.", optional = true)
     public boolean USE_VCF_INDEX = false;
 
-    @Option(shortName = "MISSING_HOM", doc="Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be treated as no call sites and sites missing in both the truth and call sets will be true negatives. Useful when hom ref sites are left out of the truth set.")
+    @Option(shortName = "MISSING_HOM", doc="Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be " +
+            "treated as HOM_REF sites and sites missing in both the truth and call sets will be true negatives. Useful when hom ref sites are left out of the truth set. " +
+            "This flag can only be used with a high confidence interval list.")
     public boolean MISSING_SITES_HOM_REF = false;
 
     private final Log log = Log.getInstance(GenotypeConcordance.class);
@@ -145,6 +147,13 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
             if (!indexExists(CALL_VCF)) {
                 errors.add("The index file was not found for the CALL VCF.  Note that if intervals are specified, the VCF files must be indexed.");
+            }
+        }
+        if (MISSING_SITES_HOM_REF) {
+            //If you are using this flag you must include a high confidence interval list where missing sites are hom_ref.
+            if (!usingIntervals){
+                errors.add("You cannot use the MISSING_HOM option without also supplying an interval list over which missing " +
+                        "sites are considered confident homozygous reference calls.");
             }
         }
 
@@ -196,7 +205,6 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
             log.info("Finished loading up intervals list(s).");
         }
-
         final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF, USE_VCF_INDEX);
         final VCFFileReader callReader = new VCFFileReader(CALL_VCF, USE_VCF_INDEX);
 
@@ -293,6 +301,15 @@ public class GenotypeConcordance extends CommandLineProgram {
             progress.record(variantContextForLogging.getContig(), variantContextForLogging.getStart());
         }
 
+        //snp counter add in X number of missing-missing hom ref's (truth and call state)
+        //missing missing is total interval size minus number of iterations in while loop
+        if (MISSING_SITES_HOM_REF) {
+            //need to know size of intervals to add missing-missing sites for NIST schema.
+            final long intervalBaseCount = intervals.getBaseCount();
+            addMissingTruthAndMissingCallStates(snpCounter.getCounterSize(), intervalBaseCount, snpCounter);
+            addMissingTruthAndMissingCallStates(indelCounter.getCounterSize(), intervalBaseCount, indelCounter);
+        }
+
         // Calculate and store the summary-level metrics
         final MetricsFile<GenotypeConcordanceSummaryMetrics,?> genotypeConcordanceSummaryMetricsFile = getMetricsFile();
         GenotypeConcordanceSummaryMetrics summaryMetrics = new GenotypeConcordanceSummaryMetrics(SNP, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF);
@@ -320,6 +337,15 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
 
         return 0;
+    }
+
+    /**
+     * Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.
+     */
+    private void addMissingTruthAndMissingCallStates(final double numVariants, final long intervalBaseCount, final GenotypeConcordanceCounts counter){
+        final double countMissingMissing = intervalBaseCount-numVariants;
+        final TruthAndCallStates missingMissing = new TruthAndCallStates(TruthState.MISSING, CallState.MISSING);
+        counter.increment(missingMissing, countMissingMissing);
     }
 
     /**
