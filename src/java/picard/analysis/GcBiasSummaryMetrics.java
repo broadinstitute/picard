@@ -54,4 +54,13 @@ public class GcBiasSummaryMetrics extends MultilevelMetrics {
      * (%ref_at_gc - %reads_at_gc) and summing all positive values for GC=[50..100].
      */
     public double GC_DROPOUT;
+
+    /**
+     * Normalized coverage over each quintile of GC content.
+     */
+    public double GC_NC_0_20;
+    public double GC_NC_20_40;
+    public double GC_NC_40_60;
+    public double GC_NC_60_80;
+    public double GC_NC_80_100;
 }

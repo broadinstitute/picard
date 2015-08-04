@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 /** Calculates GC Bias Metrics on multiple levels
  * Created by kbergin on 3/23/15.
@@ -199,10 +200,18 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     else if (group.equals("Sample")) {summary.SAMPLE = gcType;}
                     else if (group.equals("Library")) {summary.LIBRARY = gcType;}
 
+                    final ArrayList<Double> gcNormCovIntervals = calculateGcNormCoverage(meanReadsPerWindow, readsByGc);
+
                     summary.ACCUMULATION_LEVEL = group;
                     summary.WINDOW_SIZE = windowSize;
                     summary.TOTAL_CLUSTERS = totalClusters;
                     summary.ALIGNED_READS = totalAlignedReads;
+                    summary.GC_NC_0_20 = gcNormCovIntervals.get(0);
+                    summary.GC_NC_20_40 = gcNormCovIntervals.get(1);
+                    summary.GC_NC_40_60 = gcNormCovIntervals.get(2);
+                    summary.GC_NC_60_80 = gcNormCovIntervals.get(3);
+                    summary.GC_NC_80_100 = gcNormCovIntervals.get(4);
+
 
                     calculateDropoutMetrics(metrics.DETAILS.getMetrics(), summary);
 
@@ -212,6 +221,34 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 }
             }
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Calculates the normalized coverage over each gc content quintile
+    /////////////////////////////////////////////////////////////////////////////
+    private ArrayList<Double> calculateGcNormCoverage(final Double meanReadsPerWindow, final int[] readsByGc) {
+        final ArrayList<Double> gcNormCovIntervals = new ArrayList<Double>();
+        int readStartsTotal = 0;
+        int windowsTotal = 0;
+
+        for (int i = 0; i < windowsByGc.length; i++) {
+            if (i == 0 || i%20 != 0) {
+                readStartsTotal = readStartsTotal + readsByGc[i];
+                windowsTotal = windowsTotal + windowsByGc[i];
+            }
+            else {
+                if(windowsTotal == 0) {
+                    gcNormCovIntervals.add(0.0);
+                }
+                else {
+                    gcNormCovIntervals.add((readStartsTotal / (double) windowsTotal) / meanReadsPerWindow);
+                }
+                readStartsTotal = 0;
+                windowsTotal = 0;
+            }
+        }
+
+        return gcNormCovIntervals;
     }
 
     /////////////////////////////////////////////////////////////////////////////
