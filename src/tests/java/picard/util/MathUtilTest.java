@@ -19,6 +19,9 @@ public class MathUtilTest {
         Assert.assertEquals(MathUtil.LOG_10_MATH.sum(1.23, 4.56, 2), 4.5613970317323586660874152202433434022756298235604568d, 0.00001d);
         // http://www.wolframalpha.com/input/?i=log10%2810%5E1.23+*+10%5E4.56+*+10%5E2%29
         Assert.assertEquals(MathUtil.LOG_10_MATH.product(1.23, 4.56, 2), 7.7899999999999999999999999999999999999999999999999999d, 0.00001d);
+
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.LOG_10_MATH.getLogValue(new double[]{0.1, 1.0, 10.0}), new double[]{-1.0, 0.0, 1.0}, 0.00001d);
+        TestNGUtil.assertEqualDoubleArrays(MathUtil.LOG_2_MATH.getLogValue(new double[]{0.5, 1.0, 2.0}), new double[]{-1.0, 0.0, 1.0}, 0.00001d);
     }
 
     @DataProvider

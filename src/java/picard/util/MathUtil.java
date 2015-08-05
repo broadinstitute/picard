@@ -35,7 +35,9 @@ import static java.lang.Math.pow;
  *
  * @author Tim Fennell
  */
-public class MathUtil {
+final public class MathUtil {
+    private MathUtil(){};
+
     /** The double value closest to 1 while still being less than 1. */
     public static final double MAX_PROB_BELOW_ONE = 0.9999999999999999d;
 
@@ -325,6 +327,15 @@ public class MathUtil {
             return Math.log(nonLogValue) / log_of_base;
         }
 
+        /** Returns the log-representation of the provided decimal array. */
+        public double[] getLogValue(final double[] nonLogArray) {
+            final double logArray[] = new double[nonLogArray.length];
+            for (int i = 0; i < nonLogArray.length; i++) {
+                logArray[i] = getLogValue(nonLogArray[i]);
+            }
+            return logArray;
+        }
+
         /** Computes the mean of the provided log values. */
         public double mean(final double... logValues) {
             return sum(logValues) - getLogValue(logValues.length);
@@ -345,5 +356,7 @@ public class MathUtil {
         public double product(final double... logValues) {
             return MathUtil.sum(logValues);
         }
+
+
     }
 }
