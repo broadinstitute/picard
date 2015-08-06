@@ -197,4 +197,30 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
             }
         }
     }
+
+    /**
+     * Histogram Width was being incorrectly set causing histograms to be trimmed an removed inappropriately.
+     * See https://github.com/broadinstitute/picard/issues/253
+     * Test to be sure that the right number of histograms are being output.
+     */
+    @Test
+    public void testHistogramWidthIsSetProperly() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
+        final File outfile = File.createTempFile("test", ".insert_size_metrics");
+        final File pdf = File.createTempFile("test", ".pdf");
+        outfile.deleteOnExit();
+        pdf.deleteOnExit();
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "HISTOGRAM_FILE=" + pdf.getAbsolutePath(),
+                "LEVEL=null",
+                "LEVEL=READ_GROUP"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+        final MetricsFile<InsertSizeMetrics, Comparable<?>> output = new MetricsFile<InsertSizeMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        Assert.assertEquals(output.getAllHistograms().size(), 5);
+    }
 }
