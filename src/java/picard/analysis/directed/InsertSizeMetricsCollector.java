@@ -31,12 +31,12 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
 
     //Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail.
     //Also, when calculating mean and stdev, only bins <= Histogram_WIDTH will be included.
-    private Integer HistogramWidth;
+    private final Integer histogramWidth;
 
     public InsertSizeMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                       final double minimumPct, final Integer HistogramWidth, final double deviations) {
         this.minimumPct = minimumPct;
-        this.HistogramWidth = HistogramWidth;
+        this.histogramWidth = HistogramWidth;
         this.deviations = deviations;
         setup(accumulationLevels, samRgRecords);
     }
@@ -166,11 +166,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
 
                     // Trim the Histogram down to get rid of outliers that would make the chart useless.
                     final Histogram<Integer> trimmedHisto = Histogram; //alias it
-                    if (HistogramWidth == null) {
-                        HistogramWidth = (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
-                    }
-
-                    trimmedHisto.trimByWidth(HistogramWidth);
+                    trimmedHisto.trimByWidth(getWidthToTrimTo(metrics));
 
                     metrics.MEAN_INSERT_SIZE = trimmedHisto.getMean();
                     metrics.STANDARD_DEVIATION = trimmedHisto.getStandardDeviation();
@@ -178,6 +174,17 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                     file.addHistogram(trimmedHisto);
                     file.addMetric(metrics);
                 }
+            }
+        }
+
+        /**
+         * @return {@link #histogramWidth} if it was specified in the constructor or a calculated width based on the stdev of the input metric and {@link #deviations}
+         */
+        private int getWidthToTrimTo(InsertSizeMetrics metrics) {
+            if (histogramWidth == null) {
+                return (int) (metrics.MEDIAN_INSERT_SIZE + (deviations * metrics.MEDIAN_ABSOLUTE_DEVIATION));
+            } else {
+                return histogramWidth;
             }
         }
     }
