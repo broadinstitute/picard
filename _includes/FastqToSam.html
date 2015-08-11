@@ -7,6 +7,7 @@
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>FASTQ (File)</td><td>Input fastq file (optionally gzipped) for single end data, or first read in paired end data.  Required. </td></tr>
 <tr><td>FASTQ2 (File)</td><td>Input fastq file (optionally gzipped) for the second read of paired end data.  Default value: null. </td></tr>
+<tr><td>USE_SEQUENTIAL_FASTQS (Boolean)</td><td>Use sequential fastq files with the suffix &lt;prefix>_###.fastq or &lt;prefix>_###.fastq.gz  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>QUALITY_FORMAT (FastqQualityFormat)</td><td>A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled scores with a character shift of 33.  If this value is not specified, the quality format will be detected automatically.  Default value: null. Possible values: {Solexa, Illumina, Standard} </td></tr>
 <tr><td>OUTPUT (File)</td><td>Output SAM/BAM file.   Required. </td></tr>
 <tr><td>READ_GROUP_NAME (String)</td><td>Read group name  Default value: A. This option can be set to 'null' to clear the default value. </td></tr>
