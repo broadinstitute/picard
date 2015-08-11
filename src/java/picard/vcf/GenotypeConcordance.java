@@ -298,7 +298,7 @@ public class GenotypeConcordance extends CommandLineProgram {
             }
 
             final VariantContext variantContextForLogging = tuple.truthVariantContext != null ? tuple.truthVariantContext : tuple.callVariantContext;
-            progress.record(variantContextForLogging.getContig(), variantContextForLogging.getStart());
+            progress.record(variantContextForLogging.getChr(), variantContextForLogging.getStart());
         }
 
         //snp counter add in X number of missing-missing hom ref's (truth and call state)
