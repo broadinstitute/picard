@@ -69,14 +69,18 @@ public class LiftoverVcf extends CommandLineProgram {
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     /** Filter name to use when a target cannot be lifted over. */
-    public static final String FILTER_CANNOT_LIFTOVER = "FailedLiftover";
+    public static final String FILTER_CANNOT_LIFTOVER_INDEL = "ReverseComplementedIndel";
+
+    /** Filter name to use when a target cannot be lifted over. */
+    public static final String FILTER_NO_TARGET = "NoTarget";
 
     /** Filter name to use when a target is lifted over, but the reference allele doens't match the new reference. */
     public static final String FILTER_MISMATCHING_REF_ALLELE = "MismatchedRefAllele";
 
     /** Filters to be added to the REJECT file. */
     private static final List<VCFFilterHeaderLine> FILTERS = CollectionUtil.makeList(
-            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER, "Variant could not be lifted between genome builds."),
+            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
+            new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover.")
     );
 
@@ -147,8 +151,10 @@ public class LiftoverVcf extends CommandLineProgram {
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, 1.0);
 
-            if (target == null) {
-                rejects.add(new VariantContextBuilder(ctx).filter(FILTER_CANNOT_LIFTOVER).make());
+            // if the target is null OR (the target is reverse complemented AND the variant is an indel or mixed), then we cannot lift it over
+            if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel()))) {
+                final String reason = (target == null) ? FILTER_NO_TARGET : FILTER_CANNOT_LIFTOVER_INDEL;
+                rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
             }
             else {

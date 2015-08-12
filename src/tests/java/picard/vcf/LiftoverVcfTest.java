@@ -1,20 +1,67 @@
 package picard.vcf;
 
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.*;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
+import picard.cmdline.CommandLineProgramTest;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 
 /**
  * Test class for LiftoverVcf.
  *
  * Created by ebanks on 8/11/15.
  */
-public class LiftoverVcfTest {
+public class LiftoverVcfTest extends CommandLineProgramTest {
+
+    private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
+    private static final File CHAIN_FILE = new File(TEST_DATA_PATH, "test.over.chain");
+    private static final File REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.reference.fasta");
+    private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("LiftoverVcfsTest", null);
+
+    public String getCommandLineProgramName() {
+        return LiftoverVcf.class.getSimpleName();
+    }
+
+    @AfterClass
+    public void teardown() {
+        IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
+    }
+
+    @Test
+    public void testDoNotFixReverseComplementedIndels() {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftover.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false);
+        for (final VariantContext inputContext : liftReader) {
+            Assert.fail("there should be no passing indels in the liftover");
+        }
+        final VCFFileReader rejectReader = new VCFFileReader(rejectOutputFile, false);
+        int counter = 0;
+        for (final VariantContext inputContext : rejectReader) {
+            counter++;
+        }
+        Assert.assertEquals(counter, 2, "the wrong number of rejected indels faile the liftover");
+    }
 
     @Test
     public void testFixReverseComplementedGenotypes() {
