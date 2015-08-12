@@ -13,9 +13,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -141,6 +139,8 @@ public class LiftoverVcf extends CommandLineProgram {
                 TMP_DIR);
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
+        // a mapping from original allele to reverse complemented allele
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<Allele, Allele>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
@@ -153,13 +153,17 @@ public class LiftoverVcf extends CommandLineProgram {
             }
             else {
                 // Fix the alleles if we went from positive to negative strand
+                reverseComplementAlleleMap.clear();
                 final List<Allele> alleles = new ArrayList<Allele>();
+
                 for (final Allele oldAllele : ctx.getAlleles()) {
                     if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
                         alleles.add(oldAllele);
                     }
                     else {
-                        alleles.add(Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference()));
+                        final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
+                        alleles.add(fixedAllele);
+                        reverseComplementAlleleMap.put(oldAllele, fixedAllele);
                     }
                 }
 
@@ -173,7 +177,7 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 builder.id(ctx.getID());
                 builder.attributes(ctx.getAttributes());
-                builder.genotypes(ctx.getGenotypes());
+                builder.genotypes(fixGenotypes(ctx.getGenotypes(), reverseComplementAlleleMap));
                 builder.filters(ctx.getFilters());
                 builder.log10PError(ctx.getLog10PError());
 
@@ -229,5 +233,23 @@ public class LiftoverVcf extends CommandLineProgram {
         sorter.cleanup();
 
         return 0;
+    }
+
+    protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> reverseComplementAlleleMap) {
+        // optimization: if nothing needs to be fixed then don't bother
+        if ( reverseComplementAlleleMap.isEmpty() ) {
+            return originals;
+        }
+
+        final GenotypesContext fixedGenotypes = GenotypesContext.create(originals.size());
+        for ( final Genotype genotype : originals ) {
+            final List<Allele> fixedAlleles = new ArrayList<Allele>();
+            for ( final Allele allele : genotype.getAlleles() ) {
+                final Allele fixedAllele = reverseComplementAlleleMap.containsKey(allele) ? reverseComplementAlleleMap.get(allele) : allele;
+                fixedAlleles.add(fixedAllele);
+            }
+            fixedGenotypes.add(new GenotypeBuilder(genotype).alleles(fixedAlleles).make());
+        }
+        return fixedGenotypes;
     }
 }
