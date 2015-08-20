@@ -21,11 +21,14 @@ public class GenotypeConcordanceCounts {
 
     /**
      * Pre-defined sets based on if the caller wishes to return the sensitivity given the common homozygous reference, heterozygous, and homozygous variant cases.
+     * Var truth states can also be used to calculate specificity. Hom Ref and Missing can be added to var truth states because they are needed
+     * for specificity and do not contain TP or FN, so they will not effect sensitivity.
      */
     static final TruthState[] HOM_REF_TRUTH_STATES = {TruthState.HOM_REF};
     static final TruthState[] HET_TRUTH_STATES = {TruthState.HET_REF_VAR1, TruthState.HET_VAR1_VAR2};
     static final TruthState[] HOM_VAR_TRUTH_STATES = {TruthState.HOM_VAR1};
-    static final TruthState[] VAR_TRUTH_STATES = {TruthState.HET_REF_VAR1, TruthState.HET_VAR1_VAR2, TruthState.HOM_VAR1};
+    static final TruthState[] VAR_TRUTH_STATES = {TruthState.HET_REF_VAR1, TruthState.HET_VAR1_VAR2, TruthState.HOM_VAR1,
+            TruthState.HOM_REF, TruthState.MISSING};
 
     /**
      * Pre-defined sets based on if the caller wishes to return the PPV given the common homozygous reference, heterozygous, and homozygous variant cases.
@@ -47,6 +50,14 @@ public class GenotypeConcordanceCounts {
      */
     public void increment(final TruthAndCallStates truthAndCallStates) {
         this.counter.increment(truthAndCallStates);
+    }
+
+    public void increment(final TruthAndCallStates truthAndCallStates, final double count){
+        this.counter.increment(truthAndCallStates, count);
+    }
+
+    public double getCounterSize() {
+        return this.counter.getCount();
     }
 
     /**
@@ -71,6 +82,53 @@ public class GenotypeConcordanceCounts {
         final Set<ContingencyState> contingencyStateSet = new HashSet<ContingencyState>();
         Collections.addAll(contingencyStateSet, contingencyStateArray);
         return contingencyStateSet;
+    }
+
+    /**
+     * Genotype Concordance Util calculates the Genotype Concordance and the Non-Ref Genotype Concordance, based on the includeHomRef flag.
+     */
+    private double calculateGenotypeConcordanceUtil(final GenotypeConcordanceScheme scheme, final boolean missingSitesFlag, final boolean includeHomRef) {
+        double numerator = 0.0;
+        double denominator = 0.0;
+
+        scheme.validateScheme();
+
+        final TruthState[] allTruthStates = TruthState.values();
+        final CallState[] allCallStates = CallState.values();
+
+        for (final TruthState truthState : allTruthStates) {
+            for (final CallState callState : allCallStates) {
+                if (!missingSitesFlag && isMissing(truthState, callState)) {
+                    continue;
+                }
+                else if (includeHomRef || isVar(truthState, callState)) {
+                    final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
+                    final int count = getCount(truthAndCallStates);
+                    if (truthState.getCode()==callState.getCode()) {
+                        //If we enter this, we are 'on the diagonal'
+                        numerator += count;
+                    }
+                    denominator += count;
+                }
+            }
+        }
+        return (denominator > 0.0 ? (numerator / denominator) : Double.NaN);
+    }
+
+    /**
+     * Genotype Concordance is the number of times the truth and call states match exactly / all truth and call combinations made
+     * If the GA4GH scheme is being used, any MISSING sites in truth OR call will not be included in the discordance calculations.
+     */
+    public double calculateGenotypeConcordance(final GenotypeConcordanceScheme scheme, final boolean missingSitesFlag) {
+        return calculateGenotypeConcordanceUtil(scheme, missingSitesFlag, true);
+    }
+
+    /**
+     * Non Ref Genotype Concordance is the number of times the truth and call states match exactly for *vars only* / all truth and call *var* combinations made
+     * If the GA4GH scheme is being used, any MISSING sites in truth OR call will not be included in the discordance calculations.
+     */
+    public double calculateNonRefGenotypeConcordance(final GenotypeConcordanceScheme scheme, final boolean missingSitesFlag) {
+        return calculateGenotypeConcordanceUtil(scheme, missingSitesFlag, false);
     }
 
     /**
@@ -104,16 +162,6 @@ public class GenotypeConcordanceCounts {
     }
 
     /**
-     * Returns the sensitivity defined by the scheme across all truth states.
-     */
-    public double getSensitivity(final GenotypeConcordanceScheme scheme) {
-        final List<TruthState> listOfTruthStates = Arrays.asList(TruthState.values());
-        TruthState[] allTruthStates = new TruthState[listOfTruthStates.size()];
-        allTruthStates = listOfTruthStates.toArray(allTruthStates);
-        return getSensitivity(scheme, allTruthStates);
-    }
-
-    /**
      * Returns the PPV defined by the scheme across the subset of call states.
      */
     public double Ppv(final GenotypeConcordanceScheme scheme, final CallState[] callStateList) {
@@ -141,16 +189,6 @@ public class GenotypeConcordanceCounts {
         }
 
         return (numerator / denominator);
-    }
-
-    /**
-     * Returns the PPV defined by the scheme across all call states.
-     */
-    public double getPpv(final GenotypeConcordanceScheme scheme) {
-        final List<CallState> listOfCallStates = Arrays.asList(CallState.values());
-        CallState[] allCallStates = new CallState[listOfCallStates.size()];
-        allCallStates = listOfCallStates.toArray(allCallStates);
-        return Ppv(scheme, allCallStates);
     }
 
     /**
@@ -183,16 +221,6 @@ public class GenotypeConcordanceCounts {
     }
 
     /**
-     * Returns the specificity defined by the scheme across all truth states.
-     */
-    public double getSpecificity(final GenotypeConcordanceScheme scheme) {
-        final List<TruthState> listOfTruthStates = Arrays.asList(TruthState.values());
-        TruthState[] allTruthStates = new TruthState[listOfTruthStates.size()];
-        allTruthStates = listOfTruthStates.toArray(allTruthStates);
-        return getSpecificity(scheme, allTruthStates);
-    }
-
-    /**
      * Returns the count defined by the truth state set and call state set.
      */
     public int getCount(final TruthState truthState, final CallState callState) {
@@ -207,7 +235,26 @@ public class GenotypeConcordanceCounts {
         return (bin == null ? 0 : (int) bin.getValue());
     }
 
+    /**
+     * Returns true if EITHER the truth or call state is a VAR.
+     * Used for calculating non ref genotype concordance.
+     */
+    public boolean isVar(final TruthState truthState, final CallState callState) {
+        final List<TruthState> listOfTruthStates = Arrays.asList(TruthState.HOM_VAR1, TruthState.HET_REF_VAR1, TruthState.HET_VAR1_VAR2);
+        final List<CallState> listOfCallStates = Arrays.asList(CallState.HET_REF_VAR1, CallState.HET_REF_VAR2, CallState.HET_REF_VAR3,
+                CallState.HET_VAR1_VAR2, CallState.HET_VAR1_VAR3, CallState.HET_VAR3_VAR4,
+                CallState.HOM_VAR1, CallState.HOM_VAR2, CallState.HOM_VAR3);
 
+        return listOfTruthStates.contains(truthState) || listOfCallStates.contains(callState);
+    }
+
+    /**
+     * Returns true if EITHER the truth or call state is MISSING.
+     * Used for calculating genotype concordance and non-ref genotype concordance when the GA4GH scheme is used.
+     */
+    public boolean isMissing(final TruthState truthState, final CallState callState) {
+        return truthState == TruthState.MISSING || callState == CallState.MISSING;
+    }
 
     /**
      * Returns the sum of all pairs of tuples defined by the truth state set and call state set.

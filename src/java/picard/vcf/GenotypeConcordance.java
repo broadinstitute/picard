@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2015 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
+import htsjdk.tribble.Tribble;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
@@ -85,7 +86,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     @Option(shortName = "CS", doc="The name of the call sample within the call VCF")
     public String CALL_SAMPLE;
 
-    @Option(doc="One or more interval list files that will be used to limit the genotype concordance.")
+    @Option(doc="One or more interval list files that will be used to limit the genotype concordance.  Note - if intervals are specified, the VCF files must be indexed.")
     public List<File> INTERVALS;
 
     @Option(doc="If true, multiple interval lists will be intersected. If false multiple lists will be unioned.")
@@ -102,6 +103,11 @@ public class GenotypeConcordance extends CommandLineProgram {
 
     @Option(doc="If true, use the VCF index, else iterate over the entire VCF.", optional = true)
     public boolean USE_VCF_INDEX = false;
+
+    @Option(shortName = "MISSING_HOM", doc="Default is false, which follows the GA4GH Scheme. If true, missing sites in the truth set will be " +
+            "treated as HOM_REF sites and sites missing in both the truth and call sets will be true negatives. Useful when hom ref sites are left out of the truth set. " +
+            "This flag can only be used with a high confidence interval list.")
+    public boolean MISSING_SITES_HOM_REF = false;
 
     private final Log log = Log.getInstance(GenotypeConcordance.class);
     private final ProgressLogger progress = new ProgressLogger(log, 10000, "checked", "variants");
@@ -124,9 +130,51 @@ public class GenotypeConcordance extends CommandLineProgram {
         new GenotypeConcordance().instanceMainWithExit(args);
     }
 
-    @Override protected int doWork() {
+    @Override
+    protected String[] customCommandLineValidation() {
+        // Note - If the user specifies to use INTERVALS, the code will fail if the vcfs are not indexed, so we set USE_VCF_INDEX to true and check that the vcfs are indexed.
         IOUtil.assertFileIsReadable(TRUTH_VCF);
         IOUtil.assertFileIsReadable(CALL_VCF);
+        final boolean usingIntervals = this.INTERVALS != null && this.INTERVALS.size() > 0;
+        final List<String> errors = new ArrayList<String>();
+        if (usingIntervals) {
+            USE_VCF_INDEX = true;
+        }
+        if (USE_VCF_INDEX) {
+            // Index file is required either because we are using intervals, or because user-set parameter
+            if (!indexExists(TRUTH_VCF)) {
+                errors.add("The index file was not found for the TRUTH VCF.  Note that if intervals are specified, the VCF files must be indexed.");
+            }
+            if (!indexExists(CALL_VCF)) {
+                errors.add("The index file was not found for the CALL VCF.  Note that if intervals are specified, the VCF files must be indexed.");
+            }
+        }
+        if (MISSING_SITES_HOM_REF) {
+            //If you are using this flag you must include a high confidence interval list where missing sites are hom_ref.
+            if (!usingIntervals){
+                errors.add("You cannot use the MISSING_HOM option without also supplying an interval list over which missing " +
+                        "sites are considered confident homozygous reference calls.");
+            }
+        }
+
+        if (errors.isEmpty()) {
+            return null;
+        } else {
+            return errors.toArray(new String[errors.size()]);
+        }
+    }
+
+    /**
+     * Determines whether an index file exists for the given vcf file using standard extension suffixes
+     *
+     * @param vcf  the vcf file to investigate
+     * @return true if an index file exists, false otherwise
+     */
+    private boolean indexExists(final File vcf) {
+        return Tribble.indexFile(vcf).exists() || Tribble.tabixIndexFile(vcf).exists();
+    }
+
+    @Override protected int doWork() {
         final File summaryMetricsFile = new File(OUTPUT + SUMMARY_METRICS_FILE_EXTENSION);
         final File detailedMetricsFile = new File(OUTPUT + DETAILED_METRICS_FILE_EXTENSION);
         final File contingencyMetricsFile = new File(OUTPUT + CONTINGENCY_METRICS_FILE_EXTENSION);
@@ -138,7 +186,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         IntervalList intervals = null;
         SAMSequenceDictionary intervalsSamSequenceDictionary = null;
         if (usingIntervals) {
-            log.info("Loading up region lists.");
+            log.info("Starting to load intervals list(s).");
             long genomeBaseCount = 0;
             for (final File f : INTERVALS) {
                 IOUtil.assertFileIsReadable(f);
@@ -155,9 +203,8 @@ public class GenotypeConcordance extends CommandLineProgram {
             if (intervals != null) {
                 intervals = intervals.uniqued();
             }
-            log.info("Finished loading up region lists.");
+            log.info("Finished loading up intervals list(s).");
         }
-
         final VCFFileReader truthReader = new VCFFileReader(TRUTH_VCF, USE_VCF_INDEX);
         final VCFFileReader callReader = new VCFFileReader(CALL_VCF, USE_VCF_INDEX);
 
@@ -254,11 +301,20 @@ public class GenotypeConcordance extends CommandLineProgram {
             progress.record(variantContextForLogging.getChr(), variantContextForLogging.getStart());
         }
 
+        //snp counter add in X number of missing-missing hom ref's (truth and call state)
+        //missing missing is total interval size minus number of iterations in while loop
+        if (MISSING_SITES_HOM_REF) {
+            //need to know size of intervals to add missing-missing sites for NIST schema.
+            final long intervalBaseCount = intervals.getBaseCount();
+            addMissingTruthAndMissingCallStates(snpCounter.getCounterSize(), intervalBaseCount, snpCounter);
+            addMissingTruthAndMissingCallStates(indelCounter.getCounterSize(), intervalBaseCount, indelCounter);
+        }
+
         // Calculate and store the summary-level metrics
         final MetricsFile<GenotypeConcordanceSummaryMetrics,?> genotypeConcordanceSummaryMetricsFile = getMetricsFile();
-        GenotypeConcordanceSummaryMetrics summaryMetrics = new GenotypeConcordanceSummaryMetrics(SNP, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE);
+        GenotypeConcordanceSummaryMetrics summaryMetrics = new GenotypeConcordanceSummaryMetrics(SNP, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF);
         genotypeConcordanceSummaryMetricsFile.addMetric(summaryMetrics);
-        summaryMetrics = new GenotypeConcordanceSummaryMetrics(INDEL, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE);
+        summaryMetrics = new GenotypeConcordanceSummaryMetrics(INDEL, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF);
         genotypeConcordanceSummaryMetricsFile.addMetric(summaryMetrics);
         genotypeConcordanceSummaryMetricsFile.write(summaryMetricsFile);
 
@@ -270,9 +326,9 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Calculate and score the contingency metrics
         final MetricsFile<GenotypeConcordanceContingencyMetrics,?> genotypeConcordanceContingencyMetricsFile = getMetricsFile();
-        GenotypeConcordanceContingencyMetrics contingencyMetrics = new GenotypeConcordanceContingencyMetrics(SNP, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE);
+        GenotypeConcordanceContingencyMetrics contingencyMetrics = new GenotypeConcordanceContingencyMetrics(SNP, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF);
         genotypeConcordanceContingencyMetricsFile.addMetric(contingencyMetrics);
-        contingencyMetrics = new GenotypeConcordanceContingencyMetrics(INDEL, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE);
+        contingencyMetrics = new GenotypeConcordanceContingencyMetrics(INDEL, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF);
         genotypeConcordanceContingencyMetricsFile.addMetric(contingencyMetrics);
         genotypeConcordanceContingencyMetricsFile.write(contingencyMetricsFile);
 
@@ -284,11 +340,22 @@ public class GenotypeConcordance extends CommandLineProgram {
     }
 
     /**
+     * Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.
+     */
+    private void addMissingTruthAndMissingCallStates(final double numVariants, final long intervalBaseCount, final GenotypeConcordanceCounts counter){
+        final double countMissingMissing = intervalBaseCount-numVariants;
+        final TruthAndCallStates missingMissing = new TruthAndCallStates(TruthState.MISSING, CallState.MISSING);
+        counter.increment(missingMissing, countMissingMissing);
+    }
+
+    /**
     * Outputs the detailed statistics tables for SNP and Indel match categories.
     **/
     private void outputDetailMetricsFile(final VariantContext.Type variantType, final MetricsFile<GenotypeConcordanceDetailMetrics,?> genotypeConcordanceDetailMetricsFile,
                                          final GenotypeConcordanceCounts counter, final String truthSampleName, final String callSampleName) {
-        final GenotypeConcordanceScheme scheme = new GenotypeConcordanceScheme();
+        final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
+        final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(MISSING_SITES_HOM_REF);
+        scheme.validateScheme();
         for (final TruthState truthState : TruthState.values()) {
             for (final CallState callState : CallState.values()) {
                 final int count = counter.getCount(truthState, callState);
@@ -334,6 +401,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         Genotype truthGenotype = null, callGenotype = null;
 
         // Site level checks
+        // Added potential to include missing sites as hom ref..
         if (truthContext == null) truthState = TruthState.MISSING;
         else if (truthContext.isMixed()) truthState = TruthState.IS_MIXED;
         else if (truthContext.isFiltered()) truthState = TruthState.VC_FILTERED;

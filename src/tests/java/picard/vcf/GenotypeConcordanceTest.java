@@ -1,7 +1,30 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package picard.vcf;
 
 import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.FormatUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -22,7 +45,6 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +56,11 @@ public class GenotypeConcordanceTest {
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
 
     // Test VCFs
-    private static final File CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
+    private final File CEU_TRIOS_SNPS_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps.vcf");
     private static final File CEU_TRIOS_INDELS_VCF = new File(TEST_DATA_PATH, "CEUTrio-indels.vcf");
+
+    // Test that missing sites flag for new scheme works for NIST data sets
+    private static final File NIST_MISSING_SITES_TRUTH_VCF = new File(TEST_DATA_PATH, "NIST.selected.vcf");
 
     // Test that we notice a difference on the first line
     private static final File CEU_TRIOS_SNPS_FIRST_LINE_DIFF_VCF = new File(TEST_DATA_PATH, "CEUTrio-snps_first_line_diff.vcf");
@@ -55,8 +80,7 @@ public class GenotypeConcordanceTest {
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_ALL_ROWS = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff_AllRows";
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff_MinGq";
     private static final String CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP = "CEUTrio-snps_vs_CEUTrio-snps_GtConcordanceDiff_MinDp";
-
-    private static final File INTERVALS_FILE = new File(TEST_DATA_PATH, "IntervalListChr1Small.interval_list");
+    private static final String NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC = "NIST-truth-snps_vs_CEUTrio-snps_GtConcordanceDiff";
 
     private static final String TRUTH_SAMPLE_NAME = "Foo";
     private static final String CALL_SAMPLE_NAME = "Foo";
@@ -77,27 +101,28 @@ public class GenotypeConcordanceTest {
     private static final Allele AAAAA = Allele.create("AAAAA");
 
     @AfterClass
-    public void teardown() {
+    public void tearDown() {
         IOUtil.deleteDirectoryTree(OUTPUT_DATA_PATH);
     }
 
     @DataProvider(name = "genotypeConcordanceTestFileData")
     public Object[][] getGenotypeConcordanceTestFileData() {
         return new Object[][]{
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC},
-                {CEU_TRIOS_INDELS_VCF, "NA12878", CEU_TRIOS_INDELS_VCF, "NA12878", null, null, false, CEU_TRIOS_INDELS_VS_CEU_TRIOS_INDELS_GC},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_FIRST_LINE_DIFF_VCF, "NA12878", null, null, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_FIRST_LINE_DIFF_GC},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_LAST_LINE_DIFF_VCF, "NA12878", null, null, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_LAST_LINE_DIFF_GC},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_DEL_LINE_VCF, "NA12878", null, null, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_DEL_LINE_GC},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, true, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_ALL_ROWS},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", 40, null, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ},
-                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", null, 40, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP}
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC},
+                {CEU_TRIOS_INDELS_VCF, "NA12878", CEU_TRIOS_INDELS_VCF, "NA12878", null, null, false, false, CEU_TRIOS_INDELS_VS_CEU_TRIOS_INDELS_GC},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_FIRST_LINE_DIFF_VCF, "NA12878", null, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_FIRST_LINE_DIFF_GC},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_LAST_LINE_DIFF_VCF, "NA12878", null, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_LAST_LINE_DIFF_GC},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_DEL_LINE_VCF, "NA12878", null, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_DEL_LINE_GC},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, true, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_ALL_ROWS},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", 40, null, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_GQ},
+                {CEU_TRIOS_SNPS_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12891", null, 40, false, false, CEU_TRIOS_SNPS_VS_CEU_TRIOS_SNPS_GC_MIN_DP},
+                {NIST_MISSING_SITES_TRUTH_VCF, "NA12878", CEU_TRIOS_SNPS_VCF, "NA12878", null, null, false, true, NIST_TRUTH_SNPS_VS_CEU_TRIOS_SNPS_GC}
         };
     }
 
     @Test(dataProvider = "genotypeConcordanceTestFileData")
     public void testGenotypeConcordance(final File vcf1, final String sample1, final File vcf2, final String sample2,
-                                        final Integer minGq, final Integer minDp, final boolean outputAllRows,
+                                        final Integer minGq, final Integer minDp, final boolean outputAllRows, final boolean missingSitesFlag,
                                         final String expectedOutputFileBaseName) throws Exception {
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "actualGtConc");
         final File outputSummaryFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
@@ -116,6 +141,8 @@ public class GenotypeConcordanceTest {
         if (minDp != null) genotypeConcordance.MIN_DP = minDp;
         genotypeConcordance.OUTPUT_ALL_ROWS = outputAllRows;
         genotypeConcordance.OUTPUT = outputBaseFileName;
+        genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
+        if (missingSitesFlag) genotypeConcordance.INTERVALS = Collections.singletonList(new File(TEST_DATA_PATH, "IntervalList1PerChrom.interval_list"));
 
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
         assertMetricsFileEqual(outputSummaryFile, new File(TEST_DATA_PATH, expectedOutputFileBaseName + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION));
@@ -137,8 +164,8 @@ public class GenotypeConcordanceTest {
         Assert.assertTrue(expected.areHistogramsEqual(actual));
     }
 
-    @Test
-    public void testGenotypeConcordanceDetails() throws Exception {
+    public static GenotypeConcordanceCounts getGenotypeConcordanceCounts(final File truthVCF, final File callVCF, final String callSample, final boolean missingSitesFlag, List<File> intervalFiles){
+        //gets the Genotype Concordance Counts for the detail tests for each scheme
         final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "actualGtConc");
         final File outputSummaryFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
         final File outputDetailsFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
@@ -146,68 +173,20 @@ public class GenotypeConcordanceTest {
         outputDetailsFile.deleteOnExit();
 
         final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_VCF = CEU_TRIOS_SNPS_VCF;
+        genotypeConcordance.TRUTH_VCF = truthVCF;
         genotypeConcordance.TRUTH_SAMPLE = "NA12878";
-        genotypeConcordance.CALL_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.CALL_SAMPLE = "NA12878";
+        genotypeConcordance.CALL_VCF = callVCF;
+        genotypeConcordance.CALL_SAMPLE = callSample;
+        genotypeConcordance.MISSING_SITES_HOM_REF = missingSitesFlag;
+        genotypeConcordance.INTERVALS = intervalFiles;
         genotypeConcordance.OUTPUT = outputBaseFileName;
 
         Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
 
-        final Map<TruthAndCallStates, Integer> nonZeroCounts = new HashMap<TruthAndCallStates, Integer>();
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HET_REF_VAR1), 104);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HOM_VAR1, CallState.HOM_VAR1), 59);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.VC_FILTERED, CallState.VC_FILTERED), 40);
-
-        GenotypeConcordanceCounts concordanceCounts = genotypeConcordance.getSnpCounter();
-        assertNonZeroCountsAgree(concordanceCounts, nonZeroCounts);
-
-        final FormatUtil fmt = new FormatUtil();
-
-        final GenotypeConcordanceScheme scheme = new GenotypeConcordanceScheme();
-        concordanceCounts.validateCountsAgainstScheme(scheme);
-
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-
-        // Now run it again with different samples
-        genotypeConcordance.TRUTH_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.TRUTH_SAMPLE = "NA12878";
-        genotypeConcordance.CALL_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.CALL_SAMPLE = "NA12891";
-        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
-
-        nonZeroCounts.clear();
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HOM_REF, CallState.HET_REF_VAR1), 31);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HOM_REF), 30);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HET_REF_VAR1), 50);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HOM_VAR1), 24);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HOM_VAR1, CallState.HET_REF_VAR1), 18);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HOM_VAR1, CallState.HOM_VAR1), 41);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.VC_FILTERED, CallState.VC_FILTERED), 49);
-
-        concordanceCounts = genotypeConcordance.getSnpCounter();
-        assertNonZeroCountsAgree(concordanceCounts, nonZeroCounts);
-
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.711538");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.686869");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "0.769231");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "0.766234");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "0.730337");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.734807");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.707447");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "0.769231");
+        return genotypeConcordance.getSnpCounter();
     }
 
-    private void assertNonZeroCountsAgree(final GenotypeConcordanceCounts counter, final Map<TruthAndCallStates, Integer> expectedCountMap) {
+    public static void assertNonZeroCountsAgree(final GenotypeConcordanceCounts counter, final Map<TruthAndCallStates, Integer> expectedCountMap) {
         for (final TruthState truthState : TruthState.values()) {
             for (final CallState callState : CallState.values()) {
                 Integer expectedCount = expectedCountMap.get(new TruthAndCallStates(truthState, callState));
@@ -215,73 +194,6 @@ public class GenotypeConcordanceTest {
                 Assert.assertEquals(counter.getCount(truthState, callState), expectedCount.intValue());
             }
         }
-    }
-
-    @Test
-    public void testGenotypeConcordanceDetailsWithIntervals() throws Exception {
-        final File outputBaseFileName = new File(OUTPUT_DATA_PATH, "actualGtConc");
-        final File outputSummaryFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.SUMMARY_METRICS_FILE_EXTENSION);
-        final File outputDetailsFile = new File(outputBaseFileName.getAbsolutePath() + GenotypeConcordance.DETAILED_METRICS_FILE_EXTENSION);
-        outputSummaryFile.deleteOnExit();
-        outputDetailsFile.deleteOnExit();
-
-        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.TRUTH_SAMPLE = "NA12878";
-        genotypeConcordance.CALL_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.CALL_SAMPLE = "NA12878";
-        genotypeConcordance.INTERVALS = Collections.singletonList(INTERVALS_FILE);
-        genotypeConcordance.OUTPUT = outputBaseFileName;
-
-        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
-
-        final Map<TruthAndCallStates, Integer> nonZeroCounts = new HashMap<TruthAndCallStates, Integer>();
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HET_REF_VAR1), 1);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.VC_FILTERED, CallState.VC_FILTERED), 2);
-
-        GenotypeConcordanceCounts concordanceCounts = genotypeConcordance.getSnpCounter();
-        assertNonZeroCountsAgree(concordanceCounts, nonZeroCounts);
-
-        final FormatUtil fmt = new FormatUtil();
-
-        final GenotypeConcordanceScheme scheme = new GenotypeConcordanceScheme();
-        concordanceCounts.validateCountsAgainstScheme(scheme);
-
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-
-        // Now run it again with different samples
-        genotypeConcordance.TRUTH_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.TRUTH_SAMPLE = "NA12878";
-        genotypeConcordance.CALL_VCF = CEU_TRIOS_SNPS_VCF;
-        genotypeConcordance.CALL_SAMPLE = "NA12891";
-        genotypeConcordance.INTERVALS = Collections.singletonList(INTERVALS_FILE);
-        Assert.assertEquals(genotypeConcordance.instanceMain(new String[0]), 0);
-
-        nonZeroCounts.clear();
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HOM_REF, CallState.HET_REF_VAR1), 1);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.HET_REF_VAR1, CallState.HET_REF_VAR1), 1);
-        nonZeroCounts.put(new TruthAndCallStates(TruthState.VC_FILTERED, CallState.VC_FILTERED), 2);
-
-        concordanceCounts = genotypeConcordance.getSnpCounter();
-        assertNonZeroCountsAgree(concordanceCounts, nonZeroCounts);
-
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HET_CALL_STATES)), "0.5");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HET_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.HOM_VAR_CALL_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.HOM_VAR_TRUTH_STATES)), "?");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSensitivity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
-        Assert.assertEquals(fmt.format(concordanceCounts.Ppv(scheme, GenotypeConcordanceCounts.VAR_CALL_STATES)), "0.5");
-        Assert.assertEquals(fmt.format(concordanceCounts.getSpecificity(scheme, GenotypeConcordanceCounts.VAR_TRUTH_STATES)), "1");
     }
 
     @DataProvider(name = "genotypeConcordanceDetermineStateDataProvider")
