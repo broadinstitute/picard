@@ -33,27 +33,49 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * Tests CollectWgsMetrics
+ * Tests CollectWgsMetricsFromSampledSites
  */
-public class CollectWgsMetricsTest extends CommandLineProgramTest {
+public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
     public String getCommandLineProgramName() {
-        return CollectWgsMetrics.class.getSimpleName();
+        return CollectWgsMetricsFromSampledSites.class.getSimpleName();
     }
 
-    /**
-     * Important note:
-     *   This test is simply confirming that the correct number of sites are being evaluated by the tool.
-     *   It is not testing correctness of the results.
-     *   The code in general requires significant further testing of correctness.
-     */
     @Test
-    public void testIntervals() throws IOException {
-        final File input = new File(TEST_DATA_DIR, "aligned.sam");
+    public void testOnePos() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "forMetrics.sam");
         final File outfile = File.createTempFile("test", ".wgs_metrics");
         final File ref = new File(TEST_DATA_DIR, "merger.fasta");
-        final File intervals = new File(TEST_DATA_DIR, "several.interval_list");
+        final File intervals = new File(TEST_DATA_DIR, "onePos.interval_list");
+        outfile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath()
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<CollectWgsMetricsFromSampledSites.SampledWgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetricsFromSampledSites.SampledWgsMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 1);
+            Assert.assertEquals(metrics.MEAN_COVERAGE, 3.0);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.272727); // 3 of 11
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.181818); // 2 of 11
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.090909); // 1 of 9
+            Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.090909); // 1 of 9
+        }
+    }
+
+    @Test
+    public void testContiguousIntervals() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "forMetrics.sam");
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        final File ref = new File(TEST_DATA_DIR, "merger.fasta");
+        final File intervals = new File(TEST_DATA_DIR, "contiguous.interval_list");
         outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
@@ -68,6 +90,9 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
 
         for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.GENOME_TERRITORY, 5);
+            Assert.assertEquals(metrics.MEAN_COVERAGE, 2.6);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.0);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.066667);
         }
     }
 }
