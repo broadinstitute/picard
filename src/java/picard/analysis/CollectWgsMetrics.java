@@ -60,9 +60,6 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(doc = "Determines whether to include the base quality histogram in the metrics file.")
     public boolean INCLUDE_BQ_HISTOGRAM = false;
 
-    @Option(shortName = "INTERVALS", doc = "An interval list file that contains the locations of the positions to assess.", optional = true)
-    public File INTERVALS = null;
-
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
@@ -135,14 +132,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
-
-        final SamLocusIterator iterator;
-        if (INTERVALS != null) {
-            IOUtil.assertFileIsReadable(INTERVALS);
-            iterator = new SamLocusIterator(in, IntervalList.fromFile(INTERVALS));
-        } else {
-            iterator = new SamLocusIterator(in);
-        }
+        final SamLocusIterator iterator = getLocusIterator(in);
 
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
         final CountingFilter dupeFilter = new CountingDuplicateFilter();
@@ -219,9 +209,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
         metrics.MEDIAN_COVERAGE = histo.getMedian();
         metrics.MAD_COVERAGE = histo.getMedianAbsoluteDeviation();
 
-        final long basesExcludedByDupes = dupeFilter.getFilteredBases();
-        final long basesExcludedByMapq = mapqFilter.getFilteredBases();
-        final long basesExcludedByPairing = pairFilter.getFilteredBases();
+        final long basesExcludedByDupes = getBasesExcludedBy(dupeFilter);
+        final long basesExcludedByMapq = getBasesExcludedBy(mapqFilter);
+        final long basesExcludedByPairing = getBasesExcludedBy(pairFilter);
         final double total = histo.getSum();
         final double totalWithExcludes = total + basesExcludedByDupes + basesExcludedByMapq + basesExcludedByPairing + basesExcludedByBaseq + basesExcludedByOverlap + basesExcludedByCapping;
         metrics.PCT_EXC_DUPE = basesExcludedByDupes / totalWithExcludes;
@@ -259,6 +249,14 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
     protected WgsMetrics generateWgsMetrics() {
         return new WgsMetrics();
+    }
+
+    protected long getBasesExcludedBy(final CountingFilter filter) {
+        return filter.getFilteredBases();
+    }
+
+    protected SamLocusIterator getLocusIterator(final SamReader in) {
+        return new SamLocusIterator(in);
     }
 }
 
