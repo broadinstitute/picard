@@ -45,6 +45,16 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         public long TOTAL_BASES = 0;
         /** The number of usable bases, after all filters are applied. */
         public long TOTAL_USABLE_BASES = 0;
+
+        /** The number of read pairs, before all filters are applied. */
+        public long TOTAL_READ_PAIRS = 0;
+        /** The number of duplicate read pairs, before all filters are applied. */
+        public long TOTAL_DUPE_PAIRS = 0;
+
+        /** The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied. */
+        public long TOTAL_ORIENTED_PAIRS = 0;
+        /** The mean insert size, after filters are applied. */
+        public double MEAN_INSERT_SIZE = 0.0;
     }
 
     public static void main(final String[] args) {
@@ -70,6 +80,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         long basesExcludedByPairing = 0;
         long basesExcludedByBaseq = 0;
         long basesExcludedByOverlap = 0;
+        double insertSizeSum = 0.0;
 
         // Loop through all the loci by read pairs
         ReadPair pairToAnalyze = getNextReadPair(iterator);
@@ -84,10 +95,12 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
 
             // now compute metrics...
             metrics.TOTAL_BASES += totalReadBases;
+            if (isProperPair) metrics.TOTAL_READ_PAIRS++;
 
             if (!isProperPair || pairToAnalyze.read1.getMateUnmappedFlag() || pairToAnalyze.read2.getMateUnmappedFlag()) {
                 basesExcludedByPairing += totalReadBases;
             } else if (pairToAnalyze.read1.getDuplicateReadFlag()) {
+                metrics.TOTAL_DUPE_PAIRS++;
                 basesExcludedByDupes += totalReadBases;
             } else {
 
@@ -110,6 +123,12 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
                 }
 
                 metrics.TOTAL_USABLE_BASES += usableBaseCount;
+
+                final int insertSize = Math.abs(pairToAnalyze.read1.getInferredInsertSize());
+                if (insertSize > 0 && pairToAnalyze.read1.getProperPairFlag()) {
+                    metrics.TOTAL_ORIENTED_PAIRS++;
+                    insertSizeSum += insertSize;
+                }
             }
 
             // record progress
@@ -130,6 +149,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.PCT_EXC_OVERLAP = basesExcludedByOverlap / (double)metrics.TOTAL_BASES;
         final double totalExcludedBases = metrics.TOTAL_BASES - metrics.TOTAL_USABLE_BASES;
         metrics.PCT_EXC_TOTAL = totalExcludedBases / metrics.TOTAL_BASES;
+        metrics.MEAN_INSERT_SIZE = insertSizeSum / metrics.TOTAL_ORIENTED_PAIRS;
 
         final MetricsFile<MySeqMetrics, Integer> out = getMetricsFile();
         out.addMetric(metrics);

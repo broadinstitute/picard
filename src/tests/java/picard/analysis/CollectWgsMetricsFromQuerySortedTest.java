@@ -38,10 +38,15 @@ public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest
         output.read(new FileReader(outfile));
 
         for (final CollectWgsMetricsFromQuerySorted.MySeqMetrics metrics : output.getMetrics()) {
-            Assert.assertEquals(metrics.TOTAL_BASES, 404);
+            Assert.assertEquals(metrics.TOTAL_BASES, 606);
             Assert.assertEquals(metrics.TOTAL_USABLE_BASES, 238);
-            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 0.128713);  // 52 of 404 bases
-            Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.282178);    // 114 of 404 bases
+            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 0.085809);  // 52 of 606 bases
+            Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.188119);    // 114 of 606 bases
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.333333);    // 202 of 606 bases
+            Assert.assertEquals(metrics.TOTAL_READ_PAIRS, 3);
+            Assert.assertEquals(metrics.TOTAL_DUPE_PAIRS, 1);
+            Assert.assertEquals(metrics.TOTAL_ORIENTED_PAIRS, 2);
+            Assert.assertEquals(metrics.MEAN_INSERT_SIZE, 118.0);
         }
     }
 }
