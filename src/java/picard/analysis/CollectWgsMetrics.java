@@ -60,6 +60,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(doc = "Determines whether to include the base quality histogram in the metrics file.")
     public boolean INCLUDE_BQ_HISTOGRAM = false;
 
+    @Option(doc="If true, count unpaired reads, and paired reads with one end unmapped")
+    public boolean COUNT_UNPAIRED = false;
+
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
@@ -140,7 +143,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final CountingPairedFilter pairFilter = new CountingPairedFilter();
         filters.add(mapqFilter);
         filters.add(dupeFilter);
-        filters.add(pairFilter);
+        if (!COUNT_UNPAIRED) {
+            filters.add(pairFilter);
+        }
         filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         iterator.setSamFilters(filters);
         iterator.setEmitUncoveredLoci(true);
