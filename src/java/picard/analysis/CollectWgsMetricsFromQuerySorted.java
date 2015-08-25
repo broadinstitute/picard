@@ -40,7 +40,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
     private final Log log = Log.getInstance(CollectWgsMetricsFromQuerySorted.class);
 
     /** Metrics for evaluating the performance of whole genome sequencing experiments. */
-    public static class MySeqMetrics extends CollectWgsMetrics.WgsMetrics {
+    public static class QuerySortedSeqMetrics extends CollectWgsMetrics.WgsMetrics {
         /** The total number of bases, before any filters are applied. */
         public long TOTAL_BASES = 0;
         /** The number of usable bases, after all filters are applied. */
@@ -74,7 +74,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         final PeekableIterator<SAMRecord> iterator = new PeekableIterator<SAMRecord>(reader.iterator());
 
         // the metrics to keep track of
-        final MySeqMetrics metrics = new MySeqMetrics();
+        final QuerySortedSeqMetrics metrics = new QuerySortedSeqMetrics();
         long basesExcludedByDupes = 0;
         long basesExcludedByMapq = 0;
         long basesExcludedByPairing = 0;
@@ -151,7 +151,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.PCT_EXC_TOTAL = totalExcludedBases / metrics.TOTAL_BASES;
         metrics.MEAN_INSERT_SIZE = insertSizeSum / metrics.TOTAL_ORIENTED_PAIRS;
 
-        final MetricsFile<MySeqMetrics, Integer> out = getMetricsFile();
+        final MetricsFile<QuerySortedSeqMetrics, Integer> out = getMetricsFile();
         out.addMetric(metrics);
         out.write(OUTPUT);
 
@@ -180,7 +180,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
      *
      * @param metrics the metrics object
      */
-    private void setUnusedMetrics(final MySeqMetrics metrics) {
+    private void setUnusedMetrics(final QuerySortedSeqMetrics metrics) {
         metrics.SD_COVERAGE = -1;
         metrics.MEDIAN_COVERAGE = -1;
         metrics.MAD_COVERAGE = -1;
@@ -220,7 +220,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
 
         final byte[] read1quals = read1exclusions.read.getBaseQualities();
         final byte[] read2quals = read2exclusions.read.getBaseQualities();
-        final int indexOfOverlapInFirstRead = getOffsetAtReferencePosition(read1exclusions.read, read2exclusions.read.getAlignmentStart()) - 1;
+        final int indexOfOverlapInFirstRead = read1exclusions.read.getReadPositionAtReferencePosition(read2exclusions.read.getAlignmentStart(), true) - 1;
         final int maxPossibleOverlap = read1exclusions.firstTrailingClippedBaseIndex - indexOfOverlapInFirstRead;
         // the overlap cannot actually be larger than the usable bases in read2
         final int actualOverlap = Math.min(maxPossibleOverlap, read2exclusions.firstTrailingClippedBaseIndex - read2exclusions.firstUnclippedBaseIndex);
@@ -238,28 +238,6 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         }
 
         return numHighQualityOverlappingBases;
-    }
-
-    // TODO -- delete after https://github.com/samtools/htsjdk/pull/306 is merged
-    private static int getOffsetAtReferencePosition(final SAMRecord rec, final int pos) {
-
-        int offset = 0;
-
-        if (pos != 0) {
-            for (final AlignmentBlock alignmentBlock : rec.getAlignmentBlocks()) {
-                if (CoordMath.getEnd(alignmentBlock.getReferenceStart(), alignmentBlock.getLength()) >= pos) {
-                    if (pos < alignmentBlock.getReferenceStart()) {
-                        break;
-                    } else {
-                        offset = pos - alignmentBlock.getReferenceStart() + alignmentBlock.getReadStart();
-                        break;
-                    }
-                } else {
-                    offset += alignmentBlock.getLength();
-                }
-            }
-        }
-        return offset;
     }
 
     /**

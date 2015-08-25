@@ -34,10 +34,10 @@ public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
-        final MetricsFile<CollectWgsMetricsFromQuerySorted.MySeqMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetricsFromQuerySorted.MySeqMetrics, Comparable<?>>();
+        final MetricsFile<CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics, Comparable<?>>();
         output.read(new FileReader(outfile));
 
-        for (final CollectWgsMetricsFromQuerySorted.MySeqMetrics metrics : output.getMetrics()) {
+        for (final CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics metrics : output.getMetrics()) {
             Assert.assertEquals(metrics.TOTAL_BASES, 606);
             Assert.assertEquals(metrics.TOTAL_USABLE_BASES, 238);
             Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 0.085809);  // 52 of 606 bases
