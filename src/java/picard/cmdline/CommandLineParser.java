@@ -892,11 +892,18 @@ public class CommandLineParser {
                         " must have a String ctor or be an enum");
             }
 
+            // If the field isn't optional, it should have a minimum number of elements in case the supplied
+            // default is an empty list:
+            int realMinElements = optionAnnotation.minElements();
+            if(!optionAnnotation.optional() && optionAnnotation.minElements() <= 0) {
+                realMinElements = 1;
+            }
+
             final OptionDefinition optionDefinition = new OptionDefinition(field,
                     field.getName(),
                     optionAnnotation.shortName(),
                     optionAnnotation.doc(), optionAnnotation.optional() || (field.get(callerOptions) != null),
-                    optionAnnotation.overridable(), isCollection, optionAnnotation.minElements(),
+                    optionAnnotation.overridable(), isCollection, realMinElements,
                     optionAnnotation.maxElements(), field.get(callerOptions), optionAnnotation.common(),
                     optionAnnotation.mutex());
 
