@@ -32,3 +32,4 @@ RUN mkdir /usr/working
 WORKDIR /usr/working
 
 ENTRYPOINT ["/usr/picard/docker_helper.sh"]
+CMD [""]
