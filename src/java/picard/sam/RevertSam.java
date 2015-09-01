@@ -103,8 +103,9 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.MQ.name());
         add(SAMTag.SA.name()); // Supplementary alignment metadata
         add(SAMTag.MC.name());      // Mate Cigar
+        add(SAMTag.AS.name());
     }};
-
+    
     @Option(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
             "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
             "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
