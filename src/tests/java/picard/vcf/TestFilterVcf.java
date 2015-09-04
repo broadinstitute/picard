@@ -40,10 +40,11 @@ import java.util.TreeSet;
  */
 public class TestFilterVcf {
     private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
+    private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
 
     /** Tests that all records get PASS set as their filter when extreme values are used for filtering. */
     @Test public void testNoFiltering() throws Exception {
-        final File out = testFiltering(INPUT, 0, 0, 0, Double.MAX_VALUE);
+        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, Double.MAX_VALUE);
         final VCFFileReader in = new VCFFileReader(out, false);
         for (final VariantContext ctx : in) {
             if (!ctx.filtersWereApplied() || ctx.isFiltered()) {
@@ -55,7 +56,7 @@ public class TestFilterVcf {
     /** Tests that sites with a het allele balance < 0.4 are marked as filtered out. */
     @Test public void testAbFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("tf2", "rs28566954", "rs28548431");
-        final File out = testFiltering(INPUT, 0.4, 0, 0, Double.MAX_VALUE);
+        final File out = testFiltering(INPUT, ".vcf.gz", 0.4, 0, 0, Double.MAX_VALUE);
         final ListMap<String,String> filters = slurpFilters(out);
         Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
     }
@@ -63,7 +64,15 @@ public class TestFilterVcf {
     /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
     @Test public void testDpFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
-        final File out = testFiltering(INPUT, 0, 18, 0, Double.MAX_VALUE);
+        final File out = testFiltering(INPUT, ".vcf.gz", 0, 18, 0, Double.MAX_VALUE);
+        final ListMap<String,String> filters = slurpFilters(out);
+        Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+    }
+
+    /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
+    @Test public void testDpFilteringToVcf() throws Exception {
+        final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
+        final File out = testFiltering(INPUT, ".vcf", 0, 18, 0, Double.MAX_VALUE);
         final ListMap<String,String> filters = slurpFilters(out);
         Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
     }
@@ -73,17 +82,17 @@ public class TestFilterVcf {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448"); // SNP with GQ=21; lowest GQ in file
 
         {
-            final File out = testFiltering(INPUT, 0, 0, 20, Double.MAX_VALUE);
+            final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 20, Double.MAX_VALUE);
             final ListMap<String, String> filters = slurpFilters(out);
             Assert.assertEquals(filters.size(), 0, "Should not have filtered sites: " + filters);
         }
         {
-            final File out = testFiltering(INPUT, 0, 0, 21, Double.MAX_VALUE);
+            final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 21, Double.MAX_VALUE);
             final ListMap<String, String> filters = slurpFilters(out);
             Assert.assertEquals(filters.size(), 0, "Should not have filtered sites: " + filters);
         }
         {
-            final File out = testFiltering(INPUT, 0, 0, 22, Double.MAX_VALUE);
+            final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 22, Double.MAX_VALUE);
             final ListMap<String, String> filters = slurpFilters(out);
             Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
         }
@@ -92,21 +101,21 @@ public class TestFilterVcf {
     /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
     @Test public void testFsFiltering() throws Exception {
         final Set<String> fails = CollectionUtil.makeSet("rs13303033", "rs28548431", "rs2799066");
-        final File out = testFiltering(INPUT, 0, 0, 0, 5.0d);
+        final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, 5.0d);
         final ListMap<String,String> filters = slurpFilters(out);
         Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
     }
 
     @Test public void testCombinedFiltering() throws Exception {
         final TreeSet<String> fails = new TreeSet<String>(CollectionUtil.makeSet("rs13302979", "rs13303033", "rs2710876" , "rs2799066" , "rs28548431", "rs28566954", "rs71509448", "rs71628926", "tf2"));
-        final File out = testFiltering(INPUT, 0.4, 18, 22, 5.0d);
+        final File out = testFiltering(INPUT, ".vcf.gz", 0.4, 18, 22, 5.0d);
         final ListMap<String,String> filters = slurpFilters(out);
         Assert.assertEquals(new TreeSet<String>(filters.keySet()), fails, "Failed sites did not match expected set of failed sites.");
     }
 
     /** Utility method that takes a a VCF and a set of parameters and filters the VCF. */
-    File testFiltering(final File vcf, final double minAb, final int minDp, final int minGq, final double maxFs) throws Exception {
-        final File out = File.createTempFile("filterVcfTest.", ".vcf.gz");
+    File testFiltering(final File vcf, final String outputExtension, final double minAb, final int minDp, final int minGq, final double maxFs) throws Exception {
+        final File out = File.createTempFile("filterVcfTest.", outputExtension);
         out.deleteOnExit();
 
         final FilterVcf filterer = new FilterVcf();
@@ -125,6 +134,25 @@ public class TestFilterVcf {
 
         return out;
     }
+
+    /** Tests that attempting to write to an uncompressed vcf fails if the input has no sequence dictionary */
+    @Test(expectedExceptions = PicardException.class)
+    public void testFilteringToVcfWithNoSequenceDictionary() throws Exception {
+        final File out = File.createTempFile("filterVcfTest.", ".vcf");
+        out.deleteOnExit();
+
+        final FilterVcf filterer = new FilterVcf();
+        filterer.CREATE_INDEX = true;
+        filterer.INPUT = BAD_INPUT;
+        filterer.OUTPUT = out;
+        filterer.MIN_AB = 0;
+        filterer.MIN_DP = 18;
+        filterer.MIN_GQ = 0;
+        filterer.MAX_FS = Double.MAX_VALUE;
+
+        filterer.doWork();
+    }
+
 
     /** Consumes a VCF and returns a ListMap where each they keys are the IDs of filtered out sites and the values are the set of filters. */
     ListMap<String,String> slurpFilters(final File vcf) {
