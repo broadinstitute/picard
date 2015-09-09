@@ -214,12 +214,14 @@ public class RevertSam extends CommandLineProgram {
             // Weed out non-primary and supplemental read as we don't want duplicates in the reverted file!
             if (rec.isSecondaryOrSupplementary()) continue;
 
-            // Actually to the reverting of the remaining records
+            // log the progress before you revert because otherwise the "last read position" might not be accurate
+            progress.record(rec);
+
+            // Actually do the reverting of the remaining records
             revertSamRecord(rec);
 
             if (sanitizing) sorter.add(rec);
             else out.addAlignment(rec);
-            progress.record(rec);
         }
 
         ////////////////////////////////////////////////////////////////////////////
