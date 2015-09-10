@@ -27,6 +27,7 @@ import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
@@ -164,5 +165,6 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         for (final File outputSam : samFiles) {
             IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));
         }
+        TestUtil.recursiveDelete(outputDir);
     }
 }

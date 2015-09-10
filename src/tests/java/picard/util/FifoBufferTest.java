@@ -41,7 +41,7 @@ public class FifoBufferTest {
      */
     public void test(final double megabytes) throws IOException {
         final File inputFile  = File.createTempFile("fifo_input.", ".foo");
-
+        inputFile.deleteOnExit();
         // Generate a file with a set number of megabytes of random data
         final int nBytes = (int) (megabytes * 1024 * 1024);
         {

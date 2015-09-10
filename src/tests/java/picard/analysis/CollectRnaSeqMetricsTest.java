@@ -68,6 +68,8 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
 
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
@@ -82,6 +84,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
 
         final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),
@@ -139,6 +142,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
 
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
         final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
         for (final SAMRecord rec: builder.getRecords()) samWriter.addAlignment(rec);
         samWriter.close();
@@ -153,6 +157,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
 
         // Generate the metrics.
         final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
 
         final String[] args = new String[] {
                 "INPUT=" +               samFile.getAbsolutePath(),

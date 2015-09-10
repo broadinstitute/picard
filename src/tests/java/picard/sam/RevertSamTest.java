@@ -66,6 +66,7 @@ public class RevertSamTest extends CommandLineProgramTest {
                                    final List<String> attributesToClear) throws Exception {
 
         final File output = File.createTempFile("reverted", ".sam");
+        output.deleteOnExit();
         final RevertSam reverter = new RevertSam();
         final String args[] = new String[5 + (so != null ? 1 : 0) + attributesToClear.size() + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;
@@ -152,6 +153,7 @@ public class RevertSamTest extends CommandLineProgramTest {
     public void basicNegativeTest(final String sample, final String library) throws Exception {
 
         final File output = File.createTempFile("bad", ".sam");
+        output.deleteOnExit();
         final RevertSam reverter = new RevertSam();
         final String args[] = new String[2 + (sample != null ? 1 : 0) + (library != null ? 1 : 0)];
         int index = 0;

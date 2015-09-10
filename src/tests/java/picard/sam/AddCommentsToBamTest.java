@@ -29,6 +29,7 @@ public class AddCommentsToBamTest extends CommandLineProgramTest {
     @Test
     public void testAddCommentsToBam() throws Exception {
         final File outputFile = File.createTempFile("addCommentsToBamTest.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        outputFile.deleteOnExit();
         runIt(INPUT_FILE, outputFile, commentList);
 
         final SAMFileHeader newHeader = SamReaderFactory.makeDefault().getFileHeader(outputFile);
@@ -41,19 +42,24 @@ public class AddCommentsToBamTest extends CommandLineProgramTest {
         }
 
         Assert.assertEquals(newHeader.getComments(), massagedComments);
+        outputFile.delete();
     }
 
     @Test(expectedExceptions = PicardException.class)
     public void testUsingSam() throws Exception {
         final File outputFile = File.createTempFile("addCommentsToBamTest.samFile", BamFileIoUtils.BAM_FILE_EXTENSION);
+        outputFile.deleteOnExit();
         runIt(SAM_FILE, outputFile, commentList);
+        outputFile.delete();
         throw new IllegalStateException("We shouldn't be here!");
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testUsingNewlines() throws Exception {
         final File outputFile = File.createTempFile("addCommentsToBamTest.mewLine", BamFileIoUtils.BAM_FILE_EXTENSION);
+        outputFile.deleteOnExit();
         runIt(SAM_FILE, outputFile, new String[]{"this is\n a crazy\n test"});
+        outputFile.delete();
         throw new IllegalStateException("We shouldn't be here!");
     }
 
