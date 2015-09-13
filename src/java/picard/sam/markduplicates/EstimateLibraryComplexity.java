@@ -127,13 +127,21 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             "group size would be approximately 10 reads.")
     public int MAX_GROUP_RATIO = 500;
 
+    @Option(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
+    public String BARCODE_TAG = null;
+
+    @Option(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    public String READ_ONE_BARCODE_TAG = null;
+
+    @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    public String READ_TWO_BARCODE_TAG = null;
+
     private final Log log = Log.getInstance(EstimateLibraryComplexity.class);
 
     /**
      * Little class to hold the sequence of a pair of reads and tile location information.
      */
     static class PairedReadSequence implements OpticalDuplicateFinder.PhysicalLocation {
-        static int size_in_bytes = 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
         short readGroup = -1;
         short tile = -1;
         short x = -1, y = -1;
@@ -141,6 +149,10 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         byte[] read1;
         byte[] read2;
         short libraryId;
+
+        public static int getSizeInBytes() {
+            return 2 + 1 + 4 + 1 + 300; // rough guess at memory footprint
+        }
 
         public short getReadGroup() { return this.readGroup; }
 
@@ -161,14 +173,44 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         public short getLibraryId() { return this.libraryId; }
 
         public void setLibraryId(final short libraryId) { this.libraryId = libraryId; }
+
+        public static SortingCollection.Codec<PairedReadSequence> getCodec() {
+            return new PairedReadCodec();
+        }
+    }
+
+    static class PairedReadSequenceWithBarcodes extends PairedReadSequence {
+        int barcode; // primary barcode for this read (and pair)
+        int readOneBarcode; // read one barcode, 0 if not present
+        int readTwoBarcode; // read two barcode, 0 if not present or not paired
+
+        public PairedReadSequenceWithBarcodes() {
+            super();
+        }
+
+        public PairedReadSequenceWithBarcodes(final PairedReadSequence val) {
+            if (null == val) throw new PicardException("val was null");
+            this.readGroup = val.getReadGroup();
+            this.tile = val.getTile();
+            this.x = val.getX();
+            this.y = val.getY();
+            this.qualityOk = val.qualityOk;
+            this.read1 = val.read1.clone();
+            this.read2 = val.read2.clone();
+            this.libraryId = val.getLibraryId();
+        }
+
+        public static int getSizeInBytes() {
+            return PairedReadSequence.getSizeInBytes() + (3 * 4); // rough guess at memory footprint
+        }
     }
 
     /**
      * Codec class for writing and read PairedReadSequence objects.
      */
     static class PairedReadCodec implements SortingCollection.Codec<PairedReadSequence> {
-        private DataOutputStream out;
-        private DataInputStream in;
+        protected DataOutputStream out;
+        protected DataInputStream in;
 
         public void setOutputStream(final OutputStream out) {
             this.out = new DataOutputStream(out);
@@ -188,7 +230,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 this.out.write(val.read1);
                 this.out.writeInt(val.read2.length);
                 this.out.write(val.read2);
-            } catch (IOException ioe) {
+            } catch (final IOException ioe) {
                 throw new PicardException("Error write out read pair.", ioe);
             }
         }
@@ -198,7 +240,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 final PairedReadSequence val = new PairedReadSequence();
                 try {
                     val.readGroup = this.in.readShort();
-                } catch (EOFException eof) {
+                } catch (final EOFException eof) {
                     return null;
                 }
 
@@ -219,13 +261,56 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 }
 
                 return val;
-            } catch (IOException ioe) {
+            } catch (final IOException ioe) {
                 throw new PicardException("Exception reading read pair.", ioe);
             }
         }
 
         @Override
         public SortingCollection.Codec<PairedReadSequence> clone() { return new PairedReadCodec(); }
+    }
+
+
+    /**
+     * Codec class for writing and read PairedReadSequence objects.
+     */
+    static class PairedReadWithBarcodesCodec extends PairedReadCodec {
+        @Override
+        public void encode(final PairedReadSequence val) {
+            if (!(val instanceof PairedReadSequenceWithBarcodes)) {
+                throw new PicardException("Val was not a PairedReadSequenceWithBarcodes");
+            }
+            final PairedReadSequenceWithBarcodes data = (PairedReadSequenceWithBarcodes) val;
+
+            super.encode(val);
+
+            try {
+                this.out.writeInt(data.barcode);
+                this.out.writeInt(data.readOneBarcode);
+                this.out.writeInt(data.readTwoBarcode);
+            } catch (final IOException ioe) {
+                throw new PicardException("Error write out read pair.", ioe);
+            }
+        }
+
+        @Override
+        public PairedReadSequence decode() {
+            try {
+                final PairedReadSequence parentVal = super.decode();
+                if (null == parentVal) return null; // EOF
+                final PairedReadSequenceWithBarcodes val = new PairedReadSequenceWithBarcodes(parentVal);
+                val.barcode = this.in.readInt();
+                val.readOneBarcode = this.in.readInt();
+                val.readTwoBarcode = this.in.readInt();
+
+                return val;
+            } catch (final IOException ioe) {
+                throw new PicardException("Exception reading read pair.", ioe);
+            }
+        }
+
+        @Override
+        public SortingCollection.Codec<PairedReadSequence> clone() { return new PairedReadWithBarcodesCodec(); }
     }
 
     /**
@@ -251,13 +336,38 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         }
     }
 
+    public int getBarcodeValue(final SAMRecord record) {
+        return getReadBarcodeValue(record, BARCODE_TAG);
+    }
+
+    public static int getReadBarcodeValue(final SAMRecord record, final String tag) {
+        if (null == tag) return 0;
+        final String attr = record.getStringAttribute(tag);
+        if (null == attr) return 0;
+        else return attr.hashCode();
+    }
+
+    private int getReadOneBarcodeValue(final SAMRecord record) {
+        return getReadBarcodeValue(record, READ_ONE_BARCODE_TAG);
+    }
+
+    private int getReadTwoBarcodeValue(final SAMRecord record) {
+        return getReadBarcodeValue(record, READ_TWO_BARCODE_TAG);
+    }
+
     /** Stock main method. */
     public static void main(final String[] args) {
         new EstimateLibraryComplexity().instanceMainWithExit(args);
     }
 
     public EstimateLibraryComplexity() {
-        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / PairedReadSequence.size_in_bytes) / 2;
+        final int sizeInBytes;
+        if (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG) {
+            sizeInBytes = PairedReadSequenceWithBarcodes.getSizeInBytes();
+        } else {
+            sizeInBytes = PairedReadSequence.getSizeInBytes();
+        }
+        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
     }
 
     /**
@@ -273,11 +383,22 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
 
         final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
         final int recordsRead = 0;
-        final SortingCollection<PairedReadSequence> sorter = SortingCollection.newInstance(PairedReadSequence.class,
-                new PairedReadCodec(),
-                new PairedReadComparator(),
-                MAX_RECORDS_IN_RAM,
-                TMP_DIR);
+        final SortingCollection<PairedReadSequence> sorter;
+        final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
+
+        if (!useBarcodes) {
+            sorter = SortingCollection.newInstance(PairedReadSequence.class,
+                    new PairedReadCodec(),
+                    new PairedReadComparator(),
+                    MAX_RECORDS_IN_RAM,
+                    TMP_DIR);
+        } else {
+            sorter = SortingCollection.newInstance(PairedReadSequence.class,
+                    new PairedReadWithBarcodesCodec(),
+                    new PairedReadComparator(),
+                    MAX_RECORDS_IN_RAM,
+                    TMP_DIR);
+        }
 
         // Loop through the input files and pick out the read sequences etc.
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
@@ -295,7 +416,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 PairedReadSequence prs = pendingByName.remove(rec.getReadName());
                 if (prs == null) {
                     // Make a new paired read object and add RG and physical location information to it
-                    prs = new PairedReadSequence();
+                    prs = useBarcodes ? new PairedReadSequenceWithBarcodes() : new PairedReadSequence();
                     if (opticalDuplicateFinder.addLocationInformation(rec.getReadName(), prs)) {
                         final SAMReadGroupRecord rg = rec.getReadGroup();
                         if (rg != null) prs.setReadGroup((short) readGroups.indexOf(rg));
@@ -315,10 +436,19 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 final byte[] bases = rec.getReadBases();
                 if (rec.getReadNegativeStrandFlag()) SequenceUtil.reverseComplement(bases);
 
+                final PairedReadSequenceWithBarcodes prsWithBarcodes = (useBarcodes) ? (PairedReadSequenceWithBarcodes) prs : null;
+
                 if (rec.getFirstOfPairFlag()) {
                     prs.read1 = bases;
+                    if (useBarcodes) {
+                        prsWithBarcodes.barcode = getBarcodeValue(rec);
+                        prsWithBarcodes.readOneBarcode = getReadOneBarcodeValue(rec);
+                    }
                 } else {
                     prs.read2 = bases;
+                    if (useBarcodes) {
+                        prsWithBarcodes.readTwoBarcode = getReadTwoBarcodeValue(rec);
+                    }
                 }
 
                 if (prs.read1 != null && prs.read2 != null && prs.qualityOk) {
@@ -380,7 +510,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                             final PairedReadSequence rhs = seqs.get(j);
                             if (rhs == null) continue;
 
-                            if (matches(lhs, rhs, MAX_DIFF_RATE)) {
+                            if (matches(lhs, rhs, MAX_DIFF_RATE, useBarcodes)) {
                                 dupes.add(rhs);
                                 seqs.set(j, null);
                             }
@@ -446,11 +576,21 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
      * Checks to see if two reads pairs have sequence that are the same, give or take a few
      * errors/diffs as dictated by the maxDiffRate.
      */
-    private boolean matches(final PairedReadSequence lhs, final PairedReadSequence rhs, final double maxDiffRate) {
+    private boolean matches(final PairedReadSequence lhs, final PairedReadSequence rhs, final double maxDiffRate, final boolean useBarcodes) {
         final int read1Length = Math.min(lhs.read1.length, rhs.read1.length);
         final int read2Length = Math.min(lhs.read2.length, rhs.read2.length);
         final int maxErrors = (int) Math.floor((read1Length + read2Length) * maxDiffRate);
         int errors = 0;
+
+        if (useBarcodes) {
+            final PairedReadSequenceWithBarcodes lhsWithBarcodes = (PairedReadSequenceWithBarcodes) lhs;
+            final PairedReadSequenceWithBarcodes rhsWithBarcodes = (PairedReadSequenceWithBarcodes) rhs;
+            if (lhsWithBarcodes.barcode != rhsWithBarcodes.barcode ||
+                    lhsWithBarcodes.readOneBarcode != rhsWithBarcodes.readOneBarcode ||
+                    lhsWithBarcodes.readTwoBarcode != rhsWithBarcodes.readTwoBarcode) {
+                return false;
+            }
+        }
 
         // The loop can start from MIN_IDENTICAL_BASES because we've already confirmed that
         // at least those first few bases are identical when sorting.
