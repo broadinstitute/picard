@@ -14,6 +14,8 @@
 <li><a href="#CollectVariantCallingMetrics.VariantCallingDetailMetrics">CollectVariantCallingMetrics.VariantCallingDetailMetrics</a>: A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample.</li>
 <li><a href="#CollectVariantCallingMetrics.VariantCallingSummaryMetrics">CollectVariantCallingMetrics.VariantCallingSummaryMetrics</a>: A collection of metrics relating to snps and indels within a variant-calling file (VCF).</li>
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
+<li><a href="#CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
+<li><a href="#CollectWgsMetricsFromSampledSites.SampledWgsMetrics">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</a>: </li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
 <li><a href="#ExtractIlluminaBarcodes.BarcodeMetric">ExtractIlluminaBarcodes.BarcodeMetric</a>: Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
@@ -160,6 +162,22 @@
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>GENOME_TERRITORY</td><td>The number of non-N bases in the genome reference over which coverage will be evaluated.</td></tr><tr><td>MEAN_COVERAGE</td><td>The mean coverage in bases of the genome territory, after all filters are applied.</td></tr><tr><td>SD_COVERAGE</td><td>The standard deviation of coverage of the genome after all filters are applied.</td></tr><tr><td>MEDIAN_COVERAGE</td><td>The median coverage in bases of the genome territory, after all filters are applied.</td></tr><tr><td>MAD_COVERAGE</td><td>The median absolute deviation of coverage of the genome after all filters are applied.</td></tr><tr><td>PCT_EXC_MAPQ</td><td>The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20).</td></tr><tr><td>PCT_EXC_DUPE</td><td>The fraction of aligned bases that were filtered out because they were in reads marked as duplicates.</td></tr><tr><td>PCT_EXC_UNPAIRED</td><td>The fraction of aligned bases that were filtered out because they were in reads without a mapped mate pair.</td></tr><tr><td>PCT_EXC_BASEQ</td><td>The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20).</td></tr><tr><td>PCT_EXC_OVERLAP</td><td>The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.</td></tr><tr><td>PCT_EXC_CAPPED</td><td>The fraction of aligned bases that were filtered out because they would have raised coverage above the capped value (default cap = 250x).</td></tr><tr><td>PCT_EXC_TOTAL</td><td>The total fraction of aligned bases excluded due to all filters.</td></tr><tr><td>PCT_5X</td><td>The fraction of bases that attained at least 5X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_10X</td><td>The fraction of bases that attained at least 10X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_15X</td><td>The fraction of bases that attained at least 15X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_20X</td><td>The fraction of bases that attained at least 20X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_25X</td><td>The fraction of bases that attained at least 25X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_30X</td><td>The fraction of bases that attained at least 30X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_40X</td><td>The fraction of bases that attained at least 40X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_50X</td><td>The fraction of bases that attained at least 50X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_60X</td><td>The fraction of bases that attained at least 60X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_70X</td><td>The fraction of bases that attained at least 70X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_80X</td><td>The fraction of bases that attained at least 80X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_90X</td><td>The fraction of bases that attained at least 90X sequence coverage in post-filtering bases.</td></tr><tr><td>PCT_100X</td><td>The fraction of bases that attained at least 100X sequence coverage in post-filtering bases.</td></tr></table>
+</section>
+<a id="CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics"></a>
+<h2>CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</h2>
+<section>
+<p>Metrics for evaluating the performance of whole genome sequencing experiments.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>TOTAL_BASES</td><td>The total number of bases, before any filters are applied.</td></tr><tr><td>TOTAL_USABLE_BASES</td><td>The number of usable bases, after all filters are applied.</td></tr><tr><td>TOTAL_READ_PAIRS</td><td>The number of read pairs, before all filters are applied.</td></tr><tr><td>TOTAL_DUPE_PAIRS</td><td>The number of duplicate read pairs, before all filters are applied.</td></tr><tr><td>TOTAL_ORIENTED_PAIRS</td><td>The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied.</td></tr><tr><td>MEAN_INSERT_SIZE</td><td>The mean insert size, after filters are applied.</td></tr></table>
+</section>
+<a id="CollectWgsMetricsFromSampledSites.SampledWgsMetrics"></a>
+<h2>CollectWgsMetricsFromSampledSites.SampledWgsMetrics</h2>
+<section>
+<p></p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+</table>
 </section>
 <a id="DuplicationMetrics"></a>
 <h2>DuplicationMetrics</h2>
