@@ -23,6 +23,7 @@
  */
 package picard.vcf.filter;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -33,6 +34,7 @@ import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -94,8 +96,18 @@ public class FilterVcf extends CommandLineProgram {
         final VCFFileReader in = new VCFFileReader(INPUT, false);
         final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
 
-        final VariantContextWriter out = new VariantContextWriterBuilder().setOutputFile(OUTPUT).build();
         final VCFHeader header = in.getFileHeader();
+        // If the user is writing to a .bcf or .vcf, VariantContextBuilderWriter requires a Sequence Dictionary.  Make sure that the
+        // Input VCF has one.
+        final VariantContextWriterBuilder variantContextWriterBuilder = new VariantContextWriterBuilder();
+        if (isVcfOrBcf(OUTPUT)) {
+            final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+            if (sequenceDictionary == null) {
+                throw new PicardException("The input vcf must have a sequence dictionary in order to create indexed vcf or bcfs.");
+            }
+            variantContextWriterBuilder.setReferenceDictionary(sequenceDictionary);
+        }
+        final VariantContextWriter out = variantContextWriterBuilder.setOutputFile(OUTPUT).build();
         header.addMetaDataLine(new VCFFilterHeaderLine("AllGtsFiltered", "Site filtered out because all genotypes are filtered out."));
         header.addMetaDataLine(new VCFFormatHeaderLine("FT", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Genotype filters."));
         for (final VariantFilter filter : variantFilters) {
@@ -113,5 +125,10 @@ public class FilterVcf extends CommandLineProgram {
         out.close();
         in.close();
         return 0;
+    }
+
+    private boolean isVcfOrBcf(final File file) {
+        final String fileName = file.getName();
+        return fileName.endsWith(".vcf") || fileName.endsWith(".bcf");
     }
 }

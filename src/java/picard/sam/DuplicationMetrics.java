@@ -78,7 +78,7 @@ public class DuplicationMetrics extends MetricBase {
 
     /**
      * Estimates the size of a library based on the number of paired end molecules observed
-     * and the number of unique pairs ovserved.
+     * and the number of unique pairs observed.
      *
      * Based on the Lander-Waterman equation that states:
      *     C/X = 1 - exp( -N/X )

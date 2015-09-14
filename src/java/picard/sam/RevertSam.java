@@ -103,8 +103,9 @@ public class RevertSam extends CommandLineProgram {
         add(SAMTag.MQ.name());
         add(SAMTag.SA.name()); // Supplementary alignment metadata
         add(SAMTag.MC.name());      // Mate Cigar
+        add(SAMTag.AS.name());
     }};
-
+    
     @Option(doc = "WARNING: This option is potentially destructive. If enabled will discard reads in order to produce " +
             "a consistent output BAM. Reads discarded include (but are not limited to) paired reads with missing " +
             "mates, duplicated records, records with mismatches in length of bases and qualities. This option can " +
@@ -213,12 +214,14 @@ public class RevertSam extends CommandLineProgram {
             // Weed out non-primary and supplemental read as we don't want duplicates in the reverted file!
             if (rec.isSecondaryOrSupplementary()) continue;
 
-            // Actually to the reverting of the remaining records
+            // log the progress before you revert because otherwise the "last read position" might not be accurate
+            progress.record(rec);
+
+            // Actually do the reverting of the remaining records
             revertSamRecord(rec);
 
             if (sanitizing) sorter.add(rec);
             else out.addAlignment(rec);
-            progress.record(rec);
         }
 
         ////////////////////////////////////////////////////////////////////////////

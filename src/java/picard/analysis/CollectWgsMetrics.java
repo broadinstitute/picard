@@ -10,11 +10,7 @@ import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
-import htsjdk.samtools.util.Histogram;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.ProgressLogger;
-import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.util.*;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -63,6 +59,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
     @Option(doc = "Determines whether to include the base quality histogram in the metrics file.")
     public boolean INCLUDE_BQ_HISTOGRAM = false;
+
+    @Option(doc="If true, count unpaired reads, and paired reads with one end unmapped")
+    public boolean COUNT_UNPAIRED = false;
 
     private final Log log = Log.getInstance(CollectWgsMetrics.class);
 
@@ -136,15 +135,17 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+        final SamLocusIterator iterator = getLocusIterator(in);
 
-        final SamLocusIterator iterator = new SamLocusIterator(in);
         final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
         final CountingFilter dupeFilter = new CountingDuplicateFilter();
         final CountingFilter mapqFilter = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
         final CountingPairedFilter pairFilter = new CountingPairedFilter();
         filters.add(mapqFilter);
         filters.add(dupeFilter);
-        filters.add(pairFilter);
+        if (!COUNT_UNPAIRED) {
+            filters.add(pairFilter);
+        }
         filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         iterator.setSamFilters(filters);
         iterator.setEmitUncoveredLoci(true);
@@ -213,9 +214,9 @@ public class CollectWgsMetrics extends CommandLineProgram {
         metrics.MEDIAN_COVERAGE = histo.getMedian();
         metrics.MAD_COVERAGE = histo.getMedianAbsoluteDeviation();
 
-        final long basesExcludedByDupes = dupeFilter.getFilteredBases();
-        final long basesExcludedByMapq = mapqFilter.getFilteredBases();
-        final long basesExcludedByPairing = pairFilter.getFilteredBases();
+        final long basesExcludedByDupes = getBasesExcludedBy(dupeFilter);
+        final long basesExcludedByMapq = getBasesExcludedBy(mapqFilter);
+        final long basesExcludedByPairing = getBasesExcludedBy(pairFilter);
         final double total = histo.getSum();
         final double totalWithExcludes = total + basesExcludedByDupes + basesExcludedByMapq + basesExcludedByPairing + basesExcludedByBaseq + basesExcludedByOverlap + basesExcludedByCapping;
         metrics.PCT_EXC_DUPE = basesExcludedByDupes / totalWithExcludes;
@@ -253,6 +254,14 @@ public class CollectWgsMetrics extends CommandLineProgram {
 
     protected WgsMetrics generateWgsMetrics() {
         return new WgsMetrics();
+    }
+
+    protected long getBasesExcludedBy(final CountingFilter filter) {
+        return filter.getFilteredBases();
+    }
+
+    protected SamLocusIterator getLocusIterator(final SamReader in) {
+        return new SamLocusIterator(in);
     }
 }
 

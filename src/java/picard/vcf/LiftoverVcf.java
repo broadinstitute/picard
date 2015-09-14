@@ -13,9 +13,7 @@ import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.SortingCollection;
 import htsjdk.samtools.util.StringUtil;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -71,14 +69,18 @@ public class LiftoverVcf extends CommandLineProgram {
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     /** Filter name to use when a target cannot be lifted over. */
-    public static final String FILTER_CANNOT_LIFTOVER = "FailedLiftover";
+    public static final String FILTER_CANNOT_LIFTOVER_INDEL = "ReverseComplementedIndel";
+
+    /** Filter name to use when a target cannot be lifted over. */
+    public static final String FILTER_NO_TARGET = "NoTarget";
 
     /** Filter name to use when a target is lifted over, but the reference allele doens't match the new reference. */
     public static final String FILTER_MISMATCHING_REF_ALLELE = "MismatchedRefAllele";
 
     /** Filters to be added to the REJECT file. */
     private static final List<VCFFilterHeaderLine> FILTERS = CollectionUtil.makeList(
-            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER, "Variant could not be lifted between genome builds."),
+            new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
+            new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover.")
     );
 
@@ -141,25 +143,33 @@ public class LiftoverVcf extends CommandLineProgram {
                 TMP_DIR);
 
         ProgressLogger progress = new ProgressLogger(log, 1000000, "read");
+        // a mapping from original allele to reverse complemented allele
+        final Map<Allele, Allele> reverseComplementAlleleMap = new HashMap<Allele, Allele>(10);
 
         for (final VariantContext ctx : in) {
             ++total;
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
             final Interval target = liftOver.liftOver(source, 1.0);
 
-            if (target == null) {
-                rejects.add(new VariantContextBuilder(ctx).filter(FILTER_CANNOT_LIFTOVER).make());
+            // if the target is null OR (the target is reverse complemented AND the variant is an indel or mixed), then we cannot lift it over
+            if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel()))) {
+                final String reason = (target == null) ? FILTER_NO_TARGET : FILTER_CANNOT_LIFTOVER_INDEL;
+                rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
             }
             else {
                 // Fix the alleles if we went from positive to negative strand
+                reverseComplementAlleleMap.clear();
                 final List<Allele> alleles = new ArrayList<Allele>();
+
                 for (final Allele oldAllele : ctx.getAlleles()) {
                     if (target.isPositiveStrand() || oldAllele.isSymbolic()) {
                         alleles.add(oldAllele);
                     }
                     else {
-                        alleles.add(Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference()));
+                        final Allele fixedAllele = Allele.create(SequenceUtil.reverseComplement(oldAllele.getBaseString()), oldAllele.isReference());
+                        alleles.add(fixedAllele);
+                        reverseComplementAlleleMap.put(oldAllele, fixedAllele);
                     }
                 }
 
@@ -173,7 +183,7 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 builder.id(ctx.getID());
                 builder.attributes(ctx.getAttributes());
-                builder.genotypes(ctx.getGenotypes());
+                builder.genotypes(fixGenotypes(ctx.getGenotypes(), reverseComplementAlleleMap));
                 builder.filters(ctx.getFilters());
                 builder.log10PError(ctx.getLog10PError());
 
@@ -229,5 +239,23 @@ public class LiftoverVcf extends CommandLineProgram {
         sorter.cleanup();
 
         return 0;
+    }
+
+    protected static GenotypesContext fixGenotypes(final GenotypesContext originals, final Map<Allele, Allele> reverseComplementAlleleMap) {
+        // optimization: if nothing needs to be fixed then don't bother
+        if ( reverseComplementAlleleMap.isEmpty() ) {
+            return originals;
+        }
+
+        final GenotypesContext fixedGenotypes = GenotypesContext.create(originals.size());
+        for ( final Genotype genotype : originals ) {
+            final List<Allele> fixedAlleles = new ArrayList<Allele>();
+            for ( final Allele allele : genotype.getAlleles() ) {
+                final Allele fixedAllele = reverseComplementAlleleMap.containsKey(allele) ? reverseComplementAlleleMap.get(allele) : allele;
+                fixedAlleles.add(fixedAllele);
+            }
+            fixedGenotypes.add(new GenotypeBuilder(genotype).alleles(fixedAlleles).make());
+        }
+        return fixedGenotypes;
     }
 }
