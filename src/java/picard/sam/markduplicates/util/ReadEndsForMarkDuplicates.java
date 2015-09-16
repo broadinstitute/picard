@@ -37,11 +37,38 @@ public class ReadEndsForMarkDuplicates extends ReadEnds {
        - int: read1ReferenceIndex, read1Coordinate, read2ReferenceIndex, read2Coordinate
        - long: read1IndexInFile, read2IndexInFile
      */
-    public static final int SIZE_OF = (1 * 1) + (5 * 2) + (4 * 4) + (8 * 2) + 1
+    protected static final int SIZE_OF = (1 * 1) + (5 * 2) + (4 * 4) + (8 * 2) + 1
             + 8 + // last 8 == reference overhead
             13; // This is determined experimentally with JProfiler
+
+    public static int getSizeOf() {
+        return SIZE_OF;
+    }
 
     public short score = 0;
     public long read1IndexInFile = -1;
     public long read2IndexInFile = -1;
+
+    public ReadEndsForMarkDuplicates() {}
+
+    public ReadEndsForMarkDuplicates(final ReadEndsForMarkDuplicates read) {
+        this.libraryId = read.getLibraryId();
+        this.orientation = read.orientation;
+        this.read1ReferenceIndex = read.read1ReferenceIndex;
+        this.read1Coordinate = read.read1Coordinate;
+        this.read2ReferenceIndex = read.read2ReferenceIndex;
+        this.read2Coordinate = read.read2Coordinate;
+
+        this.readGroup = read.getReadGroup();
+        this.tile = read.getTile();
+        this.x = read.x;
+        this.y = read.y;
+
+        this.orientationForOpticalDuplicates = read.orientationForOpticalDuplicates;
+
+        this.score = read.score;
+
+        this.read1IndexInFile = read.read1IndexInFile;
+        this.read2IndexInFile = read.read2IndexInFile;
+    }
 }

@@ -44,6 +44,8 @@ import picard.sam.markduplicates.util.ReadEndsForMarkDuplicates;
 import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesCodec;
 import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesMap;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
+import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodes;
+import picard.sam.markduplicates.util.ReadEndsForMarkDuplicatesWithBarcodesCodec;
 
 import java.io.*;
 import java.util.*;
@@ -82,12 +84,33 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             "some of the sorting collections.  If you are running out of memory, try reducing this number.")
     public double SORTING_COLLECTION_SIZE_RATIO = 0.25;
 
+    @Option(doc = "Barcode SAM tag (ex. BC for 10X Genomics)", optional = true)
+    public String BARCODE_TAG = null;
+
+    @Option(doc = "Read one barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    public String READ_ONE_BARCODE_TAG = null;
+
+    @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
+    public String READ_TWO_BARCODE_TAG = null;
+
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
     private SortingLongCollection duplicateIndexes;
     private int numDuplicateIndices = 0;
 
     protected LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
+
+    private int getBarcodeValue(final SAMRecord record) {
+        return EstimateLibraryComplexity.getReadBarcodeValue(record, BARCODE_TAG);
+    }
+
+    private int getReadOneBarcodeValue(final SAMRecord record) {
+        return EstimateLibraryComplexity.getReadBarcodeValue(record, READ_ONE_BARCODE_TAG);
+    }
+
+    private int getReadTwoBarcodeValue(final SAMRecord record) {
+        return EstimateLibraryComplexity.getReadBarcodeValue(record, READ_TWO_BARCODE_TAG);
+    }
 
     public MarkDuplicates() {
         DUPLICATE_SCORING_STRATEGY = ScoringStrategy.SUM_OF_BASE_QUALITIES;
@@ -109,11 +132,13 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsWritable(METRICS_FILE);
 
+        final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
+
         reportMemoryStats("Start of doWork");
         log.info("Reading input file and constructing read end information.");
-        buildSortedReadEndLists();
+        buildSortedReadEndLists(useBarcodes);
         reportMemoryStats("After buildSortedReadEndLists");
-        generateDuplicateIndexes();
+        generateDuplicateIndexes(useBarcodes);
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
 
@@ -146,7 +171,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         while (iterator.hasNext()) {
             final SAMRecord rec = iterator.next();
             if (!rec.isSecondaryOrSupplementary()) {
-                final String library = libraryIdGenerator.getLibraryName(header, rec);
+                final String library = LibraryIdGenerator.getLibraryName(header, rec);
                 DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
                 if (metrics == null) {
                     metrics = new DuplicationMetrics();
@@ -229,19 +254,35 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      * hold the necessary information (reference sequence, 5' read coordinate) to do
      * duplication, caching to disk as necssary to sort them.
      */
-    private void buildSortedReadEndLists() {
-        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / ReadEndsForMarkDuplicates.SIZE_OF);
+    private void buildSortedReadEndLists(final boolean useBarcodes) {
+        final int sizeInBytes;
+        if (useBarcodes) {
+            sizeInBytes = ReadEndsForMarkDuplicatesWithBarcodes.getSizeOf();
+        } else {
+            sizeInBytes = ReadEndsForMarkDuplicates.getSizeOf();
+        }
+        MAX_RECORDS_IN_RAM = (int) (Runtime.getRuntime().maxMemory() / sizeInBytes) / 2;
+        final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
+        final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec;
+        if (useBarcodes) {
+            fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+            pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+        } else {
+            fragCodec = new ReadEndsForMarkDuplicatesCodec();
+            pairCodec = new ReadEndsForMarkDuplicatesCodec();
+        }
+
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
-                new ReadEndsForMarkDuplicatesCodec(),
-                new ReadEndsMDComparator(),
+                pairCodec,
+                new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
                 TMP_DIR);
 
         this.fragSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
-                new ReadEndsForMarkDuplicatesCodec(),
-                new ReadEndsMDComparator(),
+                fragCodec,
+                new ReadEndsMDComparator(useBarcodes),
                 maxInMemory,
                 TMP_DIR);
 
@@ -277,7 +318,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                 }
                 // If this read is unmapped but sorted with the mapped reads, just skip it.
             } else if (!rec.isSecondaryOrSupplementary()) {
-                final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, index, rec);
+                final ReadEndsForMarkDuplicates fragmentEnd = buildReadEnds(header, index, rec, useBarcodes);
                 this.fragSort.add(fragmentEnd);
 
                 if (rec.getReadPairedFlag() && !rec.getMateUnmappedFlag()) {
@@ -286,7 +327,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
                     // See if we've already seen the first end or not
                     if (pairedEnds == null) {
-                        pairedEnds = buildReadEnds(header, index, rec);
+                        pairedEnds = buildReadEnds(header, index, rec, useBarcodes);
                         tmp.put(pairedEnds.read2ReferenceIndex, key, pairedEnds);
                     } else {
                         final int sequence = fragmentEnd.read1ReferenceIndex;
@@ -296,8 +337,12 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                         // before updating the orientation later.
                         if (rec.getFirstOfPairFlag()) {
                             pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(rec.getReadNegativeStrandFlag(), pairedEnds.orientation == ReadEnds.R);
+                            if (useBarcodes)
+                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readOneBarcode = getReadOneBarcodeValue(rec);
                         } else {
                             pairedEnds.orientationForOpticalDuplicates = ReadEnds.getOrientationByte(pairedEnds.orientation == ReadEnds.R, rec.getReadNegativeStrandFlag());
+                            if (useBarcodes)
+                                ((ReadEndsForMarkDuplicatesWithBarcodes) pairedEnds).readTwoBarcode = getReadTwoBarcodeValue(rec);
                         }
 
                         // If the second read is actually later, just add the second read data, else flip the reads
@@ -341,8 +386,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     }
 
     /** Builds a read ends object that represents a single read. */
-    private ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec) {
-        final ReadEndsForMarkDuplicates ends = new ReadEndsForMarkDuplicates();
+    private ReadEndsForMarkDuplicates buildReadEnds(final SAMFileHeader header, final long index, final SAMRecord rec, final boolean useBarcodes) {
+        final ReadEndsForMarkDuplicates ends;
+
+        if (useBarcodes) {
+            ends = new ReadEndsForMarkDuplicatesWithBarcodes();
+        } else {
+            ends = new ReadEndsForMarkDuplicates();
+        }
         ends.read1ReferenceIndex = rec.getReferenceIndex();
         ends.read1Coordinate = rec.getReadNegativeStrandFlag() ? rec.getUnclippedEnd() : rec.getUnclippedStart();
         ends.orientation = rec.getReadNegativeStrandFlag() ? ReadEnds.R : ReadEnds.F;
@@ -372,6 +423,16 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
         }
 
+        if (useBarcodes) {
+            final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
+            endsWithBarcode.barcode = getBarcodeValue(rec);
+            if (rec.getFirstOfPairFlag()) {
+                endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
+            } else {
+                endsWithBarcode.readTwoBarcode = getReadTwoBarcodeValue(rec);
+            }
+        }
+
         return ends;
     }
 
@@ -381,7 +442,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      *
      * @return an array with an ordered list of indexes into the source file
      */
-    private void generateDuplicateIndexes() {
+    private void generateDuplicateIndexes(final boolean useBarcodes) {
         // Keep this number from getting too large even if there is a huge heap.
         final int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF,
                 (double) (Integer.MAX_VALUE - 5));
@@ -397,7 +458,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             if (firstOfNextChunk == null) {
                 firstOfNextChunk = next;
                 nextChunk.add(firstOfNextChunk);
-            } else if (areComparableForDuplicates(firstOfNextChunk, next, true)) {
+            } else if (areComparableForDuplicates(firstOfNextChunk, next, true, useBarcodes)) {
                 nextChunk.add(next);
             } else {
                 if (nextChunk.size() > 1) {
@@ -419,7 +480,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         boolean containsFrags = false;
 
         for (final ReadEndsForMarkDuplicates next : this.fragSort) {
-            if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, false)) {
+            if (firstOfNextChunk != null && areComparableForDuplicates(firstOfNextChunk, next, false, useBarcodes)) {
                 nextChunk.add(next);
                 containsPairs = containsPairs || next.isPaired();
                 containsFrags = containsFrags || !next.isPaired();
@@ -443,18 +504,29 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         this.duplicateIndexes.doneAddingStartIteration();
     }
 
-    private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2) {
-        boolean retval = lhs.libraryId == rhs.libraryId &&
-                lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
-                lhs.read1Coordinate == rhs.read1Coordinate &&
-                lhs.orientation == rhs.orientation;
+    private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
+        boolean areComparable = lhs.libraryId == rhs.libraryId;
 
-        if (retval && compareRead2) {
-            retval = lhs.read2ReferenceIndex == rhs.read2ReferenceIndex &&
+        if (useBarcodes && areComparable) { // areComparable is useful here to avoid the casts below
+            final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
+            final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
+            areComparable = lhsWithBarcodes.barcode == rhsWithBarcodes.barcode &&
+                    lhsWithBarcodes.readOneBarcode == rhsWithBarcodes.readOneBarcode &&
+                    lhsWithBarcodes.readTwoBarcode == rhsWithBarcodes.readTwoBarcode;
+        }
+
+        if (areComparable) {
+            areComparable = lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
+                    lhs.read1Coordinate == rhs.read1Coordinate &&
+                    lhs.orientation == rhs.orientation;
+        }
+
+        if (areComparable && compareRead2) {
+            areComparable = lhs.read2ReferenceIndex == rhs.read2ReferenceIndex &&
                     lhs.read2Coordinate == rhs.read2Coordinate;
         }
 
-        return retval;
+        return areComparable;
     }
 
     private void addIndexAsDuplicate(final long bamIndex) {
@@ -522,18 +594,38 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         }
     }
 
+    // To avoid overflows or underflows when subtracting two large (positive and negative) numbers
+    static int compareInteger(final int x, final int y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
     /** Comparator for ReadEndsForMarkDuplicates that orders by read1 position then pair orientation then read2 position. */
     static class ReadEndsMDComparator implements Comparator<ReadEndsForMarkDuplicates> {
+
+        final boolean useBarcodes;
+
+        public ReadEndsMDComparator(final boolean useBarcodes) {
+            this.useBarcodes = useBarcodes;
+        }
+
         public int compare(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs) {
-            int retval = lhs.libraryId - rhs.libraryId;
-            if (retval == 0) retval = lhs.read1ReferenceIndex - rhs.read1ReferenceIndex;
-            if (retval == 0) retval = lhs.read1Coordinate - rhs.read1Coordinate;
-            if (retval == 0) retval = lhs.orientation - rhs.orientation;
-            if (retval == 0) retval = lhs.read2ReferenceIndex - rhs.read2ReferenceIndex;
-            if (retval == 0) retval = lhs.read2Coordinate - rhs.read2Coordinate;
-            if (retval == 0) retval = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
-            if (retval == 0) retval = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
-            return retval;
+            int compareDifference = lhs.libraryId - rhs.libraryId;
+            if (useBarcodes) {
+                final ReadEndsForMarkDuplicatesWithBarcodes lhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) lhs;
+                final ReadEndsForMarkDuplicatesWithBarcodes rhsWithBarcodes = (ReadEndsForMarkDuplicatesWithBarcodes) rhs;
+                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.barcode, rhsWithBarcodes.barcode);
+                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.readOneBarcode, rhsWithBarcodes.readOneBarcode);
+                if (compareDifference == 0) compareDifference = compareInteger(lhsWithBarcodes.readTwoBarcode, rhsWithBarcodes.readTwoBarcode);
+            }
+            if (compareDifference == 0) compareDifference = lhs.read1ReferenceIndex - rhs.read1ReferenceIndex;
+            if (compareDifference == 0) compareDifference = lhs.read1Coordinate - rhs.read1Coordinate;
+            if (compareDifference == 0) compareDifference = lhs.orientation - rhs.orientation;
+            if (compareDifference == 0) compareDifference = lhs.read2ReferenceIndex - rhs.read2ReferenceIndex;
+            if (compareDifference == 0) compareDifference = lhs.read2Coordinate - rhs.read2Coordinate;
+            if (compareDifference == 0) compareDifference = (int) (lhs.read1IndexInFile - rhs.read1IndexInFile);
+            if (compareDifference == 0) compareDifference = (int) (lhs.read2IndexInFile - rhs.read2IndexInFile);
+
+            return compareDifference;
         }
     }
 }
