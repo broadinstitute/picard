@@ -51,8 +51,6 @@ public class ClippingUtilityTest {
 
     }
 
-
-
     @Test(dataProvider = "clipTestData")
     public void testSingleEndSamRecordClip(final String testName, final String read, final String clip, final int minMatch,
                                            final double errRate, final int expected) {
@@ -90,9 +88,6 @@ public class ClippingUtilityTest {
                     // Test that if errRate is increased, it still matches
                     Assert.assertNotNull(ClippingUtility.adapterTrimIlluminaSingleRead(rec, minMatch, errRate + 0.1, adapter), testName);
                 }
-
-                // Very low error threshold should cause match failure
-                Assert.assertNull(ClippingUtility.adapterTrimIlluminaSingleRead(rec, minMatch, 0.01, adapter), testName);
             }
         }
 
@@ -170,7 +165,9 @@ public class ClippingUtilityTest {
     private SAMRecord createSamRecordWithAdapterSequence(final int readLength, final IlluminaAdapterPair adapterPair, final int adapterPosition) {
         final String adapterString = adapterPair.get3PrimeAdapterInReadOrder();
         final int replacementLength = Math.min(adapterString.length(), readLength - adapterPosition);
-        final String adapterSubstring = adapterString.substring(0, replacementLength);
+        // when inserting the adapter sequence, replace any wildcard ('N') bases with a standard base.
+        // if we don't do this, then the resulting no-call bases may cause the sequence to match an adapter other than the intended one.
+        final String adapterSubstring = adapterString.substring(0, replacementLength).replace('N', 'A');
         final String readBases = replaceSubstring(makeBogusReadString(readLength), adapterSubstring, adapterPosition, adapterSubstring.length());
         final SAMRecord rec = new SAMRecord(null);
         rec.setReadString(readBases);
@@ -188,23 +185,21 @@ public class ClippingUtilityTest {
         final String SE_FORWARD = IlluminaAdapterPair.SINGLE_END.get3PrimeAdapter();
         final String REVERSE = IlluminaAdapterPair.PAIRED_END.get5PrimeAdapterInReadOrder();
         return new Object[][] {
+                {"Perfect match", "AAAAACCCCCAGATCGGAAGAGCG", "AGATCGGAAGAGCG", 14, 0.0, 10},
                 {"Simple test 1", "AAAAACCCCCAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 10},
                 {"Simple test 2", "AAAAACCCCCGGGGGAGATCGGAAGAGCA", "AGATCGGAAGAGCG", 14, 0.15, 15},
                 {"No adapter", "AAAAACCCCCGGGGGTTTTT", "AGATCGGAAGAGCG", 6, 0.15, -1},
                 {"Partial adapter", "AAAAACCCCCTGATCGGAA", "AGATCGGAAGAGCG", 9, 0.15, 10},
-// no longer support clips in middle of read
-//          {"Adapter+Primer", "AAAAACCCCCAGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCG", 6, 0.15, 10},
                 {"No sequence", null, "AGATCGGAAGAGCG", 6, 0.15, -1},
                 {"Read too short", "AGATCGGAAG", "AGATCGGAAGAGCG", 11, 0.15, -1},
-                {"All No Calls", "AAACCCNNNNNNNNNNNNNNNNNNNN", "AGATCGGAAGAGCG", 6, 0.15, -1},
+                {"All No Calls", "AAACCCNNNNNNNNNNNNNNNNNNNN", "AGATCGGAAGAGCG", 14, 0.15, 12}, // no-calls in the read count as matches
                 {"From Test Data1", "CGGCATTCCTGCTGAACCGAGATCGGAAGAGCGTCGTGTAGGGAAAGGGGGTGGATCTCGGTGGGCGGCGTGTTGT", REVERSE, 57, 0.15, 19},
                 {"From Test Data2a", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCCGAA", REVERSE, 9, 0.14, 27},  // XT:i:28
                 {"From Test Data2b", "CGGAAGAGCGGTTCAGCAGGAATGCCGAGATCGGAA", REVERSE, 10, 0.14, -1},  // only matches 9
                 {"From PE Test Data1", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", FORWARD, 17, 0.14, 19},
                 {"From PE Test Data2", "CGGTTCAGCAGGAATGCCGAGATCGGAAGAGCGGGT", REVERSE, 5, 0.14, -1},
-                new Object[] {"From Test 8-clipped", "TGGGGTGGTTATTGTTGATTTTTGTTTGTGTGTTAGGTTGTTTGTGTTAGTTTTTTATTTTATTTTCGAGATCGAA", FORWARD, 8, 0.14, 68},
+                {"From Test 8-clipped", "TGGGGTGGTTATTGTTGATTTTTGTTTGTGTGTTAGGTTGTTTGTGTTAGTTTTTTATTTTATTTTCGAGATCGAA", FORWARD, 8, 0.14, 68},
                 {"50% can be bad", "AAAAACCCCCAGGTCGGAAGAGCG", "AGATCGGAAGAGCG", 5, 0.5, 18},        // 18?
-
                 {"From 30E54AAXX.5.a", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", "AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG", 34, 0.14, 0},  // 0!? From KT test case
                 {"From 30E54AAXX.5.b", "ATATCTGAAGATCTCGTATGCCGTCTTCTGCTTG", SE_FORWARD, 34, 0.14, 0},  // 1?? From KT test case
         };
@@ -358,7 +353,7 @@ public class ClippingUtilityTest {
             matchedPair = marker.adapterTrimIlluminaSingleRead(rec);
             Assert.assertNotNull(matchedPair);
             Assert.assertEquals(rec.getIntegerAttribute(ReservedTagConstants.XT).intValue(), adapterPosition + 1,
-                    rec.getReadString() + " matched " + matchedPair);
+                    rec.getReadString() + " did not match " + matchedPair);
 
             // Put adapter in different place next time.
             adapterPosition++;

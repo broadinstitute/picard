@@ -77,7 +77,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
             if (record.getIntegerAttribute(ReservedTagConstants.XT) != null) {
                 count++;
                 if ((count == 1 || count == 2) && LANE.equals("2")){
-                    Assert.assertEquals (114, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
+                    Assert.assertEquals (94, (int)record.getIntegerAttribute(ReservedTagConstants.XT));
                 } else if (count == 1 || count == 2 && LANE.equals("1")) {
                     Assert.assertEquals(68, (int) record.getIntegerAttribute(ReservedTagConstants.XT));
                 }

@@ -71,9 +71,9 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.PF_NOISE_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 3);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 59);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 19.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 303);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*58D/303D*/0.191419);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                 Assert.assertEquals(metrics.BAD_CYCLES, 19);
                 break;
             case SECOND_OF_PAIR:
@@ -82,9 +82,9 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.PF_NOISE_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 7);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 239);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 707);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*19D/707D*/0.026874);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                 Assert.assertEquals(metrics.BAD_CYCLES, 3);
                 break;
             case PAIR:
@@ -93,9 +93,9 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.PF_NOISE_READS, 2);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_READS, 10);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_Q20_BASES, 298);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 1010);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*77D/1010D*/0.076238);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                 Assert.assertEquals(metrics.BAD_CYCLES, 22);
                 break;
             case UNPAIRED:
@@ -133,32 +133,32 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.TOTAL_READS, 1);
                 Assert.assertEquals(metrics.PF_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 20.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 1.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 20D/100D);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.01);
                 Assert.assertEquals(metrics.BAD_CYCLES, 20);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(20/(double)100));
+                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(1/(double)100));
                 break;
             case SECOND_OF_PAIR:
                 // Three no-calls, two potentially methylated bases
                 Assert.assertEquals(metrics.TOTAL_READS, 1);
                 Assert.assertEquals(metrics.PF_READS, 1);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 3.0);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.0);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 101);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*3D/99D*/0.030303);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, 0.0);
                 Assert.assertEquals(metrics.BAD_CYCLES, 3);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(3/(double)99));
+                Assert.assertEquals(metrics.PF_HQ_ERROR_RATE, 0.0);
                 break;
             case PAIR:
                 Assert.assertEquals(metrics.TOTAL_READS, 2);
                 Assert.assertEquals(metrics.PF_READS, 2);
                 Assert.assertEquals(metrics.PF_HQ_ALIGNED_BASES, 202);
-                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 11.5);
+                Assert.assertEquals(metrics.PF_HQ_MEDIAN_MISMATCHES, 0.5);
                 Assert.assertEquals(metrics.PF_ALIGNED_BASES, 202);
-                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*23D/199D*/0.115578);
+                Assert.assertEquals(metrics.PF_MISMATCH_RATE, /*1D/199D*/0.005025);
                 Assert.assertEquals(metrics.BAD_CYCLES, 23);
-                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(23/(double)199));
+                Assert.assertEquals(format.format(metrics.PF_HQ_ERROR_RATE), format.format(1/(double)199));
                 break;
             case UNPAIRED:
             default:
