@@ -265,13 +265,15 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         final int maxInMemory = (int) ((Runtime.getRuntime().maxMemory() * SORTING_COLLECTION_SIZE_RATIO) / sizeInBytes);
         log.info("Will retain up to " + maxInMemory + " data points before spilling to disk.");
 
-        final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec;
+        final ReadEndsForMarkDuplicatesCodec fragCodec, pairCodec, diskCodec;
         if (useBarcodes) {
             fragCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
             pairCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
+            diskCodec = new ReadEndsForMarkDuplicatesWithBarcodesCodec();
         } else {
             fragCodec = new ReadEndsForMarkDuplicatesCodec();
             pairCodec = new ReadEndsForMarkDuplicatesCodec();
+            diskCodec = new ReadEndsForMarkDuplicatesCodec();
         }
 
         this.pairSort = SortingCollection.newInstance(ReadEndsForMarkDuplicates.class,
@@ -288,7 +290,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         final SamHeaderAndIterator headerAndIterator = openInputs();
         final SAMFileHeader header = headerAndIterator.header;
-        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP);
+        final ReadEndsForMarkDuplicatesMap tmp = new DiskBasedReadEndsForMarkDuplicatesMap(MAX_FILE_HANDLES_FOR_READ_ENDS_MAP, diskCodec);
         long index = 0;
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
