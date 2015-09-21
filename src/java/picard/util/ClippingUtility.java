@@ -30,7 +30,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
 
 /**
- * Utilities to clip the adapater sequence from a SAMRecord read
+ * Utilities to clip the adapter sequence from a SAMRecord read
  *
  * @author Tim Fennell
  */
@@ -252,8 +252,9 @@ public class ClippingUtility {
      * @param read
      */
     public static int findIndexOfClipSequence(final byte[] read, final byte[] adapterSequence, final int minMatch, final double maxErrorRate) {
-        // If the read's too short we can't possibly match it
+        // If the read or adapter are too short we can't possibly match it
         if (read == null || read.length < minMatch) return NO_MATCH;
+        if (adapterSequence == null || adapterSequence.length < minMatch) return NO_MATCH;
         final int minClipPosition = 0;
 
         // Walk backwards down the read looking for the sequence
@@ -264,12 +265,10 @@ public class ClippingUtility {
             int mismatches = 0;
 
             for (int i = 0; i < length; ++i) {
-                if (!SequenceUtil.isNoCall(adapterSequence[i]) && !SequenceUtil.basesEqual(adapterSequence[i], read[start + i])) {
+                if (!SequenceUtil.basesEqual(adapterSequence[i], read[start + i])) {
                     if (++mismatches > mismatchesAllowed) continue READ_LOOP;
                 }
             }
-
-            // If we got this far without breaking out, then it matches
             return start;
         }
 

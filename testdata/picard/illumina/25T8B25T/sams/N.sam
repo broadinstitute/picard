@@ -1,15 +1,15 @@
 @HD	VN:1.5	SO:queryname
 @RG	ID:HiMom.1	SM:SA_N	LB:LN_N	PL:illumina	PU:HiMom.1.N	CN:BI
-HiMom:1:1101:1031:2224	589	*	0	0	*	*	0	0	.AATA............T.......	#0;@@####################	BC:Z:NNNNNNNN	RG:Z:HiMom.1
-HiMom:1:1101:1031:2224	653	*	0	0	*	*	0	0	.........................	#########################	BC:Z:NNNNNNNN	RG:Z:HiMom.1	XN:i:1
+HiMom:1:1101:1031:2224	589	*	0	0	*	*	0	0	.AATA............T.......	#0;@@####################	BC:Z:NNNNNNNN	RG:Z:HiMom.1	XT:i:20
+HiMom:1:1101:1031:2224	653	*	0	0	*	*	0	0	.........................	#########################	BC:Z:NNNNNNNN	RG:Z:HiMom.1	XN:i:1	XT:i:20
 HiMom:1:1101:1039:2147	589	*	0	0	*	*	0	0	.CCAA.G..GG....ATGTAA....	#4;@@#4##2<####43@@@@####	BC:Z:NNNNNNNN	RG:Z:HiMom.1
 HiMom:1:1101:1039:2147	653	*	0	0	*	*	0	0	.........................	#########################	BC:Z:NNNNNNNN	RG:Z:HiMom.1	XN:i:1
 HiMom:1:1101:1046:2175	589	*	0	0	*	*	0	0	.TGCC.G.GTT.CG.GGTCTT....	#4;@@####################	BC:Z:NNNNNNNN	RG:Z:HiMom.1
 HiMom:1:1101:1046:2175	653	*	0	0	*	*	0	0	..GGA....................	#########################	BC:Z:NNNNNNNN	RG:Z:HiMom.1
 HiMom:1:1101:1047:2122	589	*	0	0	*	*	0	0	.CTAA.G.ACT.TG.GTGTGC....	#0;@@#4#3@@#3@#2<@@@@####	BC:Z:NNNANNNN	RG:Z:HiMom.1
 HiMom:1:1101:1047:2122	653	*	0	0	*	*	0	0	..TCA....................	#########################	BC:Z:NNNANNNN	RG:Z:HiMom.1
-HiMom:1:1101:1048:2197	589	*	0	0	*	*	0	0	.CTCC.G.TCA.CA.GTGGAG....	#0;?@####################	BC:Z:NNNCNNNN	RG:Z:HiMom.1
-HiMom:1:1101:1048:2197	653	*	0	0	*	*	0	0	..GTG....................	#########################	BC:Z:NNNCNNNN	RG:Z:HiMom.1
+HiMom:1:1101:1048:2197	589	*	0	0	*	*	0	0	.CTCC.G.TCA.CA.GTGGAG....	#0;?@####################	BC:Z:NNNCNNNN	RG:Z:HiMom.1	XT:i:20
+HiMom:1:1101:1048:2197	653	*	0	0	*	*	0	0	..GTG....................	#########################	BC:Z:NNNCNNNN	RG:Z:HiMom.1	XT:i:20
 HiMom:1:1101:1065:2193	77	*	0	0	*	*	0	0	GAAGTACGCCCTGCCCCTGGTT.GC	?@@DAADAHHFHBEBEGGHG?####	BC:Z:GAACGATN	RG:Z:HiMom.1
 HiMom:1:1101:1065:2193	141	*	0	0	*	*	0	0	.CTTG....................	#########################	BC:Z:GAACGATN	RG:Z:HiMom.1
 HiMom:1:1101:1162:2207	589	*	0	0	*	*	0	0	ACCTTGAGGAGAACATAAGAGCAAA	#########################	BC:Z:ACAAAATT	RG:Z:HiMom.1
