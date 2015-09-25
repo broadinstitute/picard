@@ -421,7 +421,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
         private void calculateTargetCoverageMetrics() {
-            final short[] depths = new short[(int) this.metrics.TARGET_TERRITORY];  // may not use entire array
+            final int[] depths = new int[(int) this.metrics.TARGET_TERRITORY];  // may not use entire array
             int zeroCoverageTargets = 0;
             int depthIndex = 0;
             double totalCoverage = 0;
@@ -433,10 +433,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     continue;
                 }
 
-                final short[] targetDepths = c.getDepths();
+                final int[] targetDepths = c.getDepths();
                 basesConsidered += targetDepths.length;
 
-                for (final short depth : targetDepths) {
+                for (final int depth : targetDepths) {
                     depths[depthIndex++] = depth;
                     totalCoverage += depth;
                 }
@@ -449,7 +449,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             Arrays.sort(depths);
             // Note.  basesConsidered can be between 0 and depths.length inclusive.  indexOf80thPercentile will be -1 in the latter case
             final int indexOf80thPercentile = Math.max((depths.length - 1 - basesConsidered) + (int) (basesConsidered * 0.2), 0);
-            final int coverageAt80thPercentile = depths[indexOf80thPercentile];
+            final int coverageAt80thPercentile;
+            if(depths.length > 0) {
+                coverageAt80thPercentile = depths[indexOf80thPercentile];
+            }
+            else {
+                throw new PicardException("Interval list only contains one zero-length interval.");
+            }
             this.metrics.FOLD_80_BASE_PENALTY = this.metrics.MEAN_TARGET_COVERAGE / coverageAt80thPercentile;
             this.metrics.ZERO_CVG_TARGETS_PCT = zeroCoverageTargets / (double) allTargets.getIntervals().size();
 
@@ -464,7 +470,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 	        int targetBases100x = 0;
 
             for (final Coverage c : this.coverageByTarget.values()) {
-                for (final short depth : c.getDepths()) {
+                for (final int depth : c.getDepths()) {
                     ++totalTargetBases;
 
                     if (depth >= 2) {
@@ -525,6 +531,11 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
                     final Interval interval = entry.getKey();
                     final Coverage cov = entry.getValue();
+
+                    if (interval.length() <= 0) {
+                        log.warn("interval of length zero found: " + interval + " skipped.");
+                        continue;
+                    }
 
                     final double gcDouble = this.intervalToGc.get(interval);
                     final int gc = (int) Math.round(gcDouble * 100);
@@ -589,19 +600,18 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
      */
     public static class Coverage {
         private final Interval interval;
-        private final short[] depths;
+        private final int[] depths;
 
         /** Constructs a new coverage object for the provided mapping with the desired padding either side. */
         public Coverage(final Interval i, final int padding) {
             this.interval = i;
-            this.depths = new short[interval.length() + 2*padding];
+            this.depths = new int[interval.length() + 2*padding];
         }
 
         /** Adds a single point of depth at the desired offset into the coverage array. */
         public void addBase(final int offset) {
             if (offset >= 0 && offset < this.depths.length) {
-                // Prevent overflow if depth is too great, while avoiding doubling memory requirement.
-                if (this.depths[offset] < Short.MAX_VALUE) {
+                if (this.depths[offset] < Integer.MAX_VALUE) {
                     this.depths[offset] += 1;
                 }
             }
@@ -609,15 +619,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Returns true if any base in the range has coverage of > 1 */
         public boolean hasCoverage() {
-            for (final short s : depths) {
+            for (final int s : depths) {
                 if (s > 1) return true;
             }
 
             return false;
         }
 
-        /** Gets the coverage depths as an array of shorts. */
-        public short[] getDepths() { return this.depths; }
+        /** Gets the coverage depths as an array of ints. */
+        public int[] getDepths() { return this.depths; }
 
         public int getTotal() {
             int total = 0;

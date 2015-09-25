@@ -1,0 +1,4 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chrM	LN:16903	SP:Mus	musculus
+chrM	2	1	+	interval-1
+chrM	20	100	+	interval-2

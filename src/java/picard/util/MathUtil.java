@@ -144,7 +144,16 @@ final public class MathUtil {
         return min;
     }
 
+    /** Returns the smallest value stored in the array. */
+    public static int min(final int[] nums) {
+        int min = nums[0];
+        for (int i = 1; i < nums.length; ++i) {
+            if (nums[i] < min) min = nums[i];
+        }
 
+        return min;
+    }
+    
     /** Returns the smallest value stored in the array. */
     public static short min(final short[] nums) {
         short min = nums[0];
