@@ -358,7 +358,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         scheme.validateScheme();
         for (final TruthState truthState : TruthState.values()) {
             for (final CallState callState : CallState.values()) {
-                final int count = counter.getCount(truthState, callState);
+                final long count = counter.getCount(truthState, callState);
                 final String contingencyValues = scheme.getContingencyStateString(truthState, callState);
                 if (count > 0 || OUTPUT_ALL_ROWS) {
                     final GenotypeConcordanceDetailMetrics detailMetrics = new GenotypeConcordanceDetailMetrics();
