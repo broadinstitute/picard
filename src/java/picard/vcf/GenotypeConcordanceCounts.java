@@ -103,7 +103,7 @@ public class GenotypeConcordanceCounts {
                 }
                 else if (includeHomRef || isVar(truthState, callState)) {
                     final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
-                    final int count = getCount(truthAndCallStates);
+                    final long count = getCount(truthAndCallStates);
                     if (truthState.getCode()==callState.getCode()) {
                         //If we enter this, we are 'on the diagonal'
                         numerator += count;
@@ -146,7 +146,7 @@ public class GenotypeConcordanceCounts {
         for (final TruthState truthState : truthStateArray) {
             for (final CallState callState : CallState.values()) {
                 final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
-                final int count = getCount(truthAndCallStates);
+                final long count = getCount(truthAndCallStates);
                 for (final ContingencyState contingencyState : scheme.getConcordanceStateArray(truthAndCallStates)) {
                     if (ContingencyState.TP == contingencyState) {
                         numerator += count;
@@ -176,7 +176,7 @@ public class GenotypeConcordanceCounts {
         for (final CallState callState : callStateList) {
             for (final TruthState truthState : TruthState.values()) {
                 final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
-                final int count = getCount(truthAndCallStates);
+                final long count = getCount(truthAndCallStates);
                 for (final ContingencyState contingencyState : scheme.getConcordanceStateArray(truthAndCallStates)) {
                     if (ContingencyState.TP == contingencyState) {
                         numerator += count;
@@ -206,7 +206,7 @@ public class GenotypeConcordanceCounts {
         for (final TruthState truthState : truthStateArray) {
             for (final CallState callState : CallState.values()) {
                 final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
-                final int count = getCount(truthAndCallStates);
+                final long count = getCount(truthAndCallStates);
                 for (final ContingencyState contingencyState : scheme.getConcordanceStateArray(truthAndCallStates)) {
                     if (ContingencyState.TN == contingencyState) {
                         numerator += count;
@@ -223,16 +223,16 @@ public class GenotypeConcordanceCounts {
     /**
      * Returns the count defined by the truth state set and call state set.
      */
-    public int getCount(final TruthState truthState, final CallState callState) {
+    public long getCount(final TruthState truthState, final CallState callState) {
         return getCount(new TruthAndCallStates(truthState, callState));
     }
 
     /**
      * Returns the count defined by the truth state set and call state set.
      */
-    public int getCount(final TruthAndCallStates truthAndCallStates) {
+    public long getCount(final TruthAndCallStates truthAndCallStates) {
         final Histogram<TruthAndCallStates>.Bin bin = this.counter.get(truthAndCallStates);
-        return (bin == null ? 0 : (int) bin.getValue());
+        return (bin == null ? 0L : (long) bin.getValue());
     }
 
     /**
@@ -259,8 +259,8 @@ public class GenotypeConcordanceCounts {
     /**
      * Returns the sum of all pairs of tuples defined by the truth state set and call state set.
      */
-    public int getSum(final Set<TruthState> truthStateSet, final Set<CallState> callStateSet) {
-        int count = 0;
+    public long getSum(final Set<TruthState> truthStateSet, final Set<CallState> callStateSet) {
+        long count = 0;
         for (final TruthState truthState : truthStateSet) {
             for (final CallState callState : callStateSet) {
                 count += getCount(truthState, callState);
@@ -272,19 +272,19 @@ public class GenotypeConcordanceCounts {
     /**
      * Returns the sum of all pairs of tuples defined by the truth state set and call state set.
      */
-    public int getSum() {
+    public long getSum() {
         return getSum(new HashSet<TruthState>(Arrays.asList(TruthState.values())), new HashSet<CallState>(Arrays.asList(CallState.values())));
     }
 
     /**
      * Returns the total number of times each contingency state is encountered, summed across all truth/call state pairs.
      */
-    public Map<ContingencyState, Integer> getContingencyStateCounts(final GenotypeConcordanceScheme scheme) {
+    public Map<ContingencyState, Long> getContingencyStateCounts(final GenotypeConcordanceScheme scheme) {
         scheme.validateScheme();
 
-        final Map<ContingencyState, Integer> counts = new HashMap<ContingencyState, Integer>();
+        final Map<ContingencyState, Long> counts = new HashMap<ContingencyState, Long>();
         for (final ContingencyState contingencyState : ContingencyState.values()) {
-            counts.put(contingencyState, 0);
+            counts.put(contingencyState, 0L);
         }
 
         for (final TruthState truthState : TruthState.values()) {
@@ -292,7 +292,7 @@ public class GenotypeConcordanceCounts {
                 final TruthAndCallStates truthAndCallStates = new TruthAndCallStates(truthState, callState);
                 final ContingencyState[] contingencyStateArray = scheme.getConcordanceStateArray(truthAndCallStates);
                 for (final ContingencyState contingencyState : contingencyStateArray) {
-                    final int newCount = counts.get(contingencyState) + getCount(truthAndCallStates);
+                    final long newCount = counts.get(contingencyState) + getCount(truthAndCallStates);
                     counts.put(contingencyState, newCount);
                 }
             }
