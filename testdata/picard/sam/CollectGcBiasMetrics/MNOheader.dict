@@ -1,0 +1,4 @@
+@HD	VN:1.0	SO:coordinate
+@SQ	SN:chrM	LN:1019	UR:chrM.reference.fasta
+@SQ	SN:chrN	LN:1041	UR:chrM.reference.fasta
+@SQ	SN:chrO	LN:1041	UR:chrM.reference.fasta
