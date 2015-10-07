@@ -1,13 +1,13 @@
 <a id="CollectGcBiasMetrics"/>
 <h3>CollectGcBiasMetrics</h3>
 <section>
-<p>Tool to collect information about GC bias in the reads in a given BAM file. Computes the number of windows (of size specified by WINDOW_SIZE) in the genome at each GC% and counts the number of read starts in each GC bin.  What is output and plotted is the "normalized coverage" in each bin - i.e. the number of reads per window normalized to the average number of reads per window across the whole genome..
+<p>Tool to collect information about GC bias in the reads in a given BAM file. Computes the number of windows (of size specified by SCAN_WINDOW_SIZE) in the genome at each GC% and counts the number of read starts in each GC bin.  What is output and plotted is the "normalized coverage" in each bin - i.e. the number of reads per window normalized to the average number of reads per window across the whole genome..
 </p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>CHART_OUTPUT (File)</td><td>The PDF file to render the chart to.  Required. </td></tr>
-<tr><td>SUMMARY_OUTPUT (File)</td><td>The text file to write summary metrics to.  Default value: null. </td></tr>
-<tr><td>WINDOW_SIZE (Integer)</td><td>The size of windows on the genome that are used to bin reads.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>SUMMARY_OUTPUT (File)</td><td>The text file to write summary metrics to.  Required. </td></tr>
+<tr><td>SCAN_WINDOW_SIZE (Integer)</td><td>The size of the scanning windows on the reference genome that are used to bin reads.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MINIMUM_GENOME_FRACTION (Double)</td><td>For summary metrics, exclude GC windows that include less than this fraction of the genome.  Default value: 1.0E-5. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>IS_BISULFITE_SEQUENCED (Boolean)</td><td>Whether the SAM or BAM file consists of bisulfite sequenced reads.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>METRIC_ACCUMULATION_LEVEL (MetricAccumulationLevel)</td><td>The level(s) at which to accumulate metrics.  Default value: [ALL_READS]. This option can be set to 'null' to clear the default value. Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>

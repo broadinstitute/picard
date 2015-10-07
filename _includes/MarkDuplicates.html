@@ -7,6 +7,9 @@
 <tr><td>MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP (Integer)</td><td>This option is obsolete. ReadEnds will always be spilled to disk.  Default value: 50000. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MAX_FILE_HANDLES_FOR_READ_ENDS_MAP (Integer)</td><td>Maximum number of file handles to keep open when spilling read ends to disk. Set this number a little lower than the per-process maximum number of file that may be open. This number can be found by executing the 'ulimit -n' command on a Unix system.  Default value: 8000. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>SORTING_COLLECTION_SIZE_RATIO (Double)</td><td>This number, plus the maximum RAM available to the JVM, determine the memory footprint used by some of the sorting collections.  If you are running out of memory, try reducing this number.  Default value: 0.25. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>BARCODE_TAG (String)</td><td>Barcode SAM tag (ex. BC for 10X Genomics)  Default value: null. </td></tr>
+<tr><td>READ_ONE_BARCODE_TAG (String)</td><td>Read one barcode SAM tag (ex. BX for 10X Genomics)  Default value: null. </td></tr>
+<tr><td>READ_TWO_BARCODE_TAG (String)</td><td>Read two barcode SAM tag (ex. BX for 10X Genomics)  Default value: null. </td></tr>
 <tr><td>INPUT (String)</td><td>One or more input SAM or BAM files to analyze. Must be coordinate sorted.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output file to write marked records to  Required. </td></tr>
 <tr><td>METRICS_FILE (File)</td><td>File to write duplication metrics to  Required. </td></tr>
