@@ -33,6 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -204,5 +205,78 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
                 {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
                 {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
         };
+    }
+
+    @Test
+    public void testWithBarcodeDuplicate() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        final String barcodeTag = "BC";
+        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+            record.setAttribute(barcodeTag, "Barcode1");
+        }
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.runTest();
+    }
+
+    @Test
+    public void testWithBarcodeComplex() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        final String readNameOne = "RUNID:1:1:15993:13361";
+        final String readNameTwo = "RUNID:2:2:15993:13362";
+        final String readNameThree = "RUNID:3:3:15993:13362";
+
+        // first two reads have the same barcode, third read has a different barcode
+        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+
+        final String barcodeTag = "BC";
+        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+            if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
+                record.setAttribute(barcodeTag, "Barcode1");
+            }
+            else if (record.getReadName().equals(readNameThree)) {
+                record.setAttribute(barcodeTag, "Barcode2");
+            }
+        }
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.runTest();
+    }
+
+    @Test
+    public void testWithIndividualReadBarcodes() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        final String readNameOne = "RUNID:1:1:15993:13361";
+        final String readNameTwo = "RUNID:2:2:15993:13362";
+        final String readNameThree = "RUNID:3:3:15993:13362";
+
+        // first two reads have the same barcode (all three), third read has a different barcode for the second end
+        tester.addMatePair(readNameOne, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair(readNameTwo, 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY); // same barcode as the first
+        tester.addMatePair(readNameThree, 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+
+        final String barcodeTag = "BC";
+        final String readOneBarcodeTag = "BX"; // want the same tag as the second end, since this is allowed
+        final String readTwoBarcodeTag = "BX";
+        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+            record.setAttribute(barcodeTag, "Barcode1"); // same barcode
+            if (record.getFirstOfPairFlag()) { // always the same value for the first end
+                record.setAttribute(readOneBarcodeTag, "readOne1");
+            }
+            else { // second end
+                if (record.getReadName().equals(readNameOne) || record.getReadName().equals(readNameTwo)) {
+                    record.setAttribute(readTwoBarcodeTag, "readTwo1");
+                } else if (record.getReadName().equals(readNameThree)) {
+                    record.setAttribute(readTwoBarcodeTag, "readTwo2");
+                }
+            }
+        }
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.addArg("READ_ONE_BARCODE_TAG=" + readOneBarcodeTag);
+        tester.addArg("READ_TWO_BARCODE_TAG=" + readTwoBarcodeTag);
+
+        tester.runTest();
     }
 }

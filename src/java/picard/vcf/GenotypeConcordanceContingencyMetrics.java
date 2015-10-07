@@ -27,7 +27,7 @@ public class GenotypeConcordanceContingencyMetrics extends MetricBase {
         scheme.validateScheme();
         concordanceCounts.validateCountsAgainstScheme(scheme);
 
-        Map<ContingencyState, Integer> counts = concordanceCounts.getContingencyStateCounts(scheme);
+        Map<ContingencyState, Long> counts = concordanceCounts.getContingencyStateCounts(scheme);
         this.TP_COUNT = counts.get(ContingencyState.TP);
         this.TN_COUNT = counts.get(ContingencyState.TN);
         this.FP_COUNT = counts.get(ContingencyState.FP);
@@ -45,17 +45,17 @@ public class GenotypeConcordanceContingencyMetrics extends MetricBase {
     public String CALL_SAMPLE;
 
     /** The TP (true positive) count across all variants */
-    public int TP_COUNT;
+    public long TP_COUNT;
 
     /** The TN (true negative) count across all variants */
-    public int TN_COUNT;
+    public long TN_COUNT;
 
     /** The FP (false positive) count across all variants */
-    public int FP_COUNT;
+    public long FP_COUNT;
 
     /** The FN (false negative) count across all variants */
-    public int FN_COUNT;
+    public long FN_COUNT;
 
     /** The empty (no contingency info) count across all variants */
-    public int EMPTY_COUNT;
+    public long EMPTY_COUNT;
 }

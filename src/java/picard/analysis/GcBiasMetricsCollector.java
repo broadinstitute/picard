@@ -1,4 +1,28 @@
-package picard.analysis.directed;
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+package picard.analysis;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
@@ -6,10 +30,8 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SequenceUtil;
-import picard.analysis.GcBiasDetailMetrics;
-import picard.analysis.GcBiasSummaryMetrics;
+import htsjdk.samtools.util.StringUtil;
 import picard.metrics.GcBiasMetrics;
-import picard.analysis.MetricAccumulationLevel;
 import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
 
@@ -20,21 +42,24 @@ import java.util.Set;
 import java.util.HashMap;
 
 /** Calculates GC Bias Metrics on multiple levels
- * Created by kbergin on 3/23/15.
+ *  Created by kbergin on 3/23/15.
  */
 public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, Integer, GcBiasCollectorArgs> {
     // Histograms to track the number of windows at each GC, and the number of read starts
     // at windows of each GC. Need 101 to get from 0-100.
-    private final int windowSize;
+    private final int scanWindowSize;
     private final boolean bisulfite;
-    private final Map<String, byte[]> gcByRef;
-    private int[] windowsByGc = new int[WINDOWS];
-    private static final int WINDOWS = 101;
+    private int[] windowsByGc = new int[BINS];
+    private static final int BINS = 101;
 
-    public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final Map<String, byte[]> gcByRef, final int[] windowsByGc, final List<SAMReadGroupRecord> samRgRecords, final int windowSize, final boolean bisulfite) {
-        this.windowSize = windowSize;
+    //will hold the relevant gc information per contig
+    private byte [] gc = null;
+    private int referenceIndex = -1;
+
+    public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
+                                  final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize, final boolean bisulfite) {
+        this.scanWindowSize = scanWindowSize;
         this.bisulfite = bisulfite;
-        this.gcByRef = gcByRef;
         this.windowsByGc = windowsByGc;
         setup(accumulationLevels, samRgRecords);
     }
@@ -102,8 +127,15 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             if (!rec.getReadUnmappedFlag()) {
                 final ReferenceSequence ref = args.getRef();
                 final byte[] refBases = ref.getBases();
-                final String refName = ref.getName();
-                final byte[] gc = gcByRef.get(refName);
+                StringUtil.toUpperCase(refBases);
+                final int refLength = refBases.length;
+                final int lastWindowStart = refLength - scanWindowSize;
+
+                if(referenceIndex != rec.getReferenceIndex() || gc == null){
+                    gc = GcBiasUtils.calculateAllGcs(refBases, lastWindowStart, scanWindowSize);
+                    referenceIndex=rec.getReferenceIndex();
+                }
+
                 final String group;
                 if (this.readGroup != null) {
                     type = this.readGroup;
@@ -200,7 +232,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     else if (group.equals("Library")) {summary.LIBRARY = gcType;}
 
                     summary.ACCUMULATION_LEVEL = group;
-                    summary.WINDOW_SIZE = windowSize;
+                    summary.WINDOW_SIZE = scanWindowSize;
                     summary.TOTAL_CLUSTERS = totalClusters;
                     summary.ALIGNED_READS = totalAlignedReads;
 
@@ -249,12 +281,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     /////////////////////////////////////////////////////////////////////////////
     //Keeps track of each level of GcCalculation
     /////////////////////////////////////////////////////////////////////////////
-    class GcObject{
+    class GcObject {
         int totalClusters = 0;
         int totalAlignedReads = 0;
-        int[] readsByGc = new int[WINDOWS];
-        long[] basesByGc = new long[WINDOWS];
-        long[] errorsByGc = new long[WINDOWS];
+        int[] readsByGc = new int[BINS];
+        long[] basesByGc = new long[BINS];
+        long[] errorsByGc = new long[BINS];
         String group = null;
     }
 
@@ -264,7 +296,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     /////////////////////////////////////////////////////////////////////////////
      private void addRead(final GcObject gcObj, final SAMRecord rec, final String group, final byte[] gc, final byte[] refBases) {
         if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) ++gcObj.totalClusters;
-        final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - windowSize : rec.getAlignmentStart();
+        final int pos = rec.getReadNegativeStrandFlag() ? rec.getAlignmentEnd() - scanWindowSize : rec.getAlignmentStart();
         ++gcObj.totalAlignedReads;
         if (pos > 0) {
             final int windowGc = gc[pos];

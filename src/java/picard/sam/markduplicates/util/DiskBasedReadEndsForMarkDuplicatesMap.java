@@ -53,8 +53,8 @@ import java.util.*;
 public class DiskBasedReadEndsForMarkDuplicatesMap implements ReadEndsForMarkDuplicatesMap {
     private final CoordinateSortedPairInfoMap<String, ReadEndsForMarkDuplicates> pairInfoMap;
 
-    public DiskBasedReadEndsForMarkDuplicatesMap(int maxOpenFiles) {
-        pairInfoMap = new CoordinateSortedPairInfoMap<String, ReadEndsForMarkDuplicates>(maxOpenFiles, new Codec());
+    public DiskBasedReadEndsForMarkDuplicatesMap(int maxOpenFiles, final ReadEndsForMarkDuplicatesCodec readEndsForMarkDuplicatesCodec) {
+        pairInfoMap = new CoordinateSortedPairInfoMap<String, ReadEndsForMarkDuplicates>(maxOpenFiles, new Codec(readEndsForMarkDuplicatesCodec));
     }
 
     public ReadEndsForMarkDuplicates remove(int mateSequenceIndex, String key) {
@@ -74,7 +74,11 @@ public class DiskBasedReadEndsForMarkDuplicatesMap implements ReadEndsForMarkDup
     }
 
     private static class Codec implements CoordinateSortedPairInfoMap.Codec<String, ReadEndsForMarkDuplicates> {
-        private final ReadEndsForMarkDuplicatesCodec readEndsForMarkDuplicatesCodec = new ReadEndsForMarkDuplicatesCodec();
+        private final ReadEndsForMarkDuplicatesCodec readEndsForMarkDuplicatesCodec;
+
+        public Codec(final ReadEndsForMarkDuplicatesCodec readEndsForMarkDuplicatesCodec) {
+            this.readEndsForMarkDuplicatesCodec = readEndsForMarkDuplicatesCodec;
+        }
 
         public void setInputStream(final InputStream is) {
             readEndsForMarkDuplicatesCodec.setInputStream(is);
