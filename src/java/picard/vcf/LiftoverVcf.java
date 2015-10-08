@@ -2,6 +2,7 @@ package picard.vcf;
 
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CloserUtil;
@@ -137,7 +138,7 @@ public class LiftoverVcf extends CommandLineProgram {
         log.info("Lifting variants over and sorting.");
 
         final SortingCollection<VariantContext> sorter = SortingCollection.newInstance(VariantContext.class,
-                new VCFRecordCodec(outHeader),
+                new VCFRecordCodec(outHeader, VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                 outHeader.getVCFRecordComparator(),
                 MAX_RECORDS_IN_RAM,
                 TMP_DIR);

@@ -2,6 +2,7 @@ package picard.vcf;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -143,7 +144,7 @@ public class SortVcf extends CommandLineProgram {
         final SortingCollection<VariantContext> sorter =
                 SortingCollection.newInstance(
                         VariantContext.class,
-                        new VCFRecordCodec(outputHeader),
+                        new VCFRecordCodec(outputHeader, VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                         outputHeader.getVCFRecordComparator(),
                         MAX_RECORDS_IN_RAM,
                         TMP_DIR);
