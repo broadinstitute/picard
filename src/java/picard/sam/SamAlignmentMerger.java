@@ -14,6 +14,7 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.filter.OverclippedReadFilter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.DelegatingIterator;
@@ -43,6 +44,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final List<File> read1AlignedSamFile;
     private final List<File> read2AlignedSamFile;
     private final int maxGaps;
+    private final int minUnclippedBases;
     private boolean forceSort = false;
 
     /**
@@ -81,6 +83,10 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * @param primaryAlignmentSelectionStrategy How to handle multiple alignments for a fragment or read pair,
      *                                          in which none are primary, or more than one is marked primary
      * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
+     *
+     * @param unmapContaminantReads             If true, identify reads having the signature of contamination from a foreign organism (i.e. mostly clipped bases),
+     *                                          and mark them as unmapped.
+     * @param minUnclippedBases                 If unmapContaminantReads is set, require this many unclipped bases or else the read will be marked as contaminant.
      */
     public SamAlignmentMerger(final File unmappedBamFile, final File targetBamFile, final File referenceFasta,
                               final SAMProgramRecord programRecord, final boolean clipAdapters, final boolean bisulfiteSequence,
@@ -92,11 +98,13 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
                               final List<SamPairUtil.PairOrientation> expectedOrientations,
                               final SortOrder sortOrder,
                               final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
-                              final boolean addMateCigar) {
+                              final boolean addMateCigar,
+                              final boolean unmapContaminantReads,
+                              final int minUnclippedBases) {
 
         super(unmappedBamFile, targetBamFile, referenceFasta, clipAdapters, bisulfiteSequence,
                 alignedReadsOnly, programRecord, attributesToRetain, attributesToRemove, read1BasesTrimmed,
-                read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar);
+                read2BasesTrimmed, expectedOrientations, sortOrder, primaryAlignmentSelectionStrategy, addMateCigar, unmapContaminantReads);
 
         if ((alignedSamFile == null || alignedSamFile.size() == 0) &&
                 (read1AlignedSamFile == null || read1AlignedSamFile.size() == 0 ||
@@ -122,6 +130,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.read1AlignedSamFile = read1AlignedSamFile;
         this.read2AlignedSamFile = read2AlignedSamFile;
         this.maxGaps = maxGaps;
+        this.minUnclippedBases = minUnclippedBases;
 
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
@@ -331,6 +340,28 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
             }
         }
         return gaps > maxGaps;
+    }
+
+    /**
+     * Criteria for contaminant reads:
+     * 1. primary alignment has fewer than minUnclippedBases unclipped bases
+     * 2. primary alignment has both ends clipped
+     * 3. for pairs, at least one end of primary alignment meets above criteria
+     */
+    protected boolean isContaminant(final HitsForInsert hits) {
+        final OverclippedReadFilter contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
+        boolean isContaminant = false;
+        if (hits.numHits() > 0) {
+            final int primaryIndex = hits.getIndexOfEarliestPrimary();
+            if (primaryIndex < 0) throw new IllegalStateException("No primary alignment was found, despite having nonzero hits.");
+            final SAMRecord primaryRead1 = hits.getFirstOfPair(primaryIndex);
+            final SAMRecord primaryRead2 = hits.getSecondOfPair(primaryIndex);
+            if (primaryRead1 != null && primaryRead2 != null) isContaminant = contaminationFilter.filterOut(primaryRead1, primaryRead2);
+            else if (primaryRead1 != null) isContaminant = contaminationFilter.filterOut(primaryRead1);
+            else if (primaryRead2 != null) isContaminant = contaminationFilter.filterOut(primaryRead2);
+            else throw new IllegalStateException("Neither read1 or read2 exist for chosen primary alignment");
+        }
+        return isContaminant;
     }
 
     // Accessor for testing

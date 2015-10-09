@@ -45,6 +45,7 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.OverclippedReadFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.reference.ReferenceSequenceFileWalker;
 import htsjdk.samtools.util.CigarUtil;
@@ -113,6 +114,7 @@ public abstract class AbstractAlignmentMerger {
     private final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy;
     private boolean keepAlignerProperPairFlags = false;
     private boolean addMateCigar = false;
+    private boolean unmapContaminantReads = false;
 
     private final SamRecordFilter alignmentFilter = new SamRecordFilter() {
         public boolean filterOut(final SAMRecord record) {
@@ -123,6 +125,7 @@ public abstract class AbstractAlignmentMerger {
             throw new UnsupportedOperationException("Paired SamRecordFilter not implemented!");
         }
     };
+
     private boolean includeSecondaryAlignments = true;
 
     /** Class that allows a Sorting Collection and a SAMFileWriter to be treated identically. */
@@ -160,6 +163,8 @@ public abstract class AbstractAlignmentMerger {
 
     protected boolean ignoreAlignment(final SAMRecord sam) { return false; } // default implementation
 
+    protected boolean isContaminant(final HitsForInsert hits) { return false; } // default implementation
+
     /**
      * Constructor
      *
@@ -189,6 +194,8 @@ public abstract class AbstractAlignmentMerger {
      * @param primaryAlignmentSelectionStrategy What to do when there are multiple primary alignments, or multiple
      *                                          alignments but none primary, for a read or read pair.
      * @param addMateCigar                      True if we are to add or maintain the mate CIGAR (MC) tag, false if we are to remove or not include.
+     * @param unmapContaminantReads             If true, identify reads having the signature of contamination from a foreign organism (i.e. mostly clipped bases),
+     *                                          and mark them as unmapped.
      */
     public AbstractAlignmentMerger(final File unmappedBamFile, final File targetBamFile,
                                    final File referenceFasta, final boolean clipAdapters,
@@ -199,7 +206,8 @@ public abstract class AbstractAlignmentMerger {
                                    final List<SamPairUtil.PairOrientation> expectedOrientations,
                                    final SAMFileHeader.SortOrder sortOrder,
                                    final PrimaryAlignmentSelectionStrategy primaryAlignmentSelectionStrategy,
-                                   final boolean addMateCigar) {
+                                   final boolean addMateCigar,
+                                   final boolean unmapContaminantReads) {
         IOUtil.assertFileIsReadable(unmappedBamFile);
         IOUtil.assertFileIsWritable(targetBamFile);
         IOUtil.assertFileIsReadable(referenceFasta);
@@ -248,6 +256,7 @@ public abstract class AbstractAlignmentMerger {
         this.primaryAlignmentSelectionStrategy = primaryAlignmentSelectionStrategy;
 
         this.addMateCigar = addMateCigar;
+        this.unmapContaminantReads = unmapContaminantReads;
     }
 
     /** Allows the caller to override the maximum records in RAM. */
@@ -269,7 +278,6 @@ public abstract class AbstractAlignmentMerger {
     }
 
     /**
-     * /**
      * Merges the alignment data with the non-aligned records from the source BAM file.
      */
     public void mergeAlignment(final File referenceFasta) {
@@ -349,6 +357,10 @@ public abstract class AbstractAlignmentMerger {
                 final boolean clone = nextAligned.numHits() > 1 || nextAligned.hasSupplementalHits();
                 SAMRecord r1Primary = null, r2Primary = null;
 
+                // by this point there should be a single chosen primary alignment, which we will use to determine whether the read is contaminant.
+                // this must be done before the main iteration, since secondary / supplementary alignments will be affected by the primary.
+                final boolean removeDueToContaminant = this.unmapContaminantReads && isContaminant(nextAligned);
+
                 if (rec.getReadPairedFlag()) {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         // firstAligned or secondAligned may be null, if there wasn't an alignment for the end,
@@ -375,9 +387,10 @@ public abstract class AbstractAlignmentMerger {
                             r2Primary = secondToWrite;
                         }
 
-                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned);
+                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned, removeDueToContaminant);
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
+                        // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
                         if (!firstToWrite.getReadUnmappedFlag() || isPrimaryAlignment) {
                             addIfNotFiltered(sink, firstToWrite);
                             if (firstToWrite.getReadUnmappedFlag()) ++unmapped;
@@ -398,26 +411,35 @@ public abstract class AbstractAlignmentMerger {
 
                         for (final SAMRecord supp : supplementals) {
                             final SAMRecord out = clone(sourceRec);
-                            transferAlignmentInfoToFragment(out, supp);
+                            transferAlignmentInfoToFragment(out, supp, removeDueToContaminant);
                             if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary, addMateCigar);
-                            ++aligned;
-                            addIfNotFiltered(sink, out);
+                            // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
+                            if (!out.getReadUnmappedFlag()) {
+                                addIfNotFiltered(sink, out);
+                                ++aligned;
+                            } else ++unmapped;
                         }
                     }
                 } else {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
-                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i));
-                        addIfNotFiltered(sink, recToWrite);
+                        final boolean isPrimary = !nextAligned.getFragment(i).isSecondaryOrSupplementary();
+                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i), removeDueToContaminant);
+                        // Only write unmapped read if it was originally the primary.
+                        // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
+                        if (!recToWrite.getReadUnmappedFlag() || isPrimary) addIfNotFiltered(sink, recToWrite);
                         if (recToWrite.getReadUnmappedFlag()) ++unmapped;
                         else ++aligned;
                     }
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
                     for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
                         final SAMRecord recToWrite = clone(rec);
-                        transferAlignmentInfoToFragment(recToWrite, supplementalRec);
-                        addIfNotFiltered(sink, recToWrite);
-                        ++aligned;
+                        transferAlignmentInfoToFragment(recToWrite, supplementalRec, removeDueToContaminant);
+                        // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
+                        if (!recToWrite.getReadUnmappedFlag()) {
+                            addIfNotFiltered(sink, recToWrite);
+                            ++aligned;
+                        } else ++unmapped;
                     }
                 }
                 nextAligned = nextAligned();
@@ -505,18 +527,25 @@ public abstract class AbstractAlignmentMerger {
 
     /**
      * Copies alignment info from aligned to unaligned read, clips as appropriate, and sets PG ID.
+     * May also un-map the resulting read if the alignment is bad (e.g. no unclipped bases).
      *
      * @param unaligned Original SAMRecord, and object into which values are copied.
      * @param aligned   Holds alignment info that will be copied into unaligned.
+     * @param isContaminant Should this read be unmapped due to contamination?
      */
-    private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned) {
+    private void transferAlignmentInfoToFragment(final SAMRecord unaligned, final SAMRecord aligned, final boolean isContaminant) {
         setValuesFromAlignment(unaligned, aligned);
         updateCigarForTrimmedOrClippedBases(unaligned, aligned);
         if (SAMUtils.cigarMapsNoBasesToRef(unaligned.getCigar())) {
+            log.warn("Record contains no unclipped bases; making unmapped: " + aligned);
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (SAMUtils.recordMapsEntirelyBeyondEndOfReference(aligned)) {
             log.warn("Record mapped off end of reference; making unmapped: " + aligned);
             SAMUtils.makeReadUnmapped(unaligned);
+        } else if (isContaminant) {
+            log.warn("Record looks like foreign contamination; making unmapped: " + aligned);
+            SAMUtils.makeReadUnmappedWithOriginalTags(unaligned);
+            unaligned.setAttribute(SAMTag.FT.name(), "Cross-species contamination");
         }
     }
 
@@ -527,17 +556,18 @@ public abstract class AbstractAlignmentMerger {
      * @param secondUnaligned Original second of pair, into which alignment and pair info will be written.
      * @param firstAligned    Aligned first of pair, or null if no alignment.
      * @param secondAligned   Aligned second of pair, or null if no alignment.
+     * @param isContaminant Should this pair be unmapped due to contamination?
      */
-    private void transferAlignmentInfoToPairedRead(final SAMRecord firstUnaligned, final SAMRecord secondUnaligned, final SAMRecord firstAligned, final SAMRecord secondAligned) {
-        if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned);
-        if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned);
+    private void transferAlignmentInfoToPairedRead(final SAMRecord firstUnaligned, final SAMRecord secondUnaligned,
+                                                   final SAMRecord firstAligned, final SAMRecord secondAligned, final boolean isContaminant) {
+        if (firstAligned != null) transferAlignmentInfoToFragment(firstUnaligned, firstAligned, isContaminant);
+        if (secondAligned != null) transferAlignmentInfoToFragment(secondUnaligned, secondAligned, isContaminant);
         if (isClipOverlappingReads()) clipForOverlappingReads(firstUnaligned, secondUnaligned);
         SamPairUtil.setMateInfo(secondUnaligned, firstUnaligned, header, addMateCigar);
         if (!keepAlignerProperPairFlags) {
             SamPairUtil.setProperPairFlags(secondUnaligned, firstUnaligned, expectedOrientations);
         }
     }
-
 
     /**
      * Checks to see whether the ends of the reads overlap and soft clips reads
@@ -693,7 +723,6 @@ public abstract class AbstractAlignmentMerger {
             CigarUtil.softClip3PrimeEndOfRead(rec, rec.getIntegerAttribute(ReservedTagConstants.XT));
         }
     }
-
 
     protected SAMSequenceDictionary getSequenceDictionary() { return this.sequenceDictionary; }
 
