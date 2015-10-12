@@ -72,7 +72,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
     @Option(shortName = "S", doc = "The text file to write summary metrics to.")
     public File SUMMARY_OUTPUT;
 
-    @Option(shortName = "WIN", doc = "The size of the scanning windows on the reference genome that are used to bin reads.")
+    @Option(shortName = "WINDOW_SIZE", doc = "The size of the scanning windows on the reference genome that are used to bin reads.")
     public int SCAN_WINDOW_SIZE = 100;
 
     @Option(shortName = "MGF", doc = "For summary metrics, exclude GC windows that include less than this fraction of the genome.")

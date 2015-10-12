@@ -55,6 +55,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     //will hold the relevant gc information per contig
     private byte [] gc = null;
     private int referenceIndex = -1;
+    private byte [] refBases = null;
 
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize, final boolean bisulfite) {
@@ -125,13 +126,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             final SAMRecord rec = args.getRec();
             final String type;
             if (!rec.getReadUnmappedFlag()) {
-                final ReferenceSequence ref = args.getRef();
-                final byte[] refBases = ref.getBases();
-                StringUtil.toUpperCase(refBases);
-                final int refLength = refBases.length;
-                final int lastWindowStart = refLength - scanWindowSize;
-
                 if(referenceIndex != rec.getReferenceIndex() || gc == null){
+                    final ReferenceSequence ref = args.getRef();
+                    refBases = ref.getBases();
+                    StringUtil.toUpperCase(refBases);
+                    final int refLength = refBases.length;
+                    final int lastWindowStart = refLength - scanWindowSize;
                     gc = GcBiasUtils.calculateAllGcs(refBases, lastWindowStart, scanWindowSize);
                     referenceIndex=rec.getReferenceIndex();
                 }
