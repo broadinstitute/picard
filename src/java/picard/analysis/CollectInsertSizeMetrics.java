@@ -75,7 +75,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     public float MINIMUM_PCT = 0.05f;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
-    private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;

@@ -48,6 +48,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "METRIC_ACCUMULATION_LEVEL="+MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name()
@@ -112,6 +113,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+                "METRIC_ACCUMULATION_LEVEL="+MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name()
@@ -259,6 +261,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
             }
         }
     }
+    
     @Test //test all gcBias collection levels
     public void testGcBiasMetrics() throws IOException{
         runGcTest(tempSamFile);
@@ -272,6 +275,7 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + referenceFile,
+                "METRIC_ACCUMULATION_LEVEL="+MetricAccumulationLevel.ALL_READS.name(),
                 "PROGRAM=null",
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectAlignmentSummaryMetrics.name(),
                 "PROGRAM="+CollectMultipleMetrics.Program.CollectInsertSizeMetrics.name(),
