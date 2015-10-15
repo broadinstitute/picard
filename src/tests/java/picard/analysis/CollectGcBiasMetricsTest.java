@@ -203,6 +203,7 @@ public class CollectGcBiasMetricsTest extends CommandLineProgramTest {
     /////////////////////////////////////////////////////////////////////////////
     public File build (final List<SAMRecordSetBuilder> setBuilder, final File unsortedSam, final SAMFileHeader header) throws IOException {
         final File sortedSam = File.createTempFile("CollectGcBias", ".bam", TEST_DIR);
+        sortedSam.deleteOnExit();
 
         final SAMFileWriter writer = new SAMFileWriterFactory()
                 .setCreateIndex(true).makeBAMWriter(header, false, unsortedSam);
