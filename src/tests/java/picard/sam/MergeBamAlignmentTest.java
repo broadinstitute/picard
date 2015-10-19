@@ -96,6 +96,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     @Test
     public void testMergerWithSupplemental() throws Exception {
         final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
+        outputWithSupplemental.deleteOnExit();
         System.out.println(outputWithSupplemental.getAbsolutePath());
         // outputWithSupplemental.deleteOnExit();
 

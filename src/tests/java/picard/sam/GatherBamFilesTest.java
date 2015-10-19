@@ -32,6 +32,7 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
     @Test
     public void testTheGathering() throws Exception {
         final File outputFile = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        outputFile.deleteOnExit();
         final List<String> args = new ArrayList<String>();
         for (final File splitBam : SPLIT_BAMS) {
             args.add("INPUT=" + splitBam.getAbsolutePath());
@@ -49,6 +50,7 @@ public class GatherBamFilesTest extends CommandLineProgramTest {
     @Test
     public void sanityCheckTheGathering() throws Exception {
         final File outputFile = File.createTempFile("gatherBamFilesTest.samFile.", BamFileIoUtils.BAM_FILE_EXTENSION);
+        outputFile.deleteOnExit();
         final List<String> args = new ArrayList<String>();
         for (final File splitBam : SPLIT_BAMS) {
             args.add("INPUT=" + splitBam.getAbsolutePath());

@@ -81,6 +81,7 @@ public class SamFileConverterTest {
         samFormatConverter.INPUT = inputFile;
         try {
             samFormatConverter.OUTPUT = File.createTempFile("SamFileConverterTest." + inputFile.getName(), extension);
+            samFormatConverter.OUTPUT.deleteOnExit();
         } catch (final IOException e) {
             e.printStackTrace();
         }

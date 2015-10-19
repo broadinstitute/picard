@@ -76,6 +76,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
         IOUtil.deleteDirectoryTree(dataDir);
         IOUtil.deleteDirectoryTree(basecallDir);
         IOUtil.deleteDirectoryTree(intensityDir);
+        IOUtil.deleteDirectoryTree(illuminaDir);
     }
 
     public void makeFiles(final SupportedIlluminaFormat[] formats, final int lane, final List<Integer> tiles,
