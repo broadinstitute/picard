@@ -9,9 +9,9 @@ sequencing data.
 It's also possible to build a version of Picard that supports reading from
 GA4GH API, e.g. Google Genomics:
 
-* Fetch [gatk-tools-java](https://github.com/gatk-tools-java) 
+* Fetch [gatk-tools-java](https://github.com/googlegenomics/gatk-tools-java) 
  
-```git clone https://github.com/gatk-tools-java```
+```git clone https://github.com/googlegenomics/gatk-tools-java```
 
 * Build gatk-tools-java: 
 
