@@ -56,16 +56,53 @@ import java.util.Set;
  *
  * @author jgentry@broadinstitute.org
  */
+
 @CommandLineProgramProperties(
-        usage = CollectRrbsMetrics.USAGE,
-        usageShort = CollectRrbsMetrics.USAGE,
+        usage = CollectRrbsMetrics.USAGE_SUMMARY + CollectRrbsMetrics.USAGE_DETAILS,
+        usageShort = CollectRrbsMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectRrbsMetrics extends CommandLineProgram {
-    final static String USAGE = "Collects metrics about bisulfite conversion for RRBS data";
+    static final String USAGE_SUMMARY = "Collect metrics from reduced representation bisulfite sequencing (RRBS) data.  ";
+    static final String USAGE_DETAILS = "This tool collect metrics for RRBS data, based on the methylation status of cytosine (C) " +
+            "bases in both CpG and non-CpG sites across all reads of a BAM/SAM file. For a brief primer on bisulfite sequencing and " +
+            "cytosine methylation, see the " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6330'>GATK Dictionary</a>." +
+            "<br /><br />" +
+            "" +
+            "Since cytosine methylation is not exclusive for CpG \"hotspots\", the CollectRrbsMetrics tool outputs a summary table " +
+            "indicating the number of CpG and non-CpG cytosines as well as their conversion C -> T (+ strand) or G -> A (- strand) " +
+            "rates. The tool also outputs the numbers of reads having no CpG sites, and the numbers of reads discarded from the " +
+            "analysis due to inadequate size or excessive numbers of mismatches." +
+            "<br /><br />" +
+            "The tool also provides a table containing detailed information on CpG occurrence frequency, CpG conversion frequencies " +
+            "[C -> T (+ strand) or G -> A (- strand)], and the specific locations of the CpG sites in the genome. The conversion " +
+            "frequency helps determines the methylation status of a CpG site." +
+            "<br /><br />" +
+            "Finally, the tool provides graphical representation of four metrics in the form of a \".pdf\" document. These metrics " +
+            "are the bisulfite conversion rate for CpG and non-CpG cytosines, a distribution of the numbers of CpG sites as a " +
+            "function of CpG conversion rate, the distribution of CpG sites by read coverage, and the numbers of reads discarded due " +
+            "to high numbers of mismatches or inadequate read size." +
+            "" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectRrbsMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      M=rrbs_metrics \\<br />" +
+            "      R=reference_sequence.fasta" +
+            "</pre>" +
+            "<hr />" +
+            "" +
+            "Please see " +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsCpgDetailMetrics'>" +
+            "the RrbsCpgDetailMetrics documentation</a> and the " +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsSummaryMetrics'>" +
+            "the RrbsSummaryMetrics documentation</a>for detailed explanations of the output metrics." +
+            "<hr />";
 
-    // Path to R file for plotting purposes
-    private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
+// Path to R file for plotting purposes
+
+private static final String R_SCRIPT = "picard/analysis/rrbsQc.R";
 
     @Option(doc = "The BAM or SAM file containing aligned reads. Must be coordinate sorted", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

@@ -27,18 +27,30 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Concatenates one or more BAM files together as efficiently as possible. Assumes that the " +
-                "list of BAM files provided as INPUT are in the order that they should be concatenated and simply concatenates the bodies " +
-                "of the BAM files while retaining the header from the first file.  Operates via copying of the gzip blocks directly for speed " +
-                "but also supports generation of an MD5 on the output and indexing of the output BAM file. Only support BAM files, does not " +
-                "support SAM files.",
-        usageShort = "Concatenates one or more BAM files together as efficiently as possible",
+        usage = GatherBamFiles.USAGE_SUMMARY + GatherBamFiles.USAGE_DETAILS,
+        usageShort = GatherBamFiles.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class GatherBamFiles extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Concatenate one or more BAM files as efficiently as possible";
+    static final String USAGE_DETAILS = "This tool performs a rapid \"gather\" operation on BAM files after scatter" +
+            " operations where the same process has been performed on different regions of a BAM file creating many " +
+            "smaller BAM files that now need to be concatenated (reassembled) back together." +
+            "<br /><br />" +
+            "Assumes that the list of BAM files provided as INPUT are in the order that they should be concatenated and" +
+            " simply concatenates the bodies of the BAM files while retaining the header from the first file.  " +
+            "Operates via copying of the gzip blocks directly for speed but also supports generation of an MD5 on the" +
+            " output and indexing of the output BAM file. Only supports BAM files, does not support SAM files." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar GatherBamFiles \\<br /> " +
+            "     I=input1.bam \\ <br /> " +
+            "     I=input2.bam \\ <br /> " +
+            "     O=gathered_files.bam" +
+            "</pre> " +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "One or more BAM files or text files containing lists of BAM files one per line.")
+            doc = "Two or more BAM files or text files containing lists of BAM files (one per line).")
     public List<File> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The output BAM file to write.")

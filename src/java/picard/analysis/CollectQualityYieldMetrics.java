@@ -47,14 +47,44 @@ import java.io.File;
  *
  * @author Martha Borkan
  */
+
+
 @CommandLineProgramProperties(
-        usage = "Collects quality yield metrics, a set of metrics that quantify the quality and yield of sequence data from a " +
-                "SAM/BAM input file. Note that the default behaviour of this program changed as of November 6th 2015 to no longer " +
-                "include secondary and supplemental alignments in the computation.",
-        usageShort = "Collects a set of metrics that quantify the quality and yield of sequence data from the provided SAM/BAM",
+        usage = CollectQualityYieldMetrics.USAGE_SUMMARY + CollectQualityYieldMetrics.USAGE_DETAILS,
+        usageShort = CollectQualityYieldMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectQualityYieldMetrics extends SinglePassSamProgram {
+    static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  ";
+    static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
+            "The output indicates the total numbers of bases within a read group that pass a minimum base quality score threshold and " +
+            "(in the case of Illumina data) pass Illumina quality filters as described in the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>. " +
+            "<br />" +
+            "<h4>Note on base quality score options</h4>" +
+            "If the quality score of read bases has been modified in a previous data processing step such as " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=44'>GATK Base Recalibration</a> " +
+            "and an OQ tag is available, this tool can be set to use the OQ value instead of the primary quality value for the evaluation. " +
+            "<br /><br />" +
+            "Note that the default behaviour of this program changed as of November 6th 2015 to no longer include secondary and " +
+            "supplemental alignments in the computation. <br />" +
+            "<h4>Usage Example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectQualityYieldMetrics \\<br /> " +
+            "      I=input.bam \\<br /> "+
+            "      O=quality_yield_metrics.txt \\<br />" +
+            "</pre>" +
+            "Please see " +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectQualityYieldMetrics.QualityYieldMetrics'>" +
+            "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
+            "<hr />";
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
+            doc = "A SAM or BAM file to process.")
+    public File INPUT;
+
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
+            doc = "The metrics file to write with quality yield metrics.")
+    public File OUTPUT;
+
     @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
             doc = "If available in the OQ tag, use the original quality scores " +
                     "as inputs instead of the quality scores in the QUAL field.")

@@ -57,12 +57,28 @@ import java.util.*;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules. " +
-                "All records are then written to the output file with the duplicate records flagged.",
-        usageShort = "Examines aligned records in the supplied SAM or BAM file to locate duplicate molecules.",
+        usage = MarkDuplicates.USAGE_SUMMARY + MarkDuplicates.USAGE_DETAILS,
+        usageShort = MarkDuplicates.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
+    static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
+    static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where " +
+            "duplicate reads are defined as originating from the same original fragment of DNA.  The PCR duplicates are identified as " +
+            "having identical start coordinates for both reads in a mate pair. Optical duplicates are identified using the " +
+            "READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options. For more information on duplicate reads, see the " +
+            "GATK user documentation guide.<br /><br />" +
+            "The tool's main output is a new SAM or BAM file in which duplicates have been identified (in the SAM flags field). " +
+            "In addition, it also outputs a metrics file containing the numbers of READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS, " +
+            "UNPAIRED_READ DUPLICATES, READ_PAIR_DUPLICATES, and READ_PAIR_OPTICAL_DUPLICATES. <br /> " +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar MarkDuplicates \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=marked_duplicates.bam \\<br />" +
+            "      M=marked_dup_metrics.txt " +
+            "</pre>" +
+            "<hr />";
     private final Log log = Log.getInstance(MarkDuplicates.class);
 
     /**

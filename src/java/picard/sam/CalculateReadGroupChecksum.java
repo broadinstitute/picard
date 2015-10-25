@@ -14,14 +14,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 @CommandLineProgramProperties(
-        usage = "Creates a hash code based on identifying information in the RG (read group) " +
-                "records in a SAM file's header. This hash code changes any time read groups are added or removed " +
-                "comparing one file's hash code to another tells you if the read groups in the BAM files are different.",
-        usageShort = "Creates a hash code based on the read groups (RG) in the SAM or BAM header.",
+        usage = CalculateReadGroupChecksum.USAGE_SUMMARY + CalculateReadGroupChecksum.USAGE_DETAILS,
+        usageShort = CalculateReadGroupChecksum.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class CalculateReadGroupChecksum extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Creates a hash code based on the read groups (RG).  ";
+    static final String USAGE_DETAILS = "This tool creates a hash code based on identifying information in the read groups " +
+            "(RG) of a \".BAM\" or \"SAM\" file header.  Addition or removal of RGs changes the hash code, enabling the user to " +
+            "quickly determine if changes have been made to the read group information. " +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CalculateReadGroupChecksum \\<br />" +
+            "      I=input.bam" +
+            "</pre>"  +
+            "Please see the AddOrReplaceReadGroups tool documentation for information regarding the addition, subtraction, or merging of read groups."     +
+            "<hr />";
     private static final String OUTPUT_FILE_EXTENSION = ".read_group_md5";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file. ")

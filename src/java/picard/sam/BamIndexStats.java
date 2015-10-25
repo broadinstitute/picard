@@ -45,14 +45,23 @@ import java.io.File;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = "Generates BAM index statistics, including the number of aligned and unaligned SAMRecords for each reference sequence, " +
-                "and the number of SAMRecords with no coordinate." +
-                "Input BAM file must have a corresponding index file.\n",
-        usageShort = "Generates index statistics from a BAM file",
+        usage = BamIndexStats.USAGE_SUMMARY + BamIndexStats.USAGE_DETAILS,
+        usageShort = BamIndexStats.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BamIndexStats extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Generate index statistics from a BAM file";
+    static final String USAGE_DETAILS = "This tool calculates statistics from a BAM index (.bai) file, emulating the behavior of the " +
+            "\"samtools idxstats\" command. The statistics collected include counts of aligned and unaligned reads as well as all " +
+            "records with no start coordinate. The input to the tool is the BAM file name but it must be accompanied by a corresponding " +
+            "index file.<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar BamIndexStats \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=output" +
+            "</pre>"   +
+            "<hr />"       ;
     private static final Log log = Log.getInstance(BamIndexStats.class);
 
     @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME,
@@ -71,7 +80,7 @@ public class BamIndexStats extends CommandLineProgram {
     protected int doWork() {
 
         if (INPUT.getName().endsWith(BAMIndex.BAMIndexSuffix))
-               log.warn("INPUT should be BAM file not index file");
+               log.warn("INPUT should be the BAM file name, not its index file");
         IOUtil.assertFileIsReadable(INPUT);
         BAMIndexMetaData.printIndexStats(INPUT);
 

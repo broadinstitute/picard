@@ -38,12 +38,25 @@ import java.io.File;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Create BFQ files from a BAM file for use by the Maq aligner.",
-        usageShort = "Create BFQ files from a BAM file for use by the Maq aligner.",
+        usage = BamToBfq.USAGE_SUMMARY + BamToBfq.USAGE_DETAILS,
+        usageShort = BamToBfq.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BamToBfq extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Create BFQ files from a BAM file for use by the maq aligner.  ";
+    static final String USAGE_DETAILS = "BFQ is a binary version of the FASTQ file format. This tool creates bfq files from a BAM file " +
+            "for use by the maq aligner." +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar BamToBfq \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      ANALYSIS_DIR=analysis_dir \\<br />" +
+            "      OUTPUT_FILE_PREFIX=output_file_1 \\<br />" +
+            "      PAIRED_RUN=false" +
+            "</pre>" +
+            "<hr />"
+            ;
     // The following attributes define the command-line arguments
 
     @Option(doc="The BAM file to parse.", shortName=StandardOptionDefinitions.INPUT_SHORT_NAME) public File INPUT;

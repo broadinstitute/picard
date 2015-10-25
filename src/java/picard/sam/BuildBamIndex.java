@@ -50,16 +50,25 @@ import java.net.URL;
  * @author Martha Borkan
  */
 @CommandLineProgramProperties(
-        usage = "Generates a BAM index (.bai) file.",
-        usageShort = "Generates a BAM index (.bai) file",
+        usage = BuildBamIndex.USAGE_SUMMARY + BuildBamIndex.USAGE_DETAILS,
+        usageShort = BuildBamIndex.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class BuildBamIndex extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Generates a BAM index \".bai\" file.  ";
+    static final String USAGE_DETAILS = "This tool creates an index file for the input BAM that allows fast look-up of data in a " +
+            "BAM file, lke an index on a database. Note that this tool cannot be run on SAM files, and that the input BAM file must be " +
+            "sorted in coordinate order." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar BuildBamIndex \\<br />" +
+            "      I=input.bam" +
+            "</pre>" +
+            "<hr />";
     private static final Log log = Log.getInstance(BuildBamIndex.class);
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "A BAM file or URL to process. Must be sorted in coordinate order.")
+            doc = "A BAM file or GA4GH URL to process. Must be sorted in coordinate order.")
     public String INPUT;
 
     URL inputUrl = null;   // INPUT as URL
@@ -132,7 +141,7 @@ public class BuildBamIndex extends CommandLineProgram {
         }
 
         if (!bam.getFileHeader().getSortOrder().equals(SAMFileHeader.SortOrder.coordinate)) {
-            throw new SAMException("Input bam file must be sorted by coordinates");
+            throw new SAMException("Input bam file must be sorted by coordinate");
         }
 
         BAMIndexer.createIndex(bam, OUTPUT);

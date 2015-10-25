@@ -51,12 +51,27 @@ import java.util.List;
  * @author Doug Voet
  */
 @CommandLineProgramProperties(
-        usage = "Read a SAM or BAM file and report on its validity.",
-        usageShort = "Validates a SAM or BAM file",
+        usage = ValidateSamFile.USAGE_SUMMARY + ValidateSamFile.USAGE_DETAILS,
+        usageShort = ValidateSamFile.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class ValidateSamFile extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Validates a SAM or BAM file.  ";
+    static final String USAGE_DETAILS = "This tool reports on the validity of a SAM or BAM file relative to the SAM format specification " +
+            "(see http://samtools.github.io/hts-specs/SAMv1.pdf), which is useful for troubleshooting errors encountered with other tools " +
+            "that may be caused by improper formatting.<br /><br />" +
+            "By default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the " +
+            "console (stdout). It is often practical to start by running this tool with the SUMMARY mode option, which summarizes the " +
+            "\"errors\" and \"warnings\". Consequently, specific validation warnings or errors that are of lesser concern can be ignored " +
+            "using the IGNORE and/or IGNORE_WARNINGS arguments in order to focus on blocking errors. " +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar ValidateSamFile \\<br />" +
+            "     I=input.bam \\<br />" +
+            "     MODE=SUMMARY" +
+            "</pre>" +
+            "<hr />";
     public enum Mode {VERBOSE, SUMMARY}
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,

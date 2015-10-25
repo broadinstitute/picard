@@ -52,14 +52,27 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Program to generate a data table and pdf chart of " +
-                "mean base quality by cycle from a SAM or BAM file.  Works best on a single lane/run of data, but can be applied to" +
-                "merged BAMs. Uses R to generate chart output.",
-        usageShort = "Writes mean quality by cycle for a SAM or BAM file",
+        usage = MeanQualityByCycle.USAGE_SUMMARY + MeanQualityByCycle.USAGE_DETAILS,
+        usageShort = MeanQualityByCycle.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class MeanQualityByCycle extends SinglePassSamProgram {
-
+    static final String USAGE_SUMMARY = "Collect mean quality by cycle.";
+    static final String USAGE_DETAILS = "This tool generates a data table and chart of mean quality by cycle from a BAM file. It is " +
+            "intended to be used on a single lane or read group's worth of data, but can be applied to merged BAMs if needed. " +
+            "<br /><br />" +
+            "This metric gives an overall snapshot of sequencing machine performance. For most types of sequencing data, the output " +
+            "is expected to show a slight reduction in overall base quality scores towards the end of each read. Spikes in quality within " +
+            "reads are not expected and may indicate that technical problems occurred during sequencing." +
+            "<br /><br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar MeanQualityByCycle \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=mean_qual_by_cycle.txt \\<br />" +
+            "      CHART=mean_qual_by_cycle.pdf" +
+            "</pre>" +
+            "<hr />";
     @Option(shortName="CHART", doc="A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 

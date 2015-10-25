@@ -33,6 +33,7 @@ import picard.cmdline.programgroups.Metrics;
  *
  * @author Tim Fennell
  */
+
 @CommandLineProgramProperties(
         usage = "DEPRECATED: Use CollectHsMetrics instead. Calculates a set of Hybrid Selection specific metrics from an aligned SAM" +
                 "or BAM file. If a reference sequence is provided, AT/GC dropout metrics will " +

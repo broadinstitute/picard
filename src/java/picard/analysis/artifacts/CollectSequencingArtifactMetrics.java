@@ -53,13 +53,37 @@ import static htsjdk.samtools.util.CodeUtil.getOrElse;
  *
  */
 @CommandLineProgramProperties(
-        usage = CollectSequencingArtifactMetrics.USAGE,
-        usageShort = CollectSequencingArtifactMetrics.USAGE,
+        usage = CollectSequencingArtifactMetrics.USAGE_SUMMARY + CollectSequencingArtifactMetrics.USAGE_DETAILS,
+        usageShort = CollectSequencingArtifactMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
-    static final String USAGE = "Collect metrics to quantify single-base sequencing artifacts.";
-
+    static final String USAGE_SUMMARY = "Collect metrics to quantify single-base sequencing artifacts.";
+    static final String USAGE_DETAILS = "This tool examines two sources of sequencing errors resulting from hybrid selection protocols:" +
+            " <a href='https://www.broadinstitute.org/gatk/guide/article?id=6333'>bait-bias</a> and " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6332'>" +
+            "pre-adapter artifacts</a>. For a brief primer on these types of artifacts, see the corresponding GATK Dictionary entries." +
+            "<br /><br />" +
+            "This tool produces four files; summary and detail metrics files for both pre-adapter and bait-bias artifacts. The detailed " +
+            "metrics show the error rates for each type of base substitution within every possible triplet base configuration.  Error " +
+            "rates associated with these substitutions are Phred-scaled and provided as quality scores, the lower the value, the more " +
+            "likely it is that an alternate base call is due to an artifact. The summary metrics provide likelihood information on the " +
+            "\"worst-case\" errors. <br />" +
+            "" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectSequencingArtifactMetrics \\<br />" +
+            "     I=input.bam \\<br />" +
+            "     O=artifact_metrics.txt \\<br />" +
+            "     R=reference_sequence.fasta" +
+            "</pre>" +
+            "" +
+            "For additional information, please see " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.PreAdapterDetailMetrics'>the PreAdapterDetailMetrics documentation</a>, the " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.PreAdapterSummaryMetrics'>the PreAdapterSummaryMetrics documentation</a>, the " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.BaitBiasDetailMetrics'>the BaitBiasDetailMetrics documentation</a>, and the " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#SequencingArtifactMetrics.BaitBiasSummaryMetrics'>the BaitBiasSummaryMetrics documentation</a>. " +
+            "<hr />" ;
     @Option(doc = "An optional list of intervals to restrict analysis to.", optional = true)
     public File INTERVALS;
 

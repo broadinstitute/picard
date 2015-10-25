@@ -54,20 +54,31 @@ import java.util.Random;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Randomly down-sample a SAM or BAM file to retain only a subset of the reads in the file. " +
-                "All reads for a templates are kept or discarded as a unit, with the goal of retaining reads" +
-                "from PROBABILITY * input templates. While this will usually result in approximately " +
-                "PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not " +
-                "be the case.\n" +
-                "A number of different downsampling strategies are supported using the STRATEGY option:\n\n" +
-                "ConstantMemory: " + DownsamplingIteratorFactory.CONSTANT_MEMORY_DESCRPTION + "\n\n" +
-                "HighAccuracy: " + DownsamplingIteratorFactory.HIGH_ACCURACY_DESCRIPTION + "\n\n" +
-                "Chained: " + DownsamplingIteratorFactory.CHAINED_DESCRIPTION + "\n",
-        usageShort = "Down-sample a SAM or BAM file to retain a random subset of the reads",
+        usage = DownsampleSam.USAGE_SUMMARY + DownsampleSam.USAGE_DETAILS,
+        usageShort = DownsampleSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class DownsampleSam extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Downsample a SAM or BAM file.  ";
+    static final String USAGE_DETAILS = "This tool applies a random downsampling algorithm to a SAM or BAM file to retain " +
+            "only a random subset of the reads. Reads in a mate-pair are either both kept or both discarded. Reads marked as not primary " +
+            "alignments are all discarded. Each read is given a probability P of being retained so that runs performed with the exact " +
+            "same input in the same order and with the same value for RANDOM_SEED will produce the same results." +
+            "All reads for a template are kept or discarded as a unit, with the goal of retaining reads" +
+            "from PROBABILITY * input templates. While this will usually result in approximately " +
+            "PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not " +
+            "be the case.\n" +
+            "A number of different downsampling strategies are supported using the STRATEGY option:\n\n" +
+            "ConstantMemory: " + DownsamplingIteratorFactory.CONSTANT_MEMORY_DESCRPTION + "\n\n" +
+            "HighAccuracy: " + DownsamplingIteratorFactory.HIGH_ACCURACY_DESCRIPTION + "\n\n" +
+            "Chained: " + DownsamplingIteratorFactory.CHAINED_DESCRIPTION + "\n\n" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar DownsampleSam \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=downsampled.bam" +
+            "</pre>" +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM or BAM file to downsample.")
     public File INPUT;
 
@@ -77,7 +88,7 @@ public class DownsampleSam extends CommandLineProgram {
     @Option(shortName="S", doc="The downsampling strategy to use. See usage for discussion.")
     public Strategy STRATEGY = Strategy.ConstantMemory;
 
-    @Option(shortName = "R", doc = "Random seed to use if reproducibilty is desired.  " +
+    @Option(shortName = "R", doc = "Random seed to use if deterministic behavior is desired.  " +
             "Setting to null will cause multiple invocations to produce different results.")
     public Integer RANDOM_SEED = 1;
 

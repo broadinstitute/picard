@@ -65,13 +65,30 @@ import static java.lang.Math.log10;
  * Class for trying to quantify the CpCG->CpCA error rate.
  */
 @CommandLineProgramProperties(
-        usage = CollectOxoGMetrics.USAGE,
-        usageShort = CollectOxoGMetrics.USAGE,
+        usage = CollectOxoGMetrics.USAGE_SUMMARY + CollectOxoGMetrics.USAGE_DETAILS,
+        usageShort = CollectOxoGMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectOxoGMetrics extends CommandLineProgram {
-    static final String USAGE = "Collects metrics quantifying the CpCG -> CpCA error rate from the provided SAM/BAM";
-
+    static final String USAGE_SUMMARY = "Collect metrics to assess oxidative artifacts.";
+    static final String USAGE_DETAILS = "This tool collects metrics quantifying the error rate resulting from oxidative artifacts. " +
+            "For a brief primer on oxidative artifacts, see " +
+            "<a href='http://gatkforums.broadinstitute.org/discussion/6328/oxog-oxidative-artifacts'>" +
+            "the GATK Dictionary</a>." +
+            "<br /><br />" +
+            "This tool calculates the Phred-scaled probability that an alternate base call results from an oxidation artifact. This " +
+            "probability score is based on base context, sequencing read orientation, and the characteristic low allelic frequency " +
+            "(doi:10.1093/nar/gks1443). Lower probability values implicate artifacts resulting from 8-oxoguanine, while higher " +
+            "probability values suggest that an alternate base call is due to either some other type of artifact or is a real variant." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectOxoGMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=oxoG_metrics.txt \\<br />" +
+            "      R=reference_sequence.fasta" +
+            "</pre>" +
+            "" +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "Input BAM file for analysis.")
     public File INPUT;

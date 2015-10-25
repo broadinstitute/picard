@@ -32,14 +32,38 @@ import java.util.Set;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = " General tool for manipulating interval lists, " +
-                "including sorting, merging, padding, uniqueifying, and other set-theoretic operations. Default operation if given one or more inputs is to " +
-                "merge and sort them.  Other options are controlled by arguments.",
-        usageShort = "General tool for manipulating interval lists",
+        usage = IntervalListTools.USAGE_SUMMARY + IntervalListTools.USAGE_DETAILS,
+        usageShort = IntervalListTools.USAGE_SUMMARY,
         programGroup = Intervals.class
 )
 public class IntervalListTools extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Manipulates interval lists.  ";
+    static final String USAGE_DETAILS = "This tool offers multiple interval list file manipulation capabilities include sorting, " +
+            "merging, subtracting, padding, customizing, and other set-theoretic operations. If given one or more inputs, the default " +
+            "operation is to merge and sort them.  Other options e.g. interval subtraction are controlled by the arguments. The tool " +
+            "lists intervals with respect to a reference sequence." +
+            "<br /><br />" +
+            "Both interval_list and VCF files are accepted as input. The interval_list file format is relatively simple" +
+            " and reflects the SAM alignment format to a degree.  A SAM style header must be present in the file that " +
+            "lists the sequence records against which the intervals are described.  After the header, the file then" +
+            " contains records, one per line in text format with the following" +
+            " values tab-separated: " +
+            "<pre>" +
+            "     -Sequence name (SN) <br />" +
+            "     -Start position (1-based)** <br />" +
+            "     -End position (1-based, end inclusive) <br />" +
+            "     -Strand (either + or -) <br />" +
+            "     -Interval name (ideally unique names for intervals)" +
+            "</pre>" +
+            "The coordinate system of interval_list files is such that the first base or position in a sequence is position \"1\"." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar IntervalListTools \\<br />" +
+            "      I=input.interval_list \\<br />" +
+            "      SI=input_2.interval_list \\<br />" +
+            "      O=new.interval_list" +
+            "</pre>" +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
             doc = "One or more interval lists. If multiple interval lists are provided the output is the" +
                     "result of merging the inputs. Supported formats are interval_list and VCF.", minElements = 1)

@@ -30,17 +30,33 @@ import java.util.Arrays;
  * @author mdepristo
  */
 @CommandLineProgramProperties(
-        usage = "Replaces all read groups in the INPUT file with a single new read group and assigns " +
-                "all reads to this read group in the OUTPUT BAM",
-        usageShort = "Replaces read groups in a BAM or SAM file with a single new read group",
+        usage = AddOrReplaceReadGroups.USAGE_SUMMARY + AddOrReplaceReadGroups.USAGE_DETAILS,
+        usageShort = AddOrReplaceReadGroups.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class AddOrReplaceReadGroups extends CommandLineProgram {
-
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (bam or sam or a GA4GH url).")
+    static final String USAGE_SUMMARY = "Replace read groups in a BAM file.";
+    static final String USAGE_DETAILS = "This tool enables the user to replace all read groups in the INPUT file with a single new read " +
+            "group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />" +
+            "For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>" +
+            "GATK Dictionary entry.</a> <br /><br /> " +
+            "This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation)." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar AddOrReplaceReadGroups \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=output.bam \\<br />" +
+            "      RGID=4 \\<br />" +
+            "      RGLB=lib1 \\<br />" +
+            "      RGPL=illumina \\<br />" +
+            "      RGPU=unit1 \\<br />" +
+            "      RGSM=20" +
+            "</pre>" +
+            "<hr />" ;
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input file (BAM or SAM or a GA4GH url).")
     public String INPUT = null;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (bam or sam).")
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file (BAM or SAM).")
     public File OUTPUT = null;
 
     @Option(shortName = StandardOptionDefinitions.SORT_ORDER_SHORT_NAME, optional = true,
@@ -50,7 +66,7 @@ public class AddOrReplaceReadGroups extends CommandLineProgram {
     @Option(shortName = "ID", doc = "Read Group ID")
     public String RGID = "1";
 
-    @Option(shortName = "LB", doc = "Read Group Library")
+    @Option(shortName = "LB", doc = "Read Group library")
     public String RGLB;
 
     @Option(shortName = "PL", doc = "Read Group platform (e.g. illumina, solid)")
