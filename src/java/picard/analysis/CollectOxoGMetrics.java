@@ -19,6 +19,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SamLocusIterator;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -202,6 +203,11 @@ public class CollectOxoGMetrics extends CommandLineProgram {
 
         final Set<String> samples = new HashSet<String>();
         final Set<String> libraries = new HashSet<String>();
+        
+        if (in.getFileHeader().getReadGroups().isEmpty()) {
+        	throw new PicardException("This analysis requires a read group entry in the alignment file header");
+        }
+        
         for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
             samples.add(getOrElse(rec.getSample(), UNKNOWN_SAMPLE));
             libraries.add(getOrElse(rec.getLibrary(), UNKNOWN_LIBRARY));
