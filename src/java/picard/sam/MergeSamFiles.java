@@ -32,10 +32,15 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SamFileHeaderMerger;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -44,7 +49,9 @@ import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Reads a SAM or BAM file and combines the output to one file
@@ -83,6 +90,13 @@ public class MergeSamFiles extends CommandLineProgram {
     @Option(doc = "Comment(s) to include in the merged output file's header.", optional = true, shortName = "CO")
     public List<String> COMMENT = new ArrayList<String>();
 
+    @Option(shortName = "RGN", doc = "An interval list file that contains the locations of the positions to merge. "+
+            "Assume bam are sorted and indexed. "+
+            "The resulting file will contain alignments that may overlap with genomic regions outside the requested region. "+
+            "Unmapped reads are discarded.",
+            optional = true)
+    public File INTERVALS = null;
+
     private static final int PROGRESS_INTERVAL = 1000000;
 
     /** Required main method implementation. */
@@ -94,7 +108,12 @@ public class MergeSamFiles extends CommandLineProgram {
     @Override
     protected int doWork() {
         boolean matchedSortOrders = true;
-
+        
+        // read interval list if it is defined
+        final List<Interval> intervalList = (INTERVALS == null ? null : IntervalList.fromFile(INTERVALS).uniqued().getIntervals() );
+        // map reader->iterator used if INTERVALS is defined
+        final Map<SamReader, CloseableIterator<SAMRecord> > samReaderToIterator = new HashMap<SamReader, CloseableIterator<SAMRecord> >(INPUT.size());
+        
         // Open the files for reading and writing
         final List<SamReader> readers = new ArrayList<SamReader>();
         final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>();
@@ -104,6 +123,12 @@ public class MergeSamFiles extends CommandLineProgram {
             for (final File inFile : INPUT) {
                 IOUtil.assertFileIsReadable(inFile);
                 final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(inFile);
+                 if ( INTERVALS != null ) {
+                     if( ! in.hasIndex() ) throw new PicardException("Merging with interval but Bam file is not indexed "+ inFile);
+                     final CloseableIterator<SAMRecord> samIterator = new SamRecordIntervalIteratorFactory().makeSamRecordIntervalIterator(in, intervalList, true);
+                     samReaderToIterator.put(in, samIterator);
+                 }
+
                 readers.add(in);
                 headers.add(in.getFileHeader());
 
@@ -127,7 +152,7 @@ public class MergeSamFiles extends CommandLineProgram {
         final SAMFileHeader.SortOrder headerMergerSortOrder;
         final boolean mergingSamRecordIteratorAssumeSorted;
 
-        if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED) {
+        if (matchedSortOrders || SORT_ORDER == SAMFileHeader.SortOrder.unsorted || ASSUME_SORTED || INTERVALS != null ) {
             log.info("Input files are in same order as output so sorting to temp directory is not needed.");
             headerMergerSortOrder = SORT_ORDER;
             mergingSamRecordIteratorAssumeSorted = ASSUME_SORTED;
@@ -139,7 +164,16 @@ public class MergeSamFiles extends CommandLineProgram {
             presorted = false;
         }
         final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headerMergerSortOrder, headers, MERGE_SEQUENCE_DICTIONARIES);
-        final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, mergingSamRecordIteratorAssumeSorted);
+        final MergingSamRecordIterator iterator;
+        // no interval defined, get an iterator for the whole bam
+        if( intervalList == null) {
+            iterator = new MergingSamRecordIterator(headerMerger, readers, mergingSamRecordIteratorAssumeSorted);
+        }
+        else {
+            // show warning related to https://github.com/broadinstitute/picard/pull/314/files
+            log.info("Warning: merged bams from different interval lists may contain the same read in both files");
+            iterator = new MergingSamRecordIterator(headerMerger, samReaderToIterator, true);
+        }
         final SAMFileHeader header = headerMerger.getMergedHeader();
         for (final String comment : COMMENT) {
             header.addComment(comment);
@@ -160,6 +194,7 @@ public class MergeSamFiles extends CommandLineProgram {
         }
 
         log.info("Finished reading inputs.");
+        for(final CloseableIterator<SAMRecord> iter : samReaderToIterator.values())  CloserUtil.close(iter);
         CloserUtil.close(readers);
         out.close();
         return 0;
