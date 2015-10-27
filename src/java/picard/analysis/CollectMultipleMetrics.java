@@ -1,7 +1,9 @@
 package picard.analysis;
 
 import htsjdk.samtools.util.CollectionUtil;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
+import picard.analysis.artifacts.CollectSequencingArtifactMetrics;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
@@ -9,9 +11,7 @@ import picard.cmdline.programgroups.Metrics;
 import picard.cmdline.StandardOptionDefinitions;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Class that is designed to instantiate and execute multiple metrics programs that extend
@@ -23,7 +23,7 @@ import java.util.List;
 @CommandLineProgramProperties(
         usage = "Takes an input BAM and reference sequence and runs one or more Picard " +
                 "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
-                "default options and fixed output extesions, but this may become more flexible in future.",
+                "default options and fixed output extensions, but this may become more flexible in future.",
         usageShort = "A \"meta-metrics\" calculating program that produces multiple metrics for the provided SAM/BAM",
         programGroup = Metrics.class
 )
@@ -34,25 +34,31 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * Includes a method for determining whether or not a Program explicitly needs a reference sequence (i.e. cannot be null)
      */
     public static interface ProgramInterface {
-        SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference);
+        SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference,
+            final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals);
         public boolean needsReferenceSequence();
+        public boolean supportsMetricAccumulationLevel();
     }
-    
+
     public static enum Program implements ProgramInterface {
         CollectAlignmentSummaryMetrics {
             @Override
             public boolean needsReferenceSequence() {
                 return false;
             }
-
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return true;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
                 program.OUTPUT = new File(outbase + ".alignment_summary_metrics");
 
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
+                program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.INPUT = input;
                 program.REFERENCE_SEQUENCE = reference;
 
@@ -64,15 +70,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             public boolean needsReferenceSequence() {
                 return false;
             }
-
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return true;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
                 program.OUTPUT = new File(outbase + ".insert_size_metrics");
                 program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
+                program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.INPUT = input;
                 program.REFERENCE_SEQUENCE = reference;
 
@@ -85,7 +95,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return false;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
                 program.OUTPUT = new File(outbase + ".quality_distribution_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".quality_distribution.pdf");
@@ -104,7 +118,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return false;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
                 program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
@@ -123,7 +141,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return false;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
                 program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
@@ -142,15 +164,19 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return true;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
                 program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics");
                 program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
 
                 program.INPUT = input;
-                program.METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS,
-                        MetricAccumulationLevel.LIBRARY);
+                // previously MetricAccumulationLevel.ALL_READS, MetricAccumulationLevel.LIBRARY
+                program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.SCAN_WINDOW_SIZE = 100;
                 program.MINIMUM_GENOME_FRACTION = 1.0E-5;
                 program.IS_BISULFITE_SEQUENCED = false;
@@ -168,16 +194,42 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference) {
+            public boolean supportsMetricAccumulationLevel() {
+                return true;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
                 program.OUTPUT       = new File(outbase + ".rna_metrics");
                 program.CHART_OUTPUT = new File(outbase + ".rna_coverage.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
+                program.METRIC_ACCUMULATION_LEVEL = metricAccumulationLevel;
                 program.INPUT = input;
                 program.REFERENCE_SEQUENCE = reference;
                 
+                return program;
+            }
+        },
+        CollectSequencingArtifactMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return true;
+            }
+            @Override
+            public boolean supportsMetricAccumulationLevel() { return false; }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+                final CollectSequencingArtifactMetrics program = new CollectSequencingArtifactMetrics();
+                program.OUTPUT = new File(outbase);
+                program.DB_SNP = dbSnp;
+                program.INTERVALS = intervals;
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
                 return program;
             }
         }
@@ -197,9 +249,21 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Base name of output files.")
     public String OUTPUT;
 
+    // create the default accumulation level as a variable. We'll use this to init the command-line arg and for validation later.
+    private final Set<MetricAccumulationLevel> accumLevelDefault = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
+    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = new HashSet<MetricAccumulationLevel>(accumLevelDefault);
+
     @Option(doc = "List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
             Program.CollectInsertSizeMetrics, Program.MeanQualityByCycle, Program.QualityScoreDistribution);
+
+    @Option(doc = "An optional list of intervals to restrict analysis to.", optional = true)
+    public File INTERVALS;
+
+    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.", optional = true)
+    public File DB_SNP;
 
     /**
      * Contents of PROGRAM list is transferred to this list during command-line validation, so that an outside
@@ -207,7 +271,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * setProgramsToRun().
      */
     private List<ProgramInterface> programsToRun;
-    
+
+    private static final Log log = Log.getInstance(CollectMultipleMetrics.class);
+
     // Stock main method
     public static void main(final String[] args) {
         new CollectMultipleMetrics().instanceMainWithExit(args);
@@ -219,6 +285,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             return new String[]{"No programs specified with PROGRAM"};
         }
         programsToRun = new ArrayList<ProgramInterface>(PROGRAM);
+
         return super.customCommandLineValidation();
     }
 
@@ -241,7 +308,11 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             if (program.needsReferenceSequence() && REFERENCE_SEQUENCE==null) {
                 throw new PicardException("The " + program.toString() + " program needs a Reference Sequence, please set REFERENCE_SEQUENCE in the command line");
             }
-            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE);
+            if (!accumLevelDefault.equals(METRIC_ACCUMULATION_LEVEL) && !program.supportsMetricAccumulationLevel()) {
+                log.warn("The " + program.toString() + " program does not support a metric accumulation level, but METRIC_ACCUMULATION_LEVEL" +
+                        " was overridden in the command line. " + program.toString() + " will be run against the entire input.");
+            }
+            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway
