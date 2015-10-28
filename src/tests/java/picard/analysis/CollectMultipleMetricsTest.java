@@ -292,21 +292,6 @@ public class CollectMultipleMetricsTest extends CommandLineProgramTest {
                 Assert.assertEquals(metrics.ALIGNED_READS, 600);
                 Assert.assertEquals(metrics.AT_DROPOUT, 7.234062);
                 Assert.assertEquals(metrics.GC_DROPOUT, 4.086217);
-            } else if (metrics.READ_GROUP != null && metrics.READ_GROUP.equals("TestReadGroup1")) { //Library 1
-                Assert.assertEquals(metrics.TOTAL_CLUSTERS, 100);
-                Assert.assertEquals(metrics.ALIGNED_READS, 200);
-                Assert.assertEquals(metrics.AT_DROPOUT, 9.20674);
-                Assert.assertEquals(metrics.GC_DROPOUT, 3.834244);
-            } else if (metrics.READ_GROUP != null && metrics.READ_GROUP.equals("TestReadGroup2")) {//Library 2
-                Assert.assertEquals(metrics.TOTAL_CLUSTERS, 100);
-                Assert.assertEquals(metrics.ALIGNED_READS, 200);
-                Assert.assertEquals(metrics.AT_DROPOUT, 10.144505);
-                Assert.assertEquals(metrics.GC_DROPOUT, 4.08986);
-            } else if (metrics.READ_GROUP != null && metrics.READ_GROUP.equals("TestReadGroup3")) {//Library 3
-                Assert.assertEquals(metrics.TOTAL_CLUSTERS, 100);
-                Assert.assertEquals(metrics.ALIGNED_READS, 200);
-                Assert.assertEquals(metrics.AT_DROPOUT, 9.229205);
-                Assert.assertEquals(metrics.GC_DROPOUT, 4.977838);
             } else {
                 Assert.fail("Unexpected metric: " + metrics);
             }
