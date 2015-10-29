@@ -153,6 +153,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true)
     public boolean INCLUDE_NON_PF_READS = true;
 
+    @Option(doc="Whether to ignore reads whose barcodes are not found in MULTIPLEX_PARAMS.  Useful when outputting " +
+            "fastqs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
+    public boolean IGNORE_UNEXPECTED_BARCODES = false;
+
     @Option(doc="The read name header formatting to emit.  Casava1.8 formatting has additional information beyond Illumina, including: " +
             "the passing-filter flag value for the read, the flowcell name, and the sequencer name.", optional = false)
     public ReadNameFormat READ_NAME_FORMAT = ReadNameFormat.CASAVA_1_8;
@@ -239,7 +243,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
                 readStructure.barcodes.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
-                this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS);
+                this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
 
