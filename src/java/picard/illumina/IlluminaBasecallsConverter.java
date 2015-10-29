@@ -133,6 +133,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
     private final TimerTask gcTimerTask;
     private List<Integer> tiles;
     private final boolean includeNonPfReads;
+    private final boolean ignoreUnexpectedBarcodes;
+
     private final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype;
     // Annoying that we need this.
     private final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass;
@@ -155,6 +157,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 	 * @param codecPrototype         For spilling output records to disk.
 	 * @param outputRecordClass      Inconveniently needed to create SortingCollections.
 	 * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
+     * @param ignoreUnexpectedBarcodes  If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     *                                  otherwise will throw an exception
 	 */
 	public IlluminaBasecallsConverter(final File basecallsDir, final int lane, final ReadStructure readStructure,
 	                                  final Map<String, ? extends ConvertedClusterDataWriter<CLUSTER_OUTPUT_RECORD>> barcodeRecordWriterMap,
@@ -168,14 +172,15 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 	                                  final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
 	                                  final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
 	                                  final boolean applyEamssFiltering,
-	                                  final boolean includeNonPfReads
+	                                  final boolean includeNonPfReads,
+                                      final boolean ignoreUnexpectedBarcodes
 	) {
 		this(basecallsDir, null, lane, readStructure,
 				barcodeRecordWriterMap, demultiplex, maxReadsInRamPerTile,
 				tmpDirs, numProcessors, forceGc, firstTile, tileLimit,
 				outputRecordComparator, codecPrototype, outputRecordClass,
 				bclQualityEvaluationStrategy, applyEamssFiltering,
-				includeNonPfReads);
+				includeNonPfReads, ignoreUnexpectedBarcodes);
 	}
 
 	/**
@@ -197,6 +202,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
      * @param codecPrototype         For spilling output records to disk.
      * @param outputRecordClass      Inconveniently needed to create SortingCollections.
      * @param includeNonPfReads      If true, will include ALL reads (including those which do not have PF set)
+     * @param ignoreUnexpectedBarcodes  If true, will ignore reads whose called barcode is not found in barcodeRecordWriterMap,
+     *                                  otherwise will throw an exception
      */
     public IlluminaBasecallsConverter(final File basecallsDir, File barcodesDir, final int lane,
                                       final ReadStructure readStructure,
@@ -210,7 +217,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
                                       final SortingCollection.Codec<CLUSTER_OUTPUT_RECORD> codecPrototype,
                                       final Class<CLUSTER_OUTPUT_RECORD> outputRecordClass,
                                       final BclQualityEvaluationStrategy bclQualityEvaluationStrategy,
-                                      final boolean applyEamssFiltering, final boolean includeNonPfReads
+                                      final boolean applyEamssFiltering, final boolean includeNonPfReads,
+                                      final boolean ignoreUnexpectedBarcodes
     ) {
         this.barcodeRecordWriterMap = barcodeRecordWriterMap;
         this.demultiplex = demultiplex;
@@ -221,6 +229,7 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
         this.outputRecordClass = outputRecordClass;
         this.bclQualityEvaluationStrategy = bclQualityEvaluationStrategy;
         this.includeNonPfReads = includeNonPfReads;
+        this.ignoreUnexpectedBarcodes = ignoreUnexpectedBarcodes;
 
         // If we're forcing garbage collection, collect every 5 minutes in a daemon thread.
         if (forceGc) {
@@ -426,8 +435,15 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             // Grab the existing collection, or initialize it if it doesn't yet exist
             SortingCollection<CLUSTER_OUTPUT_RECORD> recordCollection = this.barcodeToRecordCollection.get(barcode);
             if (recordCollection == null) {
-                if (!barcodeRecordWriterMap.containsKey(barcode))
+                // TODO: The implementation here for supporting ignoreUnexpectedBarcodes is not efficient,
+                // but the alternative is an extensive rewrite.  We are living with the inefficiency for
+                // this special case for the time being.
+                if (!barcodeRecordWriterMap.containsKey(barcode)) {
+                    if (ignoreUnexpectedBarcodes) {
+                        return;
+                    }
                     throw new PicardException(String.format("Read records with barcode %s, but this barcode was not expected.  (Is it referenced in the parameters file?)", barcode));
+                }
                 recordCollection = this.newSortingCollection();
                 this.barcodeToRecordCollection.put(barcode, recordCollection);
                 this.barcodeToProcessingState.put(barcode, null);
