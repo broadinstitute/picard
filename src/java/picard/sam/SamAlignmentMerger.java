@@ -46,6 +46,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
     private final int maxGaps;
     private final int minUnclippedBases;
     private boolean forceSort = false;
+    private final OverclippedReadFilter contaminationFilter;
 
     /**
      * Constructor
@@ -131,6 +132,7 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
         this.read2AlignedSamFile = read2AlignedSamFile;
         this.maxGaps = maxGaps;
         this.minUnclippedBases = minUnclippedBases;
+        this.contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
 
         log.info("Processing SAM file(s): " + alignedSamFile != null ? alignedSamFile : read1AlignedSamFile + "," + read2AlignedSamFile);
     }
@@ -349,7 +351,6 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      * 3. for pairs, at least one end of primary alignment meets above criteria
      */
     protected boolean isContaminant(final HitsForInsert hits) {
-        final OverclippedReadFilter contaminationFilter = new OverclippedReadFilter(minUnclippedBases, false);
         boolean isContaminant = false;
         if (hits.numHits() > 0) {
             final int primaryIndex = hits.getIndexOfEarliestPrimary();

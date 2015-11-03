@@ -359,7 +359,7 @@ public abstract class AbstractAlignmentMerger {
 
                 // by this point there should be a single chosen primary alignment, which we will use to determine whether the read is contaminant.
                 // this must be done before the main iteration, since secondary / supplementary alignments will be affected by the primary.
-                final boolean removeDueToContaminant = this.unmapContaminantReads && isContaminant(nextAligned);
+                final boolean unmapDueToContaminant = this.unmapContaminantReads && isContaminant(nextAligned);
 
                 if (rec.getReadPairedFlag()) {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
@@ -387,7 +387,7 @@ public abstract class AbstractAlignmentMerger {
                             r2Primary = secondToWrite;
                         }
 
-                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned, removeDueToContaminant);
+                        transferAlignmentInfoToPairedRead(firstToWrite, secondToWrite, firstAligned, secondAligned, unmapDueToContaminant);
 
                         // Only write unmapped read when it has the mate info from the primary alignment.
                         // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
@@ -411,7 +411,7 @@ public abstract class AbstractAlignmentMerger {
 
                         for (final SAMRecord supp : supplementals) {
                             final SAMRecord out = clone(sourceRec);
-                            transferAlignmentInfoToFragment(out, supp, removeDueToContaminant);
+                            transferAlignmentInfoToFragment(out, supp, unmapDueToContaminant);
                             if (matePrimary != null) SamPairUtil.setMateInformationOnSupplementalAlignment(out, matePrimary, addMateCigar);
                             // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
                             if (!out.getReadUnmappedFlag()) {
@@ -424,7 +424,7 @@ public abstract class AbstractAlignmentMerger {
                     for (int i = 0; i < nextAligned.numHits(); ++i) {
                         final SAMRecord recToWrite = clone ? clone(rec) : rec;
                         final boolean isPrimary = !nextAligned.getFragment(i).isSecondaryOrSupplementary();
-                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i), removeDueToContaminant);
+                        transferAlignmentInfoToFragment(recToWrite, nextAligned.getFragment(i), unmapDueToContaminant);
                         // Only write unmapped read if it was originally the primary.
                         // this avoids the scenario of having multiple unmapped reads with the same name & pair flags
                         if (!recToWrite.getReadUnmappedFlag() || isPrimary) addIfNotFiltered(sink, recToWrite);
@@ -434,7 +434,7 @@ public abstract class AbstractAlignmentMerger {
                     // Take all of the supplemental reads which had been stashed and add them (as appropriate) to sorted
                     for (final SAMRecord supplementalRec : nextAligned.getSupplementalFirstOfPairOrFragment()) {
                         final SAMRecord recToWrite = clone(rec);
-                        transferAlignmentInfoToFragment(recToWrite, supplementalRec, removeDueToContaminant);
+                        transferAlignmentInfoToFragment(recToWrite, supplementalRec, unmapDueToContaminant);
                         // don't write supplementary reads that were unmapped by transferAlignmentInfoToFragment
                         if (!recToWrite.getReadUnmappedFlag()) {
                             addIfNotFiltered(sink, recToWrite);
