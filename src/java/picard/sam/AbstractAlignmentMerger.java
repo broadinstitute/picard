@@ -544,7 +544,11 @@ public abstract class AbstractAlignmentMerger {
             SAMUtils.makeReadUnmapped(unaligned);
         } else if (isContaminant) {
             log.warn("Record looks like foreign contamination; making unmapped: " + aligned);
-            SAMUtils.makeReadUnmappedWithOriginalTags(unaligned);
+            // NB: for reads that look like contamination, just set unmapped flag and zero MQ but keep other flags as-is.
+            // this maintains the sort order so that downstream analyses can use them for calculating evidence
+            // of contamination vs other causes (e.g. structural variants)
+            unaligned.setReadUnmappedFlag(true);
+            unaligned.setMappingQuality(SAMRecord.NO_MAPPING_QUALITY);
             unaligned.setAttribute(SAMTag.FT.name(), "Cross-species contamination");
         }
     }

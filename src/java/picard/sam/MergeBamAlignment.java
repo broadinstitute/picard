@@ -192,7 +192,7 @@ public class MergeBamAlignment extends CommandLineProgram {
     public boolean UNMAP_CONTAMINANT_READS = false;
 
     @Option(doc = "If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.")
-    public int MIN_UNCLIPPED_BASES = 30;
+    public int MIN_UNCLIPPED_BASES = 32;
 
     private static final Log log = Log.getInstance(MergeBamAlignment.class);
 

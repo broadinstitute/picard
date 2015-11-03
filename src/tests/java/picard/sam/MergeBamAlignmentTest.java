@@ -98,8 +98,6 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
     public void testMergerWithSupplemental() throws Exception {
         final File outputWithSupplemental = File.createTempFile("mergeWithSupplementalTest", ".sam");
         outputWithSupplemental.deleteOnExit();
-        System.out.println(outputWithSupplemental.getAbsolutePath());
-        // outputWithSupplemental.deleteOnExit();
 
         doMergeAlignment(unmappedBam,
                 Collections.singletonList(supplementalReadAlignedBam),
@@ -1685,8 +1683,7 @@ public class MergeBamAlignmentTest extends CommandLineProgramTest {
         final File expectedSam = new File(TEST_DATA_DIR, "contam.expected.sam");
         final File refFasta = new File(TEST_DATA_DIR, "cliptest.fasta");
         final File mergedSam = File.createTempFile("merged", ".sam");
-        //mergedSam.deleteOnExit();
-        System.out.println(mergedSam);
+        mergedSam.deleteOnExit();
 
         doMergeAlignment(unmappedSam, Collections.singletonList(alignedSam),
                 null, null, null, null,
