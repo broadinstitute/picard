@@ -26,7 +26,9 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.RExecutor;
 
 import java.io.File;
 import java.io.FileReader;
@@ -222,5 +224,21 @@ public class CollectInsertSizeMetricsTest extends CommandLineProgramTest {
         output.read(new FileReader(outfile));
 
         Assert.assertEquals(output.getAllHistograms().size(), 5);
+    }
+
+    @Test
+    public void testMultipleOrientationsForHistogram() throws IOException {
+        final File output = new File("testdata/picard/analysis/directed/CollectInsertSizeMetrics", "multiple_orientation.sam.insert_size_metrics");
+        final File pdf = File.createTempFile("test", ".pdf");
+        pdf.deleteOnExit();
+
+        final int rResult;
+        rResult = RExecutor.executeFromClasspath(
+                CollectInsertSizeMetrics.Histogram_R_SCRIPT,
+                output.getAbsolutePath(),
+                pdf.getAbsolutePath(),
+                "Flags of Chad and Romania");
+
+        Assert.assertEquals(rResult, 0);
     }
 }

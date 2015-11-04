@@ -33,11 +33,10 @@ headers <- sapply(sub(".fr_count","",names(histogram),fixed=TRUE), "[[" ,1)
 headers <- sapply(sub(".rf_count","",headers,fixed=TRUE), "[[" ,1)
 headers <- sapply(sub(".tandem_count","",headers,fixed=TRUE), "[[" ,1)
 
-## Duplicated header names cause this to barf. KT & Yossi report that this is going to be extremely difficult to
-## resolve and it's unlikely that anyone cares anyways. Trap this situation and avoid the PDF so it won't cause
-## the workflow to fail
+## Duplicate header names could cause this to barf.  But it really shouldn't when we have "All_reads.fr_count" and 
+## "All_reads.rf_count" for example.  Not sure why this would fail, but I care.
 if (any(duplicated(headers))) {
-  print(paste("Not creating insert size PDF as there are duplicated header names:", headers[which(duplicated(headers))]))
+  levels = unique(headers[2:length(headers)]);
 } else {
   levels <- c()
   for (i in 2:length(headers)) {
@@ -45,54 +44,53 @@ if (any(duplicated(headers))) {
       levels[length(levels)+1] <- headers[i]
     }
   }
-
-  pdf(pdfFile)
-
-  for (i in 1:length(levels)) {
-    ## Reconstitutes the histogram column headers for this level
-    fr <- paste(levels[i], "fr_count", sep=".")
-    rf <- paste(levels[i], "rf_count", sep=".")
-    tandem <- paste(levels[i], "tandem_count", sep=".")
-
-    frrange = ifelse(fr %in% names(histogram), max(histogram[fr]), 0)
-    rfrange = ifelse(rf %in% names(histogram), max(histogram[rf]), 0)
-    tandemrange = ifelse(tandem %in% names(histogram), max(histogram[tandem]), 0)
-
-    yrange <- max(frrange, rfrange, tandemrange)
-    xrange <- ifelse(histoWidth > 0, histoWidth, max(histogram$insert_size))
-
-    plot(x=NULL, y=NULL,
-         type="n",
-         main=paste("Insert Size Histogram for", levels[i], "\nin file", bamName),
-         xlab="Insert Size",
-         ylab="Count",
-         xlim=range(0, xrange),
-         ylim=range(0, yrange))
-
-    colors <- c()
-    labels <- c()
-
-    if (fr %in% names(histogram) ) {
-      lines(histogram$insert_size, as.matrix(histogram[fr]),  type="h", col="red")
-      colors <- c(colors, "red")
-      labels <- c(labels, "FR")
-    }
-    if (rf %in% names(histogram)) {
-      lines(histogram$insert_size, as.matrix(histogram[rf]),  type="h", col="blue")
-      colors <- c(colors, "blue")
-      labels <- c(labels, "RF")
-    }
-
-    if (tandem %in% names(histogram)) {
-      lines(histogram$insert_size, as.matrix(histogram[tandem]),  type="h", col="orange")
-      colors <- c(colors, "orange")
-      labels <- c(labels, "TANDEM")
-    }
-
-    ## Create the legend
-    legend("topright", labels, fill=colors, col=colors, cex=0.7)
-  }
-
-  dev.off()
 }
 
+pdf(pdfFile)
+
+for (i in 1:length(levels)) {
+  ## Reconstitutes the histogram column headers for this level
+  fr <- paste(levels[i], "fr_count", sep=".")
+  rf <- paste(levels[i], "rf_count", sep=".")
+  tandem <- paste(levels[i], "tandem_count", sep=".")
+
+  frrange = ifelse(fr %in% names(histogram), max(histogram[fr]), 0)
+  rfrange = ifelse(rf %in% names(histogram), max(histogram[rf]), 0)
+  tandemrange = ifelse(tandem %in% names(histogram), max(histogram[tandem]), 0)
+
+  yrange <- max(frrange, rfrange, tandemrange)
+  xrange <- ifelse(histoWidth > 0, histoWidth, max(histogram$insert_size))
+
+  plot(x=NULL, y=NULL,
+       type="n",
+       main=paste("Insert Size Histogram for", levels[i], "\nin file", bamName),
+       xlab="Insert Size",
+       ylab="Count",
+       xlim=range(0, xrange),
+       ylim=range(0, yrange))
+
+  colors <- c()
+  labels <- c()
+
+  if (fr %in% names(histogram) ) {
+    lines(histogram$insert_size, as.matrix(histogram[fr]),  type="h", col="red")
+    colors <- c(colors, "red")
+    labels <- c(labels, "FR")
+  }
+  if (rf %in% names(histogram)) {
+    lines(histogram$insert_size, as.matrix(histogram[rf]),  type="h", col="blue")
+    colors <- c(colors, "blue")
+    labels <- c(labels, "RF")
+  }
+
+  if (tandem %in% names(histogram)) {
+    lines(histogram$insert_size, as.matrix(histogram[tandem]),  type="h", col="orange")
+    colors <- c(colors, "orange")
+    labels <- c(labels, "TANDEM")
+  }
+
+  ## Create the legend
+  legend("topright", labels, fill=colors, col=colors, cex=0.7)
+}
+
+dev.off()

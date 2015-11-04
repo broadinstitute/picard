@@ -56,7 +56,7 @@ import java.util.Set;
 )
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
-    private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
+    protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 
     @Option(shortName="H", doc="File to write insert size Histogram chart to.")
     public File Histogram_FILE;
