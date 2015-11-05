@@ -69,6 +69,17 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             doc = "File to write duplication metrics to")
     public File METRICS_FILE;
 
+    @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
+    public boolean REMOVE_DUPLICATES = false;
+
+    @Option(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
+            doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise.")
+    public boolean ASSUME_SORTED = false;
+
+    @Option(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
+    public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
+
+    
     @Option(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program record ID for the @PG record(s) created by this program. Set to null to disable " +
                     "PG record creation.  This string may have a suffix appended to avoid collision with other " +
@@ -94,16 +105,6 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             doc = "Comment(s) to include in the output file's header.",
             optional = true)
     public List<String> COMMENT = new ArrayList<String>();
-
-    @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
-    public boolean REMOVE_DUPLICATES = false;
-
-    @Option(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
-            doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise.")
-    public boolean ASSUME_SORTED = false;
-
-    @Option(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
-    public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
 
     /** The program groups that have been seen during the course of examining the input records. */
     protected final Set<String> pgIdsSeen = new HashSet<String>();
