@@ -83,4 +83,17 @@ public @interface Option {
      * the options of the parent annotation are overridden with this annotation.
      */
     boolean overridable() default false;
+    
+    /**
+     * Overwrite default order in which Option are printed in usage by explicitly setting a 
+     * print position e.g. printOrder=1 is printed before printOrder=2.
+     * Options without printOrder automatically receive a printOrder that (1) is a multiple of 1000 
+     * and (2) reflects the order's default position. This gives you the option to insert your own options between 
+     * options inherited from super classes (which order you do not control).
+     * The default ordering follows the declaration position in the class and superclass options after class options. 
+     *  
+     * @author charles girardot 
+     */
+    int printOrder() default Integer.MAX_VALUE;
+    
 }

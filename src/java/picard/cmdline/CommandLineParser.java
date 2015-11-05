@@ -24,7 +24,9 @@
 package picard.cmdline;
 
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CollectionUtil.MultiMap;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 
@@ -41,6 +43,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -246,19 +250,28 @@ public class CommandLineParser {
             prefixDot = prefix + ".";
         }
 
-
+        int fieldCounter = 1;
         for (final Field field : getAllFields(this.callerOptions.getClass())) {
             if (field.getAnnotation(PositionalArguments.class) != null) {
                 handlePositionalArgumentAnnotation(field);
             }
             if (field.getAnnotation(Option.class) != null) {
-                handleOptionAnnotation(field);
+                handleOptionAnnotation(field, fieldCounter);
+                //only increase counter if the field had default printOrder 
+                if(field.getAnnotation(Option.class).printOrder() == Integer.MAX_VALUE)
+                		fieldCounter++;
             } else if (!isCommandLineProgram() && field.getAnnotation(NestedOptions.class) != null) {
                 // If callerOptions is an instance of CommandLineProgram, defer creation of child
                 // CommandLineParsers until after parsing options for this parser, in case CommandLineProgram
                 // wants to do something dynamic based on values for this parser.
                 handleNestedOptionsAnnotation(field);
             }
+            
+        }
+        
+       //make sure to sort options according to printOrder
+        if(optionDefinitions!=null && !optionDefinitions.isEmpty()){
+        	Collections.sort(optionDefinitions, new OptionDefinitionByPrintOrderComparator());
         }
 
         this.programProperties = this.callerOptions.getClass().getAnnotation(CommandLineProgramProperties.class);
@@ -287,6 +300,20 @@ public class CommandLineParser {
      * @param stream Where to write the usage message.
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
+    	
+    	usage(stream, printCommon, null);
+    	
+    }
+    
+    /**
+     * Print a usage message based on the options object passed to the ctor.
+    *
+    * @param stream Where to write the usage message.
+    * @param printCommon
+    * @param optionOrder option.name <=> order for printing ie 1 gets printed before 2
+    */
+    public void usage(final PrintStream stream, final boolean printCommon, final Map<String, Integer> optionOrder) {
+    
         if (prefix.isEmpty()) {
             stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
             stream.println("\nVersion: " + getVersion());
@@ -316,7 +343,7 @@ public class CommandLineParser {
                                     "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
                                     "by a subsequent command-line option.  " +
                                     "A line starting with '#' is considered a comment.",
-                            false, true, false, 0, Integer.MAX_VALUE, null, true, new String[0]);
+                            false, true, false, 0, Integer.MAX_VALUE, null, true, new String[0], 0);
             printOptionUsage(stream, optionsFileOptionDefinition);
         }
 
@@ -869,7 +896,11 @@ public class CommandLineParser {
         stream.print(sb);
     }
 
-    private void handleOptionAnnotation(final Field field) {
+    /**
+     * @param field
+     * @param fieldPosition the field number as returned by getAllFields() that returns all fields including those of superclasses
+     */
+    private void handleOptionAnnotation(final Field field, final int fieldPosition) {
         try {
             field.setAccessible(true);
             final Option optionAnnotation = field.getAnnotation(Option.class);
@@ -892,13 +923,28 @@ public class CommandLineParser {
                         " must have a String ctor or be an enum");
             }
 
+            int printOrder = optionAnnotation.printOrder();
+            if(printOrder == Integer.MAX_VALUE){
+            	/*
+            	 *  we got the default ie the print order was not specified.
+            	 *  we use the field position to set its default print order
+            	 *  but  we multiply by 1000 to
+            	 *  (1) make sure that custom ordering is preserved as long as it is below 1000
+            	 *  (2) get rooms in between each options
+            	 */
+            	printOrder = fieldPosition * 1000;  
+            	 
+            }
+            
+            
             final OptionDefinition optionDefinition = new OptionDefinition(field,
                     field.getName(),
                     optionAnnotation.shortName(),
                     optionAnnotation.doc(), optionAnnotation.optional() || (field.get(callerOptions) != null),
                     optionAnnotation.overridable(), isCollection, optionAnnotation.minElements(),
                     optionAnnotation.maxElements(), field.get(callerOptions), optionAnnotation.common(),
-                    optionAnnotation.mutex());
+                    optionAnnotation.mutex(), 
+                    printOrder);
 
             for (final String option : optionAnnotation.mutex()) {
                 final OptionDefinition mutextOptionDef = optionMap.get(option);
@@ -1080,6 +1126,16 @@ public class CommandLineParser {
         String getHelpDoc();
     }
 
+    
+    protected static class OptionDefinitionByPrintOrderComparator implements Comparator<OptionDefinition>{
+
+		@Override
+		public int compare(OptionDefinition o1, OptionDefinition o2) {
+			return o1.printOrder - o2.printOrder;
+		}
+    	
+    }
+    
     protected static class OptionDefinition {
         final Field field;
         final String name;
@@ -1090,6 +1146,7 @@ public class CommandLineParser {
         final boolean isCollection;
         final int minElements;
         final int maxElements;
+        final int printOrder;
         final String defaultValue;
         final boolean isCommon;
         boolean hasBeenSet = false;
@@ -1100,7 +1157,7 @@ public class CommandLineParser {
         private OptionDefinition(final Field field, final String name, final String shortName, final String doc,
                                  final boolean optional, final boolean overridable, boolean collection, final int minElements,
                                  final int maxElements, final Object defaultValue, final boolean isCommon,
-                                 final String[] mutuallyExclusive) {
+                                 final String[] mutuallyExclusive, final int printOrder) {
             this.field = field;
             this.name = name.toUpperCase();
             this.shortName = shortName.toUpperCase();
@@ -1123,6 +1180,7 @@ public class CommandLineParser {
             }
             this.isCommon = isCommon;
             this.mutuallyExclusive = new HashSet<String>(Arrays.asList(mutuallyExclusive));
+            this.printOrder = printOrder;
         }
     }
 
