@@ -573,21 +573,26 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             int depthIndex = 0;
             double totalCoverage = 0;
             int basesConsidered = 0;
+            long numTargetBasesAtZeroCoverage = 0;
             final Histogram<Integer> targetCoverageHistogram = new Histogram<Integer>();
 
             for (final Coverage c : this.coverageByTarget.values()) {
-                if (!c.hasCoverage()) {
+                final int[] targetDepths = c.getDepths();
+                for (final int depth : targetDepths) {
+                    if (0 == depth) numTargetBasesAtZeroCoverage++;
+                    targetCoverageHistogram.increment(depth);
+                }
+
+                if (!c.hasCoverage()) { // NB: this means that coverage > 1, not > 0
                     ++zeroCoverageTargets;
                     continue;
                 }
 
-                final int[] targetDepths = c.getDepths();
                 basesConsidered += targetDepths.length;
 
                 for (final int depth : targetDepths) {
                     depths[depthIndex++] = depth;
                     totalCoverage += depth;
-                    targetCoverageHistogram.increment(depth);
                 }
             }
             targetCoverageHistogram.increment(0, zeroCoverageTargets); // do not forget zero coverage targets, and also forces this histogram to have a value for the number of 0x target bases
@@ -597,7 +602,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // get the number of bases at zero coverage, and subtract that from the total coverage, then divide that by the total coverage
             // to get the percent of target bases at 1x coverage or greater.
-            final double numTargetBasesAtZeroCoverage = targetCoverageHistogram.get(0).getValue();
             this.metrics.PCT_TARGET_BASES_1X = (this.metrics.TARGET_TERRITORY - numTargetBasesAtZeroCoverage) / this.metrics.TARGET_TERRITORY;
 
             // Sort the array (ASCENDING) and then find the base the coverage value that lies at the 80%
