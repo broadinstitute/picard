@@ -47,7 +47,8 @@ import java.io.File;
  */
 @CommandLineProgramProperties(
         usage = "Collects quality yield metrics, a set of metrics that quantify the quality and yield of sequence data from a " +
-                "SAM/BAM input file.",
+                "SAM/BAM input file. Note that the default behaviour of this program changed as of November 6th 2015 to no longer " +
+                "include secondary and supplemental alignments in the computation.",
         usageShort = "Collects a set of metrics that quantify the quality and yield of sequence data from the provided SAM/BAM",
         programGroup = Metrics.class
 )
@@ -65,6 +66,14 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
             doc = "If available in the OQ tag, use the original quality scores " +
                     "as inputs instead of the quality scores in the QUAL field.")
     public boolean USE_ORIGINAL_QUALITIES = true;
+
+    @Option(doc="If true, include bases from secondary alignments in metrics. Setting to true may cause double-counting " +
+            "of bases if there are secondary alignments in the input file.")
+    public boolean INCLUDE_SECONDARY_ALIGNMENTS = false;
+
+    @Option(doc="If true, include bases from supplemental alignments in metrics. Setting to true may cause double-counting " +
+            "of bases if there are supplemental alignments in the input file.")
+    public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
     /** Stock main method for a command line program. */
     public static void main(final String[] argv) {
@@ -92,6 +101,9 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
         final QualityYieldMetrics metrics = new QualityYieldMetrics();
 
         for (final SAMRecord rec : sam) {
+            if (!INCLUDE_SECONDARY_ALIGNMENTS    && rec.getNotPrimaryAlignmentFlag()) continue;
+            if (!INCLUDE_SUPPLEMENTAL_ALIGNMENTS && rec.getSupplementaryAlignmentFlag()) continue;
+
             metrics.TOTAL_READS++;
             final int length = rec.getReadLength();
 
@@ -173,7 +185,5 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
 
         /** The sum of quality scores of all bases divided by 20 */
         public long PF_Q20_EQUIVALENT_YIELD = 0;
-
     }
-
 }
