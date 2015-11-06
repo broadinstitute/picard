@@ -50,6 +50,8 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/sams");
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/sams");
+    private static final File TEST_DATA_DIR_WITH_4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M");
+    private static final File TEST_DATA_DIR_WITH_4M4M_INDEX = new File("testdata/picard/illumina/25T8B25T/sams_with_4M4M");
 
     public String getCommandLineProgramName() {
         return IlluminaBasecallsToSam.class.getSimpleName();
@@ -82,8 +84,55 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testNonBarcodedWithMoleclarIndex() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S8M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World"
+        });
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex8M.sam"));
+    }
+
+    @Test
+    public void testNonBarcodedWithDualMoleclarIndex() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S4M4M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World"
+        });
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex4M4M.sam"));
+
+    }
+
+    @Test
     public void testMultiplexed() throws Exception {
         runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B25T", BASECALLS_DIR, TEST_DATA_DIR);
+    }
+
+    @Test
+    public void testMultiplexedWith4MIndex() throws Exception {
+        runStandardTest(1, "multiplexedBarcode.", "barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M_INDEX);
+    }
+
+    @Test
+    public void testMultiplexedWith4M4MIndex() throws Exception {
+        runStandardTest(1, "multiplexedBarcode2.", "barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M_INDEX);
     }
 
     //Same as testMultiplexed except we use BARCODE_1 instead of BARCODE

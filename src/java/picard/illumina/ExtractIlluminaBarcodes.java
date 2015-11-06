@@ -73,14 +73,15 @@ import java.util.concurrent.TimeUnit;
  * @author jburke@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Determine the barcode for each read in an Illumina lane.\n" +
+        usage = "Determine the sample barcode for each read in an Illumina lane.\n" +
                 "For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. " +
                 "An output file contains a line for each read in the tile, aligned with the regular basecall output. \n" +
                 "The output file contains the following tab-separated columns: \n" +
                 "    * read subsequence at barcode position\n" +
                 "    * Y or N indicating if there was a barcode match\n" +
                 "    * matched barcode sequence\n" +
-                "Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n\n",
+                "Note 1: that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.\n" +
+                "Note 2: molecular barcodes (M in the read structure) are not the barcode being extracted here and will be ignored here.\n\n",
         usageShort = "Tool to determine the barcode for each read in an Illumina lane",
         programGroup = Illumina.class
 )
@@ -163,7 +164,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         IOUtil.assertDirectoryIsWritable(OUTPUT_DIR);
 
         // Create BarcodeMetric for counting reads that don't match any barcode
-        final String[] noMatchBarcode = new String[readStructure.barcodes.length()];
+        final String[] noMatchBarcode = new String[readStructure.sampleBarcodes.length()];
         int index = 0;
         for (final ReadDescriptor d : readStructure.descriptors) {
             if (d.type == ReadType.Barcode) {
@@ -323,11 +324,11 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         this.bclQualityEvaluationStrategy = new BclQualityEvaluationStrategy(MINIMUM_QUALITY);
 
         /**
-         * In extract illumina barcodes we NEVER want to look at the template reads, therefore replace them with skips because
-         * IlluminaDataProvider and its factory will not open these nor produce ClusterData with the template reads in them, thus reducing
-         * the file IO and value copying done by the data provider
+         * In extract illumina barcodes we NEVER want to look at the template reads nor the molecular barcodes, therefore replace them with
+         * skips because IlluminaDataProvider and its factory will neither open these nor produce ClusterData with the template reads in them,
+         * thus reducing the file IO and value copying done by the data provider
          */
-        readStructure = new ReadStructure(READ_STRUCTURE.replaceAll("T", "S"));
+        readStructure = new ReadStructure(READ_STRUCTURE.replaceAll("T|M", "S"));
         final IlluminaDataType[] datatypes = (MINIMUM_BASE_QUALITY > 0) ?
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF, IlluminaDataType.QualityScores} :
                 new IlluminaDataType[]{IlluminaDataType.BaseCalls, IlluminaDataType.PF};
@@ -376,7 +377,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
         final boolean hasBarcodeName = barcodesParser.hasColumn(BARCODE_NAME_COLUMN);
         final boolean hasLibraryName = barcodesParser.hasColumn(LIBRARY_NAME_COLUMN);
-        final int numBarcodes = readStructure.barcodes.length();
+        final int numBarcodes = readStructure.sampleBarcodes.length();
         final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
             final String bcStrings[] = new String[numBarcodes];
@@ -575,7 +576,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
                 //Most likely we have SKIPS in our read structure since we replace all template reads with skips in the input data structure
                 //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
-                final int[] barcodeIndices = outputReadStructure.barcodes.getIndices();
+                final int[] barcodeIndices = outputReadStructure.sampleBarcodes.getIndices();
                 final BufferedWriter writer = IOUtil.openFileForBufferedWriting(barcodeFile);
                 final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
                 final byte qualityScores[][] = usingQualityScores ? new byte[barcodeIndices.length][] : null;

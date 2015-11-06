@@ -1,0 +1,6 @@
+@HD	VN:1.5	SO:queryname
+@RG	ID:HiMom.1	SM:SA_ACAGGTAT	LB:LN_ACAGGTAT	PL:illumina	PU:HiMom.1.ACAGGTAT	CN:BI
+HiMom:1:1101:1236:2121	4	*	0	0	*	*	0	0	TTGC	CCCF	RG:Z:HiMom.1
+HiMom:1:1201:1341:2116	4	*	0	0	*	*	0	0	ATAA	####	RG:Z:HiMom.1
+HiMom:1:2101:1063:2206	4	*	0	0	*	*	0	0	.TGC	#1=D	RG:Z:HiMom.1
+HiMom:1:2101:1325:2083	4	*	0	0	*	*	0	0	TGTG	####	RG:Z:HiMom.1
