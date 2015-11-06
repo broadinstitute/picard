@@ -398,6 +398,7 @@
         <document-command title="CollectAlignmentSummaryMetrics"    main-class="picard.analysis.CollectAlignmentSummaryMetrics"/>
         <document-command title="CollectBaseDistributionByCycle"    main-class="picard.analysis.CollectBaseDistributionByCycle"/>
         <document-command title="CollectGcBiasMetrics"              main-class="picard.analysis.CollectGcBiasMetrics"/>
+        <document-command title="CollectHsMetrics"                  main-class="picard.analysis.directed.CollectHsMetrics"/>
         <document-command title="CollectInsertSizeMetrics"          main-class="picard.analysis.CollectInsertSizeMetrics"/>
         <document-command title="CollectMultipleMetrics"            main-class="picard.analysis.CollectMultipleMetrics"/>
         <document-command title="CollectTargetedPcrMetrics"         main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>

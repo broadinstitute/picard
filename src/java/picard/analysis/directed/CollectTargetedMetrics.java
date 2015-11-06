@@ -2,6 +2,7 @@ package picard.analysis.directed;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -70,6 +71,12 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
 
     @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
+
+    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    public int MINIMUM_MAPPING_QUALITY = 0;
+
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
+    public int MINIMUM_BASE_QUALITY = 0;
 
     /**
      * Asserts that files are readable and writable and then fires off an

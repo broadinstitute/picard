@@ -5,6 +5,7 @@ import htsjdk.samtools.util.*;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
+import picard.filter.CountingFilter;
 
 import java.io.File;
 

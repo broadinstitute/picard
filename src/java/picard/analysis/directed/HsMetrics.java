@@ -83,6 +83,9 @@ public class HsMetrics extends MultilevelMetrics {
     /** The number of PF aligned bases that mapped to a targeted region of the genome. */
     public long ON_TARGET_BASES;
 
+    /** The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20). */
+    public double PCT_EXC_BASEQ;
+
     /** On+Near Bait Bases / PF Bases Aligned. */
     public double PCT_SELECTED_BASES;
 
@@ -98,6 +101,9 @@ public class HsMetrics extends MultilevelMetrics {
     /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
     public double MEAN_TARGET_COVERAGE;
 
+    /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
+    public double MEDIAN_TARGET_COVERAGE;
+
     /** The number of aligned, de-duped, on-bait bases out of the PF bases available. */
     public double PCT_USABLE_BASES_ON_BAIT;
 
@@ -110,12 +116,17 @@ public class HsMetrics extends MultilevelMetrics {
     /** The number of targets that did not reach coverage=2 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
 
+    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20). */
+    public double PCT_EXC_MAPQ;
+
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
      * the mean coverage level in those targets.
      */
     public double FOLD_80_BASE_PENALTY;
 
+    /** The percentage of ALL target bases achieving 1X or greater coverage. */
+    public double PCT_TARGET_BASES_1X;
     /** The percentage of ALL target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
     /** The percentage of ALL target bases achieving 10X or greater coverage. */
