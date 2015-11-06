@@ -94,6 +94,6 @@ public class CollectHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetric
                                               final IntervalList probeIntervals,
                                               final String probeSetName) {
         return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName,
-                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY);
+                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, true);
     }
 }
