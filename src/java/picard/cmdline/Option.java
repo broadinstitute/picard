@@ -90,7 +90,8 @@ public @interface Option {
      * Options without printOrder automatically receive a printOrder that (1) is a multiple of 1000 
      * and (2) reflects the order's default position. This gives you the option to insert your own options between 
      * options inherited from super classes (which order you do not control).
-     * The default ordering follows the declaration position in the class and superclass options after class options. 
+     * The default ordering follows (1)the option declaration position in the class and (2) sub-classes options printed
+     *  before superclass options. 
      *  
      * @author charles girardot 
      */

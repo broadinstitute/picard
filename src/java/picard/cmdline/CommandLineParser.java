@@ -24,11 +24,8 @@
 package picard.cmdline;
 
 import htsjdk.samtools.util.CloserUtil;
-import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CollectionUtil.MultiMap;
-import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.StringUtil;
-import picard.PicardException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -51,6 +48,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import picard.PicardException;
 
 /**
  * Annotation-driven utility for parsing command-line arguments, checking for errors, and producing usage message.
@@ -301,19 +300,6 @@ public class CommandLineParser {
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
     	
-    	usage(stream, printCommon, null);
-    	
-    }
-    
-    /**
-     * Print a usage message based on the options object passed to the ctor.
-    *
-    * @param stream Where to write the usage message.
-    * @param printCommon
-    * @param optionOrder option.name <=> order for printing ie 1 gets printed before 2
-    */
-    public void usage(final PrintStream stream, final boolean printCommon, final Map<String, Integer> optionOrder) {
-    
         if (prefix.isEmpty()) {
             stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
             stream.println("\nVersion: " + getVersion());
@@ -343,7 +329,7 @@ public class CommandLineParser {
                                     "unrecognized options are ignored.  " + "A single-valued option set in an options file may be overridden " +
                                     "by a subsequent command-line option.  " +
                                     "A line starting with '#' is considered a comment.",
-                            false, true, false, 0, Integer.MAX_VALUE, null, true, new String[0], 0);
+                            false, true, false, 0, Integer.MAX_VALUE, null, true, new String[0], Integer.MAX_VALUE);
             printOptionUsage(stream, optionsFileOptionDefinition);
         }
 
@@ -930,7 +916,7 @@ public class CommandLineParser {
             	 *  we use the field position to set its default print order
             	 *  but  we multiply by 1000 to
             	 *  (1) make sure that custom ordering is preserved as long as it is below 1000
-            	 *  (2) get rooms in between each options
+            	 *  (2) get rooms in between each options to be able to insert your own options
             	 */
             	printOrder = fieldPosition * 1000;  
             	 
