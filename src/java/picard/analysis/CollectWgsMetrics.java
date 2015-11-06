@@ -1,7 +1,5 @@
 package picard.analysis;
 
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.SamRecordFilter;
@@ -16,6 +14,10 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.programgroups.Metrics;
 import picard.cmdline.StandardOptionDefinitions;
+import picard.filter.CountingDuplicateFilter;
+import picard.filter.CountingFilter;
+import picard.filter.CountingMapQFilter;
+import picard.filter.CountingPairedFilter;
 import picard.util.MathUtil;
 
 import java.io.File;
@@ -141,12 +143,13 @@ public class CollectWgsMetrics extends CommandLineProgram {
         final CountingFilter dupeFilter = new CountingDuplicateFilter();
         final CountingFilter mapqFilter = new CountingMapQFilter(MINIMUM_MAPPING_QUALITY);
         final CountingPairedFilter pairFilter = new CountingPairedFilter();
+        // The order in which filters are added matters!
+        filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         filters.add(mapqFilter);
         filters.add(dupeFilter);
         if (!COUNT_UNPAIRED) {
             filters.add(pairFilter);
         }
-        filters.add(new SecondaryAlignmentFilter()); // Not a counting filter because we never want to count reads twice
         iterator.setSamFilters(filters);
         iterator.setEmitUncoveredLoci(true);
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
@@ -263,61 +266,5 @@ public class CollectWgsMetrics extends CommandLineProgram {
     protected SamLocusIterator getLocusIterator(final SamReader in) {
         return new SamLocusIterator(in);
     }
-}
-
-/**
- * A SamRecordFilter that counts the number of aligned bases in the reads which it filters out. Abstract and designed
- * to be subclassed to implement the desired filter.
- */
-abstract class CountingFilter implements SamRecordFilter {
-    private long filteredRecords = 0;
-    private long filteredBases = 0;
-
-    /** Gets the number of records that have been filtered out thus far. */
-    public long getFilteredRecords() { return this.filteredRecords; }
-
-    /** Gets the number of bases that have been filtered out thus far. */
-    public long getFilteredBases() { return this.filteredBases; }
-
-    @Override
-    public final boolean filterOut(final SAMRecord record) {
-        final boolean filteredOut = reallyFilterOut(record);
-        if (filteredOut) {
-            ++filteredRecords;
-            for (final AlignmentBlock block : record.getAlignmentBlocks()) {
-                this.filteredBases += block.getLength();
-            }
-        }
-        return filteredOut;
-    }
-
-    abstract public boolean reallyFilterOut(final SAMRecord record);
-
-    @Override
-    public boolean filterOut(final SAMRecord first, final SAMRecord second) {
-        throw new UnsupportedOperationException();
-    }
-}
-
-/** Counting filter that discards reads that have been marked as duplicates. */
-class CountingDuplicateFilter extends CountingFilter {
-    @Override
-    public boolean reallyFilterOut(final SAMRecord record) { return record.getDuplicateReadFlag(); }
-}
-
-/** Counting filter that discards reads below a configurable mapping quality threshold. */
-class CountingMapQFilter extends CountingFilter {
-    private final int minMapq;
-
-    CountingMapQFilter(final int minMapq) { this.minMapq = minMapq; }
-
-    @Override
-    public boolean reallyFilterOut(final SAMRecord record) { return record.getMappingQuality() < minMapq; }
-}
-
-/** Counting filter that discards reads that are unpaired in sequencing and paired reads who's mates are not mapped. */
-class CountingPairedFilter extends CountingFilter {
-    @Override
-    public boolean reallyFilterOut(final SAMRecord record) { return !record.getReadPairedFlag() || record.getMateUnmappedFlag(); }
 }
 

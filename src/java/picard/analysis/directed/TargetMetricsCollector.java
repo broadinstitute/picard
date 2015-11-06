@@ -25,16 +25,21 @@
 package picard.analysis.directed;
 
 import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryAlignmentFilter;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.util.CigarUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
@@ -44,6 +49,7 @@ import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
 import picard.PicardException;
 import picard.analysis.MetricAccumulationLevel;
+import picard.filter.CountingMapQFilter;
 import picard.metrics.MultilevelMetrics;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordMultiLevelCollector;
@@ -53,6 +59,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -109,6 +116,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     private final long genomeSize;
 
+    private final int minimumMappingQuality;
+
+    private final int minimumBaseQuality;
+
+    private boolean noSideEffects;
+
     //A map of coverage by target in which coverage is reset every read, this is done
     //so that we can calculate overlap for a read once and the resulting coverage is
     //than added to the cumulative coverage of every collector that collects
@@ -118,6 +131,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
     //Converts a targetMetric into a more specific metric of METRIC_TYPE
     public abstract METRIC_TYPE convertMetric(final TargetMetrics targetMetrics);
+
+
+    /**
+     * In the case of ignoring bases in overlapping reads from the same template,
+     * we can choose whether to modify the existing record, or modify a clone.  The
+     * latter may significantly slow down the performance, but also has no side effects.
+     * @param value the boolean value to set.
+     */
+    public void setNoSideEffects(final boolean value) {
+        this.noSideEffects = value;
+    }
 
     /**
      * Since the targeted metrics (HsMetrics, TargetedPcrMetrics,...) share many of the same values as TargetMetrics, this copy will copy all public attributes in targetMetrics
@@ -185,8 +209,28 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         }
     }
 
-    public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile,
-                                  final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName) {
+    public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                  final List<SAMReadGroupRecord> samRgRecords,
+                                  final ReferenceSequenceFile refFile,
+                                  final File perTargetCoverage,
+                                  final IntervalList targetIntervals,
+                                  final IntervalList probeIntervals,
+                                  final String probeSetName,
+                                  final int minimumMappingQuality,
+                                  final int minimumBaseQuality) {
+        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, minimumMappingQuality, minimumBaseQuality, false);
+    }
+
+    public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                  final List<SAMReadGroupRecord> samRgRecords,
+                                  final ReferenceSequenceFile refFile,
+                                  final File perTargetCoverage,
+                                  final IntervalList targetIntervals,
+                                  final IntervalList probeIntervals,
+                                  final String probeSetName,
+                                  final int minimumMappingQuality,
+                                  final int minimumBaseQuality,
+                                  final boolean noSideEffects) {
         this.perTargetCoverage = perTargetCoverage;
         this.probeSetName = probeSetName;
 
@@ -228,6 +272,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             }
         }
 
+
+        this.minimumMappingQuality = minimumMappingQuality;
+
+        this.minimumBaseQuality = minimumBaseQuality;
+
+        this.noSideEffects = noSideEffects;
+
         setup(accumulationLevels, samRgRecords);
     }
 
@@ -235,7 +286,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeChildCollector(final String sample, final String library, final String readGroup) {
         final PerUnitTargetMetricCollector collector =  new PerUnitTargetMetricCollector(probeSetName, coverageByTargetForRead.keySet(),
                                                                                          sample, library, readGroup, probeTerritory, targetTerritory, genomeSize,
-                                                                                         intervalToGc);
+                                                                                         intervalToGc, minimumMappingQuality, minimumBaseQuality);
         if (this.probeSetName != null) {
             collector.setBaitSetName(probeSetName);
         }
@@ -266,6 +317,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         private final TargetMetrics metrics = new TargetMetrics();
 
+
+        // Filters that should be applied before accepting a record.  Order of filters in this list
+        // matches the order applied.
+        final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
+
+        private final int minimumBaseQuality;
+        private final CountingMapQFilter mapQFilter;
+
         /**
          * Constructor that parses the squashed reference to genome reference file and stores the
          * information in a map for later use.
@@ -273,7 +332,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
         public PerUnitTargetMetricCollector(final String probeSetName, final Set<Interval> coverageTargets,
                                             final String sample, final String library, final String readGroup,
                                             final long probeTerritory, final long targetTerritory, final long genomeSize,
-                                            final Map<Interval, Double> intervalToGc) {
+                                            final Map<Interval, Double> intervalToGc,
+                                            final int minimumMappingQuality,
+                                            final int minimumBaseQuality) {
             this.metrics.SAMPLE           = sample;
             this.metrics.LIBRARY          = library;
             this.metrics.READ_GROUP       = readGroup;
@@ -288,6 +349,13 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 this.coverageByTarget.put(target, new Coverage(target,0));
             }
 
+            this.mapQFilter = new CountingMapQFilter(minimumMappingQuality);
+
+            this.filters.add(new SecondaryAlignmentFilter());
+            this.filters.add(mapQFilter);
+
+            this.minimumBaseQuality = minimumBaseQuality;
+
             this.intervalToGc = intervalToGc;
         }
 
@@ -301,12 +369,75 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.metrics.PROBE_SET = name;
         }
 
-        /** Adds information about an individual SAMRecord to the statistics. */
-        public void acceptRecord(final SAMRecord rec) {
-            // Just plain avoid records that are marked as not-primary
-            if (rec.isSecondaryOrSupplementary()) return;
+        private int getBasesAtMinimumQualityInBlock(final SAMRecord record, final AlignmentBlock block) {
+            int basesInBLockAtMinimumQuality = 0;
+            final byte[] baseQualities = record.getBaseQualities();
+            for (int idx = block.getReadStart(); idx <= CoordMath.getEnd(block.getLength(), block.getReadStart()); idx++) { // idx is one-based
+                if (minimumBaseQuality <= baseQualities[idx-1]) basesInBLockAtMinimumQuality++;
+            }
+            return basesInBLockAtMinimumQuality;
+        }
 
-            this.metrics.TOTAL_READS += 1;
+        private SAMRecord clipOverlappingBases(final SAMRecord rec) {
+            // NB: ignores how to handle supplemental records when present for both ends by just using the mate information in the record.
+
+            if (!rec.getReadPairedFlag()) return rec;
+
+            // Only clip records that are left-most in genomic order and overlapping and are the first end
+            if (rec.getSecondOfPairFlag()) return rec; // second end, ignore.
+            if (rec.getMateAlignmentStart() < rec.getAlignmentStart()) return rec; // right-most, so ignore.  Do this first since getAlignmentEnd is expensive
+            final int numBasesToClip = rec.getMateAlignmentStart() - rec.getAlignmentEnd() + 1;
+            if (0 < numBasesToClip) return rec; // left-most but not overlapping
+
+            try {
+                // watch out for when the second read overlaps all of the first read
+                if (rec.getMateAlignmentStart() <= rec.getAlignmentStart()) { // make it unmapped
+                    if (noSideEffects) {
+                        final SAMRecord recClone = ((SAMRecord)rec.clone());
+                        recClone.setReadUnmappedFlag(true);
+                        return recClone;
+                    }
+                    else rec.setReadUnmappedFlag(true);
+                    return rec;
+                }
+
+                // clip it, clip it good
+                final Cigar cigar = CigarUtil.addSoftClippedBasesToEndsOfCigar(
+                        rec.getCigar(),
+                        false, // ignore, since we want 3' end genomic order
+                        numBasesToClip, // want 3' end genomic order
+                        0
+                );
+                if (noSideEffects) {
+                    final SAMRecord recClone = ((SAMRecord)rec.clone());
+                    recClone.setCigar(cigar);
+                    return recClone;
+                }
+                else {
+                    rec.setCigar(cigar);
+                    return rec;
+                }
+            } catch (CloneNotSupportedException e) {
+                throw new PicardException(e.getMessage(), e);
+            }
+        }
+
+        /** Adds information about an individual SAMRecord to the statistics. */
+        public void acceptRecord(final SAMRecord record) {
+            // We should not "Just plain avoid records that are marked as not-primary" since:
+            // 1. We should disregard secondary alignments in for both record and base counting.
+            // 2. We should disregard supplementary alignments for ONLY record counting
+            // This means that we need to consider supplemental alignments for base counting but not record counting.
+
+            // NB: this could modify the record.  See noSideEffects
+            final SAMRecord rec = clipOverlappingBases(record);
+
+            // apply any filters
+            for (final SamRecordFilter filter : this.filters) {
+                if (filter.filterOut(rec)) return;
+            }
+
+            if (!rec.getSupplementaryAlignmentFlag()) this.metrics.TOTAL_READS += 1;
 
             // Check for PF reads
             if (rec.getReadFailsVendorQualityCheckFlag()) {
@@ -327,14 +458,23 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 probes = null;
             }
 
-            ++this.metrics.PF_READS;
-            this.metrics.PF_BASES += rec.getReadLength();
+            // get the number of bases above the minimum base quality
+            int basesAtMinimumQuality = 0;
+            for (final byte baseQuality : rec.getBaseQualities()) {
+                if (minimumBaseQuality <= baseQuality) basesAtMinimumQuality++;
+                else metrics.PCT_EXC_BASEQ++;
+            }
 
-            // And now calculate the values we need for HS_LIBRARY_SIZE
-            if (rec.getReadPairedFlag() && rec.getFirstOfPairFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
-                if (probes != null && !probes.isEmpty()) {
-                    ++this.metrics.PF_SELECTED_PAIRS;
-                    if (!rec.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
+            if (!rec.getSupplementaryAlignmentFlag()) {
+                ++this.metrics.PF_READS;
+                this.metrics.PF_BASES += basesAtMinimumQuality;
+
+                // And now calculate the values we need for HS_LIBRARY_SIZE
+                if (rec.getReadPairedFlag() && rec.getFirstOfPairFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
+                    if (probes != null && !probes.isEmpty()) {
+                        ++this.metrics.PF_SELECTED_PAIRS;
+                        if (!rec.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
+                    }
                 }
             }
 
@@ -342,7 +482,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             if (rec.getDuplicateReadFlag()) {
                 return;
             }
-            else {
+            else if (!rec.getSupplementaryAlignmentFlag()) {
                 ++this.metrics.PF_UNIQUE_READS;
             }
 
@@ -351,12 +491,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 return;
             }
 
-            this.metrics.PF_UQ_READS_ALIGNED += 1;
+            if (!rec.getSupplementaryAlignmentFlag()) this.metrics.PF_UQ_READS_ALIGNED += 1;
             for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
-                this.metrics.PF_UQ_BASES_ALIGNED += block.getLength();
+                this.metrics.PF_UQ_BASES_ALIGNED += getBasesAtMinimumQualityInBlock(rec, block);
             }
 
-            final boolean mappedInPair = rec.getReadPairedFlag() && !rec.getMateUnmappedFlag();
+            final boolean mappedInPair = rec.getReadPairedFlag() && !rec.getMateUnmappedFlag() && !rec.getSupplementaryAlignmentFlag();
+
+            final byte[] baseQualities = rec.getBaseQualities();
 
             // Find the target overlaps
             if (targets != null && !targets.isEmpty()) {
@@ -365,8 +507,10 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                     for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
                         final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
-                        for (int pos=block.getReferenceStart(); pos<=end; ++ pos) {
+                        int readPos = block.getReadStart(); // one-based
+                        for (int pos=block.getReferenceStart(); pos<=end; ++ pos, ++readPos) {
                             if (pos >= target.getStart() && pos <= target.getEnd()) {
+                                if (baseQualities[readPos-1] < minimumBaseQuality) continue; // ignore low-quality bases
                                 ++this.metrics.ON_TARGET_BASES;
                                 if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
                                 coverage.addBase(pos - target.getStart());
@@ -378,15 +522,16 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             // Now do the bait overlaps
             int mappedBases = 0;
-            for (final AlignmentBlock block : rec.getAlignmentBlocks()) mappedBases += block.getLength();
+            for (final AlignmentBlock block : rec.getAlignmentBlocks()) mappedBases += getBasesAtMinimumQualityInBlock(rec, block);
             int onBaitBases = 0;
 
             if (probes != null && !probes.isEmpty()) {
                 for (final Interval bait : probes) {
                     for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
                         final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
-
-                        for (int pos=block.getReferenceStart(); pos<=end; ++pos) {
+                        int readPos = block.getReadStart(); // one-based
+                        for (int pos=block.getReferenceStart(); pos<=end; ++pos, ++readPos) {
+                            if (baseQualities[readPos-1] < minimumBaseQuality) continue; // ignore low-quality bases
                             if (pos >= bait.getStart() && pos <= bait.getEnd()) ++onBaitBases;
                         }
                     }
@@ -415,6 +560,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.MEAN_PROBE_COVERAGE   = metrics.ON_PROBE_BASES / (double) metrics.PROBE_TERRITORY;
             metrics.FOLD_ENRICHMENT       = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
 
+            metrics.PCT_EXC_MAPQ = mapQFilter.getFilteredBases();
+
             calculateTargetCoverageMetrics();
             calculateGcMetrics();
         }
@@ -426,6 +573,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             int depthIndex = 0;
             double totalCoverage = 0;
             int basesConsidered = 0;
+            final Histogram<Integer> targetCoverageHistogram = new Histogram<Integer>();
 
             for (final Coverage c : this.coverageByTarget.values()) {
                 if (!c.hasCoverage()) {
@@ -439,10 +587,18 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 for (final int depth : targetDepths) {
                     depths[depthIndex++] = depth;
                     totalCoverage += depth;
+                    targetCoverageHistogram.increment(depth);
                 }
             }
+            targetCoverageHistogram.increment(0, zeroCoverageTargets); // do not forget zero coverage targets, and also forces this histogram to have a value for the number of 0x target bases
 
             this.metrics.MEAN_TARGET_COVERAGE = totalCoverage / basesConsidered;
+            this.metrics.MEDIAN_TARGET_COVERAGE = targetCoverageHistogram.getMedian();
+
+            // get the number of bases at zero coverage, and subtract that from the total coverage, then divide that by the total coverage
+            // to get the percent of target bases at 1x coverage or greater.
+            final double numTargetBasesAtZeroCoverage = targetCoverageHistogram.get(0).getValue();
+            this.metrics.PCT_TARGET_BASES_1X = (this.metrics.TARGET_TERRITORY - numTargetBasesAtZeroCoverage) / this.metrics.TARGET_TERRITORY;
 
             // Sort the array (ASCENDING) and then find the base the coverage value that lies at the 80%
             // line, which is actually at 20% into the array now
@@ -698,6 +854,9 @@ class TargetMetrics extends MultilevelMetrics {
     /** The number of PF aligned bases that are mapped in pair to a targeted region of the genome. */
     public long ON_TARGET_FROM_PAIR_BASES;
 
+    /** The fraction of aligned bases that were filtered out because they were of low base quality (default is < 20). */
+    public double PCT_EXC_BASEQ;
+
     //metrics below here are derived after collection
 
     /** PF reads / total reads.  The percent of reads passing filter. */
@@ -724,11 +883,17 @@ class TargetMetrics extends MultilevelMetrics {
     /** The fold by which the probed region has been amplified above genomic background. */
     public double FOLD_ENRICHMENT;
 
-    /** The mean coverage of targets that recieved at least coverage depth = 2 at one base. */
+    /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
     public double MEAN_TARGET_COVERAGE;
+
+    /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
+    public double MEDIAN_TARGET_COVERAGE;
 
     /** The number of targets that did not reach coverage=2 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
+
+    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality (default is < 20). */
+    public double PCT_EXC_MAPQ;
 
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
@@ -736,19 +901,21 @@ class TargetMetrics extends MultilevelMetrics {
      */
     public double FOLD_80_BASE_PENALTY;
 
-    /** The percentage of ALL target bases acheiving 2X or greater coverage. */
+    /** The percentage of ALL target bases achieving 1X or greater coverage. */
+    public double PCT_TARGET_BASES_1X;
+    /** The percentage of ALL target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
-    /** The percentage of ALL target bases acheiving 10X or greater coverage. */
+    /** The percentage of ALL target bases achieving 10X or greater coverage. */
     public double PCT_TARGET_BASES_10X;
-    /** The percentage of ALL target bases acheiving 20X or greater coverage. */
+    /** The percentage of ALL target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-	/** The percentage of ALL target bases acheiving 30X or greater coverage. */
+	/** The percentage of ALL target bases achieving 30X or greater coverage. */
 	public double PCT_TARGET_BASES_30X;
-	/** The percentage of ALL target bases acheiving 40X or greater coverage. */
+	/** The percentage of ALL target bases achieving 40X or greater coverage. */
 	public double PCT_TARGET_BASES_40X;
-	/** The percentage of ALL target bases acheiving 50X or greater coverage. */
+	/** The percentage of ALL target bases achieving 50X or greater coverage. */
 	public double PCT_TARGET_BASES_50X;
-	/** The percentage of ALL target bases acheiving 100X or greater coverage. */
+	/** The percentage of ALL target bases achieving 100X or greater coverage. */
 	public double PCT_TARGET_BASES_100X;
 
     /**
