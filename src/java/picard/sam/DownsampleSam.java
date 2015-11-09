@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2015 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package picard.sam;
 
 import htsjdk.samtools.DownsamplingIteratorFactory;
@@ -24,12 +47,15 @@ import java.text.NumberFormat;
 import java.util.Random;
 
 /**
- * Class to randomly downsample a BAM file while respecting that we should either get rid
- * of both ends of a pair or neither end of the pair!
+ * Class to randomly downsample a BAM file while respecting that we should either retain or discard
+ * all of the reads for a template - i.e. all reads with the same name, whether first or second of
+ * pair, secondary or supplementary, all travel together.
+ *
+ * @author Tim Fennell
  */
 @CommandLineProgramProperties(
         usage = "Randomly down-sample a SAM or BAM file to retain only a subset of the reads in the file. " +
-                "All reads for a templates are kept or discarded as a unit, with the goal or retaining reads" +
+                "All reads for a templates are kept or discarded as a unit, with the goal of retaining reads" +
                 "from PROBABILITY * input templates. While this will usually result in approximately " +
                 "PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not " +
                 "be the case.\n" +
@@ -73,6 +99,11 @@ public class DownsampleSam extends CommandLineProgram {
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
+
+        // Warn the user if they are running with P=1; 0 <= P <= 1 is checked by the DownsamplingIteratorFactory
+        if (PROBABILITY == 1) {
+            log.warn("Running DownsampleSam with PROBABILITY=1! This will likely just recreate the input file.");
+        }
 
         final Random r = RANDOM_SEED == null ? new Random() : new Random(RANDOM_SEED);
         final SamReader in = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
