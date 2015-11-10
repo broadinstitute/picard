@@ -25,6 +25,16 @@ for (i in 1:length(startFinder)) {
   }
 }
 
+getCumulative <- function(y, yrange) {
+  yNew <- rep(0, nrow(y));
+  yLength <- nrow(y)
+  ySum <- sum(y[,1])
+  for (i in 1:yLength) {
+    yNew[i] <- (yrange * sum(y[i:yLength,1]) / ySum)
+  }
+  return (yNew)
+}
+
 histogram <- read.table(metricsFile, header=TRUE, sep="\t", skip=secondBlankLine, comment.char="", quote='', check.names=FALSE)
 
 ## The histogram has a fr_count/rf_count/tandem_count for each metric "level"
@@ -61,6 +71,7 @@ for (i in 1:length(levels)) {
   yrange <- max(frrange, rfrange, tandemrange)
   xrange <- ifelse(histoWidth > 0, histoWidth, max(histogram$insert_size))
 
+  par(mar=c(5,4,4,4));
   plot(x=NULL, y=NULL,
        type="n",
        main=paste("Insert Size Histogram for", levels[i], "\nin file", bamName),
@@ -68,23 +79,27 @@ for (i in 1:length(levels)) {
        ylab="Count",
        xlim=range(0, xrange),
        ylim=range(0, yrange))
+  axis(side=4, at=seq(from=0, to=1, by=0.1)*yrange, labels=seq(from=0, to=1, by=0.10));
+  mtext(side=4, line=2, text="cumulative fraction of reads > insert size");
 
   colors <- c()
   labels <- c()
 
   if (fr %in% names(histogram) ) {
     lines(histogram$insert_size, as.matrix(histogram[fr]),  type="h", col="red")
+    lines(histogram$insert_size, getCumulative(histogram[fr], yrange), col="black", lty=1)
     colors <- c(colors, "red")
     labels <- c(labels, "FR")
   }
   if (rf %in% names(histogram)) {
     lines(histogram$insert_size, as.matrix(histogram[rf]),  type="h", col="blue")
+    lines(histogram$insert_size, getCumulative(histogram[rf], yrange), col="black", lty=2)
     colors <- c(colors, "blue")
     labels <- c(labels, "RF")
-  }
-
+   }
   if (tandem %in% names(histogram)) {
     lines(histogram$insert_size, as.matrix(histogram[tandem]),  type="h", col="orange")
+    lines(histogram$insert_size, getCumulative(histogram[tandem], yrange), col="black", lty=3)
     colors <- c(colors, "orange")
     labels <- c(labels, "TANDEM")
   }
