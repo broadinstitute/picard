@@ -6,11 +6,13 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Histogram;
+import picard.PicardException;
 import picard.analysis.InsertSizeMetrics;
 import picard.analysis.MetricAccumulationLevel;
 import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +115,17 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
         }
 
         public void addMetricsToFile(final MetricsFile<InsertSizeMetrics,Integer> file) {
-            for (final Histogram<Integer> h : this.Histograms.values()) totalInserts += h.getCount();
+            // get the number of inserts, and the maximum and minimum keys across, across all orientations
+            int minKey = Integer.MAX_VALUE, maxKey = Integer.MIN_VALUE;
+            for (final Histogram<Integer> h : this.Histograms.values()) {
+                totalInserts += h.getCount();
+                if (!h.isEmpty()) {
+                    int curMin = Collections.min(h.keySet()), curMax = Collections.max(h.keySet());
+                    if (curMin < minKey) minKey = curMin;
+                    if (maxKey < curMax) maxKey = curMax;
+                }
+            }
+            if (0 == totalInserts) return; // nothing to store
 
             for(final Map.Entry<SamPairUtil.PairOrientation, Histogram<Integer>> entry : Histograms.entrySet()) {
                 final SamPairUtil.PairOrientation pairOrientation = entry.getKey();
@@ -121,7 +133,13 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                 final double total = Histogram.getCount();
 
                 // Only include a category if it has a sufficient percentage of the data in it
-                if( total > totalInserts * minimumPct ) {
+                if( total >= totalInserts * minimumPct ) {
+                    // in the case that minimumPct == 0 and total == 0, just make an empty histogram with zero values for the entire range
+                    if (Histogram.isEmpty()) {
+                        for (int key = minKey; key <= maxKey; key++) Histogram.increment(key, 0);
+                        if (Histogram.isEmpty()) throw new PicardException("BUG: minKey=" + minKey + " maxKey=" + maxKey);
+                    }
+
                     final InsertSizeMetrics metrics = new InsertSizeMetrics();
                     metrics.SAMPLE             = this.sample;
                     metrics.LIBRARY            = this.library;
