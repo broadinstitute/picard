@@ -84,6 +84,7 @@ public class IlluminaBasecallsToSamAdapterClippingTest extends CommandLineProgra
             }
         }
         samReader.close();
+        samFile.delete();
     }
 
     @DataProvider(name="data")

@@ -428,7 +428,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         if (useBarcodes) {
             final ReadEndsForMarkDuplicatesWithBarcodes endsWithBarcode = (ReadEndsForMarkDuplicatesWithBarcodes) ends;
             endsWithBarcode.barcode = getBarcodeValue(rec);
-            if (rec.getFirstOfPairFlag()) {
+            if (!rec.getReadPairedFlag() || rec.getFirstOfPairFlag()) {
                 endsWithBarcode.readOneBarcode = getReadOneBarcodeValue(rec);
             } else {
                 endsWithBarcode.readTwoBarcode = getReadTwoBarcodeValue(rec);

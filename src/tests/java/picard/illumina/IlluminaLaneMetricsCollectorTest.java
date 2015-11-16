@@ -61,7 +61,8 @@ public class IlluminaLaneMetricsCollectorTest {
         final File laneMetricsFile = buildOutputFile(clp.OUTPUT_DIRECTORY, clp.OUTPUT_PREFIX, IlluminaLaneMetrics.getExtension());
         final File canonicalLaneFile = buildOutputFile(runDirectory, testRun, IlluminaLaneMetrics.getExtension());
         IOUtil.assertFilesEqual(canonicalLaneFile, laneMetricsFile);
-        IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);    }
+        IOUtil.deleteDirectoryTree(clp.OUTPUT_DIRECTORY);
+    }
 
     @DataProvider(name = "testCollectIlluminaLaneMetrics")
     public Object[][] testCollectIlluminaLaneMetricsDataProvider() {

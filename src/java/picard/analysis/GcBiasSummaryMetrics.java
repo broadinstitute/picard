@@ -41,7 +41,7 @@ public class GcBiasSummaryMetrics extends MultilevelMetrics {
     public int TOTAL_CLUSTERS;
 
     /** The total number of aligned reads used to compute the gc bias metrics. */
-    public int ALIGNED_READS;
+    public long ALIGNED_READS;
 
     /**
      * Illumina-style AT dropout metric.  Calculated by taking each GC bin independently and calculating

@@ -55,6 +55,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     //will hold the relevant gc information per contig
     private byte [] gc = null;
     private int referenceIndex = -1;
+    private byte [] refBases = null;
 
     public GcBiasMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final int[] windowsByGc,
                                   final List<SAMReadGroupRecord> samRgRecords, final int scanWindowSize, final boolean bisulfite) {
@@ -125,13 +126,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
             final SAMRecord rec = args.getRec();
             final String type;
             if (!rec.getReadUnmappedFlag()) {
-                final ReferenceSequence ref = args.getRef();
-                final byte[] refBases = ref.getBases();
-                StringUtil.toUpperCase(refBases);
-                final int refLength = refBases.length;
-                final int lastWindowStart = refLength - scanWindowSize;
-
                 if(referenceIndex != rec.getReferenceIndex() || gc == null){
+                    final ReferenceSequence ref = args.getRef();
+                    refBases = ref.getBases();
+                    StringUtil.toUpperCase(refBases);
+                    final int refLength = refBases.length;
+                    final int lastWindowStart = refLength - scanWindowSize;
                     gc = GcBiasUtils.calculateAllGcs(refBases, lastWindowStart, scanWindowSize);
                     referenceIndex=rec.getReferenceIndex();
                 }
@@ -191,7 +191,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                 final long[] errorsByGc = gcCur.errorsByGc;
                 final long[] basesByGc = gcCur.basesByGc;
                 final int totalClusters = gcCur.totalClusters;
-                final int totalAlignedReads = gcCur.totalAlignedReads;
+                final long totalAlignedReads = gcCur.totalAlignedReads;
                 final String group = gcCur.group;
 
                 final GcBiasMetrics metrics = new GcBiasMetrics();
@@ -206,22 +206,21 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                         detail.GC = i;
                         detail.WINDOWS = windowsByGc[i];
                         detail.READ_STARTS = readsByGc[i];
-                        if (errorsByGc[i] > 0) detail.MEAN_BASE_QUALITY = QualityUtil.getPhredScoreFromObsAndErrors(basesByGc[i], errorsByGc[i]);
+                        if (errorsByGc[i] > 0) {
+                            detail.MEAN_BASE_QUALITY = QualityUtil.getPhredScoreFromObsAndErrors(basesByGc[i], errorsByGc[i]);
+                        }
                         if (windowsByGc[i] != 0) {
                             detail.NORMALIZED_COVERAGE = (detail.READ_STARTS / (double) detail.WINDOWS) / meanReadsPerWindow;
                             detail.ERROR_BAR_WIDTH = (Math.sqrt(detail.READ_STARTS) / (double) detail.WINDOWS) / meanReadsPerWindow;
-                        }
-                        else{
+                        } else {
                             detail.NORMALIZED_COVERAGE = 0;
                             detail.ERROR_BAR_WIDTH = 0;
                         }
                         detail.ACCUMULATION_LEVEL = group;
-                        if (group.equals("Read Group")) {
-                            detail.READ_GROUP = gcType;}
-                        else if (group.equals("Sample")) {
-                            detail.SAMPLE = gcType;}
-                        else if (group.equals("Library")) {
-                            detail.LIBRARY = gcType;}
+                        if (group.equals("Read Group")) {detail.READ_GROUP = gcType;}
+                        else if (group.equals("Sample")) {detail.SAMPLE = gcType;}
+                        else if (group.equals("Library")) {detail.LIBRARY = gcType;}
+
                         metrics.DETAILS.addMetric(detail);
                     }
 
@@ -283,7 +282,7 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     /////////////////////////////////////////////////////////////////////////////
     class GcObject {
         int totalClusters = 0;
-        int totalAlignedReads = 0;
+        long totalAlignedReads = 0;
         int[] readsByGc = new int[BINS];
         long[] basesByGc = new long[BINS];
         long[] errorsByGc = new long[BINS];

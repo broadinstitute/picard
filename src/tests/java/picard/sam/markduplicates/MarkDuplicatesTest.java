@@ -197,6 +197,8 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
         markDuplicates.PROGRAM_RECORD_ID = null;
         Assert.assertEquals(markDuplicates.doWork(), 0);
         Assert.assertEquals(markDuplicates.numOpticalDuplicates(), expectedNumOpticalDuplicates);
+        TestUtil.recursiveDelete(outputDir);
+
     }
 
     @DataProvider(name="testOpticalDuplicateDetectionDataProvider")
@@ -205,6 +207,32 @@ public class MarkDuplicatesTest extends AbstractMarkDuplicatesCommandLineProgram
                 {new File(TEST_DATA_DIR, "optical_dupes.sam"), 1L},
                 {new File(TEST_DATA_DIR, "optical_dupes_casava.sam"), 1L},
         };
+    }
+
+    @Test
+    public void testWithBarcodeFragmentDuplicate() {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.addMappedFragment(2, 41212324, false, "50M", DEFAULT_BASE_QUALITY);
+        tester.addMappedFragment(2, 41212324, true, "50M", DEFAULT_BASE_QUALITY);
+        final String barcodeTag = "BC";
+        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+            record.setAttribute(barcodeTag, "Barcode1");
+        }
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.runTest();
+    }
+
+    public void addMappedFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+                                  final int defaultQualityScore) {
+        final AbstractMarkDuplicatesCommandLineProgramTester tester = getTester();
+        tester.addMatePair("RUNID:1:1:15993:13361", 2, 41212324, 41212310, false, false, false, false, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        tester.addMatePair("RUNID:2:2:15993:13362", 2, 41212324, 41212310, false, false, true, true, "33S35M", "19S49M", true, true, false, false, false, DEFAULT_BASE_QUALITY);
+        final String barcodeTag = "BC";
+        for (final SAMRecord record : new IterableAdapter<SAMRecord>(tester.getRecordIterator())) {
+            record.setAttribute(barcodeTag, "Barcode1");
+        }
+        tester.addArg("BARCODE_TAG=" + barcodeTag);
+        tester.runTest();
     }
 
     @Test

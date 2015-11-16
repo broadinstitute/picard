@@ -6,12 +6,32 @@ Picard is implemented using the HTSJDK Java library[HTSJDK][1], supporting
 accessing of common file formats, such as [SAM][2] and [VCF][3], used for high-throughput
 sequencing data.  
 
+To clone and build:
+Clone the repo:
+
+    git clone git@github.com:broadinstitute/picard.git
+    cd picard/
+    
+Clone htsjdk into a subdirectory:
+
+    ant clone-htsjdk
+Build:
+
+    ant
+
+Enjoy!
+
+    java -jar dist/picard.jar
+
+----
+
+
 It's also possible to build a version of Picard that supports reading from
 GA4GH API, e.g. Google Genomics:
 
-* Fetch [gatk-tools-java](https://github.com/gatk-tools-java) 
+* Fetch [gatk-tools-java](https://github.com/googlegenomics/gatk-tools-java) 
  
-```git clone https://github.com/gatk-tools-java```
+```git clone https://github.com/googlegenomics/gatk-tools-java```
 
 * Build gatk-tools-java: 
 

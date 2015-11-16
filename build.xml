@@ -414,6 +414,7 @@
         <document-command title="FilterVcf"                         main-class="picard.vcf.filter.FilterVcf"/>
         <document-command title="FixMateInformation"                main-class="picard.sam.FixMateInformation"/>
         <document-command title="GatherBamFiles"                    main-class="picard.sam.GatherBamFiles"/>
+        <document-command title="GatherVcfs"                        main-class="picard.vcf.GatherVcfs"/>
         <document-command title="GenotypeConcordance"               main-class="picard.vcf.GenotypeConcordance"/>
         <document-command title="IlluminaBasecallsToFastq"          main-class="picard.illumina.IlluminaBasecallsToFastq"/>
         <document-command title="IlluminaBasecallsToSam"            main-class="picard.illumina.IlluminaBasecallsToSam"/>

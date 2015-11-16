@@ -54,7 +54,6 @@ class HitsForInsert {
         NONE, ONE, MORE_THAN_ONE
     }
 
-
     // These are package-visible to make life easier for the PrimaryAlignmentSelectionStrategies.
     final List<SAMRecord> firstOfPairOrFragment = new ArrayList<SAMRecord>();
     final List<SAMRecord> secondOfPair = new ArrayList<SAMRecord>();
@@ -147,8 +146,25 @@ class HitsForInsert {
     }
 
     /**
-     * Set all alignments to not primary, except for the one specified by the argument.  If paired, and set the
-     * alignment for both ends if there is an alignment for both ends, otherwise just for the end for which
+     * Get the index of the first primary we see in the list of hits (either read1 or read2).
+     * NOTE: if the PrimaryAlignmentSelectionStrategy has not been run, the returned value may not represent the ONLY primary.
+     *
+     * @return the index, or -1 if no primary was found.
+     */
+    public int getIndexOfEarliestPrimary() {
+        for (int i = 0; i < numHits(); i++) {
+            final SAMRecord firstAligned = getFirstOfPair(i);
+            final SAMRecord secondAligned = getSecondOfPair(i);
+            final boolean isPrimaryAlignment = (firstAligned != null && !firstAligned.isSecondaryOrSupplementary()) ||
+                    (secondAligned != null && !secondAligned.isSecondaryOrSupplementary());
+            if (isPrimaryAlignment) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Used by PrimaryAlignmentSelectionStrategy to set all alignments to not primary, except for the one specified by the argument.
+     * If paired, and set the alignment for both ends if there is an alignment for both ends, otherwise just for the end for which
      * there is an alignment at the given index.
      * @param primaryAlignmentIndex
      */
@@ -167,7 +183,6 @@ class HitsForInsert {
                 this.getSecondOfPair(i).setNotPrimaryAlignmentFlag(notPrimary);
             }
         }
-
     }
 
     /**
@@ -220,8 +235,6 @@ class HitsForInsert {
         }
     }
 
-
-
     /**
      * Determine if there is a single primary alignment in a list of alignments.
      * @param records
@@ -242,19 +255,6 @@ class HitsForInsert {
     public NumPrimaryAlignmentState tallyPrimaryAlignments(final boolean firstEnd) {
         if (firstEnd) return tallyPrimaryAlignments(firstOfPairOrFragment);
         else return tallyPrimaryAlignments(secondOfPair);
-    }
-
-    int findPrimaryAlignment(final List<SAMRecord> records) {
-        int indexOfPrimaryAlignment = -1;
-        for (int i = 0; i < records.size(); ++i) {
-            if (records.get(i) != null && !records.get(i).isSecondaryOrSupplementary()) {
-                if (indexOfPrimaryAlignment != -1) {
-                    throw new IllegalStateException("Multiple primary alignments found for read " + getReadName());
-                }
-                indexOfPrimaryAlignment = i;
-            }
-        }
-        return indexOfPrimaryAlignment;
     }
 
     // null HI tag sorts after any non-null.

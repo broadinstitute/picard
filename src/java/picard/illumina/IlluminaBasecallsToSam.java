@@ -201,6 +201,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     @Option(doc="Whether to include non-PF reads", shortName="NONPF", optional=true)
     public boolean INCLUDE_NON_PF_READS = true;
 
+    @Option(doc="Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting " +
+            "BAMs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
+    public boolean IGNORE_UNEXPECTED_BARCODES = false;
+
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<SAMRecordsForCluster> basecallsConverter;
@@ -241,7 +245,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
                 barcodeSamWriterMap, true, MAX_READS_IN_RAM_PER_TILE/numOutputRecords, TMP_DIR, NUM_PROCESSORS, FORCE_GC,
                 FIRST_TILE, TILE_LIMIT, new QueryNameComparator(), new Codec(numOutputRecords), SAMRecordsForCluster.class,
-                bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS);
+                bclQualityEvaluationStrategy, this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
 
         log.info("DONE_READING STRUCTURE IS " + readStructure.toString());
 

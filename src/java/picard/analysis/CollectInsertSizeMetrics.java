@@ -56,7 +56,7 @@ import java.util.Set;
 )
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
-    private static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
+    protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 
     @Option(shortName="H", doc="File to write insert size Histogram chart to.")
     public File Histogram_FILE;
@@ -75,7 +75,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     public float MINIMUM_PCT = 0.05f;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
-    private Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;
