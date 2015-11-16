@@ -31,5 +31,7 @@
 <tr><td>CLIP_OVERLAPPING_READS (Boolean)</td><td>For paired reads, soft clip the 3' end of each read if necessary so that it does not extend past the 5' end of its mate.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>INCLUDE_SECONDARY_ALIGNMENTS (Boolean)</td><td>If false, do not write secondary alignments to output.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>ADD_MATE_CIGAR (Boolean)</td><td>Adds the mate CIGAR tag (MC) if true, does not if false.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>UNMAP_CONTAMINANT_READS (Boolean)</td><td>Detect reads originating from foreign organisms (e.g. bacterial DNA in a non-bacterial sample),and unmap + label those reads accordingly.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MIN_UNCLIPPED_BASES (Integer)</td><td>If UNMAP_CONTAMINANT_READS is set, require this many unclipped bases or else the read will be marked as contaminant.  Default value: 32. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
 </section>

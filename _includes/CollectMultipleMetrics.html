@@ -1,13 +1,16 @@
 <a id="CollectMultipleMetrics"/>
 <h3>CollectMultipleMetrics</h3>
 <section>
-<p>Takes an input BAM and reference sequence and runs one or more Picard metrics modules at the same time to cut down on I/O. Currently all programs are run with default options and fixed output extesions, but this may become more flexible in future.</p>
+<p>Takes an input BAM and reference sequence and runs one or more Picard metrics modules at the same time to cut down on I/O. Currently all programs are run with default options and fixed output extensions, but this may become more flexible in future.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
 <tr><td>ASSUME_SORTED (Boolean)</td><td>If true (default), then the sort order in the header file will be ignored.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>STOP_AFTER (Integer)</td><td>Stop after processing N reads, mainly for debugging.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>OUTPUT (String)</td><td>Base name of output files.  Required. </td></tr>
-<tr><td>PROGRAM (Program)</td><td>List of metrics programs to apply during the pass through the SAM file.  Default value: [CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectInsertSizeMetrics, MeanQualityByCycle, QualityScoreDistribution]. This option can be set to 'null' to clear the default value. Possible values: {CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution, MeanQualityByCycle, CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>METRIC_ACCUMULATION_LEVEL (MetricAccumulationLevel)</td><td>The level(s) at which to accumulate metrics.  Default value: [ALL_READS]. This option can be set to 'null' to clear the default value. Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>PROGRAM (Program)</td><td>List of metrics programs to apply during the pass through the SAM file.  Default value: [CollectAlignmentSummaryMetrics, CollectBaseDistributionByCycle, CollectInsertSizeMetrics, MeanQualityByCycle, QualityScoreDistribution]. This option can be set to 'null' to clear the default value. Possible values: {CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution, MeanQualityByCycle, CollectBaseDistributionByCycle, CollectGcBiasMetrics, RnaSeqMetrics, CollectSequencingArtifactMetrics} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
+<tr><td>INTERVALS (File)</td><td>An optional list of intervals to restrict analysis to.  Default value: null. </td></tr>
+<tr><td>DB_SNP (File)</td><td>VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.  Default value: null. </td></tr>
 </table>
 </section>

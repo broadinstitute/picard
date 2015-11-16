@@ -27,5 +27,6 @@
 <tr><td>MAX_READS_IN_RAM_PER_TILE (Integer)</td><td>Configure SortingCollections to store this many records before spilling to disk. For an indexed run, each SortingCollection gets this value/number of indices.  Default value: 1200000. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MINIMUM_QUALITY (Integer)</td><td>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown.The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.  Default value: 2. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>INCLUDE_NON_PF_READS (Boolean)</td><td>Whether to include non-PF reads  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>IGNORE_UNEXPECTED_BARCODES (Boolean)</td><td>Whether to ignore reads whose barcodes are not found in LIBRARY_PARAMS.  Useful when outputting BAMs for only a subset of the barcodes in a lane.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>
