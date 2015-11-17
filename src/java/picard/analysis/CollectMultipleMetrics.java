@@ -255,6 +255,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = new HashSet<MetricAccumulationLevel>(accumLevelDefault);
 
+    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.insert_size_metrics.EXT). None if null", optional=true)
+    public String FILE_EXTENSION = null;
+
     @Option(doc = "List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
             Program.CollectInsertSizeMetrics, Program.MeanQualityByCycle, Program.QualityScoreDistribution);
@@ -313,6 +316,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                         " was overridden in the command line. " + program.toString() + " will be run against the entire input.");
             }
             final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
+
+            // Add a file extension if desired
+            if (null != FILE_EXTENSION && !FILE_EXTENSION.isEmpty()) instance.OUTPUT = new File(instance.OUTPUT.getAbsolutePath() + FILE_EXTENSION);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway
