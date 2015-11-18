@@ -234,6 +234,12 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     summary.WINDOW_SIZE = scanWindowSize;
                     summary.TOTAL_CLUSTERS = totalClusters;
                     summary.ALIGNED_READS = totalAlignedReads;
+                    summary.GC_NC_0_19 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 0, 19);
+                    summary.GC_NC_20_39 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 20, 39);
+                    summary.GC_NC_40_59 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 40, 59);
+                    summary.GC_NC_60_79 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 60, 79);
+                    summary.GC_NC_80_100 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 80, 100);
+
 
                     calculateDropoutMetrics(metrics.DETAILS.getMetrics(), summary);
 
@@ -242,6 +248,27 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     file.addMetric(metrics);
                 }
             }
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Calculates the normalized coverage over a given gc content region
+    /////////////////////////////////////////////////////////////////////////////
+    private double calculateGcNormCoverage(final double meanReadsPerWindow, final int[] readsByGc, final int start, final int end) {
+        int windowsTotal = 0;
+        double sum = 0.0;
+        for (int i = start; i <= end; i++) {
+            if (windowsByGc[i] != 0) {
+                sum += (double) readsByGc[i];
+                windowsTotal += windowsByGc[i];
+            }
+        }
+
+        if (windowsTotal == 0) {
+            return 0.0;
+        }
+        else {
+            return (sum / (windowsTotal*meanReadsPerWindow));
         }
     }
 
