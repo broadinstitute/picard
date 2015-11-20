@@ -91,6 +91,9 @@ public class FixMateInformation extends CommandLineProgram {
     @Option(shortName = "MC", optional = true, doc = "Adds the mate CIGAR tag (MC) if true, does not if false.")
     public Boolean ADD_MATE_CIGAR = true;
 
+    @Option(doc = "If true, ignore missing mates, otherwise will throw an exception when missing mates are found.", optional = true)
+    public Boolean IGNORE_MISSING_MATES = true;
+
     private static final Log log = Log.getInstance(FixMateInformation.class);
 
     protected SAMFileWriter out;
@@ -154,7 +157,7 @@ public class FixMateInformation extends CommandLineProgram {
 
             // And now deal with re-sorting if necessary
             if (ASSUME_SORTED || allQueryNameSorted) {
-                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(tmp), ADD_MATE_CIGAR);
+                iterator = new SamPairUtil.SetMateInfoIterator(new PeekableIterator<SAMRecord>(tmp), ADD_MATE_CIGAR, IGNORE_MISSING_MATES);
             } else {
                 log.info("Sorting input into queryname order.");
                 final SortingCollection<SAMRecord> sorter = SortingCollection.newInstance(SAMRecord.class,
@@ -173,10 +176,9 @@ public class FixMateInformation extends CommandLineProgram {
                         super.close();
                         sorter.cleanup();
                     }
-                }, ADD_MATE_CIGAR);
+                }, ADD_MATE_CIGAR, IGNORE_MISSING_MATES);
                 log.info("Sorting by queryname complete.");
             }
-
             // Deal with the various sorting complications
             final SortOrder outputSortOrder = SORT_ORDER == null ? readers.get(0).getFileHeader().getSortOrder() : SORT_ORDER;
             log.info("Output will be sorted by " + outputSortOrder);
