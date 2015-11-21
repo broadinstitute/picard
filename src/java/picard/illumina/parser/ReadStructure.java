@@ -35,10 +35,11 @@ import java.util.regex.Pattern;
 /**
  * Describes the intended logical output structure of clusters of an Illumina run.
  * (e.g. If the input data consists of 80 base
- * clusters and we provide a read structure of "36T8B36T" then those bases should be split into 3 reads:
+ * clusters and we provide a read structure of "36T8B4M36T" then those bases should be split into 4 reads:
  *     read one should be 36 cycles of template,
- *     read two should be 8 cycles of barcode,
- *     read three should be another 36 cycle template read.)
+ *     read two should be 8 cycles of sample barcode,
+ *     read three should be 4 cycles of molecular barcode,
+ *     read four should be another 36 cycle template read.)
  *  Note: In future releases, ReadStructures will be specified by clients of IlluminaDataProvider(currently
  *  read structures are detected by IlluminaDataProviderFactory via the structure of QSeq files). When working with
  *  QSeq formats, while the individual reads need not fall on QSeq end file boundaries the total number of cycles
@@ -61,8 +62,10 @@ public class ReadStructure {
     public final int totalCycles;
     public final int [] readLengths;
 
-    public final Substructure barcodes;
+    public final Substructure sampleBarcodes;
     public final Substructure templates;
+    public final Substructure molecularBarcode;
+
     public final Substructure skips;
 
     //nonSkips include barcode and template indices in the order they appear in the descriptors list
@@ -112,10 +115,11 @@ public class ReadStructure {
         this.descriptors = Collections.unmodifiableList(collection);
         int cycles = 0;
 
-        final List<Integer> nonSkipIndicesList  = new ArrayList<Integer>();
-        final List<Integer> barcodeIndicesList  = new ArrayList<Integer>();
-        final List<Integer> templateIndicesList = new ArrayList<Integer>();
-        final List<Integer> skipIndicesList     = new ArrayList<Integer>();
+        final List<Integer> nonSkipIndicesList          = new ArrayList<Integer>();
+        final List<Integer> sampleBarcodeIndicesList    = new ArrayList<Integer>();
+        final List<Integer> templateIndicesList         = new ArrayList<Integer>();
+        final List<Integer> molecularBarcodeIndicesList = new ArrayList<Integer>();
+        final List<Integer> skipIndicesList             = new ArrayList<Integer>();
         readLengths = new int[collection.size()];
 
         int currentCycleIndex = 0;   // Current cycle in the entire read structure
@@ -134,7 +138,7 @@ public class ReadStructure {
             switch(desc.type) {
                 case B:
                     nonSkipIndicesList.add(descIndex);
-                    barcodeIndicesList.add(descIndex);
+                    sampleBarcodeIndicesList.add(descIndex);
                     break;
                 case T:
                     nonSkipIndicesList.add(descIndex);
@@ -143,6 +147,10 @@ public class ReadStructure {
                 case S:
                     skipIndicesList.add(descIndex);
                     break;
+                case M:
+                    nonSkipIndicesList.add(descIndex);
+                    molecularBarcodeIndicesList.add(descIndex);
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unsupported ReadType (" + desc.type + ") encountered by IlluminaRunConfiugration!");
@@ -150,11 +158,12 @@ public class ReadStructure {
             ++descIndex;
         }
 
-        this.totalCycles    = cycles;
-        this.barcodes       = new Substructure(barcodeIndicesList,  allRanges);
-        this.templates      = new Substructure(templateIndicesList, allRanges);
-        this.skips          = new Substructure(skipIndicesList,     allRanges);
-        this.nonSkips       = new Substructure(nonSkipIndicesList,  allRanges);
+        this.totalCycles      = cycles;
+        this.sampleBarcodes   = new Substructure(sampleBarcodeIndicesList,    allRanges);
+        this.templates        = new Substructure(templateIndicesList,         allRanges);
+        this.skips            = new Substructure(skipIndicesList,             allRanges);
+        this.molecularBarcode = new Substructure(molecularBarcodeIndicesList, allRanges);
+        this.nonSkips         = new Substructure(nonSkipIndicesList,          allRanges);
     }
 
     /**
@@ -196,7 +205,6 @@ public class ReadStructure {
             throw new IllegalArgumentException(readStructure + " cannot be parsed as a ReadStructure! " + ReadStructureMsg);
         }
 
-
         final Matcher subMatcher = SubPattern.matcher(readStructure);
         final List<ReadDescriptor> descriptors = new ArrayList<ReadDescriptor>();
         while(subMatcher.find()) {
@@ -237,7 +245,7 @@ public class ReadStructure {
     }
 
     /** Represents a subset of ReadDescriptors in the containing ReadStructure, they ARE NOT necessarily contiguous
-     *  in the containing ReadStrucure but they ARE in the order they appear in the containing ReadStructure */
+     *  in the containing ReadStructure but they ARE in the order they appear in the containing ReadStructure */
     public class Substructure implements Iterable<ReadDescriptor> {
         /** Total number of descriptors == readTypeIndices.length */
         private final int   numDescriptors;

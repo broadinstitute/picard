@@ -105,8 +105,20 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testSingleEndWithBarcodeAtStartAndMolecularIndicies() throws Exception {
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "8B4M21T");
+        Assert.assertEquals(metricsFile.getMetrics().get(11).PERFECT_MATCHES, 1);
+    }
+
+    @Test
     public void testSingleEndWithBarcodeAtEnd() throws Exception {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T8B");
+        Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
+    }
+
+    @Test
+     public void testSingleEndWithBarcodeAtEndAndMolecularIndicies() throws Exception {
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B");
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
 
@@ -116,6 +128,11 @@ public class ExtractIlluminaBarcodesTest extends CommandLineProgramTest {
         Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
     }
 
+    @Test
+    public void testPairedEndWithBarcodeAndMolecularIndicies() throws Exception {
+        final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "4M21T8B21T4M");
+        Assert.assertEquals(metricsFile.getMetrics().get(0).PERFECT_MATCHES, 5);
+    }
     @Test
     public void testPairedEndWithBarcodeOnSecondEnd() throws Exception {
         final MetricsFile<ExtractIlluminaBarcodes.BarcodeMetric, Integer> metricsFile = runIt(1, "25T25T8B");

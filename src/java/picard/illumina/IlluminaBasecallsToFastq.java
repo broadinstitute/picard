@@ -169,7 +169,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         CASAVA_1_8, ILLUMINA
     }
     
-    private final Map<String, FastqRecordsWriter> barcodeFastqWriterMap = new HashMap<String, FastqRecordsWriter>();
+    private final Map<String, FastqRecordsWriter> sampleBarcodeFastqWriterMap = new HashMap<String, FastqRecordsWriter>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<FastqRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
@@ -231,18 +231,18 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         }
         final boolean demultiplex;
         if (OUTPUT_PREFIX != null) {
-            barcodeFastqWriterMap.put(null, buildWriter(OUTPUT_PREFIX));
+            sampleBarcodeFastqWriterMap.put(null, buildWriter(OUTPUT_PREFIX));
             demultiplex = false;
         } else {
             populateWritersFromMultiplexParams();
             demultiplex = true;
         }
-        final int readsPerCluster = readStructure.templates.length() + readStructure.barcodes.length();
+        final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
         basecallsConverter = new IlluminaBasecallsConverter<FastqRecordsForCluster>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                barcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE/readsPerCluster, TMP_DIR, NUM_PROCESSORS,
+                sampleBarcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / readsPerCluster, TMP_DIR, NUM_PROCESSORS,
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
-                readStructure.barcodes.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
+                        readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
                 this.APPLY_EAMSS_FILTER, INCLUDE_NON_PF_READS, IGNORE_UNEXPECTED_BARCODES);
 
         log.info("READ STRUCTURE IS " + readStructure.toString());
@@ -250,7 +250,6 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         basecallsConverter.setConverter(
 		        new ClusterToFastqRecordsForClusterConverter(
 				        basecallsConverter.getFactory().getOutputReadStructure()));
-
     }
 
     /**
@@ -272,41 +271,41 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     }
 
     /**
-     * For each line in the MULTIPLEX_PARAMS file create a FastqRecordsWriter and put it in the barcodeFastqWriterMap map,
-     * where the key to the map is the concatenation of all barcodes in order for the given line.
+     * For each line in the MULTIPLEX_PARAMS file create a FastqRecordsWriter and put it in the sampleBarcodeFastqWriterMap map,
+     * where the key to the map is the concatenation of all sampleBarcodes in order for the given line.
      */
     private void populateWritersFromMultiplexParams() {
         final TabbedTextFileWithHeaderParser libraryParamsParser = new TabbedTextFileWithHeaderParser(MULTIPLEX_PARAMS);
 
         final Set<String> expectedColumnLabels = CollectionUtil.makeSet("OUTPUT_PREFIX");
-        final List<String> barcodeColumnLabels = new ArrayList<String>();
-        for (int i = 1; i <= readStructure.barcodes.length(); i++) {
-            barcodeColumnLabels.add("BARCODE_" + i);
+        final List<String> sampleBarcodeColumnLabels = new ArrayList<String>();
+        for (int i = 1; i <= readStructure.sampleBarcodes.length(); i++) {
+            sampleBarcodeColumnLabels.add("BARCODE_" + i);
         }
 
-        expectedColumnLabels.addAll(barcodeColumnLabels);
+        expectedColumnLabels.addAll(sampleBarcodeColumnLabels);
         assertExpectedColumns(libraryParamsParser.columnLabels(), expectedColumnLabels);
 
         for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
-            List<String> barcodeValues = null;
+            List<String> sampleBarcodeValues = null;
 
-            if (barcodeColumnLabels.size() > 0) {
-                barcodeValues = new ArrayList<String>();
-                for (final String barcodeLabel : barcodeColumnLabels) {
-                    barcodeValues.add(row.getField(barcodeLabel));
+            if (sampleBarcodeColumnLabels.size() > 0) {
+                sampleBarcodeValues = new ArrayList<String>();
+                for (final String sampleBarcodeLabel : sampleBarcodeColumnLabels) {
+                    sampleBarcodeValues.add(row.getField(sampleBarcodeLabel));
                 }
             }
 
-            final String key = (barcodeValues == null || barcodeValues.contains("N")) ? null : StringUtil.join("", barcodeValues);
-            if (barcodeFastqWriterMap.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded MULTIPLEX_PARAMS file
+            final String key = (sampleBarcodeValues == null || sampleBarcodeValues.contains("N")) ? null : StringUtil.join("", sampleBarcodeValues);
+            if (sampleBarcodeFastqWriterMap.containsKey(key)) {    //This will catch the case of having more than 1 line in a non-barcoded MULTIPLEX_PARAMS file
                 throw new PicardException("Row for barcode " + key + " appears more than once in MULTIPLEX_PARAMS file " +
                         MULTIPLEX_PARAMS);
             }
 
             final FastqRecordsWriter writer = buildWriter(new File(row.getField("OUTPUT_PREFIX")));
-            barcodeFastqWriterMap.put(key, writer);
+            sampleBarcodeFastqWriterMap.put(key, writer);
         }
-        if (barcodeFastqWriterMap.isEmpty()) {
+        if (sampleBarcodeFastqWriterMap.isEmpty()) {
             throw new PicardException("MULTIPLEX_PARAMS file " + MULTIPLEX_PARAMS + " does have any data rows.");
         }
         libraryParamsParser.close();
@@ -322,16 +321,24 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final String prefixString = outputPrefix.getName();
         final String suffixString = COMPRESS_OUTPUTS ? "fastq.gz" : "fastq";
         final FastqWriter[] templateWriters = new FastqWriter[readStructure.templates.length()];
-        final FastqWriter[] barcodeWriters = new FastqWriter[readStructure.barcodes.length()];
+        final FastqWriter[] sampleBarcodeWriters = new FastqWriter[readStructure.sampleBarcodes.length()];
+        final FastqWriter[] molecularBarcodeWriters = new FastqWriter[readStructure.molecularBarcode.length()];
+
         for (int i = 0; i < templateWriters.length; ++i) {
             final String filename = String.format("%s.%d.%s", prefixString, i+1, suffixString);
             templateWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
         }
-        for (int i = 0; i < barcodeWriters.length; ++i) {
+
+        for (int i = 0; i < sampleBarcodeWriters.length; ++i) {
             final String filename = String.format("%s.barcode_%d.%s", prefixString, i+1, suffixString);
-            barcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
+            sampleBarcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
         }
-        return new FastqRecordsWriter(templateWriters, barcodeWriters);
+
+        for (int i = 0; i < molecularBarcodeWriters.length; ++i) {
+            final String filename = String.format("%s.index_%d.%s", prefixString, i+1, suffixString);
+            molecularBarcodeWriters[i] = fastqWriterFactory.newWriter(new File(outputDir, filename));
+        }
+        return new FastqRecordsWriter(templateWriters, sampleBarcodeWriters, molecularBarcodeWriters);
     }
 
     public static void main(final String[] args) {
@@ -339,25 +346,30 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     }
 
     /**
-     * Container for various FastqWriters, one for each template read and one for each barcode read.
+     * Container for various FastqWriters, one for each template read, one for each sample barcode read,
+     * and one for each molecular barcode read.
      */
     private static class FastqRecordsWriter implements IlluminaBasecallsConverter.ConvertedClusterDataWriter<FastqRecordsForCluster> {
         final FastqWriter[] templateWriters;
-        final FastqWriter[] barcodeWriters;
+        final FastqWriter[] sampleBarcodeWriters;
+        final FastqWriter[] molecularBarcodeWriters;
 
         /**
          * @param templateWriters Writers for template reads in order, e,g. 0th element is for template read 1.
-         * @param barcodeWriters Writers for barcode reads in order, e,g. 0th element is for barcode read 1.
+         * @param sampleBarcodeWriters Writers for sample barcode reads in order, e,g. 0th element is for sample barcode read 1.
+         * @param molecularBarcodeWriters Writers for molecular barcode reads in order, e,g. 0th element is for molecualr barcode read 1.
          */
-        private FastqRecordsWriter(final FastqWriter[] templateWriters, final FastqWriter[] barcodeWriters) {
-            this.templateWriters = templateWriters;
-            this.barcodeWriters = barcodeWriters;
+        private FastqRecordsWriter(final FastqWriter[] templateWriters, final FastqWriter[] sampleBarcodeWriters, final FastqWriter[] molecularBarcodeWriters) {
+            this.templateWriters         = templateWriters;
+            this.sampleBarcodeWriters    = sampleBarcodeWriters;
+            this.molecularBarcodeWriters = molecularBarcodeWriters;
         }
 
         @Override
         public void write(final FastqRecordsForCluster records) {
-            write(templateWriters, records.templateRecords);
-            write(barcodeWriters, records.barcodeRecords);
+            write(templateWriters,         records.templateRecords);
+            write(sampleBarcodeWriters,    records.sampleBarcodeRecords);
+            write(molecularBarcodeWriters, records.molecularBarcodeRecords);
         }
 
         private void write(final FastqWriter[] writers, final FastqRecord[] records) {
@@ -371,7 +383,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             for (final FastqWriter writer : templateWriters) {
                 writer.close();
             }
-            for (final FastqWriter writer : barcodeWriters) {
+            for (final FastqWriter writer : sampleBarcodeWriters) {
+                writer.close();
+            }
+            for (final FastqWriter writer : molecularBarcodeWriters) {
                 writer.close();
             }
         }
@@ -383,11 +398,13 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     static class FastqRecordsForCluster {
         // These are accessed directly by converter and writer rather than through getters and setters.
         final FastqRecord[] templateRecords;
-        final FastqRecord[] barcodeRecords;
+        final FastqRecord[] sampleBarcodeRecords;
+        final FastqRecord[] molecularBarcodeRecords;
 
-        FastqRecordsForCluster(final int numTemplates, final int numBarcodes) {
-            templateRecords = new FastqRecord[numTemplates];
-            barcodeRecords = new FastqRecord[numBarcodes];
+        FastqRecordsForCluster(final int numTemplates, final int numSampleBarcodes, final int numMolecularBarcodes) {
+            templateRecords         = new FastqRecord[numTemplates];
+            sampleBarcodeRecords    = new FastqRecord[numSampleBarcodes];
+            molecularBarcodeRecords = new FastqRecord[numMolecularBarcodes];
         }
     }
 
@@ -398,19 +415,25 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             implements IlluminaBasecallsConverter.ClusterDataConverter<FastqRecordsForCluster> {
 
         private final int [] templateIndices;
-        private final int [] barcodeIndices;
+        private final int [] sampleBarcodeIndicies;
+        private final int [] molecularBarcodeIndicies;
 
         ClusterToFastqRecordsForClusterConverter(final ReadStructure outputReadStructure) {
-            this.templateIndices = outputReadStructure.templates.getIndices();
-            this.barcodeIndices = outputReadStructure.barcodes.getIndices();
+            this.templateIndices          = outputReadStructure.templates.getIndices();
+            this.sampleBarcodeIndicies    = outputReadStructure.sampleBarcodes.getIndices();
+            this.molecularBarcodeIndicies = outputReadStructure.molecularBarcode.getIndices();
         }
 
         @Override
         public FastqRecordsForCluster convertClusterToOutputRecord(final ClusterData cluster) {
-            final FastqRecordsForCluster ret = new FastqRecordsForCluster(readStructure.templates.length(), readStructure.barcodes.length());
-            final boolean appendReadNumberSuffix = ret.templateRecords.length > 1;
-            makeFastqRecords(ret.templateRecords, templateIndices, cluster, appendReadNumberSuffix);
-            makeFastqRecords(ret.barcodeRecords, barcodeIndices, cluster, false);
+            final FastqRecordsForCluster ret = new FastqRecordsForCluster(readStructure.templates.length(), readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length());
+            final boolean appendTemplateNumberSuffix = ret.templateRecords.length > 1;
+            final boolean appendMolecularBarcodeNumber = ret.molecularBarcodeRecords.length > 1;
+
+            makeFastqRecords(ret.templateRecords,         templateIndices,          cluster, appendTemplateNumberSuffix);
+            makeFastqRecords(ret.sampleBarcodeRecords,    sampleBarcodeIndicies,    cluster, false);
+            makeFastqRecords(ret.molecularBarcodeRecords, molecularBarcodeIndicies, cluster, appendMolecularBarcodeNumber);
+
             return ret;
         }
 
@@ -431,17 +454,20 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     }
 
     /**
-     * Coded passed to IlluminaBasecallsConverter for use in SortingCollections of output records.
+     * Codec passed to IlluminaBasecallsConverter for use in SortingCollections of output records.
      */
     static class FastqRecordsForClusterCodec implements SortingCollection.Codec<FastqRecordsForCluster> {
         private final int numTemplates;
-        private final int numBarcodes;
+        private final int numSampleBarcodes;
+        private final int numMolecularBarcodes;
+
         private BasicFastqWriter writer = null;
         private FastqReader reader = null;
 
-        FastqRecordsForClusterCodec(final int numTemplates, final int numBarcodes) {
+        FastqRecordsForClusterCodec(final int numTemplates, final int numSampleBarcodes, final int numMolecularBarcodes) {
             this.numTemplates = numTemplates;
-            this.numBarcodes = numBarcodes;
+            this.numSampleBarcodes = numSampleBarcodes;
+            this.numMolecularBarcodes = numMolecularBarcodes;
         }
 
         @Override
@@ -454,12 +480,14 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             reader = new FastqReader(new BufferedReader(new InputStreamReader(is)));
         }
 
+        //TODO: add tests to encode and decode
         @Override
         public void encode(final FastqRecordsForCluster val) {
             if (numTemplates != val.templateRecords.length) throw new IllegalStateException();
-            if (numBarcodes != val.barcodeRecords.length) throw new IllegalStateException();
+            if (numSampleBarcodes != val.sampleBarcodeRecords.length) throw new IllegalStateException();
             encodeArray(val.templateRecords);
-            encodeArray(val.barcodeRecords);
+            encodeArray(val.sampleBarcodeRecords);
+ //           encodeArray(val.molecularBarcodeRecords);
             writer.flush();
         }
 
@@ -472,9 +500,10 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         @Override
         public FastqRecordsForCluster decode() {
             if (!reader.hasNext()) return null;
-            final FastqRecordsForCluster ret = new FastqRecordsForCluster(numTemplates, numBarcodes);
+            final FastqRecordsForCluster ret = new FastqRecordsForCluster(numTemplates, numSampleBarcodes, numMolecularBarcodes);
             decodeArray(ret.templateRecords);
-            decodeArray(ret.barcodeRecords);
+            decodeArray(ret.sampleBarcodeRecords);
+            decodeArray(ret.molecularBarcodeRecords);
             return ret;
         }
 
@@ -486,7 +515,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
 
         @Override
         public SortingCollection.Codec<FastqRecordsForCluster> clone() {
-            return new FastqRecordsForClusterCodec(numTemplates, numBarcodes);
+            return new FastqRecordsForClusterCodec(numTemplates, numSampleBarcodes, numMolecularBarcodes);
         }
     }
 }

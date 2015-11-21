@@ -201,9 +201,22 @@ public class IlluminaUtil {
      * @return A single string representation of all the barcodes
      */
     public static String barcodeSeqsToString(final String barcodes[]) {
+        return stringSeqsToString(barcodes, BARCODE_DELIMITER);
+    }
+
+    /**
+     * Concatenates all the barcode sequences with BARCODE_DELIMITER
+     * @param barcodes
+     * @return A single string representation of all the barcodes
+     */
+    public static String barcodeSeqsToString(final byte barcodes[][]) {
+        return byteArrayToString(barcodes, BARCODE_DELIMITER);
+    }
+
+    public static String stringSeqsToString(final String barcodes[], String delim) {
         final StringBuilder sb = new StringBuilder();
         for (final String bc : barcodes) {
-            if (sb.length() > 0) sb.append(BARCODE_DELIMITER);
+            if (sb.length() > 0) sb.append(delim);
             sb.append(bc);
         }
         return sb.toString();
@@ -214,11 +227,11 @@ public class IlluminaUtil {
      * @param barcodes
      * @return A single string representation of all the barcodes
      */
-    public static String barcodeSeqsToString(final byte barcodes[][]) {
+    public static String byteArrayToString(final byte barcodes[][], String delim) {
         final String bcs[] = new String[barcodes.length];
         for (int i = 0; i < barcodes.length; i++) {
             bcs[i] = StringUtil.bytesToString(barcodes[i]);
         }
-        return barcodeSeqsToString(bcs);
+        return stringSeqsToString(bcs, delim);
     }
 }
