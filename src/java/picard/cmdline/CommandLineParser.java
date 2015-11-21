@@ -256,8 +256,8 @@ public class CommandLineParser {
             }
             if (field.getAnnotation(Option.class) != null) {
                 handleOptionAnnotation(field, fieldCounter);
-                //only increase counter if the field had default printOrder 
-                if(field.getAnnotation(Option.class).printOrder() == Integer.MAX_VALUE)
+                // only increase counter if the field had default printOrder 
+                if (field.getAnnotation(Option.class).printOrder() == Integer.MAX_VALUE)
                 		fieldCounter++;
             } else if (!isCommandLineProgram() && field.getAnnotation(NestedOptions.class) != null) {
                 // If callerOptions is an instance of CommandLineProgram, defer creation of child
@@ -268,8 +268,8 @@ public class CommandLineParser {
             
         }
         
-       //make sure to sort options according to printOrder
-        if(optionDefinitions!=null && !optionDefinitions.isEmpty()){
+       // make sure to sort options according to printOrder
+        if (optionDefinitions != null && !optionDefinitions.isEmpty()){
         	Collections.sort(optionDefinitions, new OptionDefinitionByPrintOrderComparator());
         }
 
@@ -299,7 +299,6 @@ public class CommandLineParser {
      * @param stream Where to write the usage message.
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
-    	
         if (prefix.isEmpty()) {
             stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
             stream.println("\nVersion: " + getVersion());
@@ -883,7 +882,7 @@ public class CommandLineParser {
     }
 
     /**
-     * @param field
+     * @param field the command line parameter as a {@link Field}
      * @param fieldPosition the field number as returned by getAllFields() that returns all fields including those of superclasses
      */
     private void handleOptionAnnotation(final Field field, final int fieldPosition) {
@@ -910,16 +909,16 @@ public class CommandLineParser {
             }
 
             int printOrder = optionAnnotation.printOrder();
-            if(printOrder == Integer.MAX_VALUE){
-            	/*
-            	 *  we got the default ie the print order was not specified.
-            	 *  we use the field position to set its default print order
-            	 *  but  we multiply by 1000 to
-            	 *  (1) make sure that custom ordering is preserved as long as it is below 1000
-            	 *  (2) get rooms in between each options to be able to insert your own options
-            	 */
+            /*
+        	 *  check if we got the default printOrder (ie the print order was not specified in 
+        	 *  field annotation).
+        	 *  If so we use the field position to set its default print order
+        	 *  *but* we multiply the field position by 1000 to
+        	 *  (1) make sure that custom ordering is preserved as long as it is below 1000
+        	 *  (2) get rooms in between each options to be able to insert your own options
+        	 */
+            if (printOrder == Integer.MAX_VALUE) {
             	printOrder = fieldPosition * 1000;  
-            	 
             }
             
             
@@ -1113,7 +1112,7 @@ public class CommandLineParser {
     }
 
     
-    protected static class OptionDefinitionByPrintOrderComparator implements Comparator<OptionDefinition>{
+    protected static class OptionDefinitionByPrintOrderComparator implements Comparator<OptionDefinition> {
 
 		@Override
 		public int compare(OptionDefinition o1, OptionDefinition o2) {
