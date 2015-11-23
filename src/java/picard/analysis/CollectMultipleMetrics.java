@@ -232,12 +232,32 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.REFERENCE_SEQUENCE = reference;
                 return program;
             }
+        },
+        CollectQualityYieldMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+            @Override
+            public boolean supportsMetricAccumulationLevel() {
+                return false;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+                final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
+                program.OUTPUT = new File(outbase + ".quality_yield_metrics");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+                return program;
+            }
         }
     }
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
-
 
     @Option(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)

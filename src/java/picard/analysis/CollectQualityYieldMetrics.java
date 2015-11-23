@@ -24,11 +24,13 @@
 
 package picard.analysis;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
@@ -52,16 +54,7 @@ import java.io.File;
         usageShort = "Collects a set of metrics that quantify the quality and yield of sequence data from the provided SAM/BAM",
         programGroup = Metrics.class
 )
-public class CollectQualityYieldMetrics extends CommandLineProgram {
-
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "A SAM or BAM file to process.")
-    public File INPUT;
-
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "The metrics file to write with quality yield metrics.")
-    public File OUTPUT;
-
+public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
             doc = "If available in the OQ tag, use the original quality scores " +
                     "as inputs instead of the quality scores in the QUAL field.")
@@ -75,79 +68,64 @@ public class CollectQualityYieldMetrics extends CommandLineProgram {
             "of bases if there are supplemental alignments in the input file.")
     public boolean INCLUDE_SUPPLEMENTAL_ALIGNMENTS = false;
 
-    /** Stock main method for a command line program. */
-    public static void main(final String[] argv) {
-        new CollectQualityYieldMetrics().instanceMainWithExit(argv);
+    // The metrics to be accumulated
+    private final QualityYieldMetrics metrics = new QualityYieldMetrics();
+
+    /** Ensure that we get all reads regardless of alignment status. */
+    @Override protected boolean usesNoRefReads() { return true; }
+
+    @Override
+    protected void setup(final SAMFileHeader header, final File samFile) {
+        IOUtil.assertFileIsWritable(OUTPUT);
     }
 
-    /**
-     * Main method for the program.  Checks that all input files are present and
-     * readable and that the output file can be written to.  Then iterates through
-     * all the records accumulating metrics.  Finally writes metrics file
-     */
-    protected int doWork() {
-        final Log log = Log.getInstance(getClass());
-        final ProgressLogger progress = new ProgressLogger(log);
+    @Override
+    protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
+        if (!INCLUDE_SECONDARY_ALIGNMENTS    && rec.getNotPrimaryAlignmentFlag()) return;
+        if (!INCLUDE_SUPPLEMENTAL_ALIGNMENTS && rec.getSupplementaryAlignmentFlag()) return;
 
-        // Some quick parameter checking
-        IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        final int length = rec.getReadLength();
+        metrics.TOTAL_READS++;
+        metrics.TOTAL_BASES += length;
 
-        log.info("Reading input file and calculating metrics.");
-
-        final SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
-
-        final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
-        final QualityYieldMetrics metrics = new QualityYieldMetrics();
-
-        for (final SAMRecord rec : sam) {
-            if (!INCLUDE_SECONDARY_ALIGNMENTS    && rec.getNotPrimaryAlignmentFlag()) continue;
-            if (!INCLUDE_SUPPLEMENTAL_ALIGNMENTS && rec.getSupplementaryAlignmentFlag()) continue;
-
-            metrics.TOTAL_READS++;
-            final int length = rec.getReadLength();
-
-            final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
-            if (isPfRead) {
-                metrics.PF_READS++;
-                metrics.PF_BASES += length;
-            }
-
-            metrics.TOTAL_BASES += length;
-
-            final byte[] quals;
-            if (USE_ORIGINAL_QUALITIES) {
-                byte[] tmp = rec.getOriginalBaseQualities();
-                if (tmp == null) tmp = rec.getBaseQualities();
-                quals = tmp;
-            } else {
-                quals = rec.getBaseQualities();
-            }
-
-            // add up quals, and quals >= 20
-            for (int i = 0; i < quals.length; ++i) {
-                metrics.Q20_EQUIVALENT_YIELD += quals[i];
-                if (quals[i] >= 20) metrics.Q20_BASES++;
-                if (quals[i] >= 30) metrics.Q30_BASES++;
-
-                if (isPfRead) {
-                    metrics.PF_Q20_EQUIVALENT_YIELD += quals[i];
-                    if (quals[i] >= 20) metrics.PF_Q20_BASES++;
-                    if (quals[i] >= 30) metrics.PF_Q30_BASES++;
-                }
-            }
-
-            progress.record(rec);
+        final boolean isPfRead = !rec.getReadFailsVendorQualityCheckFlag();
+        if (isPfRead) {
+            metrics.PF_READS++;
+            metrics.PF_BASES += length;
         }
 
+        final byte[] quals;
+        if (USE_ORIGINAL_QUALITIES) {
+            byte[] tmp = rec.getOriginalBaseQualities();
+            if (tmp == null) tmp = rec.getBaseQualities();
+            quals = tmp;
+        } else {
+            quals = rec.getBaseQualities();
+        }
+
+        // add up quals, and quals >= 20
+        for (final int qual : quals) {
+            metrics.Q20_EQUIVALENT_YIELD += qual;
+            if (qual >= 20) metrics.Q20_BASES++;
+            if (qual >= 30) metrics.Q30_BASES++;
+
+            if (isPfRead) {
+                metrics.PF_Q20_EQUIVALENT_YIELD += qual;
+                if (qual >= 20) metrics.PF_Q20_BASES++;
+                if (qual >= 30) metrics.PF_Q30_BASES++;
+            }
+        }
+    }
+
+    @Override
+    protected void finish() {
+        final MetricsFile<QualityYieldMetrics, Integer> metricsFile = getMetricsFile();
         metrics.READ_LENGTH = metrics.TOTAL_READS == 0 ? 0 : (int) (metrics.TOTAL_BASES / metrics.TOTAL_READS);
         metrics.Q20_EQUIVALENT_YIELD = metrics.Q20_EQUIVALENT_YIELD / 20;
         metrics.PF_Q20_EQUIVALENT_YIELD = metrics.PF_Q20_EQUIVALENT_YIELD / 20;
 
         metricsFile.addMetric(metrics);
         metricsFile.write(OUTPUT);
-
-        return 0;
     }
 
     /** A set of metrics used to describe the general quality of a BAM file */
