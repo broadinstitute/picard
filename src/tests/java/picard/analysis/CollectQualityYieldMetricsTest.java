@@ -27,9 +27,7 @@ package picard.analysis;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
-import picard.util.RExecutor;
 
 import java.io.File;
 import java.io.FileReader;
@@ -49,7 +47,7 @@ public class CollectQualityYieldMetricsTest extends CommandLineProgramTest {
     public void test() throws IOException {
         final File input = new File(TEST_DATA_DIR, "insert_size_metrics_test.sam");
         final File outfile   = File.createTempFile("test", ".quality_yield_metrics");
-        //outfile.deleteOnExit();
+        outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
