@@ -58,6 +58,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -373,20 +374,15 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
      * @return A Map of ReadGroupHeaderTags -> Values
      */
     private Map<String, String> buildSamHeaderParameters(final List<String> barcodes) {
-        final Map<String, String> params = new HashMap<String, String>();
+        final Map<String, String> params = new LinkedHashMap<String, String>();
 
         String platformUnit = RUN_BARCODE + "." + LANE;
         if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
-        params.put("PU", platformUnit);
 
-        params.put("CN", SEQUENCING_CENTER);
         params.put("PL", PLATFORM);
-        if (RUN_START_DATE != null) {
-            final Iso8601Date date = new Iso8601Date(RUN_START_DATE);
-            params.put("DT", date.toString());
-        } else {
-            params.put("DT", null);
-        }
+        params.put("PU", platformUnit);
+        params.put("CN", SEQUENCING_CENTER);
+        params.put("DT", RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
 
         return params;
     }

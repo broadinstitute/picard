@@ -208,8 +208,10 @@ class ArtifactCounter {
         PreAdapterDetailMetrics worstPreAdapterMetrics = null;
         BaitBiasDetailMetrics worstBaitBiasMetrics = null;
         for (final DetailPair m : metrics) {
-            if (worstPreAdapterMetrics == null || m.preAdapterMetrics.QSCORE < worstPreAdapterMetrics.QSCORE) worstPreAdapterMetrics = m.preAdapterMetrics;
-            if (worstBaitBiasMetrics == null || m.baitBiasMetrics.QSCORE < worstBaitBiasMetrics.QSCORE) worstBaitBiasMetrics = m.baitBiasMetrics;
+
+            //The comparator first comparse by QSCORE and then uses other fields to guarrantee a deterministic order
+            if (worstPreAdapterMetrics == null || m.preAdapterMetrics.compareTo(worstPreAdapterMetrics) < 0) worstPreAdapterMetrics = m.preAdapterMetrics;
+            if (worstBaitBiasMetrics   == null || m.baitBiasMetrics.  compareTo(worstBaitBiasMetrics)   < 0) worstBaitBiasMetrics   = m.baitBiasMetrics;
         }
         return new DetailPair(worstPreAdapterMetrics, worstBaitBiasMetrics);
     }

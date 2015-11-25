@@ -43,7 +43,7 @@
     <!-- TODO: get this from the build.xml in htsjdk -->
     <property name="htsjdk-classes" value="htsjdk/classes"/>
 
-    <property name="javac.target" value="1.6"/>
+    <property name="javac.target" value="1.7"/>
     <property name="javac.debug" value="true"/>
 
     <!-- Get GIT hash, if available, otherwise leave it blank.  -->

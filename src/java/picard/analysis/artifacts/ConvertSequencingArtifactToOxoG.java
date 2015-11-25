@@ -53,8 +53,8 @@ public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
         IOUtil.assertFileIsReadable(BAIT_BIAS_IN);
         IOUtil.assertFileIsWritable(OXOG_OUT);
 
-        final List<PreAdapterDetailMetrics> preAdapterDetailMetricsList = (List<PreAdapterDetailMetrics>) MetricsFile.readBeans(PRE_ADAPTER_IN);
-        final List<BaitBiasDetailMetrics> baitBiasDetailMetricsList = (List<BaitBiasDetailMetrics>) MetricsFile.readBeans(BAIT_BIAS_IN);
+        final List<PreAdapterDetailMetrics> preAdapterDetailMetricsList = MetricsFile.readBeans(PRE_ADAPTER_IN);
+        final List<BaitBiasDetailMetrics> baitBiasDetailMetricsList = MetricsFile.readBeans(BAIT_BIAS_IN);
 
         // TODO should we validate that the two inputs match up as expected?
 
