@@ -4,11 +4,14 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.ListMap;
 import htsjdk.samtools.util.SequenceUtil;
 import picard.PicardException;
-import picard.analysis.artifacts.SequencingArtifactMetrics.*;
+import picard.analysis.artifacts.SequencingArtifactMetrics.BaitBiasDetailMetrics;
+import picard.analysis.artifacts.SequencingArtifactMetrics.DetailPair;
+import picard.analysis.artifacts.SequencingArtifactMetrics.PreAdapterDetailMetrics;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Keeps track of the AlignmentAccumulators for each artifact / context of interest.
@@ -21,7 +24,7 @@ class ContextAccumulator {
 
     public ContextAccumulator(final Set<String> contexts, final boolean expectedTandemReads) {
         this.expectedTandemReads = expectedTandemReads;
-        this.artifactMap = new HashMap<Transition, Map<String, AlignmentAccumulator>>();
+        this.artifactMap = new HashMap<>();
         for (final Transition transition : Transition.values()) {
             this.artifactMap.put(transition, new HashMap<String, AlignmentAccumulator>());
         }
@@ -44,10 +47,10 @@ class ContextAccumulator {
      * Core method to compute detailed (i.e. context-by-context) metrics from this accumulator.
      */
     public ListMap<Transition, DetailPair> calculateMetrics(final String sampleAlias, final String library) {
-        final ListMap<Transition, DetailPair> detailMetricsMap = new ListMap<Transition, DetailPair>();
+        final ListMap<Transition, DetailPair> detailMetricsMap = new ListMap<>();
         for (final Transition altTransition : Transition.altValues()) {
             final Transition refTransition = altTransition.matchingRef();
-            for (final String context : this.artifactMap.get(altTransition).keySet()) {
+            for (final String context : new TreeSet<>(this.artifactMap.get(altTransition).keySet())) {
                 // each combination of artifact + context represents a single metric row
                 final PreAdapterDetailMetrics preAdapterDetailMetrics = new PreAdapterDetailMetrics();
                 final BaitBiasDetailMetrics baitBiasDetailMetrics = new BaitBiasDetailMetrics();
