@@ -75,9 +75,9 @@ import java.util.Set;
  * @author Jonathan Burke
  */
 public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetrics> extends SAMRecordMultiLevelCollector<METRIC_TYPE, Integer> {
-
-    // What is considered "near" to the bait
-    private static final int NEAR_PROBE_DISTANCE = 250;
+    /** Default distance for a read to be considered "selected". */
+    public static final int NEAR_PROBE_DISTANCE_DEFAULT = 250;
+    private int nearProbeDistance = NEAR_PROBE_DISTANCE_DEFAULT;
 
     //If perTargetCoverage != null then coverage is computed for each specified target and output to this file
     private final File perTargetCoverage;
@@ -115,6 +115,12 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     //information on that read
     private Map<Interval, Coverage> coverageByTargetForRead;
     private Coverage [] cov;
+
+    /** Gets the distance that is allowed between a read and the nearest probe for it to be considered "near probe" and "selected. */
+    public int getNearProbeDistance() { return nearProbeDistance; }
+
+    /** Sets the distance that is allowed between a read and the nearest probe for it to be considered "near probe" and "selected. */
+    public void setNearProbeDistance(final int nearProbeDistance) { this.nearProbeDistance = nearProbeDistance; }
 
     //Converts a targetMetric into a more specific metric of METRIC_TYPE
     public abstract METRIC_TYPE convertMetric(final TargetMetrics targetMetrics);
@@ -186,15 +192,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     }
 
     public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile,
-                                  final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName) {
+                                  final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName,
+                                  final int nearProbeDistance) {
         this.perTargetCoverage = perTargetCoverage;
         this.probeSetName = probeSetName;
+        this.nearProbeDistance = nearProbeDistance;
 
         this.allProbes  = probeIntervals;
         this.allTargets = targetIntervals;
 
         final List<Interval> uniqueBaits = this.allProbes.uniqued().getIntervals();
-        this.probeDetector = new OverlapDetector<Interval>(-NEAR_PROBE_DISTANCE, 0);
+        this.probeDetector = new OverlapDetector<Interval>(-this.nearProbeDistance, 0);
         this.probeDetector.addAll(uniqueBaits, uniqueBaits);
         this.probeTerritory = Interval.countBases(uniqueBaits);
 

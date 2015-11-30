@@ -60,7 +60,8 @@ public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPc
                                                         final File perTargetCoverage,
                                                         final IntervalList targetIntervals,
                                                         final IntervalList probeIntervals,
-                                                        final String probeSetName) {
-        return new TargetedPcrMetricsCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName);
+                                                        final String probeSetName,
+                                                        final int nearProbeDistance) {
+        return new TargetedPcrMetricsCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance);
     }
 }
