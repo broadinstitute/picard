@@ -30,7 +30,7 @@ getCumulative <- function(y, yrange) {
   yLength <- nrow(y)
   ySum <- sum(y[,1])
   for (i in 1:yLength) {
-    yNew[i] <- (yrange * sum(y[i:yLength,1]) / ySum)
+    yNew[i] <- (yrange * sum(as.numeric(y[i:yLength,1])) / ySum)
   }
   return (yNew)
 }
@@ -87,19 +87,19 @@ for (i in 1:length(levels)) {
 
   if (fr %in% names(histogram) ) {
     lines(histogram$insert_size, as.matrix(histogram[fr]),  type="h", col="red")
-    lines(histogram$insert_size, getCumulative(histogram[fr], yrange), col="darkred", lty=2)
+    lines(histogram$insert_size, getCumulative(histogram[fr], frrange), col="darkred", lty=2)
     colors <- c(colors, "red")
     labels <- c(labels, "FR")
   }
   if (rf %in% names(histogram)) {
     lines(histogram$insert_size, as.matrix(histogram[rf]),  type="h", col="blue")
-    lines(histogram$insert_size, getCumulative(histogram[rf], yrange), col="darkblue", lty=2)
+    lines(histogram$insert_size, getCumulative(histogram[rf], rfrange), col="darkblue", lty=2)
     colors <- c(colors, "blue")
     labels <- c(labels, "RF")
    }
   if (tandem %in% names(histogram)) {
     lines(histogram$insert_size, as.matrix(histogram[tandem]),  type="h", col="orange")
-    lines(histogram$insert_size, getCumulative(histogram[tandem], yrange), col="darkorange", lty=2)
+    lines(histogram$insert_size, getCumulative(histogram[tandem], tandemrange), col="darkorange", lty=2)
     colors <- c(colors, "orange")
     labels <- c(labels, "TANDEM")
   }
