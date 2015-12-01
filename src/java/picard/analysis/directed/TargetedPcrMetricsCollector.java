@@ -43,8 +43,33 @@ import java.util.Set;
 public class TargetedPcrMetricsCollector extends TargetMetricsCollector<TargetedPcrMetrics> {
     //maybe instead just inject this into the TargetedMetricCollector ->
 
-    public TargetedPcrMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile, final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName, final int nearProbeDistance) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance);
+    public TargetedPcrMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                       final List<SAMReadGroupRecord> samRgRecords,
+                                       final ReferenceSequenceFile refFile,
+                                       final File perTargetCoverage,
+                                       final IntervalList targetIntervals,
+                                       final IntervalList probeIntervals,
+                                       final String probeSetName,
+                                       final int nearProbeDistance,
+                                       final int minimumMappingQuality,
+                                       final int minimumBaseQuality,
+                                       final boolean clipOverlappingReads) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads);
+    }
+
+    public TargetedPcrMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
+                                       final List<SAMReadGroupRecord> samRgRecords,
+                                       final ReferenceSequenceFile refFile,
+                                       final File perTargetCoverage,
+                                       final IntervalList targetIntervals,
+                                       final IntervalList probeIntervals,
+                                       final String probeSetName,
+                                       final int nearProbeDistance,
+                                       final int minimumMappingQuality,
+                                       final int minimumBaseQuality,
+                                       final boolean clipOverlappingReads,
+                                       final boolean noSideEffects) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects);
     }
 
     @Override

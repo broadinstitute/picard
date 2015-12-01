@@ -62,6 +62,7 @@ public class CollectTargetedPcrMetrics extends CollectTargetedMetrics<TargetedPc
                                                         final IntervalList probeIntervals,
                                                         final String probeSetName,
                                                         final int nearProbeDistance) {
-        return new TargetedPcrMetricsCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance);
+        return new TargetedPcrMetricsCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance,
+                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, CLIP_OVERLAPPING_READS, true);
     }
 }

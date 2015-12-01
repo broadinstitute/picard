@@ -77,14 +77,26 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
     /** The mean coverage of all amplicons in the experiment. */
     public double MEAN_AMPLICON_COVERAGE;
 
-    /** The mean coverage of targets that recieved at least coverage depth = 2 at one base. */
+    /** The mean coverage of targets. */
     public double MEAN_TARGET_COVERAGE;
+
+    /** The median coverage of targets. */
+    public double MEDIAN_TARGET_COVERAGE;
 
     /** The fold by which the amplicon region has been amplified above genomic background. */
     public double FOLD_ENRICHMENT;
 
-    /** The number of targets that did not reach coverage=2 over any base. */
+    /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
+
+    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality. */
+    public double PCT_EXC_MAPQ;
+
+    /** The fraction of aligned bases that were filtered out because they were of low base quality. */
+    public double PCT_EXC_BASEQ;
+
+    /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
+    public double PCT_EXC_OVERLAP;
 
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
@@ -92,13 +104,15 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
      */
     public double FOLD_80_BASE_PENALTY;
 
-    /** The percentage of ALL target bases achieving 2X or greater coverage. */
+    /** The percentage of all target bases achieving 1X or greater coverage. */
+    public double PCT_TARGET_BASES_1X;
+    /** The percentage of all target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
-    /** The percentage of ALL target bases achieving 10X or greater coverage. */
+    /** The percentage of all target bases achieving 10X or greater coverage. */
     public double PCT_TARGET_BASES_10X;
-    /** The percentage of ALL target bases achieving 20X or greater coverage. */
+    /** The percentage of all target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-	/** The percentage of ALL target bases achieving 30X or greater coverage. */
+	/** The percentage of all target bases achieving 30X or greater coverage. */
 	public double PCT_TARGET_BASES_30X;
 
     /**

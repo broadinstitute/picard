@@ -22,16 +22,12 @@
  * THE SOFTWARE.
  */
 
-package picard.analysis;
+package picard.filter;
 
-import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.SAMRecord;
 
-public class BaseDistributionByCycleMetrics extends MetricBase {
-    public int READ_END;
-    public int CYCLE;
-    public double PCT_A;
-    public double PCT_C;
-    public double PCT_G;
-    public double PCT_T;
-    public double PCT_N;
+/** Counting filter that discards reads that have been marked as duplicates. */
+public class CountingDuplicateFilter extends CountingFilter {
+    @Override
+    public boolean reallyFilterOut(final SAMRecord record) { return record.getDuplicateReadFlag(); }
 }

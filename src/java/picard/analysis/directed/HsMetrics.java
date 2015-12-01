@@ -95,8 +95,11 @@ public class HsMetrics extends MultilevelMetrics {
     /** The mean coverage of all baits in the experiment. */
     public double MEAN_BAIT_COVERAGE;
 
-    /** The mean coverage of targets that received at least coverage depth = 2 at one base. */
+    /** The mean coverage of targets. */
     public double MEAN_TARGET_COVERAGE;
+
+    /** The median coverage of targets. */
+    public double MEDIAN_TARGET_COVERAGE;
 
     /** The number of aligned, de-duped, on-bait bases out of the PF bases available. */
     public double PCT_USABLE_BASES_ON_BAIT;
@@ -107,8 +110,17 @@ public class HsMetrics extends MultilevelMetrics {
     /** The fold by which the baited region has been amplified above genomic background. */
     public double FOLD_ENRICHMENT;
 
-    /** The number of targets that did not reach coverage=2 over any base. */
+    /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
+
+    /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality. */
+    public double PCT_EXC_MAPQ;
+
+    /** The fraction of aligned bases that were filtered out because they were of low base quality. */
+    public double PCT_EXC_BASEQ;
+
+    /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
+    public double PCT_EXC_OVERLAP;
 
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to
@@ -116,19 +128,21 @@ public class HsMetrics extends MultilevelMetrics {
      */
     public double FOLD_80_BASE_PENALTY;
 
-    /** The percentage of ALL target bases achieving 2X or greater coverage. */
+    /** The percentage of all target bases achieving 1X or greater coverage. */
+    public double PCT_TARGET_BASES_1X;
+    /** The percentage of all target bases achieving 2X or greater coverage. */
     public double PCT_TARGET_BASES_2X;
-    /** The percentage of ALL target bases achieving 10X or greater coverage. */
+    /** The percentage of all target bases achieving 10X or greater coverage. */
     public double PCT_TARGET_BASES_10X;
-    /** The percentage of ALL target bases achieving 20X or greater coverage. */
+    /** The percentage of all target bases achieving 20X or greater coverage. */
     public double PCT_TARGET_BASES_20X;
-	/** The percentage of ALL target bases achieving 30X or greater coverage. */
+	/** The percentage of all target bases achieving 30X or greater coverage. */
 	public double PCT_TARGET_BASES_30X;
-	/** The percentage of ALL target bases achieving 40X or greater coverage. */
+	/** The percentage of all target bases achieving 40X or greater coverage. */
 	public double PCT_TARGET_BASES_40X;
-	/** The percentage of ALL target bases achieving 50X or greater coverage. */
+	/** The percentage of all target bases achieving 50X or greater coverage. */
 	public double PCT_TARGET_BASES_50X;
-	/** The percentage of ALL target bases achieving 100X or greater coverage. */
+	/** The percentage of all target bases achieving 100X or greater coverage. */
 	public double PCT_TARGET_BASES_100X;
 
     /** The estimated number of unique molecules in the selected part of the library. */

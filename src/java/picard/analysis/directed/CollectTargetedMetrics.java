@@ -2,6 +2,7 @@ package picard.analysis.directed;
 
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
@@ -75,6 +76,15 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     @Option(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
             "considered 'near probe' and included in percent selected.")
     public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
+
+    @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
+    public int MINIMUM_MAPPING_QUALITY = 0;
+
+    @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
+    public int MINIMUM_BASE_QUALITY = 0;
+
+    @Option(doc = "True if we are to clip overlapping reads, false otherwise.", optional=true, overridable = true)
+    public boolean CLIP_OVERLAPPING_READS = false;
 
     /**
      * Asserts that files are readable and writable and then fires off an
