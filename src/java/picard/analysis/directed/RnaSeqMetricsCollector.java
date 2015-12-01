@@ -113,16 +113,22 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         }
 
         public void acceptRecord(SAMRecord rec) {
+            // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
+
             // Filter out some reads, and collect the total number of PF bases
-            if (rec.getReadFailsVendorQualityCheckFlag() || rec.isSecondaryOrSupplementary()) return;
+            if (rec.getReadFailsVendorQualityCheckFlag()) return;
 
-            this.metrics.PF_BASES += rec.getReadLength();
-            if (rec.getReadUnmappedFlag()) return;
+            // NB: we count unmapped reads here
+            if (!rec.getNotPrimaryAlignmentFlag()) this.metrics.PF_BASES += rec.getReadLength();
 
-            if (ignoredSequenceIndices.contains(rec.getReferenceIndex())) {
+            // NB: we count secondary mapped reads here
+            if (!rec.getReadUnmappedFlag() && !rec.getNotPrimaryAlignmentFlag() && ignoredSequenceIndices.contains(rec.getReferenceIndex())) {
                 ++this.metrics.IGNORED_READS;
                 return;
             }
+
+            // We can now ignore secondary or unmapped reads
+            if (rec.getNotPrimaryAlignmentFlag() || rec.getReadUnmappedFlag()) return;
 
             // Grab information about the alignment and overlapping genes etc.
             final Interval readInterval = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
@@ -217,7 +223,7 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
 
             // Strand-specificity is tallied on read basis rather than base at a time.  A read that aligns to more than one
             // gene is not counted.
-            if (overlapsExon && strandSpecificity != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
+            if (!rec.getNotPrimaryAlignmentFlag() && overlapsExon && strandSpecificity != StrandSpecificity.NONE && overlappingGenes.size() == 1) {
                 final boolean negativeTranscriptionStrand = overlappingGenes.iterator().next().isNegativeStrand();
                 final boolean negativeReadStrand = rec.getReadNegativeStrandFlag();
                 final boolean readAndTranscriptStrandsAgree = negativeReadStrand == negativeTranscriptionStrand;
