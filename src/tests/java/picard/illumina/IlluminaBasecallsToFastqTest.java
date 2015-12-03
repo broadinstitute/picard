@@ -28,7 +28,6 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.LineReader;
 import htsjdk.samtools.util.StringUtil;
 import htsjdk.samtools.util.TestUtil;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 import picard.illumina.parser.ReadStructure;
@@ -45,6 +44,9 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     private static final File BASECALLS_DIR = new File("testdata/picard/illumina/25T8B25T/Data/Intensities/BaseCalls");
     private static final File DUAL_BASECALLS_DIR = new File("testdata/picard/illumina/25T8B8B25T/Data/Intensities/BaseCalls");
     private static final File TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B25T/fastq");
+    private static final File TEST_DATA_DIR_WITH_4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M");
+    private static final File TEST_DATA_DIR_WITH_4M4M = new File("testdata/picard/illumina/25T8B25T/fastq_with_4M4M");
+
     private static final File DUAL_TEST_DATA_DIR = new File("testdata/picard/illumina/25T8B8B25T/fastq");
 
     public String getCommandLineProgramName() {
@@ -114,6 +116,16 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testDeMultiplexedWithIndex() throws Exception {
+        runStandardTest(1, "multiplexedBarcodeWithIndex.", "mp_barcode.params", 1, "25T8B4M21T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M);
+    }
+
+    @Test
+    public void testDeMultiplexedWithtwoIndexes() throws Exception {
+        runStandardTest(1, "multiplexedBarcodeWithTwoIndexes.", "mp_barcode.params", 1, "25T8B4M4M17T", BASECALLS_DIR, TEST_DATA_DIR_WITH_4M4M);
+    }
+
+    @Test
     public void testDualBarcodes() throws Exception {
         runStandardTest(1, "dualBarcode.", "barcode_double.params", 2, "25T8B8B25T", DUAL_BASECALLS_DIR, DUAL_TEST_DATA_DIR);
     }
@@ -179,8 +191,12 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     final String filename = outputSam.getName() + "." + i + ".fastq";
                     IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
-                for (int i = 1; i <= readStructure.barcodes.length(); ++i) {
+                for (int i = 1; i <= readStructure.sampleBarcodes.length(); ++i) {
                     final String filename = outputSam.getName() + ".barcode_" + i + ".fastq";
+                    IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
+                }
+                for (int i = 1; i <= readStructure.molecularBarcode.length(); ++i) {
+                    final String filename = outputSam.getName() + ".index_" + i + ".fastq";
                     IOUtil.assertFilesEqual(new File(outputSam.getParentFile(), filename), new File(testDataDir, filename));
                 }
             }

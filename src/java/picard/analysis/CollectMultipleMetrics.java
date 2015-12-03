@@ -232,12 +232,32 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 program.REFERENCE_SEQUENCE = reference;
                 return program;
             }
+        },
+        CollectQualityYieldMetrics {
+            @Override
+            public boolean needsReferenceSequence() {
+                return false;
+            }
+            @Override
+            public boolean supportsMetricAccumulationLevel() {
+                return false;
+            }
+            @Override
+            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+                final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
+                program.OUTPUT = new File(outbase + ".quality_yield_metrics");
+                // Generally programs should not be accessing these directly but it might make things smoother
+                // to just set them anyway. These are set here to make sure that in case of a the derived class
+                // overrides
+                program.INPUT = input;
+                program.REFERENCE_SEQUENCE = reference;
+                return program;
+            }
         }
     }
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
-
 
     @Option(doc = "If true (default), then the sort order in the header file will be ignored.",
             shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
@@ -254,6 +274,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = new HashSet<MetricAccumulationLevel>(accumLevelDefault);
+
+    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.insert_size_metrics.EXT). None if null", optional=true)
+    public String FILE_EXTENSION = null;
 
     @Option(doc = "List of metrics programs to apply during the pass through the SAM file.")
     public List<Program> PROGRAM = CollectionUtil.makeList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
@@ -313,6 +336,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                         " was overridden in the command line. " + program.toString() + " will be run against the entire input.");
             }
             final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
+
+            // Add a file extension if desired
+            if (null != FILE_EXTENSION && !FILE_EXTENSION.isEmpty()) instance.OUTPUT = new File(instance.OUTPUT.getAbsolutePath() + FILE_EXTENSION);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway

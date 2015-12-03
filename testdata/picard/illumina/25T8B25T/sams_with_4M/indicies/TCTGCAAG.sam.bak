@@ -1,0 +1,3 @@
+@HD	VN:1.5	SO:queryname
+@RG	ID:HiMom.1	SM:SA_TCTGCAAG	LB:LN_TCTGCAAG	PL:illumina	PU:HiMom.1.TCTGCAAG	CN:BI
+HiMom:1:1201:1042:2174	4	*	0	0	*	*	0	0	.TCA	#0;@	RG:Z:HiMom.1

@@ -92,7 +92,8 @@ public class CalculateHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetr
                                               final File perTargetCoverage,
                                               final IntervalList targetIntervals,
                                               final IntervalList probeIntervals,
-                                              final String probeSetName) {
-        return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName);
+                                              final String probeSetName,
+                                              final int nearProbeDistance) {
+        return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance);
     }
 }

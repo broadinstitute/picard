@@ -58,6 +58,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -306,14 +307,14 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
 
     /**
      * For each line in the LIBRARY_PARAMS file create a SamFileWriter and put it in the barcodeSamWriterMap map, where
-     * the key to the map is the concatenation of all barcodes in order for the given line
+     * the key to the map is the concatenation of all sampleBarcodes in order for the given line
      */
     private void populateWritersFromLibraryParams() {
         final TabbedTextFileWithHeaderParser libraryParamsParser = new TabbedTextFileWithHeaderParser(LIBRARY_PARAMS);
 
         final Set<String> expectedColumnLabels = CollectionUtil.makeSet("OUTPUT", "SAMPLE_ALIAS", "LIBRARY_NAME");
         final List<String> barcodeColumnLabels = new ArrayList<String>();
-        if (readStructure.barcodes.length() == 1) {
+        if (readStructure.sampleBarcodes.length() == 1) {
             //For the single barcode read case, the barcode label name can either by BARCODE or BARCODE_1
             if (libraryParamsParser.hasColumn("BARCODE")) {
                 barcodeColumnLabels.add("BARCODE");
@@ -323,7 +324,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
                 throw new PicardException("LIBRARY_PARAMS(BARCODE_PARAMS) file " + LIBRARY_PARAMS + " does not have column BARCODE or BARCODE_1.");
             }
         } else {
-            for (int i = 1; i <= readStructure.barcodes.length(); i++) {
+            for (int i = 1; i <= readStructure.sampleBarcodes.length(); i++) {
                 barcodeColumnLabels.add("BARCODE_" + i);
             }
         }
@@ -365,28 +366,23 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
     }
 
     /**
-     * Create the list of headers that will be added to the SAMFileHeader for a library with the given barcodes (or
-     * the entire run if barcodes == NULL).  Note that any value that is null will NOT be added via buildSamFileWriter
+     * Create the list of headers that will be added to the SAMFileHeader for a library with the given sampleBarcodes (or
+     * the entire run if sampleBarcodes == NULL).  Note that any value that is null will NOT be added via buildSamFileWriter
      * but is placed in the map in order to be able to query the tags that we automatically add.
      *
-     * @param barcodes The list of barcodes that uniquely identify the read group we are building parameters for
+     * @param barcodes The list of sampleBarcodes that uniquely identify the read group we are building parameters for
      * @return A Map of ReadGroupHeaderTags -> Values
      */
     private Map<String, String> buildSamHeaderParameters(final List<String> barcodes) {
-        final Map<String, String> params = new HashMap<String, String>();
+        final Map<String, String> params = new LinkedHashMap<String, String>();
 
         String platformUnit = RUN_BARCODE + "." + LANE;
         if (barcodes != null) platformUnit += ("." + IlluminaUtil.barcodeSeqsToString(barcodes));
-        params.put("PU", platformUnit);
 
-        params.put("CN", SEQUENCING_CENTER);
         params.put("PL", PLATFORM);
-        if (RUN_START_DATE != null) {
-            final Iso8601Date date = new Iso8601Date(RUN_START_DATE);
-            params.put("DT", date.toString());
-        } else {
-            params.put("DT", null);
-        }
+        params.put("PU", platformUnit);
+        params.put("CN", SEQUENCING_CENTER);
+        params.put("DT", RUN_START_DATE == null ? null : new Iso8601Date(RUN_START_DATE).toString());
 
         return params;
     }
@@ -414,6 +410,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         }
 
         final SAMFileHeader header = new SAMFileHeader();
+
         header.setSortOrder(SAMFileHeader.SortOrder.queryname);
         header.addReadGroup(rg);
         return new SAMFileWriterWrapper(new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, output));
@@ -440,7 +437,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<String>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if (!readStructure.barcodes.isEmpty()) {
+        if (!readStructure.sampleBarcodes.isEmpty()) {
             if (LIBRARY_PARAMS == null) {
                 messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
                         " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
@@ -536,7 +533,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             for (int i = 1; i < numRecords; ++i) {
                 ret.records[i] = bamCodec.decode();
                 if (ret.records[i] == null) {
-                    throw new IllegalStateException(String.format("Expected to read % records but read only %d", numRecords, i));
+                    throw new IllegalStateException(String.format("Expected to read %d records but read only %d", numRecords, i));
                 }
             }
             return ret;

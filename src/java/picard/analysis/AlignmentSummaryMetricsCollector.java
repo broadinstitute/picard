@@ -220,7 +220,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             public void addRecord(final SAMRecord record, final ReferenceSequence ref) {
-                if (record.isSecondaryOrSupplementary()) {
+                if (record.getNotPrimaryAlignmentFlag()) {
                     // only want 1 count per read so skip non primary alignments
                     return;
                 }
@@ -261,6 +261,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             private void collectReadData(final SAMRecord record, final ReferenceSequence ref) {
+                // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
+                if (record.getSupplementaryAlignmentFlag()) return;
+
                 metrics.TOTAL_READS++;
                 readLengthHistogram.increment(record.getReadBases().length);
 
@@ -301,7 +304,9 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
             }
 
             private void collectQualityData(final SAMRecord record, final ReferenceSequence reference) {
-                // If the read isnt an aligned PF read then look at the read for no-calls
+                // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
+
+                // If the read isn't an aligned PF read then look at the read for no-calls
                 if (record.getReadUnmappedFlag() || record.getReadFailsVendorQualityCheckFlag() || !doRefMetrics) {
                     final byte[] readBases = record.getReadBases();
                     for (int i = 0; i < readBases.length; i++) {
@@ -312,7 +317,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
                 else if (!record.getReadFailsVendorQualityCheckFlag()) {
                     final boolean highQualityMapping = isHighQualityMapping(record);
-                    if (highQualityMapping) metrics.PF_HQ_ALIGNED_READS++;
+                    if (highQualityMapping && !record.getSupplementaryAlignmentFlag()) metrics.PF_HQ_ALIGNED_READS++;
 
                     final byte[] readBases = record.getReadBases();
                     final byte[] refBases = reference.getBases();

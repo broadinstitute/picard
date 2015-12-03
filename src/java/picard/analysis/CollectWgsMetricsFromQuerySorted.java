@@ -185,6 +185,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.SD_COVERAGE = -1;
         metrics.MEDIAN_COVERAGE = -1;
         metrics.MAD_COVERAGE = -1;
+        metrics.PCT_1X = -1;
         metrics.PCT_5X = -1;
         metrics.PCT_10X = -1;
         metrics.PCT_15X = -1;

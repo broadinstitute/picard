@@ -33,6 +33,7 @@ import picard.PicardException;
 
 import java.io.File;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
@@ -41,6 +42,9 @@ import java.util.TreeSet;
 public class TestFilterVcf {
     private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
     private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
+
+    /** Returns a sorted copy of the supplied set, for safer comparison. */
+    <T extends Comparable> SortedSet<T> sorted(Set<T> in) { return new TreeSet<T>(in); }
 
     /** Tests that all records get PASS set as their filter when extreme values are used for filtering. */
     @Test public void testNoFiltering() throws Exception {
@@ -58,7 +62,7 @@ public class TestFilterVcf {
         final Set<String> fails = CollectionUtil.makeSet("tf2", "rs28566954", "rs28548431");
         final File out = testFiltering(INPUT, ".vcf.gz", 0.4, 0, 0, Double.MAX_VALUE);
         final ListMap<String,String> filters = slurpFilters(out);
-        Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+        Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
     /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
@@ -66,7 +70,7 @@ public class TestFilterVcf {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
         final File out = testFiltering(INPUT, ".vcf.gz", 0, 18, 0, Double.MAX_VALUE);
         final ListMap<String,String> filters = slurpFilters(out);
-        Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+        Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
     /** Tests that genotypes with DP < 18 are marked as failed, but not >= 18. */
@@ -74,7 +78,7 @@ public class TestFilterVcf {
         final Set<String> fails = CollectionUtil.makeSet("rs71509448", "rs71628926", "rs13302979", "rs2710876");
         final File out = testFiltering(INPUT, ".vcf", 0, 18, 0, Double.MAX_VALUE);
         final ListMap<String,String> filters = slurpFilters(out);
-        Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+        Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
     /** Tests that genotypes with low GQ are filtered appropriately. */
@@ -94,7 +98,7 @@ public class TestFilterVcf {
         {
             final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 22, Double.MAX_VALUE);
             final ListMap<String, String> filters = slurpFilters(out);
-            Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+            Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
         }
     }
 
@@ -103,7 +107,7 @@ public class TestFilterVcf {
         final Set<String> fails = CollectionUtil.makeSet("rs13303033", "rs28548431", "rs2799066");
         final File out = testFiltering(INPUT, ".vcf.gz", 0, 0, 0, 5.0d);
         final ListMap<String,String> filters = slurpFilters(out);
-        Assert.assertEquals(filters.keySet(), fails, "Failed sites did not match expected set of failed sites.");
+        Assert.assertEquals(sorted(filters.keySet()), sorted(fails), "Failed sites did not match expected set of failed sites.");
     }
 
     @Test public void testCombinedFiltering() throws Exception {

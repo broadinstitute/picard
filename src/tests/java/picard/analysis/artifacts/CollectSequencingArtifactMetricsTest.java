@@ -68,11 +68,10 @@ public class CollectSequencingArtifactMetricsTest extends CommandLineProgramTest
     }
 
     private void assertAllFilesEqual(final File expectedBase, final File actualBase) {
-        boolean equal = areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT);
-        equal = equal && areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT);
-        equal = equal && areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT);
-        equal = equal && areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT);
-        Assert.assertTrue(equal);
+        Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT),"Pre-Adapter summary files differ.");
+        Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT),"Pre-Adapter details files differ.");
+        Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT), "Bait-Bias summary files differ.");
+        Assert.assertTrue(areMetricsEqual(expectedBase, actualBase, SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT), "Bait-bias details files differ.");
     }
 
     private boolean areMetricsEqual(final File expectedBase, final File actualBase, final String extension) {

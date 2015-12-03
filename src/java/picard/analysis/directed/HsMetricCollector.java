@@ -43,8 +43,8 @@ import java.util.Set;
  */
 public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
 
-    public HsMetricCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile, final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName);
+    public HsMetricCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords, final ReferenceSequenceFile refFile, final File perTargetCoverage, final IntervalList targetIntervals, final IntervalList probeIntervals, final String probeSetName, final int nearProbeDistance) {
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance);
     }
 
     @Override

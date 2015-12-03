@@ -93,6 +93,8 @@ public class CollectWgsMetrics extends CommandLineProgram {
         /** The total fraction of aligned bases excluded due to all filters. */
         public double PCT_EXC_TOTAL;
 
+        /** The fraction of bases that attained at least 1X sequence coverage in post-filtering bases. */
+        public double PCT_1X;
         /** The fraction of bases that attained at least 5X sequence coverage in post-filtering bases. */
         public double PCT_5X;
         /** The fraction of bases that attained at least 10X sequence coverage in post-filtering bases. */
@@ -227,7 +229,8 @@ public class CollectWgsMetrics extends CommandLineProgram {
         metrics.PCT_EXC_CAPPED = basesExcludedByCapping / totalWithExcludes;
         metrics.PCT_EXC_TOTAL = (totalWithExcludes - total) / totalWithExcludes;
 
-        metrics.PCT_5X = MathUtil.sum(HistogramArray, 5, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_1X  = MathUtil.sum(HistogramArray, 1, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
+        metrics.PCT_5X  = MathUtil.sum(HistogramArray, 5, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_10X = MathUtil.sum(HistogramArray, 10, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_15X = MathUtil.sum(HistogramArray, 15, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;
         metrics.PCT_20X = MathUtil.sum(HistogramArray, 20, HistogramArray.length) / (double) metrics.GENOME_TERRITORY;

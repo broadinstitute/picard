@@ -3,6 +3,8 @@ package picard.analysis.artifacts;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.util.QualityUtil;
 
+import java.util.Comparator;
+
 public class SequencingArtifactMetrics {
     public static final String PRE_ADAPTER_SUMMARY_EXT = ".pre_adapter_summary_metrics";
     public static final String PRE_ADAPTER_DETAILS_EXT = ".pre_adapter_detail_metrics";
@@ -179,13 +181,27 @@ public class SequencingArtifactMetrics {
             }
             this.QSCORE = QualityUtil.getPhredScoreFromErrorProbability(this.ERROR_RATE);
         }
+
+        public int compareTo(final PreAdapterDetailMetrics o) {
+            int retval = Double.compare(QSCORE, o.QSCORE);
+            if (retval != 0) return retval;
+
+            retval = REF_BASE - o.REF_BASE;
+            if (retval != 0) return retval;
+
+            retval = ALT_BASE - o.ALT_BASE;
+            if (retval != 0) return retval;
+
+            retval = CONTEXT.compareTo(o.CONTEXT);
+
+            return retval;
+        }
     }
 
     /**
      * Bait bias artifacts broken down by context.
      */
     public static class BaitBiasDetailMetrics extends MetricBase {
-        /** The name of the sample being assayed. */
         public String SAMPLE_ALIAS;
         /** The name of the library being assayed. */
         public String LIBRARY;
@@ -238,6 +254,21 @@ public class SequencingArtifactMetrics {
 
             this.ERROR_RATE = Math.max(MIN_ERROR, this.FWD_ERROR_RATE - this.REV_ERROR_RATE);
             this.QSCORE = QualityUtil.getPhredScoreFromErrorProbability(this.ERROR_RATE);
+        }
+
+        public int compareTo(final BaitBiasDetailMetrics o) {
+            int retval = Double.compare(QSCORE, o.QSCORE);
+            if (retval != 0) return retval;
+
+            retval = REF_BASE - o.REF_BASE;
+            if (retval != 0) return retval;
+
+            retval = ALT_BASE - o.ALT_BASE;
+            if (retval != 0) return retval;
+
+            retval = CONTEXT.compareTo(o.CONTEXT);
+
+            return retval;
         }
     }
 

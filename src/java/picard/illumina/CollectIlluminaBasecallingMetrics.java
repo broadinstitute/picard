@@ -111,7 +111,7 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
             for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
                 final String barcodeName = row.getField(BARCODE_NAME_COLUMN);
                 final StringBuilder barcode = new StringBuilder();
-                for (int i = 1; i <= readStructure.barcodes.length(); i++) {
+                for (int i = 1; i <= readStructure.sampleBarcodes.length(); i++) {
                     barcode.append(row.getField(BARCODE_SEQUENCE_COLUMN_NAME_STUB + i));
                     if (barcodeLength == 0) barcodeLength = barcode.length();
                 }

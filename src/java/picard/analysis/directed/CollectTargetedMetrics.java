@@ -53,7 +53,8 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                                                final File perTargetCoverage,
                                                final IntervalList targetIntervals,
                                                final IntervalList probeIntervals,
-                                               final String probeSetName);
+                                               final String probeSetName,
+                                               final int nearProbeDistance);
 
 
     @Option(shortName = "TI", doc = "An interval list file that contains the locations of the targets.", minElements=1)
@@ -70,6 +71,10 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
 
     @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
+
+    @Option(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
+            "considered 'near probe' and included in percent selected.")
+    public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
 
     /**
      * Asserts that files are readable and writable and then fires off an
@@ -110,7 +115,8 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                 PER_TARGET_COVERAGE,
                 targetIntervals,
                 getProbeIntervals(),
-                getProbeSetName()
+                getProbeSetName(),
+                NEAR_DISTANCE
         );
 
         final ProgressLogger progress = new ProgressLogger(log);
