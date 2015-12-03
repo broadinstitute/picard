@@ -11,5 +11,6 @@
 <tr><td>OUTPUT (File)</td><td>The output file to write the metrics to.  Required. </td></tr>
 <tr><td>METRIC_ACCUMULATION_LEVEL (MetricAccumulationLevel)</td><td>The level(s) at which to accumulate metrics.  Default value: [ALL_READS]. This option can be set to 'null' to clear the default value. Possible values: {ALL_READS, SAMPLE, LIBRARY, READ_GROUP} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
 <tr><td>PER_TARGET_COVERAGE (File)</td><td>An optional file to output per target coverage information to.  Default value: null. </td></tr>
+<tr><td>NEAR_DISTANCE (Integer)</td><td>The maximum distance between a read and the nearest probe/bait/amplicon for the read to be considered 'near probe' and included in percent selected.  Default value: 250. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
 </section>

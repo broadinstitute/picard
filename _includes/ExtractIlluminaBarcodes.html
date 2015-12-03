@@ -1,13 +1,14 @@
 <a id="ExtractIlluminaBarcodes"/>
 <h3>ExtractIlluminaBarcodes</h3>
 <section>
-<p>Determine the barcode for each read in an Illumina lane.
+<p>Determine the sample barcode for each read in an Illumina lane.
 For each tile, a file is written to the basecalls directory of the form s_<lane>_<tile>_barcode.txt. An output file contains a line for each read in the tile, aligned with the regular basecall output. 
 The output file contains the following tab-separated columns: 
     * read subsequence at barcode position
     * Y or N indicating if there was a barcode match
     * matched barcode sequence
-Note that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.
+Note 1: that the order of specification of barcodes can cause arbitrary differences in output for poorly matching barcodes.
+Note 2: molecular barcodes (M in the read structure) are not the barcode being extracted here and will be ignored here.
 
 </p>
 <table>

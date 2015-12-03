@@ -9,5 +9,6 @@
 <tr><td>SORT_ORDER (SortOrder)</td><td>Optional sort order if the OUTPUT file should be sorted differently than the INPUT file.  Default value: null. Possible values: {unsorted, queryname, coordinate, duplicate} </td></tr>
 <tr><td>ASSUME_SORTED (Boolean)</td><td>If true, assume that the input file is queryname sorted, even if the header says otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>ADD_MATE_CIGAR (Boolean)</td><td>Adds the mate CIGAR tag (MC) if true, does not if false.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>IGNORE_MISSING_MATES (Boolean)</td><td>If true, ignore missing mates, otherwise will throw an exception when missing mates are found.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>
