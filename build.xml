@@ -312,6 +312,7 @@
                 protected="true"
                 use="true"
                 version="true"
+                additionalparam="-Xdoclint:none -notimestamp"
                 failonerror="true"
                 excludepackagenames="htsjdk*">
             <classpath>
@@ -340,6 +341,7 @@
                 protected="true"
                 use="true"
                 version="true"
+                additionalparam="-Xdoclint:none -notimestamp"
                 failonerror="true"
                 excludepackagenames="picard*">
             <classpath>
