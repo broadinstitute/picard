@@ -4,7 +4,7 @@ import sbt.Package.ManifestAttributes
 
 name := "picard"
 
-version := "1.141"
+version := "1.142"
 
 organization := "com.github.broadinstitute"
 
@@ -15,7 +15,7 @@ javaSource in Test := baseDirectory.value / "src/tests"
 unmanagedResourceDirectories in Test := Seq(baseDirectory.value / "src/scripts", baseDirectory.value / "testdata", baseDirectory.value / "src/tests/scripts")
 
 libraryDependencies ++= Seq(
-  "com.github.samtools" % "htsjdk" % "1.141",
+  "com.github.samtools" % "htsjdk" % "1.142",
   ("com.google.cloud.genomics" % "gatk-tools-java" % "1.1" % "picardopt").
     exclude("org.mortbay.jetty", "servlet-api"),
   "org.testng" % "testng" % "6.8.8" % Test
@@ -36,9 +36,7 @@ pomIncludeRepository := { _ => false }
 
 crossPaths := false
 
-javacOptions in Compile ++= Seq("-source", "1.6")
-
-javacOptions in(Compile, compile) ++= Seq("-target", "1.6")
+javacOptions in (Compile,doc) ++= Seq("-Xdoclint:none")
 
 versionWithGit
 
