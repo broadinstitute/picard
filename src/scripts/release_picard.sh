@@ -250,7 +250,7 @@ do pushd $sandbox
 	# Add the new javadoc files
 	find javadoc/$sandbox | xargs git add
 	# Commit!
-	git commit -m "Updating javadoc for release: $RELEASE_ID"
+	git commit -a --allow-empty -m "Updating javadoc for release: $RELEASE_ID"
 	# NB: assumes the push will not fail
 	git push $REMOTE $GHPAGES_BRANCH
 	# Reset the repository to master 
@@ -276,7 +276,7 @@ cd dist/html
 cp inc/*.html program_usage/*.html picard-metric-definitions.html ../../_includes/.
 cd ../../
 find _includes | xargs git add
-git commit -m "Adding website files for $RELEASE_ID"
+git commit -a --allow-empty -m "Adding website files for $RELEASE_ID"
 git push $REMOTE $GHPAGES_BRANCH
 
 # Move back to master just in case
