@@ -152,10 +152,10 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
         /** The number of bases in PF reads that achieve quality score 20 or higher */
         public long PF_Q20_BASES = 0;
 
-        /** The number of bases in all reads that achieve quality score 20 or higher */
+        /** The number of bases in all reads that achieve quality score 30 or higher */
         public long Q30_BASES = 0;
 
-        /** The number of bases in PF reads that achieve quality score 20 or higher */
+        /** The number of bases in PF reads that achieve quality score 30 or higher */
         public long PF_Q30_BASES = 0;
 
         /** The sum of quality scores of all bases divided by 20 */
