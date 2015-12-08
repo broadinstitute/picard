@@ -138,7 +138,29 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
     @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
 
+    @Option(doc = "The maximum number of bases to consider when comparing reads (0 means no maximum).", optional = true)
+    public int MAX_READ_LENGTH = 0;
+
+    @Option(doc = "Minimum number group count.  On a per-library basis, we count the number of groups of duplicates " +
+            "that have a particular size.  Omit from consideration any count that is less than this value.  For " +
+            "example, if we see only one group of duplicates with size 500, we omit it from the metric calculations if " +
+            "MIN_GROUP_COUNT is set to two.  Setting this to two may help remove technical artifacts from the library " +
+            "size calculation, for example, adapter dimers.", optional = true)
+    public int MIN_GROUP_COUNT = 2;
+
     private final Log log = Log.getInstance(EstimateLibraryComplexity.class);
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        final List<String> errorMsgs = new ArrayList<String>();
+        if (0 < MAX_READ_LENGTH && MAX_READ_LENGTH < MIN_IDENTICAL_BASES) {
+            errorMsgs.add("MAX_READ_LENGTH must be greater than MIN_IDENTICAL_BASES");
+        }
+        if (MIN_IDENTICAL_BASES <= 0) {
+            errorMsgs.add("MIN_IDENTICAL_BASES must be greater than 0");
+        }
+        return errorMsgs.size() == 0 ? super.customCommandLineValidation() : errorMsgs.toArray(new String[errorMsgs.size()]);
+    }
 
     /**
      * Little class to hold the sequence of a pair of reads and tile location information.
@@ -448,7 +470,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             CloserUtil.close(in);
         }
 
-        log.info("Finished reading - moving on to scanning for duplicates.");
+        log.info(String.format("Finished reading - read %d records - moving on to scanning for duplicates.", progress.getCount()));
 
         // Now go through the sorted reads and attempt to find duplicates
         final PeekableIterator<PairedReadSequence> iterator = new PeekableIterator<PairedReadSequence>(sorter.iterator());
@@ -537,12 +559,12 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             final DuplicationMetrics metrics = new DuplicationMetrics();
             metrics.LIBRARY = library;
 
-            // Filter out any bins that have only a single entry in them and calcu
+            // Filter out any bins that have fewer than MIN_GROUP_COUNT entries in them and calculate derived metrics
             for (final Integer bin : duplicationHisto.keySet()) {
                 final double duplicateGroups = duplicationHisto.get(bin).getValue();
                 final double opticalDuplicates = opticalHisto.get(bin) == null ? 0 : opticalHisto.get(bin).getValue();
 
-                if (duplicateGroups > 1) {
+                if (duplicateGroups >= MIN_GROUP_COUNT) {
                     metrics.READ_PAIRS_EXAMINED += (bin * duplicateGroups);
                     metrics.READ_PAIR_DUPLICATES += ((bin - 1) * duplicateGroups);
                     metrics.READ_PAIR_OPTICAL_DUPLICATES += opticalDuplicates;
@@ -565,8 +587,9 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
      * errors/diffs as dictated by the maxDiffRate.
      */
     private boolean matches(final PairedReadSequence lhs, final PairedReadSequence rhs, final double maxDiffRate, final boolean useBarcodes) {
-        final int read1Length = Math.min(lhs.read1.length, rhs.read1.length);
-        final int read2Length = Math.min(lhs.read2.length, rhs.read2.length);
+        final int maxReadLength = (MAX_READ_LENGTH <= 0) ? Integer.MAX_VALUE : MAX_READ_LENGTH;
+        final int read1Length = Math.min(Math.min(lhs.read1.length, rhs.read1.length), maxReadLength);
+        final int read2Length = Math.min(Math.min(lhs.read2.length, rhs.read2.length), maxReadLength);
         final int maxErrors = (int) Math.floor((read1Length + read2Length) * maxDiffRate);
         int errors = 0;
 
@@ -658,8 +681,10 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
             if (SequenceUtil.isNoCall(bases[i])) return false;
         }
 
+        final int maxReadLength = (MAX_READ_LENGTH <= 0) ? Integer.MAX_VALUE : MAX_READ_LENGTH;
+        final int readLength = Math.min(bases.length, maxReadLength);
         int total = 0;
-        for (final byte b : quals) total += b;
-        return total / quals.length >= minQuality;
+        for (int i = 0; i < readLength; i++) total += quals[i];
+        return total / readLength >= minQuality;
     }
 }
