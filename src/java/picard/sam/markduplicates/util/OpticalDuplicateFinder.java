@@ -104,7 +104,7 @@ public class OpticalDuplicateFinder {
         public void setLibraryId(short libraryId);
     }
 
-    private final int[] tmpLocationFields = new int[10]; // for optimization of addLocationInformation
+    private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
     /**
      * Method used to extract tile/x/y from the read name and add it to the PhysicalLocation so that it
      * can be used later to determine optical duplication
@@ -127,10 +127,9 @@ public class OpticalDuplicateFinder {
                 }
                 return false;
             }
-            final int offset = fields == 7 ? 2 : 0;
-            loc.setTile((short) tmpLocationFields[offset + 2]);
-            loc.setX((short) tmpLocationFields[offset + 3]);
-            loc.setY((short) tmpLocationFields[offset + 4]);
+            loc.setTile((short) tmpLocationFields[0]);
+            loc.setX((short) tmpLocationFields[1]);
+            loc.setY((short) tmpLocationFields[2]);
             return true;
         } else if (this.readNameRegex == null) {
             return false;

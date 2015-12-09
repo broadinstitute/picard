@@ -5,6 +5,9 @@ import org.testng.annotations.Test;
 import org.testng.Assert;
 import picard.sam.util.ReadNameParsingUtils;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Tests for OpticalDuplicateFinder
  *
@@ -27,31 +30,35 @@ public class OpticalDuplicateFinderTest {
     }
 
     /** Helper for testGetRapidDefaultReadNameRegexSplit */
-    private void doTestGetRapidDefaultReadNameRegexSplit(int numFields, final OpticalDuplicateFinder opticalDuplicateFinder) {
-        final int[] inputFields = new int[numFields];
-        final int[] expectedFields = new int[numFields];
+    private void doTestGetRapidDefaultReadNameRegexSplit(int numFields) {
+        final int[] inputFields = new int[3];
+        final int[] expectedFields = new int[3];
         String readName = "";
-        for (int i = 0; i < inputFields.length; i++) {
-            inputFields[i] = -1;
-            expectedFields[i] = -1;
+        for (int i = 0; i < numFields; i++) {
             if (0 < i) readName += ":";
             readName += Integer.toString(i);
         }
-        if (2 < numFields) expectedFields[2] = 2;
-        if (3 < numFields) expectedFields[3] = 3;
-        if (4 < numFields) expectedFields[4] = 4;
-        Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), numFields);
-        for (int i = 0; i < inputFields.length; i++) {
-            Assert.assertEquals(inputFields[i], expectedFields[i]);
+        inputFields[0] = inputFields[1] = inputFields[2] = -1;
+        if (numFields < 3) {
+            Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), -1);
+        }
+        else {
+            Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), numFields);
+            expectedFields[0] = expectedFields[1] = expectedFields[2] = -1;
+            if (0 < numFields) expectedFields[0] = numFields-3;
+            if (1 < numFields) expectedFields[1] = numFields-2;
+            if (2 < numFields) expectedFields[2] = numFields-1;
+            for (int i = 0; i < inputFields.length; i++) {
+                Assert.assertEquals(inputFields[i], expectedFields[i]);
+            }
         }
     }
 
-    /** Tests that we split the string early, with the correct # of fields, and modified values */
+    /** Tests that we split the string with the correct # of fields, and modified values */
     @Test
     public void testGetRapidDefaultReadNameRegexSplit() {
-        final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
         for (int i = 1; i < 10; i++) {
-            doTestGetRapidDefaultReadNameRegexSplit((i <= 5) ? i : 5, opticalDuplicateFinder);
+            doTestGetRapidDefaultReadNameRegexSplit(i);
         }
     }
 
@@ -72,5 +79,27 @@ public class OpticalDuplicateFinderTest {
                 {"RUNID:7:1203:2886:82292", 1203, 2886, 82292},
                 {"RUNID:7:1203:2884:16834", 1203, 2884, 16834}
         };
+    }
+
+    @Test
+    public void testVeryLongReadNames() {
+        final String readName1 = "M01234:123:000000000-ZZZZZ:1:1105:17981:23325";
+        final String readName2 = "M01234:123:000000000-ZZZZZ:1:1109:22981:17995";
+
+        final int[] tokens = new int[3];
+        Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName1, ':', tokens), 7);
+        Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName2, ':', tokens), 7);
+
+        final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+        final OpticalDuplicateFinder.PhysicalLocation loc1 = new ReadEndsForMarkDuplicates();
+        final OpticalDuplicateFinder.PhysicalLocation loc2 = new ReadEndsForMarkDuplicates();
+
+        Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName1, loc1));
+        Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName2, loc2));
+
+        final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(Arrays.asList(loc1, loc2));
+        for (final boolean opticalDuplicateFlag : opticalDuplicateFlags) {
+            Assert.assertFalse(opticalDuplicateFlag);
+        }
     }
 }
