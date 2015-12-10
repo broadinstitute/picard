@@ -42,10 +42,10 @@ public class OpticalDuplicateFinderTest {
         }
         inputFields[0] = inputFields[1] = inputFields[2] = -1;
         if (numFields < 3) {
-            Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), -1);
+            Assert.assertEquals(ReadNameParser.getLastThreeFields(readName, ':', inputFields), -1);
         }
         else {
-            Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), numFields);
+            Assert.assertEquals(ReadNameParser.getLastThreeFields(readName, ':', inputFields), numFields);
             expectedFields[0] = expectedFields[1] = expectedFields[2] = -1;
             if (0 < numFields) expectedFields[0] = numFields-3;
             if (1 < numFields) expectedFields[1] = numFields-2;
@@ -100,8 +100,8 @@ public class OpticalDuplicateFinderTest {
         final String readName2 = "M01234:123:000000000-ZZZZZ:1:1109:22981:17995";
 
         final int[] tokens = new int[3];
-        Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName1, ':', tokens), 7);
-        Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName2, ':', tokens), 7);
+        Assert.assertEquals(ReadNameParser.getLastThreeFields(readName1, ':', tokens), 7);
+        Assert.assertEquals(ReadNameParser.getLastThreeFields(readName2, ':', tokens), 7);
 
         final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
         final PhysicalLocation loc1 = new ReadEndsForMarkDuplicates();

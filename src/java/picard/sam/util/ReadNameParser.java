@@ -43,7 +43,7 @@ public class ReadNameParser {
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
         // Optimized version if using the default read name regex (== used on purpose):
         if (this.readNameRegex == this.DEFAULT_READ_NAME_REGEX) {
-            final int fields = getRapidDefaultReadNameRegexSplit(readName, ':', tmpLocationFields);
+            final int fields = getLastThreeFields(readName, ':', tmpLocationFields);
             if (!(fields == 5 || fields == 7)) {
                 if (null != log && !this.warnedAboutRegexNotMatching) {
                     this.log.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
@@ -85,30 +85,32 @@ public class ReadNameParser {
     /**
      * Single pass method to parse the read name for the default regex.  Examines the last three fields as split by the delimiter.
      */
-    public static int getRapidDefaultReadNameRegexSplit(final String readName, final char delim, final int[] tokens) {
-        int tokensIdx = 0;
-        int prevIdx = 0;
-        int numFields = 1;
-        for (int i = 0; i < readName.length(); i++) {
-            if (readName.charAt(i) == delim) numFields++;
-        }
-        int startOffset = numFields - 2 - 1; // zero-based (ex. 7 -> 4, 5 -> 2)
-        if (startOffset < 0) return -1;
-        int endOffset = startOffset + 2; // zero-based
-        for (int i = 0; i < readName.length(); i++) {
-            if (readName.charAt(i) == delim) {
-                if (startOffset <= tokensIdx && tokensIdx <= endOffset)
-                    tokens[tokensIdx - startOffset] = rapidParseInt(readName.substring(prevIdx, i)); // only fill in 2-4 inclusive for 5 fields
-                tokensIdx++;
-                prevIdx = i + 1;
+    public static int getLastThreeFields(final String readName, final char delim, final int[] tokens) {
+        int tokensIdx = 2; // start at the last token
+        int numFields = 0;
+        int i, endIdx;
+        endIdx = readName.length();
+        // find the last three tokens only
+        for (i = readName.length() - 1; 0 <= i && 0 <= tokensIdx; i--) {
+            if (readName.charAt(i) == delim || 0 == i) {
+                numFields++;
+                tokens[tokensIdx] = rapidParseInt(readName.substring(i+1, endIdx));
+                tokensIdx--;
+                endIdx = i;
             }
         }
-        if (prevIdx < readName.length()) {
-            if (startOffset <= tokensIdx && tokensIdx <= endOffset)
-                tokens[tokensIdx - startOffset] = rapidParseInt(readName.substring(prevIdx, readName.length())); // only fill in 2-4 inclusive
-            tokensIdx++;
+        // continue to find the # of fields
+        while (0 <= i) {
+            if (readName.charAt(i) == delim || 0 == i) numFields++;
+            i--;
         }
-        return tokensIdx;
+        if (numFields < 3) {
+            tokens[0] = tokens[1] = tokens[2] = -1;
+            return -1;
+        }
+        else {
+            return numFields;
+        }
     }
 
     /**
