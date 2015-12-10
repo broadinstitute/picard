@@ -23,8 +23,10 @@
  */
 package picard.sam.markduplicates.util;
 
+import picard.sam.util.PhysicalLocationShort;
+
 /** Little struct-like class to hold read pair (and fragment) end data for duplicate marking. */
-abstract public class ReadEnds implements OpticalDuplicateFinder.PhysicalLocation {
+abstract public class ReadEnds extends PhysicalLocationShort {
 
     public static final byte F = 0, R = 1, FF = 2, FR = 3, RR = 4, RF = 5;
 
@@ -35,14 +37,11 @@ abstract public class ReadEnds implements OpticalDuplicateFinder.PhysicalLocatio
     public int read2ReferenceIndex = -1;
     public int read2Coordinate = -1;
 
-    // Information used to detect optical dupes
+    // Additional information used to detect optical dupes
     public short readGroup = -1;
-    public short tile = -1;
-    public short x = -1, y = -1;
 
     /** For optical duplicate detection the orientation matters regard to 1st or 2nd end of a mate */
     public byte orientationForOpticalDuplicates = -1;
-
 
     public boolean isPaired() { return this.read2ReferenceIndex != -1; }
 
@@ -51,24 +50,6 @@ abstract public class ReadEnds implements OpticalDuplicateFinder.PhysicalLocatio
 
     @Override
     public void setReadGroup(final short readGroup) { this.readGroup = readGroup; }
-
-    @Override
-    public short getTile() { return this.tile; }
-
-    @Override
-    public void setTile(final short tile) { this.tile = tile; }
-
-    @Override
-    public short getX() { return this.x; }
-
-    @Override
-    public void setX(final short x) { this.x = x; }
-
-    @Override
-    public short getY() { return this.y; }
-
-    @Override
-    public void setY(final short y) { this.y = y; }
 
     @Override
     public short getLibraryId() { return this.libraryId; }

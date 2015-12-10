@@ -28,16 +28,17 @@ package picard.sam.markduplicates.util;
  * @author nhomer
  */
 
+import picard.sam.util.PhysicalLocation;
+import picard.sam.util.PhysicalLocationShort;
+
 /** Stores the minimal information needed for optical duplicate detection. */
-public class PhysicalLocationForMateCigar implements OpticalDuplicateFinder.PhysicalLocation {
+public class PhysicalLocationForMateCigar extends PhysicalLocationShort {
 
     // Information used to detect optical dupes
     short readGroup = -1;
-    short tile = -1;
-    short x = -1, y = -1;
     short libraryId;
 
-    public PhysicalLocationForMateCigar(final OpticalDuplicateFinder.PhysicalLocation rec) {
+    public PhysicalLocationForMateCigar(final PhysicalLocation rec) {
         this.setReadGroup(rec.getReadGroup());
         this.setTile(rec.getTile());
         this.setX(rec.getX());
@@ -50,24 +51,6 @@ public class PhysicalLocationForMateCigar implements OpticalDuplicateFinder.Phys
 
     @Override
     public void setReadGroup(final short rg) { this.readGroup = rg; }
-
-    @Override
-    public short getTile() { return this.tile; }
-
-    @Override
-    public void setTile(final short tile) { this.tile = tile; }
-
-    @Override
-    public short getX() { return this.x; }
-
-    @Override
-    public void setX(final short x) { this.x = x; }
-
-    @Override
-    public short getY() { return this.y; }
-
-    @Override
-    public void setY(final short y) { this.y = y;}
 
     @Override
     public short getLibraryId() { return this.libraryId; }

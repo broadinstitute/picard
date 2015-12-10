@@ -43,7 +43,8 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
-import picard.sam.util.PhysicalLocation;
+import picard.sam.markduplicates.util.OpticalDuplicateFinder;
+import picard.sam.util.PhysicalLocationInt;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
     private final Log log = Log.getInstance(PositionBasedDownsampleSam.class);
 
-    private PhysicalLocation opticalDuplicateFinder;
+    private OpticalDuplicateFinder opticalDuplicateFinder;
     private long total = 0;
     private long kept = 0;
     public static String PG_PROGRAM_NAME = "PositionBasedDownsampleSam";
@@ -164,7 +165,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         log.info("Checking to see if input file has been downsampled with this program before.");
         checkProgramRecords();
 
-        opticalDuplicateFinder = new PhysicalLocation();
+        opticalDuplicateFinder = new OpticalDuplicateFinder();
 
         log.info("Starting first pass. Examining read distribution in tiles.");
         fillTileMinMaxCoord();
@@ -206,7 +207,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
             total++;
 
-            final PhysicalLocation pos = getSamRecordLocation(rec);
+            final PhysicalLocationInt pos = getSamRecordLocation(rec);
 
             if (!xPositions.containsKey(pos.getTile())) {
                 xPositions.put(pos.getTile(), new Histogram<Short>(pos.getTile() + "-xpos", "count"));
@@ -266,7 +267,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
             total++;
             progress.record(rec);
-            final PhysicalLocation location = getSamRecordLocation(rec);
+            final PhysicalLocationInt location = getSamRecordLocation(rec);
 
             //Defaulting map will create a new Coord if it's not there.
 
@@ -298,8 +299,8 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         CloserUtil.close(in);
     }
 
-    private PhysicalLocation getSamRecordLocation(final SAMRecord rec) {
-        final PhysicalLocation pos = new PhysicalLocation();
+    private PhysicalLocationInt getSamRecordLocation(final SAMRecord rec) {
+        final PhysicalLocationInt pos = new PhysicalLocationInt();
         opticalDuplicateFinder.addLocationInformation(rec.getReadName(), pos);
         return pos;
     }
@@ -352,7 +353,7 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
         private double roundedPart(final double x) {return x - Math.round(x);}
 
         // this function checks to see if the location of the read is within the masking circle
-        private boolean select(final PhysicalLocation coord, final Coord tileCoord) {
+        private boolean select(final PhysicalLocationInt coord, final Coord tileCoord) {
             // r^2 = (x-x_0)^2 + (y-y_0)^2, where both x_0 and y_0 equal offset
             final double distanceSquared =
                             Math.pow(roundedPart(((coord.getX() - tileCoord.minX) / (double) (tileCoord.maxX - tileCoord.minX)) - offset), 2) +

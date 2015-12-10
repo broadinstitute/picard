@@ -3,10 +3,12 @@ package picard.sam.markduplicates.util;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.Assert;
-import picard.sam.util.ReadNameParsingUtils;
+import picard.sam.util.PhysicalLocation;
+import picard.sam.util.PhysicalLocationInt;
+import picard.sam.util.PhysicalLocationShort;
+import picard.sam.util.ReadNameParser;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Tests for OpticalDuplicateFinder
@@ -20,12 +22,12 @@ public class OpticalDuplicateFinderTest {
     public void testRapidParseInt() {
         final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
         for (int i = -100; i < 100; i++) {
-            Assert.assertEquals(ReadNameParsingUtils.rapidParseInt(Integer.toString(i)), i);
+            Assert.assertEquals(ReadNameParser.rapidParseInt(Integer.toString(i)), i);
 
             // trailing characters
-            Assert.assertEquals(ReadNameParsingUtils.rapidParseInt(Integer.toString(i)+"A"), i);
-            Assert.assertEquals(ReadNameParsingUtils.rapidParseInt(Integer.toString(i)+"ACGT"), i);
-            Assert.assertEquals(ReadNameParsingUtils.rapidParseInt(Integer.toString(i)+".1"), i);
+            Assert.assertEquals(ReadNameParser.rapidParseInt(Integer.toString(i)+"A"), i);
+            Assert.assertEquals(ReadNameParser.rapidParseInt(Integer.toString(i)+"ACGT"), i);
+            Assert.assertEquals(ReadNameParser.rapidParseInt(Integer.toString(i)+".1"), i);
         }
     }
 
@@ -40,10 +42,10 @@ public class OpticalDuplicateFinderTest {
         }
         inputFields[0] = inputFields[1] = inputFields[2] = -1;
         if (numFields < 3) {
-            Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), -1);
+            Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), -1);
         }
         else {
-            Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), numFields);
+            Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName, ':', inputFields), numFields);
             expectedFields[0] = expectedFields[1] = expectedFields[2] = -1;
             if (0 < numFields) expectedFields[0] = numFields-3;
             if (1 < numFields) expectedFields[1] = numFields-2;
@@ -63,14 +65,25 @@ public class OpticalDuplicateFinderTest {
     }
 
     // NB: these tests fails due to overflow in the duplicate finder test.  This has been the behavior previously, so keep it for now.
-    @Test(dataProvider = "testParseReadNameDataProvider", enabled = false)
-    public void testParseReadName(final String readName, final int tile, final int x, final int y) {
+    @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
+    public void testParseReadNameOverflow(final String readName, final int tile, final int x, final int y) {
         OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
-        OpticalDuplicateFinder.PhysicalLocation loc = new ReadEndsForMarkDuplicates();
+        PhysicalLocation loc = new PhysicalLocationShort();
         Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName, loc));
         Assert.assertEquals(loc.getTile(), tile);
-        Assert.assertEquals(loc.getX(), x);
-        Assert.assertEquals(loc.getY(), y);
+        Assert.assertEquals(loc.getX(), (short)x); // casting to short for the overflow
+        Assert.assertEquals(loc.getY(), (short)y); // casting to short for the overflow
+    }
+
+    // NB: these tests the case wher we do not overflow in the duplicate finder test.
+    @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
+    public void testParseReadNameOK(final String readName, final int tile, final int x, final int y) {
+        OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+        PhysicalLocation loc = new PhysicalLocationInt();
+        Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName, loc));
+        Assert.assertEquals(loc.getTile(), tile);
+        Assert.assertEquals(loc.getX(), x); // we store ints, so we should not overflow
+        Assert.assertEquals(loc.getY(), y); // we store ints, so we should not overflow
     }
 
     @DataProvider(name = "testParseReadNameDataProvider")
@@ -87,12 +100,12 @@ public class OpticalDuplicateFinderTest {
         final String readName2 = "M01234:123:000000000-ZZZZZ:1:1109:22981:17995";
 
         final int[] tokens = new int[3];
-        Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName1, ':', tokens), 7);
-        Assert.assertEquals(ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName2, ':', tokens), 7);
+        Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName1, ':', tokens), 7);
+        Assert.assertEquals(ReadNameParser.getRapidDefaultReadNameRegexSplit(readName2, ':', tokens), 7);
 
         final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
-        final OpticalDuplicateFinder.PhysicalLocation loc1 = new ReadEndsForMarkDuplicates();
-        final OpticalDuplicateFinder.PhysicalLocation loc2 = new ReadEndsForMarkDuplicates();
+        final PhysicalLocation loc1 = new ReadEndsForMarkDuplicates();
+        final PhysicalLocation loc2 = new ReadEndsForMarkDuplicates();
 
         Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName1, loc1));
         Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName2, loc2));

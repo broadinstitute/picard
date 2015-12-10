@@ -46,6 +46,8 @@ import picard.cmdline.programgroups.Metrics;
 import picard.sam.DuplicationMetrics;
 import picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram;
 import picard.sam.markduplicates.util.OpticalDuplicateFinder;
+import picard.sam.util.PhysicalLocation;
+import picard.sam.util.PhysicalLocationShort;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -141,10 +143,8 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
     /**
      * Little class to hold the sequence of a pair of reads and tile location information.
      */
-    static class PairedReadSequence implements OpticalDuplicateFinder.PhysicalLocation {
+    static class PairedReadSequence extends PhysicalLocationShort {
         short readGroup = -1;
-        short tile = -1;
-        short x = -1, y = -1;
         boolean qualityOk = true;
         byte[] read1;
         byte[] read2;
@@ -157,18 +157,6 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         public short getReadGroup() { return this.readGroup; }
 
         public void setReadGroup(final short readGroup) { this.readGroup = readGroup; }
-
-        public short getTile() { return this.tile; }
-
-        public void setTile(final short tile) { this.tile = tile; }
-
-        public short getX() { return this.x; }
-
-        public void setX(final short x) { this.x = x; }
-
-        public short getY() { return this.y; }
-
-        public void setY(final short y) { this.y = y; }
 
         public short getLibraryId() { return this.libraryId; }
 
