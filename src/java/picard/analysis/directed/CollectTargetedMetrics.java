@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, COLLECTOR extends TargetMetricsCollector<METRIC>> extends CommandLineProgram {
 
-    private static final Log log = Log.getInstance(CalculateHsMetrics.class);
+    private final Log log = Log.getInstance(getClass());
 
     protected abstract IntervalList getProbeIntervals();
 
@@ -78,7 +78,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
     public int NEAR_DISTANCE = TargetedPcrMetricsCollector.NEAR_PROBE_DISTANCE_DEFAULT;
 
     @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
-    public int MINIMUM_MAPPING_QUALITY = 0;
+    public int MINIMUM_MAPPING_QUALITY = 1;
 
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 0;

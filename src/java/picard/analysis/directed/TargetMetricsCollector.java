@@ -329,7 +329,6 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
      * Collect the Target Metrics for one unit of "accumulation" (i.e. for one sample, or for one library ...)
      */
     public class PerUnitTargetMetricCollector implements PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> {
-
         private final Map<Interval,Double> intervalToGc;
         private File perTargetOutput;
 
@@ -338,14 +337,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         private final TargetMetrics metrics = new TargetMetrics();
 
-
-        // Filters that should be applied before accepting a record.  Order of filters in this list
-        // matches the order applied.
-        final List<SamRecordFilter> filters = new ArrayList<SamRecordFilter>();
-
         private final int minimumBaseQuality;
         private final CountingMapQFilter mapQFilter;
-
         private final boolean clipOverlappingReads;
 
         /**
@@ -373,14 +366,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 this.coverageByTarget.put(target, new Coverage(target,0));
             }
 
-            this.filters.add(new SecondaryAlignmentFilter());
             this.mapQFilter = new CountingMapQFilter(minimumMappingQuality);
-            this.filters.add(mapQFilter);
-
             this.minimumBaseQuality = minimumBaseQuality;
-
             this.intervalToGc = intervalToGc;
-
             this.clipOverlappingReads = clipOverlappingReads;
         }
 
@@ -396,6 +384,19 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Adds information about an individual SAMRecord to the statistics. */
         public void acceptRecord(final SAMRecord record) {
+            // Just ignore secondary alignments altogether
+            if (record.getNotPrimaryAlignmentFlag()) return;
+
+            // Cache some things, and compute the total number of bases aligned in the record.
+            final boolean mappedInPair = record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && !record.getSupplementaryAlignmentFlag();
+            final byte[] baseQualities = record.getBaseQualities();
+            int basesAlignedInRecord = 0;
+            if (!record.getReadUnmappedFlag()) {
+                for (final AlignmentBlock block : record.getAlignmentBlocks()) {
+                    basesAlignedInRecord += block.getLength();
+                }
+            }
+
             /*
             Count metrics related to # of base and reads. Consider supplemental alignments for base counting but not record counting.
             Do this counting *prior* to applying filters to ensure we match other metrics' computation for these values, such as AlignmentSummaryMetrics.
@@ -403,10 +404,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             if (!record.getNotPrimaryAlignmentFlag()) { // ignore secondary alignments for both # of read and # of base metrics
                 // # of bases
                 if (!record.getReadFailsVendorQualityCheckFlag()) { // only reads that pass vendor's filters
-                    this.metrics.PF_BASES += record.getReadLength();
-                    if (!record.getDuplicateReadFlag() && !record.getReadUnmappedFlag()) { // ignore duplicates and unmapped reads
-                        for (final AlignmentBlock block : record.getAlignmentBlocks()) {
-                            this.metrics.PF_UQ_BASES_ALIGNED += block.getLength();
+                    // Strangely enough we should not count supplementals in PF_BASES, assuming that the
+                    // main record also contains these bases! But we *do* count the aligned bases, assuming
+                    // that those bases are not *aligned* in the primary record
+                    if (!record.getSupplementaryAlignmentFlag()) this.metrics.PF_BASES += record.getReadLength();
+
+                    if (!record.getReadUnmappedFlag()) {
+                        this.metrics.PF_BASES_ALIGNED += basesAlignedInRecord;
+                        if (!record.getDuplicateReadFlag()) {
+                            this.metrics.PF_UQ_BASES_ALIGNED += basesAlignedInRecord;
                         }
                     }
                 }
@@ -426,10 +432,63 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 }
             }
 
-            // apply any filters
-            for (final SamRecordFilter filter : this.filters) {
-                if (filter.filterOut(record)) return;
+            ///////////////////////////////////////////////////////////////////
+            // Unmapped reads can be totally ignored beyond this point
+            ///////////////////////////////////////////////////////////////////
+            if (record.getReadUnmappedFlag()) return;
+
+            // Prefetch the list of target and bait overlaps here as they're needed multiple times.
+            final Interval read = new Interval(record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd());
+            final Collection<Interval> targets = targetDetector.getOverlaps(read);
+            final Collection<Interval> probes  = probeDetector.getOverlaps(read);
+
+            // Calculate the values we need for HS_LIBRARY_SIZE
+            if (!record.getSupplementaryAlignmentFlag()) {
+                if (record.getReadPairedFlag() && record.getFirstOfPairFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag()) {
+                    if (!probes.isEmpty()) {
+                        ++this.metrics.PF_SELECTED_PAIRS;
+                        if (!record.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
+                    }
+                }
             }
+
+            ///////////////////////////////////////////////////////////////////
+            // Duplicate reads can be totally ignored beyond this point
+            ///////////////////////////////////////////////////////////////////
+            if (record.getDuplicateReadFlag()) {
+                this.metrics.PCT_EXC_DUPE += basesAlignedInRecord;
+                return;
+            }
+
+            // Compute the bait-related metrics *before* applying the overlap clipping and
+            // the map-q threshold, since those would skew the assay-related metrics
+            {
+                final int mappedBases = basesAlignedInRecord;
+                int onBaitBases = 0;
+
+                if (!probes.isEmpty()) {
+                    for (final Interval bait : probes) {
+                        for (final AlignmentBlock block : record.getAlignmentBlocks()) {
+                            final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
+
+                            for (int pos=block.getReferenceStart(); pos<=end; ++pos) {
+                                if (pos >= bait.getStart() && pos <= bait.getEnd()) ++onBaitBases;
+                            }
+                        }
+                    }
+
+                    this.metrics.ON_PROBE_BASES   += onBaitBases;
+                    this.metrics.NEAR_PROBE_BASES += (mappedBases - onBaitBases);
+                }
+                else {
+                    this.metrics.OFF_PROBE_BASES += mappedBases;
+                }
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            // And lastly, ignore reads falling below the mapq threshold
+            ///////////////////////////////////////////////////////////////////
+            if (this.mapQFilter.filterOut(record)) return;
 
             // NB: this could modify the record.  See noSideEffects.
             final SAMRecord rec;
@@ -440,86 +499,36 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             }
             else rec = record;
 
-            // Prefetch the list of target and bait overlaps here as they're needed multiple times.
-            final Collection<Interval> targets;
-            final Collection<Interval> probes;
-
-            if (!rec.getReadUnmappedFlag()) {
-                final Interval read = new Interval(rec.getReferenceName(), rec.getAlignmentStart(), rec.getAlignmentEnd());
-                targets = targetDetector.getOverlaps(read);
-                probes  = probeDetector.getOverlaps(read);
-            }
-            else {
-                targets = null;
-                probes = null;
-            }
-
-            // get the number of bases above the minimum base quality
-            for (final byte baseQuality : rec.getBaseQualities()) {
-                if (baseQuality < minimumBaseQuality) metrics.PCT_EXC_BASEQ++;
-            }
-
-            if (!rec.getSupplementaryAlignmentFlag()) {
-                // And now calculate the values we need for HS_LIBRARY_SIZE
-                if (rec.getReadPairedFlag() && rec.getFirstOfPairFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag()) {
-                    if (probes != null && !probes.isEmpty()) {
-                        ++this.metrics.PF_SELECTED_PAIRS;
-                        if (!rec.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
-                    }
-                }
-            }
-
-            // Check for reads that are marked as duplicates or that didn't align uniquely
-            if (rec.getDuplicateReadFlag() || rec.getReadUnmappedFlag() || rec.getMappingQuality() == 0) {
-                return;
-            }
-
-            final boolean mappedInPair = rec.getReadPairedFlag() && !rec.getMateUnmappedFlag() && !rec.getSupplementaryAlignmentFlag();
-
-            final byte[] baseQualities = rec.getBaseQualities();
-
             // Find the target overlaps
-            if (targets != null && !targets.isEmpty()) {
-                for (final Interval target : targets) {
-                    final Coverage coverage = this.coverageByTarget.get(target);
+            for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
+                final int length = block.getLength(), refStart = block.getReferenceStart(), readStart = block.getReadStart();
 
-                    for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
-                        final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
-                        for (int pos=block.getReferenceStart(), readPos = block.getReadStart();
-                             pos<=end && pos >= target.getStart() && pos <= target.getEnd() && minimumBaseQuality <= baseQualities[readPos-1];
-                             ++pos, ++readPos) {
-                            ++this.metrics.ON_TARGET_BASES;
-                            if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
-                            coverage.addBase(pos - target.getStart());
+                for (int offset = 0; offset < length; ++offset) {
+                    final int refPos = refStart + offset;
+                    final int readPos = readStart + offset;
+                    final int qual = baseQualities[readPos - 1];
+
+                    if (qual < minimumBaseQuality) {
+                        this.metrics.PCT_EXC_BASEQ++;
+                    }
+                    else {
+                        boolean isOnTarget = false;
+                        for (final Interval target : targets) {
+                            if (refPos >= target.getStart() && refPos<= target.getEnd()) {
+                                isOnTarget = true;
+                                ++this.metrics.ON_TARGET_BASES;
+                                if (mappedInPair) ++this.metrics.ON_TARGET_FROM_PAIR_BASES;
+
+                                final int targetOffset = refPos - target.getStart();
+                                final Coverage coverage = this.coverageByTarget.get(target);
+                                coverage.addBase(targetOffset);
+                            }
                         }
+
+                        if (!isOnTarget) this.metrics.PCT_EXC_OFF_TARGET++;
                     }
                 }
             }
-
-            // Now do the bait overlaps
-            int mappedBases = 0;
-            for (final AlignmentBlock block : rec.getAlignmentBlocks()) mappedBases += TargetMetricsCollector.getNumBasesPassingMinimumBaseQuality(rec, block, minimumBaseQuality);
-            int onBaitBases = 0;
-
-            if (probes != null && !probes.isEmpty()) {
-                for (final Interval bait : probes) {
-                    for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
-                        final int end = CoordMath.getEnd(block.getReferenceStart(), block.getLength());
-                        for (int pos=block.getReferenceStart(), readPos = block.getReadStart();
-                             pos<=end && pos >= bait.getStart() && pos <= bait.getEnd() && minimumBaseQuality <= baseQualities[readPos-1];
-                             ++pos, ++readPos) {
-                            ++onBaitBases;
-                        }
-                    }
-                }
-
-                this.metrics.ON_PROBE_BASES   += onBaitBases;
-                this.metrics.NEAR_PROBE_BASES += (mappedBases - onBaitBases);
-            }
-            else {
-                this.metrics.OFF_PROBE_BASES += mappedBases;
-            }
-
         }
 
         @Override
@@ -530,13 +539,17 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
             final double denominator   = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES + metrics.OFF_PROBE_BASES);
 
-            metrics.PCT_SELECTED_BASES = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES) / denominator;
-            metrics.PCT_OFF_PROBE         = metrics.OFF_PROBE_BASES / denominator;
+            metrics.PCT_SELECTED_BASES   = (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES) / denominator;
+            metrics.PCT_OFF_PROBE        = metrics.OFF_PROBE_BASES / denominator;
             metrics.ON_PROBE_VS_SELECTED = metrics.ON_PROBE_BASES / (double) (metrics.ON_PROBE_BASES + metrics.NEAR_PROBE_BASES);
-            metrics.MEAN_PROBE_COVERAGE   = metrics.ON_PROBE_BASES / (double) metrics.PROBE_TERRITORY;
-            metrics.FOLD_ENRICHMENT       = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
+            metrics.MEAN_PROBE_COVERAGE  = metrics.ON_PROBE_BASES / (double) metrics.PROBE_TERRITORY;
+            metrics.FOLD_ENRICHMENT      = (metrics.ON_PROBE_BASES/ denominator) / ((double) metrics.PROBE_TERRITORY / metrics.GENOME_SIZE);
 
-            metrics.PCT_EXC_MAPQ = mapQFilter.getFilteredBases();
+            metrics.PCT_EXC_DUPE       /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_MAPQ        = mapQFilter.getFilteredBases() / (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_BASEQ      /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_OVERLAP    /= (double) metrics.PF_BASES_ALIGNED;
+            metrics.PCT_EXC_OFF_TARGET /= (double) metrics.PF_BASES_ALIGNED;
 
             calculateTargetCoverageMetrics();
             calculateGcMetrics();
@@ -790,6 +803,9 @@ class TargetMetrics extends MultilevelMetrics {
     public long PF_UQ_READS_ALIGNED;
 
     /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
+    public long PF_BASES_ALIGNED;
+
+    /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
     public long PF_UQ_BASES_ALIGNED;
 
     /** The number of PF aligned probed that mapped to a baited region of the genome. */
@@ -842,6 +858,9 @@ class TargetMetrics extends MultilevelMetrics {
     /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
 
+    /** The fraction of aligned bases that were filtered out because they were in reads marked as duplicates. */
+    public double PCT_EXC_DUPE;
+
     /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality. */
     public double PCT_EXC_MAPQ;
 
@@ -850,6 +869,9 @@ class TargetMetrics extends MultilevelMetrics {
 
     /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
     public double PCT_EXC_OVERLAP;
+
+    /** The fraction of aligned bases that were filtered out because they did not align over a target base. */
+    public double PCT_EXC_OFF_TARGET;
 
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to

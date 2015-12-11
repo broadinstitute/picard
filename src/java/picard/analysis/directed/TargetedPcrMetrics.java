@@ -48,6 +48,9 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
     public double PCT_PF_UQ_READS_ALIGNED;
 
     /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
+    public long PF_BASES_ALIGNED;
+
+    /** The number of PF unique bases that are aligned with mapping score > 0 to the reference genome. */
     public long PF_UQ_BASES_ALIGNED;
 
     /** The number of PF aligned amplified that mapped to an amplified region of the genome. */
@@ -89,6 +92,9 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
     /** The fraction of targets that did not reach coverage=1 over any base. */
     public double ZERO_CVG_TARGETS_PCT;
 
+    /** The fraction of aligned bases that were filtered out because they were in reads marked as duplicates. */
+    public double PCT_EXC_DUPE;
+
     /** The fraction of aligned bases that were filtered out because they were in reads with low mapping quality. */
     public double PCT_EXC_MAPQ;
 
@@ -97,6 +103,9 @@ public class TargetedPcrMetrics extends MultilevelMetrics {
 
     /** The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads. */
     public double PCT_EXC_OVERLAP;
+
+    /** The fraction of aligned bases that were filtered out because they did not align over a target base. */
+    public double PCT_EXC_OFF_TARGET;
 
     /**
      * The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to

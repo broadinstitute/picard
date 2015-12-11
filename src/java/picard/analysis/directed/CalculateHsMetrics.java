@@ -45,7 +45,7 @@ import picard.cmdline.programgroups.Metrics;
 public class CalculateHsMetrics extends CollectHsMetrics {
 
     @Option(shortName = "MQ", doc = "Minimum mapping quality for a read to contribute coverage.", overridable = true)
-    public int MINIMUM_MAPPING_QUALITY = 0;
+    public int MINIMUM_MAPPING_QUALITY = 1;
 
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 0;
