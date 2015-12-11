@@ -20,7 +20,6 @@ public class OpticalDuplicateFinderTest {
     /** Tests rapidParseInt for positive and negative numbers, as well as non-digit suffixes */
     @Test
     public void testRapidParseInt() {
-        final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
         for (int i = -100; i < 100; i++) {
             Assert.assertEquals(ReadNameParser.rapidParseInt(Integer.toString(i)), i);
 
@@ -64,7 +63,7 @@ public class OpticalDuplicateFinderTest {
         }
     }
 
-    // NB: these tests fails due to overflow in the duplicate finder test.  This has been the behavior previously, so keep it for now.
+    // NB: these test fail s due to overflow in the duplicate finder test.  This has been the behavior previously, so keep it for now.
     @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
     public void testParseReadNameOverflow(final String readName, final int tile, final int x, final int y) {
         OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
@@ -75,7 +74,7 @@ public class OpticalDuplicateFinderTest {
         Assert.assertEquals(loc.getY(), (short)y); // casting to short for the overflow
     }
 
-    // NB: these tests the case wher we do not overflow in the duplicate finder test.
+    // NB: this test the case where we do not overflow in the duplicate finder test.
     @Test(dataProvider = "testParseReadNameDataProvider", enabled = true)
     public void testParseReadNameOK(final String readName, final int tile, final int x, final int y) {
         OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
@@ -92,6 +91,28 @@ public class OpticalDuplicateFinderTest {
                 {"RUNID:7:1203:2886:82292", 1203, 2886, 82292},
                 {"RUNID:7:1203:2884:16834", 1203, 2884, 16834}
         };
+    }
+
+    @Test
+    public void testDefaultRegex() {
+        final String readName1 = "000000000-ZZZZZ:1:1105:17981:23325";
+        final String readName2 = "000000000-ZZZZZ:1:1109:22981:17995";
+
+        final int[] tokens = new int[3];
+        Assert.assertEquals(ReadNameParser.getLastThreeFields(readName1, ':', tokens), 5);
+        Assert.assertEquals(ReadNameParser.getLastThreeFields(readName2, ':', tokens), 5);
+
+        final OpticalDuplicateFinder opticalDuplicateFinder = new OpticalDuplicateFinder();
+        final PhysicalLocation loc1 = new ReadEndsForMarkDuplicates();
+        final PhysicalLocation loc2 = new ReadEndsForMarkDuplicates();
+
+        Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName1, loc1));
+        Assert.assertTrue(opticalDuplicateFinder.addLocationInformation(readName2, loc2));
+
+        final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(Arrays.asList(loc1, loc2));
+        for (final boolean opticalDuplicateFlag : opticalDuplicateFlags) {
+            Assert.assertFalse(opticalDuplicateFlag);
+        }
     }
 
     @Test

@@ -272,7 +272,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * We expect only reads with FR or RF orientations, not a mixture of both. 
      * 
      * In PCR duplicate detection, a duplicates can be a have FR and RF when fixing the orientation order to the first end of the mate.  In
-     * optical duplicate detection, we do not consider them duplicates if one read as FR ann the other RF when we order orientation by the
+     * optical duplicate detection, we do not consider them duplicates if one read as FR and the other RF when we order orientation by the
      * first mate sequenced (read #1 of the pair).
      */
     private static void trackOpticalDuplicates(final List<? extends PhysicalLocation> list,

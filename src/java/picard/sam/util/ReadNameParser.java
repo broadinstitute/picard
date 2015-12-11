@@ -6,13 +6,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Small class that provides access to the physical location information about a cluster.
+ * Provides access to the physical location information about a cluster.
  * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
  * non-zero positive integers, x and y coordinates may be negative.
  */
 public class ReadNameParser {
 
-    public static final String DEFAULT_READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*".intern();
+    public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
     public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
 
@@ -83,7 +83,8 @@ public class ReadNameParser {
     }
 
     /**
-     * Single pass method to parse the read name for the default regex.  Examines the last three fields as split by the delimiter.
+     * Given a string, splits the string by the delimiter, and returns the the last three fields parsed as integers.  Parsing a field
+     * considers only a sequence of digits up until the first non-digit character.  The three values are stored in the passed-in array.
      */
     public static int getLastThreeFields(final String readName, final char delim, final int[] tokens) {
         int tokensIdx = 2; // start at the last token

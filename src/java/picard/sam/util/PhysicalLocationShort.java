@@ -29,7 +29,7 @@ package picard.sam.util;
  * Small class that provides access to the physical location information about a cluster.
  * All values should be defaulted to -1 if unavailable.  Tile should only allow
  * non-zero positive integers, x and y coordinates must be non-negative.
- * This is different from OpticalDuplicateFinder.PhysicalLocationInt in that the x and y positions are shorts, not ints
+ * This is different from PhysicalLocationInt in that the x and y positions are shorts, not ints
  * thus, they may overflow within a HiSeqX tile.
  */
 public class PhysicalLocationShort extends PhysicalLocationInt {
