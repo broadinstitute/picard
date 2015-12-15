@@ -19,9 +19,10 @@ public class ReadNameParser {
      * which assumes that fields in the read name are delimited by ':' and the last three fields correspond to the tile, x and y locations,
      * ignoring any trailing non-digit characters.
      *
-     * The default regex is optimized for fast parsing (see getLastThreeFields) by searching for the last three fields, ignoring any
-     * trailing non-digit characters, assuming the delimiter ':'.  This should consider correctly read names where we have 5 or 7 fields
-     * with the last three fields are tile/x/y, as is the case for the majority of read names produced by Illumina technology.
+     * The default regex is optimized for fast parsing (see {@link #getLastThreeFields(String, char, int[])}) by searching for the last
+     * three fields, ignoring any trailing non-digit characters, assuming the delimiter ':'.  This should consider correctly read names
+     * where we have 5 or 7 field with the last three fields being tile/x/y, as is the case for the majority of read names produced by
+     * Illumina technology.
      */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
 
