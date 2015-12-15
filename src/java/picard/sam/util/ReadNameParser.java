@@ -73,52 +73,64 @@ public class ReadNameParser {
      * @return true if the read name contained the information in parsable form, false otherwise
      */
     public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
-        // Optimized version if using the default read name regex (== used on purpose):
-        if (this.readNameRegex == this.DEFAULT_READ_NAME_REGEX) {
-            final int fields = getLastThreeFields(readName, ':', tmpLocationFields);
-            if (!(fields == 5 || fields == 7)) {
-                if (null != log && !this.warnedAboutRegexNotMatching) {
-                    this.log.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
-                                    "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
-                                    "Note that this message will not be emitted again even if other read names do not match the regex.",
-                            this.readNameRegex, readName));
-                    this.warnedAboutRegexNotMatching = true;
+        try {
+            // Optimized version if using the default read name regex (== used on purpose):
+            if (this.readNameRegex == ReadNameParser.DEFAULT_READ_NAME_REGEX) {
+                final int fields = getLastThreeFields(readName, ':', tmpLocationFields);
+                if (!(fields == 5 || fields == 7)) {
+                    if (null != log && !this.warnedAboutRegexNotMatching) {
+                        this.log.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
+                                        "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
+                                        "Note that this message will not be emitted again even if other read names do not match the regex.",
+                                this.readNameRegex, readName));
+                        this.warnedAboutRegexNotMatching = true;
+                    }
+                    return false;
                 }
-                return false;
-            }
-            loc.setTile((short) tmpLocationFields[0]);
-            loc.setX(tmpLocationFields[1]);
-            loc.setY(tmpLocationFields[2]);
-            return true;
-        } else if (this.readNameRegex == null) {
-            return false;
-        } else {
-            // Standard version that will use the regex
-            if (this.readNamePattern == null) this.readNamePattern = Pattern.compile(this.readNameRegex);
-
-            final Matcher m = this.readNamePattern.matcher(readName);
-            if (m.matches()) {
-                loc.setTile((short) Integer.parseInt(m.group(1)));
-                loc.setX(Integer.parseInt(m.group(2)));
-                loc.setY(Integer.parseInt(m.group(3)));
+                loc.setTile((short) tmpLocationFields[0]);
+                loc.setX(tmpLocationFields[1]);
+                loc.setY(tmpLocationFields[2]);
                 return true;
-            } else {
-                if (null != log && !this.warnedAboutRegexNotMatching) {
-                    this.log.warn(String.format("READ_NAME_REGEX '%s' did not match read name '%s'.  Your regex may not be correct.  " +
-                                    "Note that this message will not be emitted again even if other read names do not match the regex.",
-                            this.readNameRegex, readName));
-                    warnedAboutRegexNotMatching = true;
-                }
+            } else if (this.readNameRegex == null) {
                 return false;
+            } else {
+                // Standard version that will use the regex
+                if (this.readNamePattern == null) this.readNamePattern = Pattern.compile(this.readNameRegex);
+
+                final Matcher m = this.readNamePattern.matcher(readName);
+                if (m.matches()) {
+                    loc.setTile((short) Integer.parseInt(m.group(1)));
+                    loc.setX(Integer.parseInt(m.group(2)));
+                    loc.setY(Integer.parseInt(m.group(3)));
+                    return true;
+                } else {
+                    if (null != log && !this.warnedAboutRegexNotMatching) {
+                        this.log.warn(String.format("READ_NAME_REGEX '%s' did not match read name '%s'.  Your regex may not be correct.  " +
+                                        "Note that this message will not be emitted again even if other read names do not match the regex.",
+                                this.readNameRegex, readName));
+                        warnedAboutRegexNotMatching = true;
+                    }
+                    return false;
+                }
             }
+        }
+        catch (NumberFormatException nfe) {
+            if (log != null && !this.warnedAboutRegexNotMatching) {
+                this.log.warn("A field field parsed out of a read name was expected to contain an integer and did not. ",
+                              "Read name: ", readName, ". Cause: ", nfe.getMessage());
+                warnedAboutRegexNotMatching = true;
+            }
+            return false;
         }
     }
 
     /**
      * Given a string, splits the string by the delimiter, and returns the the last three fields parsed as integers.  Parsing a field
      * considers only a sequence of digits up until the first non-digit character.  The three values are stored in the passed-in array.
+     *
+     * @throws NumberFormatException if any of the tokens that should contain numbers do not start with parsable numbers
      */
-    public static int getLastThreeFields(final String readName, final char delim, final int[] tokens) {
+    public static int getLastThreeFields(final String readName, final char delim, final int[] tokens) throws NumberFormatException {
         int tokensIdx = 2; // start at the last token
         int numFields = 0;
         int i, endIdx;
@@ -149,8 +161,10 @@ public class ReadNameParser {
     /**
      * Very specialized method to rapidly parse a sequence of digits from a String up until the first
      * non-digit character.
+     *
+     * @throws NumberFormatException if the String does not start with an optional - followed by at least on digit
      */
-    public static int rapidParseInt(final String input) {
+    public static int rapidParseInt(final String input) throws NumberFormatException {
         final int len = input.length();
         int val = 0;
         int i = 0;
@@ -161,17 +175,19 @@ public class ReadNameParser {
             isNegative = true;
         }
 
+        boolean hasDigits = false;
         for (; i < len; ++i) {
             final char ch = input.charAt(i);
             if (Character.isDigit(ch)) {
                 val = (val * 10) + (ch - 48);
+                hasDigits = true;
             } else {
                 break;
             }
         }
 
+        if (!hasDigits) throw new NumberFormatException("String '" + input + "' did not start with a parsable number.");
         if (isNegative) val = -val;
-
         return val;
     }
 }
