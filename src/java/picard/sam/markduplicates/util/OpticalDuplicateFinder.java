@@ -25,13 +25,12 @@
 package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.util.Log;
-import picard.sam.util.ReadNameParsingUtils;
+import picard.sam.util.PhysicalLocation;
+import picard.sam.util.ReadNameParser;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Contains methods for finding optical duplicates.
@@ -39,121 +38,30 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  * @author Nils Homer
  */
-public class OpticalDuplicateFinder {
-
-    public static final String DEFAULT_READ_NAME_REGEX = "[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*".intern();
-
-    public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
-
-    public String readNameRegex;
+public class OpticalDuplicateFinder extends ReadNameParser {
 
     public int opticalDuplicatePixelDistance;
 
-    private Pattern readNamePattern;
+    public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
 
-    private boolean warnedAboutRegexNotMatching = false;
-
-    private final Log log;
-
+    /**
+     * Uses the default duplicate distance {@value DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
+     * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
+     */
     public OpticalDuplicateFinder() {
-        this(DEFAULT_READ_NAME_REGEX, DEFAULT_OPTICAL_DUPLICATE_DISTANCE);
-    }
-
-    public OpticalDuplicateFinder(final int opticalDuplicatePixelDistance) {
-        this(DEFAULT_READ_NAME_REGEX, opticalDuplicatePixelDistance);
-    }
-
-    public OpticalDuplicateFinder(final String readNameRegex) {
-        this(readNameRegex, DEFAULT_OPTICAL_DUPLICATE_DISTANCE);
-    }
-
-    public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance) {
-        this(readNameRegex, opticalDuplicatePixelDistance, null);
-    }
-
-    public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance, final Log log) {
-        this.readNameRegex = readNameRegex;
-        this.opticalDuplicatePixelDistance = opticalDuplicatePixelDistance;
-        this.log = log;
+        super();
+        this.opticalDuplicatePixelDistance = DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
     }
 
     /**
-     * Small interface that provides access to the physical location information about a cluster.
-     * All values should be defaulted to -1 if unavailable.  ReadGroup and Tile should only allow
-     * non-zero positive integers, x and y coordinates may be negative.
-     */
-    public static interface PhysicalLocation {
-        public short getReadGroup();
-
-        public void setReadGroup(short rg);
-
-        public short getTile();
-
-        public void setTile(short tile);
-
-        public short getX();
-
-        public void setX(short x);
-
-        public short getY();
-
-        public void setY(short y);
-
-        public short getLibraryId();
-
-        public void setLibraryId(short libraryId);
-    }
-
-    private final int[] tmpLocationFields = new int[10]; // for optimization of addLocationInformation
-    /**
-     * Method used to extract tile/x/y from the read name and add it to the PhysicalLocation so that it
-     * can be used later to determine optical duplication
      *
-     * @param readName the name of the read/cluster
-     * @param loc the object to add tile/x/y to
-     * @return true if the read name contained the information in parsable form, false otherwise
+     * @param readNameRegex see {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
+     * @param opticalDuplicatePixelDistance the optical duplicate pixel distance
+     * @param log the log to which to write messages.
      */
-    public boolean addLocationInformation(final String readName, final PhysicalLocation loc) {
-        // Optimized version if using the default read name regex (== used on purpose):
-        if (this.readNameRegex == this.DEFAULT_READ_NAME_REGEX) {
-            final int fields = ReadNameParsingUtils.getRapidDefaultReadNameRegexSplit(readName, ':', tmpLocationFields);
-            if (!(fields == 5 || fields == 7)) {
-                if (null != log && !this.warnedAboutRegexNotMatching) {
-                    this.log.warn(String.format("Default READ_NAME_REGEX '%s' did not match read name '%s'.  " +
-                            "You may need to specify a READ_NAME_REGEX in order to correctly identify optical duplicates.  " +
-                            "Note that this message will not be emitted again even if other read names do not match the regex.",
-                            this.readNameRegex, readName));
-                    this.warnedAboutRegexNotMatching = true;
-                }
-                return false;
-            }
-            final int offset = fields == 7 ? 2 : 0;
-            loc.setTile((short) tmpLocationFields[offset + 2]);
-            loc.setX((short) tmpLocationFields[offset + 3]);
-            loc.setY((short) tmpLocationFields[offset + 4]);
-            return true;
-        } else if (this.readNameRegex == null) {
-            return false;
-        } else {
-            // Standard version that will use the regex
-            if (this.readNamePattern == null) this.readNamePattern = Pattern.compile(this.readNameRegex);
-
-            final Matcher m = this.readNamePattern.matcher(readName);
-            if (m.matches()) {
-                loc.setTile((short) Integer.parseInt(m.group(1)));
-                loc.setX((short) Integer.parseInt(m.group(2)));
-                loc.setY((short) Integer.parseInt(m.group(3)));
-                return true;
-            } else {
-                if (null != log && !this.warnedAboutRegexNotMatching) {
-                    this.log.warn(String.format("READ_NAME_REGEX '%s' did not match read name '%s'.  Your regex may not be correct.  " +
-                            "Note that this message will not be emitted again even if other read names do not match the regex.",
-                            this.readNameRegex, readName));
-                    warnedAboutRegexNotMatching = true;
-                }
-                return false;
-            }
-        }
+    public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance, final Log log) {
+        super(readNameRegex, log);
+        this.opticalDuplicatePixelDistance = opticalDuplicatePixelDistance;
     }
 
     /**
