@@ -12,15 +12,22 @@ import java.util.regex.Pattern;
  */
 public class ReadNameParser {
 
+    /**
+     * The read name regular expression (regex) is used to extract three pieces of information from the read name: tile, x location,
+     * and y location.  Any read name regex should parse the read name to produce these and only these values.  An example regex is:
+     *  (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$
+     * which assumes that fields in the read name are delimited by ':' and the last three fields correspond to the tile, x and y locations,
+     * ignoring any trailing non-digit characters.
+     *
+     * The default regex is optimized for fast parsing (see getLastThreeFields) by searching for the last three fields, ignoring any
+     * trailing non-digit characters, assuming the delimiter ':'.  This should consider correctly read names where we have 5 or 7 fields
+     * with the last three fields are tile/x/y, as is the case for the majority of read names produced by Illumina technology.
+     */
     public static final String DEFAULT_READ_NAME_REGEX = "<optimized capture of last three ':' separated fields as numeric values>".intern();
-
-    public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
 
     private final int[] tmpLocationFields = new int[3]; // for optimization of addLocationInformation
 
-    public String readNameRegex;
-
-    public int opticalDuplicatePixelDistance;
+    private String readNameRegex = null;
 
     private Pattern readNamePattern;
 
@@ -28,7 +35,31 @@ public class ReadNameParser {
 
     private final Log log;
 
-    public ReadNameParser(final Log log) {
+    /**
+     * Creates are read name parser using the default read name regex and optical duplicate distance.   See {@link #DEFAULT_READ_NAME_REGEX}
+     * for an explanation on how the read name is parsed.
+     */
+    public ReadNameParser() {
+        this(DEFAULT_READ_NAME_REGEX);
+    }
+
+    /**
+     * Creates are read name parser using the given read name regex.  See {@link #DEFAULT_READ_NAME_REGEX} for an explanation on how to
+     * format the regular expression (regex) string.
+     * @param readNameRegex the read name regular expression string to parse read names, null to never parse location information.
+     */
+    public ReadNameParser(final String readNameRegex) {
+        this(readNameRegex, null);
+    }
+
+    /**
+     * Creates are read name parser using the given read name regex.  See {@link #DEFAULT_READ_NAME_REGEX} for an explanation on how to
+     * format the regular expression (regex) string.
+     * @param readNameRegex the read name regular expression string to parse read names, null to never parse location information..
+     * @param log the log to which to write messages.
+     */
+    public ReadNameParser(final String readNameRegex, final Log log) {
+        this.readNameRegex = readNameRegex;
         this.log = log;
     }
 
@@ -95,7 +126,7 @@ public class ReadNameParser {
         for (i = readName.length() - 1; 0 <= i && 0 <= tokensIdx; i--) {
             if (readName.charAt(i) == delim || 0 == i) {
                 numFields++;
-                tokens[tokensIdx] = rapidParseInt(readName.substring(i+1, endIdx));
+                tokens[tokensIdx] = rapidParseInt(readName.substring((0 == i) ? 0 : (i+1), endIdx));
                 tokensIdx--;
                 endIdx = i;
             }

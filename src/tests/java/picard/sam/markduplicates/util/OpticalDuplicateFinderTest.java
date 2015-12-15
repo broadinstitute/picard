@@ -136,4 +136,41 @@ public class OpticalDuplicateFinderTest {
             Assert.assertFalse(opticalDuplicateFlag);
         }
     }
+
+    @DataProvider(name = "testReadNameParsing")
+    public Object[][] testReadNameParsingDataProvider() {
+        final String lastThreeFieldsRegex = "(?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$";
+        return new Object[][]{
+                {lastThreeFieldsRegex, "RUNID:123:000000000-ZZZZZ:1:1105:17981:23325", 1105, 17981, 23325, true},
+                {lastThreeFieldsRegex, "RUNID:123:000000000-ZZZZZ:1:1109:22981:17995", 1109, 22981, 17995, true},
+                {lastThreeFieldsRegex, "1109:22981:17995", 1109, 22981, 17995, true},
+                {lastThreeFieldsRegex, "RUNID:7:1203:2886:82292", 1203, 2886, 82292, true},
+                {lastThreeFieldsRegex, "RUNID:7:1203:2884:16834", 1203, 2884, 16834, true},
+                {lastThreeFieldsRegex, "1109ABC:22981DEF:17995GHI", 1109, 22981, 17995, true},
+                {ReadNameParser.DEFAULT_READ_NAME_REGEX, "RUNID:123:000000000-ZZZZZ:1:1105:17981:23325", 1105, 17981, 23325, true},
+                {ReadNameParser.DEFAULT_READ_NAME_REGEX, "RUNID:123:000000000-ZZZZZ:1:1109:22981:17995", 1109, 22981, 17995, true},
+                {ReadNameParser.DEFAULT_READ_NAME_REGEX, "1109:22981:17995", 1109, 22981, 17995, false},
+                {ReadNameParser.DEFAULT_READ_NAME_REGEX, "RUNID:7:1203:2886:82292", 1203, 2886, 82292, true},
+                {ReadNameParser.DEFAULT_READ_NAME_REGEX, "RUNID:7:1203:2884:16834", 1203, 2884, 16834, true}
+        };
+    }
+
+    @Test(dataProvider = "testReadNameParsing")
+    public void testReadNameParsing(final String readNameRegex, final String readName, final int tile, final int x, final int y, final boolean addLocationInformationSucceeds) {
+        final ReadNameParser parser = new ReadNameParser(readNameRegex);
+        final PhysicalLocationInt loc = new PhysicalLocationInt();
+        Assert.assertEquals(parser.addLocationInformation(readName, loc), addLocationInformationSucceeds);
+        if (addLocationInformationSucceeds) { // just check the location
+            Assert.assertEquals(loc.getTile(), tile);
+            Assert.assertEquals(loc.getX(), x);
+            Assert.assertEquals(loc.getY(), y);
+        }
+        else if (readNameRegex == ReadNameParser.DEFAULT_READ_NAME_REGEX) { // additional testing on the default regex
+            int[] tokens = new int[3];
+            ReadNameParser.getLastThreeFields(readName, ':', tokens);
+            Assert.assertEquals(tokens[0], tile);
+            Assert.assertEquals(tokens[1], x);
+            Assert.assertEquals(tokens[2], y);
+        }
+    }
 }

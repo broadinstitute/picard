@@ -40,25 +40,27 @@ import java.util.List;
  */
 public class OpticalDuplicateFinder extends ReadNameParser {
 
+    public int opticalDuplicatePixelDistance;
+
+    public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
+
+    /**
+     * Uses the default duplicate distance {@value DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
+     * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
+     */
     public OpticalDuplicateFinder() {
-        this(DEFAULT_READ_NAME_REGEX, DEFAULT_OPTICAL_DUPLICATE_DISTANCE);
+        super();
+        this.opticalDuplicatePixelDistance = DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
     }
 
-    public OpticalDuplicateFinder(final int opticalDuplicatePixelDistance) {
-        this(DEFAULT_READ_NAME_REGEX, opticalDuplicatePixelDistance);
-    }
-
-    public OpticalDuplicateFinder(final String readNameRegex) {
-        this(readNameRegex, DEFAULT_OPTICAL_DUPLICATE_DISTANCE);
-    }
-
-    public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance) {
-        this(readNameRegex, opticalDuplicatePixelDistance, null);
-    }
-
+    /**
+     *
+     * @param readNameRegex see {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
+     * @param opticalDuplicatePixelDistance the optical duplicate pixel distance
+     * @param log the log to which to write messages.
+     */
     public OpticalDuplicateFinder(final String readNameRegex, final int opticalDuplicatePixelDistance, final Log log) {
-        super(log);
-        this.readNameRegex = readNameRegex;
+        super(readNameRegex, log);
         this.opticalDuplicatePixelDistance = opticalDuplicatePixelDistance;
     }
 
