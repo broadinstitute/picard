@@ -224,8 +224,8 @@ public class MarkIlluminaAdapters extends CommandLineProgram {
                     progress.record(r);
                     if (out != null) out.addAlignment(r);
 
-                    final Integer clip = rec.getIntegerAttribute(ReservedTagConstants.XT);
-                    if (clip != null) histo.increment(rec.getReadLength() - clip + 1);
+                    final Integer clip = r.getIntegerAttribute(ReservedTagConstants.XT);
+                    if (clip != null) histo.increment(r.getReadLength() - clip + 1);
                 }
             }
         }
