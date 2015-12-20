@@ -108,6 +108,9 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
     private DbSnpBitSetUtil dbSnpMask;
     private SamRecordFilter recordFilter;
 
+    private String currentRefString = null;
+    private int currentRefIndex = -1;
+
     private final Set<String> samples = new HashSet<String>();
     private final Set<String> libraries = new HashSet<String>();
     private final Map<String, ArtifactCounter> artifactCounters = new HashMap<String, ArtifactCounter>();
@@ -196,12 +199,32 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
             throw new PicardException("Record contains library that is missing from header: " + library);
         }
 
+        // set up some constants that don't change in the loop below
+        final int contextFullLength = 2 * CONTEXT_SIZE + 1;
+        final ArtifactCounter counter = artifactCounters.get(library);
+        final byte[] readBases = rec.getReadBases();
+        final byte[] readQuals;
+        if (USE_OQ) {
+            final byte[] tmp = rec.getOriginalBaseQualities();
+            readQuals = tmp == null ? rec.getBaseQualities() : tmp;
+        } else {
+            readQuals = rec.getBaseQualities();
+        }
+
         // iterate over aligned positions
         for (final AlignmentBlock block : rec.getAlignmentBlocks()) {
             for (int offset = 0; offset < block.getLength(); offset++) {
                 // remember, these are 1-based!
                 final int readPos = block.getReadStart() + offset;
                 final int refPos = block.getReferenceStart() + offset;
+
+                // skip low BQ sites
+                final byte qual = readQuals[readPos - 1];
+                if (qual < MINIMUM_QUALITY_SCORE) continue;
+
+                // skip N bases in read
+                final char readBase = Character.toUpperCase((char)readBases[readPos - 1]);
+                if (readBase == 'N') continue;
 
                 /**
                  * Skip regions outside of intervals.
@@ -218,24 +241,25 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
 
                 // skip the ends of the reference
                 final int contextStartIndex = refPos - CONTEXT_SIZE - 1;
-                final int contextFullLength = 2 * CONTEXT_SIZE + 1;
                 if (contextStartIndex < 0 || contextStartIndex + contextFullLength > ref.length()) continue;
 
                 // skip contexts with N bases
-                final String context = StringUtil.bytesToString(ref.getBases(), contextStartIndex, contextFullLength).toUpperCase();
+                final String context = getRefContext(ref, contextStartIndex, contextFullLength);
                 if (context.contains("N")) continue;
 
-                // skip low BQ sites
-                if (failsBaseQualityCutoff(readPos, rec)) continue;
-
-                // skip N bases in read
-                final char readBase = Character.toUpperCase((char) rec.getReadBases()[readPos - 1]);
-                if (readBase == 'N') continue;
-
                 // count the base!
-                artifactCounters.get(library).countRecord(context, readBase, rec);
+                counter.countRecord(context, readBase, rec);
             }
         }
+    }
+
+    private String getRefContext(final ReferenceSequence ref, final int contextStartIndex, final int contextFullLength) {
+        // cache the upper-cased string version of this reference so we don't need to create a string for every base in every read
+        if (currentRefIndex != ref.getContigIndex()) {
+            currentRefString = new String(ref.getBases()).toUpperCase();
+            currentRefIndex = ref.getContigIndex();
+        }
+        return currentRefString.substring(contextStartIndex, contextStartIndex + contextFullLength);
     }
 
     @Override
@@ -274,17 +298,4 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
 
     @Override
     protected boolean usesNoRefReads() { return false; }
-
-    /**
-     * Check if this read base fails the base quality cutoff.
-     */
-    private boolean failsBaseQualityCutoff(final int oneIndexedPos, final SAMRecord rec) {
-        final byte qual;
-        if (USE_OQ && rec.getOriginalBaseQualities() != null) {
-            qual = rec.getOriginalBaseQualities()[oneIndexedPos - 1];
-        } else {
-            qual = rec.getBaseQualities()[oneIndexedPos - 1];
-        }
-        return (qual < MINIMUM_QUALITY_SCORE);
-    }
 }
