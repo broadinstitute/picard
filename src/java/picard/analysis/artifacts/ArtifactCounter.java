@@ -21,10 +21,7 @@ class ArtifactCounter {
     private final String sampleAlias;
     private final String library;
 
-    private final Set<String> fullContexts;
-    private final Map<String, String> leadingContextMap;
-    private final Map<String, String> trailingContextMap;
-    private final Map<String, String> zeroContextMap;
+    private final Map<String, RefContext> contextMap = new HashMap<>();
 
     private final ContextAccumulator fullContextAccumulator;
     private final ContextAccumulator halfContextAccumulator;
@@ -35,38 +32,51 @@ class ArtifactCounter {
     private final List<BaitBiasSummaryMetrics> baitBiasSummaryMetricsList;
     private final List<BaitBiasDetailMetrics> baitBiasDetailMetricsList;
 
+    private final Set<String> leadingContexts = new HashSet<>();
+    private final Set<String> trailingContexts = new HashSet<>();
+
+    // tuple to keep track of the different types of sub-contexts from a given reference context
+    protected final class RefContext {
+        final String ref, leading, trailing, zero;
+
+        public RefContext(final String ref, final String leading, final String trailing, final String zero) {
+            this.ref = ref;
+            this.leading = leading;
+            this.trailing = trailing;
+            this.zero = zero;
+        }
+    }
+
     public ArtifactCounter(final String sampleAlias, final String library, final int contextSize, final boolean expectedTandemReads) {
         this.sampleAlias = sampleAlias;
         this.library = library;
 
         // define the contexts
-        this.fullContexts = new HashSet<String>();
+        final HashSet<String> fullContexts = new HashSet<>();
         for (final byte[] kmer : SequenceUtil.generateAllKmers(2 * contextSize + 1)) {
-            this.fullContexts.add(StringUtil.bytesToString(kmer));
+            fullContexts.add(StringUtil.bytesToString(kmer));
         }
+
+        final Set<String> zeroContexts = new HashSet<>();
 
         // the half contexts specify either leading or trailing bases. the zero context is just the center.
         // NB: we use N to represent a wildcard base, rather than an ambiguous base. It's assumed that all of the input
         // contexts are unambiguous, and that any actual N's in the data have been dealt with elsewhere.
         final String padding = StringUtil.repeatCharNTimes('N', contextSize);
-        this.leadingContextMap = new HashMap<String, String>();
-        this.trailingContextMap = new HashMap<String, String>();
-        this.zeroContextMap = new HashMap<String, String>();
-        for (final String context : this.fullContexts) {
-            final String leading = context.substring(0, contextSize);
-            final String trailing = context.substring(contextSize + 1, context.length());
-            final char center = context.charAt(contextSize);
-            this.leadingContextMap.put(context, leading + center + padding);
-            this.trailingContextMap.put(context, padding + center + trailing);
-            this.zeroContextMap.put(context, padding + center + padding);
+        for (final String context : fullContexts) {
+            final char centralBase = context.charAt(contextSize);
+            final String leading = context.substring(0, contextSize) + centralBase + padding;
+            final String trailing = padding + centralBase + context.substring(contextSize + 1, context.length());
+            final String zero = padding + centralBase + padding;
+            contextMap.put(context, new RefContext(context, leading, trailing, zero));
+
+            leadingContexts.add(leading);
+            trailingContexts.add(trailing);
+            zeroContexts.add(zero);
         }
 
-        // set up the accumulators
-        final Set<String> halfContexts = new HashSet<String>();
-        halfContexts.addAll(leadingContextMap.values());
-        halfContexts.addAll(trailingContextMap.values());
-        final Set<String> zeroContexts = new HashSet<String>();
-        zeroContexts.addAll(zeroContextMap.values());
+        final Set<String> halfContexts = new HashSet<>(leadingContexts);
+        halfContexts.addAll(trailingContexts);
 
         this.fullContextAccumulator = new ContextAccumulator(fullContexts, expectedTandemReads);
         this.halfContextAccumulator = new ContextAccumulator(halfContexts, expectedTandemReads);
@@ -83,11 +93,12 @@ class ArtifactCounter {
      * Add a record to all the accumulators.
      */
     public void countRecord(final String refContext, final char calledBase, final SAMRecord rec) {
-        if (this.fullContexts.contains(refContext)) {
-            this.fullContextAccumulator.countRecord(refContext, calledBase, rec);
-            this.halfContextAccumulator.countRecord(this.leadingContextMap.get(refContext), calledBase, rec);
-            this.halfContextAccumulator.countRecord(this.trailingContextMap.get(refContext), calledBase, rec);
-            this.zeroContextAccumulator.countRecord(this.zeroContextMap.get(refContext), calledBase, rec);
+        if (this.contextMap.containsKey(refContext)) {
+            final RefContext contexts = contextMap.get(refContext);
+            this.fullContextAccumulator.countRecord(contexts.ref, calledBase, rec);
+            this.halfContextAccumulator.countRecord(contexts.leading, calledBase, rec);
+            this.halfContextAccumulator.countRecord(contexts.trailing, calledBase, rec);
+            this.zeroContextAccumulator.countRecord(contexts.zero, calledBase, rec);
         }
     }
 
@@ -147,8 +158,8 @@ class ArtifactCounter {
                 if (!metrics.preAdapterMetrics.CONTEXT.equals(metrics.baitBiasMetrics.CONTEXT)) {
                     throw new PicardException("Input detail metrics are not matched up properly - contexts differ.");
                 }
-                final boolean isLeading = this.leadingContextMap.containsValue(metrics.preAdapterMetrics.CONTEXT);
-                final boolean isTrailing = this.trailingContextMap.containsValue(metrics.preAdapterMetrics.CONTEXT);
+                final boolean isLeading = leadingContexts.contains(metrics.preAdapterMetrics.CONTEXT);
+                final boolean isTrailing = trailingContexts.contains(metrics.preAdapterMetrics.CONTEXT);
                 // if the original contextSize is 0, there's no difference between leading and trailing, so add it to both
                 if (isLeading) leadingMetricsForTransition.add(metrics);
                 if (isTrailing) trailingMetricsForTransition.add(metrics);
