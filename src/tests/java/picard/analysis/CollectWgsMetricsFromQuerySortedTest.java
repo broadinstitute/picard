@@ -38,11 +38,14 @@ public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest
         output.read(new FileReader(outfile));
 
         for (final CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics metrics : output.getMetrics()) {
+            final boolean isRaw = metrics.TYPE == CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.RAW;
+
             Assert.assertEquals(metrics.TOTAL_BASES, 606);
-            Assert.assertEquals(metrics.TOTAL_USABLE_BASES, 238);
-            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, 0.085809);  // 52 of 606 bases
-            Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.188119);    // 114 of 606 bases
-            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.333333);    // 202 of 606 bases
+            Assert.assertEquals(metrics.TOTAL_PASSING_BASES, isRaw ? 238 : 200);
+            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, isRaw ? 0.085809 : 0.013201);  // raw: 52/606, usable: 8/606
+            Assert.assertEquals(metrics.PCT_EXC_BASEQ, isRaw ? 0.188119 : 0.156766);    // raw: 114/606, usable 95/606
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, isRaw ? 0.0 : 0.166667);          // raw: 0/606, usable:101/606
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.333333);                        // both: 202/606
             Assert.assertEquals(metrics.TOTAL_READ_PAIRS, 3);
             Assert.assertEquals(metrics.TOTAL_DUPE_PAIRS, 1);
             Assert.assertEquals(metrics.TOTAL_ORIENTED_PAIRS, 2);
