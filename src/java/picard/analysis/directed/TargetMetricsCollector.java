@@ -397,38 +397,38 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 }
             }
 
-            /*
-            Count metrics related to # of base and reads. Consider supplemental alignments for base counting but not record counting.
-            Do this counting *prior* to applying filters to ensure we match other metrics' computation for these values, such as AlignmentSummaryMetrics.
-            */
-            if (!record.getNotPrimaryAlignmentFlag()) { // ignore secondary alignments for both # of read and # of base metrics
-                // # of bases
-                if (!record.getReadFailsVendorQualityCheckFlag()) { // only reads that pass vendor's filters
-                    // Strangely enough we should not count supplementals in PF_BASES, assuming that the
-                    // main record also contains these bases! But we *do* count the aligned bases, assuming
-                    // that those bases are not *aligned* in the primary record
-                    if (!record.getSupplementaryAlignmentFlag()) this.metrics.PF_BASES += record.getReadLength();
+            /* Count metrics related to # of base and reads. Consider supplemental alignments for base counting but not record counting.
+               Do this counting *prior* to applying filters to ensure we match other metrics' computation for these values, such as AlignmentSummaryMetrics. */
 
-                    if (!record.getReadUnmappedFlag()) {
-                        this.metrics.PF_BASES_ALIGNED += basesAlignedInRecord;
-                        if (!record.getDuplicateReadFlag()) {
-                            this.metrics.PF_UQ_BASES_ALIGNED += basesAlignedInRecord;
+            // READ Based Metrics
+            if (!record.getSupplementaryAlignmentFlag()) { // only consider the primary
+                this.metrics.TOTAL_READS++;
+                if (!record.getReadFailsVendorQualityCheckFlag()) { // only reads that pass vendor's filters
+                    this.metrics.PF_READS++;
+                    if (!record.getDuplicateReadFlag()) { // ignore duplicates for unique reads/bases
+                        this.metrics.PF_UNIQUE_READS++;
+                        if (!record.getReadUnmappedFlag()) { // ignore unmapped reads
+                            this.metrics.PF_UQ_READS_ALIGNED++;
                         }
                     }
                 }
+            }
 
-                // # of reads
-                if (!record.getSupplementaryAlignmentFlag()) { // only consider the primary
-                    this.metrics.TOTAL_READS++;
-                    if (!record.getReadFailsVendorQualityCheckFlag()) { // only reads that pass vendor's filters
-                        this.metrics.PF_READS++;
-                        if (!record.getDuplicateReadFlag()) { // ignore duplicates for unique reads/bases
-                            this.metrics.PF_UNIQUE_READS++;
-                            if (!record.getReadUnmappedFlag()) { // ignore unmapped reads
-                                this.metrics.PF_UQ_READS_ALIGNED++;
-                            }
-                        }
-                    }
+            ///////////////////////////////////////////////////////////////////
+            // Non-PF reads can be totally ignored beyond this point
+            ///////////////////////////////////////////////////////////////////
+            if (record.getReadFailsVendorQualityCheckFlag()) return;
+
+            // BASE Based Metrics
+            // Strangely enough we should not count supplementals in PF_BASES, assuming that the
+            // main record also contains these bases! But we *do* count the aligned bases, assuming
+            // that those bases are not *aligned* in the primary record
+            if (!record.getSupplementaryAlignmentFlag()) this.metrics.PF_BASES += record.getReadLength();
+
+            if (!record.getReadUnmappedFlag()) {
+                this.metrics.PF_BASES_ALIGNED += basesAlignedInRecord;
+                if (!record.getDuplicateReadFlag()) {
+                    this.metrics.PF_UQ_BASES_ALIGNED += basesAlignedInRecord;
                 }
             }
 
