@@ -31,7 +31,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /** Represents a tile from TileMetricsOut.bin. Stores information on location (lane & tile #, density, number of clusters and the
  * phasing/prephasing values associated with this tile
@@ -101,15 +103,10 @@ public class Tile {
 
     /** For any given TileTemplateRead, we want to make sure that there is only a single TilePhasingValue */
     private static Collection<TilePhasingValue> ensureSoleTilePhasingValuesPerRead(final Collection<TilePhasingValue> tilePhasingValues) {
-        final Map<TileTemplateRead, Collection<TilePhasingValue>> partitionedMap = CollectionUtil.partition(tilePhasingValues,
-                new CollectionUtil.Partitioner<TilePhasingValue, TileTemplateRead>() {
-                    @Override
-                    public TileTemplateRead getPartition(final TilePhasingValue phasingValue) {
-                        return phasingValue.getTileTemplateRead();
-                    }
-                });
+        final Map<TileTemplateRead, List<TilePhasingValue>> partitionedMap =
+                tilePhasingValues.stream().collect(Collectors.groupingBy(TilePhasingValue::getTileTemplateRead));
 
-        final Collection<TilePhasingValue> newTilePhasingValues = new LinkedList<TilePhasingValue>();
+        final Collection<TilePhasingValue> newTilePhasingValues = new LinkedList<>();
         for (final TileTemplateRead read : partitionedMap.keySet()) {
             newTilePhasingValues.add(CollectionUtil.getSoleElement(partitionedMap.get(read)));
         }

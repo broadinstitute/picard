@@ -164,6 +164,16 @@ final public class MathUtil {
         return min;
     }
 
+    /** Returns the smallest value stored in the array. */
+    public static byte min(final byte[] nums) {
+        byte min = nums[0];
+        for (int i = 1; i < nums.length; ++i) {
+            if (nums[i] < min) min = nums[i];
+        }
+
+        return min;
+    }
+
     /** Mimic's R's seq() function to produce a sequence of equally spaced numbers. */
     public static double[] seq(final double from, final double to, final double by) {
         if (from < to && by <= 0) return new double[0];
