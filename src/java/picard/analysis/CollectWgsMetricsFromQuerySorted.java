@@ -158,6 +158,8 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.metrics.TOTAL_BASES += totalReadBases;
         if (isPaired) metrics.metrics.TOTAL_READ_PAIRS++;
 
+        // Note that CollectWgsMetrics does NOT count paired reads that are both unmapped in the PCT_EXC_UNPAIRED, but we do so here
+        //   because this tool isn't a locus iterator and we need to ensure that our passing base numbers are accurate in the end
         if (!isPaired || pairToAnalyze.read1.getMateUnmappedFlag() || pairToAnalyze.read2.getMateUnmappedFlag()) {
             metrics.basesExcludedByPairing += totalReadBases;
         } else if (pairToAnalyze.read1.getDuplicateReadFlag()) {
