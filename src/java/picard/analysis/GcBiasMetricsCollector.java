@@ -31,6 +31,7 @@ import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.FormatUtil;
 import picard.metrics.GcBiasMetrics;
 import picard.metrics.MultiLevelCollector;
 import picard.metrics.PerUnitMetricCollector;
@@ -234,12 +235,15 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
                     summary.WINDOW_SIZE = scanWindowSize;
                     summary.TOTAL_CLUSTERS = totalClusters;
                     summary.ALIGNED_READS = totalAlignedReads;
-                    summary.GC_NC_0_19 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 0, 19);
-                    summary.GC_NC_20_39 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 20, 39);
-                    summary.GC_NC_40_59 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 40, 59);
-                    summary.GC_NC_60_79 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 60, 79);
-                    summary.GC_NC_80_100 = calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 80, 100);
 
+                    //Use FormatUtil to control size of number returned
+                    //FormatUtil returns a string and the database expects a double, to avoid changing the schema, parseDouble
+                    FormatUtil fmt = new FormatUtil();
+                    summary.GC_NC_0_19 = fmt.parseDouble(fmt.format(calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 0, 19)));
+                    summary.GC_NC_20_39 = fmt.parseDouble(fmt.format(calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 20, 39)));
+                    summary.GC_NC_40_59 = fmt.parseDouble(fmt.format(calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 40, 59)));
+                    summary.GC_NC_60_79 = fmt.parseDouble(fmt.format(calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 60, 79)));
+                    summary.GC_NC_80_100 = fmt.parseDouble(fmt.format(calculateGcNormCoverage(meanReadsPerWindow, readsByGc, 80, 100)));
 
                     calculateDropoutMetrics(metrics.DETAILS.getMetrics(), summary);
 
