@@ -48,13 +48,36 @@ import java.util.Set;
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
 @CommandLineProgramProperties(
-        usage = "Reads a SAM or BAM file and writes a file containing metrics about " +
-                "the statistical distribution of insert size (excluding duplicates) " +
-                "and generates a Histogram plot.",
-        usageShort = "Writes insert size distribution metrics for a SAM or BAM file",
+        usage = CollectInsertSizeMetrics.USAGE_SUMMARY + CollectInsertSizeMetrics.USAGE_BRIEF,
+        usageShort = CollectInsertSizeMetrics.USAGE_BRIEF,
         programGroup = Metrics.class
 )
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
+    static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
+    static final String USAGE_SUMMARY = "This tool provides useful metrics for validating library construction including " +
+            "the insert size distribution and read orientation of paired-end libraries. <br /><br />" +
+            "" +
+            "The expected proportions of these metrics vary depending on the type of library preparation used, resulting from " +
+            "technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing and mate-pair reads, see <a href='http://gatkforums.broadinstitute.org/discussion/6327/paired-end-mate-pair'>the GATK Dictionary</a>" +
+            "" +
+            "<br /><br />The CollectInsertSizeMetrics tool outputs the percentages of read pairs in each of the three orientations " +
+            "(FR, RF, and TANDEM) as a histogram. In addition, the insert size distribution is output as both a histogram " +
+            "(.insert_size_Histogram.pdf) and as a data table (.insert_size_metrics.txt)." +
+            ""+
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectInsertSizeMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=insert_size_metrics.txt \\<br />" +
+            "      H=insert_size_histogram.pdf \\<br />" +
+            "      M=0.5" +
+            "</pre>"    +
+            "Note: If processing a small file, set the minimum percentage option (M) to 0.5, otherwise an error may occur. "+
+            "<br /><br />" +
+            "Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#InsertSizeMetrics'>" +
+            "the InsertSizeMetrics documentation</a> for further explanations of each metric." +
+            "<hr />";
+
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);
     protected static final String Histogram_R_SCRIPT = "picard/analysis/insertSizeHistogram.R";
 

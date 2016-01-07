@@ -20,15 +20,35 @@ import java.util.Map;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = ConvertSequencingArtifactToOxoG.USAGE,
-        usageShort = ConvertSequencingArtifactToOxoG.USAGE,
+        usage = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY + ConvertSequencingArtifactToOxoG.USAGE_DETAILS,
+        usageShort = ConvertSequencingArtifactToOxoG.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class ConvertSequencingArtifactToOxoG extends CommandLineProgram {
-    static final String USAGE = "Extract OxoG metrics format from generalized artifact metrics.";
-
+    static final String USAGE_SUMMARY = "Extract OxoG metrics from generalized artifacts metrics";
+    static final String USAGE_DETAILS = "This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of " +
+            "CollectSequencingArtifactsMetrics(a tool that provides detailed information on a variety of artifacts found in sequencing " +
+            "libraries) and converts them to the CollectOxoGMetrics tool's output format. This conveniently eliminates the need to run " +
+            "CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for " +
+            "CollectSequencingArtifactsMetrics and CollectOxoGMetrics for additional information on these tools.<br /><br />." +
+            "Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the file name input. " +
+            "For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics" +
+            " or artifact_metrics.txt.pre_adapter_detail_metrics, only the base of the file name \"artifact_metrics\" is " +
+            "required on the command line for \"input\".  " +
+            "An output file called \"artifact_metrics.oxog_metrics\" will be generated automatically.  " +
+            "A reference sequence is also required.<br />"+
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar ConvertSequencingArtifactToOxoG \\<br />" +
+            "     I=artifact_metrics \\<br />" +
+            "     R=reference.fasta" +
+            "</pre>" +
+            "For detailed explanations of the output metrics, please see:" +
+            "http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics" +
+            "<hr />"
+            ;
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "Basename for input artifact metrics")
+            doc = "Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics)")
     public File INPUT_BASE;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,

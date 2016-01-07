@@ -50,21 +50,32 @@ import java.io.IOException;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Extracts one or more intervals described in an interval_list file " +
-                "from a given reference sequence and writes them out in FASTA format. Requires a fasta index " +
-                "file to be present.",
-        usageShort = "Extracts intervals from a reference sequence, writing them to a FASTA file",
+        usage = ExtractSequences.USAGE_SUMMARY + ExtractSequences.USAGE_DETAILS,
+        usageShort = ExtractSequences.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
 public class ExtractSequences extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY ="Subsets intervals from a reference sequence to a new FASTA file.";
+    static final String USAGE_DETAILS ="This tool takes a list of intervals, reads the corresponding subsquences from a reference " +
+            "FASTA file and writes them to a new FASTA file as separate records. Note that the reference FASTA file must be " +
+            "accompanied by an index file and the interval list must be provided in Picard list format. The names provided for the " +
+            "intervals will be used to name the corresponding records in the output file." +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar ExtractSequences \\<br />" +
+            "      INTERVAL_LIST=regions_of_interest.interval_list \\<br />" +
+            "      R=reference.fasta \\<br />" +
+            "      O=extracted_IL_sequences.fasta" +
+            "</pre>" +
+            "<hr />";
     @Option(doc="Interval list describing intervals to be extracted from the reference sequence.")
     public File INTERVAL_LIST;
 
-    @Option(shortName= StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence file.")
+    @Option(shortName= StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="Reference sequence FASTA file.")
     public File REFERENCE_SEQUENCE;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output fasta file.")
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="Output FASTA file.")
     public File OUTPUT;
 
     @Option(doc="Maximum line length for sequence data.")

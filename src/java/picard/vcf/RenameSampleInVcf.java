@@ -42,11 +42,24 @@ import java.io.File;
 import java.util.EnumSet;
 
 @CommandLineProgramProperties(
-        usage = "Rename a sample within a VCF or BCF.",
-        usageShort = "Rename a sample within a VCF or BCF.",
+        usage = RenameSampleInVcf.USAGE_SUMMARY + RenameSampleInVcf.USAGE_DETAILS,
+        usageShort = RenameSampleInVcf.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class RenameSampleInVcf extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Renames a sample within a VCF or BCF.  ";
+    static final String USAGE_DETAILS = "This tool enables the user to rename a sample in either a VCF or BCF file.  " +
+            "It is intended to change the name of a sample in a VCF prior to merging with VCF files in which one or more samples have " +
+            "similar names. Note that the input VCF file must be single-sample VCF and that the NEW_SAMPLE_NAME is required." +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar RenameSampleInVcf \\<br />" +
+            "      I=input.vcf \\<br />" +
+            "      O=renamed.vcf \\<br />" +
+            "      NEW_SAMPLE_NAME=sample123" +
+            "</pre>" +
+            "<hr />";
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="Input single sample VCF.")
     public File INPUT;
 

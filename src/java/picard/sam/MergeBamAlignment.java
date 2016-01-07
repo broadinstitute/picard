@@ -47,17 +47,27 @@ import java.util.List;
  * @author ktibbett@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Merges alignment data from a SAM or BAM " +
-                "file with additional data stored in an unmapped BAM file and produces a third SAM " +
-                "or BAM file of aligned and unaligned reads. The purpose is to use information from the " +
-                "unmapped BAM to fix up aligner output, so that the resulting file is valid for use by other " +
-                "Picard programs. For simple BAM file merges, use MergeSamFiles. NOTE that MergeBamAlignment expects to " +
-                "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
-                "to have the same base name as the reference fasta except with the extension '.dict'",
-        usageShort = "Merges alignment data from a SAM or BAM with data in an unmapped BAM file",
+        usage = MergeBamAlignment.USAGE_SUMMARY + MergeBamAlignment.USAGE_DETAILS,
+        usageShort = MergeBamAlignment.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class MergeBamAlignment extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Merge alignment data from a SAM or BAM with data in an unmapped BAM file.  ";
+    static final String USAGE_DETAILS = "This tool produces a new SAM or BAM file that includes all aligned and unaligned reads and also carries " +
+            "forward additional read attributes from the unmapped BAM (attributes that are otherwise lost in the process of alignment)." +
+            "  The purpose of this tool is to use information from the unmapped BAM to fix up aligner output.  The resulting file will be valid " +
+            "for use by other Picard tools.  For simple BAM file merges, use MergeSamFiles.  Note that MergeBamAlignment expects to " +
+            "find a sequence dictionary in the same directory as REFERENCE_SEQUENCE and expects it " +
+            "to have the same base name as the reference FASTA except with the extension \".dict\". "         +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar MergeBamAlignment \\<br /> " +
+            "      ALIGNED=aligned.bam \\ <br /> " +
+            "      UNMAPPED=unmapped.bam \\ <br /> " +
+            "      O=merge_alignments.bam \\<br /> " +
+            "      R=reference_sequence.fasta" +
+            "</pre> " +
+            "<hr />";
 
     @Option(shortName = "UNMAPPED",
             doc = "Original SAM or BAM file of unmapped reads, which must be in queryname order.")

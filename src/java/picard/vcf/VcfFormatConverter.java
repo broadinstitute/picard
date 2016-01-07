@@ -53,19 +53,31 @@ import java.io.File;
  * @author jgentry@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Convert a VCF file to a BCF file, or BCF to VCF.\n" +
-                "Input and output formats are determined by file extension.",
-        usageShort = "Converts a VCF file to a BCF file, or BCF to VCF",
+        usage = VcfFormatConverter.USAGE_SUMMARY + VcfFormatConverter.USAGE_DETAILS,
+        usageShort = VcfFormatConverter.USAGE_SUMMARY,
         programGroup = VcfOrBcf.class
 )
 public class VcfFormatConverter extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Converts VCF to BCF or BCF to VCF.  ";
+    static final String USAGE_DETAILS = "This tool converts files between the plain-text VCF format and its binary compressed equivalent, " +
+            "BCF. Input and output formats are determined by file extensions specified in the file names. For best results," +
+            " it is recommended to ensure that an index file is present and set the REQUIRE_INDEX option to true." +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar VcfFormatConverter \\<br />" +
+            "      I=input.vcf \\<br />" +
+            "      O=output.bcf \\<br />" +
+            "      REQUIRE_INDEX=true" +
+            "</pre>"+
+            "<hr />";
     // The following attributes define the command-line arguments
     public static final Log LOG = Log.getInstance(VcfFormatConverter.class);
 
-    @Option(doc="The BCF or VCF input file. The file format is determined by file extension.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
+    @Option(doc="The BCF or VCF input file.", shortName= StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 
-    @Option(doc="The BCF or VCF output file. The file format is determined by file extension.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
+    @Option(doc="The BCF or VCF output file name.", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
 	@Option(doc="Fail if an index is not available for the input VCF/BCF")

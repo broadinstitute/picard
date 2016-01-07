@@ -48,14 +48,26 @@ import java.io.File;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "Replace the SAMFileHeader in a SAM file with the given header. " +
-                "Validation is minimal.  It is up to the user to ensure that all the elements referred to in the SAMRecords " +
-                "are present in the new header.  Sort order of the two input files must be the same.",
-        usageShort = "Replace the SAMFileHeader in a SAM file with the given header",
+        usage =  ReplaceSamHeader.USAGE_SUMMARY + ReplaceSamHeader.USAGE_DETAILS,
+        usageShort = ReplaceSamHeader.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class ReplaceSamHeader extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Replaces the SAMFileHeader in a SAM or BAM file.  ";
+    static final String USAGE_DETAILS = "This tool makes it possible to replace the header of a SAM or BAM file with the header of another" +
+            "file, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must " +
+            "be the same.<br /><br />" +
+            "Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords " +
+            "are present in the new header. " +
+            "<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar ReplaceSamHeader \\<br />" +
+            "      I=input_1.bam \\<br />" +
+            "      HEADER=input_2.bam \\<br />" +
+            "      O=bam_with_new_head.bam" +
+            "</pre>" +
+            "<hr />";
     @Option(doc = "SAM file from which SAMRecords will be read.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;
 

@@ -68,13 +68,23 @@ import java.util.Map;
  * all alignment information.
  */
 @CommandLineProgramProperties(
-        usage = "Reverts SAM or BAM files to a previous state by removing certain types of information and/or " +
-                "substituting in the original quality scores when available.",
-        usageShort = "Reverts SAM or BAM files to a previous state",
+        usage = RevertSam.USAGE_SUMMARY + RevertSam.USAGE_DETAILS,
+        usageShort = RevertSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class RevertSam extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY ="Reverts SAM or BAM files to a previous state.  ";
+    static final String USAGE_DETAILS ="This tool removes or restores certain properties of the SAM records, including alignment " +
+            "information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of " +
+            "restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if the" +
+            "original qualities were retained." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar RevertSam \\<br />" +
+            "     I=input.bam \\<br />" +
+            "     O=reverted.bam" +
+            "</pre>" +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input SAM/BAM file to revert the state of.")
     public File INPUT;
 

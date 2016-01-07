@@ -69,22 +69,26 @@ import java.util.Set;
         programGroup = Metrics.class
 )
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
-    static final String USAGE_SUMMARY = "Produces a file containing summary alignment metrics from a SAM or BAM.";
-    static final String USAGE_DETAILS = "<br />" +
+    static final String USAGE_SUMMARY = "Produce a summary of alignment metrics from a SAM or BAM file";
+    static final String USAGE_DETAILS = "Using read outputs from high throughput sequencing (HTS) technologies, this tool provides " +
+            "metrics regarding the quality of read alignments to a reference sequence, as well as the proportion of the reads " +
+            "that passed machine signal-to-noise threshold quality filters (Illumina)."+
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "    java -jar picard.jar CollectAlignmentMetrics \\<br />" +
-            "        R=reference.fasta \\<br />" +
-            "        I=input.bam \\<br />" +
-            "        O=output.txt" +
-            "</pre>" +
+            "    java -jar picard.jar CollectAlignmentSummaryMetrics \\<br />" +
+            "          R=reference_sequence.fasta \\<br />" +
+            "          I=input.bam \\<br />" +
+            "          O=output.txt" +
+            "</pre>"+
+            "Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics'>" +
+            "the AlignmentSummaryMetrics documentation</a> for detailed explanations of each metric. <br /> <br />" +
+            "Additional information about Illumina's quality filters can be found in the following documents on the Illumina website: " +
+            "<ul><li>http://support.illumina.com/content/dam/illumina-marketing/documents/products/technotes/hiseq-x-percent-pf-technical-note-770-2014-043.pdf</li> " +
+            "<li>http://support.illumina.com/content/dam/illumina-support/documents/documentation/system_documentation/hiseqx/hiseq-x-system-guide-15050091-d.pdf</li></ul>" +
             "<hr />";
-    
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
-    // Usage and parameters
-
-    @Option(doc="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
+    @Option(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;
 
     @Option(doc="List of adapter sequences to use when processing the alignment metrics")
@@ -104,7 +108,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     public boolean IS_BISULFITE_SEQUENCED = false;
 
     //overridden to make it visible on the commandline and to change the doc.
-    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated.",  optional = true, overridable = true)
+    @Option(shortName = StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc = "Reference sequence file. Note that while this argument isn't required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",  optional = true, overridable = true)
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
     private AlignmentSummaryMetricsCollector collector;
@@ -122,7 +126,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         if (header.getSequenceDictionary().isEmpty()) {
             log.warn(INPUT.getAbsoluteFile() + " has no sequence dictionary.  If any reads " +
-                    "in the file are aligned then alignment summary metrics collection will fail.");
+                    "in the file are aligned, then alignment summary metrics collection will fail.");
         }
 
         final boolean doRefMetrics = REFERENCE_SEQUENCE != null;

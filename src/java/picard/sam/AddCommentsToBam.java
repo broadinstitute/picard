@@ -16,19 +16,30 @@ import java.util.List;
 
 /**
  * A tool to add comments to a BAM file header. Effectively copies the BAM file except for the addition of the @CO records
- * in the header. This tool does not support SAM files.
+ * in the header. This tool does not support SAM files. A block copying method is used to ensure efficient transfer to the output file.
  *
  * @author jgentry
  */
 @CommandLineProgramProperties(
-        usage = "Adds one or more comments to the header of a specified BAM file. Copies the file with the " +
-                "modified header to a specified output file. Note that a block copying method is used to ensure efficient transfer to the " +
-                "output file. SAM files are not supported",
-        usageShort = "Adds comments to the header of a BAM file",
+        usage =  AddCommentsToBam.USAGE_SUMMARY + AddCommentsToBam.USAGE_DETAILS,
+        usageShort = AddCommentsToBam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class AddCommentsToBam extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Adds comments to the header of a BAM file.";
+    static final String USAGE_DETAILS = "This tool makes a copy of the input bam file, with a modified header that includes the comments " +
+            "specified at the command line (prefixed by @CO). Use double quotes to wrap comments that include whitespace or special characters. <br /><br />" +
+            "Note that this tool cannot be run on SAM files.<br />"          +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar AddCommentsToBam \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=modified_bam.bam \\<br />" +
+            "      C=comment_1 \\<br />" +
+            "      C=\"comment 2\"" +
+            "</pre>" +
+            "" +
+            "<hr />";
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input BAM file to add a comment to the header")
     public File INPUT;
 

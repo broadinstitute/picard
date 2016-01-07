@@ -62,12 +62,25 @@ import java.util.List;
  * Input files can be in GZip format (end in .gz).
  */
 @CommandLineProgramProperties(
-        usage = "Extracts read sequences and qualities from the input fastq file and writes them into the output file in unaligned BAM format."
-                + " Input files can be in GZip format (end in .gz).\n",
-        usageShort = "Converts a fastq file to an unaligned BAM or SAM file",
+        usage = FastqToSam.USAGE_SUMMARY + FastqToSam.USAGE_DETAILS,
+        usageShort = FastqToSam.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class FastqToSam extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Converts a FASTQ file to an unaligned BAM or SAM file.  ";
+    static final String USAGE_DETAILS = "This tool extracts read sequences and base qualities from the input FASTQ file and writes them" +
+            " out to a new file in unaligned BAM (uBAM) format. Read group information can be provided on the command line. <br /><br />  " +
+            "Three versions of FASTQ quality scales are supported: FastqSanger, FastqSolexa and FastqIllumina " +
+            "(see http://maq.sourceforge.net/fastq.shtml for details). Input FASTQ files can be in GZip format " +
+            "(with .gz extension)." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar FastqToSam \\<br />" +
+            "      F1=file_1.fastq \\<br />" +
+            "      O=fastq_to_bam.bam \\<br />" +
+            "      SM=for_tool_testing " +
+            "</pre>" +
+            "<hr />";
     private static final Log LOG = Log.getInstance(FastqToSam.class);
 
     @Option(shortName="F1", doc="Input fastq file (optionally gzipped) for single end data, or first read in paired end data.")
@@ -79,9 +92,9 @@ public class FastqToSam extends CommandLineProgram {
     @Option(doc="Use sequential fastq files with the suffix <prefix>_###.fastq or <prefix>_###.fastq.gz", optional=true)
     public boolean USE_SEQUENTIAL_FASTQS = false;
 
-    @Option(shortName="V", doc="A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 " +
-            "style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled " +
-            "scores with a character shift of 33.  If this value is not specified, the quality format will be detected automatically.", optional = true)
+    @Option(shortName="V", doc="A value describing how the quality values are encoded in the input FASTQ file.  " +
+            "Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  " +
+            "If this value is not specified, the quality format will be detected automatically.", optional = true)
     public FastqQualityFormat QUALITY_FORMAT;
 
     @Option(doc="Output SAM/BAM file. ", shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME) 
@@ -132,7 +145,7 @@ public class FastqToSam extends CommandLineProgram {
     @Option(doc="Maximum quality allowed in the input fastq.  An exception will be thrown if a quality is greater than this value.")
     public int MAX_Q = SAMUtils.MAX_PHRED_SCORE;
 
-    @Option(doc="If true and this is an unpaired fastq any occurance of '/1' will be removed from the end of a read name.")
+    @Option(doc="If true and this is an unpaired fastq any occurrence of '/1' will be removed from the end of a read name.")
     public Boolean STRIP_UNPAIRED_MATE_NUMBER = false;
 
     @Option(doc="Allow (and ignore) empty lines")

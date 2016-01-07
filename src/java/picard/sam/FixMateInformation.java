@@ -64,16 +64,25 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Ensure that all mate-pair information is in sync between each read " +
-                "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
-                "and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
-                "to the output file unchanged.",
-        usageShort = "Ensure that all mate-pair information is in sync between each read and its mate pair",
+        usage = FixMateInformation.USAGE_SUMMARY + FixMateInformation.USAGE_DETAILS,
+        usageShort = FixMateInformation.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class FixMateInformation extends CommandLineProgram {
-
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to fix.")
+    static final String USAGE_SUMMARY = "Verify mate-pair information between mates and fix if needed.";
+    static final String USAGE_DETAILS = "This tool ensures that all mate-pair information is in sync between each read " +
+            "and its mate pair.  If no OUTPUT file is supplied then the output is written to a temporary file " +
+            "and then copied over the INPUT file.  Reads marked with the secondary alignment flag are written " +
+            "to the output file unchanged." +
+            "" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar FixMateInformation \\<br /> " +
+            "      I=input.bam \\ <br /> " +
+            "      O=fixed_mate.bam" +
+            "</pre> " +
+            "<hr />";
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "The input file to check and fix.")
     public List<File> INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional = true,

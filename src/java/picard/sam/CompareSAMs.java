@@ -50,16 +50,24 @@ import java.util.Map;
  * @author alecw@broadinstitute.org
  */
 @CommandLineProgramProperties(
-        usage = "USAGE: CompareSAMS <SAMFile1> <SAMFile2>\n" +
-                "Compares the headers of the two input SAM or BAM files, and, if possible, the SAMRecords. " +
-                "For SAMRecords, compares only the readUnmapped flag, reference name, start position and strand. " +
-                "Reports the number of SAMRecords that match, differ in alignment, are mapped in only one input, " +
-                "or are missing in one of the files",
-        usageShort = "Compares two input SAM or BAM files",
+        usage = CompareSAMs.USAGE_SUMMARY + CompareSAMs.USAGE_DETAILS,
+        usageShort = CompareSAMs.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
 public class CompareSAMs extends CommandLineProgram {
-
+    static final String USAGE_SUMMARY = "Compare two input \".sam\" or \".bam\" files.  ";
+    static final String USAGE_DETAILS = "This tool initially compares the headers of SAM or BAM files. " +
+            " If the file headers are comparable, the tool will examine and compare readUnmapped flag, reference name, " +
+            "start position and strand between the SAMRecords. The tool summarizes information on the number of read " +
+            "pairs that match or mismatch, and of reads that are missing or unmapped (stratified by direction: " +
+            "forward or reverse)." +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CompareSAMs \\<br />" +
+            "      file_1.bam \\<br />" +
+            "      file_2.bam" +
+            "</pre>" +
+            "<hr />";
     @PositionalArguments(minElements = 2, maxElements = 2)
     public List<File> samFiles;
 

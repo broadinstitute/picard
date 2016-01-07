@@ -22,21 +22,31 @@ import java.io.IOException;
  * same length, and are a reasonable length!
  */
 @CommandLineProgramProperties(
-        usage = "Takes any file that conforms to the fasta format and " +
-                "normalizes it so that all lines of sequence except the last line per named sequence " +
-                "are of the same length.",
-        usageShort = "Normalizes lines of sequence in a fasta file to be of the same length",
+        usage = NormalizeFasta.USAGE_SUMMARY + NormalizeFasta.USAGE_DETAILS,
+        usageShort = NormalizeFasta.USAGE_SUMMARY,
         programGroup = Fasta.class
 )
 public class NormalizeFasta extends CommandLineProgram {
-
-    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input fasta file to normalize.")
+    static final String USAGE_SUMMARY = "Normalizes lines of sequence in a FASTA file to be of the same length.";
+    static final String USAGE_DETAILS = "This tool takes any FASTA-formatted file and reformats the sequence to ensure that all of the " +
+            "sequence record lines are of the same length (with the exception of the last line). Although the default setting is 100 bases " +
+            "per line, a custom line_length can be specified by the user. In addition, record names can be truncated at the first " +
+            "instance of a whitespace character to ensure downstream compatibility.<br />" +
+            "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "java -jar picard.jar NormalizeFasta \\<br />" +
+            "      I=input_sequence.fasta \\<br />" +
+            "      O=normalized_sequence.fasta" +
+            "</pre>" +
+            "<hr />"
+            ;
+    @Option(shortName= StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input FASTA file to normalize.")
     public File INPUT;
 
-    @Option(shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output fasta file to write.")
+    @Option(shortName= StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc="The output FASTA file to write.")
     public File OUTPUT;
 
-    @Option(doc="The line length to be used for the output fasta file.")
+    @Option(doc="The line length to be used for the output FASTA file.")
     public int LINE_LENGTH=100;
 
     @Option(doc="Truncate sequence names at first whitespace.")

@@ -45,10 +45,9 @@ import java.util.*;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Takes an input BAM and reference sequence and runs one or more Picard " +
-                "metrics modules at the same time to cut down on I/O. Currently all programs are run with " +
-                "default options and fixed output extensions, but this may become more flexible in future.",
-        usageShort = "A \"meta-metrics\" calculating program that produces multiple metrics for the provided SAM/BAM",
+
+        usage = CollectMultipleMetrics.USAGE_SUMMARY + CollectMultipleMetrics.USAGE_DETAILS,
+        usageShort = CollectMultipleMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectMultipleMetrics extends CommandLineProgram {
@@ -57,6 +56,35 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * This interface allows developers to create Programs to run in addition to the ones defined in the Program enum.
      * Includes a method for determining whether or not a Program explicitly needs a reference sequence (i.e. cannot be null)
      */
+
+    static final String USAGE_SUMMARY ="Collect multiple classes of metrics.  ";
+    static final String USAGE_DETAILS ="This \"meta-metrics\" tool runs one or more of the metrics collection modules at the same time to cut down " +
+            "on the time spent reading in data from input files. Available modules include CollectAlignmentSummaryMetrics, " +
+            "CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, and CollectBaseDistributionByCycle.  " +
+            "The tool produces outputs of \".pdf\" and \".txt\" files for each module, except for the CollectAlignmentSummaryMetrics " +
+            "module, which outputs only a \".txt\" file. Output files are named by specifying a base name (without any file extensions)." +
+            "<br /><br />" +
+            "" +
+            "Currently all programs are run with default options and fixed output extensions, " +
+            "but this may become more flexible in future. Specifying a reference sequence file is required." +
+            "<br />" +
+            "<h4>Usage example (all modules on by default):</h4>" +
+            "<pre>" +
+            "java -jar picard.jar CollectMultipleMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=multiple_metrics \\<br />" +
+            "      R=reference_sequence.fasta <br />" +
+            "</pre>" +
+            "<h4>Usage example (two modules only):</h4>" +
+            "java -jar picard.jar CollectMultipleMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=multiple_metrics \\<br />" +
+            "      R=reference_sequence.fasta \\<br />" +
+            "      PROGRAM=null \\<br />" +
+            "      PROGRAM=QualityScoreDistribution \\<br />" +
+            "      PROGRAM=MeanQualityByCycle "+
+            "</pre>" +
+            "<hr />";
     public static interface ProgramInterface {
         SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference,
             final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals);
