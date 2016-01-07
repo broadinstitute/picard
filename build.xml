@@ -405,6 +405,7 @@
         <document-command title="CollectMultipleMetrics"            main-class="picard.analysis.CollectMultipleMetrics"/>
         <document-command title="CollectTargetedPcrMetrics"         main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>
         <document-command title="CollectRnaSeqMetrics"              main-class="picard.analysis.CollectRnaSeqMetrics"/>
+        <document-command title="CollectVariantCallingMetrics"      main-class="picard.vcf.CollectVariantCallingMetrics"/>
         <document-command title="CollectWgsMetrics"                 main-class="picard.analysis.CollectWgsMetrics"/>
         <document-command title="CompareSAMs"                       main-class="picard.sam.CompareSAMs"/>
         <document-command title="CreateSequenceDictionary"          main-class="picard.sam.CreateSequenceDictionary"/>
