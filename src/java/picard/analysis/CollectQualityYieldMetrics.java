@@ -77,13 +77,6 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
             "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectQualityYieldMetrics.QualityYieldMetrics'>" +
             "the QualityYieldMetrics documentation</a> for details and explanations of the output metrics." +
             "<hr />";
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME,
-            doc = "A SAM or BAM file to process.")
-    public File INPUT;
-
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME,
-            doc = "The metrics file to write with quality yield metrics.")
-    public File OUTPUT;
 
     @Option(shortName = StandardOptionDefinitions.USE_ORIGINAL_QUALITIES_SHORT_NAME,
             doc = "If available in the OQ tag, use the original quality scores " +
