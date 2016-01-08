@@ -2,9 +2,9 @@
 
 A set of Java command line tools for manipulating high-throughput sequencing (HTS) data and formats.  
 
-Picard is implemented using the HTSJDK Java library[HTSJDK][1], supporting
-accessing of common file formats, such as [SAM][2] and [VCF][3], used for high-throughput
-sequencing data.  
+Picard is implemented using the HTSJDK Java library [HTSJDK][1] to support
+accessing file formats that are commonly used for high-throughput
+sequencing data such as [SAM][2] and [VCF][3].  
 
 As of version 2.0.1 (Nov. 2015) Picard requires Java 1.8 (jdk8u66). The last version to support Java 1.7 was release 1.141.
 
