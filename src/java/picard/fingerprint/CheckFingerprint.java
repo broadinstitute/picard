@@ -89,6 +89,10 @@ public class CheckFingerprint extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CheckFingerprint.class);
 
+    public static final String FINGERPRINT_SUMMARY_FILE_SUFFIX = "fingerprinting_summary_metrics";
+    public static final String FINGERPRINT_DETAIL_FILE_SUFFIX = "fingerprinting_detail_metrics";
+
+
     // Stock main method
     public static void main(final String[] args) {
         new CheckFingerprint().instanceMainWithExit(args);
@@ -106,8 +110,8 @@ public class CheckFingerprint extends CommandLineProgram {
         SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT), checker.getHeader().getSequenceDictionary(), true);
 
         if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
-        final File SUMMARY_OUT = new File(OUTPUT + "fingerprinting_summary_metrics");
-        final File DETAILS_OUT = new File(OUTPUT + "fingerprinting_detail_metrics");
+        final File SUMMARY_OUT = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
+        final File DETAILS_OUT = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
         IOUtil.assertFileIsWritable(SUMMARY_OUT);
         IOUtil.assertFileIsWritable(DETAILS_OUT);
 
