@@ -24,9 +24,11 @@
 
 package picard.fingerprint;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.SequenceUtil;
@@ -51,21 +53,37 @@ import java.util.List;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Computes a fingerprint from the supplied SAM/BAM file and " +
-                "compares it to the expected fingerprint genotypes provided. The key output is a LOD score " +
-                "which represents the relative likelihood of the sequence data originating from the same " +
-                "sample as the genotypes vs. from a random sample.",
+        usage = CheckFingerprint.USAGE_DETAILS,
         usageShort = "Computes a fingerprint from the supplied SAM/BAM file and compares it to the provided genotypes",
         programGroup = Alpha.class // TODO -- when mature please move to a to-be-created Fingerprinting.class
 )
 public class CheckFingerprint extends CommandLineProgram {
 
+    static final String USAGE_DETAILS = "Computes a fingerprint from the supplied SAM/BAM file and " +
+            "compares it to the expected fingerprint genotypes provided. The key output is a LOD score " +
+            "which represents the relative likelihood of the sequence data originating from the same " +
+            "sample as the genotypes vs. from a random sample.  Two outputs are produced: (1) a summary " +
+            "metrics file that gives metrics related single read group (lane or index within a lane) " +
+            "versus a set of known genotypes for the expected sample, and (2) a detail metrics file that " +
+            "contains an individual SNP/Haplotype comparison within a fingerprint comparison.  The two " +
+            "files may be specified individually using the SUMMARY_OUTPUT and DETAIL_OUTPUT options.  " +
+            "Alternatively the OUTPUT option may be used instead to give the base of the two output " +
+            "files, with the summary metrics having a file extension '" + CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX + "' " +
+            "and the detail metrics having a file extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'.";
 
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM or BAM file.")
     public File INPUT;
 
-    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Base of output files to write.")
+    @Option(shortName=StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "The base of output files to write.  The summary metrics " +
+            "will have the file extension '" + CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX + "' and the detail metrics will have " +
+            "the extension '" + CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX + "'.",  mutex = {"SUMMARY_OUTPUT", "DETAIL_OUTPUT"})
     public String OUTPUT;
+
+    @Option(shortName = "S", doc = "The text file to which to write summary metrics.", mutex = {"OUTPUT"})
+    public File SUMMARY_OUTPUT;
+
+    @Option(shortName = "D", doc = "The text file to which to write detail metrics.",  mutex = {"OUTPUT"})
+    public File DETAIL_OUTPUT;
 
     @Option(shortName="G", doc = "File of genotypes (VCF or GELI) to be used in comparison. May contain " +
             "any number of genotypes; CheckFingerprint will use only those that are usable for fingerprinting.")
@@ -100,24 +118,31 @@ public class CheckFingerprint extends CommandLineProgram {
 
     @Override
     protected int doWork() {
+        final File outputDetailMetricsFile, outputSummaryMetricsFile;
+        if (OUTPUT == null) {
+            outputDetailMetricsFile = DETAIL_OUTPUT;
+            outputSummaryMetricsFile = SUMMARY_OUTPUT;
+        }
+        else {
+            if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
+            outputDetailMetricsFile = new File(OUTPUT, FINGERPRINT_DETAIL_FILE_SUFFIX);
+            outputSummaryMetricsFile = new File(OUTPUT, FINGERPRINT_SUMMARY_FILE_SUFFIX);
+        }
+
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsReadable(GENOTYPES);
+        IOUtil.assertFileIsReadable(outputDetailMetricsFile);
+        IOUtil.assertFileIsReadable(outputSummaryMetricsFile);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
         SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT), SAMSequenceDictionaryExtractor.extractDictionary(GENOTYPES), true);
         SequenceUtil.assertSequenceDictionariesEqual(SAMSequenceDictionaryExtractor.extractDictionary(INPUT), checker.getHeader().getSequenceDictionary(), true);
 
-        if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
-        final File SUMMARY_OUT = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
-        final File DETAILS_OUT = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
-        IOUtil.assertFileIsWritable(SUMMARY_OUT);
-        IOUtil.assertFileIsWritable(DETAILS_OUT);
-
         // If sample alias isn't supplied, assume it's the one from the INPUT file's RGs
         if (SAMPLE_ALIAS == null) {
-            final SAMFileReader in = new SAMFileReader(INPUT);
+            final SamReader in = SamReaderFactory.makeDefault().open(INPUT);
             for (final SAMReadGroupRecord rec : in.getFileHeader().getReadGroups()) {
                 if (SAMPLE_ALIAS == null) {
                     SAMPLE_ALIAS = rec.getSample();
@@ -126,7 +151,7 @@ public class CheckFingerprint extends CommandLineProgram {
                     throw new PicardException("SAM File must not contain data from multiple samples.");
                 }
             }
-            in.close();
+            CloserUtil.close(in);
         }
 
 
@@ -195,8 +220,8 @@ public class CheckFingerprint extends CommandLineProgram {
             log.info(metrics.READ_GROUP + " vs. " + metrics.SAMPLE + ": LOD = " + metrics.LOD_EXPECTED_SAMPLE);
         }
 
-        summaryFile.write(SUMMARY_OUT);
-        detailsFile.write(DETAILS_OUT);
+        summaryFile.write(outputSummaryMetricsFile);
+        detailsFile.write(outputDetailMetricsFile);
 
         return 0;
     }
