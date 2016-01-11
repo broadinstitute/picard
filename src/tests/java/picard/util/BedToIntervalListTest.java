@@ -26,6 +26,7 @@ public class BedToIntervalListTest {
         program.INPUT = inputBedFile;
         program.SEQUENCE_DICTIONARY = new File(TEST_DATA_DIR, header);
         program.OUTPUT = outputFile;
+        program.UNIQUE = true;
         program.doWork();
 
         // Assert they are equal
