@@ -20,6 +20,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_PATH = new File("testdata/picard/vcf/");
     private static final File CHAIN_FILE = new File(TEST_DATA_PATH, "test.over.chain");
+    private static final File CHAIN_FILE_WITH_BAD_CONTIG = new File(TEST_DATA_PATH, "test.over.badContig.chain");
     private static final File REFERENCE_FILE = new File(TEST_DATA_PATH, "dummy.reference.fasta");
     private static final File OUTPUT_DATA_PATH = IOUtil.createTempDir("LiftoverVcfsTest", null);
 
@@ -91,5 +92,38 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
             Assert.assertEquals(expected.get(0), actual.get(0));
             Assert.assertEquals(expected.get(1), actual.get(1));
         }
+    }
+
+    @Test
+    public void testMissingContigInReference() {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftoverUsingMissingContig.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        // Test without using WMC option (Should exit with EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE)
+        final String[] argsWithoutWarnOnMissingContig = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE_WITH_BAD_CONTIG,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false"
+        };
+        Assert.assertEquals(runPicardCommandLine(argsWithoutWarnOnMissingContig), LiftoverVcf.EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE);
+
+        // Test using WMC option (Should exit normally providing warnings)
+        final String[] argsWithWarnOnMissingContig = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE_WITH_BAD_CONTIG,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false",
+                "WMC=true"
+        };
+        Assert.assertEquals(runPicardCommandLine(argsWithWarnOnMissingContig), 0);
     }
 }
