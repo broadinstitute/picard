@@ -235,6 +235,26 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         }
 
         // Finish metrics tallying.
+        finalizeMetrics(barcodeToMetrics, noMatchMetric);
+
+        // Warn about minimum qualities and assert that we've achieved the minimum.
+        for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
+            LOG.warn(String.format("Observed low quality of %s %s times.", entry.getKey(), entry.getValue()));
+        }
+        bclQualityEvaluationStrategy.assertMinimumQualities();
+
+        final MetricsFile<BarcodeMetric, Integer> metrics = getMetricsFile();
+        for (final BarcodeMetric barcodeMetric : barcodeToMetrics.values()) {
+            metrics.addMetric(barcodeMetric);
+        }
+        metrics.addMetric(noMatchMetric);
+        metrics.write(METRICS_FILE);
+        return 0;
+    }
+
+    public static void finalizeMetrics(final Map<String, BarcodeMetric> barcodeToMetrics,
+                                       final BarcodeMetric noMatchMetric) {
+        // Finish metrics tallying.
         int totalReads = noMatchMetric.READS;
         int totalPfReads = noMatchMetric.PF_READS;
         int totalPfReadsAssigned = 0;
@@ -282,12 +302,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             }
         }
 
-        // Warn about minimum qualities and assert that we've achieved the minimum.
-        for (Map.Entry<Byte, Integer> entry : bclQualityEvaluationStrategy.getPoorQualityFrequencies().entrySet()) {
-            LOG.warn(String.format("Observed low quality of %s %s times.", entry.getKey(), entry.getValue()));
-        }
-        bclQualityEvaluationStrategy.assertMinimumQualities();
-
         // Calculate the normalized matches
         if (totalPfReadsAssigned > 0) {
             final double mean = (double) totalPfReadsAssigned / (double) barcodeToMetrics.values().size();
@@ -295,14 +309,6 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 m.PF_NORMALIZED_MATCHES = m.PF_READS / mean;
             }
         }
-
-        final MetricsFile<BarcodeMetric, Integer> metrics = getMetricsFile();
-        for (final BarcodeMetric barcodeMetric : barcodeToMetrics.values()) {
-            metrics.addMetric(barcodeMetric);
-        }
-        metrics.addMetric(noMatchMetric);
-        metrics.write(METRICS_FILE);
-        return 0;
     }
 
     /** Create a barcode filename corresponding to the given tile qseq file. */
