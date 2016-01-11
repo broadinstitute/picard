@@ -23,19 +23,20 @@
  */
 package picard.vcf;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.metrics.MetricBase;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.Log;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.metrics.MetricBase;
-import htsjdk.samtools.metrics.MetricsFile;
-import htsjdk.samtools.util.IntervalList;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.util.CloserUtil;
-import htsjdk.variant.vcf.VCFFileReader;
 import picard.cmdline.programgroups.Metrics;
 import picard.util.DbSnpBitSetUtil;
 import picard.vcf.processor.VariantProcessor;
@@ -67,11 +68,11 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     public File TARGET_INTERVALS;
 
     @Option(shortName = StandardOptionDefinitions.SEQUENCE_DICTIONARY_SHORT_NAME, optional = true,
-            doc = "If present, speeds loading of dbSNP file")
+            doc = "If present, speeds loading of dbSNP file, will look for dictionary in vcf if not present here.")
     public File SEQUENCE_DICTIONARY = null;
 
-    @Option(doc = "Deprecated option will be removed in a future release.")
-    public Boolean REQUIRE_INDEX = false;
+    @Option(doc = "Set to true if running on a single-sample gvcf.", optional = true)
+    public boolean GVCF_INPUT = false;
 
     @Option
     public int THREAD_COUNT = 1;
@@ -88,13 +89,11 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
         final boolean requiresIndex = this.TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
         final VCFFileReader variantReader = new VCFFileReader(INPUT, requiresIndex);
-        final SAMSequenceDictionary sequenceDictionary;
-        if (SEQUENCE_DICTIONARY != null) {
-            sequenceDictionary = SAMFileReader.getSequenceDictionary(SEQUENCE_DICTIONARY);
-        } else {
-            sequenceDictionary = variantReader.getFileHeader().getSequenceDictionary();
-        }
+        final VCFHeader vcfHeader = variantReader.getFileHeader();
         CloserUtil.close(variantReader);
+
+        final SAMSequenceDictionary sequenceDictionary =
+                SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT : SEQUENCE_DICTIONARY);
 
         log.info("Loading dbSNP file ...");
         final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary);
@@ -103,21 +102,12 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
 
         final VariantProcessor.Builder<CallingMetricAccumulator, CallingMetricAccumulator.Result> builder =
                 VariantProcessor.Builder
-                        .generatingAccumulatorsBy(
-                                new VariantProcessor.AccumulatorGenerator<CallingMetricAccumulator, CallingMetricAccumulator.Result>() {
-                                    @Override
-                                    public CallingMetricAccumulator build() {
-                                        return new CallingMetricAccumulator(dbsnp);
-                                    }
-                                })
-                        .combiningResultsBy(
-                                new VariantProcessor.ResultMerger<CallingMetricAccumulator.Result>() {
-                                    @Override
-                                    public CallingMetricAccumulator.Result merge(final Collection<CallingMetricAccumulator.Result>
-                                                                                         resultsToReduce) {
-                                        return CallingMetricAccumulator.Result.merge(resultsToReduce);
-                                    }
-                                })
+                        .generatingAccumulatorsBy(() -> {
+                            CallingMetricAccumulator accumulator = GVCF_INPUT ? new GvcfMetricAccumulator(dbsnp) : new CallingMetricAccumulator(dbsnp);
+                            accumulator.setup(vcfHeader);
+                            return accumulator;
+                        })
+                        .combiningResultsBy(CallingMetricAccumulator.Result::merge)
                         .withInput(INPUT)
                         .multithreadingBy(THREAD_COUNT);
 
@@ -131,9 +121,8 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         final MetricsFile<CollectVariantCallingMetrics.VariantCallingDetailMetrics, Integer> detail = getMetricsFile();
         final MetricsFile<CollectVariantCallingMetrics.VariantCallingSummaryMetrics, Integer> summary = getMetricsFile();
         summary.addMetric(result.summary);
-        for (final CollectVariantCallingMetrics.VariantCallingDetailMetrics detailMetric : result.details) {
-            detail.addMetric(detailMetric);
-        }
+        result.details.forEach(detail::addMetric);
+
         final String outputPrefix = OUTPUT.getAbsolutePath() + ".";
         detail.write(new File(outputPrefix + CollectVariantCallingMetrics.VariantCallingDetailMetrics.getFileExtension()));
         summary.write(new File(outputPrefix + CollectVariantCallingMetrics.VariantCallingSummaryMetrics.getFileExtension()));
@@ -261,7 +250,6 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
             }
             target.updateDerivedValuesInPlace();
         }
-
     }
 
     /** A collection of metrics relating to snps and indels within a variant-calling file (VCF) for a given sample. */
@@ -305,6 +293,5 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
             // Divide by zero should be OK -- NaN should get propagated to metrics file and to DB.
             HET_HOMVAR_RATIO = numHets / (double) numHomVar;
         }
-
     }
 }
