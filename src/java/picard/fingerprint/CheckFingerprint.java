@@ -125,15 +125,15 @@ public class CheckFingerprint extends CommandLineProgram {
         }
         else {
             if (!OUTPUT.endsWith(".")) OUTPUT = OUTPUT + ".";
-            outputDetailMetricsFile = new File(OUTPUT, FINGERPRINT_DETAIL_FILE_SUFFIX);
-            outputSummaryMetricsFile = new File(OUTPUT, FINGERPRINT_SUMMARY_FILE_SUFFIX);
+            outputDetailMetricsFile = new File(OUTPUT + FINGERPRINT_DETAIL_FILE_SUFFIX);
+            outputSummaryMetricsFile = new File(OUTPUT + FINGERPRINT_SUMMARY_FILE_SUFFIX);
         }
 
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(HAPLOTYPE_MAP);
         IOUtil.assertFileIsReadable(GENOTYPES);
-        IOUtil.assertFileIsReadable(outputDetailMetricsFile);
-        IOUtil.assertFileIsReadable(outputSummaryMetricsFile);
+        IOUtil.assertFileIsWritable(outputDetailMetricsFile);
+        IOUtil.assertFileIsWritable(outputSummaryMetricsFile);
 
         final FingerprintChecker checker = new FingerprintChecker(HAPLOTYPE_MAP);
 
