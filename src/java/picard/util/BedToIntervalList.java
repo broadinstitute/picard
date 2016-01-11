@@ -91,7 +91,7 @@ public class BedToIntervalList extends CommandLineProgram {
     public boolean SORT = true;
 
     @Option(doc="If true, unique the output interval list by merging overlapping regions, before writing it (implies sort=true).")
-    public boolean UNIQUE = true;
+    public boolean UNIQUE = false;
 
     final Log LOG = Log.getInstance(getClass());
 
