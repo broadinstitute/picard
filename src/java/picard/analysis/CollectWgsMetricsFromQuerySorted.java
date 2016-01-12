@@ -182,8 +182,12 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.metrics.TOTAL_BASES += totalReadBases;
         if (isPaired) metrics.metrics.TOTAL_READ_PAIRS++;
 
-        // Note that CollectWgsMetrics does NOT count paired reads that are both unmapped in the PCT_EXC_UNPAIRED, but we do so here
-        //   because this tool isn't a locus iterator and we need to ensure that our passing base numbers are accurate in the end
+        // We note here several differences between this tool and CollectWgsMetrics:
+        // 1. CollectWgsMetrics does NOT count paired reads that are both unmapped in the PCT_EXC_UNPAIRED, but we do so here
+        //    because this tool isn't a locus iterator and we need to ensure that our passing base numbers are accurate in the end.
+        // 2. For a similar reason, we DO count soft-clipped bases (and they are usually - but not always - filtered as part of
+        //    PCT_EXC_BASEQ), while CollectWgsMetrics does not count them.
+        // 3. We DO count bases from insertions as part of the total coverage, while CollectWgsMetrics does not (because it cannot).
         if (!isPaired || pairToAnalyze.read1.getMateUnmappedFlag() || pairToAnalyze.read2.getMateUnmappedFlag()) {
             metrics.basesExcludedByPairing += totalReadBases;
         } else if (pairToAnalyze.read1.getDuplicateReadFlag()) {
