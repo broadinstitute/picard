@@ -6,6 +6,8 @@ package picard.sam.util;
  * non-zero positive integers, x and y coordinates may be negative.
  */
 public interface PhysicalLocation {
+    public int NO_VALUE = -1;
+
     public short getReadGroup();
 
     public void setReadGroup(short rg);
@@ -25,4 +27,9 @@ public interface PhysicalLocation {
     public short getLibraryId();
 
     public void setLibraryId(short libraryId);
+
+    /** Default implementation of a method to check whether real location data has been set. */
+    default public boolean hasLocation() {
+        return getTile() != NO_VALUE;
+    }
 }

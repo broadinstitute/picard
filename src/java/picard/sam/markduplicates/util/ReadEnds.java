@@ -43,6 +43,9 @@ abstract public class ReadEnds extends PhysicalLocationShort {
     /** For optical duplicate detection the orientation matters regard to 1st or 2nd end of a mate */
     public byte orientationForOpticalDuplicates = -1;
 
+    /** A *transient* flag marking this read end as being an optical duplicate. */
+    public transient boolean isOpticalDuplicate = false;
+
     public boolean isPaired() { return this.read2ReferenceIndex != -1; }
 
     @Override

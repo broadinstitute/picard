@@ -590,7 +590,7 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 final Set<ReadEnds> locations = toMarkQueue.getLocations(next);
 
                 if (!locations.isEmpty()) {
-                    AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(new ArrayList<ReadEnds>(locations),
+                    AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(new ArrayList<ReadEnds>(locations), null,
                             opticalDuplicateFinder, libraryIdGenerator);
                 }
             }

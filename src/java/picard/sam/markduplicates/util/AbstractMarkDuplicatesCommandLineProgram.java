@@ -225,8 +225,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     /**
      * Looks through the set of reads and identifies how many of the duplicates are
      * in fact optical duplicates, and stores the data in the instance level histogram.
+     * Additionally sets the transient isOpticalDuplicate flag on each read end that is
+     * identified as an optical duplicate.
      */
     public static void trackOpticalDuplicates(List<? extends ReadEnds> ends,
+                                              final ReadEnds keeper,
                                               final OpticalDuplicateFinder opticalDuplicateFinder,
                                               final LibraryIdGenerator libraryIdGenerator) {
         boolean hasFR = false, hasRF = false;
@@ -258,10 +261,10 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             }
 
             // track the duplicates
-            trackOpticalDuplicates(trackOpticalDuplicatesF, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
-            trackOpticalDuplicates(trackOpticalDuplicatesR, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            trackOpticalDuplicates(trackOpticalDuplicatesF, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            trackOpticalDuplicates(trackOpticalDuplicatesR, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
         } else { // No need to partition
-            AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(ends, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
+            AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(ends, keeper, opticalDuplicateFinder, libraryIdGenerator.getOpticalDuplicatesByLibraryIdMap());
         }
     }
 
@@ -275,13 +278,20 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
      * optical duplicate detection, we do not consider them duplicates if one read as FR and the other RF when we order orientation by the
      * first mate sequenced (read #1 of the pair).
      */
-    private static void trackOpticalDuplicates(final List<? extends PhysicalLocation> list,
+    private static void trackOpticalDuplicates(final List<? extends ReadEnds> list,
+                                               final ReadEnds keeper,
                                                final OpticalDuplicateFinder opticalDuplicateFinder,
                                                final Histogram<Short> opticalDuplicatesByLibraryId) {
-        final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(list);
+        final boolean[] opticalDuplicateFlags = opticalDuplicateFinder.findOpticalDuplicates(list, keeper);
 
         int opticalDuplicates = 0;
-        for (final boolean b : opticalDuplicateFlags) if (b) ++opticalDuplicates;
+        for (int i=0; i<opticalDuplicateFlags.length; ++i) {
+            if (opticalDuplicateFlags[i]) {
+                ++opticalDuplicates;
+                list.get(i).isOpticalDuplicate = true;
+            }
+        }
+
         if (opticalDuplicates > 0) {
             opticalDuplicatesByLibraryId.increment(list.get(0).getLibraryId(), opticalDuplicates);
         }

@@ -200,7 +200,7 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
 
             // Track the optical duplicates
             if (this.READ_NAME_REGEX != null && 1 < duplicateReadEnds.size()) {
-                AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(duplicateReadEnds, opticalDuplicateFinder, libraryIdGenerator);
+                AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(duplicateReadEnds, duplicateReadEnds.get(0), opticalDuplicateFinder, libraryIdGenerator);
             }
         }
 

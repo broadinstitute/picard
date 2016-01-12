@@ -63,29 +63,50 @@ import java.util.*;
 )
 public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     static final String USAGE_SUMMARY = "Identifies duplicate reads.  ";
-    static final String USAGE_DETAILS = "This tool locates and tags duplicate reads (both PCR and optical) in a BAM or SAM file, where " +
-            "duplicate reads are defined as originating from the same original fragment of DNA.  The PCR duplicates are identified as " +
-            "having identical start coordinates for both reads in a mate pair. Optical duplicates are identified using the " +
-            "READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options. For more information on duplicate reads, see the " +
-            "GATK user documentation guide.<br /><br />" +
-            "The tool's main output is a new SAM or BAM file in which duplicates have been identified (in the SAM flags field). " +
-            "In addition, it also outputs a metrics file containing the numbers of READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS, " +
-            "UNPAIRED_READ DUPLICATES, READ_PAIR_DUPLICATES, and READ_PAIR_OPTICAL_DUPLICATES. <br /> " +
-            "<h4>Usage example:</h4>" +
-            "<pre>" +
-            "java -jar picard.jar MarkDuplicates \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=marked_duplicates.bam \\<br />" +
-            "      M=marked_dup_metrics.txt " +
-            "</pre>" +
-            "<hr />";
+    static final String USAGE_DETAILS =
+            "This tool locates and tags duplicate reads (both PCR and optical/sequencing-driven) in a BAM or SAM file, where\n" +
+                    "duplicate reads are defined as originating from the same original fragment of DNA. Duplicates are identified as read\n" +
+                    "pairs having identical 5' positions (coordinate and strand) for both reads in a mate pair (and optinally, matching\n" +
+                    "unique molecular identifier reads; see BARCODE_TAG option). Optical, or more broadly Sequencing, duplicates are\n" +
+                    "duplicates that appear clustered together spatially during sequencing and can arise from optical/imagine-processing\n" +
+                    "artifacts or from bio-chemical processes during clonal amplification and sequencing; they are identified using the\n" +
+                    "READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.\n" +
+                    "\n" +
+                    "The tool's main output is a new SAM or BAM file in which duplicates have been identified in the SAM flags field, or\n" +
+                    "optionally removed (see REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and optionally marked with a duplicate type\n" +
+                    "in the 'DT' optional attribute. In addition, it also outputs a metrics file containing the numbers of\n" +
+                    "READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS, UNPAIRED_READ DUPLICATES, READ_PAIR_DUPLICATES, and\n" +
+                    "READ_PAIR_OPTICAL_DUPLICATES.\n" +
+                    "\n" +
+                    "Usage example: java -jar picard.jar MarkDuplicates I=input.bam \\\n" +
+                    "                 O=marked_duplicates.bam M=marked_dup_metrics.txt\n";
+
+    /** Enum used to control how duplicates are flagged in the DT optional tag on each read. */
+    public enum DuplicateTaggingPolicy { DontTag, OpticalOnly, All }
+
+    /** The optional attribute in SAM/BAM files used to store the duplicate type. */
+    public static final String DUPLICATE_TYPE_TAG = "DT";
+    /** The duplicate type tag value for duplicate type: library. */
+    public static final String DUPLICATE_TYPE_LIBRARY = "LB";
+    /** The duplicate type tag value for duplicate type: sequencing (optical & pad-hopping, or "co-localized"). */
+    public static final String DUPLICATE_TYPE_SEQUENCING = "SQ";
+
+    /** Enum for the possible values that a duplicate read can be tagged with in the DT attribute. */
+    public enum DuplicateType {
+        LIBRARY(DUPLICATE_TYPE_LIBRARY),
+        SEQUENCING(DUPLICATE_TYPE_SEQUENCING);
+
+        private final String code;
+        DuplicateType(final String code) { this.code = code; }
+        public String code() { return this.code; }
+    }
+
     private final Log log = Log.getInstance(MarkDuplicates.class);
 
     /**
      * If more than this many sequences in SAM file, don't spill to disk because there will not
      * be enough file handles.
      */
-
     @Option(shortName = "MAX_SEQS",
             doc = "This option is obsolete. ReadEnds will always be spilled to disk.")
     public int MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP = 50000;
@@ -109,9 +130,18 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
     @Option(doc = "Read two barcode SAM tag (ex. BX for 10X Genomics)", optional = true)
     public String READ_TWO_BARCODE_TAG = null;
 
+    @Option(doc = "If true remove 'optical' duplicates and other duplicates that appear to have arisen from the " +
+            "sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. " +
+            "If REMOVE_DUPLICATES is true, all duplicates are removed and this option is ignored.")
+    public boolean REMOVE_SEQUENCING_DUPLICATES = false;
+
+    @Option(doc= "Determines how duplicate types are recorded in the DT optional attribute.")
+    public DuplicateTaggingPolicy TAGGING_POLICY = DuplicateTaggingPolicy.DontTag;
+
     private SortingCollection<ReadEndsForMarkDuplicates> pairSort;
     private SortingCollection<ReadEndsForMarkDuplicates> fragSort;
     private SortingLongCollection duplicateIndexes;
+    private SortingLongCollection opticalDuplicateIndexes;
     private int numDuplicateIndices = 0;
 
     protected LibraryIdGenerator libraryIdGenerator = null; // this is initialized in buildSortedReadEndLists
@@ -154,7 +184,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         log.info("Reading input file and constructing read end information.");
         buildSortedReadEndLists(useBarcodes);
         reportMemoryStats("After buildSortedReadEndLists");
-        generateDuplicateIndexes(useBarcodes);
+        generateDuplicateIndexes(useBarcodes, this.REMOVE_SEQUENCING_DUPLICATES || this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag);
         reportMemoryStats("After generateDuplicateIndexes");
         log.info("Marking " + this.numDuplicateIndices + " records as duplicates.");
 
@@ -181,6 +211,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
         // Now copy over the file while marking all the necessary indexes as duplicates
         long recordInFileIndex = 0;
         long nextDuplicateIndex = (this.duplicateIndexes.hasNext() ? this.duplicateIndexes.next() : -1);
+        long nextOpticalDuplicateIndex = this.opticalDuplicateIndexes != null && this.opticalDuplicateIndexes.hasNext() ? this.opticalDuplicateIndexes.next() : -1;
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Written");
         final CloseableIterator<SAMRecord> iterator = headerAndIterator.iterator;
@@ -226,15 +257,28 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
                     rec.setDuplicateReadFlag(false);
                 }
             }
-            recordInFileIndex++;
 
-            if (!this.REMOVE_DUPLICATES || !rec.getDuplicateReadFlag()) {
-                if (PROGRAM_RECORD_ID != null) {
-                    rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+            // Manage the flagging of optical/sequencing duplicates
+            final boolean isOpticalDuplicate = (recordInFileIndex == nextOpticalDuplicateIndex);
+            if (isOpticalDuplicate) nextOpticalDuplicateIndex = this.opticalDuplicateIndexes.hasNext() ? this.opticalDuplicateIndexes.next() : -1;
+            rec.setAttribute(DUPLICATE_TYPE_TAG, null);
+
+            if (this.TAGGING_POLICY != DuplicateTaggingPolicy.DontTag && rec.getDuplicateReadFlag()) {
+                if (isOpticalDuplicate) {
+                    rec.setAttribute(DUPLICATE_TYPE_TAG, DuplicateType.SEQUENCING.code());
+                } else if (this.TAGGING_POLICY == DuplicateTaggingPolicy.All) {
+                    rec.setAttribute(DUPLICATE_TYPE_TAG, DuplicateType.LIBRARY.code());
                 }
-                out.addAlignment(rec);
-                progress.record(rec);
             }
+
+            // Output the record if desired and bump the record index
+            recordInFileIndex++;
+            if (this.REMOVE_DUPLICATES            && rec.getDuplicateReadFlag()) continue;
+            if (this.REMOVE_SEQUENCING_DUPLICATES && isOpticalDuplicate)         continue;
+
+            if (PROGRAM_RECORD_ID != null)  rec.setAttribute(SAMTag.PG.name(), chainedPgIds.get(rec.getStringAttribute(SAMTag.PG.name())));
+            out.addAlignment(rec);
+            progress.record(rec);
         }
 
         // remember to close the inputs
@@ -460,10 +504,14 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
      *
      * @return an array with an ordered list of indexes into the source file
      */
-    private void generateDuplicateIndexes(final boolean useBarcodes) {
+    private void generateDuplicateIndexes(final boolean useBarcodes, final boolean indexOpticalDuplicates) {
         // Keep this number from getting too large even if there is a huge heap.
-        final int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF,
-                (double) (Integer.MAX_VALUE - 5));
+        int maxInMemory = (int) Math.min((Runtime.getRuntime().maxMemory() * 0.25) / SortingLongCollection.SIZEOF, (double) (Integer.MAX_VALUE - 5));
+        // If we're also tracking optical duplicates, cut maxInMemory in half, since we'll need two sorting collections
+        if (indexOpticalDuplicates) {
+            maxInMemory /= 2;
+            this.opticalDuplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
+        }
         log.info("Will retain up to " + maxInMemory + " duplicate indices before spilling to disk.");
         this.duplicateIndexes = new SortingLongCollection(maxInMemory, TMP_DIR.toArray(new File[TMP_DIR.size()]));
 
@@ -520,6 +568,7 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
 
         log.info("Sorting list of duplicate records.");
         this.duplicateIndexes.doneAddingStartIteration();
+        if (this.opticalDuplicateIndexes != null) this.opticalDuplicateIndexes.doneAddingStartIteration();
     }
 
     private boolean areComparableForDuplicates(final ReadEndsForMarkDuplicates lhs, final ReadEndsForMarkDuplicates rhs, final boolean compareRead2, final boolean useBarcodes) {
@@ -570,15 +619,20 @@ public class MarkDuplicates extends AbstractMarkDuplicatesCommandLineProgram {
             }
         }
 
+        if (this.READ_NAME_REGEX != null) {
+            AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(list, best, opticalDuplicateFinder, libraryIdGenerator);
+        }
+
         for (final ReadEndsForMarkDuplicates end : list) {
             if (end != best) {
                 addIndexAsDuplicate(end.read1IndexInFile);
                 addIndexAsDuplicate(end.read2IndexInFile);
-            }
-        }
 
-        if (this.READ_NAME_REGEX != null) {
-            AbstractMarkDuplicatesCommandLineProgram.trackOpticalDuplicates(list, opticalDuplicateFinder, libraryIdGenerator);
+                if (end.isOpticalDuplicate && this.opticalDuplicateIndexes != null) {
+                    this.opticalDuplicateIndexes.add(end.read1IndexInFile);
+                    this.opticalDuplicateIndexes.add(end.read2IndexInFile);
+                }
+            }
         }
     }
 
