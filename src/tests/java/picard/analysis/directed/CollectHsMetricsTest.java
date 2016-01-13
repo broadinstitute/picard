@@ -24,10 +24,10 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         final String intervals = TEST_DIR + "/chrM.interval_list";
 
         return new Object[][] {
-                {TEST_DIR + "/lowbaseq.sam", referenceFile, intervals, "NONE", 1, 0, true, 2, 202, 0, 0.505},
-                {TEST_DIR + "/lowmapq.sam", referenceFile, intervals, "NONE", 0, 100, true, 2, 202, 0, 0.995},
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true, 3, 202, 0, 0.505},
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 3, 303, 0, 1.0}
+                {TEST_DIR + "/lowbaseq.sam", referenceFile, intervals, "NONE", 1, 0, true, 2, 202, 0, 0.505, 1000},
+                {TEST_DIR + "/lowmapq.sam", referenceFile, intervals, "NONE", 0, 100, true, 2, 202, 0, 0.995, 1000},
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true, 3, 202, 0, 0.505, 1000},
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 3, 303, 0, 1.0, 1000}
 
         };
     }
@@ -43,7 +43,8 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                                               final int totalReads,
                                               final int pfUqBasesAligned,
                                               final double pctExcBaseq,
-                                              final double pctTargetBases1x) throws IOException {
+                                              final double pctTargetBases1x,
+                                              final int sampleSize) throws IOException {
 
         final File outfile = File.createTempFile("CollectHsMetrics", ".hs_metrics", TEST_DIR);
         outfile.deleteOnExit();
@@ -55,7 +56,8 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 "OUTPUT=" + "TODO",
                 "MINIMUM_MAPPING_QUALITY=" + minimumMappingQuality,
                 "MINIMUM_BASE_QUALITY=" + minimumBaseQuality,
-                "CLIP_OVERLAPPING_READS=" + clipOverlappingReads
+                "CLIP_OVERLAPPING_READS=" + clipOverlappingReads,
+                "SAMPLE_SIZE=" + sampleSize
         };
 
         Assert.assertEquals(runPicardCommandLine(args), 0);

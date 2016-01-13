@@ -103,6 +103,6 @@ public class CollectHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetric
                                               final String probeSetName,
                                               final int nearProbeDistance) {
         return new HsMetricCollector(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance,
-                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, CLIP_OVERLAPPING_READS, true);
+                MINIMUM_MAPPING_QUALITY, MINIMUM_BASE_QUALITY, CLIP_OVERLAPPING_READS, true, COVERAGE_CAP, SAMPLE_SIZE);
     }
 }

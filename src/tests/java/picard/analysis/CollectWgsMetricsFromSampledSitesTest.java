@@ -48,12 +48,14 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         final File outfile = File.createTempFile("test", ".wgs_metrics");
         final File ref = new File(TEST_DATA_DIR, "merger.fasta");
         final File intervals = new File(TEST_DATA_DIR, "onePos.interval_list");
+        final int sampleSize = 1000;
         outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
-                "INTERVALS=" + intervals.getAbsolutePath()
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -67,6 +69,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.181818); // 2 of 11
             Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.090909); // 1 of 9
             Assert.assertEquals(metrics.PCT_EXC_BASEQ, 0.090909); // 1 of 9
+            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.34655, .02);
         }
     }
 
@@ -76,12 +79,14 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
         final File outfile = File.createTempFile("test", ".wgs_metrics");
         final File ref = new File(TEST_DATA_DIR, "merger.fasta");
         final File intervals = new File(TEST_DATA_DIR, "contiguous.interval_list");
+        final int sampleSize = 1000;
         outfile.deleteOnExit();
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
                 "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
-                "INTERVALS=" + intervals.getAbsolutePath()
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
 
@@ -93,6 +98,7 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
             Assert.assertEquals(metrics.MEAN_COVERAGE, 2.6);
             Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.066667);
+            Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.393802, .02);
         }
     }
 }
