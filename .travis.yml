@@ -2,9 +2,8 @@ language: java
 jdk:
   - oraclejdk8
 before_install:
-  - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
-  - chmod 755 ./travis-tool.sh
-  - sudo ./travis-tool.sh bootstrap
+  - sudo apt-get -qq update
+  - sudo apt-get install -y --no-install-recommends r-base-dev r-recommended qpdf
   - sed -i -e 's_git@github.com:_https://github.com/_' build.xml
 script:
   - ant -lib lib/ant clone-htsjdk 
