@@ -34,11 +34,16 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     //Also, when calculating mean and stdev, only bins <= Histogram_WIDTH will be included.
     private final Integer histogramWidth;
 
+    // If set to true, then duplicates will also be included in the histogram
+    private final boolean includeDuplicates;
+
     public InsertSizeMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
-                                      final double minimumPct, final Integer histogramWidth, final double deviations) {
+                                      final double minimumPct, final Integer histogramWidth, final double deviations,
+                                      final boolean includeDuplicates) {
         this.minimumPct = minimumPct;
         this.histogramWidth = histogramWidth;
         this.deviations = deviations;
+        this.includeDuplicates = includeDuplicates;
         setup(accumulationLevels, samRgRecords);
     }
 
@@ -65,7 +70,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
                 record.getMateUnmappedFlag() ||
                 record.getFirstOfPairFlag() ||
                 record.isSecondaryOrSupplementary() ||
-                record.getDuplicateReadFlag() ||
+                (record.getDuplicateReadFlag() && !this.includeDuplicates) ||
                 record.getInferredInsertSize() == 0) {
             return;
         }

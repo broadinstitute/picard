@@ -91,7 +91,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Option(shortName="W", doc="Explicitly sets the Histogram width, overriding automatic truncation of Histogram tail. " +
             "Also, when calculating mean and standard deviation, only bins <= Histogram_WIDTH will be included.", optional=true)
-    public Integer Histogram_WIDTH = null;
+    public Integer HISTOGRAM_WIDTH = null;
 
     @Option(shortName="M", doc="When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this " +
             "percentage of overall reads. (Range: 0 to 1).")
@@ -99,6 +99,9 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
+
+    @Option(doc="If true, also include reads marked as duplicates in the insert size histogram.")
+    public boolean INCLUDE_DUPLICATES = false;
 
     // Calculates InsertSizeMetrics for all METRIC_ACCUMULATION_LEVELs provided
     private InsertSizeMetricsCollector multiCollector;
@@ -132,7 +135,8 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
         IOUtil.assertFileIsWritable(Histogram_FILE);
 
         //Delegate actual collection to InsertSizeMetricCollector
-        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), MINIMUM_PCT, Histogram_WIDTH, DEVIATIONS);
+        multiCollector = new InsertSizeMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(),
+                                                        MINIMUM_PCT, HISTOGRAM_WIDTH, DEVIATIONS, INCLUDE_DUPLICATES);
     }
 
     @Override protected void acceptRead(final SAMRecord record, final ReferenceSequence ref) {
@@ -156,7 +160,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             file.write(OUTPUT);
 
             final int rResult;
-            if(Histogram_WIDTH == null) {
+            if(HISTOGRAM_WIDTH == null) {
                 rResult = RExecutor.executeFromClasspath(
                     Histogram_R_SCRIPT,
                     OUTPUT.getAbsolutePath(),
@@ -168,7 +172,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
                     OUTPUT.getAbsolutePath(),
                     Histogram_FILE.getAbsolutePath(),
                     INPUT.getName(),
-                    String.valueOf( Histogram_WIDTH ) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
+                    String.valueOf(HISTOGRAM_WIDTH) ); //Histogram_WIDTH is passed because R automatically sets Histogram width to the last
                                                          //bin that has data, which may be less than Histogram_WIDTH and confuse the user.
             }
 
