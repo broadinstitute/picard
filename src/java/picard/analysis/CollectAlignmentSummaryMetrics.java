@@ -27,6 +27,7 @@ package picard.analysis;
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamPairUtil.PairOrientation;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CollectionUtil;
@@ -60,6 +61,14 @@ import java.util.Set;
  * <li>Strand balance - reads mapped to positive strand / total mapped reads</li>
  * </ul>
  * Metrics are written for the first read of a pair, the second read, and combined for the pair.
+ *
+ * Chimeras are identified if any of the of following criteria are met:
+ * <ul>
+ * <li>the insert size is larger than MAX_INSERT_SIZE</li>
+ * <li>the ends of a pair map to different contigs</li>
+ * <li>the paired end orientation is different that the expected orientation</li>
+ * <li>the read contains an SA tag (chimeric alignment)</li>
+ * </ul>
  * 
  * @author Doug Voet (dvoet at broadinstitute dot org)
  */
@@ -90,6 +99,9 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
     @Option(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
     public int MAX_INSERT_SIZE = 100000;
+
+    @Option(doc="Paired-end reads that do not have this expected orientation will be considered chimeric.")
+    public PairOrientation EXPECTED_PAIR_ORIENTATION = PairOrientation.FR;
 
     @Option(doc="List of adapter sequences to use when processing the alignment metrics")
 	public List<String> ADAPTER_SEQUENCE = CollectionUtil.makeList(
@@ -131,7 +143,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         final boolean doRefMetrics = REFERENCE_SEQUENCE != null;
         collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), doRefMetrics,
-                ADAPTER_SEQUENCE, MAX_INSERT_SIZE,  IS_BISULFITE_SEQUENCED);
+                ADAPTER_SEQUENCE, MAX_INSERT_SIZE, EXPECTED_PAIR_ORIENTATION, IS_BISULFITE_SEQUENCED);
     }
 
     @Override protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
