@@ -29,6 +29,7 @@ import htsjdk.samtools.SamFileValidator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.BamIndexValidator.IndexValidationStringency;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 import htsjdk.samtools.util.IOUtil;
@@ -97,8 +98,16 @@ public class ValidateSamFile extends CommandLineProgram {
     @Option(doc = "If true, only report errors and ignore warnings.")
     public boolean IGNORE_WARNINGS = false;
 
-    @Option(doc = "If true and input is a BAM file with an index file, also validates the index.")
+    @Option(doc = "DEPRECATED.  Use INDEX_VALIDATION_STRINGENCY instead.  If true and input is " +
+            "a BAM file with an index file, also validates the index.  Until this parameter is retired " +
+            "VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index.")
     public boolean VALIDATE_INDEX = true;
+
+    @Option(doc = "If set to anything other than IndexValidationStringency.NONE and input is " +
+            "a BAM file with an index file, also validates the index at the specified stringency. " +
+            "Until VALIDATE_INDEX is retired, VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY " +
+            "must agree on whether to validate the index.")
+    public IndexValidationStringency INDEX_VALIDATION_STRINGENCY = IndexValidationStringency.EXHAUSTIVE;
 
     @Option(shortName = "BISULFITE",
             doc = "Whether the SAM or BAM file consists of bisulfite sequenced reads. " +
@@ -184,5 +193,17 @@ public class ValidateSamFile extends CommandLineProgram {
         out.flush();
 
         return result ? 0 : 1;
+    }
+
+    @Override
+    protected String[] customCommandLineValidation() {
+        if ((!VALIDATE_INDEX && INDEX_VALIDATION_STRINGENCY != IndexValidationStringency.NONE) ||
+            (VALIDATE_INDEX && INDEX_VALIDATION_STRINGENCY == IndexValidationStringency.NONE)) {
+            return new String[]{"VALIDATE_INDEX and INDEX_VALIDATION_STRINGENCY must be consistent: " +
+                    "VALIDATE_INDEX is " + VALIDATE_INDEX + " and INDEX_VALIDATION_STRINGENCY is " +
+                    INDEX_VALIDATION_STRINGENCY};
+        }
+
+        return super.customCommandLineValidation();
     }
 }
