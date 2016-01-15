@@ -66,6 +66,12 @@
     <condition property="isUnix">
         <os family="unix"/>
     </condition>
+
+    <!-- Import JaCoCo Ant tasks -->
+    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+      <classpath path="lib/ant/jacocoant.jar" />
+    </taskdef>
+
     <target name="set_excluded_test_groups_unix" if="isUnix">
         <property name="excludedTestGroups" value="slow, broken"/>
     </target>
@@ -192,6 +198,7 @@
     <!-- TEST -->
     <target name="test" depends="compile, set_excluded_test_groups" description="Run unit tests">
         <taskdef resource="testngtasks" classpathref="classpath"/>
+	<jacoco:coverage destfile="jacoco.data" xmlns:jacoco="antlib:org.jacoco.ant">
         <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
                 failureproperty="tests.failed" excludedgroups="${excludedTestGroups}" workingDir="${basedir}"
                 verbose="${testng.verbosity}">
@@ -206,6 +213,8 @@
             </classfileset>
             <jvmarg value="-Xmx2G"/>
         </testng>
+	</jacoco:coverage>
+
         <junitreport todir="${dist}/test">
             <fileset dir="${test.output}">
                 <include name="*.xml"/>
@@ -215,6 +224,23 @@
         <copy file="etc/test/testng.css" todir="${dist}/test" overwrite="true"/>
         <fail if="tests.failed" message="There were failed unit tests"/>
     </target>
+
+<target name="report-coverage" depends="test" description="Creates an HTML code coverage report">
+  <jacoco:report xmlns:jacoco="antlib:org.jacoco.ant">
+    <executiondata>
+        <file file="jacoco.data"/>
+    </executiondata>
+    <structure name="Picard">
+        <classfiles>
+            <fileset dir="classes"/>
+        </classfiles>
+        <sourcefiles encoding="UTF-8">
+            <fileset dir="src"/>
+        </sourcefiles>
+    </structure>
+    <html destdir="report"/>
+  </jacoco:report>
+</target>
 
     <target name="single-test"
             depends="compile, compile-tests"
