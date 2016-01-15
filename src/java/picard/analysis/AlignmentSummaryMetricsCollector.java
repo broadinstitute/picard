@@ -31,12 +31,14 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.SamPairUtil.PairOrientation;
 import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
@@ -58,6 +60,8 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     //Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.
     private final int maxInsertSize;
 
+    //Paired-end reads that do not have this expected orientation will be considered chimeric.
+    private final PairOrientation expectedOrientation;
 
     //Whether the SAM or BAM file consists of bisulfite sequenced reads.
     private final boolean isBisulfiteSequenced;
@@ -75,11 +79,13 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     private static final int MAX_ADAPTER_ERRORS = 1;
 
     public AlignmentSummaryMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
-                                            final boolean doRefMetrics, final List<String> adapterSequence, final int maxInsertSize, boolean isBisulfiteSequenced) {
-        this.doRefMetrics       = doRefMetrics;
-        this.adapterSequence    = adapterSequence;
-        this.adapterKmers = prepareAdapterSequences();
-        this.maxInsertSize = maxInsertSize;
+                                            final boolean doRefMetrics, final List<String> adapterSequence, final int maxInsertSize,
+                                            final PairOrientation expectedOrientation, final boolean isBisulfiteSequenced) {
+        this.doRefMetrics         = doRefMetrics;
+        this.adapterSequence      = adapterSequence;
+        this.adapterKmers         = prepareAdapterSequences();
+        this.maxInsertSize        = maxInsertSize;
+        this.expectedOrientation  = expectedOrientation;
         this.isBisulfiteSequenced = isBisulfiteSequenced;
         setup(accumulationLevels, samRgRecords);
     }
@@ -307,7 +313,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     else if(doRefMetrics) {
                         metrics.PF_READS_ALIGNED++;
                         if (!record.getReadNegativeStrandFlag()) numPositiveStrand++;
-
                         if (record.getReadPairedFlag() && !record.getMateUnmappedFlag()) {
                             metrics.READS_ALIGNED_IN_PAIRS++;
 
@@ -318,9 +323,18 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
 
                                 // With both reads mapped we can see if this pair is chimeric
                                 if (Math.abs(record.getInferredInsertSize()) > maxInsertSize ||
-                                        !record.getReferenceIndex().equals(record.getMateReferenceIndex())) {
+                                        !record.getReferenceIndex().equals(record.getMateReferenceIndex()) ||
+                                        SamPairUtil.getPairOrientation(record) != expectedOrientation ||
+                                        record.getAttribute("SA") != null) {
                                     ++this.chimeras;
                                 }
+                            }
+                        }
+                        else { // fragment reads or read pairs with one end that maps
+                            // Consider chimeras that occur *within* the read using the SA tag
+                            if (record.getMappingQuality() >= MAPPING_QUALITY_THRESOLD) {
+                                ++this.chimerasDenominator;
+                                if (record.getAttribute("SA") != null) ++this.chimeras;
                             }
                         }
                     }
