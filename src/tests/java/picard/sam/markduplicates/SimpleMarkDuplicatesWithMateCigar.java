@@ -30,6 +30,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordDuplicateComparator;
 import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
@@ -43,6 +44,7 @@ import picard.sam.markduplicates.util.LibraryIdGenerator;
 import picard.sam.markduplicates.util.ReadEnds;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,11 +111,14 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         final SAMFileWriter out = new SAMFileWriterFactory().makeSAMOrBAMWriter(outputHeader,
                 false,
                 OUTPUT);
-        
+
+        final SAMRecordDuplicateComparator comparator = new SAMRecordDuplicateComparator(Collections.singletonList(headerAndIterator.header));
+        comparator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
+
         final DuplicateSetIterator iterator = new DuplicateSetIterator(headerAndIterator.iterator,
-                headerAndIterator.header);
-        
-        iterator.setScoringStrategy(this.DUPLICATE_SCORING_STRATEGY);
+                headerAndIterator.header,
+                false,
+                comparator);
 
         // progress logger!
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e6, "Read");
