@@ -11,5 +11,3 @@ intellij.classes
 htsjdk
 .idea
 target
-report
-jacoco.data
