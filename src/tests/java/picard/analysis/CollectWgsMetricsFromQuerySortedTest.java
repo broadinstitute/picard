@@ -64,18 +64,19 @@ public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest
             final boolean isRaw = row.TYPE == CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.RAW;
 
             Assert.assertEquals(row.GENOME_TERRITORY, genomeSize);
-            Assert.assertEquals(row.TOTAL_BASES, 606);
-            Assert.assertEquals(row.TOTAL_PASSING_BASES, isRaw ? 238 : 200);
+            Assert.assertEquals(row.PF_BASES, 606);
+            Assert.assertEquals(row.PF_PASSING_BASES, isRaw ? 238 : 200);
             Assert.assertEquals(row.PCT_EXC_OVERLAP, isRaw ? 0.085809 : 0.013201);  // raw: 52/606, usable: 8/606
             Assert.assertEquals(row.PCT_EXC_BASEQ, isRaw ? 0.188119 : 0.156766);    // raw: 114/606, usable 95/606
             Assert.assertEquals(row.PCT_EXC_MAPQ, isRaw ? 0.0 : 0.166667);          // raw: 0/606, usable:101/606
             Assert.assertEquals(row.PCT_EXC_DUPE, 0.333333);                        // both: 202/606
-            Assert.assertEquals(row.TOTAL_READ_PAIRS, 3);
-            Assert.assertEquals(row.TOTAL_DUPE_PAIRS, 1);
-            Assert.assertEquals(row.TOTAL_ORIENTED_PAIRS, 2);
+            Assert.assertEquals(row.PF_READ_PAIRS, 3);
+            Assert.assertEquals(row.PF_DUPE_PAIRS, 1);
+            Assert.assertEquals(row.PF_READS_ALIGNED, 6);
+            Assert.assertEquals(row.PF_ORIENTED_PAIRS, 2);
             Assert.assertEquals(row.MEAN_INSERT_SIZE, 118.0);
 
-            final BigDecimal meanCov = new BigDecimal((double)row.TOTAL_PASSING_BASES / genomeSize).setScale(6, RoundingMode.HALF_UP);
+            final BigDecimal meanCov = new BigDecimal((double)row.PF_PASSING_BASES / genomeSize).setScale(6, RoundingMode.HALF_UP);
             Assert.assertEquals(Double.compare(row.MEAN_COVERAGE, meanCov.doubleValue()), 0);
         }
     }

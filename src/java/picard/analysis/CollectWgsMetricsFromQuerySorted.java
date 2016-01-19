@@ -82,17 +82,27 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         public FILTERING_STRINGENCY TYPE;
 
         /** The total number of bases, before any filters are applied. */
-        public long TOTAL_BASES = 0;
+        public long PF_BASES = 0;
         /** The number of passing bases, after all filters are applied. */
-        public long TOTAL_PASSING_BASES = 0;
+        public long PF_PASSING_BASES = 0;
 
         /** The number of read pairs, before all filters are applied. */
-        public long TOTAL_READ_PAIRS = 0;
-        /** The number of duplicate read pairs, before all filters are applied. */
-        public long TOTAL_DUPE_PAIRS = 0;
+        public long PF_READ_PAIRS = 0;
+        /** The number of duplicate read pairs, before any filters are applied. */
+        public long PF_DUPE_PAIRS = 0;
+
+        /** The number of aligned reads, before any filters are applied. */
+        public long PF_READS_ALIGNED = 0;
+
+        /**
+         * The number of PF reads that are marked as noise reads.  A noise read is one which is composed
+         * entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
+         * are of no use in downstream analysis.
+         */
+        public long PF_NOISE_READS = 0;
 
         /** The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied. */
-        public long TOTAL_ORIENTED_PAIRS = 0;
+        public long PF_ORIENTED_PAIRS = 0;
         /** The mean insert size, after filters are applied. */
         public double MEAN_INSERT_SIZE = 0.0;
     }
@@ -170,6 +180,10 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
                                          final IntermediateMetrics metrics,
                                          final int minimumMappingQuality,
                                          final int minimumBaseQuality) {
+        // don't bother at all with non-PF read pairs; if one is non-PF then the other is too so we only need to check the first one
+        if (pairToAnalyze.read1.getReadFailsVendorQualityCheckFlag()) {
+            return;
+        }
 
         final boolean isPaired = (pairToAnalyze.read2 != null);
 
@@ -179,8 +193,13 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         final int totalReadBases = read1bases + read2bases;
 
         // now compute metrics...
-        metrics.metrics.TOTAL_BASES += totalReadBases;
-        if (isPaired) metrics.metrics.TOTAL_READ_PAIRS++;
+        metrics.metrics.PF_BASES += totalReadBases;
+        if (isNoiseRead(pairToAnalyze.read1)) metrics.metrics.PF_NOISE_READS++;
+        if (!pairToAnalyze.read1.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+        if (isPaired) {
+            metrics.metrics.PF_READ_PAIRS++;
+            if (!pairToAnalyze.read2.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+        }
 
         // We note here several differences between this tool and CollectWgsMetrics:
         // 1. CollectWgsMetrics does NOT count paired reads that are both unmapped in the PCT_EXC_UNPAIRED, but we do so here
@@ -191,7 +210,7 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         if (!isPaired || pairToAnalyze.read1.getMateUnmappedFlag() || pairToAnalyze.read2.getMateUnmappedFlag()) {
             metrics.basesExcludedByPairing += totalReadBases;
         } else if (pairToAnalyze.read1.getDuplicateReadFlag()) {
-            metrics.metrics.TOTAL_DUPE_PAIRS++;
+            metrics.metrics.PF_DUPE_PAIRS++;
             metrics.basesExcludedByDupes += totalReadBases;
         } else {
 
@@ -213,11 +232,11 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
                 usableBaseCount -= overlapCount;
             }
 
-            metrics.metrics.TOTAL_PASSING_BASES += usableBaseCount;
+            metrics.metrics.PF_PASSING_BASES += usableBaseCount;
 
             final int insertSize = Math.abs(pairToAnalyze.read1.getInferredInsertSize());
             if (insertSize > 0 && pairToAnalyze.read1.getProperPairFlag()) {
-                metrics.metrics.TOTAL_ORIENTED_PAIRS++;
+                metrics.metrics.PF_ORIENTED_PAIRS++;
                 metrics.insertSizeSum += insertSize;
             }
         }
@@ -230,15 +249,24 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
      */
     private void finalizeMetrics(final IntermediateMetrics metrics) {
         setUnusedMetrics(metrics.metrics);
-        metrics.metrics.MEAN_COVERAGE = metrics.metrics.TOTAL_PASSING_BASES / (double)metrics.metrics.GENOME_TERRITORY;
-        metrics.metrics.PCT_EXC_DUPE = metrics.basesExcludedByDupes / (double)metrics.metrics.TOTAL_BASES;
-        metrics.metrics.PCT_EXC_MAPQ = metrics.basesExcludedByMapq / (double)metrics.metrics.TOTAL_BASES;
-        metrics.metrics.PCT_EXC_UNPAIRED = metrics.basesExcludedByPairing / (double)metrics.metrics.TOTAL_BASES;
-        metrics.metrics.PCT_EXC_BASEQ = metrics.basesExcludedByBaseq / (double)metrics.metrics.TOTAL_BASES;
-        metrics.metrics.PCT_EXC_OVERLAP = metrics.basesExcludedByOverlap / (double)metrics.metrics.TOTAL_BASES;
-        final double totalExcludedBases = metrics.metrics.TOTAL_BASES - metrics.metrics.TOTAL_PASSING_BASES;
-        metrics.metrics.PCT_EXC_TOTAL = totalExcludedBases / metrics.metrics.TOTAL_BASES;
-        metrics.metrics.MEAN_INSERT_SIZE = metrics.insertSizeSum / metrics.metrics.TOTAL_ORIENTED_PAIRS;
+        metrics.metrics.MEAN_COVERAGE = metrics.metrics.PF_PASSING_BASES / (double)metrics.metrics.GENOME_TERRITORY;
+        metrics.metrics.PCT_EXC_DUPE = metrics.basesExcludedByDupes / (double)metrics.metrics.PF_BASES;
+        metrics.metrics.PCT_EXC_MAPQ = metrics.basesExcludedByMapq / (double)metrics.metrics.PF_BASES;
+        metrics.metrics.PCT_EXC_UNPAIRED = metrics.basesExcludedByPairing / (double)metrics.metrics.PF_BASES;
+        metrics.metrics.PCT_EXC_BASEQ = metrics.basesExcludedByBaseq / (double)metrics.metrics.PF_BASES;
+        metrics.metrics.PCT_EXC_OVERLAP = metrics.basesExcludedByOverlap / (double)metrics.metrics.PF_BASES;
+        final double totalExcludedBases = metrics.metrics.PF_BASES - metrics.metrics.PF_PASSING_BASES;
+        metrics.metrics.PCT_EXC_TOTAL = totalExcludedBases / metrics.metrics.PF_BASES;
+        metrics.metrics.MEAN_INSERT_SIZE = metrics.insertSizeSum / metrics.metrics.PF_ORIENTED_PAIRS;
+    }
+
+    /**
+     * @param record the read
+     * @return true if the read is considered a "noise" read (all As and/or Ns), false otherwise
+     */
+    private boolean isNoiseRead(final SAMRecord record) {
+        final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
+        return (noiseAttribute != null && noiseAttribute.equals(1));
     }
 
     /**
