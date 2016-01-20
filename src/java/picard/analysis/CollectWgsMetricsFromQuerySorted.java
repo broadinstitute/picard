@@ -73,6 +73,9 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
 
     private final Log log = Log.getInstance(CollectWgsMetricsFromQuerySorted.class);
 
+    //the adapter utility class
+    private AdapterUtility adapterUtility;
+
     /** the various metrics types */
     public enum FILTERING_STRINGENCY { RAW, USABLE }
 
@@ -100,6 +103,18 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
          * are of no use in downstream analysis.
          */
         public long PF_NOISE_READS = 0;
+
+        /**
+         * The number of PF reads that map outside of a maximum insert size (100kb) or that have
+         * the two ends mapping to different chromosomes.
+         */
+        public long PF_CHIMERIC_PAIRS = 0;
+
+        /**
+         * The number of PF reads that are unaligned and match to a known adapter sequence right from the
+         * start of the read.
+         */
+        public long PF_ADAPTER_READS = 0;
 
         /** The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied. */
         public long PF_ORIENTED_PAIRS = 0;
@@ -139,6 +154,8 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         usableMetrics.metrics.TYPE = FILTERING_STRINGENCY.USABLE;
         final IntermediateMetrics rawMetrics = new IntermediateMetrics();
         rawMetrics.metrics.TYPE = FILTERING_STRINGENCY.RAW;
+
+        adapterUtility = new AdapterUtility(AdapterUtility.DEFAULT_ADAPTER_SEQUENCE);
 
         // Loop through all the loci by read pairs
         QuerySortedReadPairIteratorUtil.ReadPair pairToAnalyze = QuerySortedReadPairIteratorUtil.getNextReadPair(iterator);
@@ -195,10 +212,16 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         // now compute metrics...
         metrics.metrics.PF_BASES += totalReadBases;
         if (isNoiseRead(pairToAnalyze.read1)) metrics.metrics.PF_NOISE_READS++;
+
         if (!pairToAnalyze.read1.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+        else if (isAdapterRead(pairToAnalyze.read1)) metrics.metrics.PF_ADAPTER_READS++;
+
         if (isPaired) {
             metrics.metrics.PF_READ_PAIRS++;
             if (!pairToAnalyze.read2.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+            else if (isAdapterRead(pairToAnalyze.read2)) metrics.metrics.PF_ADAPTER_READS++;
+
+            if (isChimericReadPair(pairToAnalyze, minimumMappingQuality)) metrics.metrics.PF_CHIMERIC_PAIRS++;
         }
 
         // We note here several differences between this tool and CollectWgsMetrics:
@@ -267,6 +290,27 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
     private boolean isNoiseRead(final SAMRecord record) {
         final Object noiseAttribute = record.getAttribute(ReservedTagConstants.XN);
         return (noiseAttribute != null && noiseAttribute.equals(1));
+    }
+
+    /**
+     * @param record the read
+     * @return true if the read is from known adapter sequence, false otherwise
+     */
+    private boolean isAdapterRead(final SAMRecord record) {
+        final byte[] readBases = record.getReadBases();
+        if (!(record instanceof BAMRecord)) StringUtil.toUpperCase(readBases);
+        return adapterUtility.isAdapterSequence(readBases);
+    }
+
+    /**
+     * @param readPair the read pair
+     * @param minimumMappingQuality the minimum mapping quality
+     * @return true if the read pair is considered chimeric, false otherwise
+     */
+    private boolean isChimericReadPair(final QuerySortedReadPairIteratorUtil.ReadPair readPair, final int minimumMappingQuality) {
+        // Check that both ends are aligned, have mapq > minimum, and fit the bill for chimeras
+        return (readPair.read1.getMappingQuality() >= minimumMappingQuality && readPair.read2.getMappingQuality() >= minimumMappingQuality &&
+                ChimeraUtil.isChimeric(readPair.read1, readPair.read2, ChimeraUtil.DEFAULT_INSERT_SIZE_LIMIT, ChimeraUtil.DEFAULT_EXPECTED_ORIENTATIONS));
     }
 
     /**

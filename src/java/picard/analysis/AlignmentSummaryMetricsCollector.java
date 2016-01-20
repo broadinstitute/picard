@@ -31,7 +31,6 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ReservedTagConstants;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CoordMath;
@@ -43,7 +42,6 @@ import picard.metrics.PerUnitMetricCollector;
 import picard.metrics.SAMRecordAndReference;
 import picard.metrics.SAMRecordAndReferenceMultiLevelCollector;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,17 +49,11 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     // If we have a reference sequence, collect metrics on how well we aligned to it
     private final boolean doRefMetrics;
 
-    //the adapter sequences converted to byte arrays
-    private final byte[][] adapterKmers;
-
-    //A list of Strings representing the sequence of bases in an adapter
-    private final List<String> adapterSequence;
-
     //Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.
     private final int maxInsertSize;
 
     //Paired-end reads that do not have this expected orientation will be considered chimeric.
-    private final PairOrientation expectedOrientation;
+    private final Set<PairOrientation> expectedOrientations;
 
     //Whether the SAM or BAM file consists of bisulfite sequenced reads.
     private final boolean isBisulfiteSequenced;
@@ -72,20 +64,16 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
     //The minimum quality a base has to meet in order to be consider hq_20
     private final static int BASE_QUALITY_THRESHOLD = 20;
 
-    //The number of bases to check in order to map a read to an adapter
-    private static final int ADAPTER_MATCH_LENGTH = 16;
-
-    // The maximum number of mismatches a read can have and still be considered as matching an adapter
-    private static final int MAX_ADAPTER_ERRORS = 1;
+    //the adapter utility class
+    private final AdapterUtility adapterUtility;
 
     public AlignmentSummaryMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels, final List<SAMReadGroupRecord> samRgRecords,
                                             final boolean doRefMetrics, final List<String> adapterSequence, final int maxInsertSize,
-                                            final PairOrientation expectedOrientation, final boolean isBisulfiteSequenced) {
+                                            final Set<PairOrientation> expectedOrientations, final boolean isBisulfiteSequenced) {
         this.doRefMetrics         = doRefMetrics;
-        this.adapterSequence      = adapterSequence;
-        this.adapterKmers         = prepareAdapterSequences();
+        this.adapterUtility       = new AdapterUtility(adapterSequence);
         this.maxInsertSize        = maxInsertSize;
-        this.expectedOrientation  = expectedOrientation;
+        this.expectedOrientations  = expectedOrientations;
         this.isBisulfiteSequenced = isBisulfiteSequenced;
         setup(accumulationLevels, samRgRecords);
     }
@@ -100,58 +88,6 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
         if (!rec.isSecondaryOrSupplementary()) {
             super.acceptRecord(rec, ref);
         }
-    }
-
-    /** Converts the supplied adapter sequences to byte arrays in both fwd and rc. */
-    private byte [][] prepareAdapterSequences() {
-        final Set<String> kmers = new HashSet<String>();
-
-        // Make a set of all kmers of adapterMatchLength
-        for (final String seq : adapterSequence) {
-            for (int i=0; i<=seq.length() - ADAPTER_MATCH_LENGTH; ++i) {
-                final String kmer = seq.substring(i, i+ADAPTER_MATCH_LENGTH).toUpperCase();
-
-                int ns = 0;
-                for (final char ch : kmer.toCharArray()) if (ch == 'N') ++ns;
-                if (ns <= MAX_ADAPTER_ERRORS) {
-                    kmers.add(kmer);
-                    kmers.add(SequenceUtil.reverseComplement(kmer));
-                }
-            }
-        }
-
-        // Make an array of byte[] for the kmers
-        final byte [][] adapterKmers = new byte[kmers.size()][];
-        int i=0;
-        for (final String kmer : kmers) {
-            adapterKmers[i++] = StringUtil.stringToBytes(kmer);
-        }
-        return adapterKmers;
-    }
-
-    /**
-     * Checks the first ADAPTER_MATCH_LENGTH bases of the read against known adapter sequences and returns
-     * true if the read matches an adapter sequence with MAX_ADAPTER_ERRORS mismsatches or fewer.
-     *
-     * @param read the basecalls for the read in the order and orientation the machine read them
-     * @return true if the read matches an adapter and false otherwise
-     */
-    private boolean isAdapterSequence(final byte[] read) {
-        if (read.length < ADAPTER_MATCH_LENGTH) return false;
-
-        for (final byte[] adapter : adapterKmers) {
-            int errors = 0;
-
-            for (int i=0; i<adapter.length; ++i) {
-                if (read[i] != adapter[i]) {
-                    if (++errors > MAX_ADAPTER_ERRORS) break;
-                }
-            }
-
-            if (errors <= MAX_ADAPTER_ERRORS) return true;
-        }
-
-        return false;
     }
 
     private class GroupAlignmentSummaryMetricsPerUnitMetricCollector implements PerUnitMetricCollector<AlignmentSummaryMetrics, Comparable<?>, SAMRecordAndReference> {
@@ -255,7 +191,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                     return;
                 }
 
-                collectReadData(record, ref);
+                collectReadData(record);
                 collectQualityData(record, ref);
             }
 
@@ -290,7 +226,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                 }
             }
 
-            private void collectReadData(final SAMRecord record, final ReferenceSequence ref) {
+            private void collectReadData(final SAMRecord record) {
                 // NB: for read count metrics, do not include supplementary records, but for base count metrics, do include supplementary records.
                 if (record.getSupplementaryAlignmentFlag()) return;
 
@@ -306,7 +242,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                         final byte[] readBases = record.getReadBases();
                         if (!(record instanceof BAMRecord)) StringUtil.toUpperCase(readBases);
 
-                        if (isAdapterSequence(readBases)) {
+                        if (adapterUtility.isAdapterSequence(readBases)) {
                             this.adapterReads++;
                         }
                     }
@@ -322,10 +258,7 @@ public class AlignmentSummaryMetricsCollector extends SAMRecordAndReferenceMulti
                                 ++this.chimerasDenominator;
 
                                 // With both reads mapped we can see if this pair is chimeric
-                                if (Math.abs(record.getInferredInsertSize()) > maxInsertSize ||
-                                        !record.getReferenceIndex().equals(record.getMateReferenceIndex()) ||
-                                        SamPairUtil.getPairOrientation(record) != expectedOrientation ||
-                                        record.getAttribute("SA") != null) {
+                                if (ChimeraUtil.isChimeric(record, maxInsertSize, expectedOrientations)) {
                                     ++this.chimeras;
                                 }
                             }
