@@ -25,13 +25,13 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
 
         return new Object[][] {
                 // test that all bases (read 2) with base quality 1 are filtered out
-                {TEST_DIR + "/lowbaseq.sam",    referenceFile, intervals, "NONE", 1, 1, true,  2, 202, 0.5, 0.505, 1000},
+                {TEST_DIR + "/lowbaseq.sam",    referenceFile, intervals, "NONE", 1, 1, true,  2, 202, 0.5, 0.0, 0.505, 0.0,   1000},
                 // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
-                {TEST_DIR + "/lowmapq.sam",     referenceFile, intervals, "NONE", 2, 0, true,  2, 202, 0,   0.505, 1000},
+                {TEST_DIR + "/lowmapq.sam",     referenceFile, intervals, "NONE", 2, 0, true,  2, 202, 0,   0.0, 0.505, 0.0,   1000},
                 // test that we clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true,  3, 303, 0,   0.505, 1000},
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true,  2, 202, 0,   0.5, 0.505, 0.505, 1000},
                 // test that we do not clip overlapping bases
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 3, 303, 0,   0.505, 1000}
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 2, 202, 0,   0.0, 0.505, 0.505, 1000}
         };
     }
 
@@ -46,7 +46,9 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                                               final int totalReads,
                                               final int pfUqBasesAligned,
                                               final double pctExcBaseq,
+                                              final double pctExcOverlap,
                                               final double pctTargetBases1x,
+                                              final double pctTargetBases2x,
                                               final int sampleSize) throws IOException {
 
         final File outfile = File.createTempFile("CollectHsMetrics", ".hs_metrics", TEST_DIR);
@@ -73,7 +75,9 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
             Assert.assertEquals(metrics.TOTAL_READS, totalReads);
             Assert.assertEquals(metrics.PF_UQ_BASES_ALIGNED, pfUqBasesAligned);
             Assert.assertEquals(metrics.PCT_EXC_BASEQ, pctExcBaseq);
+            Assert.assertEquals(metrics.PCT_EXC_OVERLAP, pctExcOverlap);
             Assert.assertEquals(metrics.PCT_TARGET_BASES_1X, pctTargetBases1x);
+            Assert.assertEquals(metrics.PCT_TARGET_BASES_2X, pctTargetBases2x);
         }
     }
 }
