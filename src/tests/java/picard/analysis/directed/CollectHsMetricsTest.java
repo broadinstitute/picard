@@ -24,11 +24,14 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
         final String intervals = TEST_DIR + "/chrM.interval_list";
 
         return new Object[][] {
-                {TEST_DIR + "/lowbaseq.sam", referenceFile, intervals, "NONE", 1, 0, true, 2, 202, 0, 0.505, 1000},
-                {TEST_DIR + "/lowmapq.sam", referenceFile, intervals, "NONE", 0, 100, true, 2, 202, 0, 0.995, 1000},
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true, 3, 202, 0, 0.505, 1000},
-                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 3, 303, 0, 1.0, 1000}
-
+                // test that all bases (read 2) with base quality 1 are filtered out
+                {TEST_DIR + "/lowbaseq.sam",    referenceFile, intervals, "NONE", 1, 1, true,  2, 202, 0.5, 0.505, 1000},
+                // test that read 2 (with mapping quality 1) is filtered out with minimum mapping quality 2
+                {TEST_DIR + "/lowmapq.sam",     referenceFile, intervals, "NONE", 2, 0, true,  2, 202, 0,   0.505, 1000},
+                // test that we clip overlapping bases
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, true,  3, 303, 0,   0.505, 1000},
+                // test that we do not clip overlapping bases
+                {TEST_DIR + "/overlapping.sam", referenceFile, intervals, "NONE", 0, 0, false, 3, 303, 0,   0.505, 1000}
         };
     }
 
@@ -53,7 +56,7 @@ public class CollectHsMetricsTest extends CommandLineProgramTest {
                 "TARGET_INTERVALS=" + targetIntervals,
                 "BAIT_INTERVALS=" + targetIntervals,
                 "INPUT=" + input,
-                "OUTPUT=" + "TODO",
+                "OUTPUT=" + outfile,
                 "MINIMUM_MAPPING_QUALITY=" + minimumMappingQuality,
                 "MINIMUM_BASE_QUALITY=" + minimumBaseQuality,
                 "CLIP_OVERLAPPING_READS=" + clipOverlappingReads,
