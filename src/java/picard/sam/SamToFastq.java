@@ -39,6 +39,7 @@ import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.samtools.util.StringUtil;
+import htsjdk.samtools.util.TrimmingUtil;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -142,6 +143,9 @@ public class SamToFastq extends CommandLineProgram {
             "If there are fewer than this many bases left after trimming, all will be written.  If this " +
             "value is null then all bases left after trimming will be written.", optional = true)
     public Integer READ2_MAX_BASES_TO_WRITE;
+
+    @Option(shortName="Q", doc="End-trim reads using the phred/bwa quality trimming algorithm and this quality.", optional=true)
+    public Integer QUALITY;
 
     @Option(doc = "If true, include non-primary alignments in the output.  Support of non-primary alignments in SamToFastq " +
             "is not comprehensive, so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.")
@@ -296,29 +300,37 @@ public class SamToFastq extends CommandLineProgram {
             final Integer clipPoint = (Integer) read.getAttribute(CLIPPING_ATTRIBUTE);
             if (clipPoint != null) {
                 if (CLIPPING_ACTION.equalsIgnoreCase("X")) {
-                    readString = clip(readString, clipPoint, null,
-                            !read.getReadNegativeStrandFlag());
-                    baseQualities = clip(baseQualities, clipPoint, null,
-                            !read.getReadNegativeStrandFlag());
-
-                } else if (CLIPPING_ACTION.equalsIgnoreCase("N")) {
-                    readString = clip(readString, clipPoint, 'N',
-                            !read.getReadNegativeStrandFlag());
-                } else {
-                    final char newQual = SAMUtils.phredToFastq(
-                            new byte[]{(byte) Integer.parseInt(CLIPPING_ACTION)}).charAt(0);
-                    baseQualities = clip(baseQualities, clipPoint, newQual,
-                            !read.getReadNegativeStrandFlag());
+                    readString = clip(readString, clipPoint, null, !read.getReadNegativeStrandFlag());
+                    baseQualities = clip(baseQualities, clipPoint, null, !read.getReadNegativeStrandFlag());
+                }
+                else if (CLIPPING_ACTION.equalsIgnoreCase("N")) {
+                    readString = clip(readString, clipPoint, 'N', !read.getReadNegativeStrandFlag());
+                }
+                else {
+                    final char newQual = SAMUtils.phredToFastq(new byte[]{(byte) Integer.parseInt(CLIPPING_ACTION)}).charAt(0);
+                    baseQualities = clip(baseQualities, clipPoint, newQual, !read.getReadNegativeStrandFlag());
                 }
             }
         }
+
         if (RE_REVERSE && read.getReadNegativeStrandFlag()) {
             readString = SequenceUtil.reverseComplement(readString);
             baseQualities = StringUtil.reverseString(baseQualities);
         }
+
         if (basesToTrim > 0) {
             readString = readString.substring(basesToTrim);
             baseQualities = baseQualities.substring(basesToTrim);
+        }
+
+        // Perform quality trimming if desired, making sure to leave at least one base!
+        if (QUALITY != null) {
+            final byte[] quals = SAMUtils.fastqToPhred(baseQualities);
+            final int qualityTrimIndex = Math.max(1, TrimmingUtil.findQualityTrimPoint(quals, QUALITY));
+            if (qualityTrimIndex < quals.length) {
+                readString    = readString.substring(0, qualityTrimIndex);
+                baseQualities = baseQualities.substring(0, qualityTrimIndex);
+            }
         }
 
         if (maxBasesToWrite != null && maxBasesToWrite < readString.length()) {
