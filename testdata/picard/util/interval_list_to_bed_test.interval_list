@@ -1,0 +1,19 @@
+@HD	VN:1.5	SO:coordinate
+@SQ	SN:chr1	LN:1000000
+@SQ	SN:chr2	LN:1000000
+@SQ	SN:chr3	LN:1000000
+@SQ	SN:chr4	LN:1000000
+@SQ	SN:chr5	LN:1000000
+chr1	1	50	+	target_at_chrom_start
+chr1	100	110	+	target_1
+chr2	200	220	-	target_2
+chr3	300	330	+	target_3
+chr4	400	440	+	target_4
+chr5	500	550	-	target_5
+chr5	5000	5150	+	overlapping_1
+chr5	5100	5250	-	overlapping_2
+chr5	5200	5350	-	overlapping_3
+chr5	5300	5450	+	overlapping_4
+chr5	10000	10000	+	one_base_feature
+chr5	10001	10000	+	zero_base_feature
+chr5	1000000	1000000	+	target_at_chrom_end
