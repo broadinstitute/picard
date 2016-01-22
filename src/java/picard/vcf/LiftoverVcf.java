@@ -85,11 +85,12 @@ public class LiftoverVcf extends CommandLineProgram {
                     "accompanying sequence dictionary (.dict file).")
     public File REFERENCE_SEQUENCE = Defaults.REFERENCE_FASTA;
 
+    // Option on whether or not to provide a warning, or error message and exit if a missing contig is encountered
     @Option(shortName = "WMC", doc = "Warn on missing contig.", optional = true)
-    public boolean WMC = false;
+    public boolean WARN_ON_MISSING_CONGIG = false;
 
-    @Option(doc="When a contig used in the chain is not in the reference, exit with this value instead of 0.")
-    public static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
+    // When a contig used in the chain is not in the reference, exit with this value instead of 0.
+    protected static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
     /** Filter name to use when a target cannot be lifted over. */
     public static final String FILTER_CANNOT_LIFTOVER_INDEL = "ReverseComplementedIndel";
@@ -180,22 +181,19 @@ public class LiftoverVcf extends CommandLineProgram {
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
             }
-            else if (refSeqs.get(target.getContig()) == null) {
+            else if (refSeqs.containsKey(target.getContig())) {
                 final String reason = FILTER_NO_TARGET;
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
 
-                String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the reference.";
-                if(WMC) {
+                String missingContigMessage = "Encountered a contig, " + target.getContig() + " that is not part of the target reference.";
+                if(WARN_ON_MISSING_CONGIG) {
                     log.warn(missingContigMessage);
-                }
-
-                else {
+                } else {
                     log.error(missingContigMessage);
                     return EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE;
                 }
-            }
-            else {
+            } else {
                 // Fix the alleles if we went from positive to negative strand
                 reverseComplementAlleleMap.clear();
                 final List<Allele> alleles = new ArrayList<Allele>();
