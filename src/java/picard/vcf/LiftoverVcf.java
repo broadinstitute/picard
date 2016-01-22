@@ -181,7 +181,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
             }
-            else if (refSeqs.containsKey(target.getContig())) {
+            else if (!refSeqs.containsValue(target.getContig())) {
                 final String reason = FILTER_NO_TARGET;
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
