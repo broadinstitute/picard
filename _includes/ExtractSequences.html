@@ -1,5 +1,4 @@
-<a id="ExtractSequences"/>
-<h3>ExtractSequences</h3>
+<h3 id="ExtractSequences">ExtractSequences</h3>
 <section>
 <p>Subsets intervals from a reference sequence to a new FASTA file.This tool takes a list of intervals, reads the corresponding subsquences from a reference FASTA file and writes them to a new FASTA file as separate records. Note that the reference FASTA file must be accompanied by an index file and the interval list must be provided in Picard list format. The names provided for the intervals will be used to name the corresponding records in the output file.<br /><h4>Usage example:</h4><pre>java -jar picard.jar ExtractSequences \<br />      INTERVAL_LIST=regions_of_interest.interval_list \<br />      R=reference.fasta \<br />      O=extracted_IL_sequences.fasta</pre><hr /></p>
 <table>

@@ -1,5 +1,4 @@
-<a id="AddOrReplaceReadGroups"/>
-<h3>AddOrReplaceReadGroups</h3>
+<h3 id="AddOrReplaceReadGroups">AddOrReplaceReadGroups</h3>
 <section>
 <p>Replace read groups in a BAM file.This tool enables the user to replace all read groups in the INPUT file with a single new read group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br /> This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).<h4>Usage example:</h4><pre>java -jar picard.jar AddOrReplaceReadGroups \<br />      I=input.bam \<br />      O=output.bam \<br />      RGID=4 \<br />      RGLB=lib1 \<br />      RGPL=illumina \<br />      RGPU=unit1 \<br />      RGSM=20</pre><hr /></p>
 <table>
