@@ -6,131 +6,94 @@
 	<body>
 		<div class="wrapper">
 			{% include header.html %}
+
+			<section>
+				<p>Picard is a set of command line tools for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.</p>
+
+				<p>These file formats are defined in the <a href="http://samtools.github.io/hts-specs/">Hts-specs</a> repository. See especially the <a href="http://samtools.github.io/hts-specs/SAMv1.pdf"><strong>SAM specification</strong></a> and the <a href="http://samtools.github.io/hts-specs/VCFv4.3.pdf"><strong>VCF specification</strong></a>.</p>
+
+				<p>Note that the information on this page is targeted at end-users. For developers, the source code, building instructions and implementation/development resources are available on <a href="https://github.com/broadinstitute/picard"> <strong>GitHub</strong></a>.</p>
+
+				<p> These tools are open-source under the <a href="https://tldrlegal.com/license/mit-license">MIT license</a> and free for all uses.</p>
+
+				<p>Enjoy!</p>
+			</section>
+
+	        <!-- BEGIN OF THE MAIN BODY  -->
 			
+			<h2 id="QuickStart">Quick Start</h2>
 			<section>
 
-			<p>A set of Java command line tools for manipulating high-throughput sequencing data (HTS) data and formats.  </p>
+				<h3>Download Software</h3>
+				<p>The Picard command-line tools are provided as a single executable jar file. You can download a zipped package containing the jar file from the <a href="https://github.com/broadinstitute/picard/releases/latest"> <strong>Latest Release</strong></a> project page on Github. The file name will be of the format <strong>picard-tools-x.y.z.zip</strong>.
 
-			<p>Picard is implemented using the HTSJDK Java library <a href="http://github.com/samtools/htsjdk">HTSJDK</a>, supporting
-			accessing of common file formats, such as <a href="http://samtools.github.io/hts-specs/SAMv1.pdf">SAM</a> and <a href="http://samtools.github.io/hts-specs/VCFv4.1.pdf">VCF</a>, used for high-throughput
-			sequencing data.</p>
+				<h3>Install</h3>
+				<p>Open the downloaded package and place the folder containing the jar file in a convenient directory on your hard drive (or server). Unlike C-compiled programs such as Samtools, Picard cannot simply be added to your PATH, so we recommend setting up an <a href="http://www.tutorialspoint.com/unix/unix-environment.htm">environment variable</a> to act as a shortcut.</p>
+				<p>For the tools to run properly, you must have Java 1.8 installed. To check your java version by open your terminal application and run the following command: </p>
+				<pre>java -version</pre>
+				<p>If the output looks like "java version "1.8.x"", you are good to go. If not, you may need to update your version; see the <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html"><strong>Oracle Java website</strong></a> to download the latest JDK.</p>
+
+				<h3>Test Installation</h3>
+				<p>To test that you can run Picard tools, run the following command in your terminal application, providing either the full path to the picard.jar file or the environment variable that you set up as a shortcut (here we are using $PICARD).</p>
+				<pre>java -jar /path/to/picard.jar -h </pre>
+				or
+				<pre>java -jar $PICARD -h </pre>
+				<p>You should see a complete list of all the tools in the Picard toolkit. If you don't, read on to the section on Getting Help.</p>
+
+				<h3>Use Picard Tools</h3>
+				<p>The tools, which are all listed further below, are invoked as follows:
+				<pre>java <i>jvm-args</i> -jar picard.jar <i>PicardCommandName</i> OPTION1=value1 OPTION2=value2...</pre>
+				<p>See the <a href="http://broadinstitute.github.io/picard/command-line-overview.html"><strong>Tool Documentation</strong></a> for details on the <a href="http://broadinstitute.github.io/picard/command-line-overview.html#CommandSyntax">Picard command syntax</a> and <a href="http://broadinstitute.github.io/picard/command-line-overview.html#StandardOptions">standard options</a> as well as a complete <a href="http://broadinstitute.github.io/picard/command-line-overview.html#Tools">list of tools</a> with usage recommendations, options, and example commands.</p>
+
 			</section>
 
-			<!-- BEGIN OF THE MAIN BODY  -->
-
-			<h2>Introduction</h2>
-
+			<h2 id="GettingHelp">Getting Help</h2>
 			<section>
-			<p>SAM (Sequence Alignment/Map) format is a generic format for storing
-			large nucleotide sequence alignments. SAM and related file formats
-			are described in the <a href="https://samtools.github.io/hts-specs/">hts-specs</a> page.
-			</p>
 
-			<p>Picard comprises Java-based command-line utilities that manipulate SAM files,
-			and a Java API (HTSJDK) for creating new programs that read and write SAM files.
-			Both SAM text format and SAM binary (BAM) format are supported.</p>
+				<p>Picard is supported through the <a href="http://gatkforums.broadinstitute.org/gatk"><strong>GATK Forums</strong></a>. <a href="http://gatkforums.broadinstitute.org/gatk/entry/register?Target=categories%2Fgatk-support-forum">Register now</a> and you can <a href="http://gatkforums.broadinstitute.org/gatk/post/question"><strong>ask questions and report problems</strong></a> that you might encounter while using Picard and related tools such as GATK (for source code-related questions, post an issue on <a href="https://github.com/broadinstitute/picard/issues">Github</a> instead), with the following guidelines:</p>
 
-			<p>To get help using and developing Picard, please use the
-			<a href="http://gatkforums.broadinstitute.org/">GATK Forums</a>.
-			</p>
-
-			<p>Picard is hosted by <a target="_blank" href="http://github.com">Github.com</a>.
-			The source code is available at the Picard project page
-			<a target="_blank" href="http://github.com/broadinstitute/picard">here</a>.
-
-			<p>You can check out the latest source code with:</p>
-			<pre>git clone git@github.com:broadinstitute/picard.git</pre>
-
-			<p>The source code for HTSJDK is available on GitHub <a href="https://github.com/samtools/htsjdk">here</a>.
-			You can check out the latest source code with:
-			</p>
-			<pre>git clone git@github.com:samtools/htsjdk.git</pre>
-			<p>Enjoy!</p>
-			</section>
-
-			<h2>Quick Start</h2>
-			<section>
-			<p>See <a href="building.html">Building</a> and <a href="command-line-overview.html">Overview</a> for details.</p>
-			<!--TODO figure out how to make multi-line <pre> formatting work without resorting to the <br> tag.-->
-			<pre>export $JAVA_HOME=<i>Java_6_or_7_install_path</i><br>ant -lib lib/ant package-commands<br>java <i>jvm-args</i> -jar dist/picard.jar <i>PicardCommandName</i> OPTION1=value1 OPTION2=value2...</pre>
-			</section>
-
-			<a id="GettingHelp"></a>
-
-			<h2>Getting Help</h2>
-
-			<section>
-			<p>Picard is supported through
-			the <a href="http://gatkforums.broadinstitute.org/post/question">GATK Forums</a>.
-			Join the GATK Forum to get support for Picard programs among other tools supported by the Broad Institute.
-			</p>
-			</section>
-
-			<h2>Before Asking For Help</h2>
-
-			<section>
-			<p>Before posting to the Forum, please do the following:</p>
-			<ul>
-				<li>Try the <a href="https://github.com/broadinstitute/picard/releases/latest">latest version of Picard</a></li>
-				<li>See if your problem is discussed in
-				the <a href="faq.html">Frequently Asked Questions</a></li>
-				<li>Search the <a href="http://gatkforums.broadinstitute.org/post/question">GATK Forums</a> to see if your problem was previously discussed.
-				<li>Run
-				Picard<a href="command-line-overview.html#ValidateSamFile">ValidateSamFile</a>
-				MODE=SUMMARY. Attempt to resolve or at least understand any problems reported.
-				</li>
-			</ul>
-			<p>When sending email about a problem, please include the following:
-
-			<p>
-			<ul>
-				<li>Command line(s) you used.</li>
-				<li>Program console output and metrics files. Repetitive console output may be
-				abbreviated.
-				</li>
-				<li>Entire stack trace if one was produced.</li>
-				<li>Version of JVM are you using (obtained by running 'java -version').</li>
-			</ul>
-			</section>
-
-			<h2>General Information</h2>
-			<section>
-			<ul>
-				<li><a href="index.html#GettingHelp">Getting Help</a></li>
-				<li><a href="faq.html">Frequently Asked Questions</a></li>
-				<li><a href="http://github.com/broadinstitute/picard/releases">Download Page</a></li>
-				<li>SAMtools</li>
+				<h3>Before Asking For Help</h3>
+				<p>Before posting to the Forum, please do the following:</p>
 				<ul>
-					<li><a href="http://samtools.sourceforge.net/">SAMtools Home Page</a></li>
-					<li><a href="http://sourceforge.net/mail/?group_id=246254">SAMtools Mailing Lists</a></li>
+					<li>Try the <a href="https://github.com/broadinstitute/picard/releases/latest"><strong>latest version of Picard</strong></a>.</li>
+					<li>See if your problem is covered discussed in
+						the <a href="http://broadinstitute.github.io/picard/faq.html"><strong>Frequently Asked Questions</strong></a>.</li>
+					<li>Search the <a href="http://gatkforums.broadinstitute.org/gatk"><strong>GATK Forums</strong></a> to see if a similar problem has previously been discussed there.</li>
+					<li>Run
+					Picard <a href="http://broadinstitute.github.io/picard/command-line-overview.html#ValidateSamFile"><strong>ValidateSamFile</strong></a> with MODE=SUMMARY on your input SAM or BAM file (if applicable). Attempt to resolve or at least understand any problems reported.</li>
 				</ul>
-				<li>Github Project Pages:</li>
+
+				<h3>When Asking For Help</h3>
+				<p>When asking a question about a problem, please include the following:</p>
 				<ul>
-					<li><a href="https://github.com/broadinstitute/picard">Picard</a></li>
-					<li><a href="https://github.com/samtools/htsjdk">HTSJDK</a></li>
-					<li><a href="https://github.com/samtools/samtools">SAMtools</a></li>
+					<li>Command line(s) you ran.</li>
+					<li>Program console output and metrics files. Repetitive console output may be abbreviated.</li>
+					<li>Entire stack trace if one was produced.</li>
+					<li>Version of JVM you are using (obtained by running 'java -version').</li>
 				</ul>
-				<li><a href="https://samtools.github.io/hts-specs">SAM/BAM and Related File Format Specifications</a></li>
-			</ul>
+
 			</section>
-			<h2>Picard</h2>
+
+			<h2 id="Resources">Additional Resources</h2>
 			<section>
-			<ul>
-				<li><a href="command-line-overview.html#Overview">Overview</a></li>
-				<li><a href="building.html#BuildingPicardUtilities">Building</a></li>
-				<li><a href="javadoc/picard/index.html">Javadoc</a></li>
-				<li><a href="explain-flags.html">Explain SAM Flags</a></li>
-				<li><a href="picard-metric-definitions.html">Description of output of metrics programs</a></li>
-				<li><a href="sam-differences.html">SAM Differences in Picard</a></li>
-				<li><a href="intel-deflater.html">Intel Deflator</a></li>
-			</ul>
+				<ul>
+					<li><a href="http://broadinstitute.github.io/picard/command-line-overview.html#Overview">Detailed tool documentation</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html">Description of output of metrics programs</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/sam-differences.html">SAM differences in Picard</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/explain-flags.html">Explain SAM flags</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/building.html#BuildingPicardUtilities">Building from source</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/javadoc/picard/index.html">Javadoc</a></li>
+					<li><a href="http://broadinstitute.github.io/picard/intel-deflater.html">Intel Deflater</a></li>
+				</ul>
 			</section>
-			<h2>Command-line tools</h2>
+
+			<h2 id="ListTools">Full list of Picard tools</h2>
 			<section>
-			<ul>
+				<ul>
 				{% include command-line-sidebar.html %}
-			</ul>
+				</ul>
 			</section>
+
 		</div>
 		{% include footer.html %}
 	</body>

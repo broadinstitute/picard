@@ -1,0 +1,1 @@
+This is the GitHub Pages branch that contains the static html pages used to build the user-facing Picard documentation website. Headers and footers are added dynamically at build time, as well as the tool documentation that is built from the Picard source code itself (see dist/html/ after building Picard).

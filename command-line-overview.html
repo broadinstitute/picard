@@ -2,27 +2,49 @@
 ---
 <!doctype html>
 <html>
-	{% include head.html title="Overview of Picard command-line tools" %}
-	<body>
-		<div class="wrapper">
-			{% include header.html %}
+{% include head.html title="Tool documentation" %}
+<body>
+<div class="wrapper">
+	{% include header.html %}
 
-			<a id="Overview"/>
-			<h2>Overview of Picard command-line tools</h2>
-			<section>
-			<p>The Picard command-line tools are packaged as a single executable jar file.  They require Java
-			1.6.  They can be invoked as follows:</p>
-			<pre>java <i>jvm-args</i> -jar picard.jar <i>PicardCommandName</i> OPTION1=value1 OPTION2=value2...</pre>
-			<p>Most of the commands are designed to run in 2GB of JVM, so the JVM argument -Xmx2g is
-			recommended.</p>
-			</section>
-			<h3>Standard Options</h3>
-			<section>
-			<p>The following options are relevant for most Picard programs:</p>
-			{% include standard-options.html %}
-			</section>
-			{% include command-line-usage.html %}
-		</div>
-		{% include footer.html %}
+	<a id="Overview"/>
+	<h2>Tool Documentation</h2>
+	<section>
+
+		<p>This page provides detailed documentation on the Picard command-line syntax and standard options as well as a complete list of tools, usage recommendations, options, and example commands.</p>
+
+		<p>See the <a href="http://broadinstitute.github.io/picard/index.html#QuickStart"><strong>Quick Start</strong></a> documentation for instructions on how to obtain and set up the tools if you haven't already.</p>
+
+		<h3 id="CommandSyntax">Command Syntax</h3>
+
+		<p>The tools are invoked as follows:</p>
+		<pre>java <i>jvm-args</i> -jar picard.jar <i>PicardToolName</i> \<br />
+            OPTION1=value1 OPTION2=value2...</pre>
+
+        <p>The backslashes at the end of each line except the last are used to allow formatting the command line on  </p>
+		<p><strong><i>jvm-args</i></strong> are arguments that are specific to Java, not Picard. We do not provide guidance for specifying JVM (Java Virtual Machine) arguments except for specifying memory: most of the commands are designed to run in 2GB of JVM, so we recommend using the JVM argument -Xmx2g.</p>
+
+		<p><strong><i>PicardToolName</i></strong> refers to the name of the tool you want to run. It must always be the first argument after the jar file path. Some examples include: CollectAlignmentSummaryMetrics, BuildBamIndex, and CreateSequenceDictionary. The tools and their respective options are described in detail below.</p>
+
+		<p><strong><i>OPTIONs</i></strong> can be any of the Standard Options listed first below, and/or any of the tool-specific options listed for each tool. Argument values can be filenames, strings (of alphanumeric characters), enumerated values, floats (decimal numbers), integers, or boolean (true/false). For example, <i>INPUT=input.bam</i> specifies a file, where <i>INPUT</i> is the <i>OPTION</i> and <i>input.bam</i> is the value indicating what file to use. As another example, <i>STRANDSPECIFICITY=NONE</i> specifies the argument <i>STRANDSPECIFICITY</i> for which the documentation enumerates acceptable values: <i>NONE</i>, <i>FIRST_READ_TRANSCRIPTION_STRAND</i>, and <i>SECOND_READ_TRANSCRIPTION_STRAND</i>. Options frequently have a value that is set be default but can be modified by specifying a different value in the command line.</p>
+
+		<p>A typical usage example is as follows. Here, we run CollectAlignmentSummaryMetrics, a quality control tool that takes a reference file and a input file containing sequencing data, and outputs some quality control metrics.</p>
+ 		<pre>java -jar picard.jar CollectAlignmentSummaryMetrics \<br>
+       		REFERENCE=my_data/reference.fasta \<br>
+        	INPUT=my_data/input.bam \<br>
+        	OUTPUT=results/output.txt
+		</pre>
+		<p>Note that values for arguments that specify files must include appropriate file paths, either absolute or relative to the working directory. In this example we are reading in input data from a subdirectory called <i>my_data</i> and writing outputs to another subdirectory called <i>results</i>. </p>
+
+	    <h3 id="StandardOptions">Standard Options</h3>
+
+		<p>The following standard options are relevant to most Picard tools:</p>
+		{% include standard-options.html %}
+
+        <a id="Tools"/>
+	    {% include command-line-usage.html %}
+    </section>
+</div>
+{% include footer.html %}
 </body>
 </html>

@@ -1,4 +1,4 @@
-<html>
+ <html>
     <head>
         <title>Explain SAM Flags</title>
         <script type="text/javascript">
@@ -59,12 +59,12 @@ function switchToMate() {
 </head>
 <body>
 
-    This utility explains SAM flags in plain English. <br>
-    It also allows switching easily from a read to its mate.
-    <br>
-    <p>
+    <h2>Explain SAM flags</h2>
+
+    <p>This utility makes it easy to identify what are the properties of a read based on its SAM flag value, or, conversely, to find what the value would be for a given combination of properties. It also allows switching easily from a read to its mate (toggle first in pair / second in pair).</p>
 
     <form onSubmit="explainFlags(); return false;" action="">
+        <p>
         Flag: &nbsp;
         <input id="tb" type=text size=10 /> &nbsp; &nbsp; &nbsp;
         <input type=submit value="Explain" /><br>
@@ -72,8 +72,9 @@ function switchToMate() {
         <div id="button" align="left">
             <button onclick="switchToMate()">Switch to mate</button>
         </div>
-        <p>
+        </p>
 
+        <p>
         Explanation:<br>
         <script type="text/javascript">
             for(var i = 0; i < lstFlags.length; i++) {
@@ -85,6 +86,8 @@ function switchToMate() {
         <div id="summary">
 
         </div>
+        </p>
     </form>
+
 </body>
 </html>
