@@ -17,7 +17,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.command_tmp" />
       <excludeFolder url="file://$MODULE_DIR$/classes" />
     </content>
-    <orderEntry type="jdk" jdkName="1.6" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
       <library>
@@ -51,4 +51,3 @@
     </orderEntry>
   </component>
 </module>
-

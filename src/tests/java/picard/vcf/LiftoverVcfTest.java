@@ -5,6 +5,7 @@ import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
 
@@ -94,8 +95,16 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         }
     }
 
-    @Test
-    public void testMissingContigInReference() {
+    @DataProvider(name = "dataTestMissingContigInReference")
+    public Object[][] dataTestHaplotypeProbabilitiesFromSequenceAddToProbs() {
+        return new Object[][]{
+                {false, LiftoverVcf.EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE},
+                {true, 0}
+        };
+    }
+
+    @Test(dataProvider = "dataTestMissingContigInReference")
+    public void testMissingContigInReference(boolean warnOnMissingContext, int expectedReturnCode) {
         final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
         final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
         final File input = new File(TEST_DATA_PATH, "testLiftoverUsingMissingContig.vcf");
@@ -103,18 +112,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         liftOutputFile.deleteOnExit();
         rejectOutputFile.deleteOnExit();
 
-        // Test without using WMC option (Should exit with EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE)
-        final String[] argsWithoutWarnOnMissingContig = new String[]{
-                "INPUT=" + input.getAbsolutePath(),
-                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
-                "REJECT=" + rejectOutputFile.getAbsolutePath(),
-                "CHAIN=" + CHAIN_FILE_WITH_BAD_CONTIG,
-                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
-                "CREATE_INDEX=false"
-        };
-        Assert.assertEquals(runPicardCommandLine(argsWithoutWarnOnMissingContig), LiftoverVcf.EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE);
-
-        // Test using WMC option (Should exit normally providing warnings)
+        // Test using WMC option
         final String[] argsWithWarnOnMissingContig = new String[]{
                 "INPUT=" + input.getAbsolutePath(),
                 "OUTPUT=" + liftOutputFile.getAbsolutePath(),
@@ -122,8 +120,8 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "CHAIN=" + CHAIN_FILE_WITH_BAD_CONTIG,
                 "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
                 "CREATE_INDEX=false",
-                "WMC=true"
+                "WMC=" + warnOnMissingContext
         };
-        Assert.assertEquals(runPicardCommandLine(argsWithWarnOnMissingContig), 0);
+        Assert.assertEquals(runPicardCommandLine(argsWithWarnOnMissingContig), expectedReturnCode);
     }
 }
