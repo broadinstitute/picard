@@ -37,9 +37,9 @@ import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.Metrics;
-import picard.util.IlluminaUtil;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -98,20 +98,13 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     @Option(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
-    public int MAX_INSERT_SIZE = 100000;
+    public int MAX_INSERT_SIZE = ChimeraUtil.DEFAULT_INSERT_SIZE_LIMIT;
 
     @Option(doc="Paired-end reads that do not have this expected orientation will be considered chimeric.")
-    public PairOrientation EXPECTED_PAIR_ORIENTATION = PairOrientation.FR;
+    public Set<PairOrientation> EXPECTED_PAIR_ORIENTATIONS = EnumSet.copyOf(ChimeraUtil.DEFAULT_EXPECTED_ORIENTATIONS);
 
     @Option(doc="List of adapter sequences to use when processing the alignment metrics")
-	public List<String> ADAPTER_SEQUENCE = CollectionUtil.makeList(
-        IlluminaUtil.IlluminaAdapterPair.SINGLE_END.get5PrimeAdapter(),
-        IlluminaUtil.IlluminaAdapterPair.SINGLE_END.get3PrimeAdapter(),
-        IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get5PrimeAdapter(),
-        IlluminaUtil.IlluminaAdapterPair.PAIRED_END.get3PrimeAdapter(),
-        IlluminaUtil.IlluminaAdapterPair.INDEXED.get5PrimeAdapter(),
-        IlluminaUtil.IlluminaAdapterPair.INDEXED.get3PrimeAdapter()
-    );
+	public List<String> ADAPTER_SEQUENCE = AdapterUtility.DEFAULT_ADAPTER_SEQUENCE;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
@@ -143,7 +136,7 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
 
         final boolean doRefMetrics = REFERENCE_SEQUENCE != null;
         collector = new AlignmentSummaryMetricsCollector(METRIC_ACCUMULATION_LEVEL, header.getReadGroups(), doRefMetrics,
-                ADAPTER_SEQUENCE, MAX_INSERT_SIZE, EXPECTED_PAIR_ORIENTATION, IS_BISULFITE_SEQUENCED);
+                ADAPTER_SEQUENCE, MAX_INSERT_SIZE, EXPECTED_PAIR_ORIENTATIONS, IS_BISULFITE_SEQUENCED);
     }
 
     @Override protected void acceptRead(final SAMRecord rec, final ReferenceSequence ref) {
