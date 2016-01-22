@@ -49,68 +49,6 @@
     <entry_points version="2.0" />
   </component>
   <component name="InspectionProjectProfileManager">
-    <profiles>
-      <profile version="1.0" is_locked="false">
-        <option name="myName" value="Project Default" />
-        <option name="myLocal" value="false" />
-        <inspection_tool class="Convert2Diamond" enabled="false" level="WARNING" enabled_by_default="false" />
-        <inspection_tool class="FieldMayBeFinal" enabled="true" level="WARNING" enabled_by_default="true" />
-        <inspection_tool class="JavaDoc" enabled="false" level="WARNING" enabled_by_default="false">
-          <option name="TOP_LEVEL_CLASS_OPTIONS">
-            <value>
-              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
-              <option name="REQUIRED_TAGS" value="" />
-            </value>
-          </option>
-          <option name="INNER_CLASS_OPTIONS">
-            <value>
-              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
-              <option name="REQUIRED_TAGS" value="" />
-            </value>
-          </option>
-          <option name="METHOD_OPTIONS">
-            <value>
-              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
-              <option name="REQUIRED_TAGS" value="@return@param@throws or @exception" />
-            </value>
-          </option>
-          <option name="FIELD_OPTIONS">
-            <value>
-              <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
-              <option name="REQUIRED_TAGS" value="" />
-            </value>
-          </option>
-          <option name="IGNORE_DEPRECATED" value="false" />
-          <option name="IGNORE_JAVADOC_PERIOD" value="true" />
-          <option name="IGNORE_DUPLICATED_THROWS" value="false" />
-          <option name="IGNORE_POINT_TO_ITSELF" value="false" />
-          <option name="myAdditionalJavadocTags" value="" />
-        </inspection_tool>
-        <inspection_tool class="LocalCanBeFinal" enabled="true" level="WARNING" enabled_by_default="true">
-          <option name="REPORT_VARIABLES" value="true" />
-          <option name="REPORT_PARAMETERS" value="true" />
-        </inspection_tool>
-        <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
-        <inspection_tool class="UnusedDeclaration" enabled="false" level="WARNING" enabled_by_default="false">
-          <option name="ADD_MAINS_TO_ENTRIES" value="true" />
-          <option name="ADD_APPLET_TO_ENTRIES" value="true" />
-          <option name="ADD_SERVLET_TO_ENTRIES" value="true" />
-          <option name="ADD_NONJAVA_TO_ENTRIES" value="true" />
-        </inspection_tool>
-        <inspection_tool class="groupsTestNG" enabled="true" level="WARNING" enabled_by_default="true">
-          <option name="groups">
-            <value>
-              <list size="1">
-                <item index="0" class="java.lang.String" itemvalue="unix" />
-              </list>
-            </value>
-          </option>
-        </inspection_tool>
-      </profile>
-    </profiles>
-    <option name="PROJECT_PROFILE" value="Project Default" />
-    <option name="USE_PROJECT_PROFILE" value="true" />
-    <version value="1.0" />
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="SERVER PROBLEM" />
       <item index="1" class="java.lang.String" itemvalue="WEAK WARNING" />
@@ -318,7 +256,7 @@
   <component name="ProjectResources">
     <default-html-doctype>http://www.w3.org/1999/xhtml</default-html-doctype>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="SvnBranchConfigurationManager">
@@ -343,9 +281,8 @@
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">
-    <mapping directory="" vcs="" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/htsjdk" vcs="Git" />
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
 </project>
-
