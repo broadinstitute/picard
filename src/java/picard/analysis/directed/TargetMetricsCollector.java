@@ -36,6 +36,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.CoordMath;
 import htsjdk.samtools.util.FormatUtil;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityUtil;
 import htsjdk.samtools.util.Histogram;
 import htsjdk.samtools.util.Interval;
@@ -83,8 +84,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     public static final int NEAR_PROBE_DISTANCE_DEFAULT = 250;
     private int nearProbeDistance = NEAR_PROBE_DISTANCE_DEFAULT;
 
-    //If perTargetCoverage != null then coverage is computed for each specified target and output to this file
-    private final File perTargetCoverage;
+    private final File perTargetCoverage;  // If not null, per-target coverage summaries are written to this file
+    private final File perBaseCoverage;    // If not null, per-base(!) coverage summaries are written to this file
 
     //The name of the set of probes used
     private final String probeSetName;
@@ -240,6 +241,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final List<SAMReadGroupRecord> samRgRecords,
                                   final ReferenceSequenceFile refFile,
                                   final File perTargetCoverage,
+                                  final File perBaseCoverage,
                                   final IntervalList targetIntervals,
                                   final IntervalList probeIntervals,
                                   final String probeSetName,
@@ -249,13 +251,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final boolean clipOverlappingReads,
                                   final int coverageCap,
                                   final int sampleSize) {
-        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false, coverageCap, sampleSize);
+        this(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, false, coverageCap, sampleSize);
     }
 
     public TargetMetricsCollector(final Set<MetricAccumulationLevel> accumulationLevels,
                                   final List<SAMReadGroupRecord> samRgRecords,
                                   final ReferenceSequenceFile refFile,
                                   final File perTargetCoverage,
+                                  final File perBaseCoverage,
                                   final IntervalList targetIntervals,
                                   final IntervalList probeIntervals,
                                   final String probeSetName,
@@ -267,6 +270,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                                   final int coverageCap,
                                   final int sampleSize) {
         this.perTargetCoverage = perTargetCoverage;
+        this.perBaseCoverage   = perBaseCoverage;
         this.probeSetName = probeSetName;
         this.nearProbeDistance = nearProbeDistance;
 
@@ -333,9 +337,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     @Override
     protected PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> makeAllReadCollector() {
         final PerUnitTargetMetricCollector collector = (PerUnitTargetMetricCollector) makeChildCollector(null, null, null);
-        if (perTargetCoverage != null) {
-            collector.setPerTargetOutput(perTargetCoverage);
-        }
+        if (perTargetCoverage != null) collector.setPerTargetOutput(perTargetCoverage);
+        if (perBaseCoverage   != null) collector.setPerBaseOutput(perBaseCoverage);
 
         return collector;
     }
@@ -346,6 +349,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
     public class PerUnitTargetMetricCollector implements PerUnitMetricCollector<METRIC_TYPE, Integer, SAMRecord> {
         private final Map<Interval, Double> intervalToGc;
         private File perTargetOutput;
+        private File perBaseOutput;
         final long[] baseQHistogramArray = new long[Byte.MAX_VALUE];
 
         // A Map to accumulate per-bait-region (i.e. merge of overlapping targets) coverage. */
@@ -387,9 +391,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.clipOverlappingReads = clipOverlappingReads;
         }
 
-        /** If set, the metrics collector will output per target coverage information to this file. */
+        /** Sets the (optional) File to write per-target coverage information to. If null (the default), no file is produced. */
         public void setPerTargetOutput(final File perTargetOutput) {
             this.perTargetOutput = perTargetOutput;
+        }
+
+        /** Sets the (optional) File to write per-base coverage information to. If null (the default), no file is produced. */
+        public void setPerBaseOutput(final File perBaseOutput) {
+            this.perBaseOutput = perBaseOutput;
         }
 
         /** Sets the name of the bait set explicitly instead of inferring it from the bait file. */
@@ -583,6 +592,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             metrics.HET_SNP_Q = QualityUtil.getPhredScoreFromErrorProbability((1 - metrics.HET_SNP_SENSITIVITY));
 
             calculateGcMetrics();
+            emitPerBaseCoverageIfRequested();
         }
 
         /** Calculates how much additional sequencing is needed to raise 80% of bases to the mean for the lane. */
@@ -651,6 +661,33 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             this.metrics.PCT_TARGET_BASES_100X = (double) targetBases[8] / (double) targetBases[0];
 
             return coverageDistribution;
+        }
+
+        /** Emits a file with per base coverage if an output file has been set. */
+        private void emitPerBaseCoverageIfRequested() {
+            if (this.perBaseOutput == null) return;
+
+            final PrintWriter out = new PrintWriter(IOUtil.openFileForBufferedWriting(this.perBaseOutput));
+            out.println("chrom\tpos\ttarget\tcoverage");
+            for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
+                final Interval interval = entry.getKey();
+                final String chrom = interval.getContig();
+                final int firstBase = interval.getStart();
+
+                final int[] cov = entry.getValue().getDepths();
+                for (int i = 0; i < cov.length; ++i) {
+                    out.print(chrom);
+                    out.print('\t');
+                    out.print(firstBase + i);
+                    out.print('\t');
+                    out.print(interval.getName());
+                    out.print('\t');
+                    out.print(cov[i]);
+                    out.println();
+                }
+            }
+
+            out.close();
         }
 
         private void calculateGcMetrics() {
