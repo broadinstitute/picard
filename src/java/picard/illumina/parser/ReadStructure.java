@@ -35,10 +35,11 @@ import java.util.regex.Pattern;
 /**
  * Describes the intended logical output structure of clusters of an Illumina run.
  * (e.g. If the input data consists of 80 base
- * clusters and we provide a read structure of "36T8B4M36T" then those bases should be split into 4 reads:
- *     read one should be 36 cycles of template,
- *     read two should be 8 cycles of sample barcode,
- *     read three should be 4 cycles of molecular barcode,
+ * clusters and we provide a read structure of "28T8M8B8S28T" then those bases should be split into 4 reads:
+ *     read one should be 28 cycles of template,
+ *     read two should be 8 cycles of molecular barcode,
+ *     read three should be 8 cycles of sample barcode,
+ *     8 cycles are skipped,
  *     read four should be another 36 cycle template read.)
  *  Note: In future releases, ReadStructures will be specified by clients of IlluminaDataProvider(currently
  *  read structures are detected by IlluminaDataProviderFactory via the structure of QSeq files). When working with
@@ -51,13 +52,16 @@ import java.util.regex.Pattern;
  */
 public class ReadStructure {
     public static final String PARAMETER_DOC =
-            "A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam "   +
+            "A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam "    +
             "assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those "       +
-            "cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a "        +
-            "read structure of \"36T8B8S28T\" then, before being converted to SAM records those bases will be split into 4 reads where "            +
-            "read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of "           +
-            "skipped cycles and read four is another 28 cycle template read.  The read consisting of skipped cycles would NOT be included "         +
-            "in output SAM/BAM file read groups.";
+            "cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 "       +
+            "base clusters and we provide a read structure of \"28T8M8B8S28T\" then the sequence may be split up into four reads:\n"                +
+            "* read one with 28 cycles (bases) of template\n" +
+            "* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)\n" +
+            "* read three with 8 cycles (bases) of sample barcode\n" +
+            "* 8 cycles (bases) skipped.\n" +
+            "* read four with 28 cycles (bases) of template\n" +
+            "The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.";
     public final List<ReadDescriptor> descriptors;
     public final int totalCycles;
     public final int [] readLengths;
