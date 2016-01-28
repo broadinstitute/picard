@@ -45,11 +45,10 @@ public class ChimeraUtil {
      * @return true if this record is part of a chimeric read pair, false otherwise
      */
     public static boolean isChimeric(final SAMRecord rec, final int maxInsertSize, final Set<PairOrientation> expectedOrientations) {
-        return !(rec.getReadUnmappedFlag() || !rec.getReadPairedFlag() || rec.getMateUnmappedFlag()) &&  // the read pair needs to be mapped
-                (Math.abs(rec.getInferredInsertSize()) > maxInsertSize ||
-                !rec.getReferenceIndex().equals(rec.getMateReferenceIndex()) ||
-                expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) ||
-                rec.getAttribute("SA") != null);
+        return isMappedPair(rec) &&                                               // the read pair needs to be mapped and...
+                (Math.abs(rec.getInferredInsertSize()) > maxInsertSize ||         //    either far apart on the same contig
+                !rec.getReferenceIndex().equals(rec.getMateReferenceIndex()) ||   //    or on different contigs
+                !matchesExpectedOrientations(rec, expectedOrientations));         //    or in unexpected orientations
     }
 
     /**
@@ -63,11 +62,18 @@ public class ChimeraUtil {
      * @return true if this pair is chimeric, false otherwise
      */
     public static boolean isChimeric(final SAMRecord r1, final SAMRecord r2, final int maxInsertSize, final Set<PairOrientation> expectedOrientations) {
-        return !(r1.getReadUnmappedFlag() || r2.getMateUnmappedFlag()) &&  // the read pair needs to be mapped
-                (Math.abs(r1.getInferredInsertSize()) > maxInsertSize ||
-                !r1.getReferenceIndex().equals(r2.getReferenceIndex()) ||
-                !expectedOrientations.contains(SamPairUtil.getPairOrientation(r1)) ||
-                r1.getAttribute("SA") != null ||
-                r2.getAttribute("SA") != null);
+        return isMappedPair(r1) &&                                                  // the read pair needs to be mapped and...
+                (Math.abs(r1.getInferredInsertSize()) > maxInsertSize ||            //    either far apart on the same contig
+                        !r1.getReferenceIndex().equals(r2.getReferenceIndex()) ||   //    or on different contigs
+                        !matchesExpectedOrientations(r1, expectedOrientations) ||   //    or in unexpected orientations
+                        r2.getAttribute("SA") != null);                             //      (another check for an unexpected orientation here)
+    }
+
+    private static boolean isMappedPair(final SAMRecord rec) {
+        return rec.getReadPairedFlag() && !rec.getReadUnmappedFlag() && !rec.getMateUnmappedFlag();
+    }
+
+    private static boolean matchesExpectedOrientations(final SAMRecord rec, final Set<PairOrientation> expectedOrientations) {
+        return expectedOrientations.contains(SamPairUtil.getPairOrientation(rec)) && rec.getAttribute("SA") == null;
     }
 }

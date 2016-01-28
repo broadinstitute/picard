@@ -503,7 +503,28 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
                 Assert.fail("Data does not contain this sample: " + metrics.SAMPLE);
             }
         }
-
     }
 
+    @Test
+    public void testChimeras() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "summary_alignment_stats_test_chimeras.sam");
+        final File reference = new File(TEST_DATA_DIR, "summary_alignment_stats_test.fasta");
+        final File outfile   = File.createTempFile("alignmentMetrics", ".txt");
+        outfile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<AlignmentSummaryMetrics, Comparable<?>> output = new MetricsFile<AlignmentSummaryMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
+            if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.FIRST_OF_PAIR) {
+                Assert.assertEquals(metrics.PCT_CHIMERAS, 0.75);
+            }
+        }
+    }
 }
