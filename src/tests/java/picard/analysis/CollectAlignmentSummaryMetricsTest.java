@@ -514,6 +514,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
         final String[] args = new String[] {
                 "INPUT="  + input.getAbsolutePath(),
                 "OUTPUT=" + outfile.getAbsolutePath(),
+                "MAX_INSERT_SIZE=20",
                 "REFERENCE_SEQUENCE=" + reference.getAbsolutePath(),
         };
         Assert.assertEquals(runPicardCommandLine(args), 0);
@@ -523,7 +524,7 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.FIRST_OF_PAIR) {
-                Assert.assertEquals(metrics.PCT_CHIMERAS, 0.75);
+                Assert.assertEquals(metrics.PCT_CHIMERAS, 0.8);
             }
         }
     }
