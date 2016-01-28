@@ -66,7 +66,7 @@ public class ChimeraUtil {
         return !(r1.getReadUnmappedFlag() || r2.getMateUnmappedFlag()) &&  // the read pair needs to be mapped
                 (Math.abs(r1.getInferredInsertSize()) > maxInsertSize ||
                 !r1.getReferenceIndex().equals(r2.getReferenceIndex()) ||
-                expectedOrientations.contains(SamPairUtil.getPairOrientation(r1)) ||
+                !expectedOrientations.contains(SamPairUtil.getPairOrientation(r1)) ||
                 r1.getAttribute("SA") != null ||
                 r2.getAttribute("SA") != null);
     }
