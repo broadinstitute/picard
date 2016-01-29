@@ -69,7 +69,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                 "OUTPUT_PREFIX=" + outputPrefix,
                 "RUN_BARCODE=HiMom",
                 "MACHINE_NAME=machine1",
-                "FLOWCELL_BARCODE=abcdeACXX"
+                "FLOWCELL_BARCODE=abcdeACXX",
+                "MAX_READS_IN_RAM_PER_TILE=100" //force spill to disk to test encode/decode
         });
         IOUtil.assertFilesEqual(outputFastq1, new File(TEST_DATA_DIR, "nonBarcoded.1.fastq"));
         IOUtil.assertFilesEqual(outputFastq2, new File(TEST_DATA_DIR, "nonBarcoded.2.fastq"));
@@ -94,7 +95,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     "OUTPUT_PREFIX=" + outputPrefix.getAbsolutePath(),
                     "MACHINE_NAME=machine1",
                     "FLOWCELL_BARCODE=abcdeACXX",
-                    "READ_NAME_FORMAT=" + IlluminaBasecallsToFastq.ReadNameFormat.ILLUMINA
+                    "READ_NAME_FORMAT=" + IlluminaBasecallsToFastq.ReadNameFormat.ILLUMINA,
+                    "MAX_READS_IN_RAM_PER_TILE=100" //force spill to disk to test encode/decode
             });
 
             final String[] filenames = new String[]{
@@ -182,7 +184,8 @@ public class IlluminaBasecallsToFastqTest extends CommandLineProgramTest {
                     "READ_STRUCTURE=" + readStructureString,
                     "MULTIPLEX_PARAMS=" + libraryParams,
                     "MACHINE_NAME=machine1",
-                    "FLOWCELL_BARCODE=abcdeACXX"
+                    "FLOWCELL_BARCODE=abcdeACXX",
+                    "MAX_READS_IN_RAM_PER_TILE=100" //force spill to disk to test encode/decode
             });
 
             final ReadStructure readStructure = new ReadStructure(readStructureString);
