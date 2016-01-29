@@ -47,6 +47,7 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final List<SAMReadGroupRecord> samRgRecords,
                              final ReferenceSequenceFile refFile,
                              final File perTargetCoverage,
+                             final File perBaseCoverage,
                              final IntervalList targetIntervals,
                              final IntervalList probeIntervals,
                              final String probeSetName,
@@ -56,13 +57,14 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final boolean clipOverlappingReads,
                              final int coverageCap,
                              final int sampleSize) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, coverageCap, sampleSize);
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, coverageCap, sampleSize);
     }
 
     public HsMetricCollector(final Set<MetricAccumulationLevel> accumulationLevels,
                              final List<SAMReadGroupRecord> samRgRecords,
                              final ReferenceSequenceFile refFile,
                              final File perTargetCoverage,
+                             final File perBaseCoverage,
                              final IntervalList targetIntervals,
                              final IntervalList probeIntervals,
                              final String probeSetName,
@@ -73,7 +75,7 @@ public class HsMetricCollector extends TargetMetricsCollector<HsMetrics> {
                              final boolean noSideEffects,
                              final int coverageCap,
                              final int sampleSize) {
-        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
+        super(accumulationLevels, samRgRecords, refFile, perTargetCoverage, perBaseCoverage, targetIntervals, probeIntervals, probeSetName, nearProbeDistance, minimumMappingQuality, minimumBaseQuality, clipOverlappingReads, noSideEffects, coverageCap, sampleSize);
     }
 
     @Override

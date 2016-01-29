@@ -52,6 +52,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                                                final List<SAMReadGroupRecord> samRgRecords,
                                                final ReferenceSequenceFile refFile,
                                                final File perTargetCoverage,
+                                               final File perBaseCoverage,
                                                final IntervalList targetIntervals,
                                                final IntervalList probeIntervals,
                                                final String probeSetName,
@@ -72,6 +73,10 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
 
     @Option(optional = true, doc = "An optional file to output per target coverage information to.")
     public File PER_TARGET_COVERAGE;
+
+    @Option(optional = true, doc = "An optional file to output per base coverage information to. The per-base file contains " +
+            "one line per target base and can grow very large. It is not recommended for use with large target sets.")
+    public File PER_BASE_COVERAGE;
 
     @Option(optional = true, doc= "The maximum distance between a read and the nearest probe/bait/amplicon for the read to be " +
             "considered 'near probe' and included in percent selected.")
@@ -129,6 +134,7 @@ public abstract class CollectTargetedMetrics<METRIC extends MultilevelMetrics, C
                 reader.getFileHeader().getReadGroups(),
                 ref,
                 PER_TARGET_COVERAGE,
+                PER_BASE_COVERAGE,
                 targetIntervals,
                 getProbeIntervals(),
                 getProbeSetName(),
