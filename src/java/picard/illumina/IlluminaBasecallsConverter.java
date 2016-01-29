@@ -453,8 +453,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
 
         private synchronized SortingCollection<CLUSTER_OUTPUT_RECORD> newSortingCollection() {
             final int maxRecordsInRam =
-                    maxReadsInRamPerTile /
-                            barcodeRecordWriterMap.size();
+                    Math.max(1, maxReadsInRamPerTile /
+                            barcodeRecordWriterMap.size());
             return SortingCollection.newInstance(
                     outputRecordClass,
                     codecPrototype.clone(),

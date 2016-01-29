@@ -115,7 +115,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
     public File MULTIPLEX_PARAMS;
 
     @Option(doc = "Which adapters to look for in the read.")
-    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<IlluminaUtil.IlluminaAdapterPair>(
+    public List<IlluminaUtil.IlluminaAdapterPair> ADAPTERS_TO_CHECK = new ArrayList<>(
             Arrays.asList(IlluminaUtil.IlluminaAdapterPair.INDEXED,
                     IlluminaUtil.IlluminaAdapterPair.DUAL_INDEXED,
                     IlluminaUtil.IlluminaAdapterPair.NEXTERA_V2,
@@ -169,19 +169,14 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         CASAVA_1_8, ILLUMINA
     }
     
-    private final Map<String, FastqRecordsWriter> sampleBarcodeFastqWriterMap = new HashMap<String, FastqRecordsWriter>();
+    private final Map<String, FastqRecordsWriter> sampleBarcodeFastqWriterMap = new HashMap<>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<FastqRecordsForCluster> basecallsConverter;
     private static final Log log = Log.getInstance(IlluminaBasecallsToFastq.class);
     private final FastqWriterFactory fastqWriterFactory = new FastqWriterFactory();
     private ReadNameEncoder readNameEncoder;
-    private static final Comparator<FastqRecordsForCluster> queryNameComparator = new Comparator<FastqRecordsForCluster>() {
-        @Override
-        public int compare(final FastqRecordsForCluster r1, final FastqRecordsForCluster r2) {
-            return SAMRecordQueryNameComparator.compareReadNames(r1.templateRecords[0].getReadHeader(),
-                    r2.templateRecords[0].getReadHeader());
-        }
-    };
+    private static final Comparator<FastqRecordsForCluster> queryNameComparator = (r1, r2) -> SAMRecordQueryNameComparator.compareReadNames(r1.templateRecords[0].getReadHeader(),
+            r2.templateRecords[0].getReadHeader());
 
     @Override
     protected int doWork() {
@@ -238,8 +233,8 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             demultiplex = true;
         }
         final int readsPerCluster = readStructure.templates.length() + readStructure.sampleBarcodes.length();
-        basecallsConverter = new IlluminaBasecallsConverter<FastqRecordsForCluster>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
-                sampleBarcodeFastqWriterMap, demultiplex, MAX_READS_IN_RAM_PER_TILE / readsPerCluster, TMP_DIR, NUM_PROCESSORS,
+        basecallsConverter = new IlluminaBasecallsConverter<>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
+                sampleBarcodeFastqWriterMap, demultiplex, Math.max(1, MAX_READS_IN_RAM_PER_TILE / readsPerCluster), TMP_DIR, NUM_PROCESSORS,
                 FORCE_GC, FIRST_TILE, TILE_LIMIT, queryNameComparator,
                 new FastqRecordsForClusterCodec(readStructure.templates.length(),
                         readStructure.sampleBarcodes.length(), readStructure.molecularBarcode.length()), FastqRecordsForCluster.class, bclQualityEvaluationStrategy,
@@ -248,8 +243,8 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         log.info("READ STRUCTURE IS " + readStructure.toString());
 
         basecallsConverter.setConverter(
-		        new ClusterToFastqRecordsForClusterConverter(
-				        basecallsConverter.getFactory().getOutputReadStructure()));
+                new ClusterToFastqRecordsForClusterConverter(
+                        basecallsConverter.getFactory().getOutputReadStructure()));
     }
 
     /**
@@ -259,7 +254,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
      * @param expectedCols The columns that are REQUIRED
      */
     private void assertExpectedColumns(final Set<String> actualCols, final Set<String> expectedCols) {
-        final Set<String> missingColumns = new HashSet<String>(expectedCols);
+        final Set<String> missingColumns = new HashSet<>(expectedCols);
         missingColumns.removeAll(actualCols);
 
         if (missingColumns.size() > 0) {
@@ -278,7 +273,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final TabbedTextFileWithHeaderParser libraryParamsParser = new TabbedTextFileWithHeaderParser(MULTIPLEX_PARAMS);
 
         final Set<String> expectedColumnLabels = CollectionUtil.makeSet("OUTPUT_PREFIX");
-        final List<String> sampleBarcodeColumnLabels = new ArrayList<String>();
+        final List<String> sampleBarcodeColumnLabels = new ArrayList<>();
         for (int i = 1; i <= readStructure.sampleBarcodes.length(); i++) {
             sampleBarcodeColumnLabels.add("BARCODE_" + i);
         }
@@ -290,7 +285,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             List<String> sampleBarcodeValues = null;
 
             if (sampleBarcodeColumnLabels.size() > 0) {
-                sampleBarcodeValues = new ArrayList<String>();
+                sampleBarcodeValues = new ArrayList<>();
                 for (final String sampleBarcodeLabel : sampleBarcodeColumnLabels) {
                     sampleBarcodeValues.add(row.getField(sampleBarcodeLabel));
                 }
@@ -487,7 +482,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
             if (numSampleBarcodes != val.sampleBarcodeRecords.length) throw new IllegalStateException();
             encodeArray(val.templateRecords);
             encodeArray(val.sampleBarcodeRecords);
- //           encodeArray(val.molecularBarcodeRecords);
+            encodeArray(val.molecularBarcodeRecords);
             writer.flush();
         }
 
