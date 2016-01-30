@@ -20,6 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ * 
+ * History:
+ *  2015-11: Pierre Lindenbaum added the javascript filter
  */
 
 /**
@@ -35,6 +38,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.filter.AlignedFilter;
 import htsjdk.samtools.filter.FilteringIterator;
+import htsjdk.samtools.filter.JavascriptSamRecordFilter;
 import htsjdk.samtools.filter.ReadNameFilter;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
@@ -79,12 +83,12 @@ public class FilterSamReads extends CommandLineProgram {
             "<hr />";
     private static final Log log = Log.getInstance(FilterSamReads.class);
 
-    private static enum Filter {
+    public static enum Filter {
         includeAligned("OUTPUT SAM/BAM will contain aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM or BAM)"),
         excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
         includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
-        excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file");
-
+        excludeReadList("OUTPUT bam will contain reads that are *not* supplied in the READ_LIST_FILE file"),
+    	includeJavascript("OUTPUT bam will contain reads that hava been accepted by the JAVASCRIPT_FILE script.");
         private final String description;
 
         Filter(final String description) {
@@ -123,7 +127,17 @@ public class FilterSamReads extends CommandLineProgram {
     @Option(doc = "SAM or BAM file to write read excluded results to",
             optional = false, shortName = "O")
     public File OUTPUT;
+    
+	@Option(shortName = "JS",
+			doc = "Filters a SAM or BAM file with a javascript expression using the java javascript-engine. "
+	        + " The script puts the following variables in the script context: "
+	        + " 'record' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and "
+	        + " 'header' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html )."
+	        + " Last value of the script should be a boolean to tell wether we should accept or reject the record.",
+	        optional = true)
+	public File JAVASCRIPT_FILE = null;
 
+    
     private void filterReads(final FilteringIterator filteringIterator) {
 
         // get OUTPUT header from INPUT and overwrite it if necessary
@@ -181,23 +195,32 @@ public class FilterSamReads extends CommandLineProgram {
             IOUtil.assertFileIsReadable(INPUT);
             IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
-
+            final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            
             switch (FILTER) {
                 case includeAligned:
-                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                    filterReads(new FilteringIterator(samReader.iterator(),
                             new AlignedFilter(true), true));
                     break;
                 case excludeAligned:
-                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                    filterReads(new FilteringIterator(samReader.iterator(),
                             new AlignedFilter(false), true));
                     break;
                 case includeReadList:
-                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                    filterReads(new FilteringIterator(samReader.iterator(),
                             new ReadNameFilter(READ_LIST_FILE, true)));
                     break;
                 case excludeReadList:
-                    filterReads(new FilteringIterator(SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT).iterator(),
+                    filterReads(new FilteringIterator(samReader.iterator(),
                             new ReadNameFilter(READ_LIST_FILE, false)));
+                    break;
+                case includeJavascript:
+                    filterReads(new FilteringIterator(samReader.iterator(),
+                			new JavascriptSamRecordFilter(
+                			        JAVASCRIPT_FILE,
+                					samReader.getFileHeader()
+                					)));
+                	
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");

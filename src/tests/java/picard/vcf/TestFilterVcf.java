@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.vcf.filter;
+package picard.vcf;
 
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.ListMap;
@@ -30,8 +30,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.PicardException;
+import picard.vcf.filter.FilterVcf;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -43,6 +45,31 @@ public class TestFilterVcf {
     private final File INPUT = new File("testdata/picard/vcf/filter/testFiltering.vcf");
     private final File BAD_INPUT = new File("testdata/picard/vcf/filter/testFilteringNoSeqDictionary.vcf");
 
+
+    /* write content of javascript in the returned file */
+	private File quickJavascriptFilter(String content) throws Exception {
+		final File out = File.createTempFile("jsfilter", ".js");
+		out.deleteOnExit();
+		PrintWriter pw = new PrintWriter(out);
+		pw.println(content);
+		pw.flush();
+		pw.close();
+		return out;
+	}
+
+	@Test
+	public void testJavaScript() throws Exception {
+		final File out = File.createTempFile("filterVcfTestJS.", ".vcf");
+		out.deleteOnExit();
+		final FilterVcf filterer = new FilterVcf();
+		filterer.INPUT = INPUT;
+		filterer.OUTPUT = out;
+		filterer.JAVASCRIPT_FILE = quickJavascriptFilter("variant.getStart()%5 != 0");
+
+		final int retval = filterer.doWork();
+		Assert.assertEquals(retval, 0);
+	}
+    
     /** Returns a sorted copy of the supplied set, for safer comparison. */
     <T extends Comparable> SortedSet<T> sorted(Set<T> in) { return new TreeSet<T>(in); }
 
@@ -55,6 +82,7 @@ public class TestFilterVcf {
                 Assert.fail("Context should not have been filtered: " + ctx.toString());
             }
         }
+        in.close();
     }
 
     /** Tests that sites with a het allele balance < 0.4 are marked as filtered out. */

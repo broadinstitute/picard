@@ -20,12 +20,16 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ * 
  */
 package picard.vcf.filter;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.JavascriptVariantFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -42,12 +46,15 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Applies a set of hard filters to Variants and to Genotypes within a VCF.
  *
  * @author Tim Fennell
+ * @author Pierre Lindenbaum added the javascript filter in 2016 
  */
 @CommandLineProgramProperties(
         usage = "Applies one or more hard filters to a VCF file to filter out genotypes and variants.",
@@ -77,6 +84,15 @@ public class FilterVcf extends CommandLineProgram {
 
     @Option(doc="The minimum QD value to accept or otherwise filter out the variant.")
     public double MIN_QD = 0;
+    
+	@Option(shortName = "JS", doc = "Filters a VCF file with a javascript expression interpreted by the java javascript engine. "
+	        + " The script puts the following variables in the script context: "
+	        + " 'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and "
+	        + " 'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html )."
+	        + " Last value of the script should be a boolean to tell wether we should accept or reject the record.",
+	        optional = true)
+	public File JAVASCRIPT_FILE = null;
+
 
     /** Constructor to default to having index creation on. */
     public FilterVcf() { this.CREATE_INDEX = true; }
@@ -87,14 +103,26 @@ public class FilterVcf extends CommandLineProgram {
     }
 
     @Override
-    protected int doWork() {
+    public int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final List<VariantFilter>  variantFilters = CollectionUtil.makeList(new AlleleBalanceFilter(MIN_AB), new FisherStrandFilter(MAX_FS), new QdFilter(MIN_QD));
-        final List<GenotypeFilter> genotypeFilters = CollectionUtil.makeList(new GenotypeQualityFilter(MIN_GQ), new DepthFilter(MIN_DP));
         final VCFFileReader in = new VCFFileReader(INPUT, false);
-        final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
+        final List<VariantFilter>  variantFilters = new ArrayList<VariantFilter>(4);
+        variantFilters.add(new AlleleBalanceFilter(MIN_AB));
+        variantFilters.add(new FisherStrandFilter(MAX_FS));
+        variantFilters.add(new QdFilter(MIN_QD));
+        if( JAVASCRIPT_FILE != null) {
+            try {
+                variantFilters.add(new VariantContextJavascriptFilter(JAVASCRIPT_FILE, in.getFileHeader()));
+            } catch(IOException error) {
+                CloserUtil.close(in);
+                throw new PicardException("javascript-related error", error);
+            }
+        }
+        final List<GenotypeFilter> genotypeFilters = CollectionUtil.makeList(new GenotypeQualityFilter(MIN_GQ), new DepthFilter(MIN_DP));
+        @SuppressWarnings("resource")
+		final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
 
         final VCFHeader header = in.getFileHeader();
         // If the user is writing to a .bcf or .vcf, VariantContextBuilderWriter requires a Sequence Dictionary.  Make sure that the
@@ -103,6 +131,7 @@ public class FilterVcf extends CommandLineProgram {
         if (isVcfOrBcf(OUTPUT)) {
             final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
             if (sequenceDictionary == null) {
+            	in.close();
                 throw new PicardException("The input vcf must have a sequence dictionary in order to create indexed vcf or bcfs.");
             }
             variantContextWriterBuilder.setReferenceDictionary(sequenceDictionary);
@@ -130,5 +159,43 @@ public class FilterVcf extends CommandLineProgram {
     private boolean isVcfOrBcf(final File file) {
         final String fileName = file.getName();
         return fileName.endsWith(".vcf") || fileName.endsWith(".bcf");
+    }
+    
+    /** Javascript filter implementing VariantFilter */
+    private static class VariantContextJavascriptFilter
+            extends JavascriptVariantFilter
+            implements VariantFilter {
+        /** filter name */
+        private final String filterName;
+        /** script file */
+        private final File scriptFile;
+        private VariantContextJavascriptFilter(final File scriptFile, final VCFHeader header) throws IOException {
+           super(scriptFile, header);
+           this.scriptFile = scriptFile;
+           /* create filter name using file basename */
+           String fname = scriptFile.getName();
+            if (fname.toLowerCase().endsWith(".js")) {
+                fname = fname.substring(0, fname.length() - 3);
+            } else if (fname.toLowerCase().endsWith(".javascript")) {
+                fname = fname.substring(0, fname.length() - 11);
+            }
+            if(fname.isEmpty()) fname="JSFILTER";
+            this.filterName = fname;
+        }
+
+        /**
+         * returns the filterName if the javascript doesn't accept the variant ,
+         * null otherwise
+         */
+        @Override
+        public String filter(final VariantContext ctx) {
+            return (super.accept(ctx) ? null : this.filterName );
+        }
+
+        @Override
+        public List<VCFFilterHeaderLine> headerLines() {
+            return CollectionUtil.makeList(
+                    new VCFFilterHeaderLine(this.filterName, "Variant Filtered by Javascript file " + this.scriptFile));
+        }
     }
 }
