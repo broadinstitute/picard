@@ -80,6 +80,9 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
     @Option(shortName="CAP", doc="Treat bases with coverage exceeding this value as if they had coverage at this value.")
     public int COVERAGE_CAP = 100000;
 
+    @Option(doc="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low")
+    public int LOCUS_ACCUMULATION_CAP = 200000;
+
     // rename the class so that in the metric file it is annotated differently.
     public static class RawWgsMetrics extends WgsMetrics {}
 
