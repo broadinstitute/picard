@@ -92,8 +92,11 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(shortName = "Q", doc = "Minimum base quality for a base to contribute coverage.", overridable = true)
     public int MINIMUM_BASE_QUALITY = 20;
 
-    @Option(shortName = "CAP", doc = "Treat bases with coverage exceeding this value as if they had coverage at this value.", overridable = true)
+    @Option(shortName = "CAP", doc = "Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).", overridable = true)
     public int COVERAGE_CAP = 250;
+
+    @Option(doc="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low", overridable = true)
+    public int LOCUS_ACCUMULATION_CAP = 100000;
 
     @Option(doc = "For debugging purposes, stop after processing this many genomic bases.")
     public long STOP_AFTER = -1;
@@ -184,6 +187,12 @@ public class CollectWgsMetrics extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         IOUtil.assertFileIsReadable(REFERENCE_SEQUENCE);
 
+        // it doesn't make sense for the locus accumulation cap to be lower than the coverage cap
+        if (LOCUS_ACCUMULATION_CAP < COVERAGE_CAP) {
+            log.warn("Setting the LOCUS_ACCUMULATION_CAP to be equal to the COVERAGE_CAP (" + COVERAGE_CAP + ") because it should not be lower");
+            LOCUS_ACCUMULATION_CAP = COVERAGE_CAP;
+        }
+
         // Setup all the inputs
         final ProgressLogger progress = new ProgressLogger(log, 10000000, "Processed", "loci");
         final ReferenceSequenceFileWalker refWalker = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
@@ -206,6 +215,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
         iterator.setMappingQualityScoreCutoff(0); // Handled separately because we want to count bases
         iterator.setQualityScoreCutoff(0);        // Handled separately because we want to count bases
         iterator.setIncludeNonPfReads(false);
+        iterator.setMaxReadsToAccumulatePerLocus(LOCUS_ACCUMULATION_CAP);
 
         final int coverageCap = COVERAGE_CAP;
         final long[] HistogramArray = new long[coverageCap + 1];
