@@ -24,13 +24,20 @@
 package picard.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CloserUtil;
+import htsjdk.samtools.util.IntervalList;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import picard.vcf.ByIntervalListVariantContextIterator;
 
 import java.io.File;
-import java.lang.IllegalArgumentException;import java.lang.String;import java.util.BitSet;import java.util.Collection;import java.util.EnumSet;import java.util.HashMap;import java.util.Map;import java.util.Set;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class to use with DbSnp files to determine is a locus is
@@ -38,7 +45,7 @@ import java.lang.IllegalArgumentException;import java.lang.String;import java.ut
  */
 public class DbSnpBitSetUtil {
 
-    private final Map<String, BitSet> sequenceToBitSet = new HashMap<String,BitSet>();
+    private final Map<String, BitSet> sequenceToBitSet = new HashMap<>();
 
     /** Little tuple class to contain one bitset for SNPs and another for Indels. */
     public static class DbSnpBitSets {
@@ -54,6 +61,13 @@ public class DbSnpBitSetUtil {
         this(dbSnpFile, sequenceDictionary, EnumSet.noneOf(VariantType.class));
     }
 
+    /** Constructor that creates a bit set with bits set to true for the given variant types. */
+    public DbSnpBitSetUtil(final File dbSnpFile,
+                           final SAMSequenceDictionary sequenceDictionary,
+                           final Collection<VariantType> variantsToMatch) {
+        this(dbSnpFile, sequenceDictionary, variantsToMatch, null);
+    }
+
     /**
      * Constructor.
      *
@@ -66,39 +80,56 @@ public class DbSnpBitSetUtil {
      * @param sequenceDictionary Optionally, a sequence dictionary corresponding to the dbSnp file, else null.
      * If present, BitSets will be allocated more efficiently because the maximum size will be known.
      * @param variantsToMatch what types of variants to load.
+     * @param intervals an interval list specifying the regions to load, or null, if we are return all dbSNP sites.
      */
     public DbSnpBitSetUtil(final File dbSnpFile,
                            final SAMSequenceDictionary sequenceDictionary,
-                           final Collection<VariantType> variantsToMatch) {
+                           final Collection<VariantType> variantsToMatch,
+                           final IntervalList intervals) {
 
         if (dbSnpFile == null) throw new IllegalArgumentException("null dbSnpFile");
-        final Map<DbSnpBitSetUtil, Set<VariantType>> tmp = new HashMap<DbSnpBitSetUtil, Set<VariantType>>();
+        final Map<DbSnpBitSetUtil, Set<VariantType>> tmp = new HashMap<>();
         tmp.put(this, EnumSet.copyOf(variantsToMatch));
-        loadVcf(dbSnpFile, sequenceDictionary, tmp);
+        loadVcf(dbSnpFile, sequenceDictionary, tmp, intervals);
     }
 
     /** Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF. */
     public static DbSnpBitSets createSnpAndIndelBitSets(final File dbSnpFile,
                                                         final SAMSequenceDictionary sequenceDictionary) {
+        return createSnpAndIndelBitSets(dbSnpFile, sequenceDictionary, null);
+    }
+
+    /** Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF.
+     * If intervals are given, consider only SNP and indel sites that overlap the intervals. */
+    public static DbSnpBitSets createSnpAndIndelBitSets(final File dbSnpFile,
+                                                        final SAMSequenceDictionary sequenceDictionary,
+                                                        final IntervalList intervals) {
 
         final DbSnpBitSets sets = new DbSnpBitSets();
         sets.snps   = new DbSnpBitSetUtil();
         sets.indels = new DbSnpBitSetUtil();
 
-        final Map<DbSnpBitSetUtil, Set<VariantType>> map = new HashMap<DbSnpBitSetUtil, Set<VariantType>>();
+        final Map<DbSnpBitSetUtil, Set<VariantType>> map = new HashMap<>();
         map.put(sets.snps,   EnumSet.of(VariantType.SNP));
         map.put(sets.indels, EnumSet.of(VariantType.insertion, VariantType.deletion));
-        loadVcf(dbSnpFile, sequenceDictionary, map);
+        loadVcf(dbSnpFile, sequenceDictionary, map, intervals);
         return sets;
     }
 
     /** Private helper method to read through the VCF and create one or more bit sets. */
     private static void loadVcf(final File dbSnpFile,
                                 final SAMSequenceDictionary sequenceDictionary,
-                                final Map<DbSnpBitSetUtil, Set<VariantType>> bitSetsToVariantTypes) {
+                                final Map<DbSnpBitSetUtil, Set<VariantType>> bitSetsToVariantTypes,
+                                final IntervalList intervals) {
 
-        final VCFFileReader variantReader = new VCFFileReader(dbSnpFile);
-        final CloseableIterator<VariantContext> variantIterator = variantReader.iterator();
+        final VCFFileReader variantReader = new VCFFileReader(dbSnpFile, intervals != null);
+        final Iterator<VariantContext> variantIterator;
+        if (intervals != null) {
+            variantIterator = new ByIntervalListVariantContextIterator(variantReader, intervals);
+        }
+        else {
+            variantIterator = variantReader.iterator();
+        }
 
         while (variantIterator.hasNext()) {
             final VariantContext kv = variantIterator.next();
@@ -107,13 +138,13 @@ public class DbSnpBitSetUtil {
                 final DbSnpBitSetUtil bitset            = tuple.getKey();
                 final Set<VariantType> variantsToMatch  = tuple.getValue();
 
-                BitSet bits = bitset.sequenceToBitSet.get(kv.getChr());
+                BitSet bits = bitset.sequenceToBitSet.get(kv.getContig());
                 if (bits == null) {
                     final int nBits;
                     if (sequenceDictionary == null) nBits = kv.getEnd() + 1;
-                    else nBits = sequenceDictionary.getSequence(kv.getChr()).getSequenceLength() + 1;
+                    else nBits = sequenceDictionary.getSequence(kv.getContig()).getSequenceLength() + 1;
                     bits = new BitSet(nBits);
-                    bitset.sequenceToBitSet.put(kv.getChr(), bits);
+                    bitset.sequenceToBitSet.put(kv.getContig(), bits);
                 }
                 if (variantsToMatch.isEmpty() ||
                         (kv.isSNP() && variantsToMatch.contains(VariantType.SNP)) ||
@@ -125,7 +156,6 @@ public class DbSnpBitSetUtil {
             }
         }
 
-        CloserUtil.close(variantIterator);
         CloserUtil.close(variantReader);
     }
 
@@ -134,13 +164,8 @@ public class DbSnpBitSetUtil {
      */
     public boolean isDbSnpSite(final String sequenceName, final int pos) {
         // When we have a dbSnpFile with no sequence dictionary, this line will be necessary
-        if (sequenceToBitSet.get(sequenceName) == null) {
-            return false;
-        }
-        if (pos > sequenceToBitSet.get(sequenceName).length()) {
-            return false;
-        }
-        return sequenceToBitSet.get(sequenceName).get(pos);
+        return sequenceToBitSet.get(sequenceName) != null &&
+                pos <= sequenceToBitSet.get(sequenceName).length() &&
+                sequenceToBitSet.get(sequenceName).get(pos);
     }
-
 }

@@ -86,6 +86,9 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
     @Override
     protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
+        IOUtil.assertFileIsReadable(DBSNP);
+        if (TARGET_INTERVALS != null) IOUtil.assertFileIsReadable(TARGET_INTERVALS);
+        if (SEQUENCE_DICTIONARY != null) IOUtil.assertFileIsReadable(SEQUENCE_DICTIONARY);
 
         final boolean requiresIndex = this.TARGET_INTERVALS != null || this.THREAD_COUNT > 1;
         final VCFFileReader variantReader = new VCFFileReader(INPUT, requiresIndex);
@@ -95,8 +98,10 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         final SAMSequenceDictionary sequenceDictionary =
                 SAMSequenceDictionaryExtractor.extractDictionary(SEQUENCE_DICTIONARY == null ? INPUT : SEQUENCE_DICTIONARY);
 
+        final IntervalList targetIntervals = (TARGET_INTERVALS == null) ? null : IntervalList.fromFile(TARGET_INTERVALS).uniqued();
+
         log.info("Loading dbSNP file ...");
-        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary);
+        final DbSnpBitSetUtil.DbSnpBitSets dbsnp = DbSnpBitSetUtil.createSnpAndIndelBitSets(DBSNP, sequenceDictionary, targetIntervals);
 
         log.info("Starting iteration of variants.");
 
@@ -111,8 +116,8 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
                         .withInput(INPUT)
                         .multithreadingBy(THREAD_COUNT);
 
-        if (TARGET_INTERVALS != null) {
-            builder.limitingProcessedRegionsTo(IntervalList.fromFile(TARGET_INTERVALS).uniqued());
+        if (targetIntervals != null) {
+            builder.limitingProcessedRegionsTo(targetIntervals);
         }
 
         final CallingMetricAccumulator.Result result = builder.build().process();
@@ -274,7 +279,7 @@ public class CollectVariantCallingMetrics extends CommandLineProgram {
         public static void foldInto(final VariantCallingDetailMetrics target,
                                     final Collection<VariantCallingDetailMetrics> metrics) {
             VariantCallingSummaryMetrics.foldInto(target, metrics);
-            final Set<String> sampleAliases = new HashSet<String>();
+            final Set<String> sampleAliases = new HashSet<>();
             for (final VariantCallingDetailMetrics metric : metrics) {
                 target.numHets += metric.numHets;
                 target.numHomVar += metric.numHomVar;
