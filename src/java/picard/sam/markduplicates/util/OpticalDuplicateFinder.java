@@ -33,7 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Contains methods for finding optical duplicates.
+ * Contains methods for finding optical/co-localized/sequencing duplicates.
  *
  * @author Tim Fennell
  * @author Nils Homer
@@ -65,47 +65,76 @@ public class OpticalDuplicateFinder extends ReadNameParser {
     }
 
     /**
-     * Finds which reads within the list of duplicates are likely to be optical duplicates of
-     * one another.
-     * <p/>
-     * Note: this method will perform a sort() of the list; if it is imperative that the list be
-     * unmodified a copy of the list should be passed to this method.
+     * Finds which reads within the list of duplicates that are likely to be optical/co-localized duplicates of
+     * one another. Within each cluster of optical duplicates that is found, one read remains un-flagged for
+     * optical duplication and the rest are flagged as optical duplicates.  The set of reads that are considered
+     * optical duplicates are indicated by returning "true" at the same index in the resulting boolean[] as the
+     * read appeared in the input list of physical locations.
      *
      * @param list a list of reads that are determined to be duplicates of one another
+     * @param keeper a single PhysicalLocation that is the one being kept as non-duplicate, and thus should never be
+     *               annotated as an optical duplicate. May in some cases be null, or a PhysicalLocation not
+     *               contained within the list!
      * @return a boolean[] of the same length as the incoming list marking which reads are optical duplicates
      */
-    public boolean[] findOpticalDuplicates(final List<? extends PhysicalLocation> list) {
+    public boolean[] findOpticalDuplicates(final List<? extends PhysicalLocation> list, final PhysicalLocation keeper) {
+        // If there is only one or zero reads passed in, then just return an array of all false
+        if (list.size() < 2) return new boolean[list.size()];
+
         final int length = list.size();
         final boolean[] opticalDuplicateFlags = new boolean[length];
+        final int distance = this.opticalDuplicatePixelDistance;
 
-        Collections.sort(list, new Comparator<PhysicalLocation>() {
-            public int compare(final PhysicalLocation lhs, final PhysicalLocation rhs) {
-                int retval = lhs.getReadGroup() - rhs.getReadGroup();
-                if (retval == 0) retval = lhs.getTile() - rhs.getTile();
-                if (retval == 0) retval = lhs.getX() - rhs.getX();
-                if (retval == 0) retval = lhs.getY() - rhs.getY();
-                return retval;
+        final PhysicalLocation actualKeeper = keeperOrNull(list, keeper);
+
+        // First go through and compare all the reads to the keeper
+        if (actualKeeper != null) {
+            for (int i=0; i<length; ++i) {
+                final PhysicalLocation other = list.get(i);
+                opticalDuplicateFlags[i] = closeEnough(actualKeeper, other, distance);
             }
-        });
+        }
 
-        outer:
-        for (int i = 0; i < length; ++i) {
+        // Now go through and do each pairwise comparison not involving the actualKeeper
+        for (int i=0; i<length; ++i) {
             final PhysicalLocation lhs = list.get(i);
-            if (lhs.getTile() < 0) continue;
+            if (lhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
 
-            for (int j = i + 1; j < length; ++j) {
+            for (int j =i+1; j<length; ++j) {
                 final PhysicalLocation rhs = list.get(j);
+                if (rhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
+                if (opticalDuplicateFlags[i] && opticalDuplicateFlags[j]) continue; // both already marked, no need to check
 
-                if (opticalDuplicateFlags[j]) continue;
-                if (lhs.getReadGroup() != rhs.getReadGroup()) continue outer;
-                if (lhs.getTile() != rhs.getTile()) continue outer;
-                if (rhs.getX() > lhs.getX() + this.opticalDuplicatePixelDistance) continue outer;
-
-                if (Math.abs(lhs.getY() - rhs.getY()) <= this.opticalDuplicatePixelDistance) {
-                    opticalDuplicateFlags[j] = true;
+                if (closeEnough(lhs, rhs, distance)) {
+                    // At this point we want to mark either lhs or rhs as duplicate. Either could have been marked
+                    // as a duplicate of the keeper (but not both - that's checked above), so be careful about which
+                    // one to now mark as a duplicate.
+                    final int index = opticalDuplicateFlags[j] ? i : j;
+                    opticalDuplicateFlags[index] = true;
                 }
             }
         }
+        
         return opticalDuplicateFlags;
+    }
+
+    /** Returns the keeper if it is contained within the list and has location information, otherwise null. */
+    private PhysicalLocation keeperOrNull(final List<? extends PhysicalLocation> list, final PhysicalLocation keeper) {
+        if (keeper != null && keeper.hasLocation()) {
+            for (final PhysicalLocation loc : list) {
+                if (loc == keeper) return keeper;
+            }
+        }
+        return null;
+    }
+
+    /** Simple method to test whether two physical locations are close enough to each other to be deemed optical dupes. */
+    private boolean closeEnough(final PhysicalLocation lhs, final PhysicalLocation rhs, final int distance) {
+        return lhs != rhs &&                                    // no comparing an object to itself (checked using object identity)!
+               lhs.hasLocation() && rhs.hasLocation() &&        // no comparing objects without locations
+               lhs.getReadGroup() == rhs.getReadGroup() &&      // must be in the same RG to be optical duplicates
+               lhs.getTile()      == rhs.getTile()      &&      // and the same tile
+               Math.abs(lhs.getX() - rhs.getX()) <= distance &&
+               Math.abs(lhs.getY() - rhs.getY()) <= distance;
     }
 }

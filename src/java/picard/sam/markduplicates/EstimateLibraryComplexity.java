@@ -545,7 +545,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                             final int duplicateCount = dupes.size();
                             duplicationHisto.increment(duplicateCount);
 
-                            final boolean[] flags = opticalDuplicateFinder.findOpticalDuplicates(dupes);
+                            final boolean[] flags = opticalDuplicateFinder.findOpticalDuplicates(dupes, lhs);
                             for (final boolean b : flags) {
                                 if (b) opticalHisto.increment(duplicateCount);
                             }
