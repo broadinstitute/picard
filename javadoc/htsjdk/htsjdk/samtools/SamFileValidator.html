@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10,"i8":10,"i9":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -178,7 +178,7 @@ extends java.lang.Object</pre>
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -203,27 +203,35 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#setValidateIndex-boolean-">setValidateIndex</a></span>(boolean&nbsp;validateIndex)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#setIndexValidationStringency-htsjdk.samtools.BamIndexValidator.IndexValidationStringency-">setIndexValidationStringency</a></span>(<a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools">BamIndexValidator.IndexValidationStringency</a>&nbsp;stringency)</code>&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="../../htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#setValidateIndex-boolean-">setValidateIndex</a></span>(boolean&nbsp;validateIndex)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;
+<div class="block"><span class="deprecationComment">use setIndexValidationStringency instead</span></div>
+</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#setVerbose-boolean-int-">setVerbose</a></span>(boolean&nbsp;verbose,
           int&nbsp;maxVerboseOutput)</code>
 <div class="block">Control verbosity</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#validateBamFileTermination-java.io.File-">validateBamFileTermination</a></span>(java.io.File&nbsp;inputFile)</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#validateSamFileSummary-htsjdk.samtools.SamReader-htsjdk.samtools.reference.ReferenceSequenceFile-">validateSamFileSummary</a></span>(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;samReader,
                       <a href="../../htsjdk/samtools/reference/ReferenceSequenceFile.html" title="interface in htsjdk.samtools.reference">ReferenceSequenceFile</a>&nbsp;reference)</code>
 <div class="block">Outputs validation summary report to out.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamFileValidator.html#validateSamFileVerbose-htsjdk.samtools.SamReader-htsjdk.samtools.reference.ReferenceSequenceFile-">validateSamFileVerbose</a></span>(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;samReader,
                       <a href="../../htsjdk/samtools/reference/ReferenceSequenceFile.html" title="interface in htsjdk.samtools.reference">ReferenceSequenceFile</a>&nbsp;reference)</code>
@@ -372,10 +380,20 @@ extends java.lang.Object</pre>
 <a name="setValidateIndex-boolean-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setValidateIndex</h4>
 <pre>public&nbsp;<a href="../../htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a>&nbsp;setValidateIndex(boolean&nbsp;validateIndex)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;<span class="deprecationComment">use setIndexValidationStringency instead</span></div>
+</li>
+</ul>
+<a name="setIndexValidationStringency-htsjdk.samtools.BamIndexValidator.IndexValidationStringency-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>setIndexValidationStringency</h4>
+<pre>public&nbsp;<a href="../../htsjdk/samtools/SamFileValidator.html" title="class in htsjdk.samtools">SamFileValidator</a>&nbsp;setIndexValidationStringency(<a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools">BamIndexValidator.IndexValidationStringency</a>&nbsp;stringency)</pre>
 </li>
 </ul>
 </li>

@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../htsjdk/samtools/CoordinateSortedPairInfoMap.Codec.html" title="interface in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -166,45 +166,55 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.File&nbsp;indexFile,
               <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
-<div class="block">Open CRAM file for reading.</div>
+<div class="block">Create a CRAMFileReader from a file and optional index file using the supplied reference source.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.File&nbsp;indexFile,
               <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
+ source and validation stringency.</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.InputStream-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.InputStream&nbsp;inputStream)</code>
-<div class="block">Open CRAM data for reading using either the file or the input stream
- supplied in the arguments.</div>
+<div class="block">Create a CRAMFileReader from either a file or input stream using the reference source returned by
+ <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--"><code>getDefaultCRAMReferenceSource</code></a>.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.InputStream&nbsp;inputStream,
               <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
-<div class="block">Open CRAM data for reading using either the file or the input stream
- supplied in the arguments.</div>
+<div class="block">Create a CRAMFileReader from either a file or input stream using the supplied reference source.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
-              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>&nbsp;</td>
+              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
+<div class="block">Create a CRAMFileReader from a file using the supplied reference source.</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;stream,
               java.io.File&nbsp;indexFile,
               <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from an input stream and optional index file using the supplied reference
+ source and validation stringency.</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;inputStream,
               <a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;indexInputStream,
               <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+              <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from an input stream and optional index stream using the supplied reference
+ source and validation stringency.</div>
+</td>
 </tr>
 </table>
 </li>
@@ -324,14 +334,16 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 <h4>CRAMFileReader</h4>
 <pre>public&nbsp;CRAMFileReader(java.io.File&nbsp;cramFile,
                       java.io.InputStream&nbsp;inputStream)</pre>
-<div class="block">Open CRAM data for reading using either the file or the input stream
- supplied in the arguments. The
- <a href="../../htsjdk/samtools/Defaults.html#REFERENCE_FASTA"><code>default</code></a> reference fasta
- file will be used.</div>
+<div class="block">Create a CRAMFileReader from either a file or input stream using the reference source returned by
+ <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--"><code>getDefaultCRAMReferenceSource</code></a>.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>cramFile</code> - CRAM file to open</dd>
 <dd><code>inputStream</code> - CRAM stream to read</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>cramFile</code> and the <code>inputStream</code> are both null</dd>
+<dd><code>java.lang.IllegalStateException</code> - if a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--"><code>default</code></a>
+ reference source cannot be acquired</dd>
 </dl>
 </li>
 </ul>
@@ -344,14 +356,16 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 <pre>public&nbsp;CRAMFileReader(java.io.File&nbsp;cramFile,
                       java.io.InputStream&nbsp;inputStream,
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</pre>
-<div class="block">Open CRAM data for reading using either the file or the input stream
- supplied in the arguments.</div>
+<div class="block">Create a CRAMFileReader from either a file or input stream using the supplied reference source.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>cramFile</code> - CRAM file to read</dd>
-<dd><code>inputStream</code> - index file to be used for random access</dd>
+<dd><code>inputStream</code> - CRAM stream to read</dd>
 <dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
-                        reference sequences</dd>
+                        reference sequences. May not be null.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>cramFile</code> and the <code>inputStream</code> are both null
+ or if the <code>ReferenceSource</code> is null</dd>
 </dl>
 </li>
 </ul>
@@ -364,14 +378,16 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 <pre>public&nbsp;CRAMFileReader(java.io.File&nbsp;cramFile,
                       java.io.File&nbsp;indexFile,
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</pre>
-<div class="block">Open CRAM file for reading. If index file is supplied than random access
- will be available.</div>
+<div class="block">Create a CRAMFileReader from a file and optional index file using the supplied reference source. If index file
+ is supplied then random access will be available.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>cramFile</code> - CRAM file to read</dd>
-<dd><code>indexFile</code> - index file to be used for random access</dd>
+<dd><code>cramFile</code> - CRAM file to read. May not be null.</dd>
+<dd><code>indexFile</code> - index file to be used for random access. May be null.</dd>
 <dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
-                        reference sequences</dd>
+                        reference sequences. May not be null.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>cramFile</code> or the <code>ReferenceSource</code> is null</dd>
 </dl>
 </li>
 </ul>
@@ -383,6 +399,15 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 <h4>CRAMFileReader</h4>
 <pre>public&nbsp;CRAMFileReader(java.io.File&nbsp;cramFile,
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</pre>
+<div class="block">Create a CRAMFileReader from a file using the supplied reference source.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>cramFile</code> - CRAM file to read. Can not be null.</dd>
+<dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
+                        reference sequences. May not be null.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>cramFile</code> or the <code>ReferenceSource</code> is null</dd>
+</dl>
 </li>
 </ul>
 <a name="CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">
@@ -396,8 +421,17 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
                throws java.io.IOException</pre>
+<div class="block">Create a CRAMFileReader from an input stream and optional index stream using the supplied reference
+ source and validation stringency.</div>
 <dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>inputStream</code> - CRAM stream to read. May not be null.</dd>
+<dd><code>indexInputStream</code> - index stream to be used for random access. May be null.</dd>
+<dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
+                        reference sequences. May not be null.</dd>
+<dd><code>validationStringency</code> - Validation stringency to be used when reading</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>inputStream</code> or the <code>ReferenceSource</code> is null</dd>
 <dd><code>java.io.IOException</code></dd>
 </dl>
 </li>
@@ -413,8 +447,17 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
                throws java.io.IOException</pre>
+<div class="block">Create a CRAMFileReader from an input stream and optional index file using the supplied reference
+ source and validation stringency.</div>
 <dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>stream</code> - CRAM stream to read. May not be null.</dd>
+<dd><code>indexFile</code> - index file to be used for random access. May be null.</dd>
+<dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
+                        reference sequences. May not be null.</dd>
+<dd><code>validationStringency</code> - Validation stringency to be used when reading</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>inputStream</code> or the <code>ReferenceSource</code> is null</dd>
 <dd><code>java.io.IOException</code></dd>
 </dl>
 </li>
@@ -430,8 +473,17 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
                       <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
                throws java.io.IOException</pre>
+<div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
+ source and validation stringency.</div>
 <dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>cramFile</code> - CRAM stream to read. May not be null.</dd>
+<dd><code>indexFile</code> - index file to be used for random access. May be null.</dd>
+<dd><code>referenceSource</code> - a <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref"><code>source</code></a> of
+                        reference sequences. May not be null.</dd>
+<dd><code>validationStringency</code> - Validation stringency to be used when reading</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>cramFile</code> or the <code>ReferenceSource</code> is null</dd>
 <dd><code>java.io.IOException</code></dd>
 </dl>
 </li>
@@ -697,7 +749,7 @@ implements <a href="../../htsjdk/samtools/SamReader.Indexing.html" title="interf
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../htsjdk/samtools/CoordinateSortedPairInfoMap.Codec.html" title="interface in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

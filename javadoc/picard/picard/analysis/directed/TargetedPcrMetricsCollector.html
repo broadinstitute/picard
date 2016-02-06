@@ -187,14 +187,37 @@ extends <a href="../../../picard/analysis/directed/TargetMetricsCollector.html" 
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-boolean-int-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                            java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                            htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                            java.io.File&nbsp;perTargetCoverage,
+                           java.io.File&nbsp;perBaseCoverage,
                            htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                            htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                            java.lang.String&nbsp;probeSetName,
-                           int&nbsp;nearProbeDistance)</code>&nbsp;</td>
+                           int&nbsp;nearProbeDistance,
+                           int&nbsp;minimumMappingQuality,
+                           int&nbsp;minimumBaseQuality,
+                           boolean&nbsp;clipOverlappingReads,
+                           boolean&nbsp;noSideEffects,
+                           int&nbsp;coverageCap,
+                           int&nbsp;sampleSize)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-int-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+                           java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
+                           htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
+                           java.io.File&nbsp;perTargetCoverage,
+                           java.io.File&nbsp;perBaseCoverage,
+                           htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
+                           htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
+                           java.lang.String&nbsp;probeSetName,
+                           int&nbsp;nearProbeDistance,
+                           int&nbsp;minimumMappingQuality,
+                           int&nbsp;minimumBaseQuality,
+                           boolean&nbsp;clipOverlappingReads,
+                           int&nbsp;coverageCap,
+                           int&nbsp;sampleSize)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -221,7 +244,7 @@ extends <a href="../../../picard/analysis/directed/TargetMetricsCollector.html" 
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;picard.analysis.directed.<a href="../../../picard/analysis/directed/TargetMetricsCollector.html" title="class in picard.analysis.directed">TargetMetricsCollector</a></h3>
-<code><a href="../../../picard/analysis/directed/TargetMetricsCollector.html#getNearProbeDistance--">getNearProbeDistance</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#makeAllReadCollector--">makeAllReadCollector</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#makeChildCollector-java.lang.String-java.lang.String-java.lang.String-">makeChildCollector</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#reflectiveCopy-picard.analysis.directed.TargetMetrics-MT-java.lang.String:A-java.lang.String:A-">reflectiveCopy</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#setNearProbeDistance-int-">setNearProbeDistance</a></code></li>
+<code><a href="../../../picard/analysis/directed/TargetMetricsCollector.html#getNearProbeDistance--">getNearProbeDistance</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#getNumBasesPassingMinimumBaseQuality-htsjdk.samtools.SAMRecord-htsjdk.samtools.AlignmentBlock-int-">getNumBasesPassingMinimumBaseQuality</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#makeAllReadCollector--">makeAllReadCollector</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#makeChildCollector-java.lang.String-java.lang.String-java.lang.String-">makeChildCollector</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#reflectiveCopy-picard.analysis.directed.TargetMetrics-MT-java.lang.String:A-java.lang.String:A-">reflectiveCopy</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#setNearProbeDistance-int-">setNearProbeDistance</a>, <a href="../../../picard/analysis/directed/TargetMetricsCollector.html#setNoSideEffects-boolean-">setNoSideEffects</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.metrics.SAMRecordMultiLevelCollector">
@@ -258,7 +281,29 @@ extends <a href="../../../picard/analysis/directed/TargetMetricsCollector.html" 
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
+<a name="TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>TargetedPcrMetricsCollector</h4>
+<pre>public&nbsp;TargetedPcrMetricsCollector(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+                                   java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
+                                   htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
+                                   java.io.File&nbsp;perTargetCoverage,
+                                   java.io.File&nbsp;perBaseCoverage,
+                                   htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
+                                   htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
+                                   java.lang.String&nbsp;probeSetName,
+                                   int&nbsp;nearProbeDistance,
+                                   int&nbsp;minimumMappingQuality,
+                                   int&nbsp;minimumBaseQuality,
+                                   boolean&nbsp;clipOverlappingReads,
+                                   int&nbsp;coverageCap,
+                                   int&nbsp;sampleSize)</pre>
+</li>
+</ul>
+<a name="TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-boolean-int-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -268,10 +313,17 @@ extends <a href="../../../picard/analysis/directed/TargetMetricsCollector.html" 
                                    java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                                    htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                                    java.io.File&nbsp;perTargetCoverage,
+                                   java.io.File&nbsp;perBaseCoverage,
                                    htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                                    htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                                    java.lang.String&nbsp;probeSetName,
-                                   int&nbsp;nearProbeDistance)</pre>
+                                   int&nbsp;nearProbeDistance,
+                                   int&nbsp;minimumMappingQuality,
+                                   int&nbsp;minimumBaseQuality,
+                                   boolean&nbsp;clipOverlappingReads,
+                                   boolean&nbsp;noSideEffects,
+                                   int&nbsp;coverageCap,
+                                   int&nbsp;sampleSize)</pre>
 </li>
 </ul>
 </li>

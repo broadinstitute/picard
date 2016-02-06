@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9};
+var methods = {"i0":10,"i1":10,"i2":9,"i3":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -277,6 +277,11 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/illumina/ExtractIlluminaBarcodes.html#finalizeMetrics-java.util.Map-picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric-">finalizeMetrics</a></span>(java.util.Map&lt;java.lang.String,<a href="../../picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a>&gt;&nbsp;barcodeToMetrics,
+               <a href="../../picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a>&nbsp;noMatchMetric)</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/illumina/ExtractIlluminaBarcodes.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;argv)</code>&nbsp;</td>
 </tr>
 </table>
@@ -347,7 +352,7 @@ public&nbsp;java.lang.Integer LANE</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>READ_STRUCTURE</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of \"36T8B8S28T\" then, before being converted to SAM records those bases will be split into 4 reads where read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of skipped cycles and read four is another 28 cycle template read.  The read consisting of skipped cycles would NOT be included in output SAM/BAM file read groups.",
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of \"28T8M8B8S28T\" then the sequence may be split up into four reads:\n* read one with 28 cycles (bases) of template\n* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)\n* read three with 8 cycles (bases) of sample barcode\n* 8 cycles (bases) skipped.\n* read four with 28 cycles (bases) of template\nThe skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.",
         <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="RS")
 public&nbsp;java.lang.String READ_STRUCTURE</pre>
 </li>
@@ -498,6 +503,16 @@ public&nbsp;int NUM_PROCESSORS</pre>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>program exit status.</dd>
 </dl>
+</li>
+</ul>
+<a name="finalizeMetrics-java.util.Map-picard.illumina.ExtractIlluminaBarcodes.BarcodeMetric-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>finalizeMetrics</h4>
+<pre>public static&nbsp;void&nbsp;finalizeMetrics(java.util.Map&lt;java.lang.String,<a href="../../picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a>&gt;&nbsp;barcodeToMetrics,
+                                   <a href="../../picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a>&nbsp;noMatchMetric)</pre>
 </li>
 </ul>
 <a name="customCommandLineValidation--">

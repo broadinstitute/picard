@@ -74,6 +74,7 @@
 <ul>
 <li><a href="#picard.analysis">picard.analysis.*</a></li>
 <li><a href="#picard.cmdline">picard.cmdline.*</a></li>
+<li><a href="#picard.fingerprint">picard.fingerprint.*</a></li>
 <li><a href="#picard.illumina">picard.illumina.*</a></li>
 <li><a href="#picard.metrics">picard.metrics.*</a></li>
 <li><a href="#picard.sam">picard.sam.*</a></li>
@@ -339,6 +340,118 @@
 </table>
 </li>
 </ul>
+<a name="picard.fingerprint">
+<!--   -->
+</a>
+<h2 title="picard.fingerprint">picard.fingerprint.*</h2>
+<ul class="blockList">
+<li class="blockList">
+<table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
+<caption><span>picard.fingerprint.<a href="picard/fingerprint/CheckFingerprint.html" title="class in picard.fingerprint">CheckFingerprint</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th scope="col">Constant Field</th>
+<th class="colLast" scope="col">Value</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.fingerprint.CheckFingerprint.FINGERPRINT_DETAIL_FILE_SUFFIX">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CheckFingerprint.html#FINGERPRINT_DETAIL_FILE_SUFFIX">FINGERPRINT_DETAIL_FILE_SUFFIX</a></code></td>
+<td class="colLast"><code>"fingerprinting_detail_metrics"</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.fingerprint.CheckFingerprint.FINGERPRINT_SUMMARY_FILE_SUFFIX">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CheckFingerprint.html#FINGERPRINT_SUMMARY_FILE_SUFFIX">FINGERPRINT_SUMMARY_FILE_SUFFIX</a></code></td>
+<td class="colLast"><code>"fingerprinting_summary_metrics"</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList">
+<table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
+<caption><span>picard.fingerprint.<a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html" title="class in picard.fingerprint">CrosscheckReadGroupFingerprints</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th scope="col">Constant Field</th>
+<th class="colLast" scope="col">Value</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.fingerprint.CrosscheckReadGroupFingerprints.EXPECTED_MATCH">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#EXPECTED_MATCH">EXPECTED_MATCH</a></code></td>
+<td class="colLast"><code>"EXPECTED MATCH"</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.fingerprint.CrosscheckReadGroupFingerprints.EXPECTED_MISMATCH">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#EXPECTED_MISMATCH">EXPECTED_MISMATCH</a></code></td>
+<td class="colLast"><code>"EXPECTED MISMATCH"</code></td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.fingerprint.CrosscheckReadGroupFingerprints.UNEXPECTED_MATCH">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#UNEXPECTED_MATCH">UNEXPECTED_MATCH</a></code></td>
+<td class="colLast"><code>"UNEXPECTED MATCH"</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.fingerprint.CrosscheckReadGroupFingerprints.UNEXPECTED_MISMATCH">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#UNEXPECTED_MISMATCH">UNEXPECTED_MISMATCH</a></code></td>
+<td class="colLast"><code>"UNEXPECTED MISMATCH"</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList">
+<table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
+<caption><span>picard.fingerprint.<a href="picard/fingerprint/FingerprintChecker.html" title="class in picard.fingerprint">FingerprintChecker</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th scope="col">Constant Field</th>
+<th class="colLast" scope="col">Value</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.fingerprint.FingerprintChecker.DEFAULT_GENOTYPING_ERROR_RATE">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;double</code></td>
+<td><code><a href="picard/fingerprint/FingerprintChecker.html#DEFAULT_GENOTYPING_ERROR_RATE">DEFAULT_GENOTYPING_ERROR_RATE</a></code></td>
+<td class="colLast"><code>0.01</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.fingerprint.FingerprintChecker.DEFAULT_MAXIMAL_PL_DIFFERENCE">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;int</code></td>
+<td><code><a href="picard/fingerprint/FingerprintChecker.html#DEFAULT_MAXIMAL_PL_DIFFERENCE">DEFAULT_MAXIMAL_PL_DIFFERENCE</a></code></td>
+<td class="colLast"><code>30</code></td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.fingerprint.FingerprintChecker.DEFAULT_MINIMUM_BASE_QUALITY">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;int</code></td>
+<td><code><a href="picard/fingerprint/FingerprintChecker.html#DEFAULT_MINIMUM_BASE_QUALITY">DEFAULT_MINIMUM_BASE_QUALITY</a></code></td>
+<td class="colLast"><code>20</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.fingerprint.FingerprintChecker.DEFAULT_MINIMUM_MAPPING_QUALITY">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;int</code></td>
+<td><code><a href="picard/fingerprint/FingerprintChecker.html#DEFAULT_MINIMUM_MAPPING_QUALITY">DEFAULT_MINIMUM_MAPPING_QUALITY</a></code></td>
+<td class="colLast"><code>10</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
 <a name="picard.illumina">
 <!--   -->
 </a>
@@ -424,7 +537,7 @@
 <!--   -->
 </a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
 <td><code><a href="picard/illumina/parser/ReadStructure.html#PARAMETER_DOC">PARAMETER_DOC</a></code></td>
-<td class="colLast"><code>"A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of \"36T8B8S28T\" then, before being converted to SAM records those bases will be split into 4 reads where read one consists of 36 cycles of template, read two consists of 8 cycles of barcode, read three will be an 8 base read of skipped cycles and read four is another 28 cycle template read.  The read consisting of skipped cycles would NOT be included in output SAM/BAM file read groups."</code></td>
+<td class="colLast"><code>"A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of \"28T8M8B8S28T\" then the sequence may be split up into four reads:\n* read one with 28 cycles (bases) of template\n* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)\n* read three with 8 cycles (bases) of sample barcode\n* 8 cycles (bases) skipped.\n* read four with 28 cycles (bases) of template\nThe skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein."</code></td>
 </tr>
 </tbody>
 </table>
@@ -596,6 +709,41 @@
 <ul class="blockList">
 <li class="blockList">
 <table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
+<caption><span>picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicates.html" title="class in picard.sam.markduplicates">MarkDuplicates</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th scope="col">Constant Field</th>
+<th class="colLast" scope="col">Value</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_LIBRARY">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_LIBRARY">DUPLICATE_TYPE_LIBRARY</a></code></td>
+<td class="colLast"><code>"LB"</code></td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a name="picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_SEQUENCING">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_SEQUENCING">DUPLICATE_TYPE_SEQUENCING</a></code></td>
+<td class="colLast"><code>"SQ"</code></td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a name="picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_TAG">
+<!--   -->
+</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
+<td><code><a href="picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_TAG">DUPLICATE_TYPE_TAG</a></code></td>
+<td class="colLast"><code>"DT"</code></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<ul class="blockList">
+<li class="blockList">
+<table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
 <caption><span>picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util">OpticalDuplicateFinder</a></span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
@@ -690,7 +838,7 @@
 <ul class="blockList">
 <li class="blockList">
 <table class="constantsSummary" border="0" cellpadding="3" cellspacing="0" summary="Constant Field Values table, listing constant fields, and values">
-<caption><span>picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="class in picard.sam.util">PhysicalLocation</a></span><span class="tabEnd">&nbsp;</span></caption>
+<caption><span>picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th scope="col">Constant Field</th>
@@ -698,11 +846,11 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><a name="picard.sam.util.PhysicalLocation.DEFAULT_READ_NAME_REGEX">
+<td class="colFirst"><a name="picard.sam.util.PhysicalLocation.NO_VALUE">
 <!--   -->
-</a><code>public&nbsp;static&nbsp;final&nbsp;java.lang.String</code></td>
-<td><code><a href="picard/sam/util/PhysicalLocation.html#DEFAULT_READ_NAME_REGEX">DEFAULT_READ_NAME_REGEX</a></code></td>
-<td class="colLast"><code>"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*"</code></td>
+</a><code>public&nbsp;static&nbsp;final&nbsp;int</code></td>
+<td><code><a href="picard/sam/util/PhysicalLocation.html#NO_VALUE">NO_VALUE</a></code></td>
+<td class="colLast"><code>-1</code></td>
 </tr>
 </tbody>
 </table>

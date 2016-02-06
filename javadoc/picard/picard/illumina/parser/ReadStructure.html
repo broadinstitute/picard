@@ -112,10 +112,11 @@ var activeTableTab = "activeTableTab";
 extends java.lang.Object</pre>
 <div class="block">Describes the intended logical output structure of clusters of an Illumina run.
  (e.g. If the input data consists of 80 base
- clusters and we provide a read structure of "36T8B4M36T" then those bases should be split into 4 reads:
-     read one should be 36 cycles of template,
-     read two should be 8 cycles of sample barcode,
-     read three should be 4 cycles of molecular barcode,
+ clusters and we provide a read structure of "28T8M8B8S28T" then those bases should be split into 4 reads:
+     read one should be 28 cycles of template,
+     read two should be 8 cycles of molecular barcode,
+     read three should be 8 cycles of sample barcode,
+     8 cycles are skipped,
      read four should be another 36 cycle template read.)
   Note: In future releases, ReadStructures will be specified by clients of IlluminaDataProvider(currently
   read structures are detected by IlluminaDataProviderFactory via the structure of QSeq files). When working with

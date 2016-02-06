@@ -101,13 +101,19 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colFirst"><a href="../../../htsjdk/samtools/filter/AbstractJavascriptFilter.html" title="class in htsjdk.samtools.filter">AbstractJavascriptFilter</a>&lt;HEADER,TYPE&gt;</td>
+<td class="colLast">
+<div class="block">Javascript filter with HEADER type containing TYPE records.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/AggregateFilter.html" title="class in htsjdk.samtools.filter">AggregateFilter</a></td>
 <td class="colLast">
 <div class="block">Aggregates multiple filters and provides a method for applying them all to a given record with
  one method call.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/AlignedFilter.html" title="class in htsjdk.samtools.filter">AlignedFilter</a></td>
 <td class="colLast">
 <div class="block">Filter to either include or exclude aligned reads
@@ -115,7 +121,7 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/DuplicateReadFilter.html" title="class in htsjdk.samtools.filter">DuplicateReadFilter</a></td>
 <td class="colLast">
 <div class="block">Filter out SAMRecords with DuplicateRead flag set
@@ -123,7 +129,7 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/FailsVendorReadQualityFilter.html" title="class in htsjdk.samtools.filter">FailsVendorReadQualityFilter</a></td>
 <td class="colLast">
 <div class="block">Filter for filtering out reads that do not pass the quality filter
@@ -131,23 +137,38 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/FilteringIterator.html" title="class in htsjdk.samtools.filter">FilteringIterator</a></td>
 <td class="colLast">
 <div class="block">Filtering Iterator which takes a filter and an iterator and iterates through only those records
  which are not rejected by the filter.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/InsertSizeFilter.html" title="class in htsjdk.samtools.filter">InsertSizeFilter</a></td>
 <td class="colLast">
 <div class="block">Filter things that fall outside a specified range of insert sizes.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/filter/IntervalFilter.html" title="class in htsjdk.samtools.filter">IntervalFilter</a></td>
 <td class="colLast">
 <div class="block">Filter SAMRecords so that only those that overlap the given list of intervals.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../../htsjdk/samtools/filter/JavascriptSamRecordFilter.html" title="class in htsjdk.samtools.filter">JavascriptSamRecordFilter</a></td>
+<td class="colLast">
+<div class="block">javascript based read filter
+ 
+ 
+ The script puts the following variables in the script context:
+
+ - 'record' a SamRecord (
+ https://github.com/samtools/htsjdk/blob/master/src/java/htsjdk/samtools/
+ SAMRecord.java ) - 'header' (
+ https://github.com/samtools/htsjdk/blob/master/src/java/htsjdk/samtools/
+ SAMFileHeader.java )</div>
 </td>
 </tr>
 <tr class="rowColor">

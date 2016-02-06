@@ -151,18 +151,22 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#INTERVALS">INTERVALS</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#MERGE_SEQUENCE_DICTIONARIES">MERGE_SEQUENCE_DICTIONARIES</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>htsjdk.samtools.SAMFileHeader.SortOrder</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#SORT_ORDER">SORT_ORDER</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/MergeSamFiles.html#USE_THREADING">USE_THREADING</a></span></code>&nbsp;</td>
 </tr>
@@ -323,13 +327,25 @@ public&nbsp;boolean USE_THREADING</pre>
 <a name="COMMENT">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>COMMENT</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Comment(s) to include in the merged output file\'s header.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true,
         <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="CO")
 public&nbsp;java.util.List&lt;java.lang.String&gt; COMMENT</pre>
+</li>
+</ul>
+<a name="INTERVALS">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>INTERVALS</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="RGN",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="An interval list file that contains the locations of the positions to merge. Assume bam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;java.io.File INTERVALS</pre>
 </li>
 </ul>
 </li>

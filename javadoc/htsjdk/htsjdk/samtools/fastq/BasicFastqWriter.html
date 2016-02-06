@@ -108,13 +108,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../htsjdk/samtools/fastq/FastqWriter.html" title="interface in htsjdk.samtools.fastq">FastqWriter</a>, java.io.Closeable, java.lang.AutoCloseable</dd>
+<dd><a href="../../../htsjdk/samtools/fastq/FastqWriter.html" title="interface in htsjdk.samtools.fastq">FastqWriter</a>, java.io.Closeable, java.io.Flushable, java.lang.AutoCloseable</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">BasicFastqWriter</span>
 extends java.lang.Object
-implements <a href="../../../htsjdk/samtools/fastq/FastqWriter.html" title="interface in htsjdk.samtools.fastq">FastqWriter</a></pre>
+implements <a href="../../../htsjdk/samtools/fastq/FastqWriter.html" title="interface in htsjdk.samtools.fastq">FastqWriter</a>, java.io.Flushable</pre>
 <div class="block">In general FastqWriterFactory should be used so that AsyncFastqWriter can be enabled, but there are some
  cases in which that behavior is explicitly not wanted.</div>
 </li>
@@ -249,6 +249,10 @@ implements <a href="../../../htsjdk/samtools/fastq/FastqWriter.html" title="inte
 <li class="blockList">
 <h4>flush</h4>
 <pre>public&nbsp;void&nbsp;flush()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code>flush</code>&nbsp;in interface&nbsp;<code>java.io.Flushable</code></dd>
+</dl>
 </li>
 </ul>
 <a name="close--">

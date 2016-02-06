@@ -116,7 +116,7 @@ var activeTableTab = "activeTableTab";
 <pre>public class <span class="typeNameLabel">AddCommentsToBam</span>
 extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in picard.cmdline">CommandLineProgram</a></pre>
 <div class="block">A tool to add comments to a BAM file header. Effectively copies the BAM file except for the addition of the @CO records
- in the header. This tool does not support SAM files.</div>
+ in the header. This tool does not support SAM files. A block copying method is used to ensure efficient transfer to the output file.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>jgentry</dd>

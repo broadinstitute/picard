@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":9};
+var methods = {"i0":10,"i1":10,"i2":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -166,30 +166,34 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#IGNORE_WARNINGS">IGNORE_WARNINGS</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>htsjdk.samtools.BamIndexValidator.IndexValidationStringency</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#INDEX_VALIDATION_STRINGENCY">INDEX_VALIDATION_STRINGENCY</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#IS_BISULFITE_SEQUENCED">IS_BISULFITE_SEQUENCED</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#MAX_OPEN_TEMP_FILES">MAX_OPEN_TEMP_FILES</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.Integer</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#MAX_OUTPUT">MAX_OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../picard/sam/ValidateSamFile.Mode.html" title="enum in picard.sam">ValidateSamFile.Mode</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#MODE">MODE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#VALIDATE_INDEX">VALIDATE_INDEX</a></span></code>&nbsp;</td>
 </tr>
@@ -233,12 +237,18 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>protected java.lang.String[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#customCommandLineValidation--">customCommandLineValidation</a></span>()</code>
+<div class="block">Put any custom command-line validation in an override of this method.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#doWork--">doWork</a></span>()</code>
 <div class="block">Do the work after command line has been parsed.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/ValidateSamFile.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
 </tr>
@@ -248,7 +258,7 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;picard.cmdline.<a href="../../picard/cmdline/CommandLineProgram.html" title="class in picard.cmdline">CommandLineProgram</a></h3>
-<code><a href="../../picard/cmdline/CommandLineProgram.html#customCommandLineValidation--">customCommandLineValidation</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getCommandLine--">getCommandLine</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getCommandLineParser--">getCommandLineParser</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getDefaultHeaders--">getDefaultHeaders</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getMetricsFile--">getMetricsFile</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getNestedOptions--">getNestedOptions</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getNestedOptionsForHelp--">getNestedOptionsForHelp</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getStandardUsagePreamble--">getStandardUsagePreamble</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getVersion--">getVersion</a>, <a href="../../picard/cmdline/CommandLineProgram.html#instanceMain-java.lang.String:A-">instanceMain</a>, <a href="../../picard/cmdline/CommandLineProgram.html#instanceMainWithExit-java.lang.String:A-">instanceMainWithExit</a>, <a href="../../picard/cmdline/CommandLineProgram.html#parseArgs-java.lang.String:A-">parseArgs</a>, <a href="../../picard/cmdline/CommandLineProgram.html#setDefaultHeaders-java.util.List-">setDefaultHeaders</a></code></li>
+<code><a href="../../picard/cmdline/CommandLineProgram.html#getCommandLine--">getCommandLine</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getCommandLineParser--">getCommandLineParser</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getDefaultHeaders--">getDefaultHeaders</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getMetricsFile--">getMetricsFile</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getNestedOptions--">getNestedOptions</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getNestedOptionsForHelp--">getNestedOptionsForHelp</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getStandardUsagePreamble--">getStandardUsagePreamble</a>, <a href="../../picard/cmdline/CommandLineProgram.html#getVersion--">getVersion</a>, <a href="../../picard/cmdline/CommandLineProgram.html#instanceMain-java.lang.String:A-">instanceMain</a>, <a href="../../picard/cmdline/CommandLineProgram.html#instanceMainWithExit-java.lang.String:A-">instanceMainWithExit</a>, <a href="../../picard/cmdline/CommandLineProgram.html#parseArgs-java.lang.String:A-">parseArgs</a>, <a href="../../picard/cmdline/CommandLineProgram.html#setDefaultHeaders-java.util.List-">setDefaultHeaders</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -342,8 +352,18 @@ public&nbsp;boolean IGNORE_WARNINGS</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>VALIDATE_INDEX</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="If true and input is a BAM file with an index file, also validates the index.")
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="DEPRECATED.  Use INDEX_VALIDATION_STRINGENCY instead.  If true and input is a BAM file with an index file, also validates the index.  Until this parameter is retired VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index.")
 public&nbsp;boolean VALIDATE_INDEX</pre>
+</li>
+</ul>
+<a name="INDEX_VALIDATION_STRINGENCY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>INDEX_VALIDATION_STRINGENCY</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="If set to anything other than IndexValidationStringency.NONE and input is a BAM file with an index file, also validates the index at the specified stringency. Until VALIDATE_INDEX is retired, VALIDATE INDEX and INDEX_VALIDATION_STRINGENCY must agree on whether to validate the index.")
+public&nbsp;htsjdk.samtools.BamIndexValidator.IndexValidationStringency INDEX_VALIDATION_STRINGENCY</pre>
 </li>
 </ul>
 <a name="IS_BISULFITE_SEQUENCED">
@@ -404,7 +424,7 @@ public&nbsp;int MAX_OPEN_TEMP_FILES</pre>
 <a name="doWork--">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>doWork</h4>
 <pre>protected&nbsp;int&nbsp;doWork()</pre>
@@ -416,6 +436,26 @@ public&nbsp;int MAX_OPEN_TEMP_FILES</pre>
 <dd><code><a href="../../picard/cmdline/CommandLineProgram.html#doWork--">doWork</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/cmdline/CommandLineProgram.html" title="class in picard.cmdline">CommandLineProgram</a></code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>program exit status.</dd>
+</dl>
+</li>
+</ul>
+<a name="customCommandLineValidation--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>customCommandLineValidation</h4>
+<pre>protected&nbsp;java.lang.String[]&nbsp;customCommandLineValidation()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../picard/cmdline/CommandLineProgram.html#customCommandLineValidation--">CommandLineProgram</a></code></span></div>
+<div class="block">Put any custom command-line validation in an override of this method.
+ clp is initialized at this point and can be used to print usage and access argv.
+ Any options set by command-line parser can be validated.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../picard/cmdline/CommandLineProgram.html#customCommandLineValidation--">customCommandLineValidation</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/cmdline/CommandLineProgram.html" title="class in picard.cmdline">CommandLineProgram</a></code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>null if command line is valid.  If command line is invalid, returns an array of error message
+ to be written to the appropriate place.</dd>
 </dl>
 </li>
 </ul>

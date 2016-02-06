@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -182,6 +182,14 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#MULTI_REFERENCE">MULTI_REFERENCE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#NO_ALIGNMENT_SPAN">NO_ALIGNMENT_SPAN</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#NO_ALIGNMENT_START">NO_ALIGNMENT_START</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#nofBlocks">nofBlocks</a></span></code>&nbsp;</td>
 </tr>
@@ -208,10 +216,6 @@ extends java.lang.Object</pre>
 <tr class="rowColor">
 <td class="colFirst"><code><a href="../../../../htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndValue</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#sliceTags">sliceTags</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#UNMAPPED_OR_NO_REFERENCE">UNMAPPED_OR_NO_REFERENCE</a></span></code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -252,26 +256,34 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#isMapped--">isMapped</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#isMultiref--">isMultiref</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#setAttribute-java.lang.String-java.lang.Object-">setAttribute</a></span>(java.lang.String&nbsp;tag,
             java.lang.Object&nbsp;value)</code>
 <div class="block">Set a value for the tag.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#setRefMD5-byte:A-">setRefMD5</a></span>(byte[]&nbsp;ref)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#setUnsignedArrayAttribute-java.lang.String-java.lang.Object-">setUnsignedArrayAttribute</a></span>(java.lang.String&nbsp;tag,
                          java.lang.Object&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#toString--">toString</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/structure/Slice.html#validateRefMD5-byte:A-">validateRefMD5</a></span>(byte[]&nbsp;ref)</code>&nbsp;</td>
 </tr>
@@ -297,19 +309,6 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="UNMAPPED_OR_NO_REFERENCE">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>UNMAPPED_OR_NO_REFERENCE</h4>
-<pre>public static final&nbsp;int UNMAPPED_OR_NO_REFERENCE</pre>
-<dl>
-<dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.structure.Slice.UNMAPPED_OR_NO_REFERENCE">Constant Field Values</a></dd>
-</dl>
-</li>
-</ul>
 <a name="MULTI_REFERENCE">
 <!--   -->
 </a>
@@ -320,6 +319,32 @@ extends java.lang.Object</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.structure.Slice.MULTI_REFERENCE">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="NO_ALIGNMENT_START">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>NO_ALIGNMENT_START</h4>
+<pre>public static final&nbsp;int NO_ALIGNMENT_START</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.structure.Slice.NO_ALIGNMENT_START">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="NO_ALIGNMENT_SPAN">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>NO_ALIGNMENT_SPAN</h4>
+<pre>public static final&nbsp;int NO_ALIGNMENT_SPAN</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.structure.Slice.NO_ALIGNMENT_SPAN">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>
@@ -585,11 +610,29 @@ extends java.lang.Object</pre>
 <a name="setUnsignedArrayAttribute-java.lang.String-java.lang.Object-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>setUnsignedArrayAttribute</h4>
 <pre>public&nbsp;void&nbsp;setUnsignedArrayAttribute(java.lang.String&nbsp;tag,
                                       java.lang.Object&nbsp;value)</pre>
+</li>
+</ul>
+<a name="isMapped--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isMapped</h4>
+<pre>public&nbsp;boolean&nbsp;isMapped()</pre>
+</li>
+</ul>
+<a name="isMultiref--">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isMultiref</h4>
+<pre>public&nbsp;boolean&nbsp;isMultiref()</pre>
 </li>
 </ul>
 </li>

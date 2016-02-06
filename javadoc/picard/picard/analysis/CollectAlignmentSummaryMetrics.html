@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/analysis/BaseDistributionByCycleMetrics.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/analysis/ChimeraUtil.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/analysis/CollectBaseDistributionByCycle.html" title="class in picard.analysis"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -136,7 +136,15 @@ extends <a href="../../picard/analysis/SinglePassSamProgram.html" title="class i
  <li>Bad Cycles - how many machine cycles yielded combined no-call and mismatch rates of >= 80%</li>
  <li>Strand balance - reads mapped to positive strand / total mapped reads</li>
  </ul>
- Metrics are written for the first read of a pair, the second read, and combined for the pair.</div>
+ Metrics are written for the first read of a pair, the second read, and combined for the pair.
+
+ Chimeras are identified if any of the of following criteria are met:
+ <ul>
+ <li>the insert size is larger than MAX_INSERT_SIZE</li>
+ <li>the ends of a pair map to different contigs</li>
+ <li>the paired end orientation is different that the expected orientation</li>
+ <li>the read contains an SA tag (chimeric alignment)</li>
+ </ul></div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>Doug Voet (dvoet at broadinstitute dot org)</dd>
@@ -164,18 +172,22 @@ extends <a href="../../picard/analysis/SinglePassSamProgram.html" title="class i
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#ADAPTER_SEQUENCE">ADAPTER_SEQUENCE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>java.util.Set&lt;htsjdk.samtools.SamPairUtil.PairOrientation&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#EXPECTED_PAIR_ORIENTATIONS">EXPECTED_PAIR_ORIENTATIONS</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#IS_BISULFITE_SEQUENCED">IS_BISULFITE_SEQUENCED</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#MAX_INSERT_SIZE">MAX_INSERT_SIZE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.util.Set&lt;<a href="../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectAlignmentSummaryMetrics.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a></span></code>&nbsp;</td>
 </tr>
@@ -299,8 +311,18 @@ extends <a href="../../picard/analysis/SinglePassSamProgram.html" title="class i
 <ul class="blockList">
 <li class="blockList">
 <h4>MAX_INSERT_SIZE</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Paired end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
 public&nbsp;int MAX_INSERT_SIZE</pre>
+</li>
+</ul>
+<a name="EXPECTED_PAIR_ORIENTATIONS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>EXPECTED_PAIR_ORIENTATIONS</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Paired-end reads that do not have this expected orientation will be considered chimeric.")
+public&nbsp;java.util.Set&lt;htsjdk.samtools.SamPairUtil.PairOrientation&gt; EXPECTED_PAIR_ORIENTATIONS</pre>
 </li>
 </ul>
 <a name="ADAPTER_SEQUENCE">
@@ -342,7 +364,7 @@ public&nbsp;boolean IS_BISULFITE_SEQUENCED</pre>
 <li class="blockList">
 <h4>REFERENCE_SEQUENCE</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="R",
-        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Reference sequence file. Note that while this argument isn\'t required, without it only a small subset of the metrics will be calculated.",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Reference sequence file. Note that while this argument isn\'t required, without it only a small subset of the metrics will be calculated. Note also that if a reference sequence is provided, it must be accompanied by a sequence dictionary.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true,
         <a href="../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
 public&nbsp;java.io.File REFERENCE_SEQUENCE</pre>
@@ -470,7 +492,7 @@ public&nbsp;java.io.File REFERENCE_SEQUENCE</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/analysis/BaseDistributionByCycleMetrics.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/analysis/ChimeraUtil.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/analysis/CollectBaseDistributionByCycle.html" title="class in picard.analysis"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

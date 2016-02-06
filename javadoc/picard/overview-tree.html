@@ -80,6 +80,8 @@
 <li><a href="picard/cmdline/package-tree.html">picard.cmdline</a>, </li>
 <li><a href="picard/cmdline/programgroups/package-tree.html">picard.cmdline.programgroups</a>, </li>
 <li><a href="picard/fastq/package-tree.html">picard.fastq</a>, </li>
+<li><a href="picard/filter/package-tree.html">picard.filter</a>, </li>
+<li><a href="picard/fingerprint/package-tree.html">picard.fingerprint</a>, </li>
 <li><a href="picard/illumina/package-tree.html">picard.illumina</a>, </li>
 <li><a href="picard/illumina/parser/package-tree.html">picard.illumina.parser</a>, </li>
 <li><a href="picard/illumina/parser/fakers/package-tree.html">picard.illumina.parser.fakers</a>, </li>
@@ -135,6 +137,7 @@
 <ul>
 <li type="circle">java.util.TreeMap&lt;K,V&gt; (implements java.lang.Cloneable, java.util.NavigableMap&lt;K,V&gt;, java.io.Serializable)
 <ul>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/Fingerprint.html" title="class in picard.fingerprint"><span class="typeNameLink">Fingerprint</span></a></li>
 <li type="circle">picard.pedigree.<a href="picard/pedigree/PedFile.html" title="class in picard.pedigree"><span class="typeNameLink">PedFile</span></a></li>
 </ul>
 </li>
@@ -142,7 +145,9 @@
 </li>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/AdapterMarker.html" title="class in picard.util"><span class="typeNameLink">AdapterMarker</span></a></li>
+<li type="circle">picard.analysis.<a href="picard/analysis/AdapterUtility.html" title="class in picard.analysis"><span class="typeNameLink">AdapterUtility</span></a></li>
 <li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/AlleleBalanceFilter.html" title="class in picard.vcf.filter"><span class="typeNameLink">AlleleBalanceFilter</span></a> (implements picard.vcf.filter.<a href="picard/vcf/filter/VariantFilter.html" title="interface in picard.vcf.filter">VariantFilter</a>)</li>
+<li type="circle">picard.cmdline.programgroups.<a href="picard/cmdline/programgroups/Alpha.html" title="class in picard.cmdline.programgroups"><span class="typeNameLink">Alpha</span></a> (implements picard.cmdline.<a href="picard/cmdline/CommandLineProgramGroup.html" title="interface in picard.cmdline">CommandLineProgramGroup</a>)</li>
 <li type="circle">picard.util.<a href="picard/util/AsyncIterator.html" title="class in picard.util"><span class="typeNameLink">AsyncIterator</span></a>&lt;T&gt; (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
 <li type="circle">picard.fastq.<a href="picard/fastq/BamToBfqWriter.html" title="class in picard.fastq"><span class="typeNameLink">BamToBfqWriter</span></a></li>
 <li type="circle">picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/BarcodeFileReader.html" title="class in picard.illumina.parser.readers"><span class="typeNameLink">BarcodeFileReader</span></a> (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
@@ -153,9 +158,14 @@
 <li type="circle">picard.sam.<a href="picard/sam/BestEndMapqPrimaryAlignmentStrategy.html" title="class in picard.sam"><span class="typeNameLink">BestEndMapqPrimaryAlignmentStrategy</span></a> (implements picard.sam.<a href="picard/sam/PrimaryAlignmentSelectionStrategy.html" title="interface in picard.sam">PrimaryAlignmentSelectionStrategy</a>)</li>
 <li type="circle">picard.sam.<a href="picard/sam/BestMapqPrimaryAlignmentSelectionStrategy.html" title="class in picard.sam"><span class="typeNameLink">BestMapqPrimaryAlignmentSelectionStrategy</span></a> (implements picard.sam.<a href="picard/sam/PrimaryAlignmentSelectionStrategy.html" title="interface in picard.sam">PrimaryAlignmentSelectionStrategy</a>)</li>
 <li type="circle">picard.vcf.<a href="picard/vcf/ByIntervalListVariantContextIterator.html" title="class in picard.vcf"><span class="typeNameLink">ByIntervalListVariantContextIterator</span></a> (implements java.util.Iterator&lt;E&gt;)</li>
-<li type="circle">picard.vcf.<a href="picard/vcf/CallingMetricAccumulator.html" title="class in picard.vcf"><span class="typeNameLink">CallingMetricAccumulator</span></a> (implements picard.vcf.processor.<a href="picard/vcf/processor/VariantProcessor.Accumulator.html" title="interface in picard.vcf.processor">VariantProcessor.Accumulator</a>&lt;RESULT&gt;)</li>
+<li type="circle">picard.vcf.<a href="picard/vcf/CallingMetricAccumulator.html" title="class in picard.vcf"><span class="typeNameLink">CallingMetricAccumulator</span></a> (implements picard.vcf.processor.<a href="picard/vcf/processor/VariantProcessor.Accumulator.html" title="interface in picard.vcf.processor">VariantProcessor.Accumulator</a>&lt;RESULT&gt;)
+<ul>
+<li type="circle">picard.vcf.<a href="picard/vcf/GvcfMetricAccumulator.html" title="class in picard.vcf"><span class="typeNameLink">GvcfMetricAccumulator</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.vcf.<a href="picard/vcf/CallingMetricAccumulator.Result.html" title="class in picard.vcf"><span class="typeNameLink">CallingMetricAccumulator.Result</span></a></li>
 <li type="circle">picard.fastq.<a href="picard/fastq/Casava18ReadNameEncoder.html" title="class in picard.fastq"><span class="typeNameLink">Casava18ReadNameEncoder</span></a> (implements picard.fastq.<a href="picard/fastq/ReadNameEncoder.html" title="interface in picard.fastq">ReadNameEncoder</a>)</li>
+<li type="circle">picard.analysis.<a href="picard/analysis/ChimeraUtil.html" title="class in picard.analysis"><span class="typeNameLink">ChimeraUtil</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/CircularByteBuffer.html" title="class in picard.util"><span class="typeNameLink">CircularByteBuffer</span></a></li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/ClassFinder.html" title="class in picard.cmdline"><span class="typeNameLink">ClassFinder</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/ClippingUtility.html" title="class in picard.util"><span class="typeNameLink">ClippingUtility</span></a></li>
@@ -188,6 +198,7 @@
 <li type="circle">picard.util.<a href="picard/util/BedToIntervalList.html" title="class in picard.util"><span class="typeNameLink">BedToIntervalList</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/BuildBamIndex.html" title="class in picard.sam"><span class="typeNameLink">BuildBamIndex</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/CalculateReadGroupChecksum.html" title="class in picard.sam"><span class="typeNameLink">CalculateReadGroupChecksum</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/CheckFingerprint.html" title="class in picard.fingerprint"><span class="typeNameLink">CheckFingerprint</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/CheckIlluminaDirectory.html" title="class in picard.illumina"><span class="typeNameLink">CheckIlluminaDirectory</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/CheckTerminatorBlock.html" title="class in picard.sam"><span class="typeNameLink">CheckTerminatorBlock</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/CleanSam.html" title="class in picard.sam"><span class="typeNameLink">CleanSam</span></a></li>
@@ -200,7 +211,11 @@
 <li type="circle">picard.analysis.<a href="picard/analysis/CollectRrbsMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectRrbsMetrics</span></a></li>
 <li type="circle">picard.analysis.directed.<a href="picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">CollectTargetedMetrics</span></a>&lt;METRIC,COLLECTOR&gt;
 <ul>
+<li type="circle">picard.analysis.directed.<a href="picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">CollectHsMetrics</span></a>
+<ul>
 <li type="circle">picard.analysis.directed.<a href="picard/analysis/directed/CalculateHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">CalculateHsMetrics</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.analysis.directed.<a href="picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">CollectTargetedPcrMetrics</span></a></li>
 </ul>
 </li>
@@ -216,6 +231,7 @@
 <li type="circle">picard.sam.<a href="picard/sam/CompareSAMs.html" title="class in picard.sam"><span class="typeNameLink">CompareSAMs</span></a></li>
 <li type="circle">picard.analysis.artifacts.<a href="picard/analysis/artifacts/ConvertSequencingArtifactToOxoG.html" title="class in picard.analysis.artifacts"><span class="typeNameLink">ConvertSequencingArtifactToOxoG</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/CreateSequenceDictionary.html" title="class in picard.sam"><span class="typeNameLink">CreateSequenceDictionary</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html" title="class in picard.fingerprint"><span class="typeNameLink">CrosscheckReadGroupFingerprints</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/DownsampleSam.html" title="class in picard.sam"><span class="typeNameLink">DownsampleSam</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/ExtractIlluminaBarcodes.html" title="class in picard.illumina"><span class="typeNameLink">ExtractIlluminaBarcodes</span></a></li>
 <li type="circle">picard.reference.<a href="picard/reference/ExtractSequences.html" title="class in picard.reference"><span class="typeNameLink">ExtractSequences</span></a></li>
@@ -229,6 +245,7 @@
 <li type="circle">picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordance</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsToFastq.html" title="class in picard.illumina"><span class="typeNameLink">IlluminaBasecallsToFastq</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsToSam.html" title="class in picard.illumina"><span class="typeNameLink">IlluminaBasecallsToSam</span></a></li>
+<li type="circle">picard.util.<a href="picard/util/IntervalListToBed.html" title="class in picard.util"><span class="typeNameLink">IntervalListToBed</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/IntervalListTools.html" title="class in picard.util"><span class="typeNameLink">IntervalListTools</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/LiftOverIntervalList.html" title="class in picard.util"><span class="typeNameLink">LiftOverIntervalList</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/LiftoverVcf.html" title="class in picard.vcf"><span class="typeNameLink">LiftoverVcf</span></a></li>
@@ -237,6 +254,7 @@
 <li type="circle">picard.sam.<a href="picard/sam/MergeBamAlignment.html" title="class in picard.sam"><span class="typeNameLink">MergeBamAlignment</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/MergeSamFiles.html" title="class in picard.sam"><span class="typeNameLink">MergeSamFiles</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/MergeVcfs.html" title="class in picard.vcf"><span class="typeNameLink">MergeVcfs</span></a></li>
+<li type="circle">picard.reference.<a href="picard/reference/NonNFastaSize.html" title="class in picard.reference"><span class="typeNameLink">NonNFastaSize</span></a></li>
 <li type="circle">picard.reference.<a href="picard/reference/NormalizeFasta.html" title="class in picard.reference"><span class="typeNameLink">NormalizeFasta</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/PositionBasedDownsampleSam.html" title="class in picard.sam"><span class="typeNameLink">PositionBasedDownsampleSam</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/RenameSampleInVcf.html" title="class in picard.vcf"><span class="typeNameLink">RenameSampleInVcf</span></a></li>
@@ -271,6 +289,13 @@
 <li type="circle">picard.sam.<a href="picard/sam/ViewSam.html" title="class in picard.sam"><span class="typeNameLink">ViewSam</span></a></li>
 </ul>
 </li>
+<li type="circle">picard.filter.<a href="picard/filter/CountingFilter.html" title="class in picard.filter"><span class="typeNameLink">CountingFilter</span></a> (implements htsjdk.samtools.filter.SamRecordFilter)
+<ul>
+<li type="circle">picard.filter.<a href="picard/filter/CountingDuplicateFilter.html" title="class in picard.filter"><span class="typeNameLink">CountingDuplicateFilter</span></a></li>
+<li type="circle">picard.filter.<a href="picard/filter/CountingMapQFilter.html" title="class in picard.filter"><span class="typeNameLink">CountingMapQFilter</span></a></li>
+<li type="circle">picard.filter.<a href="picard/filter/CountingPairedFilter.html" title="class in picard.filter"><span class="typeNameLink">CountingPairedFilter</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/CreateHtmlDocForProgram.html" title="class in picard.cmdline"><span class="typeNameLink">CreateHtmlDocForProgram</span></a></li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/CreateHtmlDocForStandardOptions.html" title="class in picard.cmdline"><span class="typeNameLink">CreateHtmlDocForStandardOptions</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/DbSnpBitSetUtil.html" title="class in picard.util"><span class="typeNameLink">DbSnpBitSetUtil</span></a></li>
@@ -297,6 +322,8 @@
 </li>
 <li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/FilterApplyingVariantIterator.html" title="class in picard.vcf.filter"><span class="typeNameLink">FilterApplyingVariantIterator</span></a> (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
 <li type="circle">picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/FilterFileReader.html" title="class in picard.illumina.parser.readers"><span class="typeNameLink">FilterFileReader</span></a> (implements java.util.Iterator&lt;E&gt;)</li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/FingerprintChecker.html" title="class in picard.fingerprint"><span class="typeNameLink">FingerprintChecker</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/FingerprintResults.html" title="class in picard.fingerprint"><span class="typeNameLink">FingerprintResults</span></a></li>
 <li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/FisherStrandFilter.html" title="class in picard.vcf.filter"><span class="typeNameLink">FisherStrandFilter</span></a> (implements picard.vcf.filter.<a href="picard/vcf/filter/VariantFilter.html" title="interface in picard.vcf.filter">VariantFilter</a>)</li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/FourChannelIntensityData.html" title="class in picard.illumina.parser"><span class="typeNameLink">FourChannelIntensityData</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector.html" title="class in picard.analysis"><span class="typeNameLink">GcBiasMetricsCollector.PerUnitGcBiasMetricsCollector</span></a> (implements picard.metrics.<a href="picard/metrics/PerUnitMetricCollector.html" title="interface in picard.metrics">PerUnitMetricCollector</a>&lt;BEAN,HKEY,ARGTYPE&gt;)</li>
@@ -314,6 +341,22 @@
 <li type="circle">picard.vcf.<a href="picard/vcf/GenotypeConcordanceSchemeFactory.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceSchemeFactory</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceStates</span></a></li>
 <li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/GenotypeQualityFilter.html" title="class in picard.vcf.filter"><span class="typeNameLink">GenotypeQualityFilter</span></a> (implements picard.vcf.filter.<a href="picard/vcf/filter/GenotypeFilter.html" title="interface in picard.vcf.filter">GenotypeFilter</a>)</li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/GenotypeReader.html" title="class in picard.fingerprint"><span class="typeNameLink">GenotypeReader</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/GenotypeReader.VariantIterator.html" title="class in picard.fingerprint"><span class="typeNameLink">GenotypeReader.VariantIterator</span></a> (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeBlock.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeBlock</span></a> (implements java.lang.Comparable&lt;T&gt;)</li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeMap.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeMap</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilities.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilities</span></a>
+<ul>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilitiesFromGenotype.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilitiesFromGenotype</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilitiesFromGenotypeLikelihoods.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilitiesFromGenotypeLikelihoods</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilitiesFromSequence.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilitiesFromSequence</span></a>
+<ul>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilitiesFromContaminatorSequence.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilitiesFromContaminatorSequence</span></a></li>
+</ul>
+</li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilityOfNormalGivenTumor.html" title="class in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilityOfNormalGivenTumor</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.cmdline.programgroups.<a href="picard/cmdline/programgroups/Illumina.html" title="class in picard.cmdline.programgroups"><span class="typeNameLink">Illumina</span></a> (implements picard.cmdline.<a href="picard/cmdline/CommandLineProgramGroup.html" title="interface in picard.cmdline">CommandLineProgramGroup</a>)</li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsConverter.html" title="class in picard.illumina"><span class="typeNameLink">IlluminaBasecallsConverter</span></a>&lt;CLUSTER_OUTPUT_RECORD&gt;</li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/IlluminaDataProvider.html" title="class in picard.illumina.parser"><span class="typeNameLink">IlluminaDataProvider</span></a> (implements java.lang.Iterable&lt;T&gt;, java.util.Iterator&lt;E&gt;)</li>
@@ -334,6 +377,7 @@
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/LibraryIdGenerator.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">LibraryIdGenerator</span></a></li>
 <li type="circle">picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicatesWithMateCigarIterator.html" title="class in picard.sam.markduplicates"><span class="typeNameLink">MarkDuplicatesWithMateCigarIterator</span></a> (implements htsjdk.samtools.SAMRecordIterator)</li>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/MarkQueue.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">MarkQueue</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/MatchResults.html" title="class in picard.fingerprint"><span class="typeNameLink">MatchResults</span></a> (implements java.lang.Comparable&lt;T&gt;)</li>
 <li type="circle">picard.util.<a href="picard/util/MathUtil.html" title="class in picard.util"><span class="typeNameLink">MathUtil</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/MathUtil.LogMath.html" title="class in picard.util"><span class="typeNameLink">MathUtil.LogMath</span></a></li>
 <li type="circle">htsjdk.samtools.metrics.MetricBase
@@ -357,6 +401,8 @@
 </li>
 <li type="circle">picard.sam.<a href="picard/sam/DuplicationMetrics.html" title="class in picard.sam"><span class="typeNameLink">DuplicationMetrics</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina"><span class="typeNameLink">ExtractIlluminaBarcodes.BarcodeMetric</span></a></li>
+<li type="circle">picard.analysis.<a href="picard/analysis/FingerprintingDetailMetrics.html" title="class in picard.analysis"><span class="typeNameLink">FingerprintingDetailMetrics</span></a></li>
+<li type="circle">picard.analysis.<a href="picard/analysis/FingerprintingSummaryMetrics.html" title="class in picard.analysis"><span class="typeNameLink">FingerprintingSummaryMetrics</span></a></li>
 <li type="circle">picard.metrics.<a href="picard/metrics/GcBiasMetrics.html" title="class in picard.metrics"><span class="typeNameLink">GcBiasMetrics</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/GenotypeConcordanceContingencyMetrics.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceContingencyMetrics</span></a></li>
 <li type="circle">picard.vcf.<a href="picard/vcf/GenotypeConcordanceDetailMetrics.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceDetailMetrics</span></a></li>
@@ -419,7 +465,6 @@
 </ul>
 </li>
 <li type="circle">picard.cmdline.programgroups.<a href="picard/cmdline/programgroups/None.html" title="class in picard.cmdline.programgroups"><span class="typeNameLink">None</span></a> (implements picard.cmdline.<a href="picard/cmdline/CommandLineProgramGroup.html" title="interface in picard.cmdline">CommandLineProgramGroup</a>)</li>
-<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">OpticalDuplicateFinder</span></a></li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/OutputMapping.html" title="class in picard.illumina.parser"><span class="typeNameLink">OutputMapping</span></a></li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ParameterizedFileUtil.html" title="class in picard.illumina.parser"><span class="typeNameLink">ParameterizedFileUtil</span></a>
 <ul>
@@ -435,18 +480,13 @@
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/PosParser.html" title="class in picard.illumina.parser"><span class="typeNameLink">PosParser</span></a></li>
 </ul>
 </li>
-<li type="circle">picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="class in picard.sam.util"><span class="typeNameLink">PhysicalLocation</span></a></li>
-<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">PhysicalLocationForMateCigar</span></a> (implements picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>)</li>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigarSet.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">PhysicalLocationForMateCigarSet</span></a></li>
-<li type="circle">picard.cmdline.<a href="picard/cmdline/PicardCommandLine.html" title="class in picard.cmdline"><span class="typeNameLink">PicardCommandLine</span></a></li>
-<li type="circle">picard.vcf.processor.util.<a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html" title="class in picard.vcf.processor.util"><span class="typeNameLink">PredicateFilterDecoratingClosableIterator</span></a>&lt;T&gt; (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
-<li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/QdFilter.html" title="class in picard.vcf.filter"><span class="typeNameLink">QdFilter</span></a> (implements picard.vcf.filter.<a href="picard/vcf/filter/VariantFilter.html" title="interface in picard.vcf.filter">VariantFilter</a>)</li>
-<li type="circle">picard.util.<a href="picard/util/QuerySortedReadPairIteratorUtil.html" title="class in picard.util"><span class="typeNameLink">QuerySortedReadPairIteratorUtil</span></a></li>
-<li type="circle">picard.util.<a href="picard/util/QuerySortedReadPairIteratorUtil.ReadPair.html" title="class in picard.util"><span class="typeNameLink">QuerySortedReadPairIteratorUtil.ReadPair</span></a></li>
-<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/Range.html" title="class in picard.illumina.parser"><span class="typeNameLink">Range</span></a></li>
-<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadData.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadData</span></a></li>
-<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadDescriptor.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadDescriptor</span></a></li>
-<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEnds</span></a> (implements picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>)
+<li type="circle">picard.sam.util.<a href="picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util"><span class="typeNameLink">PhysicalLocationInt</span></a> (implements picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>)
+<ul>
+<li type="circle">picard.sam.util.<a href="picard/sam/util/PhysicalLocationShort.html" title="class in picard.sam.util"><span class="typeNameLink">PhysicalLocationShort</span></a>
+<ul>
+<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">PhysicalLocationForMateCigar</span></a></li>
+<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEnds</span></a>
 <ul>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicates.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMarkDuplicates</span></a>
 <ul>
@@ -456,12 +496,28 @@
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMateCigar.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMateCigar</span></a></li>
 </ul>
 </li>
+</ul>
+</li>
+</ul>
+</li>
+<li type="circle">picard.cmdline.<a href="picard/cmdline/PicardCommandLine.html" title="class in picard.cmdline"><span class="typeNameLink">PicardCommandLine</span></a></li>
+<li type="circle">picard.vcf.processor.util.<a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html" title="class in picard.vcf.processor.util"><span class="typeNameLink">PredicateFilterDecoratingClosableIterator</span></a>&lt;T&gt; (implements htsjdk.samtools.util.CloseableIterator&lt;T&gt;)</li>
+<li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/QdFilter.html" title="class in picard.vcf.filter"><span class="typeNameLink">QdFilter</span></a> (implements picard.vcf.filter.<a href="picard/vcf/filter/VariantFilter.html" title="interface in picard.vcf.filter">VariantFilter</a>)</li>
+<li type="circle">picard.util.<a href="picard/util/QuerySortedReadPairIteratorUtil.html" title="class in picard.util"><span class="typeNameLink">QuerySortedReadPairIteratorUtil</span></a></li>
+<li type="circle">picard.util.<a href="picard/util/QuerySortedReadPairIteratorUtil.ReadPair.html" title="class in picard.util"><span class="typeNameLink">QuerySortedReadPairIteratorUtil.ReadPair</span></a></li>
+<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/Range.html" title="class in picard.illumina.parser"><span class="typeNameLink">Range</span></a></li>
+<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadData.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadData</span></a></li>
+<li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadDescriptor.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadDescriptor</span></a></li>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesCodec.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMarkDuplicatesCodec</span></a> (implements htsjdk.samtools.util.SortingCollection.Codec&lt;T&gt;)
 <ul>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesWithBarcodesCodec.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMarkDuplicatesWithBarcodesCodec</span></a></li>
 </ul>
 </li>
-<li type="circle">picard.sam.util.<a href="picard/sam/util/ReadNameParsingUtils.html" title="class in picard.sam.util"><span class="typeNameLink">ReadNameParsingUtils</span></a></li>
+<li type="circle">picard.sam.util.<a href="picard/sam/util/ReadNameParser.html" title="class in picard.sam.util"><span class="typeNameLink">ReadNameParser</span></a>
+<ul>
+<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">OpticalDuplicateFinder</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadStructure.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadStructure</span></a></li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/ReadStructure.Substructure.html" title="class in picard.illumina.parser"><span class="typeNameLink">ReadStructure.Substructure</span></a> (implements java.lang.Iterable&lt;T&gt;)</li>
 <li type="circle">picard.annotation.<a href="picard/annotation/RefFlatReader.html" title="class in picard.annotation"><span class="typeNameLink">RefFlatReader</span></a></li>
@@ -474,6 +530,7 @@
 </ul>
 </li>
 <li type="circle">picard.analysis.artifacts.<a href="picard/analysis/artifacts/SequencingArtifactMetrics.html" title="class in picard.analysis.artifacts"><span class="typeNameLink">SequencingArtifactMetrics</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/Snp.html" title="class in picard.fingerprint"><span class="typeNameLink">Snp</span></a> (implements java.lang.Comparable&lt;T&gt;)</li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/StandardOptionDefinitions.html" title="class in picard.cmdline"><span class="typeNameLink">StandardOptionDefinitions</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/TabbedTextFileWithHeaderParser.html" title="class in picard.util"><span class="typeNameLink">TabbedTextFileWithHeaderParser</span></a> (implements java.lang.Iterable&lt;T&gt;)</li>
 <li type="circle">picard.util.<a href="picard/util/TabbedTextFileWithHeaderParser.Row.html" title="class in picard.util"><span class="typeNameLink">TabbedTextFileWithHeaderParser.Row</span></a></li>
@@ -484,6 +541,8 @@
 <li type="circle">picard.util.<a href="picard/util/TestNGUtil.html" title="class in picard.util"><span class="typeNameLink">TestNGUtil</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/TestNGUtil.SingleTestUnitTest.html" title="class in picard.util"><span class="typeNameLink">TestNGUtil.SingleTestUnitTest</span></a>&lt;TestClazz&gt;</li>
 <li type="circle">picard.util.<a href="picard/util/TestNGUtil.TestNGParameterizable.html" title="class in picard.util"><span class="typeNameLink">TestNGUtil.TestNGParameterizable</span></a></li>
+<li type="circle">picard.analysis.<a href="picard/analysis/TheoreticalSensitivity.html" title="class in picard.analysis"><span class="typeNameLink">TheoreticalSensitivity</span></a></li>
+<li type="circle">picard.analysis.<a href="picard/analysis/TheoreticalSensitivity.RouletteWheel.html" title="class in picard.analysis"><span class="typeNameLink">TheoreticalSensitivity.RouletteWheel</span></a></li>
 <li type="circle">java.lang.Throwable (implements java.io.Serializable)
 <ul>
 <li type="circle">java.lang.Exception
@@ -532,8 +591,8 @@
 <li type="circle">picard.vcf.filter.<a href="picard/vcf/filter/GenotypeFilter.html" title="interface in picard.vcf.filter"><span class="typeNameLink">GenotypeFilter</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsConverter.ClusterDataConverter.html" title="interface in picard.illumina"><span class="typeNameLink">IlluminaBasecallsConverter.ClusterDataConverter</span></a>&lt;OUTPUT_RECORD&gt;</li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsConverter.ConvertedClusterDataWriter.html" title="interface in picard.illumina"><span class="typeNameLink">IlluminaBasecallsConverter.ConvertedClusterDataWriter</span></a>&lt;OUTPUT_RECORD&gt;</li>
-<li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">OpticalDuplicateFinder.PhysicalLocation</span></a></li>
 <li type="circle">picard.metrics.<a href="picard/metrics/PerUnitMetricCollector.html" title="interface in picard.metrics"><span class="typeNameLink">PerUnitMetricCollector</span></a>&lt;BEAN,HKEY,ARGTYPE&gt;</li>
+<li type="circle">picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util"><span class="typeNameLink">PhysicalLocation</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/PrimaryAlignmentSelectionStrategy.html" title="interface in picard.sam"><span class="typeNameLink">PrimaryAlignmentSelectionStrategy</span></a></li>
 <li type="circle">picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesMap.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMarkDuplicatesMap</span></a></li>
 <li type="circle">picard.fastq.<a href="picard/fastq/ReadNameEncoder.html" title="interface in picard.fastq"><span class="typeNameLink">ReadNameEncoder</span></a></li>
@@ -558,10 +617,14 @@
 <ul>
 <li type="circle">picard.analysis.<a href="picard/analysis/AlignmentSummaryMetrics.Category.html" title="enum in picard.analysis"><span class="typeNameLink">AlignmentSummaryMetrics.Category</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.Program.html" title="enum in picard.analysis"><span class="typeNameLink">CollectMultipleMetrics.Program</span></a> (implements picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a>)</li>
+<li type="circle">picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis"><span class="typeNameLink">MetricAccumulationLevel</span></a></li>
 <li type="circle">picard.analysis.directed.<a href="picard/analysis/directed/RnaSeqMetricsCollector.StrandSpecificity.html" title="enum in picard.analysis.directed"><span class="typeNameLink">RnaSeqMetricsCollector.StrandSpecificity</span></a></li>
 <li type="circle">picard.annotation.<a href="picard/annotation/LocusFunction.html" title="enum in picard.annotation"><span class="typeNameLink">LocusFunction</span></a></li>
 <li type="circle">picard.annotation.<a href="picard/annotation/RefFlatReader.RefFlatColumns.html" title="enum in picard.annotation"><span class="typeNameLink">RefFlatReader.RefFlatColumns</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/DiploidGenotype.html" title="enum in picard.fingerprint"><span class="typeNameLink">DiploidGenotype</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/DiploidHaplotype.html" title="enum in picard.fingerprint"><span class="typeNameLink">DiploidHaplotype</span></a></li>
+<li type="circle">picard.fingerprint.<a href="picard/fingerprint/HaplotypeProbabilities.Genotype.html" title="enum in picard.fingerprint"><span class="typeNameLink">HaplotypeProbabilities.Genotype</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaBasecallsToFastq.ReadNameFormat.html" title="enum in picard.illumina"><span class="typeNameLink">IlluminaBasecallsToFastq.ReadNameFormat</span></a></li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/IlluminaDataType.html" title="enum in picard.illumina.parser"><span class="typeNameLink">IlluminaDataType</span></a></li>
 <li type="circle">picard.illumina.parser.<a href="picard/illumina/parser/IlluminaFileUtil.SupportedIlluminaFormat.html" title="enum in picard.illumina.parser"><span class="typeNameLink">IlluminaFileUtil.SupportedIlluminaFormat</span></a></li>
@@ -575,6 +638,8 @@
 <li type="circle">picard.sam.<a href="picard/sam/ValidateSamFile.Mode.html" title="enum in picard.sam"><span class="typeNameLink">ValidateSamFile.Mode</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/ViewSam.AlignmentStatus.html" title="enum in picard.sam"><span class="typeNameLink">ViewSam.AlignmentStatus</span></a></li>
 <li type="circle">picard.sam.<a href="picard/sam/ViewSam.PfStatus.html" title="enum in picard.sam"><span class="typeNameLink">ViewSam.PfStatus</span></a></li>
+<li type="circle">picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates"><span class="typeNameLink">MarkDuplicates.DuplicateTaggingPolicy</span></a></li>
+<li type="circle">picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicates.DuplicateType.html" title="enum in picard.sam.markduplicates"><span class="typeNameLink">MarkDuplicates.DuplicateType</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/BaitDesigner.DesignStrategy.html" title="enum in picard.util"><span class="typeNameLink">BaitDesigner.DesignStrategy</span></a></li>
 <li type="circle">picard.util.<a href="picard/util/IlluminaUtil.IlluminaAdapterPair.html" title="enum in picard.util"><span class="typeNameLink">IlluminaUtil.IlluminaAdapterPair</span></a> (implements picard.util.<a href="picard/util/AdapterPair.html" title="interface in picard.util">AdapterPair</a>)</li>
 <li type="circle">picard.util.<a href="picard/util/IntervalListScatterer.Mode.html" title="enum in picard.util"><span class="typeNameLink">IntervalListScatterer.Mode</span></a></li>

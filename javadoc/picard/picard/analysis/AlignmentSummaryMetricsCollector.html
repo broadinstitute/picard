@@ -153,11 +153,12 @@ extends <a href="../../picard/metrics/SAMRecordAndReferenceMultiLevelCollector.h
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../picard/analysis/AlignmentSummaryMetricsCollector.html#AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-boolean-">AlignmentSummaryMetricsCollector</a></span>(java.util.Set&lt;<a href="../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../picard/analysis/AlignmentSummaryMetricsCollector.html#AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-java.util.Set-boolean-">AlignmentSummaryMetricsCollector</a></span>(java.util.Set&lt;<a href="../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                                 java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                                 boolean&nbsp;doRefMetrics,
                                 java.util.List&lt;java.lang.String&gt;&nbsp;adapterSequence,
                                 int&nbsp;maxInsertSize,
+                                java.util.Set&lt;htsjdk.samtools.SamPairUtil.PairOrientation&gt;&nbsp;expectedOrientations,
                                 boolean&nbsp;isBisulfiteSequenced)</code>&nbsp;</td>
 </tr>
 </table>
@@ -227,7 +228,7 @@ extends <a href="../../picard/metrics/SAMRecordAndReferenceMultiLevelCollector.h
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-boolean-">
+<a name="AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-java.util.Set-boolean-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -238,6 +239,7 @@ extends <a href="../../picard/metrics/SAMRecordAndReferenceMultiLevelCollector.h
                                         boolean&nbsp;doRefMetrics,
                                         java.util.List&lt;java.lang.String&gt;&nbsp;adapterSequence,
                                         int&nbsp;maxInsertSize,
+                                        java.util.Set&lt;htsjdk.samtools.SamPairUtil.PairOrientation&gt;&nbsp;expectedOrientations,
                                         boolean&nbsp;isBisulfiteSequenced)</pre>
 </li>
 </ul>

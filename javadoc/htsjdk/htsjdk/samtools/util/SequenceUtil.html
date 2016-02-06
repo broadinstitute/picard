@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":41,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9,"i28":9,"i29":9,"i30":9,"i31":9,"i32":9,"i33":9,"i34":9,"i35":9,"i36":9,"i37":9,"i38":9,"i39":9,"i40":9,"i41":9,"i42":9,"i43":9,"i44":9,"i45":41,"i46":9,"i47":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":41,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9,"i28":9,"i29":9,"i30":9,"i31":9,"i32":9,"i33":9,"i34":9,"i35":9,"i36":9,"i37":9,"i38":9,"i39":9,"i40":9,"i41":9,"i42":9,"i43":9,"i44":9,"i45":9,"i46":9,"i47":9,"i48":41,"i49":9,"i50":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -298,7 +298,8 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#basesEqual-byte-byte-">basesEqual</a></span>(byte&nbsp;lhs,
           byte&nbsp;rhs)</code>
-<div class="block">Attempts to efficiently compare two bases stored as bytes for equality.</div>
+<div class="block">Efficiently compare two IUPAC base codes, simply returning true if they are equal (ignoring case),
+ without considering the set relationships between ambiguous codes.</div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
@@ -306,8 +307,8 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#bisulfiteBasesEqual-boolean-byte-byte-">bisulfiteBasesEqual</a></span>(boolean&nbsp;negativeStrand,
                    byte&nbsp;read,
                    byte&nbsp;reference)</code>
-<div class="block">Returns true if the bases are equal OR if the mismatch cannot be accounted for by
- bisfulite treatment.</div>
+<div class="block">Returns true if the bases are equal OR if the mismatch can be accounted for by
+ bisulfite treatment.</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -316,61 +317,75 @@ extends java.lang.Object</pre>
                    byte&nbsp;reference)</code>&nbsp;</td>
 </tr>
 <tr id="i9" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#bisulfiteBasesMatchWithAmbiguity-boolean-byte-byte-">bisulfiteBasesMatchWithAmbiguity</a></span>(boolean&nbsp;negativeStrand,
+                                byte&nbsp;read,
+                                byte&nbsp;reference)</code>
+<div class="block">Same as above, but use <code>readBaseMatchesRefBaseWithAmbiguity</code> instead of <code>basesEqual</code>.</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateGc-byte:A-">calculateGc</a></span>(byte[]&nbsp;bases)</code>
 <div class="block">Calculates the fraction of bases that are G/C in the sequence.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateMD5-byte:A-int-int-">calculateMD5</a></span>(byte[]&nbsp;data,
             int&nbsp;offset,
             int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateMD5String-byte:A-">calculateMD5String</a></span>(byte[]&nbsp;data)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateMD5String-byte:A-int-int-">calculateMD5String</a></span>(byte[]&nbsp;data,
                   int&nbsp;offset,
                   int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateMdAndNmTags-htsjdk.samtools.SAMRecord-byte:A-boolean-boolean-">calculateMdAndNmTags</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record,
                     byte[]&nbsp;ref,
                     boolean&nbsp;calcMD,
                     boolean&nbsp;calcNM)</code>
-<div class="block">A rip off samtools bam_md.c</div>
-</td>
-</tr>
-<tr id="i14" class="altColor">
-<td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
-                 byte[]&nbsp;referenceBases)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<div class="block">Calculate MD and NM similarly to Samtools, except that N->N is a match.</div>
 </td>
 </tr>
 <tr id="i15" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-int-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
-                 byte[]&nbsp;referenceBases,
-                 int&nbsp;referenceOffset)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+                 byte[]&nbsp;referenceBases)</code>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </td>
 </tr>
 <tr id="i16" class="altColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-int-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+                 byte[]&nbsp;referenceBases,
+                 int&nbsp;referenceOffset)</code>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
+</td>
+</tr>
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-int-boolean-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                  byte[]&nbsp;referenceBases,
                  int&nbsp;referenceOffset,
                  boolean&nbsp;bisulfiteSequence)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-char:A-int-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                  char[]&nbsp;referenceBases,
@@ -378,42 +393,42 @@ extends java.lang.Object</pre>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTagFromCigar-htsjdk.samtools.SAMRecord-">calculateSamNmTagFromCigar</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
-<div class="block">Attempts to calculate the for the predefined NM tag from the SAM spec using the cigar string alone.</div>
+<div class="block">Attempts to calculate the predefined NM tag from the SAM spec using the cigar string alone.</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>static byte</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#complement-byte-">complement</a></span>(byte&nbsp;b)</code>
 <div class="block">Returns the complement of a single byte.</div>
 </td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countDeletedBases-htsjdk.samtools.Cigar-">countDeletedBases</a></span>(<a href="../../../htsjdk/samtools/Cigar.html" title="class in htsjdk.samtools">Cigar</a>&nbsp;cigar)</code>&nbsp;</td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countDeletedBases-htsjdk.samtools.SAMRecord-">countDeletedBases</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read)</code>&nbsp;</td>
 </tr>
-<tr id="i22" class="altColor">
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countInsertedBases-htsjdk.samtools.Cigar-">countInsertedBases</a></span>(<a href="../../../htsjdk/samtools/Cigar.html" title="class in htsjdk.samtools">Cigar</a>&nbsp;cigar)</code>&nbsp;</td>
 </tr>
-<tr id="i23" class="rowColor">
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countInsertedBases-htsjdk.samtools.SAMRecord-">countInsertedBases</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read)</code>&nbsp;</td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                byte[]&nbsp;referenceBases)</code>
 <div class="block">Calculates the number of mismatches between the read and the reference sequence provided.</div>
 </td>
 </tr>
-<tr id="i25" class="rowColor">
+<tr id="i26" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-boolean-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                byte[]&nbsp;referenceBases,
@@ -421,7 +436,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the number of mismatches between the read and the reference sequence provided.</div>
 </td>
 </tr>
-<tr id="i26" class="altColor">
+<tr id="i27" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-int-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                byte[]&nbsp;referenceBases,
@@ -429,7 +444,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the number of mismatches between the read and the reference sequence provided.</div>
 </td>
 </tr>
-<tr id="i27" class="rowColor">
+<tr id="i28" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                byte[]&nbsp;referenceBases,
@@ -438,18 +453,26 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the number of mismatches between the read and the reference sequence provided.</div>
 </td>
 </tr>
-<tr id="i28" class="altColor">
+<tr id="i29" class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-boolean-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+               byte[]&nbsp;referenceBases,
+               int&nbsp;referenceOffset,
+               boolean&nbsp;bisulfiteSequence,
+               boolean&nbsp;matchAmbiguousRef)</code>&nbsp;</td>
+</tr>
+<tr id="i30" class="altColor">
 <td class="colFirst"><code>static java.util.List&lt;byte[]&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#generateAllKmers-int-">generateAllKmers</a></span>(int&nbsp;length)</code>
 <div class="block">Generates all possible unambiguous kmers (upper-case) of length and returns them as byte[]s.</div>
 </td>
 </tr>
-<tr id="i29" class="rowColor">
+<tr id="i31" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isBisulfiteConverted-byte-byte-">isBisulfiteConverted</a></span>(byte&nbsp;read,
                     byte&nbsp;reference)</code>&nbsp;</td>
 </tr>
-<tr id="i30" class="altColor">
+<tr id="i32" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isBisulfiteConverted-byte-byte-boolean-">isBisulfiteConverted</a></span>(byte&nbsp;read,
                     byte&nbsp;reference,
@@ -457,19 +480,19 @@ extends java.lang.Object</pre>
 <div class="block">Checks for bisulfite conversion, C->T on the positive strand and G->A on the negative strand.</div>
 </td>
 </tr>
-<tr id="i31" class="rowColor">
+<tr id="i33" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isNoCall-byte-">isNoCall</a></span>(byte&nbsp;base)</code>
 <div class="block">returns true if the value of base represents a no call</div>
 </td>
 </tr>
-<tr id="i32" class="altColor">
+<tr id="i34" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isValidBase-byte-">isValidBase</a></span>(byte&nbsp;b)</code>
 <div class="block">Returns true if the byte is in [acgtACGT].</div>
 </td>
 </tr>
-<tr id="i33" class="rowColor">
+<tr id="i35" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeCigarStringWithIndelPossibleClipping-int-int-int-int-int-">makeCigarStringWithIndelPossibleClipping</a></span>(int&nbsp;alignmentStart,
                                         int&nbsp;readLength,
@@ -479,7 +502,7 @@ extends java.lang.Object</pre>
 <div class="block">Create a cigar string for a gapped alignment, which may have soft clipping at either end</div>
 </td>
 </tr>
-<tr id="i34" class="altColor">
+<tr id="i36" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeCigarStringWithPossibleClipping-int-int-int-">makeCigarStringWithPossibleClipping</a></span>(int&nbsp;alignmentStart,
                                    int&nbsp;readLength,
@@ -487,56 +510,64 @@ extends java.lang.Object</pre>
 <div class="block">Create a simple ungapped cigar string, which might have soft clipping at either end</div>
 </td>
 </tr>
-<tr id="i35" class="rowColor">
+<tr id="i37" class="rowColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeReferenceFromAlignment-htsjdk.samtools.SAMRecord-boolean-">makeReferenceFromAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec,
                           boolean&nbsp;includeReferenceBasesForDeletions)</code>
 <div class="block">Produce reference bases from an aligned SAMRecord with MD string and Cigar.</div>
 </td>
 </tr>
-<tr id="i36" class="altColor">
+<tr id="i38" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeSoftClipCigar-int-">makeSoftClipCigar</a></span>(int&nbsp;clipLength)</code>&nbsp;</td>
 </tr>
-<tr id="i37" class="rowColor">
+<tr id="i39" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#readBaseMatchesRefBaseWithAmbiguity-byte-byte-">readBaseMatchesRefBaseWithAmbiguity</a></span>(byte&nbsp;readBase,
+                                   byte&nbsp;refBase)</code>
+<div class="block">Efficiently compare two IUPAC base codes, one coming from a read sequence and the other coming from
+ a reference sequence, using the reference code as a 'pattern' that the read base must match.</div>
+</td>
+</tr>
+<tr id="i40" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverse-byte:A-int-int-">reverse</a></span>(byte[]&nbsp;array,
        int&nbsp;offset,
        int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i38" class="altColor">
+<tr id="i41" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-byte:A-">reverseComplement</a></span>(byte[]&nbsp;bases)</code>
 <div class="block">Reverses and complements the bases in place.</div>
 </td>
 </tr>
-<tr id="i39" class="rowColor">
+<tr id="i42" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-byte:A-int-int-">reverseComplement</a></span>(byte[]&nbsp;bases,
                  int&nbsp;offset,
                  int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i40" class="altColor">
+<tr id="i43" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-java.lang.String-">reverseComplement</a></span>(java.lang.String&nbsp;sequenceData)</code>
 <div class="block">Calculate the reverse complement of the specified sequence
  (Stolen from Reseq)</div>
 </td>
 </tr>
-<tr id="i41" class="rowColor">
+<tr id="i44" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseQualities-byte:A-">reverseQualities</a></span>(byte[]&nbsp;quals)</code>
 <div class="block">Reverses the quals in place.</div>
 </td>
 </tr>
-<tr id="i42" class="altColor">
+<tr id="i45" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases)</code>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i43" class="rowColor">
+<tr id="i46" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -544,7 +575,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i44" class="altColor">
+<tr id="i47" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -553,7 +584,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i45" class="rowColor">
+<tr id="i48" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-char:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         char[]&nbsp;referenceBases,
@@ -561,11 +592,11 @@ extends java.lang.Object</pre>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i46" class="altColor">
+<tr id="i49" class="rowColor">
 <td class="colFirst"><code>static byte</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#upperCase-byte-">upperCase</a></span>(byte&nbsp;base)</code>&nbsp;</td>
 </tr>
-<tr id="i47" class="rowColor">
+<tr id="i50" class="altColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#upperCase-byte:A-">upperCase</a></span>(byte[]&nbsp;bases)</code>&nbsp;</td>
 </tr>
@@ -799,7 +830,26 @@ extends java.lang.Object</pre>
 <h4>basesEqual</h4>
 <pre>public static&nbsp;boolean&nbsp;basesEqual(byte&nbsp;lhs,
                                  byte&nbsp;rhs)</pre>
-<div class="block">Attempts to efficiently compare two bases stored as bytes for equality.</div>
+<div class="block">Efficiently compare two IUPAC base codes, simply returning true if they are equal (ignoring case),
+ without considering the set relationships between ambiguous codes.</div>
+</li>
+</ul>
+<a name="readBaseMatchesRefBaseWithAmbiguity-byte-byte-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>readBaseMatchesRefBaseWithAmbiguity</h4>
+<pre>public static&nbsp;boolean&nbsp;readBaseMatchesRefBaseWithAmbiguity(byte&nbsp;readBase,
+                                                          byte&nbsp;refBase)</pre>
+<div class="block">Efficiently compare two IUPAC base codes, one coming from a read sequence and the other coming from
+ a reference sequence, using the reference code as a 'pattern' that the read base must match.
+
+ We take ambiguous codes into account, returning true if the set of possible bases
+ represented by the read value is a (non-strict) subset of the possible bases represented
+ by the reference value.
+
+ Since the comparison is directional, make sure to pass read / ref codes in correct order.</div>
 </li>
 </ul>
 <a name="isNoCall-byte-">
@@ -1031,6 +1081,19 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
+<a name="countMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>countMismatches</h4>
+<pre>public static&nbsp;int&nbsp;countMismatches(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+                                  byte[]&nbsp;referenceBases,
+                                  int&nbsp;referenceOffset,
+                                  boolean&nbsp;bisulfiteSequence,
+                                  boolean&nbsp;matchAmbiguousRef)</pre>
+</li>
+</ul>
 <a name="countMismatches-htsjdk.samtools.SAMRecord-byte:A-boolean-">
 <!--   -->
 </a>
@@ -1171,8 +1234,9 @@ public static&nbsp;int&nbsp;sumQualitiesOfMismatches(<a href="../../../htsjdk/sa
 <h4>calculateSamNmTag</h4>
 <pre>public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                                     byte[]&nbsp;referenceBases)</pre>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec. To the result of
- countMismatches() it adds 1 for each indel.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </li>
 </ul>
 <a name="calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-int-">
@@ -1184,8 +1248,9 @@ public static&nbsp;int&nbsp;sumQualitiesOfMismatches(<a href="../../../htsjdk/sa
 <pre>public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                                     byte[]&nbsp;referenceBases,
                                     int&nbsp;referenceOffset)</pre>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec. To the result of
- countMismatches() it adds 1 for each indel.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>referenceOffset</code> - 0-based offset of the first element of referenceBases relative to the start
@@ -1203,8 +1268,9 @@ public static&nbsp;int&nbsp;sumQualitiesOfMismatches(<a href="../../../htsjdk/sa
                                     byte[]&nbsp;referenceBases,
                                     int&nbsp;referenceOffset,
                                     boolean&nbsp;bisulfiteSequence)</pre>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec. To the result of
- countMismatches() it adds 1 for each indel.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>referenceOffset</code> - 0-based offset of the first element of referenceBases relative to the start
@@ -1222,7 +1288,7 @@ public static&nbsp;int&nbsp;sumQualitiesOfMismatches(<a href="../../../htsjdk/sa
 <li class="blockList">
 <h4>calculateSamNmTagFromCigar</h4>
 <pre>public static&nbsp;int&nbsp;calculateSamNmTagFromCigar(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</pre>
-<div class="block">Attempts to calculate the for the predefined NM tag from the SAM spec using the cigar string alone.
+<div class="block">Attempts to calculate the predefined NM tag from the SAM spec using the cigar string alone.
  It may calculate incorrectly if ambiguous operators (Like M) are used.
 
  Needed for testing infrastructure: SAMRecordSetBuilder</div>
@@ -1285,9 +1351,9 @@ public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/
 <pre>public static&nbsp;boolean&nbsp;bisulfiteBasesEqual(boolean&nbsp;negativeStrand,
                                           byte&nbsp;read,
                                           byte&nbsp;reference)</pre>
-<div class="block">Returns true if the bases are equal OR if the mismatch cannot be accounted for by
- bisfulite treatment.  C->T on the positive strand and G->A on the negative strand
- do not count as mismatches</div>
+<div class="block">Returns true if the bases are equal OR if the mismatch can be accounted for by
+ bisulfite treatment. C->T on the positive strand and G->A on the negative strand
+ do not count as mismatches.</div>
 </li>
 </ul>
 <a name="bisulfiteBasesEqual-byte-byte-">
@@ -1298,6 +1364,20 @@ public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/
 <h4>bisulfiteBasesEqual</h4>
 <pre>public static&nbsp;boolean&nbsp;bisulfiteBasesEqual(byte&nbsp;read,
                                           byte&nbsp;reference)</pre>
+</li>
+</ul>
+<a name="bisulfiteBasesMatchWithAmbiguity-boolean-byte-byte-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>bisulfiteBasesMatchWithAmbiguity</h4>
+<pre>public static&nbsp;boolean&nbsp;bisulfiteBasesMatchWithAmbiguity(boolean&nbsp;negativeStrand,
+                                                       byte&nbsp;read,
+                                                       byte&nbsp;reference)</pre>
+<div class="block">Same as above, but use <code>readBaseMatchesRefBaseWithAmbiguity</code> instead of <code>basesEqual</code>.
+ Note that <code>isBisulfiteConverted</code> is not affected because it only applies when the
+ reference base is non-ambiguous.</div>
 </li>
 </ul>
 <a name="isBisulfiteConverted-byte-byte-boolean-">
@@ -1411,7 +1491,7 @@ public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/
                                         byte[]&nbsp;ref,
                                         boolean&nbsp;calcMD,
                                         boolean&nbsp;calcNM)</pre>
-<div class="block">A rip off samtools bam_md.c</div>
+<div class="block">Calculate MD and NM similarly to Samtools, except that N->N is a match.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>record</code> - </dd>

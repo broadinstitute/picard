@@ -261,6 +261,12 @@
 <td class="colLast"><span class="typeNameLabel">VariantContext.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContext.html#hasSameAlternateAllelesAs-htsjdk.variant.variantcontext.VariantContext-">hasSameAlternateAllelesAs</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;other)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#isTransition-htsjdk.variant.variantcontext.VariantContext-">isTransition</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc)</code>
+<div class="block">Answers if the provided variant is transitional (otherwise, it's transversional).</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>static java.util.Map&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>,java.lang.Boolean&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-java.util.Collection-">match</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      java.util.Collection&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>&gt;&nbsp;exps)</code>
@@ -268,7 +274,7 @@
  expressions to true (if they matched) or false (if they didn't).</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.util.Map&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>,java.lang.Boolean&gt;</code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.Genotype-java.util.Collection-">match</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;g,
@@ -277,7 +283,7 @@
  expressions to true (if they matched) or false (if they didn't).</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.Genotype-htsjdk.variant.variantcontext.VariantContextUtils.JexlVCMatchExp-">match</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;g,
@@ -285,14 +291,14 @@
 <div class="block">Returns true if exp match VC/g.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.VariantContextUtils.JexlVCMatchExp-">match</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>&nbsp;exp)</code>
 <div class="block">Returns true if exp match VC.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a></code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextUtils.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/VariantContextUtils.html#sitesOnlyVariantContext-htsjdk.variant.variantcontext.VariantContext-">sitesOnlyVariantContext</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc)</code>
 <div class="block">Returns a newly allocated VC that is the same as VC, but without genotypes</div>
@@ -390,13 +396,19 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">PassingVariantFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/PassingVariantFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;variantContext)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">JavascriptVariantFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/JavascriptVariantFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;record)</code>
+<div class="block">Determines whether a VariantContext matches this filter</div>
+</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">SnpFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/SnpFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;variantContext)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">PassingVariantFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/PassingVariantFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;variantContext)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">SnpFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/SnpFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;variantContext)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">VariantContextFilter.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/VariantContextFilter.html#test-htsjdk.variant.variantcontext.VariantContext-">test</a></span>(<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;record)</code>
 <div class="block">Determines whether a VariantContext matches this filter</div>

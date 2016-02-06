@@ -216,7 +216,7 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#hasNext--">hasNext</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
-<td class="colFirst"><code>void</code></td>
+<td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIterator.html#jumpWithinContainerToPos-int-int-">jumpWithinContainerToPos</a></span>(int&nbsp;refIndex,
                         int&nbsp;pos)</code>
 <div class="block">Skip cached records until given alignment start position.</div>
@@ -376,8 +376,8 @@ public&nbsp;CRAMIterator(<a href="../../htsjdk/samtools/seekablestream/SeekableS
 <ul class="blockList">
 <li class="blockList">
 <h4>jumpWithinContainerToPos</h4>
-<pre>public&nbsp;void&nbsp;jumpWithinContainerToPos(int&nbsp;refIndex,
-                                     int&nbsp;pos)</pre>
+<pre>public&nbsp;boolean&nbsp;jumpWithinContainerToPos(int&nbsp;refIndex,
+                                        int&nbsp;pos)</pre>
 <div class="block">Skip cached records until given alignment start position.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

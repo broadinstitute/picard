@@ -201,7 +201,9 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>findIndex</h4>
 <pre>public static&nbsp;java.io.File&nbsp;findIndex(java.io.File&nbsp;samFile)</pre>
-<div class="block">Finds the index file associated with the provided SAM file.  The index file must exist and be reachable to be found.</div>
+<div class="block">Finds the index file associated with the provided SAM file.  The index file must exist and be reachable to be found.
+
+ If the file is a symlink and the index cannot be found, try to unsymlink the file and look for the bai in the actual file path.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>The index for the provided SAM, or null if one was not found.</dd>

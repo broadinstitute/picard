@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigarSet.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -74,7 +74,7 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#fields.inherited.from.class.picard.sam.util.PhysicalLocationInt">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
@@ -99,7 +99,17 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">picard.sam.util.PhysicalLocationInt</a></li>
+<li>
+<ul class="inheritance">
+<li><a href="../../../../picard/sam/util/PhysicalLocationShort.html" title="class in picard.sam.util">picard.sam.util.PhysicalLocationShort</a></li>
+<li>
+<ul class="inheritance">
 <li>picard.sam.markduplicates.util.PhysicalLocationForMateCigar</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -108,13 +118,12 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></dd>
+<dd><a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">PhysicalLocationForMateCigar</span>
-extends java.lang.Object
-implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></pre>
+extends <a href="../../../../picard/sam/util/PhysicalLocationShort.html" title="class in picard.sam.util">PhysicalLocationShort</a></pre>
 <div class="block">Stores the minimal information needed for optical duplicate detection.</div>
 </li>
 </ul>
@@ -122,6 +131,28 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.picard.sam.util.PhysicalLocationInt">
+<!--   -->
+</a>
+<h3>Fields inherited from class&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></h3>
+<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#tile">tile</a>, <a href="../../../../picard/sam/util/PhysicalLocationInt.html#x">x</a>, <a href="../../../../picard/sam/util/PhysicalLocationInt.html#y">y</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.picard.sam.util.PhysicalLocation">
+<!--   -->
+</a>
+<h3>Fields inherited from interface&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></h3>
+<code><a href="../../../../picard/sam/util/PhysicalLocation.html#NO_VALUE">NO_VALUE</a></code></li>
+</ul>
+</li>
+</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -134,7 +165,7 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#PhysicalLocationForMateCigar-picard.sam.markduplicates.util.OpticalDuplicateFinder.PhysicalLocation-">PhysicalLocationForMateCigar</a></span>(<a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&nbsp;rec)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#PhysicalLocationForMateCigar-picard.sam.util.PhysicalLocation-">PhysicalLocationForMateCigar</a></span>(<a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&nbsp;rec)</code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -164,48 +195,45 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#getReadGroup--">getReadGroup</a></span>()</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>short</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#getTile--">getTile</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code>short</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#getX--">getX</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code>short</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#getY--">getY</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i6" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#hashCode--">hashCode</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#setLibraryId-short-">setLibraryId</a></span>(short&nbsp;libraryId)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#setReadGroup-short-">setReadGroup</a></span>(short&nbsp;rg)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#setTile-short-">setTile</a></span>(short&nbsp;tile)</code>&nbsp;</td>
-</tr>
-<tr id="i10" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#setX-short-">setX</a></span>(short&nbsp;x)</code>&nbsp;</td>
-</tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#setY-short-">setY</a></span>(short&nbsp;y)</code>&nbsp;</td>
-</tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.picard.sam.util.PhysicalLocationShort">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/PhysicalLocationShort.html" title="class in picard.sam.util">PhysicalLocationShort</a></h3>
+<code><a href="../../../../picard/sam/util/PhysicalLocationShort.html#setX-int-">setX</a>, <a href="../../../../picard/sam/util/PhysicalLocationShort.html#setY-int-">setY</a></code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.picard.sam.util.PhysicalLocationInt">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></h3>
+<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#getTile--">getTile</a>, <a href="../../../../picard/sam/util/PhysicalLocationInt.html#getX--">getX</a>, <a href="../../../../picard/sam/util/PhysicalLocationInt.html#getY--">getY</a>, <a href="../../../../picard/sam/util/PhysicalLocationInt.html#setTile-short-">setTile</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <code>clone, finalize, getClass, notify, notifyAll, toString, wait, wait, wait</code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.picard.sam.util.PhysicalLocation">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></h3>
+<code><a href="../../../../picard/sam/util/PhysicalLocation.html#hasLocation--">hasLocation</a></code></li>
 </ul>
 </li>
 </ul>
@@ -221,13 +249,13 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="PhysicalLocationForMateCigar-picard.sam.markduplicates.util.OpticalDuplicateFinder.PhysicalLocation-">
+<a name="PhysicalLocationForMateCigar-picard.sam.util.PhysicalLocation-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>PhysicalLocationForMateCigar</h4>
-<pre>public&nbsp;PhysicalLocationForMateCigar(<a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&nbsp;rec)</pre>
+<pre>public&nbsp;PhysicalLocationForMateCigar(<a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&nbsp;rec)</pre>
 </li>
 </ul>
 </li>
@@ -247,7 +275,9 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <pre>public&nbsp;short&nbsp;getReadGroup()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#getReadGroup--">getReadGroup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocation.html#getReadGroup--">getReadGroup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#getReadGroup--">getReadGroup</a></code>&nbsp;in class&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -260,85 +290,9 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <pre>public&nbsp;void&nbsp;setReadGroup(short&nbsp;rg)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#setReadGroup-short-">setReadGroup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getTile--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getTile</h4>
-<pre>public&nbsp;short&nbsp;getTile()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#getTile--">getTile</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="setTile-short-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>setTile</h4>
-<pre>public&nbsp;void&nbsp;setTile(short&nbsp;tile)</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#setTile-short-">setTile</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getX--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getX</h4>
-<pre>public&nbsp;short&nbsp;getX()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#getX--">getX</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="setX-short-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>setX</h4>
-<pre>public&nbsp;void&nbsp;setX(short&nbsp;x)</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#setX-short-">setX</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="getY--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getY</h4>
-<pre>public&nbsp;short&nbsp;getY()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#getY--">getY</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
-</dl>
-</li>
-</ul>
-<a name="setY-short-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>setY</h4>
-<pre>public&nbsp;void&nbsp;setY(short&nbsp;y)</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#setY-short-">setY</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocation.html#setReadGroup-short-">setReadGroup</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#setReadGroup-short-">setReadGroup</a></code>&nbsp;in class&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -351,7 +305,9 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <pre>public&nbsp;short&nbsp;getLibraryId()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#getLibraryId--">getLibraryId</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocation.html#getLibraryId--">getLibraryId</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#getLibraryId--">getLibraryId</a></code>&nbsp;in class&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -364,7 +320,9 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <pre>public&nbsp;void&nbsp;setLibraryId(short&nbsp;libraryId)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html#setLibraryId-short-">setLibraryId</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></code></dd>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocation.html#setLibraryId-short-">setLibraryId</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../../picard/sam/util/PhysicalLocationInt.html#setLibraryId-short-">setLibraryId</a></code>&nbsp;in class&nbsp;<code><a href="../../../../picard/sam/util/PhysicalLocationInt.html" title="class in picard.sam.util">PhysicalLocationInt</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -422,7 +380,7 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigarSet.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -448,7 +406,7 @@ implements <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateF
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#fields.inherited.from.class.picard.sam.util.PhysicalLocationInt">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>

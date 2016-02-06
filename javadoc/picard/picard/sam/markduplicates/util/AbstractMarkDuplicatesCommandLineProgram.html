@@ -286,7 +286,8 @@ extends <a href="../../../../picard/sam/markduplicates/util/AbstractOpticalDupli
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">trackOpticalDuplicates</a></span>(java.util.List&lt;? extends <a href="../../../../picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util">ReadEnds</a>&gt;&nbsp;ends,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.ReadEnds-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">trackOpticalDuplicates</a></span>(java.util.List&lt;? extends <a href="../../../../picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util">ReadEnds</a>&gt;&nbsp;ends,
+                      <a href="../../../../picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util">ReadEnds</a>&nbsp;keeper,
                       <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util">OpticalDuplicateFinder</a>&nbsp;opticalDuplicateFinder,
                       <a href="../../../../picard/sam/markduplicates/util/LibraryIdGenerator.html" title="class in picard.sam.markduplicates.util">LibraryIdGenerator</a>&nbsp;libraryIdGenerator)</code>
 <div class="block">Looks through the set of reads and identifies how many of the duplicates are
@@ -524,17 +525,20 @@ public&nbsp;java.util.List&lt;java.lang.String&gt; COMMENT</pre>
  and checking of the inputs.</div>
 </li>
 </ul>
-<a name="trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">
+<a name="trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.ReadEnds-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>trackOpticalDuplicates</h4>
 <pre>public static&nbsp;void&nbsp;trackOpticalDuplicates(java.util.List&lt;? extends <a href="../../../../picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util">ReadEnds</a>&gt;&nbsp;ends,
+                                          <a href="../../../../picard/sam/markduplicates/util/ReadEnds.html" title="class in picard.sam.markduplicates.util">ReadEnds</a>&nbsp;keeper,
                                           <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html" title="class in picard.sam.markduplicates.util">OpticalDuplicateFinder</a>&nbsp;opticalDuplicateFinder,
                                           <a href="../../../../picard/sam/markduplicates/util/LibraryIdGenerator.html" title="class in picard.sam.markduplicates.util">LibraryIdGenerator</a>&nbsp;libraryIdGenerator)</pre>
 <div class="block">Looks through the set of reads and identifies how many of the duplicates are
- in fact optical duplicates, and stores the data in the instance level histogram.</div>
+ in fact optical duplicates, and stores the data in the instance level histogram.
+ Additionally sets the transient isOpticalDuplicate flag on each read end that is
+ identified as an optical duplicate.</div>
 </li>
 </ul>
 </li>

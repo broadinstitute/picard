@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.EncodingLengthCalculator.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../htsjdk/samtools/cram/build/ContainerFactory.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?htsjdk/samtools/cram/build/CompressionHeaderFactory.html" target="_top">Frames</a></li>
@@ -73,14 +73,14 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -110,35 +110,33 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">CompressionHeaderFactory</span>
 extends java.lang.Object</pre>
+<div class="block">A class responsible for decisions about which encodings to use for a given set of records.
+ This particular version relies heavily on GZIP and RANS for better compression.</div>
 </li>
 </ul>
 </div>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== NESTED CLASS SUMMARY ======== -->
+<!-- =========== FIELD SUMMARY =========== -->
 <ul class="blockList">
-<li class="blockList"><a name="nested.class.summary">
+<li class="blockList"><a name="field.summary">
 <!--   -->
 </a>
-<h3>Nested Class Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
-<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<h3>Field Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Class and Description</th>
+<th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.EncodingLengthCalculator.html" title="class in htsjdk.samtools.cram.build">CompressionHeaderFactory.EncodingLengthCalculator</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.html#ALL_BYTES_USED">ALL_BYTES_USED</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.HuffmanParamsCalculator.html" title="class in htsjdk.samtools.cram.build">CompressionHeaderFactory.HuffmanParamsCalculator</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.IntegerEncodingCalculator.html" title="class in htsjdk.samtools.cram.build">CompressionHeaderFactory.IntegerEncodingCalculator</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.html#BYTE_SPACE_SIZE">BYTE_SPACE_SIZE</a></span></code>&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -176,7 +174,9 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code><a href="../../../../htsjdk/samtools/cram/structure/CompressionHeader.html" title="class in htsjdk.samtools.cram.structure">CompressionHeader</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.html#build-java.util.List-htsjdk.samtools.cram.structure.SubstitutionMatrix-boolean-">build</a></span>(java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a>&gt;&nbsp;records,
      <a href="../../../../htsjdk/samtools/cram/structure/SubstitutionMatrix.html" title="class in htsjdk.samtools.cram.structure">SubstitutionMatrix</a>&nbsp;substitutionMatrix,
-     boolean&nbsp;sorted)</code>&nbsp;</td>
+     boolean&nbsp;sorted)</code>
+<div class="block">Decides on compression methods to use for the given records.</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -194,6 +194,40 @@ extends java.lang.Object</pre>
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a name="BYTE_SPACE_SIZE">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>BYTE_SPACE_SIZE</h4>
+<pre>public static final&nbsp;int BYTE_SPACE_SIZE</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.build.CompressionHeaderFactory.BYTE_SPACE_SIZE">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="ALL_BYTES_USED">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>ALL_BYTES_USED</h4>
+<pre>public static final&nbsp;int ALL_BYTES_USED</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../constant-values.html#htsjdk.samtools.cram.build.CompressionHeaderFactory.ALL_BYTES_USED">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -226,6 +260,18 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;<a href="../../../../htsjdk/samtools/cram/structure/CompressionHeader.html" title="class in htsjdk.samtools.cram.structure">CompressionHeader</a>&nbsp;build(java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a>&gt;&nbsp;records,
                                <a href="../../../../htsjdk/samtools/cram/structure/SubstitutionMatrix.html" title="class in htsjdk.samtools.cram.structure">SubstitutionMatrix</a>&nbsp;substitutionMatrix,
                                boolean&nbsp;sorted)</pre>
+<div class="block">Decides on compression methods to use for the given records.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>records</code> - the data to be compressed</dd>
+<dd><code>substitutionMatrix</code> - a matrix of base substitution frequencies, can be null, in
+            which case it is re-calculated.</dd>
+<dd><code>sorted</code> - if true the records are assumed to be sorted by alignment
+            position</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd><a href="../../../../htsjdk/samtools/cram/structure/CompressionHeader.html" title="class in htsjdk.samtools.cram.structure"><code>CompressionHeader</code></a> object
+         describing the encoding chosen for the data</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -257,7 +303,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../../htsjdk/samtools/cram/build/CompressionHeaderFactory.EncodingLengthCalculator.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../htsjdk/samtools/cram/build/ContainerFactory.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?htsjdk/samtools/cram/build/CompressionHeaderFactory.html" target="_top">Frames</a></li>
@@ -281,14 +327,14 @@ extends java.lang.Object</pre>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

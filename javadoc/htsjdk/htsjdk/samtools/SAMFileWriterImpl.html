@@ -379,9 +379,12 @@ implements <a href="../../htsjdk/samtools/SAMFileWriter.html" title="interface i
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../htsjdk/samtools/SAMFileWriter.html#addAlignment-htsjdk.samtools.SAMRecord-">addAlignment</a></code>&nbsp;in interface&nbsp;<code><a href="../../htsjdk/samtools/SAMFileWriter.html" title="interface in htsjdk.samtools">SAMFileWriter</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>alignment</code> - Must not be null. If the alignment record's SAMFileHeader is null, the record will be
-                  updated to the header used by this writer, which will in turn cause any unresolved reference and
-                  mate reference indices to be resolved against the new header's sequence dictionary.</dd>
+<dd><code>alignment</code> - Must not be null. The record will be updated to use the header used by this writer, which will
+                  in turn cause any unresolved reference and mate reference indices to be resolved against the
+                  header's sequence dictionary.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the record's reference or mate reference indices cannot be
+ resolved against the writer's header using the current reference and mate reference names</dd>
 </dl>
 </li>
 </ul>

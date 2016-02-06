@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html" title="class in picard.sam.markduplicates"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../picard/sam/markduplicates/MarkDuplicatesWithMateCigar.html" title="class in picard.sam.markduplicates"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?picard/sam/markduplicates/MarkDuplicates.html" target="_top">Frames</a></li>
@@ -73,7 +73,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram">Nested</a>&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -143,6 +143,25 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesC
 <!--   -->
 </a>
 <h3>Nested Class Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
+<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates">MarkDuplicates.DuplicateTaggingPolicy</a></span></code>
+<div class="block">Enum used to control how duplicates are flagged in the DT optional tag on each read.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateType.html" title="enum in picard.sam.markduplicates">MarkDuplicates.DuplicateType</a></span></code>
+<div class="block">Enum for the possible values that a duplicate read can be tagged with in the DT attribute.</div>
+</td>
+</tr>
+</table>
 <ul class="blockList">
 <li class="blockList"><a name="nested.classes.inherited.from.class.picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram">
 <!--   -->
@@ -169,31 +188,57 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesC
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#BARCODE_TAG">BARCODE_TAG</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_LIBRARY">DUPLICATE_TYPE_LIBRARY</a></span></code>
+<div class="block">The duplicate type tag value for duplicate type: library.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_SEQUENCING">DUPLICATE_TYPE_SEQUENCING</a></span></code>
+<div class="block">The duplicate type tag value for duplicate type: sequencing (optical & pad-hopping, or "co-localized").</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#DUPLICATE_TYPE_TAG">DUPLICATE_TYPE_TAG</a></span></code>
+<div class="block">The optional attribute in SAM/BAM files used to store the duplicate type.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>protected <a href="../../../picard/sam/markduplicates/util/LibraryIdGenerator.html" title="class in picard.sam.markduplicates.util">LibraryIdGenerator</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#libraryIdGenerator">libraryIdGenerator</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#MAX_FILE_HANDLES_FOR_READ_ENDS_MAP">MAX_FILE_HANDLES_FOR_READ_ENDS_MAP</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP">MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP</a></span></code>
 <div class="block">If more than this many sequences in SAM file, don't spill to disk because there will not
  be enough file handles.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#READ_ONE_BARCODE_TAG">READ_ONE_BARCODE_TAG</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#READ_TWO_BARCODE_TAG">READ_TWO_BARCODE_TAG</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#REMOVE_SEQUENCING_DUPLICATES">REMOVE_SEQUENCING_DUPLICATES</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#SORTING_COLLECTION_SIZE_RATIO">SORTING_COLLECTION_SIZE_RATIO</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates">MarkDuplicates.DuplicateTaggingPolicy</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/MarkDuplicates.html#TAGGING_POLICY">TAGGING_POLICY</a></span></code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -266,7 +311,7 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesC
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;picard.sam.markduplicates.util.<a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram</a></h3>
-<code><a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#finalizeAndWriteMetrics-picard.sam.markduplicates.util.LibraryIdGenerator-">finalizeAndWriteMetrics</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#getChainedPgIds-htsjdk.samtools.SAMFileHeader-">getChainedPgIds</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#openInputs--">openInputs</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">trackOpticalDuplicates</a></code></li>
+<code><a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#finalizeAndWriteMetrics-picard.sam.markduplicates.util.LibraryIdGenerator-">finalizeAndWriteMetrics</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#getChainedPgIds-htsjdk.samtools.SAMFileHeader-">getChainedPgIds</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#openInputs--">openInputs</a>, <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#trackOpticalDuplicates-java.util.List-picard.sam.markduplicates.util.ReadEnds-picard.sam.markduplicates.util.OpticalDuplicateFinder-picard.sam.markduplicates.util.LibraryIdGenerator-">trackOpticalDuplicates</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.sam.markduplicates.util.AbstractOpticalDuplicateFinderCommandLineProgram">
@@ -303,6 +348,48 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesC
 <!--   -->
 </a>
 <h3>Field Detail</h3>
+<a name="DUPLICATE_TYPE_TAG">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DUPLICATE_TYPE_TAG</h4>
+<pre>public static final&nbsp;java.lang.String DUPLICATE_TYPE_TAG</pre>
+<div class="block">The optional attribute in SAM/BAM files used to store the duplicate type.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../constant-values.html#picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_TAG">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DUPLICATE_TYPE_LIBRARY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DUPLICATE_TYPE_LIBRARY</h4>
+<pre>public static final&nbsp;java.lang.String DUPLICATE_TYPE_LIBRARY</pre>
+<div class="block">The duplicate type tag value for duplicate type: library.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../constant-values.html#picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_LIBRARY">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DUPLICATE_TYPE_SEQUENCING">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>DUPLICATE_TYPE_SEQUENCING</h4>
+<pre>public static final&nbsp;java.lang.String DUPLICATE_TYPE_SEQUENCING</pre>
+<div class="block">The duplicate type tag value for duplicate type: sequencing (optical & pad-hopping, or "co-localized").</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../constant-values.html#picard.sam.markduplicates.MarkDuplicates.DUPLICATE_TYPE_SEQUENCING">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
 <a name="MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP">
 <!--   -->
 </a>
@@ -368,6 +455,26 @@ public&nbsp;java.lang.String READ_ONE_BARCODE_TAG</pre>
 <pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Read two barcode SAM tag (ex. BX for 10X Genomics)",
         <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.lang.String READ_TWO_BARCODE_TAG</pre>
+</li>
+</ul>
+<a name="REMOVE_SEQUENCING_DUPLICATES">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>REMOVE_SEQUENCING_DUPLICATES</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="If true remove \'optical\' duplicates and other duplicates that appear to have arisen from the sequencing process instead of the library preparation process, even if REMOVE_DUPLICATES is false. If REMOVE_DUPLICATES is true, all duplicates are removed and this option is ignored.")
+public&nbsp;boolean REMOVE_SEQUENCING_DUPLICATES</pre>
+</li>
+</ul>
+<a name="TAGGING_POLICY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>TAGGING_POLICY</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Determines how duplicate types are recorded in the DT optional attribute.")
+public&nbsp;<a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates">MarkDuplicates.DuplicateTaggingPolicy</a> TAGGING_POLICY</pre>
 </li>
 </ul>
 <a name="libraryIdGenerator">
@@ -462,7 +569,7 @@ public&nbsp;java.lang.String READ_TWO_BARCODE_TAG</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html" title="class in picard.sam.markduplicates"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../picard/sam/markduplicates/MarkDuplicatesWithMateCigar.html" title="class in picard.sam.markduplicates"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?picard/sam/markduplicates/MarkDuplicates.html" target="_top">Frames</a></li>
@@ -486,7 +593,7 @@ public&nbsp;java.lang.String READ_TWO_BARCODE_TAG</pre>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.classes.inherited.from.class.picard.sam.markduplicates.util.AbstractMarkDuplicatesCommandLineProgram">Nested</a>&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -275,6 +275,12 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i12" class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#isTransition-htsjdk.variant.variantcontext.VariantContext-">isTransition</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc)</code>
+<div class="block">Answers if the provided variant is transitional (otherwise, it's transversional).</div>
+</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static java.util.Map&lt;<a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>,java.lang.Boolean&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-java.util.Collection-">match</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      java.util.Collection&lt;<a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>&gt;&nbsp;exps)</code>
@@ -282,7 +288,7 @@ extends java.lang.Object</pre>
  expressions to true (if they matched) or false (if they didn't).</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static java.util.Map&lt;<a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>,java.lang.Boolean&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.Genotype-java.util.Collection-">match</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;g,
@@ -291,7 +297,7 @@ extends java.lang.Object</pre>
  expressions to true (if they matched) or false (if they didn't).</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.Genotype-htsjdk.variant.variantcontext.VariantContextUtils.JexlVCMatchExp-">match</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;g,
@@ -299,20 +305,20 @@ extends java.lang.Object</pre>
 <div class="block">Returns true if exp match VC/g.</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#match-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.VariantContextUtils.JexlVCMatchExp-">match</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc,
      <a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils.JexlVCMatchExp</a>&nbsp;exp)</code>
 <div class="block">Returns true if exp match VC.</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#sitesOnlyVariantContext-htsjdk.variant.variantcontext.VariantContext-">sitesOnlyVariantContext</a></span>(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc)</code>
 <div class="block">Returns a newly allocated VC that is the same as VC, but without genotypes</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static java.util.Collection&lt;<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/VariantContextUtils.html#sitesOnlyVariantContexts-java.util.Collection-">sitesOnlyVariantContexts</a></span>(java.util.Collection&lt;<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;&nbsp;vcs)</code>
 <div class="block">Returns a newly allocated list of VC, where each VC is the same as the input VCs, but without genotypes</div>
@@ -626,6 +632,40 @@ extends java.lang.Object</pre>
 <dd><code>exps</code> - expressions</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>true if there is a match</dd>
+</dl>
+</li>
+</ul>
+<a name="isTransition-htsjdk.variant.variantcontext.VariantContext-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isTransition</h4>
+<pre>public static&nbsp;boolean&nbsp;isTransition(<a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;vc)
+                            throws java.lang.IllegalArgumentException</pre>
+<div class="block">Answers if the provided variant is transitional (otherwise, it's transversional).
+ Transitions:
+ A->G
+ G->A
+ C->T
+ T->C
+ <p/>
+ Transversions:
+ A->C
+ A->T
+ C->A
+ C->G
+ G->C
+ G->T
+ T->A
+ T->G</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>vc</code> - a biallelic polymorphic SNP</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>true if a transition and false if transversion</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if vc is monomorphic, not a SNP or not bi-allelic.</dd>
 </dl>
 </li>
 </ul>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":10,"i26":10,"i27":10,"i28":10,"i29":10,"i30":10,"i31":10,"i32":10,"i33":10,"i34":10,"i35":10,"i36":10,"i37":10,"i38":10,"i39":10,"i40":10,"i41":10,"i42":10,"i43":10,"i44":10,"i45":10,"i46":10,"i47":10,"i48":10,"i49":10,"i50":10,"i51":10,"i52":10,"i53":9,"i54":10,"i55":10,"i56":10,"i57":10,"i58":10,"i59":9,"i60":10,"i61":10,"i62":10,"i63":10,"i64":10,"i65":10,"i66":10,"i67":10,"i68":10,"i69":10,"i70":10,"i71":10,"i72":10,"i73":10,"i74":10,"i75":10,"i76":10,"i77":10,"i78":10,"i79":10,"i80":10,"i81":10,"i82":9,"i83":10,"i84":10,"i85":10,"i86":10,"i87":10,"i88":10,"i89":10,"i90":10,"i91":10,"i92":10,"i93":10,"i94":10,"i95":10,"i96":10,"i97":10,"i98":10,"i99":10,"i100":10,"i101":10,"i102":10,"i103":10,"i104":10,"i105":10,"i106":10,"i107":10,"i108":10,"i109":10,"i110":10,"i111":10,"i112":10,"i113":10,"i114":10,"i115":10,"i116":10,"i117":10,"i118":42,"i119":10,"i120":10,"i121":10,"i122":10,"i123":10,"i124":10,"i125":10,"i126":10,"i127":10,"i128":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":10,"i26":10,"i27":10,"i28":10,"i29":10,"i30":10,"i31":10,"i32":10,"i33":10,"i34":10,"i35":10,"i36":10,"i37":10,"i38":10,"i39":10,"i40":10,"i41":10,"i42":10,"i43":10,"i44":10,"i45":10,"i46":10,"i47":10,"i48":10,"i49":10,"i50":10,"i51":10,"i52":10,"i53":9,"i54":10,"i55":10,"i56":10,"i57":10,"i58":10,"i59":9,"i60":10,"i61":10,"i62":10,"i63":10,"i64":10,"i65":10,"i66":10,"i67":10,"i68":10,"i69":10,"i70":10,"i71":10,"i72":10,"i73":10,"i74":10,"i75":10,"i76":10,"i77":10,"i78":10,"i79":10,"i80":10,"i81":10,"i82":9,"i83":10,"i84":10,"i85":10,"i86":10,"i87":10,"i88":9,"i89":9,"i90":10,"i91":10,"i92":10,"i93":10,"i94":10,"i95":10,"i96":10,"i97":10,"i98":10,"i99":10,"i100":10,"i101":10,"i102":10,"i103":10,"i104":10,"i105":10,"i106":10,"i107":10,"i108":10,"i109":10,"i110":10,"i111":10,"i112":10,"i113":10,"i114":10,"i115":10,"i116":10,"i117":10,"i118":10,"i119":10,"i120":10,"i121":42,"i122":10,"i123":10,"i124":10,"i125":10,"i126":10,"i127":10,"i128":10,"i129":10,"i130":10,"i131":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -179,9 +179,10 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
  A record with null a header may be validated by the isValid method, but the reference and mate reference indices,
  read group, sequence dictionary, and alignment start will not be fully validated unless a header is present.
  <p>
- Also, SAMTextWriter, BAMFileWriter, and CRAMFileWriter all require records to have a valid header in order to be
- written. Any record that does not have a header at the time it is added to the writer will be updated to use the
- header associated with the writer.
+ Also, SAMTextWriter, BAMFileWriter, and CRAMFileWriter all require the reference and mate reference names to be valid
+ in order to be written. At the time a record is added to a writer it will be updated to use the header associated
+ with the writer and the reference and mate reference names must be valid for that header. If the names cannot be
+ resolved using the writer's header, an exception will be thrown.
  <p></div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
@@ -815,205 +816,227 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 </td>
 </tr>
 <tr id="i88" class="altColor">
+<td class="colFirst"><code>protected static java.lang.Integer</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#resolveIndexFromName-java.lang.String-htsjdk.samtools.SAMFileHeader-boolean-">resolveIndexFromName</a></span>(java.lang.String&nbsp;referenceName,
+                    <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;strict)</code>
+<div class="block">Static method that resolves and returns the reference index corresponding to a given reference name.</div>
+</td>
+</tr>
+<tr id="i89" class="rowColor">
+<td class="colFirst"><code>protected static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#resolveNameFromIndex-int-htsjdk.samtools.SAMFileHeader-">resolveNameFromIndex</a></span>(int&nbsp;referenceIndex,
+                    <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>
+<div class="block">Static method that resolves and returns the reference name corresponding to a given reference index.</div>
+</td>
+</tr>
+<tr id="i90" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setAlignmentStart-int-">setAlignmentStart</a></span>(int&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i89" class="rowColor">
+<tr id="i91" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setAttribute-short-java.lang.Object-">setAttribute</a></span>(short&nbsp;tag,
             java.lang.Object&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i90" class="altColor">
+<tr id="i92" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setAttribute-short-java.lang.Object-boolean-">setAttribute</a></span>(short&nbsp;tag,
             java.lang.Object&nbsp;value,
             boolean&nbsp;isUnsignedArray)</code>&nbsp;</td>
 </tr>
-<tr id="i91" class="rowColor">
+<tr id="i93" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setAttribute-java.lang.String-java.lang.Object-">setAttribute</a></span>(java.lang.String&nbsp;tag,
             java.lang.Object&nbsp;value)</code>
 <div class="block">Set a named attribute onto the SAMRecord.</div>
 </td>
 </tr>
-<tr id="i92" class="altColor">
+<tr id="i94" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setAttributes-htsjdk.samtools.SAMBinaryTagAndValue-">setAttributes</a></span>(<a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndValue</a>&nbsp;attributes)</code>
 <div class="block">Replace any existing attributes with the given linked item.</div>
 </td>
 </tr>
-<tr id="i93" class="rowColor">
+<tr id="i95" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setBaseQualities-byte:A-">setBaseQualities</a></span>(byte[]&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i94" class="altColor">
+<tr id="i96" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setBaseQualityString-java.lang.String-">setBaseQualityString</a></span>(java.lang.String&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i95" class="rowColor">
+<tr id="i97" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setCigar-htsjdk.samtools.Cigar-">setCigar</a></span>(<a href="../../htsjdk/samtools/Cigar.html" title="class in htsjdk.samtools">Cigar</a>&nbsp;cigar)</code>&nbsp;</td>
 </tr>
-<tr id="i96" class="altColor">
+<tr id="i98" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setCigarString-java.lang.String-">setCigarString</a></span>(java.lang.String&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i97" class="rowColor">
+<tr id="i99" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setDuplicateReadFlag-boolean-">setDuplicateReadFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read is either a PCR duplicate or an optical duplicate.</div>
 </td>
 </tr>
-<tr id="i98" class="altColor">
+<tr id="i100" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setFileSource-htsjdk.samtools.SAMFileSource-">setFileSource</a></span>(<a href="../../htsjdk/samtools/SAMFileSource.html" title="class in htsjdk.samtools">SAMFileSource</a>&nbsp;fileSource)</code>
 <div class="block">Sets a marker providing the source reader for this file and the position in the file from which the read originated.</div>
 </td>
 </tr>
-<tr id="i99" class="rowColor">
+<tr id="i101" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setFirstOfPairFlag-boolean-">setFirstOfPairFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read is the first read in a pair.</div>
 </td>
 </tr>
-<tr id="i100" class="altColor">
+<tr id="i102" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setFlags-int-">setFlags</a></span>(int&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i101" class="rowColor">
+<tr id="i103" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setHeader-htsjdk.samtools.SAMFileHeader-">setHeader</a></span>(<a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>
 <div class="block">Sets the SAMFileHeader for this record.</div>
 </td>
 </tr>
-<tr id="i102" class="altColor">
+<tr id="i104" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setHeaderStrict-htsjdk.samtools.SAMFileHeader-">setHeaderStrict</a></span>(<a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</code>
+<div class="block">Establishes the SAMFileHeader for this record and forces resolution of the record's reference and mate reference
+ names against the header using the sequence dictionary in the new header.</div>
+</td>
+</tr>
+<tr id="i105" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setInferredInsertSize-int-">setInferredInsertSize</a></span>(int&nbsp;inferredInsertSize)</code>&nbsp;</td>
 </tr>
-<tr id="i103" class="rowColor">
+<tr id="i106" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMappingQuality-int-">setMappingQuality</a></span>(int&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i104" class="altColor">
+<tr id="i107" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMateAlignmentStart-int-">setMateAlignmentStart</a></span>(int&nbsp;mateAlignmentStart)</code>&nbsp;</td>
 </tr>
-<tr id="i105" class="rowColor">
+<tr id="i108" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMateNegativeStrandFlag-boolean-">setMateNegativeStrandFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">strand of the mate (false for forward; true for reverse strand).</div>
 </td>
 </tr>
-<tr id="i106" class="altColor">
+<tr id="i109" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMateReferenceIndex-int-">setMateReferenceIndex</a></span>(int&nbsp;mateReferenceIndex)</code>
 <div class="block">Updates the mate reference index.</div>
 </td>
 </tr>
-<tr id="i107" class="rowColor">
+<tr id="i110" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMateReferenceName-java.lang.String-">setMateReferenceName</a></span>(java.lang.String&nbsp;mateReferenceName)</code>
 <div class="block">Sets the mate reference name for this record.</div>
 </td>
 </tr>
-<tr id="i108" class="altColor">
+<tr id="i111" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setMateUnmappedFlag-boolean-">setMateUnmappedFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the mate is unmapped.</div>
 </td>
 </tr>
-<tr id="i109" class="rowColor">
+<tr id="i112" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setNotPrimaryAlignmentFlag-boolean-">setNotPrimaryAlignmentFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the alignment is not primary (a read having split hits may have multiple primary alignment records).</div>
 </td>
 </tr>
-<tr id="i110" class="altColor">
+<tr id="i113" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setOriginalBaseQualities-byte:A-">setOriginalBaseQualities</a></span>(byte[]&nbsp;oq)</code>
 <div class="block">Sets the original base quality scores into the "OQ" tag as a String.</div>
 </td>
 </tr>
-<tr id="i111" class="rowColor">
+<tr id="i114" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setProperPairFlag-boolean-">setProperPairFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read is mapped in a proper pair (depends on the protocol, normally inferred during alignment).</div>
 </td>
 </tr>
-<tr id="i112" class="altColor">
+<tr id="i115" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadBases-byte:A-">setReadBases</a></span>(byte[]&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i113" class="rowColor">
+<tr id="i116" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadFailsVendorQualityCheckFlag-boolean-">setReadFailsVendorQualityCheckFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read fails platform/vendor quality checks.</div>
 </td>
 </tr>
-<tr id="i114" class="altColor">
+<tr id="i117" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadName-java.lang.String-">setReadName</a></span>(java.lang.String&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i115" class="rowColor">
+<tr id="i118" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadNegativeStrandFlag-boolean-">setReadNegativeStrandFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">strand of the query (false for forward; true for reverse strand).</div>
 </td>
 </tr>
-<tr id="i116" class="altColor">
+<tr id="i119" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadPairedFlag-boolean-">setReadPairedFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read is paired in sequencing, no matter whether it is mapped in a pair.</div>
 </td>
 </tr>
-<tr id="i117" class="rowColor">
+<tr id="i120" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadString-java.lang.String-">setReadString</a></span>(java.lang.String&nbsp;value)</code>&nbsp;</td>
 </tr>
-<tr id="i118" class="altColor">
+<tr id="i121" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadUmappedFlag-boolean-">setReadUmappedFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;&nbsp;</div>
 </td>
 </tr>
-<tr id="i119" class="rowColor">
+<tr id="i122" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReadUnmappedFlag-boolean-">setReadUnmappedFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the query sequence itself is unmapped.</div>
 </td>
 </tr>
-<tr id="i120" class="altColor">
+<tr id="i123" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReferenceIndex-int-">setReferenceIndex</a></span>(int&nbsp;referenceIndex)</code>
 <div class="block">Updates the reference index.</div>
 </td>
 </tr>
-<tr id="i121" class="rowColor">
+<tr id="i124" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setReferenceName-java.lang.String-">setReferenceName</a></span>(java.lang.String&nbsp;referenceName)</code>
 <div class="block">Sets the reference name for this record.</div>
 </td>
 </tr>
-<tr id="i122" class="altColor">
+<tr id="i125" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setSecondOfPairFlag-boolean-">setSecondOfPairFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the read is the second read in a pair.</div>
 </td>
 </tr>
-<tr id="i123" class="rowColor">
+<tr id="i126" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setSupplementaryAlignmentFlag-boolean-">setSupplementaryAlignmentFlag</a></span>(boolean&nbsp;flag)</code>
 <div class="block">the alignment is supplementary (TODO: further explanation?).</div>
 </td>
 </tr>
-<tr id="i124" class="altColor">
+<tr id="i127" class="rowColor">
 <td class="colFirst"><code>java.lang.Object</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setTransientAttribute-java.lang.Object-java.lang.Object-">setTransientAttribute</a></span>(java.lang.Object&nbsp;key,
                      java.lang.Object&nbsp;value)</code>
 <div class="block">Sets the value of a transient attribute, and returns the previous value if defined.</div>
 </td>
 </tr>
-<tr id="i125" class="rowColor">
+<tr id="i128" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setUnsignedArrayAttribute-java.lang.String-java.lang.Object-">setUnsignedArrayAttribute</a></span>(java.lang.String&nbsp;tag,
                          java.lang.Object&nbsp;value)</code>
@@ -1021,19 +1044,19 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
  files.</div>
 </td>
 </tr>
-<tr id="i126" class="altColor">
+<tr id="i129" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#setValidationStringency-htsjdk.samtools.ValidationStringency-">setValidationStringency</a></span>(<a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Control validation of lazily-decoded elements.</div>
 </td>
 </tr>
-<tr id="i127" class="rowColor">
+<tr id="i130" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#toString--">toString</a></span>()</code>
 <div class="block">Simple toString() that gives a little bit of useful info about the read.</div>
 </td>
 </tr>
-<tr id="i128" class="altColor">
+<tr id="i131" class="rowColor">
 <td class="colFirst"><code>java.util.List&lt;<a href="../../htsjdk/samtools/SAMValidationError.html" title="class in htsjdk.samtools">SAMValidationError</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#validateCigar-long-">validateCigar</a></span>(long&nbsp;recordNumber)</code>
 <div class="block">Run all validations of CIGAR.</div>
@@ -1451,6 +1474,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>referenceName</code> - - must not be null</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if <code>referenceName</code> is null</dd>
 </dl>
 </li>
 </ul>
@@ -1474,8 +1499,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <dd>Index in the sequence dictionary of the reference sequence. If the read has no reference sequence, or if
  the reference name is not found in the sequence index, NO_ALIGNMENT_REFERENCE_INDEX (-1) is returned.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.IllegalStateException</code> - if the reference index cannot be resolved because the SAMFileHeader for the
- record is null.</dd>
+<dd><code>java.lang.IllegalStateException</code> - if the reference index must be resolved but cannot be because the SAMFileHeader
+ for the record is null.</dd>
 </dl>
 </li>
 </ul>
@@ -1496,8 +1521,10 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
                        record must have a SAMFileHeader and the index must exist in the associated sequence
                        dictionary.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.IllegalStateException</code> - if the SAMFileHeader is null for this record or the reference index is not
-         found in the sequence dictionary for this record.</dd>
+<dd><code>java.lang.IllegalStateException</code> - if <code>referenceIndex</code> is not equal to NO_ALIGNMENT_REFERENCE_INDEX and the
+ SAMFileHeader is null for this record</dd>
+<dd><code>java.lang.IllegalArgumentException</code> - if <code>referenceIndex</code> is not found in the sequence dictionary in the header
+ for this record.</dd>
 </dl>
 </li>
 </ul>
@@ -1528,6 +1555,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>mateReferenceName</code> - - must not be null</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if <code>mateReferenceName</code> is null</dd>
 </dl>
 </li>
 </ul>
@@ -1552,8 +1581,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
  sequence, or if the mate reference name is not found in the sequence index, NO_ALIGNMENT_REFERENCE_INDEX (-1)
  is returned.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.IllegalStateException</code> - if the mate reference index cannot be resolved because the SAMFileHeader for the
- record is null.</dd>
+<dd><code>java.lang.IllegalStateException</code> - if the mate reference index must be resolved but cannot be because the
+ SAMFileHeader for the record is null.</dd>
 </dl>
 </li>
 </ul>
@@ -1574,8 +1603,59 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
                        record must have a SAMFileHeader and the index must exist in the associated sequence
                        dictionary.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.IllegalStateException</code> - if the SAMFileHeader is null for this record or the mate reference index is not
-         found in the sequence dictionary for this record.</dd>
+<dd><code>java.lang.IllegalStateException</code> - if the SAMFileHeader is null for this record</dd>
+<dd><code>java.lang.IllegalArgumentException</code> - if the mate reference index is not found in the sequence dictionary in the header for this record.</dd>
+</dl>
+</li>
+</ul>
+<a name="resolveIndexFromName-java.lang.String-htsjdk.samtools.SAMFileHeader-boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>resolveIndexFromName</h4>
+<pre>protected static&nbsp;java.lang.Integer&nbsp;resolveIndexFromName(java.lang.String&nbsp;referenceName,
+                                                        <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                                                        boolean&nbsp;strict)</pre>
+<div class="block">Static method that resolves and returns the reference index corresponding to a given reference name.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>referenceName</code> - If <code>referenceName</code> is NO_ALIGNMENT_REFERENCE_NAME, the value NO_ALIGNMENT_REFERENCE_INDEX
+                      is returned directly. Otherwise <code>referenceName</code>  must be looked up in the header's sequence
+                      dictionary.</dd>
+<dd><code>header</code> - SAMFileHeader to use when resolving <code>referenceName</code> to an index. Must be non null if the
+                <code>referenceName</code> is not NO_ALIGNMENT_REFERENCE_NAME.</dd>
+<dd><code>strict</code> - if true, throws if <code>referenceName</code>  does not appear in the header's sequence dictionary</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalStateException</code> - if <code>referenceName</code> is not equal to NO_ALIGNMENT_REFERENCE_NAME and the header is null</dd>
+<dd><code>java.lang.IllegalArgumentException</code> - if strict is true and the name does not appear in header's sequence dictionary.
+
+ Does not mutate the SAMRecord.</dd>
+</dl>
+</li>
+</ul>
+<a name="resolveNameFromIndex-int-htsjdk.samtools.SAMFileHeader-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>resolveNameFromIndex</h4>
+<pre>protected static&nbsp;java.lang.String&nbsp;resolveNameFromIndex(int&nbsp;referenceIndex,
+                                                       <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</pre>
+<div class="block">Static method that resolves and returns the reference name corresponding to a given reference index.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>referenceIndex</code> - If <code>referenceIndex</code> is NO_ALIGNMENT_REFERENCE_INDEX, the value NO_ALIGNMENT_REFERENCE_NAME
+                      is returned directly. Otherwise <code>referenceIndex</code> must be looked up in the header's sequence
+                      dictionary.</dd>
+<dd><code>header</code> - SAMFileHeader to use when resolving <code>referenceIndex</code> to a name. Must be non null unless the
+               the <code>referenceIndex</code> is NO_ALIGNMENT_REFERENCE_INDEX.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalStateException</code> - if <code>referenceIndex</code> is not equal to NO_ALIGNMENT_REFERENCE_NAME and the header
+ is null</dd>
+<dd><code>java.lang.IllegalArgumentException</code> - if <code>referenceIndex</code> does not appear in header's sequence dictionary.
+
+ Does not mutate the SAMRecord.</dd>
 </dl>
 </li>
 </ul>
@@ -2712,6 +2792,25 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>header</code> - contains sequence dictionary for this SAMRecord</dd>
+</dl>
+</li>
+</ul>
+<a name="setHeaderStrict-htsjdk.samtools.SAMFileHeader-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setHeaderStrict</h4>
+<pre>public&nbsp;void&nbsp;setHeaderStrict(<a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header)</pre>
+<div class="block">Establishes the SAMFileHeader for this record and forces resolution of the record's reference and mate reference
+ names against the header using the sequence dictionary in the new header. If either the reference or mate
+ reference name does not appear in the new header's sequence dictionary, an IllegalArgumentException is thrown.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>header</code> - new header for this record. Can not be null.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the record has reference or mate reference names that cannot be resolved
+ to indices using the new header.</dd>
 </dl>
 </li>
 </ul>

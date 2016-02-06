@@ -120,7 +120,9 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">CollectRawWgsMetrics</span>
 extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></pre>
-<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters and has much higher coverage cap.</div>
+<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
+ experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters
+ and has much higher coverage cap.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>farjoun</dd>
@@ -175,9 +177,13 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectRawWgsMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectRawWgsMetrics.html#LOCUS_ACCUMULATION_CAP">LOCUS_ACCUMULATION_CAP</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectRawWgsMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectRawWgsMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a></span></code>&nbsp;</td>
 </tr>
@@ -187,7 +193,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;picard.analysis.<a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></h3>
-<code><a href="../../picard/analysis/CollectWgsMetrics.html#COUNT_UNPAIRED">COUNT_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INCLUDE_BQ_HISTOGRAM">INCLUDE_BQ_HISTOGRAM</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INPUT">INPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#STOP_AFTER">STOP_AFTER</a></code></li>
+<code><a href="../../picard/analysis/CollectWgsMetrics.html#COUNT_UNPAIRED">COUNT_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INCLUDE_BQ_HISTOGRAM">INCLUDE_BQ_HISTOGRAM</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INPUT">INPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#SAMPLE_SIZE">SAMPLE_SIZE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#STOP_AFTER">STOP_AFTER</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -237,7 +243,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;picard.analysis.<a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></h3>
-<code><a href="../../picard/analysis/CollectWgsMetrics.html#doWork--">doWork</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.analysis.CountingFilter-">getBasesExcludedBy</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#main-java.lang.String:A-">main</a></code></li>
+<code><a href="../../picard/analysis/CollectWgsMetrics.html#doWork--">doWork</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#main-java.lang.String:A-">main</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -292,12 +298,22 @@ public&nbsp;int MINIMUM_BASE_QUALITY</pre>
 <a name="COVERAGE_CAP">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>COVERAGE_CAP</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="CAP",
         <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Treat bases with coverage exceeding this value as if they had coverage at this value.")
 public&nbsp;int COVERAGE_CAP</pre>
+</li>
+</ul>
+<a name="LOCUS_ACCUMULATION_CAP">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>LOCUS_ACCUMULATION_CAP</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low")
+public&nbsp;int LOCUS_ACCUMULATION_CAP</pre>
 </li>
 </ul>
 </li>

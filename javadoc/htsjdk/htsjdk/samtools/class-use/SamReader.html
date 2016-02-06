@@ -241,6 +241,13 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><span class="typeNameLabel">BamIndexValidator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/BamIndexValidator.html#lessExhaustivelyTestIndex-htsjdk.samtools.SamReader-">lessExhaustivelyTestIndex</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</code>
+<div class="block">A less time-consuming index validation that only looks at the first and last references in the index
+ and the first and last chunks in each of those</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools">DownsamplingIterator</a></code></td>
 <td class="colLast"><span class="typeNameLabel">DownsamplingIteratorFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DownsamplingIteratorFactory.html#make-htsjdk.samtools.SamReader-htsjdk.samtools.DownsamplingIteratorFactory.Strategy-double-double-int-">make</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader,
     <a href="../../../htsjdk/samtools/DownsamplingIteratorFactory.Strategy.html" title="enum in htsjdk.samtools">DownsamplingIteratorFactory.Strategy</a>&nbsp;strategy,
@@ -250,24 +257,24 @@
 <div class="block">Convenience method that constructs a downsampling iterator for all the reads available from a SamReader.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>abstract void</code></td>
 <td class="colLast"><span class="typeNameLabel">SamReaderFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamReaderFactory.html#reapplyOptions-htsjdk.samtools.SamReader-">reapplyOptions</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</code>
 <div class="block">Reapplies any changed options to the reader *</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAMIterator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMIterator.html#setFileSource-htsjdk.samtools.SamReader-">setFileSource</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;mReader)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SamFileValidator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamFileValidator.html#validateSamFileSummary-htsjdk.samtools.SamReader-htsjdk.samtools.reference.ReferenceSequenceFile-">validateSamFileSummary</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;samReader,
                       <a href="../../../htsjdk/samtools/reference/ReferenceSequenceFile.html" title="interface in htsjdk.samtools.reference">ReferenceSequenceFile</a>&nbsp;reference)</code>
 <div class="block">Outputs validation summary report to out.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SamFileValidator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamFileValidator.html#validateSamFileVerbose-htsjdk.samtools.SamReader-htsjdk.samtools.reference.ReferenceSequenceFile-">validateSamFileVerbose</a></span>(<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;samReader,
                       <a href="../../../htsjdk/samtools/reference/ReferenceSequenceFile.html" title="interface in htsjdk.samtools.reference">ReferenceSequenceFile</a>&nbsp;reference)</code>

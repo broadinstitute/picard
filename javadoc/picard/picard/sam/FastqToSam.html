@@ -397,7 +397,7 @@ public&nbsp;boolean USE_SEQUENTIAL_FASTQS</pre>
 <li class="blockList">
 <h4>QUALITY_FORMAT</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="V",
-        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="A value describing how the quality values are encoded in the fastq.  Either Solexa for pre-pipeline 1.3 style scores (solexa scaling + 66), Illumina for pipeline 1.3 and above (phred scaling + 64) or Standard for phred scaled scores with a character shift of 33.  If this value is not specified, the quality format will be detected automatically.",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="A value describing how the quality values are encoded in the input FASTQ file.  Either Solexa (phred scaling + 66), Illumina (phred scaling + 64) or Standard (phred scaling + 33).  If this value is not specified, the quality format will be detected automatically.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;htsjdk.samtools.util.FastqQualityFormat QUALITY_FORMAT</pre>
 </li>
@@ -592,7 +592,7 @@ public&nbsp;int MAX_Q</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>STRIP_UNPAIRED_MATE_NUMBER</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="If true and this is an unpaired fastq any occurance of \'/1\' will be removed from the end of a read name.")
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="If true and this is an unpaired fastq any occurrence of \'/1\' will be removed from the end of a read name.")
 public&nbsp;java.lang.Boolean STRIP_UNPAIRED_MATE_NUMBER</pre>
 </li>
 </ul>

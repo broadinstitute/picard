@@ -154,7 +154,7 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;picard.analysis.directed.<a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a></h3>
-<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#NEAR_DISTANCE">NEAR_DISTANCE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_TARGET_COVERAGE">PER_TARGET_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#TARGET_INTERVALS">TARGET_INTERVALS</a></code></li>
+<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#CLIP_OVERLAPPING_READS">CLIP_OVERLAPPING_READS</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#COVERAGE_CAP">COVERAGE_CAP</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#NEAR_DISTANCE">NEAR_DISTANCE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_BASE_COVERAGE">PER_BASE_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_TARGET_COVERAGE">PER_TARGET_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#SAMPLE_SIZE">SAMPLE_SIZE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#TARGET_INTERVALS">TARGET_INTERVALS</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -210,10 +210,11 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>protected <a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html" title="class in picard.analysis.directed">TargetedPcrMetricsCollector</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
              java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
              htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
              java.io.File&nbsp;perTargetCoverage,
+             java.io.File&nbsp;perBaseCoverage,
              htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
              htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
              java.lang.String&nbsp;probeSetName,
@@ -345,7 +346,7 @@ public&nbsp;java.lang.String CUSTOM_AMPLICON_SET_NAME</pre>
 <div class="block">Stock main method.</div>
 </li>
 </ul>
-<a name="makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
+<a name="makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -355,16 +356,17 @@ public&nbsp;java.lang.String CUSTOM_AMPLICON_SET_NAME</pre>
                                                     java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                                                     htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                                                     java.io.File&nbsp;perTargetCoverage,
+                                                    java.io.File&nbsp;perBaseCoverage,
                                                     htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                                                     htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                                                     java.lang.String&nbsp;probeSetName,
                                                     int&nbsp;nearProbeDistance)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">CollectTargetedMetrics</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">CollectTargetedMetrics</a></code></span></div>
 <div class="block">A factory method for the TargetMetricsCollector to use this time.  Examples of TargetMetricsCollector:
  (TargetedPcrMetricsCollector, HsMetricsCalculator)</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/TargetedPcrMetrics.html" title="class in picard.analysis.directed">TargetedPcrMetrics</a>,<a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html" title="class in picard.analysis.directed">TargetedPcrMetricsCollector</a>&gt;</code></dd>
+<dd><code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/TargetedPcrMetrics.html" title="class in picard.analysis.directed">TargetedPcrMetrics</a>,<a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html" title="class in picard.analysis.directed">TargetedPcrMetricsCollector</a>&gt;</code></dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A TargetMetricsCollector to which we will pass SAMRecords</dd>
 </dl>

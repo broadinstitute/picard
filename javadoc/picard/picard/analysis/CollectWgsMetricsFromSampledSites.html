@@ -182,7 +182,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;picard.analysis.<a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></h3>
-<code><a href="../../picard/analysis/CollectWgsMetrics.html#COUNT_UNPAIRED">COUNT_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#COVERAGE_CAP">COVERAGE_CAP</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INCLUDE_BQ_HISTOGRAM">INCLUDE_BQ_HISTOGRAM</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INPUT">INPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#STOP_AFTER">STOP_AFTER</a></code></li>
+<code><a href="../../picard/analysis/CollectWgsMetrics.html#COUNT_UNPAIRED">COUNT_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#COVERAGE_CAP">COVERAGE_CAP</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INCLUDE_BQ_HISTOGRAM">INCLUDE_BQ_HISTOGRAM</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#INPUT">INPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#LOCUS_ACCUMULATION_CAP">LOCUS_ACCUMULATION_CAP</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#SAMPLE_SIZE">SAMPLE_SIZE</a>, <a href="../../picard/analysis/CollectWgsMetrics.html#STOP_AFTER">STOP_AFTER</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -228,7 +228,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getBasesExcludedBy-picard.analysis.CountingFilter-">getBasesExcludedBy</a></span>(picard.analysis.CountingFilter&nbsp;filter)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></span>(<a href="../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</code>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.</div>
 </td>
 </tr>
@@ -335,20 +335,20 @@ public&nbsp;java.io.File INTERVALS</pre>
 </dl>
 </li>
 </ul>
-<a name="getBasesExcludedBy-picard.analysis.CountingFilter-">
+<a name="getBasesExcludedBy-picard.filter.CountingFilter-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>getBasesExcludedBy</h4>
-<pre>protected&nbsp;long&nbsp;getBasesExcludedBy(picard.analysis.CountingFilter&nbsp;filter)</pre>
+<pre>protected&nbsp;long&nbsp;getBasesExcludedBy(<a href="../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</pre>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.
  Therefore, we call filter.getFilteredRecords() so that only the bases in the pileup at a given position
  are included in the calculations (with filter.getFilteredBases() we would be including other bases in
  the read too).</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
-<dd><code><a href="../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.analysis.CountingFilter-">getBasesExcludedBy</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></code></dd>
+<dd><code><a href="../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></code></dd>
 </dl>
 </li>
 </ul>

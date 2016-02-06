@@ -166,16 +166,16 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#DBSNP">DBSNP</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>java.io.File</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#INPUT">INPUT</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#GVCF_INPUT">GVCF_INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>java.lang.Boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#REQUIRE_INDEX">REQUIRE_INDEX</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/CollectVariantCallingMetrics.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
@@ -319,18 +319,19 @@ public&nbsp;java.io.File TARGET_INTERVALS</pre>
 <h4>SEQUENCE_DICTIONARY</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="SD",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true,
-        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="If present, speeds loading of dbSNP file")
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="If present, speeds loading of dbSNP file, will look for dictionary in vcf if not present here.")
 public&nbsp;java.io.File SEQUENCE_DICTIONARY</pre>
 </li>
 </ul>
-<a name="REQUIRE_INDEX">
+<a name="GVCF_INPUT">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>REQUIRE_INDEX</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Deprecated option will be removed in a future release.")
-public&nbsp;java.lang.Boolean REQUIRE_INDEX</pre>
+<h4>GVCF_INPUT</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Set to true if running on a single-sample gvcf.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;boolean GVCF_INPUT</pre>
 </li>
 </ul>
 <a name="THREAD_COUNT">

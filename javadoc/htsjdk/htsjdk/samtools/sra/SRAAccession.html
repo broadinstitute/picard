@@ -115,8 +115,11 @@ var activeTableTab = "activeTableTab";
 <pre>public class <span class="typeNameLabel">SRAAccession</span>
 extends java.lang.Object
 implements java.io.Serializable</pre>
-<div class="block">Describes a single SRA accession
- Also provides app string functionality and allows to check if working SRA is supported on the running platform</div>
+<div class="block">Describes a single SRA accession for SRA read collection
+ Also provides app string functionality and allows to check if working SRA is supported on the running platform
+
+ Important: due to checks performed in SRAAccession.isValid(), we won't recognise any accessions other
+ than ones that follow the pattern "^[SED]RR[0-9]{6,9}$", e.g. SRR000123</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../serialized-form.html#htsjdk.samtools.sra.SRAAccession">Serialized Form</a></dd>

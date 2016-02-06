@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9,"i3":9};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":9,"i4":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -175,6 +175,14 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicat
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#MAX_READ_LENGTH">MAX_READ_LENGTH</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#MIN_GROUP_COUNT">MIN_GROUP_COUNT</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#MIN_IDENTICAL_BASES">MIN_IDENTICAL_BASES</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
@@ -240,21 +248,27 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicat
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>protected java.lang.String[]</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#customCommandLineValidation--">customCommandLineValidation</a></span>()</code>
+<div class="block">Put any custom command-line validation in an override of this method.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#doWork--">doWork</a></span>()</code>
 <div class="block">Method that does most of the work.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#getBarcodeValue-htsjdk.samtools.SAMRecord-">getBarcodeValue</a></span>(htsjdk.samtools.SAMRecord&nbsp;record)</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#getReadBarcodeValue-htsjdk.samtools.SAMRecord-java.lang.String-">getReadBarcodeValue</a></span>(htsjdk.samtools.SAMRecord&nbsp;record,
                    java.lang.String&nbsp;tag)</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/sam/markduplicates/EstimateLibraryComplexity.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>
 <div class="block">Stock main method.</div>
@@ -266,7 +280,7 @@ extends <a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicat
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;picard.sam.markduplicates.util.<a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractOpticalDuplicateFinderCommandLineProgram</a></h3>
-<code><a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html#customCommandLineValidation--">customCommandLineValidation</a>, <a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html#setupOpticalDuplicateFinder--">setupOpticalDuplicateFinder</a></code></li>
+<code><a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html#setupOpticalDuplicateFinder--">setupOpticalDuplicateFinder</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -383,12 +397,34 @@ public&nbsp;java.lang.String READ_ONE_BARCODE_TAG</pre>
 <a name="READ_TWO_BARCODE_TAG">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>READ_TWO_BARCODE_TAG</h4>
 <pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Read two barcode SAM tag (ex. BX for 10X Genomics)",
         <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.lang.String READ_TWO_BARCODE_TAG</pre>
+</li>
+</ul>
+<a name="MAX_READ_LENGTH">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MAX_READ_LENGTH</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="The maximum number of bases to consider when comparing reads (0 means no maximum).",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;int MAX_READ_LENGTH</pre>
+</li>
+</ul>
+<a name="MIN_GROUP_COUNT">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>MIN_GROUP_COUNT</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Minimum number group count.  On a per-library basis, we count the number of groups of duplicates that have a particular size.  Omit from consideration any count that is less than this value.  For example, if we see only one group of duplicates with size 500, we omit it from the metric calculations if MIN_GROUP_COUNT is set to two.  Setting this to two may help remove technical artifacts from the library size calculation, for example, adapter dimers.",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;int MIN_GROUP_COUNT</pre>
 </li>
 </ul>
 </li>
@@ -416,6 +452,26 @@ public&nbsp;java.lang.String READ_TWO_BARCODE_TAG</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="customCommandLineValidation--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>customCommandLineValidation</h4>
+<pre>protected&nbsp;java.lang.String[]&nbsp;customCommandLineValidation()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../picard/cmdline/CommandLineProgram.html#customCommandLineValidation--">CommandLineProgram</a></code></span></div>
+<div class="block">Put any custom command-line validation in an override of this method.
+ clp is initialized at this point and can be used to print usage and access argv.
+ Any options set by command-line parser can be validated.</div>
+<dl>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html#customCommandLineValidation--">customCommandLineValidation</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractOpticalDuplicateFinderCommandLineProgram</a></code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>null if command line is valid.  If command line is invalid, returns an array of error message
+ to be written to the appropriate place.</dd>
+</dl>
+</li>
+</ul>
 <a name="getBarcodeValue-htsjdk.samtools.SAMRecord-">
 <!--   -->
 </a>

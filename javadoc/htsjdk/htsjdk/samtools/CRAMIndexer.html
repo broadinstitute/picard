@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":10,"i2":10};
+var methods = {"i0":9,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -162,9 +162,10 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIndexer.html#createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-">createIndex</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;stream,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIndexer.html#createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-htsjdk.samtools.ValidationStringency-">createIndex</a></span>(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;stream,
            java.io.File&nbsp;output,
-           <a href="../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log)</code>
+           <a href="../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log,
+           <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Generates a BAI index file from an input CRAM stream</div>
 </td>
 </tr>
@@ -176,8 +177,16 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIndexer.html#processAlignment-htsjdk.samtools.cram.structure.Slice-">processAlignment</a></span>(<a href="../../htsjdk/samtools/cram/structure/Slice.html" title="class in htsjdk.samtools.cram.structure">Slice</a>&nbsp;slice)</code>
-<div class="block">Record any index information for a given CRAM slice.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIndexer.html#processContainer-htsjdk.samtools.cram.structure.Container-htsjdk.samtools.ValidationStringency-">processContainer</a></span>(<a href="../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container,
+                <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Index a container, any of mapped, unmapped and multiple references are allowed.</div>
+</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMIndexer.html#processSingleReferenceSlice-htsjdk.samtools.cram.structure.Slice-">processSingleReferenceSlice</a></span>(<a href="../../htsjdk/samtools/cram/structure/Slice.html" title="class in htsjdk.samtools.cram.structure">Slice</a>&nbsp;slice)</code>
+<div class="block">Record index information for a given CRAM slice that contains either unmapped reads or
+ reads mapped to a single reference.</div>
 </td>
 </tr>
 </table>
@@ -242,19 +251,39 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="processAlignment-htsjdk.samtools.cram.structure.Slice-">
+<a name="processContainer-htsjdk.samtools.cram.structure.Container-htsjdk.samtools.ValidationStringency-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>processAlignment</h4>
-<pre>public&nbsp;void&nbsp;processAlignment(<a href="../../htsjdk/samtools/cram/structure/Slice.html" title="class in htsjdk.samtools.cram.structure">Slice</a>&nbsp;slice)</pre>
-<div class="block">Record any index information for a given CRAM slice.
- If this alignment starts a new reference, write out the old reference.
- Requires a non-null value for rec.getFileSource().</div>
+<h4>processContainer</h4>
+<pre>public&nbsp;void&nbsp;processContainer(<a href="../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container,
+                             <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</pre>
+<div class="block">Index a container, any of mapped, unmapped and multiple references are allowed. The only requirement is sort
+ order by coordinate.
+ For multiref containers the method reads the container through unpacking all reads. This is slower than single
+ reference but should be faster than normal reading.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>slice</code> - The CRAM slice</dd>
+<dd><code>container</code> - container to be indexed</dd>
+</dl>
+</li>
+</ul>
+<a name="processSingleReferenceSlice-htsjdk.samtools.cram.structure.Slice-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>processSingleReferenceSlice</h4>
+<pre>public&nbsp;void&nbsp;processSingleReferenceSlice(<a href="../../htsjdk/samtools/cram/structure/Slice.html" title="class in htsjdk.samtools.cram.structure">Slice</a>&nbsp;slice)</pre>
+<div class="block">Record index information for a given CRAM slice that contains either unmapped reads or
+ reads mapped to a single reference.
+ If this alignment starts a new reference, write out the old reference.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>slice</code> - The CRAM slice, single ref or unmapped only.</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="../../htsjdk/samtools/SAMException.html" title="class in htsjdk.samtools">SAMException</a></code> - if slice refers to multiple reference sequences.</dd>
 </dl>
 </li>
 </ul>
@@ -269,7 +298,7 @@ extends java.lang.Object</pre>
  Writes any final information and closes the output file.</div>
 </li>
 </ul>
-<a name="createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-">
+<a name="createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-htsjdk.samtools.ValidationStringency-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -277,7 +306,8 @@ extends java.lang.Object</pre>
 <h4>createIndex</h4>
 <pre>public static&nbsp;void&nbsp;createIndex(<a href="../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;stream,
                                java.io.File&nbsp;output,
-                               <a href="../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log)
+                               <a href="../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log,
+                               <a href="../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
                         throws java.io.IOException</pre>
 <div class="block">Generates a BAI index file from an input CRAM stream</div>
 <dl>

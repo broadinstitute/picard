@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10};
+var methods = {"i0":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../picard/sam/markduplicates/util/MarkQueue.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?picard/sam/markduplicates/util/OpticalDuplicateFinder.html" target="_top">Frames</a></li>
@@ -73,7 +73,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -99,7 +99,12 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../picard/sam/util/ReadNameParser.html" title="class in picard.sam.util">picard.sam.util.ReadNameParser</a></li>
+<li>
+<ul class="inheritance">
 <li>picard.sam.markduplicates.util.OpticalDuplicateFinder</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -109,8 +114,8 @@ var activeTableTab = "activeTableTab";
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">OpticalDuplicateFinder</span>
-extends java.lang.Object</pre>
-<div class="block">Contains methods for finding optical duplicates.</div>
+extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class in picard.sam.util">ReadNameParser</a></pre>
+<div class="block">Contains methods for finding optical/co-localized/sequencing duplicates.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>Tim Fennell, Nils Homer</dd>
@@ -121,27 +126,6 @@ extends java.lang.Object</pre>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== NESTED CLASS SUMMARY ======== -->
-<ul class="blockList">
-<li class="blockList"><a name="nested.class.summary">
-<!--   -->
-</a>
-<h3>Nested Class Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
-<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Class and Description</th>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>static interface&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a></span></code>
-<div class="block">Small interface that provides access to the physical location information about a cluster.</div>
-</td>
-</tr>
-</table>
-</li>
-</ul>
 <!-- =========== FIELD SUMMARY =========== -->
 <ul class="blockList">
 <li class="blockList"><a name="field.summary">
@@ -159,18 +143,17 @@ extends java.lang.Object</pre>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">DEFAULT_OPTICAL_DUPLICATE_DISTANCE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>static java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_READ_NAME_REGEX">DEFAULT_READ_NAME_REGEX</a></span></code>&nbsp;</td>
-</tr>
-<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#opticalDuplicatePixelDistance">opticalDuplicatePixelDistance</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
-<td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#readNameRegex">readNameRegex</a></span></code>&nbsp;</td>
-</tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.picard.sam.util.ReadNameParser">
+<!--   -->
+</a>
+<h3>Fields inherited from class&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/ReadNameParser.html" title="class in picard.sam.util">ReadNameParser</a></h3>
+<code><a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX">DEFAULT_READ_NAME_REGEX</a></code></li>
+</ul>
 </li>
 </ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
@@ -185,19 +168,12 @@ extends java.lang.Object</pre>
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder--">OpticalDuplicateFinder</a></span>()</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder--">OpticalDuplicateFinder</a></span>()</code>
+<div class="block">Uses the default duplicate distance <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">100</a> and the default read name regex
+ <a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX"><code>ReadNameParser.DEFAULT_READ_NAME_REGEX</code></a>.</div>
+</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder-int-">OpticalDuplicateFinder</a></span>(int&nbsp;opticalDuplicatePixelDistance)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder-java.lang.String-">OpticalDuplicateFinder</a></span>(java.lang.String&nbsp;readNameRegex)</code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder-java.lang.String-int-">OpticalDuplicateFinder</a></span>(java.lang.String&nbsp;readNameRegex,
-                      int&nbsp;opticalDuplicatePixelDistance)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder-java.lang.String-int-htsjdk.samtools.util.Log-">OpticalDuplicateFinder</a></span>(java.lang.String&nbsp;readNameRegex,
                       int&nbsp;opticalDuplicatePixelDistance,
                       htsjdk.samtools.util.Log&nbsp;log)</code>&nbsp;</td>
@@ -218,21 +194,21 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#addLocationInformation-java.lang.String-picard.sam.markduplicates.util.OpticalDuplicateFinder.PhysicalLocation-">addLocationInformation</a></span>(java.lang.String&nbsp;readName,
-                      <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&nbsp;loc)</code>
-<div class="block">Method used to extract tile/x/y from the read name and add it to the PhysicalLocation so that it
- can be used later to determine optical duplication</div>
-</td>
-</tr>
-<tr id="i1" class="rowColor">
 <td class="colFirst"><code>boolean[]</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#findOpticalDuplicates-java.util.List-">findOpticalDuplicates</a></span>(java.util.List&lt;? extends <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&gt;&nbsp;list)</code>
-<div class="block">Finds which reads within the list of duplicates are likely to be optical duplicates of
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#findOpticalDuplicates-java.util.List-picard.sam.util.PhysicalLocation-">findOpticalDuplicates</a></span>(java.util.List&lt;? extends <a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&gt;&nbsp;list,
+                     <a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&nbsp;keeper)</code>
+<div class="block">Finds which reads within the list of duplicates that are likely to be optical/co-localized duplicates of
  one another.</div>
 </td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.picard.sam.util.ReadNameParser">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;picard.sam.util.<a href="../../../../picard/sam/util/ReadNameParser.html" title="class in picard.sam.util">ReadNameParser</a></h3>
+<code><a href="../../../../picard/sam/util/ReadNameParser.html#addLocationInformation-java.lang.String-picard.sam.util.PhysicalLocation-">addLocationInformation</a>, <a href="../../../../picard/sam/util/ReadNameParser.html#getLastThreeFields-java.lang.String-char-int:A-">getLastThreeFields</a>, <a href="../../../../picard/sam/util/ReadNameParser.html#rapidParseInt-java.lang.String-">rapidParseInt</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
@@ -254,19 +230,19 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="DEFAULT_READ_NAME_REGEX">
+<a name="opticalDuplicatePixelDistance">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>DEFAULT_READ_NAME_REGEX</h4>
-<pre>public static final&nbsp;java.lang.String DEFAULT_READ_NAME_REGEX</pre>
+<h4>opticalDuplicatePixelDistance</h4>
+<pre>public&nbsp;int opticalDuplicatePixelDistance</pre>
 </li>
 </ul>
 <a name="DEFAULT_OPTICAL_DUPLICATE_DISTANCE">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>DEFAULT_OPTICAL_DUPLICATE_DISTANCE</h4>
 <pre>public static final&nbsp;int DEFAULT_OPTICAL_DUPLICATE_DISTANCE</pre>
@@ -274,24 +250,6 @@ extends java.lang.Object</pre>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../constant-values.html#picard.sam.markduplicates.util.OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE">Constant Field Values</a></dd>
 </dl>
-</li>
-</ul>
-<a name="readNameRegex">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>readNameRegex</h4>
-<pre>public&nbsp;java.lang.String readNameRegex</pre>
-</li>
-</ul>
-<a name="opticalDuplicatePixelDistance">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>opticalDuplicatePixelDistance</h4>
-<pre>public&nbsp;int opticalDuplicatePixelDistance</pre>
 </li>
 </ul>
 </li>
@@ -309,34 +267,8 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>OpticalDuplicateFinder</h4>
 <pre>public&nbsp;OpticalDuplicateFinder()</pre>
-</li>
-</ul>
-<a name="OpticalDuplicateFinder-int-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>OpticalDuplicateFinder</h4>
-<pre>public&nbsp;OpticalDuplicateFinder(int&nbsp;opticalDuplicatePixelDistance)</pre>
-</li>
-</ul>
-<a name="OpticalDuplicateFinder-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>OpticalDuplicateFinder</h4>
-<pre>public&nbsp;OpticalDuplicateFinder(java.lang.String&nbsp;readNameRegex)</pre>
-</li>
-</ul>
-<a name="OpticalDuplicateFinder-java.lang.String-int-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>OpticalDuplicateFinder</h4>
-<pre>public&nbsp;OpticalDuplicateFinder(java.lang.String&nbsp;readNameRegex,
-                              int&nbsp;opticalDuplicatePixelDistance)</pre>
+<div class="block">Uses the default duplicate distance <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">100</a> and the default read name regex
+ <a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX"><code>ReadNameParser.DEFAULT_READ_NAME_REGEX</code></a>.</div>
 </li>
 </ul>
 <a name="OpticalDuplicateFinder-java.lang.String-int-htsjdk.samtools.util.Log-">
@@ -348,6 +280,12 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;OpticalDuplicateFinder(java.lang.String&nbsp;readNameRegex,
                               int&nbsp;opticalDuplicatePixelDistance,
                               htsjdk.samtools.util.Log&nbsp;log)</pre>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>readNameRegex</code> - see <a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX"><code>ReadNameParser.DEFAULT_READ_NAME_REGEX</code></a>.</dd>
+<dd><code>opticalDuplicatePixelDistance</code> - the optical duplicate pixel distance</dd>
+<dd><code>log</code> - the log to which to write messages.</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -358,40 +296,25 @@ extends java.lang.Object</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="addLocationInformation-java.lang.String-picard.sam.markduplicates.util.OpticalDuplicateFinder.PhysicalLocation-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>addLocationInformation</h4>
-<pre>public&nbsp;boolean&nbsp;addLocationInformation(java.lang.String&nbsp;readName,
-                                      <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&nbsp;loc)</pre>
-<div class="block">Method used to extract tile/x/y from the read name and add it to the PhysicalLocation so that it
- can be used later to determine optical duplication</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>readName</code> - the name of the read/cluster</dd>
-<dd><code>loc</code> - the object to add tile/x/y to</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>true if the read name contained the information in parsable form, false otherwise</dd>
-</dl>
-</li>
-</ul>
-<a name="findOpticalDuplicates-java.util.List-">
+<a name="findOpticalDuplicates-java.util.List-picard.sam.util.PhysicalLocation-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>findOpticalDuplicates</h4>
-<pre>public&nbsp;boolean[]&nbsp;findOpticalDuplicates(java.util.List&lt;? extends <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util">OpticalDuplicateFinder.PhysicalLocation</a>&gt;&nbsp;list)</pre>
-<div class="block">Finds which reads within the list of duplicates are likely to be optical duplicates of
- one another.
- <p/>
- Note: this method will perform a sort() of the list; if it is imperative that the list be
- unmodified a copy of the list should be passed to this method.</div>
+<pre>public&nbsp;boolean[]&nbsp;findOpticalDuplicates(java.util.List&lt;? extends <a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&gt;&nbsp;list,
+                                       <a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&nbsp;keeper)</pre>
+<div class="block">Finds which reads within the list of duplicates that are likely to be optical/co-localized duplicates of
+ one another. Within each cluster of optical duplicates that is found, one read remains un-flagged for
+ optical duplication and the rest are flagged as optical duplicates.  The set of reads that are considered
+ optical duplicates are indicated by returning "true" at the same index in the resulting boolean[] as the
+ read appeared in the input list of physical locations.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>list</code> - a list of reads that are determined to be duplicates of one another</dd>
+<dd><code>keeper</code> - a single PhysicalLocation that is the one being kept as non-duplicate, and thus should never be
+               annotated as an optical duplicate. May in some cases be null, or a PhysicalLocation not
+               contained within the list!</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>a boolean[] of the same length as the incoming list marking which reads are optical duplicates</dd>
 </dl>
@@ -426,7 +349,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../picard/sam/markduplicates/util/MarkQueue.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.PhysicalLocation.html" title="interface in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?picard/sam/markduplicates/util/OpticalDuplicateFinder.html" target="_top">Frames</a></li>
@@ -450,7 +373,7 @@ extends java.lang.Object</pre>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
+<li>Nested&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

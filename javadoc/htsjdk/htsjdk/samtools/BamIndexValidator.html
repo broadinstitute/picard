@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9};
+var methods = {"i0":9,"i1":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../htsjdk/samtools/BAMIndexMetaData.html" title="class in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../htsjdk/samtools/BAMRecord.html" title="class in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../index.html?htsjdk/samtools/BamIndexValidator.html" target="_top">Frames</a></li>
@@ -73,7 +73,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -110,9 +110,8 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">BamIndexValidator</span>
 extends java.lang.Object</pre>
-<div class="block">One crisp, informative sentence or noun phrase that explains
- the concept modeled by the class.
- <p/>
+<div class="block">Class to validate (at two different levels of thoroughness) the index for a BAM file.
+
  This class is [<em>not</em>] thread safe [because it is immutable].</div>
 </li>
 </ul>
@@ -120,6 +119,25 @@ extends java.lang.Object</pre>
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="nested.class.summary">
+<!--   -->
+</a>
+<h3>Nested Class Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
+<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools">BamIndexValidator.IndexValidationStringency</a></span></code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -152,6 +170,13 @@ extends java.lang.Object</pre>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/BamIndexValidator.html#exhaustivelyTestIndex-htsjdk.samtools.SamReader-">exhaustivelyTestIndex</a></span>(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</code>&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/BamIndexValidator.html#lessExhaustivelyTestIndex-htsjdk.samtools.SamReader-">lessExhaustivelyTestIndex</a></span>(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</code>
+<div class="block">A less time-consuming index validation that only looks at the first and last references in the index
+ and the first and last chunks in each of those</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -195,10 +220,27 @@ extends java.lang.Object</pre>
 <a name="exhaustivelyTestIndex-htsjdk.samtools.SamReader-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>exhaustivelyTestIndex</h4>
 <pre>public static&nbsp;int&nbsp;exhaustivelyTestIndex(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</pre>
+</li>
+</ul>
+<a name="lessExhaustivelyTestIndex-htsjdk.samtools.SamReader-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>lessExhaustivelyTestIndex</h4>
+<pre>public static&nbsp;int&nbsp;lessExhaustivelyTestIndex(<a href="../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>&nbsp;reader)</pre>
+<div class="block">A less time-consuming index validation that only looks at the first and last references in the index
+ and the first and last chunks in each of those</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>reader</code> - </dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd># of chunks examined, or 0 if there is no browseable index for the reader</dd>
+</dl>
 </li>
 </ul>
 </li>
@@ -230,7 +272,7 @@ extends java.lang.Object</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../htsjdk/samtools/BAMIndexMetaData.html" title="class in htsjdk.samtools"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../htsjdk/samtools/BAMRecord.html" title="class in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../index.html?htsjdk/samtools/BamIndexValidator.html" target="_top">Frames</a></li>
@@ -254,7 +296,7 @@ extends java.lang.Object</pre>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

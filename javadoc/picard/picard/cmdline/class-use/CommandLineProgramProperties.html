@@ -102,34 +102,38 @@
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="#picard.fingerprint">picard.fingerprint</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="#picard.illumina">picard.illumina</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#picard.illumina.quality">picard.illumina.quality</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#picard.reference">picard.reference</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#picard.sam">picard.sam</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#picard.sam.markduplicates">picard.sam.markduplicates</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#picard.util">picard.util</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="#picard.vcf">picard.vcf</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="#picard.vcf.filter">picard.vcf.filter</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -202,7 +206,9 @@
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectRawWgsMetrics.html" title="class in picard.analysis">CollectRawWgsMetrics</a></span></code>
-<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters and has much higher coverage cap.</div>
+<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing
+ experiments, same implementation as CollectWgsMetrics, with different defaults: lacks baseQ and mappingQ filters
+ and has much higher coverage cap.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -296,10 +302,16 @@
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html" title="class in picard.analysis.directed">CalculateHsMetrics</a></span></code>
-<div class="block">Calculates a set of HS metrics from a sam or bam file.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">CollectHsMetrics</a></span></code>
+<div class="block">Collects a set of HS metrics from a sam or bam file.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed">CollectTargetedPcrMetrics</a></span></code>
 <div class="block">Collect metric information for target pcr metrics runs.</div>
@@ -341,6 +353,34 @@
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/fastq/BamToBfq.html" title="class in picard.fastq">BamToBfq</a></span></code>
 <div class="block">CommandLineProgram to generate to bfq files for use by the Maq aligner</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="picard.fingerprint">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../picard/cmdline/CommandLineProgramProperties.html" title="annotation in picard.cmdline">CommandLineProgramProperties</a> in <a href="../../../picard/fingerprint/package-summary.html">picard.fingerprint</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing classes, and an explanation">
+<caption><span>Classes in <a href="../../../picard/fingerprint/package-summary.html">picard.fingerprint</a> with annotations of type <a href="../../../picard/cmdline/CommandLineProgramProperties.html" title="annotation in picard.cmdline">CommandLineProgramProperties</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/fingerprint/CheckFingerprint.html" title="class in picard.fingerprint">CheckFingerprint</a></span></code>
+<div class="block">Attempts to check the sample identity of the sequence data in the provided SAM/BAM file
+ against a set of known genotypes in the supplied genotype file (in either GELI or VCF format).</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/fingerprint/CrosscheckReadGroupFingerprints.html" title="class in picard.fingerprint">CrosscheckReadGroupFingerprints</a></span></code>
+<div class="block">Program to check that all read groups within the set of BAM files appear to come from the same
+ individual.</div>
 </td>
 </tr>
 </tbody>
@@ -441,6 +481,12 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/reference/NonNFastaSize.html" title="class in picard.reference">NonNFastaSize</a></span></code>
+<div class="block">A tool to count the number of non-N bases in a fasta file</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/reference/NormalizeFasta.html" title="class in picard.reference">NormalizeFasta</a></span></code>
 <div class="block">Little program to "normalize" a fasta file to ensure that all line of sequence are the
@@ -699,15 +745,21 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/IntervalListTools.html" title="class in picard.util">IntervalListTools</a></span></code>
-<div class="block">Little class to aid working with interval lists.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/IntervalListToBed.html" title="class in picard.util">IntervalListToBed</a></span></code>
+<div class="block">Trivially simple command line program to convert an IntervalList file to a BED file.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/LiftOverIntervalList.html" title="class in picard.util">LiftOverIntervalList</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/IntervalListTools.html" title="class in picard.util">IntervalListTools</a></span></code>
+<div class="block">Little class to aid working with interval lists.</div>
+</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/LiftOverIntervalList.html" title="class in picard.util">LiftOverIntervalList</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/util/ScatterIntervalsByNs.html" title="class in picard.util">ScatterIntervalsByNs</a></span></code>
 <div class="block">A CLP for breaking up a reference into intervals of Ns and ACGTs bases.</div>

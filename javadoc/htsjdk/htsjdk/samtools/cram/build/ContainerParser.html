@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10};
+var methods = {"i0":10,"i1":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -151,6 +151,11 @@ extends java.lang.Object</pre>
           java.util.ArrayList&lt;<a href="../../../../htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a>&gt;&nbsp;records,
           <a href="../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>java.util.Map&lt;java.lang.Integer,<a href="../../../../htsjdk/samtools/cram/structure/AlignmentSpan.html" title="class in htsjdk.samtools.cram.structure">AlignmentSpan</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/cram/build/ContainerParser.html#getReferences-htsjdk.samtools.cram.structure.Container-htsjdk.samtools.ValidationStringency-">getReferences</a></span>(<a href="../../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container,
+             <a href="../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
@@ -193,7 +198,7 @@ extends java.lang.Object</pre>
 <a name="getRecords-htsjdk.samtools.cram.structure.Container-java.util.ArrayList-htsjdk.samtools.ValidationStringency-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>getRecords</h4>
 <pre>public&nbsp;java.util.List&lt;<a href="../../../../htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure">CramCompressionRecord</a>&gt;&nbsp;getRecords(<a href="../../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container,
@@ -205,6 +210,21 @@ extends java.lang.Object</pre>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.lang.IllegalArgumentException</code></dd>
 <dd><code>java.lang.IllegalAccessException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="getReferences-htsjdk.samtools.cram.structure.Container-htsjdk.samtools.ValidationStringency-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getReferences</h4>
+<pre>public&nbsp;java.util.Map&lt;java.lang.Integer,<a href="../../../../htsjdk/samtools/cram/structure/AlignmentSpan.html" title="class in htsjdk.samtools.cram.structure">AlignmentSpan</a>&gt;&nbsp;getReferences(<a href="../../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container,
+                                                                    <a href="../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)
+                                                             throws java.io.IOException</pre>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.io.IOException</code></dd>
 </dl>
 </li>
 </ul>

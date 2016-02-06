@@ -182,11 +182,12 @@ the order they are declared.</div>
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/AlignmentSummaryMetricsCollector.html#AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-boolean-">AlignmentSummaryMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/AlignmentSummaryMetricsCollector.html#AlignmentSummaryMetricsCollector-java.util.Set-java.util.List-boolean-java.util.List-int-java.util.Set-boolean-">AlignmentSummaryMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                                 java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                                 boolean&nbsp;doRefMetrics,
                                 java.util.List&lt;java.lang.String&gt;&nbsp;adapterSequence,
                                 int&nbsp;maxInsertSize,
+                                java.util.Set&lt;htsjdk.samtools.SamPairUtil.PairOrientation&gt;&nbsp;expectedOrientations,
                                 boolean&nbsp;isBisulfiteSequenced)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
@@ -233,10 +234,11 @@ the order they are declared.</div>
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code>protected <a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a></code></td>
-<td class="colLast"><span class="typeNameLabel">CalculateHsMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><span class="typeNameLabel">CollectHsMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectHsMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
              java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
              htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
              java.io.File&nbsp;perTargetCoverage,
+             java.io.File&nbsp;perBaseCoverage,
              htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
              htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
              java.lang.String&nbsp;probeSetName,
@@ -244,10 +246,11 @@ the order they are declared.</div>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>protected abstract <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="type parameter in CollectTargetedMetrics">COLLECTOR</a></code></td>
-<td class="colLast"><span class="typeNameLabel">CollectTargetedMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><span class="typeNameLabel">CollectTargetedMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
              java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
              htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
              java.io.File&nbsp;perTargetCoverage,
+             java.io.File&nbsp;perBaseCoverage,
              htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
              htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
              java.lang.String&nbsp;probeSetName,
@@ -257,10 +260,11 @@ the order they are declared.</div>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected <a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html" title="class in picard.analysis.directed">TargetedPcrMetricsCollector</a></code></td>
-<td class="colLast"><span class="typeNameLabel">CollectTargetedPcrMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><span class="typeNameLabel">CollectTargetedPcrMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
              java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
              htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
              java.io.File&nbsp;perTargetCoverage,
+             java.io.File&nbsp;perBaseCoverage,
              htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
              htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
              java.lang.String&nbsp;probeSetName,
@@ -275,23 +279,47 @@ the order they are declared.</div>
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/HsMetricCollector.html#HsMetricCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">HsMetricCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/HsMetricCollector.html#HsMetricCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-boolean-int-int-">HsMetricCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                  java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                  htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                  java.io.File&nbsp;perTargetCoverage,
+                 java.io.File&nbsp;perBaseCoverage,
                  htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                  htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                  java.lang.String&nbsp;probeSetName,
-                 int&nbsp;nearProbeDistance)</code>&nbsp;</td>
+                 int&nbsp;nearProbeDistance,
+                 int&nbsp;minimumMappingQuality,
+                 int&nbsp;minimumBaseQuality,
+                 boolean&nbsp;clipOverlappingReads,
+                 boolean&nbsp;noSideEffects,
+                 int&nbsp;coverageCap,
+                 int&nbsp;sampleSize)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/InsertSizeMetricsCollector.html#InsertSizeMetricsCollector-java.util.Set-java.util.List-double-java.lang.Integer-double-">InsertSizeMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/HsMetricCollector.html#HsMetricCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-int-int-">HsMetricCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+                 java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
+                 htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
+                 java.io.File&nbsp;perTargetCoverage,
+                 java.io.File&nbsp;perBaseCoverage,
+                 htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
+                 htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
+                 java.lang.String&nbsp;probeSetName,
+                 int&nbsp;nearProbeDistance,
+                 int&nbsp;minimumMappingQuality,
+                 int&nbsp;minimumBaseQuality,
+                 boolean&nbsp;clipOverlappingReads,
+                 int&nbsp;coverageCap,
+                 int&nbsp;sampleSize)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/InsertSizeMetricsCollector.html#InsertSizeMetricsCollector-java.util.Set-java.util.List-double-java.lang.Integer-double-boolean-">InsertSizeMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                           java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                           double&nbsp;minimumPct,
                           java.lang.Integer&nbsp;histogramWidth,
-                          double&nbsp;deviations)</code>&nbsp;</td>
+                          double&nbsp;deviations,
+                          boolean&nbsp;includeDuplicates)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/RnaSeqMetricsCollector.html#RnaSeqMetricsCollector-java.util.Set-java.util.List-java.lang.Long-htsjdk.samtools.util.OverlapDetector-htsjdk.samtools.util.OverlapDetector-java.util.HashSet-int-picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity-double-boolean-">RnaSeqMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                       java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                       java.lang.Long&nbsp;ribosomalBasesInitialValue,
@@ -303,25 +331,71 @@ the order they are declared.</div>
                       double&nbsp;rrnaFragmentPercentage,
                       boolean&nbsp;collectCoverageStatistics)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-boolean-int-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                            java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                            htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                            java.io.File&nbsp;perTargetCoverage,
+                           java.io.File&nbsp;perBaseCoverage,
                            htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                            htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                            java.lang.String&nbsp;probeSetName,
-                           int&nbsp;nearProbeDistance)</code>&nbsp;</td>
+                           int&nbsp;nearProbeDistance,
+                           int&nbsp;minimumMappingQuality,
+                           int&nbsp;minimumBaseQuality,
+                           boolean&nbsp;clipOverlappingReads,
+                           boolean&nbsp;noSideEffects,
+                           int&nbsp;coverageCap,
+                           int&nbsp;sampleSize)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetedPcrMetricsCollector.html#TargetedPcrMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-int-int-">TargetedPcrMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+                           java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
+                           htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
+                           java.io.File&nbsp;perTargetCoverage,
+                           java.io.File&nbsp;perBaseCoverage,
+                           htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
+                           htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
+                           java.lang.String&nbsp;probeSetName,
+                           int&nbsp;nearProbeDistance,
+                           int&nbsp;minimumMappingQuality,
+                           int&nbsp;minimumBaseQuality,
+                           boolean&nbsp;clipOverlappingReads,
+                           int&nbsp;coverageCap,
+                           int&nbsp;sampleSize)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.html#TargetMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">TargetMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.html#TargetMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-boolean-int-int-">TargetMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
                       java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                       htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                       java.io.File&nbsp;perTargetCoverage,
+                      java.io.File&nbsp;perBaseCoverage,
                       htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                       htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                       java.lang.String&nbsp;probeSetName,
-                      int&nbsp;nearProbeDistance)</code>&nbsp;</td>
+                      int&nbsp;nearProbeDistance,
+                      int&nbsp;minimumMappingQuality,
+                      int&nbsp;minimumBaseQuality,
+                      boolean&nbsp;clipOverlappingReads,
+                      boolean&nbsp;noSideEffects,
+                      int&nbsp;coverageCap,
+                      int&nbsp;sampleSize)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.html#TargetMetricsCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-int-int-boolean-int-int-">TargetMetricsCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+                      java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
+                      htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
+                      java.io.File&nbsp;perTargetCoverage,
+                      java.io.File&nbsp;perBaseCoverage,
+                      htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
+                      htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
+                      java.lang.String&nbsp;probeSetName,
+                      int&nbsp;nearProbeDistance,
+                      int&nbsp;minimumMappingQuality,
+                      int&nbsp;minimumBaseQuality,
+                      boolean&nbsp;clipOverlappingReads,
+                      int&nbsp;coverageCap,
+                      int&nbsp;sampleSize)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

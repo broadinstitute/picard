@@ -878,7 +878,7 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">CRAMFileWriter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileWriter.html#shouldFlushContainer-htsjdk.samtools.SAMRecord-">shouldFlushContainer</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;nextRecord)</code>
+<td class="colLast"><span class="typeNameLabel">CRAMContainerStreamWriter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMContainerStreamWriter.html#shouldFlushContainer-htsjdk.samtools.SAMRecord-">shouldFlushContainer</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;nextRecord)</code>
 <div class="block">Decide if the current container should be completed and flushed.</div>
 </td>
 </tr>
@@ -901,18 +901,24 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="typeNameLabel">CRAMContainerStreamWriter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMContainerStreamWriter.html#writeAlignment-htsjdk.samtools.SAMRecord-">writeAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;alignment)</code>
+<div class="block">Write an alignment record.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><span class="typeNameLabel">CRAMFileWriter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileWriter.html#writeAlignment-htsjdk.samtools.SAMRecord-">writeAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;alignment)</code>
 <div class="block">Write an alignment record.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected abstract void</code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterImpl.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterImpl.html#writeAlignment-htsjdk.samtools.SAMRecord-">writeAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;alignment)</code>
 <div class="block">Writes the record to disk.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="typeNameLabel">SAMTextWriter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMTextWriter.html#writeAlignment-htsjdk.samtools.SAMRecord-">writeAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;alignment)</code>
 <div class="block">Write the record.</div>
@@ -964,42 +970,48 @@
 <tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
-                    boolean&nbsp;preSorted)</code>
+                    boolean&nbsp;preSorted)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;preSorted,
+                    <a href="../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
                 boolean&nbsp;overlap)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/MergingSamRecordIterator.html#MergingSamRecordIterator-htsjdk.samtools.SamFileHeaderMerger-java.util.Map-boolean-">MergingSamRecordIterator</a></span>(<a href="../../../htsjdk/samtools/SamFileHeaderMerger.html" title="class in htsjdk.samtools">SamFileHeaderMerger</a>&nbsp;headerMerger,
                         java.util.Map&lt;<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>,<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&gt;&nbsp;iterators,
                         boolean&nbsp;assumeSorted)</code>
 <div class="block">Add a set of SAM file iterators to the merging iterator.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/NotPrimarySkippingIterator.html#NotPrimarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">NotPrimarySkippingIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SecondaryOrSupplementarySkippingIterator.html#SecondaryOrSupplementarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">SecondaryOrSupplementarySkippingIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator)</code>
 <div class="block">By default, the mate cigar tag is set</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-boolean-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                    boolean&nbsp;setMateCigar)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-boolean-boolean-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                    boolean&nbsp;setMateCigar,
                    boolean&nbsp;ignoreMissingMates)</code>&nbsp;</td>
@@ -1138,94 +1150,107 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">MappingQualityFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/MappingQualityFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">JavascriptSamRecordFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/JavascriptSamRecordFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
+<div class="block">read is filtered out if the javascript program returns false</div>
+</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">NotPrimaryAlignmentFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/NotPrimaryAlignmentFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">MappingQualityFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/MappingQualityFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><span class="typeNameLabel">OverclippedReadFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/OverclippedReadFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
+<td class="colLast"><span class="typeNameLabel">NotPrimaryAlignmentFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/NotPrimaryAlignmentFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">OverclippedReadFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/OverclippedReadFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">ReadNameFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/ReadNameFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Determines whether a SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SamRecordFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/SamRecordFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Determines whether a SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SecondaryAlignmentFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/SecondaryAlignmentFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Returns true if the read is marked as secondary.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SecondaryOrSupplementaryFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/SecondaryOrSupplementaryFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">SolexaNoiseFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/SolexaNoiseFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Determines whether a SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">TagFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/TagFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Determines whether a SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">WholeReadClippedFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/WholeReadClippedFilter.html#filterOut-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
 <div class="block">Determines whether a SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">AggregateFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/AggregateFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
 <div class="block">Determines whether a pair of SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">AlignedFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/AlignedFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
 <div class="block">Determines whether a pair of SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">DuplicateReadFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/DuplicateReadFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
 <div class="block">Determines whether a pair of SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">FailsVendorReadQualityFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FailsVendorReadQualityFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
 <div class="block">Determines whether a pair of SAMRecord matches this filter</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">InsertSizeFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/InsertSizeFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;r1,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;r2)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">IntervalFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/IntervalFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
          <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
 <div class="block">Determines whether a pair of SAMRecord matches this filter</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">JavascriptSamRecordFilter.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/JavascriptSamRecordFilter.html#filterOut-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">filterOut</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;first,
+         <a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;second)</code>
+<div class="block">return true of both records are filteredOut (AND)</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -1422,14 +1447,16 @@
                     byte[]&nbsp;ref,
                     boolean&nbsp;calcMD,
                     boolean&nbsp;calcNM)</code>
-<div class="block">A rip off samtools bam_md.c</div>
+<div class="block">Calculate MD and NM similarly to Samtools, except that N->N is a match.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                  byte[]&nbsp;referenceBases)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -1437,7 +1464,9 @@
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTag-htsjdk.samtools.SAMRecord-byte:A-int-">calculateSamNmTag</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                  byte[]&nbsp;referenceBases,
                  int&nbsp;referenceOffset)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -1446,7 +1475,9 @@
                  byte[]&nbsp;referenceBases,
                  int&nbsp;referenceOffset,
                  boolean&nbsp;bisulfiteSequence)</code>
-<div class="block">Calculates the for the predefined NM tag from the SAM spec.</div>
+<div class="block">Calculates the predefined NM tag from the SAM spec: (# of mismatches + # of indels)
+ For the purposes for calculating mismatches, we do not yet support IUPAC ambiguous codes
+ (see <code>readBaseMatchesRefBaseWithAmbiguity</code> method).</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -1460,7 +1491,7 @@
 <tr class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#calculateSamNmTagFromCigar-htsjdk.samtools.SAMRecord-">calculateSamNmTagFromCigar</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>
-<div class="block">Attempts to calculate the for the predefined NM tag from the SAM spec using the cigar string alone.</div>
+<div class="block">Attempts to calculate the predefined NM tag from the SAM spec using the cigar string alone.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -1504,37 +1535,45 @@
 </td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#countMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-boolean-">countMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
+               byte[]&nbsp;referenceBases,
+               int&nbsp;referenceOffset,
+               boolean&nbsp;bisulfiteSequence,
+               boolean&nbsp;matchAmbiguousRef)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeReferenceFromAlignment-htsjdk.samtools.SAMRecord-boolean-">makeReferenceFromAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec,
                           boolean&nbsp;includeReferenceBasesForDeletions)</code>
 <div class="block">Produce reference bases from an aligned SAMRecord with MD string and Cigar.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">AbstractProgressLogger.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/AbstractProgressLogger.html#record-htsjdk.samtools.SAMRecord...-">record</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>...&nbsp;recs)</code>
 <div class="block">Records multiple SAMRecords and triggers logging if necessary.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">ProgressLoggerInterface.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/ProgressLoggerInterface.html#record-htsjdk.samtools.SAMRecord...-">record</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>...&nbsp;recs)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">AbstractProgressLogger.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/AbstractProgressLogger.html#record-htsjdk.samtools.SAMRecord-">record</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec)</code>
 <div class="block">Records that a given record has been processed and triggers logging if necessary.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">ProgressLoggerInterface.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/ProgressLoggerInterface.html#record-htsjdk.samtools.SAMRecord-">record</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><span class="typeNameLabel">SamRecordWithOrdinal.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamRecordWithOrdinal.html#setRecord-htsjdk.samtools.SAMRecord-">setRecord</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;record)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><span class="typeNameLabel">CigarUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/CigarUtil.html#softClip3PrimeEndOfRead-htsjdk.samtools.SAMRecord-int-">softClip3PrimeEndOfRead</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec,
                        int&nbsp;clipFrom)</code>
@@ -1542,20 +1581,20 @@
  and, for negative strands, also adjusts the SAM record's start position.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static double</code></td>
 <td class="colLast"><span class="typeNameLabel">QualityUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/QualityUtil.html#sumOfErrorProbabilities-htsjdk.samtools.SAMRecord-">sumOfErrorProbabilities</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec)</code>
 <div class="block">Calculates the sum of error probabilities for all read bases in the SAM record.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases)</code>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -1563,7 +1602,7 @@
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -1572,7 +1611,7 @@
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><span class="typeNameLabel">SequenceUtil.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-char:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         char[]&nbsp;referenceBases,

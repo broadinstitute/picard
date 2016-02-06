@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/vcf/GenotypeConcordanceSummaryMetrics.html" title="class in picard.vcf"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/vcf/GvcfMetricAccumulator.html" title="class in picard.vcf"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/vcf/MakeSitesOnlyVcf.html" title="class in picard.vcf"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -144,38 +144,46 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#CHAIN">CHAIN</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>protected static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE">EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_CANNOT_LIFTOVER_INDEL">FILTER_CANNOT_LIFTOVER_INDEL</a></span></code>
 <div class="block">Filter name to use when a target cannot be lifted over.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_MISMATCHING_REF_ALLELE">FILTER_MISMATCHING_REF_ALLELE</a></span></code>
 <div class="block">Filter name to use when a target is lifted over, but the reference allele doens't match the new reference.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#FILTER_NO_TARGET">FILTER_NO_TARGET</a></span></code>
 <div class="block">Filter name to use when a target cannot be lifted over.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REJECT">REJECT</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#WARN_ON_MISSING_CONTIG">WARN_ON_MISSING_CONTIG</a></span></code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -311,8 +319,29 @@ public&nbsp;java.io.File REJECT</pre>
 <h4>REFERENCE_SEQUENCE</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="R",
         <a href="../../picard/cmdline/Option.html#common--">common</a>=false,
-        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="The reference sequence (fasta) for the TARGET genome build.  The fasta file must have an accompanying sqeuence dictionary (.dict file).")
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="The reference sequence (fasta) for the TARGET genome build.  The fasta file must have an accompanying sequence dictionary (.dict file).")
 public&nbsp;java.io.File REFERENCE_SEQUENCE</pre>
+</li>
+</ul>
+<a name="WARN_ON_MISSING_CONTIG">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>WARN_ON_MISSING_CONTIG</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="WMC",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Warn on missing contig.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;boolean WARN_ON_MISSING_CONTIG</pre>
+</li>
+</ul>
+<a name="EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE</h4>
+<pre>protected static&nbsp;int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE</pre>
 </li>
 </ul>
 <a name="FILTER_CANNOT_LIFTOVER_INDEL">
@@ -447,7 +476,7 @@ public&nbsp;java.io.File REFERENCE_SEQUENCE</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/vcf/GenotypeConcordanceSummaryMetrics.html" title="class in picard.vcf"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/vcf/GvcfMetricAccumulator.html" title="class in picard.vcf"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/vcf/MakeSitesOnlyVcf.html" title="class in picard.vcf"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

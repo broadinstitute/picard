@@ -89,6 +89,10 @@
 <td class="colFirst"><a href="#htsjdk.samtools.cram.build">htsjdk.samtools.cram.build</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><a href="#htsjdk.samtools.cram.ref">htsjdk.samtools.cram.ref</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
 </tbody>
 </table>
 </li>
@@ -133,82 +137,102 @@
 </tr>
 <tbody>
 <tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMContainerStreamWriter.html#CRAMContainerStreamWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMContainerStreamWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
+                         java.io.OutputStream&nbsp;indexStream,
+                         <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+                         <a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
+                         java.lang.String&nbsp;cramId)</code>
+<div class="block">Create a CRAMContainerStreamWriter for writing SAM records into a series of CRAM
+ containers on output stream, with an optional index.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.File&nbsp;indexFile,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
-<div class="block">Open CRAM file for reading.</div>
+<div class="block">Create a CRAMFileReader from a file and optional index file using the supplied reference source.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.File&nbsp;indexFile,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from a CRAM file and optional index file using the supplied reference
+ source and validation stringency.</div>
+</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
               java.io.InputStream&nbsp;inputStream,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
-<div class="block">Open CRAM data for reading using either the file or the input stream
- supplied in the arguments.</div>
+<div class="block">Create a CRAMFileReader from either a file or input stream using the supplied reference source.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
+              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>
+<div class="block">Create a CRAMFileReader from a file using the supplied reference source.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-">CRAMFileReader</a></span>(java.io.File&nbsp;cramFile,
-              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-java.io.File-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;stream,
               java.io.File&nbsp;indexFile,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
+              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from an input stream and optional index file using the supplied reference
+ source and validation stringency.</div>
+</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileReader.html#CRAMFileReader-java.io.InputStream-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMFileReader</a></span>(java.io.InputStream&nbsp;inputStream,
               <a href="../../../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;indexInputStream,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
-              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
-</tr>
-<tr class="altColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
-              java.io.OutputStream&nbsp;indexOS,
-              boolean&nbsp;presorted,
-              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
-              <a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
-              java.lang.String&nbsp;fileName)</code>
-<div class="block">Create a CRAMFileWriter and index on output streams.</div>
+              <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
+<div class="block">Create a CRAMFileReader from an input stream and optional index stream using the supplied reference
+ source and validation stringency.</div>
 </td>
 </tr>
 <tr class="rowColor">
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               java.io.OutputStream&nbsp;indexOS,
-              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+              boolean&nbsp;presorted,
+              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
               java.lang.String&nbsp;fileName)</code>
-<div class="block">Create a CRAMFileWriter and index on output streams.</div>
+<div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </td>
 </tr>
 <tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
+              java.io.OutputStream&nbsp;indexOS,
+              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
+              <a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
+              java.lang.String&nbsp;fileName)</code>
+<div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
-              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+              <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
               <a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
               java.lang.String&nbsp;fileName)</code>
 <div class="block">Create a CRAMFileWriter on an output stream.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-java.io.InputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(java.io.InputStream&nbsp;inputStream,
             <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
             <a href="../../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-">CRAMIterator</a></span>(<a href="../../../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
             <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
             long[]&nbsp;coordinates)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/CRAMIterator.html#CRAMIterator-htsjdk.samtools.seekablestream.SeekableStream-htsjdk.samtools.cram.ref.ReferenceSource-long:A-htsjdk.samtools.ValidationStringency-">CRAMIterator</a></span>(<a href="../../../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;seekableStream,
             <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
             long[]&nbsp;coordinates,
@@ -230,6 +254,27 @@
 <tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/cram/build/CramNormalizer.html#CramNormalizer-htsjdk.samtools.SAMFileHeader-htsjdk.samtools.cram.ref.ReferenceSource-">CramNormalizer</a></span>(<a href="../../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
               <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource)</code>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.cram.ref">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a> in <a href="../../../../../htsjdk/samtools/cram/ref/package-summary.html">htsjdk.samtools.cram.ref</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../../../htsjdk/samtools/cram/ref/package-summary.html">htsjdk.samtools.cram.ref</a> that return <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>static <a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a></code></td>
+<td class="colLast"><span class="typeNameLabel">ReferenceSource.</span><code><span class="memberNameLink"><a href="../../../../../htsjdk/samtools/cram/ref/ReferenceSource.html#getDefaultCRAMReferenceSource--">getDefaultCRAMReferenceSource</a></span>()</code>
+<div class="block">Attempts to construct a default ReferenceSource for use with CRAM files when
+ one has not been explicitly provided.</div>
+</td>
 </tr>
 </tbody>
 </table>

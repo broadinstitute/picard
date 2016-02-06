@@ -150,11 +150,26 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/JavascriptSamRecordFilter.html" title="class in htsjdk.samtools.filter">JavascriptSamRecordFilter</a></span></code>
+<div class="block">javascript based read filter
+ 
+ 
+ The script puts the following variables in the script context:
+
+ - 'record' a SamRecord (
+ https://github.com/samtools/htsjdk/blob/master/src/java/htsjdk/samtools/
+ SAMRecord.java ) - 'header' (
+ https://github.com/samtools/htsjdk/blob/master/src/java/htsjdk/samtools/
+ SAMFileHeader.java )</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/MappingQualityFilter.html" title="class in htsjdk.samtools.filter">MappingQualityFilter</a></span></code>
 <div class="block">Filter things with low mapping quality.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/NotPrimaryAlignmentFilter.html" title="class in htsjdk.samtools.filter">NotPrimaryAlignmentFilter</a></span></code>
 <div class="block">Filter out SAMRecords with NotPrimaryAlignment flag set
@@ -162,14 +177,14 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/OverclippedReadFilter.html" title="class in htsjdk.samtools.filter">OverclippedReadFilter</a></span></code>
 <div class="block">Filters out reads with very few unclipped bases, likely due to the read coming
  from a foreign organism, e.g.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/ReadNameFilter.html" title="class in htsjdk.samtools.filter">ReadNameFilter</a></span></code>
 <div class="block">Filter by a set of specified readnames
@@ -177,13 +192,13 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/SecondaryAlignmentFilter.html" title="class in htsjdk.samtools.filter">SecondaryAlignmentFilter</a></span></code>
 <div class="block">SamRecordFilter that filters out secondary alignments, but not supplemental alignments.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/SecondaryOrSupplementaryFilter.html" title="class in htsjdk.samtools.filter">SecondaryOrSupplementaryFilter</a></span></code>
 <div class="block">Filter out SAMRecords with NotPrimaryAlignment or Supplementary flag set
@@ -192,13 +207,13 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/SolexaNoiseFilter.html" title="class in htsjdk.samtools.filter">SolexaNoiseFilter</a></span></code>
 <div class="block">Filter to determine whether a read is "noisy" due to a poly-A run that is a sequencing artifact.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/TagFilter.html" title="class in htsjdk.samtools.filter">TagFilter</a></span></code>
 <div class="block">Filter class for matching tag attributes in SAMRecords
@@ -206,7 +221,7 @@
  $Id$</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/WholeReadClippedFilter.html" title="class in htsjdk.samtools.filter">WholeReadClippedFilter</a></span></code>
 <div class="block">Filter SAMRecords so that only those that have at least one un-clipped base are

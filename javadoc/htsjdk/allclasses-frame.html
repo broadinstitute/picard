@@ -21,6 +21,7 @@
 <li><a href="htsjdk/tribble/index/AbstractIndex.BlockStats.html" title="class in htsjdk.tribble.index" target="classFrame">AbstractIndex.BlockStats</a></li>
 <li><a href="htsjdk/tribble/index/AbstractIndex.IndexType.html" title="enum in htsjdk.tribble.index" target="classFrame">AbstractIndex.IndexType</a></li>
 <li><a href="htsjdk/samtools/util/AbstractIterator.html" title="class in htsjdk.samtools.util" target="classFrame">AbstractIterator</a></li>
+<li><a href="htsjdk/samtools/filter/AbstractJavascriptFilter.html" title="class in htsjdk.samtools.filter" target="classFrame">AbstractJavascriptFilter</a></li>
 <li><a href="htsjdk/samtools/util/AbstractProgressLogger.html" title="class in htsjdk.samtools.util" target="classFrame">AbstractProgressLogger</a></li>
 <li><a href="htsjdk/samtools/cram/encoding/reader/AbstractReader.html" title="class in htsjdk.samtools.cram.encoding.reader" target="classFrame">AbstractReader</a></li>
 <li><a href="htsjdk/samtools/AbstractSAMHeaderRecord.html" title="class in htsjdk.samtools" target="classFrame">AbstractSAMHeaderRecord</a></li>
@@ -28,6 +29,7 @@
 <li><a href="htsjdk/samtools/filter/AggregateFilter.html" title="class in htsjdk.samtools.filter" target="classFrame">AggregateFilter</a></li>
 <li><a href="htsjdk/samtools/filter/AlignedFilter.html" title="class in htsjdk.samtools.filter" target="classFrame">AlignedFilter</a></li>
 <li><a href="htsjdk/samtools/AlignmentBlock.html" title="class in htsjdk.samtools" target="classFrame">AlignmentBlock</a></li>
+<li><a href="htsjdk/samtools/cram/structure/AlignmentSpan.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">AlignmentSpan</a></li>
 <li><a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext" target="classFrame">Allele</a></li>
 <li><a href="htsjdk/tribble/AsciiFeatureCodec.html" title="class in htsjdk.tribble" target="classFrame">AsciiFeatureCodec</a></li>
 <li><a href="htsjdk/tribble/readers/AsciiLineReader.html" title="class in htsjdk.tribble.readers" target="classFrame">AsciiLineReader</a></li>
@@ -42,6 +44,7 @@
 <li><a href="htsjdk/samtools/BAMIndexer.html" title="class in htsjdk.samtools" target="classFrame">BAMIndexer</a></li>
 <li><a href="htsjdk/samtools/BAMIndexMetaData.html" title="class in htsjdk.samtools" target="classFrame">BAMIndexMetaData</a></li>
 <li><a href="htsjdk/samtools/BamIndexValidator.html" title="class in htsjdk.samtools" target="classFrame">BamIndexValidator</a></li>
+<li><a href="htsjdk/samtools/BamIndexValidator.IndexValidationStringency.html" title="enum in htsjdk.samtools" target="classFrame">BamIndexValidator.IndexValidationStringency</a></li>
 <li><a href="htsjdk/samtools/BAMRecord.html" title="class in htsjdk.samtools" target="classFrame">BAMRecord</a></li>
 <li><a href="htsjdk/samtools/BAMRecordCodec.html" title="class in htsjdk.samtools" target="classFrame">BAMRecordCodec</a></li>
 <li><a href="htsjdk/samtools/cram/lossy/BaseCategory.html" title="class in htsjdk.samtools.cram.lossy" target="classFrame">BaseCategory</a></li>
@@ -126,12 +129,10 @@
 <li><a href="htsjdk/samtools/util/CollectionUtil.MultiMap.html" title="class in htsjdk.samtools.util" target="classFrame">CollectionUtil.MultiMap</a></li>
 <li><a href="htsjdk/samtools/util/CollectionUtil.Partitioner.html" title="class in htsjdk.samtools.util" target="classFrame">CollectionUtil.Partitioner</a></li>
 <li><a href="htsjdk/variant/variantcontext/CommonInfo.html" title="class in htsjdk.variant.variantcontext" target="classFrame">CommonInfo</a></li>
+<li><a href="htsjdk/samtools/util/ComparableTuple.html" title="class in htsjdk.samtools.util" target="classFrame">ComparableTuple</a></li>
 <li><a href="htsjdk/variant/variantcontext/filter/CompoundFilter.html" title="class in htsjdk.variant.variantcontext.filter" target="classFrame">CompoundFilter</a></li>
 <li><a href="htsjdk/samtools/cram/structure/CompressionHeader.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">CompressionHeader</a></li>
 <li><a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.html" title="class in htsjdk.samtools.cram.build" target="classFrame">CompressionHeaderFactory</a></li>
-<li><a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.EncodingLengthCalculator.html" title="class in htsjdk.samtools.cram.build" target="classFrame">CompressionHeaderFactory.EncodingLengthCalculator</a></li>
-<li><a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.HuffmanParamsCalculator.html" title="class in htsjdk.samtools.cram.build" target="classFrame">CompressionHeaderFactory.HuffmanParamsCalculator</a></li>
-<li><a href="htsjdk/samtools/cram/build/CompressionHeaderFactory.IntegerEncodingCalculator.html" title="class in htsjdk.samtools.cram.build" target="classFrame">CompressionHeaderFactory.IntegerEncodingCalculator</a></li>
 <li><a href="htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">Container</a></li>
 <li><a href="htsjdk/samtools/cram/build/ContainerFactory.html" title="class in htsjdk.samtools.cram.build" target="classFrame">ContainerFactory</a></li>
 <li><a href="htsjdk/samtools/cram/structure/ContainerIO.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">ContainerIO</a></li>
@@ -152,6 +153,7 @@
 <li><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">CramCompressionRecord</a></li>
 <li><a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html" title="class in htsjdk.samtools.cram.structure" target="classFrame">CramCompressionRecord.BAM_FLAGS</a></li>
 <li><a href="htsjdk/samtools/cram/build/CramContainerIterator.html" title="class in htsjdk.samtools.cram.build" target="classFrame">CramContainerIterator</a></li>
+<li><a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools" target="classFrame">CRAMContainerStreamWriter</a></li>
 <li><a href="htsjdk/samtools/cram/CRAMException.html" title="class in htsjdk.samtools.cram" target="classFrame">CRAMException</a></li>
 <li><a href="htsjdk/samtools/CRAMFileReader.html" title="class in htsjdk.samtools" target="classFrame">CRAMFileReader</a></li>
 <li><a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools" target="classFrame">CRAMFileReader.IntervalIterator</a></li>
@@ -189,6 +191,7 @@
 <li><a href="htsjdk/samtools/cram/encoding/readfeatures/Deletion.html" title="class in htsjdk.samtools.cram.encoding.readfeatures" target="classFrame">Deletion</a></li>
 <li><a href="htsjdk/tribble/gelitext/DiploidGenotype.html" title="enum in htsjdk.tribble.gelitext" target="classFrame">DiploidGenotype</a></li>
 <li><a href="htsjdk/samtools/util/DiskBackedQueue.html" title="class in htsjdk.samtools.util" target="classFrame">DiskBackedQueue</a></li>
+<li><a href="htsjdk/samtools/DiskBasedBAMFileIndex.html" title="class in htsjdk.samtools" target="classFrame">DiskBasedBAMFileIndex</a></li>
 <li><a href="htsjdk/samtools/DownsamplingIterator.html" title="class in htsjdk.samtools" target="classFrame">DownsamplingIterator</a></li>
 <li><a href="htsjdk/samtools/DownsamplingIteratorFactory.html" title="class in htsjdk.samtools" target="classFrame">DownsamplingIteratorFactory</a></li>
 <li><a href="htsjdk/samtools/DownsamplingIteratorFactory.Strategy.html" title="enum in htsjdk.samtools" target="classFrame">DownsamplingIteratorFactory.Strategy</a></li>
@@ -309,6 +312,8 @@
 <li><a href="htsjdk/samtools/util/IterableOnceIterator.html" title="class in htsjdk.samtools.util" target="classFrame">IterableOnceIterator</a></li>
 <li><a href="htsjdk/samtools/util/Iterables.html" title="class in htsjdk.samtools.util" target="classFrame">Iterables</a></li>
 <li><a href="htsjdk/samtools/cram/io/ITF8.html" title="class in htsjdk.samtools.cram.io" target="classFrame">ITF8</a></li>
+<li><a href="htsjdk/samtools/filter/JavascriptSamRecordFilter.html" title="class in htsjdk.samtools.filter" target="classFrame">JavascriptSamRecordFilter</a></li>
+<li><a href="htsjdk/variant/variantcontext/filter/JavascriptVariantFilter.html" title="class in htsjdk.variant.variantcontext.filter" target="classFrame">JavascriptVariantFilter</a></li>
 <li><a href="htsjdk/samtools/util/Lazy.html" title="class in htsjdk.samtools.util" target="classFrame">Lazy</a></li>
 <li><a href="htsjdk/samtools/util/Lazy.LazyInitializer.html" title="interface in htsjdk.samtools.util" target="classFrame"><span class="interfaceName">Lazy.LazyInitializer</span></a></li>
 <li><a href="htsjdk/variant/variantcontext/LazyGenotypesContext.html" title="class in htsjdk.variant.variantcontext" target="classFrame">LazyGenotypesContext</a></li>
@@ -394,6 +399,7 @@
 <li><a href="htsjdk/samtools/util/ReferenceSequenceMask.html" title="interface in htsjdk.samtools.util" target="classFrame"><span class="interfaceName">ReferenceSequenceMask</span></a></li>
 <li><a href="htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref" target="classFrame">ReferenceSource</a></li>
 <li><a href="htsjdk/samtools/cram/ref/ReferenceTracks.html" title="class in htsjdk.samtools.cram.ref" target="classFrame">ReferenceTracks</a></li>
+<li><a href="htsjdk/samtools/cram/encoding/reader/RefSeqIdReader.html" title="class in htsjdk.samtools.cram.encoding.reader" target="classFrame">RefSeqIdReader</a></li>
 <li><a href="htsjdk/samtools/cram/encoding/readfeatures/RefSkip.html" title="class in htsjdk.samtools.cram.encoding.readfeatures" target="classFrame">RefSkip</a></li>
 <li><a href="htsjdk/samtools/util/RelativeIso8601Date.html" title="class in htsjdk.samtools.util" target="classFrame">RelativeIso8601Date</a></li>
 <li><a href="htsjdk/tribble/util/RemoteURLHelper.html" title="class in htsjdk.tribble.util" target="classFrame">RemoteURLHelper</a></li>
@@ -402,6 +408,7 @@
 <li><a href="htsjdk/samtools/util/ResourceLimitedMapFunctor.html" title="interface in htsjdk.samtools.util" target="classFrame"><span class="interfaceName">ResourceLimitedMapFunctor</span></a></li>
 <li><a href="htsjdk/samtools/util/RuntimeEOFException.html" title="class in htsjdk.samtools.util" target="classFrame">RuntimeEOFException</a></li>
 <li><a href="htsjdk/samtools/util/RuntimeIOException.html" title="class in htsjdk.samtools.util" target="classFrame">RuntimeIOException</a></li>
+<li><a href="htsjdk/samtools/util/RuntimeScriptException.html" title="class in htsjdk.samtools.util" target="classFrame">RuntimeScriptException</a></li>
 <li><a href="htsjdk/samtools/cram/build/Sam2CramRecordFactory.html" title="class in htsjdk.samtools.cram.build" target="classFrame">Sam2CramRecordFactory</a></li>
 <li><a href="htsjdk/samtools/SAMBinaryTagAndUnsignedArrayValue.html" title="class in htsjdk.samtools" target="classFrame">SAMBinaryTagAndUnsignedArrayValue</a></li>
 <li><a href="htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools" target="classFrame">SAMBinaryTagAndValue</a></li>
@@ -555,6 +562,7 @@
 <li><a href="htsjdk/tribble/TribbleException.UnableToReadIndexFile.html" title="class in htsjdk.tribble" target="classFrame">TribbleException.UnableToReadIndexFile</a></li>
 <li><a href="htsjdk/tribble/index/TribbleIndexCreator.html" title="class in htsjdk.tribble.index" target="classFrame">TribbleIndexCreator</a></li>
 <li><a href="htsjdk/tribble/TribbleIndexedFeatureReader.html" title="class in htsjdk.tribble" target="classFrame">TribbleIndexedFeatureReader</a></li>
+<li><a href="htsjdk/samtools/util/TrimmingUtil.html" title="class in htsjdk.samtools.util" target="classFrame">TrimmingUtil</a></li>
 <li><a href="htsjdk/samtools/util/Tuple.html" title="class in htsjdk.samtools.util" target="classFrame">Tuple</a></li>
 <li><a href="htsjdk/tribble/exception/UnsortedFileException.html" title="class in htsjdk.tribble.exception" target="classFrame">UnsortedFileException</a></li>
 <li><a href="htsjdk/tribble/util/URLHelper.html" title="interface in htsjdk.tribble.util" target="classFrame"><span class="interfaceName">URLHelper</span></a></li>

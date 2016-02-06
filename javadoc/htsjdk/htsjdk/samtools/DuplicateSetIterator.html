@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":42};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -149,7 +149,13 @@ implements <a href="../../htsjdk/samtools/util/CloseableIterator.html" title="in
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-">DuplicateSetIterator</a></span>(<a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
-                    boolean&nbsp;preSorted)</code>
+                    boolean&nbsp;preSorted)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">DuplicateSetIterator</a></span>(<a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;preSorted,
+                    <a href="../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
@@ -163,7 +169,7 @@ implements <a href="../../htsjdk/samtools/util/CloseableIterator.html" title="in
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -186,7 +192,9 @@ implements <a href="../../htsjdk/samtools/util/CloseableIterator.html" title="in
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/DuplicateSetIterator.html#setScoringStrategy-htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy-">setScoringStrategy</a></span>(<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools">DuplicateScoringStrategy.ScoringStrategy</a>&nbsp;scoringStrategy)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/DuplicateSetIterator.html#setScoringStrategy-htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy-">setScoringStrategy</a></span>(<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools">DuplicateScoringStrategy.ScoringStrategy</a>&nbsp;scoringStrategy)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -230,12 +238,24 @@ implements <a href="../../htsjdk/samtools/util/CloseableIterator.html" title="in
 <a name="DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>DuplicateSetIterator</h4>
 <pre>public&nbsp;DuplicateSetIterator(<a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                             <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                             boolean&nbsp;preSorted)</pre>
+</li>
+</ul>
+<a name="DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>DuplicateSetIterator</h4>
+<pre>public&nbsp;DuplicateSetIterator(<a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                            <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                            boolean&nbsp;preSorted,
+                            <a href="../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</pre>
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.  If the records are said to be
  sorted but not actually sorted in the correct order, an exception during iteration will be thrown.</div>
 </li>
@@ -254,7 +274,9 @@ implements <a href="../../htsjdk/samtools/util/CloseableIterator.html" title="in
 <ul class="blockList">
 <li class="blockList">
 <h4>setScoringStrategy</h4>
-<pre>public&nbsp;void&nbsp;setScoringStrategy(<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools">DuplicateScoringStrategy.ScoringStrategy</a>&nbsp;scoringStrategy)</pre>
+<pre>@Deprecated
+public&nbsp;void&nbsp;setScoringStrategy(<a href="../../htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools">DuplicateScoringStrategy.ScoringStrategy</a>&nbsp;scoringStrategy)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 <a name="next--">

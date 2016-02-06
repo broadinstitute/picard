@@ -103,18 +103,22 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
+<td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#clone--">clone</a></span>()</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setAsyncOutputBufferSize-int-">setAsyncOutputBufferSize</a></span>(int&nbsp;asyncOutputBufferSize)</code>
 <div class="block">If and only if using asynchronous IO then sets the maximum number of records that can be buffered per
  SAMFileWriter before producers will block when trying to write another SAMRecord.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setBufferSize-int-">setBufferSize</a></span>(int&nbsp;bufferSize)</code>
 <div class="block">Controls size of write buffer.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setCreateIndex-boolean-">setCreateIndex</a></span>(boolean&nbsp;setting)</code>
 <div class="block">Convenience method allowing newSAMFileWriterFactory().setCreateIndex(true);
@@ -123,13 +127,13 @@
  then a BAM index file will be written along with the BAM file.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setCreateMd5File-boolean-">setCreateMd5File</a></span>(boolean&nbsp;createMd5File)</code>
 <div class="block">Sets whether to create md5Files for BAMs from this factory.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setMaxRecordsInRam-int-">setMaxRecordsInRam</a></span>(int&nbsp;maxRecordsInRam)</code>
 <div class="block">Before creating a writer that is not presorted, this method may be called in order to override
@@ -137,16 +141,29 @@
  (c.f.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setTempDirectory-java.io.File-">setTempDirectory</a></span>(java.io.File&nbsp;tmpDir)</code>
 <div class="block">Set the temporary directory to use when sort data.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></code></td>
 <td class="colLast"><span class="typeNameLabel">SAMFileWriterFactory.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#setUseAsyncIo-boolean-">setUseAsyncIo</a></span>(boolean&nbsp;useAsyncIo)</code>
 <div class="block">Turn on or off the use of asynchronous IO for writing output SAM and BAM files.</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
+<caption><span>Constructors in <a href="../../../htsjdk/samtools/package-summary.html">htsjdk.samtools</a> with parameters of type <a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SAMFileWriterFactory.html#SAMFileWriterFactory-htsjdk.samtools.SAMFileWriterFactory-">SAMFileWriterFactory</a></span>(<a href="../../../htsjdk/samtools/SAMFileWriterFactory.html" title="class in htsjdk.samtools">SAMFileWriterFactory</a>&nbsp;other)</code>
+<div class="block">copy constructor</div>
 </td>
 </tr>
 </tbody>

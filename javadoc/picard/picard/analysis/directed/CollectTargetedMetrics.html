@@ -48,7 +48,7 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../picard/analysis/directed/CalculateHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -113,7 +113,7 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>Direct Known Subclasses:</dt>
-<dd><a href="../../../picard/analysis/directed/CalculateHsMetrics.html" title="class in picard.analysis.directed">CalculateHsMetrics</a>, <a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed">CollectTargetedPcrMetrics</a></dd>
+<dd><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">CollectHsMetrics</a>, <a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed">CollectTargetedPcrMetrics</a></dd>
 </dl>
 <hr>
 <br>
@@ -145,12 +145,28 @@ extends <a href="../../../picard/cmdline/CommandLineProgram.html" title="class i
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#CLIP_OVERLAPPING_READS">CLIP_OVERLAPPING_READS</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#COVERAGE_CAP">COVERAGE_CAP</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>int</code></td>
@@ -162,7 +178,15 @@ extends <a href="../../../picard/cmdline/CommandLineProgram.html" title="class i
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_BASE_COVERAGE">PER_BASE_COVERAGE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_TARGET_COVERAGE">PER_TARGET_COVERAGE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#SAMPLE_SIZE">SAMPLE_SIZE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>java.util.List&lt;java.io.File&gt;</code></td>
@@ -230,10 +254,11 @@ extends <a href="../../../picard/cmdline/CommandLineProgram.html" title="class i
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>protected abstract <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="type parameter in CollectTargetedMetrics">COLLECTOR</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
              java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
              htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
              java.io.File&nbsp;perTargetCoverage,
+             java.io.File&nbsp;perBaseCoverage,
              htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
              htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
              java.lang.String&nbsp;probeSetName,
@@ -326,15 +351,85 @@ public&nbsp;java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulatio
 public&nbsp;java.io.File PER_TARGET_COVERAGE</pre>
 </li>
 </ul>
+<a name="PER_BASE_COVERAGE">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PER_BASE_COVERAGE</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true,
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="An optional file to output per base coverage information to. The per-base file contains one line per target base and can grow very large. It is not recommended for use with large target sets.")
+public&nbsp;java.io.File PER_BASE_COVERAGE</pre>
+</li>
+</ul>
 <a name="NEAR_DISTANCE">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>NEAR_DISTANCE</h4>
 <pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true,
         <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="The maximum distance between a read and the nearest probe/bait/amplicon for the read to be considered \'near probe\' and included in percent selected.")
 public&nbsp;int NEAR_DISTANCE</pre>
+</li>
+</ul>
+<a name="MINIMUM_MAPPING_QUALITY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MINIMUM_MAPPING_QUALITY</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="MQ",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Minimum mapping quality for a read to contribute coverage.",
+        <a href="../../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
+public&nbsp;int MINIMUM_MAPPING_QUALITY</pre>
+</li>
+</ul>
+<a name="MINIMUM_BASE_QUALITY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MINIMUM_BASE_QUALITY</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="Q",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Minimum base quality for a base to contribute coverage.",
+        <a href="../../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
+public&nbsp;int MINIMUM_BASE_QUALITY</pre>
+</li>
+</ul>
+<a name="CLIP_OVERLAPPING_READS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>CLIP_OVERLAPPING_READS</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="True if we are to clip overlapping reads, false otherwise.",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true,
+        <a href="../../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
+public&nbsp;boolean CLIP_OVERLAPPING_READS</pre>
+</li>
+</ul>
+<a name="COVERAGE_CAP">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>COVERAGE_CAP</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="covMax",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Parameter to set a max coverage limit for Theoretical Sensitivity calculations. Default is 200.",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;int COVERAGE_CAP</pre>
+</li>
+</ul>
+<a name="SAMPLE_SIZE">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>SAMPLE_SIZE</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;int SAMPLE_SIZE</pre>
 </li>
 </ul>
 </li>
@@ -380,7 +475,7 @@ public&nbsp;int NEAR_DISTANCE</pre>
 <pre>protected abstract&nbsp;java.lang.String&nbsp;getProbeSetName()</pre>
 </li>
 </ul>
-<a name="makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
+<a name="makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -390,6 +485,7 @@ public&nbsp;int NEAR_DISTANCE</pre>
                                            java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
                                            htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
                                            java.io.File&nbsp;perTargetCoverage,
+                                           java.io.File&nbsp;perBaseCoverage,
                                            htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
                                            htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
                                            java.lang.String&nbsp;probeSetName,
@@ -467,7 +563,7 @@ public&nbsp;int NEAR_DISTANCE</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../../picard/analysis/directed/CalculateHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../../picard/analysis/directed/CollectTargetedPcrMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

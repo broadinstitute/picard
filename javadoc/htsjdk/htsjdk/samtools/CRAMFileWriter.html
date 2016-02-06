@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -74,13 +74,13 @@ var activeTableTab = "activeTableTab";
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
@@ -125,29 +125,6 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- =========== FIELD SUMMARY =========== -->
-<ul class="blockList">
-<li class="blockList"><a name="field.summary">
-<!--   -->
-</a>
-<h3>Field Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Field Summary table, listing fields, and an explanation">
-<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Field and Description</th>
-</tr>
-<tr class="altColor">
-<td class="colFirst"><code>protected int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#containerSize">containerSize</a></span></code>&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code>protected int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#recordsPerSlice">recordsPerSlice</a></span></code>&nbsp;</td>
-</tr>
-</table>
-</li>
-</ul>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.summary">
@@ -163,24 +140,24 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-boolean-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               java.io.OutputStream&nbsp;indexOS,
               boolean&nbsp;presorted,
-              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
               <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
               java.lang.String&nbsp;fileName)</code>
-<div class="block">Create a CRAMFileWriter and index on output streams.</div>
+<div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
               java.io.OutputStream&nbsp;indexOS,
-              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
               <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
               java.lang.String&nbsp;fileName)</code>
-<div class="block">Create a CRAMFileWriter and index on output streams.</div>
+<div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#CRAMFileWriter-java.io.OutputStream-htsjdk.samtools.cram.ref.ReferenceSource-htsjdk.samtools.SAMFileHeader-java.lang.String-">CRAMFileWriter</a></span>(java.io.OutputStream&nbsp;outputStream,
-              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+              <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
               <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
               java.lang.String&nbsp;fileName)</code>
 <div class="block">Create a CRAMFileWriter on an output stream.</div>
@@ -208,66 +185,54 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 </td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>protected void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#flushContainer--">flushContainer</a></span>()</code>
-<div class="block">Complete the current container and flush it to the output stream.</div>
-</td>
-</tr>
-<tr id="i2" class="altColor">
 <td class="colFirst"><code>java.util.Set&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#getCaptureTags--">getCaptureTags</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>protected java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#getFilename--">getFilename</a></span>()</code>
 <div class="block">For producing error messages.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>java.util.Set&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#getIgnoreTags--">getIgnoreTags</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>java.util.List&lt;<a href="../../htsjdk/samtools/cram/lossy/PreservationPolicy.html" title="class in htsjdk.samtools.cram.lossy">PreservationPolicy</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#getPreservationPolicies--">getPreservationPolicies</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#isCaptureAllTags--">isCaptureAllTags</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#isPreserveReadNames--">isPreserveReadNames</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#setCaptureAllTags-boolean-">setCaptureAllTags</a></span>(boolean&nbsp;captureAllTags)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#setCaptureTags-java.util.Set-">setCaptureTags</a></span>(java.util.Set&lt;java.lang.String&gt;&nbsp;captureTags)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#setIgnoreTags-java.util.Set-">setIgnoreTags</a></span>(java.util.Set&lt;java.lang.String&gt;&nbsp;ignoreTags)</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#setPreserveReadNames-boolean-">setPreserveReadNames</a></span>(boolean&nbsp;preserveReadNames)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
-<td class="colFirst"><code>protected boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#shouldFlushContainer-htsjdk.samtools.SAMRecord-">shouldFlushContainer</a></span>(<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;nextRecord)</code>
-<div class="block">Decide if the current container should be completed and flushed.</div>
-</td>
-</tr>
-<tr id="i13" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#writeAlignment-htsjdk.samtools.SAMRecord-">writeAlignment</a></span>(<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;alignment)</code>
 <div class="block">Write an alignment record.</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/CRAMFileWriter.html#writeHeader-java.lang.String-">writeHeader</a></span>(java.lang.String&nbsp;textHeader)</code>
 <div class="block">Write the header to disk.</div>
@@ -296,32 +261,6 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
-<!-- ============ FIELD DETAIL =========== -->
-<ul class="blockList">
-<li class="blockList"><a name="field.detail">
-<!--   -->
-</a>
-<h3>Field Detail</h3>
-<a name="recordsPerSlice">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>recordsPerSlice</h4>
-<pre>protected final&nbsp;int recordsPerSlice</pre>
-</li>
-</ul>
-<a name="containerSize">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>containerSize</h4>
-<pre>protected final&nbsp;int containerSize</pre>
-</li>
-</ul>
-</li>
-</ul>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <ul class="blockList">
 <li class="blockList"><a name="constructor.detail">
@@ -335,17 +274,19 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <li class="blockList">
 <h4>CRAMFileWriter</h4>
 <pre>public&nbsp;CRAMFileWriter(java.io.OutputStream&nbsp;outputStream,
-                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
                       java.lang.String&nbsp;fileName)</pre>
 <div class="block">Create a CRAMFileWriter on an output stream. Requires input records to be presorted to match the
  sort order defined by the input <code>samFileHeader</code>.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>outputStream</code> - where to write the output.</dd>
-<dd><code>source</code> - reference source</dd>
-<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Sort order is determined by the sortOrder property of this arg.</dd>
+<dd><code>outputStream</code> - where to write the output. Can not be null.</dd>
+<dd><code>referenceSource</code> - reference source. Can not be null.</dd>
+<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Can not be null. Sort order is determined by the sortOrder property of this arg.</dd>
 <dd><code>fileName</code> - used for display in error messages</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>outputStream</code>, <code>referenceSource</code> or <code>samFileHeader</code> are null</dd>
 </dl>
 </li>
 </ul>
@@ -357,18 +298,20 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <h4>CRAMFileWriter</h4>
 <pre>public&nbsp;CRAMFileWriter(java.io.OutputStream&nbsp;outputStream,
                       java.io.OutputStream&nbsp;indexOS,
-                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
                       java.lang.String&nbsp;fileName)</pre>
-<div class="block">Create a CRAMFileWriter and index on output streams. Requires input records to be presorted to match the
+<div class="block">Create a CRAMFileWriter and optional index on output streams. Requires input records to be presorted to match the
  sort order defined by the input <code>samFileHeader</code>.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>outputStream</code> - where to write the output.</dd>
+<dd><code>outputStream</code> - where to write the output. Can not be null.</dd>
 <dd><code>indexOS</code> - where to write the output index. Can be null if no index is required.</dd>
-<dd><code>source</code> - reference source</dd>
-<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Sort order is determined by the sortOrder property of this arg.</dd>
+<dd><code>referenceSource</code> - reference source</dd>
+<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Can not be null. Sort order is determined by the sortOrder property of this arg.</dd>
 <dd><code>fileName</code> - used for display in error messages</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>outputStream</code>, <code>referenceSource</code> or <code>samFileHeader</code> are null</dd>
 </dl>
 </li>
 </ul>
@@ -381,18 +324,20 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <pre>public&nbsp;CRAMFileWriter(java.io.OutputStream&nbsp;outputStream,
                       java.io.OutputStream&nbsp;indexOS,
                       boolean&nbsp;presorted,
-                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;source,
+                      <a href="../../htsjdk/samtools/cram/ref/ReferenceSource.html" title="class in htsjdk.samtools.cram.ref">ReferenceSource</a>&nbsp;referenceSource,
                       <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;samFileHeader,
                       java.lang.String&nbsp;fileName)</pre>
-<div class="block">Create a CRAMFileWriter and index on output streams.</div>
+<div class="block">Create a CRAMFileWriter and optional index on output streams.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>outputStream</code> - where to write the output.</dd>
+<dd><code>outputStream</code> - where to write the output. Can not be null.</dd>
 <dd><code>indexOS</code> - where to write the output index. Can be null if no index is required.</dd>
 <dd><code>presorted</code> - if true records written to this writer must already be sorted in the order specified by the header</dd>
-<dd><code>source</code> - reference source</dd>
-<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Sort order is determined by the sortOrder property of this arg.</dd>
+<dd><code>referenceSource</code> - reference source</dd>
+<dd><code>samFileHeader</code> - <a href="../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools"><code>SAMFileHeader</code></a> to be used. Can not be null. Sort order is determined by the sortOrder property of this arg.</dd>
 <dd><code>fileName</code> - used for display in error message display</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if the <code>outputStream</code>, <code>referenceSource</code> or <code>samFileHeader</code> are null</dd>
 </dl>
 </li>
 </ul>
@@ -404,42 +349,6 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="shouldFlushContainer-htsjdk.samtools.SAMRecord-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>shouldFlushContainer</h4>
-<pre>protected&nbsp;boolean&nbsp;shouldFlushContainer(<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;nextRecord)</pre>
-<div class="block">Decide if the current container should be completed and flushed. The decision is based on a) number of records and b) if the
- reference sequence id has changed.</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>nextRecord</code> - the record to be added into the current or next container</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>true if the current container should be flushed and the following records should go into a new container; false otherwise.</dd>
-</dl>
-</li>
-</ul>
-<a name="flushContainer--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>flushContainer</h4>
-<pre>protected&nbsp;void&nbsp;flushContainer()
-                       throws java.lang.IllegalArgumentException,
-                              java.lang.IllegalAccessException,
-                              java.io.IOException</pre>
-<div class="block">Complete the current container and flush it to the output stream.</div>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.IllegalArgumentException</code></dd>
-<dd><code>java.lang.IllegalAccessException</code></dd>
-<dd><code>java.io.IOException</code></dd>
-</dl>
-</li>
-</ul>
 <a name="writeAlignment-htsjdk.samtools.SAMRecord-">
 <!--   -->
 </a>
@@ -640,13 +549,13 @@ extends <a href="../../htsjdk/samtools/SAMFileWriterImpl.html" title="class in h
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>

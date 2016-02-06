@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -138,7 +138,7 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#PerUnitTargetMetricCollector-java.lang.String-java.util.Set-java.lang.String-java.lang.String-java.lang.String-long-long-long-java.util.Map-">PerUnitTargetMetricCollector</a></span>(java.lang.String&nbsp;probeSetName,
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#PerUnitTargetMetricCollector-java.lang.String-java.util.Set-java.lang.String-java.lang.String-java.lang.String-long-long-long-java.util.Map-int-int-boolean-">PerUnitTargetMetricCollector</a></span>(java.lang.String&nbsp;probeSetName,
                             java.util.Set&lt;htsjdk.samtools.util.Interval&gt;&nbsp;coverageTargets,
                             java.lang.String&nbsp;sample,
                             java.lang.String&nbsp;library,
@@ -146,7 +146,10 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
                             long&nbsp;probeTerritory,
                             long&nbsp;targetTerritory,
                             long&nbsp;genomeSize,
-                            java.util.Map&lt;htsjdk.samtools.util.Interval,java.lang.Double&gt;&nbsp;intervalToGc)</code>
+                            java.util.Map&lt;htsjdk.samtools.util.Interval,java.lang.Double&gt;&nbsp;intervalToGc,
+                            int&nbsp;minimumMappingQuality,
+                            int&nbsp;minimumBaseQuality,
+                            boolean&nbsp;clipOverlappingReads)</code>
 <div class="block">Constructor that parses the squashed reference to genome reference file and stores the
  information in a map for later use.</div>
 </td>
@@ -168,7 +171,7 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#acceptRecord-htsjdk.samtools.SAMRecord-">acceptRecord</a></span>(htsjdk.samtools.SAMRecord&nbsp;rec)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#acceptRecord-htsjdk.samtools.SAMRecord-">acceptRecord</a></span>(htsjdk.samtools.SAMRecord&nbsp;record)</code>
 <div class="block">Adds information about an individual SAMRecord to the statistics.</div>
 </td>
 </tr>
@@ -192,8 +195,14 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#setPerBaseOutput-java.io.File-">setPerBaseOutput</a></span>(java.io.File&nbsp;perBaseOutput)</code>
+<div class="block">Sets the (optional) File to write per-base coverage information to.</div>
+</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/TargetMetricsCollector.PerUnitTargetMetricCollector.html#setPerTargetOutput-java.io.File-">setPerTargetOutput</a></span>(java.io.File&nbsp;perTargetOutput)</code>
-<div class="block">If set, the metrics collector will output per target coverage information to this file.</div>
+<div class="block">Sets the (optional) File to write per-target coverage information to.</div>
 </td>
 </tr>
 </table>
@@ -218,7 +227,7 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a name="PerUnitTargetMetricCollector-java.lang.String-java.util.Set-java.lang.String-java.lang.String-java.lang.String-long-long-long-java.util.Map-">
+<a name="PerUnitTargetMetricCollector-java.lang.String-java.util.Set-java.lang.String-java.lang.String-java.lang.String-long-long-long-java.util.Map-int-int-boolean-">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -232,7 +241,10 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
                                     long&nbsp;probeTerritory,
                                     long&nbsp;targetTerritory,
                                     long&nbsp;genomeSize,
-                                    java.util.Map&lt;htsjdk.samtools.util.Interval,java.lang.Double&gt;&nbsp;intervalToGc)</pre>
+                                    java.util.Map&lt;htsjdk.samtools.util.Interval,java.lang.Double&gt;&nbsp;intervalToGc,
+                                    int&nbsp;minimumMappingQuality,
+                                    int&nbsp;minimumBaseQuality,
+                                    boolean&nbsp;clipOverlappingReads)</pre>
 <div class="block">Constructor that parses the squashed reference to genome reference file and stores the
  information in a map for later use.</div>
 </li>
@@ -252,7 +264,17 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 <li class="blockList">
 <h4>setPerTargetOutput</h4>
 <pre>public&nbsp;void&nbsp;setPerTargetOutput(java.io.File&nbsp;perTargetOutput)</pre>
-<div class="block">If set, the metrics collector will output per target coverage information to this file.</div>
+<div class="block">Sets the (optional) File to write per-target coverage information to. If null (the default), no file is produced.</div>
+</li>
+</ul>
+<a name="setPerBaseOutput-java.io.File-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setPerBaseOutput</h4>
+<pre>public&nbsp;void&nbsp;setPerBaseOutput(java.io.File&nbsp;perBaseOutput)</pre>
+<div class="block">Sets the (optional) File to write per-base coverage information to. If null (the default), no file is produced.</div>
 </li>
 </ul>
 <a name="setBaitSetName-java.lang.String-">
@@ -271,13 +293,13 @@ implements <a href="../../../picard/metrics/PerUnitMetricCollector.html" title="
 <ul class="blockList">
 <li class="blockList">
 <h4>acceptRecord</h4>
-<pre>public&nbsp;void&nbsp;acceptRecord(htsjdk.samtools.SAMRecord&nbsp;rec)</pre>
+<pre>public&nbsp;void&nbsp;acceptRecord(htsjdk.samtools.SAMRecord&nbsp;record)</pre>
 <div class="block">Adds information about an individual SAMRecord to the statistics.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../picard/metrics/PerUnitMetricCollector.html#acceptRecord-ARGTYPE-">acceptRecord</a></code>&nbsp;in interface&nbsp;<code><a href="../../../picard/metrics/PerUnitMetricCollector.html" title="interface in picard.metrics">PerUnitMetricCollector</a>&lt;<a href="../../../picard/analysis/directed/TargetMetricsCollector.html" title="type parameter in TargetMetricsCollector">METRIC_TYPE</a> extends <a href="../../../picard/metrics/MultilevelMetrics.html" title="class in picard.metrics">MultilevelMetrics</a>,java.lang.Integer,htsjdk.samtools.SAMRecord&gt;</code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>rec</code> - Contains SAMRecord, SAMReadGroupRecord, ReferenceSequence of current record and any previously
+<dd><code>record</code> - Contains SAMRecord, SAMReadGroupRecord, ReferenceSequence of current record and any previously
              computed values that might be needed for this class</dd>
 </dl>
 </li>

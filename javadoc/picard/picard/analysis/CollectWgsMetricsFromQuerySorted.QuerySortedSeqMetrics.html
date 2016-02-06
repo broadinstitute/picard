@@ -42,7 +42,7 @@
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
@@ -145,32 +145,64 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title=
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TOTAL_BASES">TOTAL_BASES</a></span></code>
-<div class="block">The total number of bases, before any filters are applied.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_ADAPTER_READS">PF_ADAPTER_READS</a></span></code>
+<div class="block">The number of PF reads that are unaligned and match to a known adapter sequence right from the
+ start of the read.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TOTAL_DUPE_PAIRS">TOTAL_DUPE_PAIRS</a></span></code>
-<div class="block">The number of duplicate read pairs, before all filters are applied.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_BASES">PF_BASES</a></span></code>
+<div class="block">The total number of bases, before any filters are applied.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TOTAL_ORIENTED_PAIRS">TOTAL_ORIENTED_PAIRS</a></span></code>
-<div class="block">The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_CHIMERIC_PAIRS">PF_CHIMERIC_PAIRS</a></span></code>
+<div class="block">The number of PF reads that map outside of a maximum insert size (100kb) or that have
+ the two ends mapping to different chromosomes.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TOTAL_READ_PAIRS">TOTAL_READ_PAIRS</a></span></code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_DUPE_PAIRS">PF_DUPE_PAIRS</a></span></code>
+<div class="block">The number of duplicate read pairs, before any filters are applied.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_NOISE_READS">PF_NOISE_READS</a></span></code>
+<div class="block">The number of PF reads that are marked as noise reads.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_ORIENTED_PAIRS">PF_ORIENTED_PAIRS</a></span></code>
+<div class="block">The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_PASSING_BASES">PF_PASSING_BASES</a></span></code>
+<div class="block">The number of passing bases, after all filters are applied.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_READ_PAIRS">PF_READ_PAIRS</a></span></code>
 <div class="block">The number of read pairs, before all filters are applied.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>long</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TOTAL_USABLE_BASES">TOTAL_USABLE_BASES</a></span></code>
-<div class="block">The number of usable bases, after all filters are applied.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_READS_ALIGNED">PF_READS_ALIGNED</a></span></code>
+<div class="block">The number of aligned reads, before any filters are applied.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TYPE">TYPE</a></span></code>
+<div class="block">Identifier for metrics type</div>
 </td>
 </tr>
 </table>
@@ -179,7 +211,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title=
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;picard.analysis.<a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a></h3>
-<code><a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#GENOME_TERRITORY">GENOME_TERRITORY</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MAD_COVERAGE">MAD_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MEAN_COVERAGE">MEAN_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MEDIAN_COVERAGE">MEDIAN_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_100X">PCT_100X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_10X">PCT_10X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_15X">PCT_15X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_1X">PCT_1X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_20X">PCT_20X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_25X">PCT_25X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_30X">PCT_30X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_40X">PCT_40X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_50X">PCT_50X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_5X">PCT_5X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_60X">PCT_60X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_70X">PCT_70X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_80X">PCT_80X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_90X">PCT_90X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_BASEQ">PCT_EXC_BASEQ</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_CAPPED">PCT_EXC_CAPPED</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_DUPE">PCT_EXC_DUPE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_MAPQ">PCT_EXC_MAPQ</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_OVERLAP">PCT_EXC_OVERLAP</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_TOTAL">PCT_EXC_TOTAL</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_UNPAIRED">PCT_EXC_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#SD_COVERAGE">SD_COVERAGE</a></code></li>
+<code><a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#GENOME_TERRITORY">GENOME_TERRITORY</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#HET_SNP_Q">HET_SNP_Q</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#HET_SNP_SENSITIVITY">HET_SNP_SENSITIVITY</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MAD_COVERAGE">MAD_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MEAN_COVERAGE">MEAN_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MEDIAN_COVERAGE">MEDIAN_COVERAGE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_100X">PCT_100X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_10X">PCT_10X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_15X">PCT_15X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_1X">PCT_1X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_20X">PCT_20X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_25X">PCT_25X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_30X">PCT_30X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_40X">PCT_40X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_50X">PCT_50X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_5X">PCT_5X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_60X">PCT_60X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_70X">PCT_70X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_80X">PCT_80X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_90X">PCT_90X</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_BASEQ">PCT_EXC_BASEQ</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_CAPPED">PCT_EXC_CAPPED</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_DUPE">PCT_EXC_DUPE</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_MAPQ">PCT_EXC_MAPQ</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_OVERLAP">PCT_EXC_OVERLAP</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_TOTAL">PCT_EXC_TOTAL</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#PCT_EXC_UNPAIRED">PCT_EXC_UNPAIRED</a>, <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#SD_COVERAGE">SD_COVERAGE</a></code></li>
 </ul>
 </li>
 </ul>
@@ -234,53 +266,107 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title=
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="TOTAL_BASES">
+<a name="TYPE">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>TOTAL_BASES</h4>
-<pre>public&nbsp;long TOTAL_BASES</pre>
+<h4>TYPE</h4>
+<pre>public&nbsp;<a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</a> TYPE</pre>
+<div class="block">Identifier for metrics type</div>
+</li>
+</ul>
+<a name="PF_BASES">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PF_BASES</h4>
+<pre>public&nbsp;long PF_BASES</pre>
 <div class="block">The total number of bases, before any filters are applied.</div>
 </li>
 </ul>
-<a name="TOTAL_USABLE_BASES">
+<a name="PF_PASSING_BASES">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>TOTAL_USABLE_BASES</h4>
-<pre>public&nbsp;long TOTAL_USABLE_BASES</pre>
-<div class="block">The number of usable bases, after all filters are applied.</div>
+<h4>PF_PASSING_BASES</h4>
+<pre>public&nbsp;long PF_PASSING_BASES</pre>
+<div class="block">The number of passing bases, after all filters are applied.</div>
 </li>
 </ul>
-<a name="TOTAL_READ_PAIRS">
+<a name="PF_READ_PAIRS">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>TOTAL_READ_PAIRS</h4>
-<pre>public&nbsp;long TOTAL_READ_PAIRS</pre>
+<h4>PF_READ_PAIRS</h4>
+<pre>public&nbsp;long PF_READ_PAIRS</pre>
 <div class="block">The number of read pairs, before all filters are applied.</div>
 </li>
 </ul>
-<a name="TOTAL_DUPE_PAIRS">
+<a name="PF_DUPE_PAIRS">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>TOTAL_DUPE_PAIRS</h4>
-<pre>public&nbsp;long TOTAL_DUPE_PAIRS</pre>
-<div class="block">The number of duplicate read pairs, before all filters are applied.</div>
+<h4>PF_DUPE_PAIRS</h4>
+<pre>public&nbsp;long PF_DUPE_PAIRS</pre>
+<div class="block">The number of duplicate read pairs, before any filters are applied.</div>
 </li>
 </ul>
-<a name="TOTAL_ORIENTED_PAIRS">
+<a name="PF_READS_ALIGNED">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>TOTAL_ORIENTED_PAIRS</h4>
-<pre>public&nbsp;long TOTAL_ORIENTED_PAIRS</pre>
+<h4>PF_READS_ALIGNED</h4>
+<pre>public&nbsp;long PF_READS_ALIGNED</pre>
+<div class="block">The number of aligned reads, before any filters are applied.</div>
+</li>
+</ul>
+<a name="PF_NOISE_READS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PF_NOISE_READS</h4>
+<pre>public&nbsp;long PF_NOISE_READS</pre>
+<div class="block">The number of PF reads that are marked as noise reads.  A noise read is one which is composed
+ entirely of A bases and/or N bases. These reads are marked as they are usually artifactual and
+ are of no use in downstream analysis.</div>
+</li>
+</ul>
+<a name="PF_CHIMERIC_PAIRS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PF_CHIMERIC_PAIRS</h4>
+<pre>public&nbsp;long PF_CHIMERIC_PAIRS</pre>
+<div class="block">The number of PF reads that map outside of a maximum insert size (100kb) or that have
+ the two ends mapping to different chromosomes.</div>
+</li>
+</ul>
+<a name="PF_ADAPTER_READS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PF_ADAPTER_READS</h4>
+<pre>public&nbsp;long PF_ADAPTER_READS</pre>
+<div class="block">The number of PF reads that are unaligned and match to a known adapter sequence right from the
+ start of the read.</div>
+</li>
+</ul>
+<a name="PF_ORIENTED_PAIRS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>PF_ORIENTED_PAIRS</h4>
+<pre>public&nbsp;long PF_ORIENTED_PAIRS</pre>
 <div class="block">The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied.</div>
 </li>
 </ul>
@@ -339,7 +425,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title=
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="../../picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
 <li><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">

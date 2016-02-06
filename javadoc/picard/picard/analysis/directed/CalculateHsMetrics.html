@@ -17,12 +17,6 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9,"i3":10};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
-var altColor = "altColor";
-var rowColor = "rowColor";
-var tableTab = "tableTab";
-var activeTableTab = "activeTableTab";
 </script>
 <noscript>
 <div>JavaScript is disabled on your browser.</div>
@@ -49,7 +43,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?picard/analysis/directed/CalculateHsMetrics.html" target="_top">Frames</a></li>
@@ -76,13 +70,13 @@ var activeTableTab = "activeTableTab";
 <li>Nested&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.summary">Method</a></li>
+<li><a href="#methods.inherited.from.class.picard.analysis.directed.CollectHsMetrics">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a name="skip.navbar.top">
@@ -105,7 +99,12 @@ var activeTableTab = "activeTableTab";
 <li><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">picard.analysis.directed.CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/HsMetrics.html" title="class in picard.analysis.directed">HsMetrics</a>,<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&gt;</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">picard.analysis.directed.CollectHsMetrics</a></li>
+<li>
+<ul class="inheritance">
 <li>picard.analysis.directed.CalculateHsMetrics</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -117,9 +116,11 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <hr>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <br>
-<pre>public class <span class="typeNameLabel">CalculateHsMetrics</span>
-extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/HsMetrics.html" title="class in picard.analysis.directed">HsMetrics</a>,<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&gt;</pre>
+<pre>@Deprecated
+public class <span class="typeNameLabel">CalculateHsMetrics</span>
+extends <a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">CollectHsMetrics</a></pre>
 <div class="block">Calculates a set of HS metrics from a sam or bam file.  See HsMetricsCollector and CollectTargetedMetrics for more details.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
@@ -144,20 +145,37 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>java.util.List&lt;java.io.File&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#BAIT_INTERVALS">BAIT_INTERVALS</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#CLIP_OVERLAPPING_READS">CLIP_OVERLAPPING_READS</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#BAIT_SET_NAME">BAIT_SET_NAME</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#MINIMUM_BASE_QUALITY">MINIMUM_BASE_QUALITY</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
+<ul class="blockList">
+<li class="blockList"><a name="fields.inherited.from.class.picard.analysis.directed.CollectHsMetrics">
+<!--   -->
+</a>
+<h3>Fields inherited from class&nbsp;picard.analysis.directed.<a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">CollectHsMetrics</a></h3>
+<code><a href="../../../picard/analysis/directed/CollectHsMetrics.html#BAIT_INTERVALS">BAIT_INTERVALS</a>, <a href="../../../picard/analysis/directed/CollectHsMetrics.html#BAIT_SET_NAME">BAIT_SET_NAME</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.picard.analysis.directed.CollectTargetedMetrics">
 <!--   -->
 </a>
 <h3>Fields inherited from class&nbsp;picard.analysis.directed.<a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a></h3>
-<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#NEAR_DISTANCE">NEAR_DISTANCE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_TARGET_COVERAGE">PER_TARGET_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#TARGET_INTERVALS">TARGET_INTERVALS</a></code></li>
+<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#COVERAGE_CAP">COVERAGE_CAP</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#METRIC_ACCUMULATION_LEVEL">METRIC_ACCUMULATION_LEVEL</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#NEAR_DISTANCE">NEAR_DISTANCE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#OUTPUT">OUTPUT</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_BASE_COVERAGE">PER_BASE_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#PER_TARGET_COVERAGE">PER_TARGET_COVERAGE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#SAMPLE_SIZE">SAMPLE_SIZE</a>, <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#TARGET_INTERVALS">TARGET_INTERVALS</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="fields.inherited.from.class.picard.cmdline.CommandLineProgram">
@@ -180,7 +198,9 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#CalculateHsMetrics--">CalculateHsMetrics</a></span>()</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#CalculateHsMetrics--">CalculateHsMetrics</a></span>()</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -191,40 +211,13 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 <!--   -->
 </a>
 <h3>Method Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Method and Description</th>
-</tr>
-<tr id="i0" class="altColor">
-<td class="colFirst"><code>protected htsjdk.samtools.util.IntervalList</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#getProbeIntervals--">getProbeIntervals</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code>protected java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#getProbeSetName--">getProbeSetName</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;argv)</code>
-<div class="block">Stock main method.</div>
-</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code>protected <a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/directed/CalculateHsMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></span>(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
-             java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
-             htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
-             java.io.File&nbsp;perTargetCoverage,
-             htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
-             htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
-             java.lang.String&nbsp;probeSetName,
-             int&nbsp;nearProbeDistance)</code>
-<div class="block">A factory method for the TargetMetricsCollector to use this time.</div>
-</td>
-</tr>
-</table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.picard.analysis.directed.CollectHsMetrics">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;picard.analysis.directed.<a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed">CollectHsMetrics</a></h3>
+<code><a href="../../../picard/analysis/directed/CollectHsMetrics.html#getProbeIntervals--">getProbeIntervals</a>, <a href="../../../picard/analysis/directed/CollectHsMetrics.html#getProbeSetName--">getProbeSetName</a>, <a href="../../../picard/analysis/directed/CollectHsMetrics.html#main-java.lang.String:A-">main</a>, <a href="../../../picard/analysis/directed/CollectHsMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.picard.analysis.directed.CollectTargetedMetrics">
 <!--   -->
@@ -260,28 +253,42 @@ extends <a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" 
 <!--   -->
 </a>
 <h3>Field Detail</h3>
-<a name="BAIT_INTERVALS">
+<a name="MINIMUM_MAPPING_QUALITY">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>BAIT_INTERVALS</h4>
-<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="BI",
-        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="An interval list file that contains the locations of the baits used.",
-        <a href="../../../picard/cmdline/Option.html#minElements--">minElements</a>=1)
-public&nbsp;java.util.List&lt;java.io.File&gt; BAIT_INTERVALS</pre>
+<h4>MINIMUM_MAPPING_QUALITY</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="MQ",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Minimum mapping quality for a read to contribute coverage.",
+        <a href="../../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
+public&nbsp;int MINIMUM_MAPPING_QUALITY</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
-<a name="BAIT_SET_NAME">
+<a name="MINIMUM_BASE_QUALITY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>MINIMUM_BASE_QUALITY</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="Q",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Minimum base quality for a base to contribute coverage.",
+        <a href="../../../picard/cmdline/Option.html#overridable--">overridable</a>=true)
+public&nbsp;int MINIMUM_BASE_QUALITY</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+</li>
+</ul>
+<a name="CLIP_OVERLAPPING_READS">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>BAIT_SET_NAME</h4>
-<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="N",
-        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Bait set name. If not provided it is inferred from the filename of the bait intervals.",
+<h4>CLIP_OVERLAPPING_READS</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="True if we are to clip overlapping reads, false otherwise.",
         <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
-public&nbsp;java.lang.String BAIT_SET_NAME</pre>
+public&nbsp;boolean CLIP_OVERLAPPING_READS</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 </li>
@@ -299,75 +306,7 @@ public&nbsp;java.lang.String BAIT_SET_NAME</pre>
 <li class="blockList">
 <h4>CalculateHsMetrics</h4>
 <pre>public&nbsp;CalculateHsMetrics()</pre>
-</li>
-</ul>
-</li>
-</ul>
-<!-- ============ METHOD DETAIL ========== -->
-<ul class="blockList">
-<li class="blockList"><a name="method.detail">
-<!--   -->
-</a>
-<h3>Method Detail</h3>
-<a name="getProbeIntervals--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getProbeIntervals</h4>
-<pre>protected&nbsp;htsjdk.samtools.util.IntervalList&nbsp;getProbeIntervals()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#getProbeIntervals--">getProbeIntervals</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/HsMetrics.html" title="class in picard.analysis.directed">HsMetrics</a>,<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&gt;</code></dd>
-</dl>
-</li>
-</ul>
-<a name="getProbeSetName--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getProbeSetName</h4>
-<pre>protected&nbsp;java.lang.String&nbsp;getProbeSetName()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#getProbeSetName--">getProbeSetName</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/HsMetrics.html" title="class in picard.analysis.directed">HsMetrics</a>,<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&gt;</code></dd>
-</dl>
-</li>
-</ul>
-<a name="main-java.lang.String:A-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>main</h4>
-<pre>public static&nbsp;void&nbsp;main(java.lang.String[]&nbsp;argv)</pre>
-<div class="block">Stock main method.</div>
-</li>
-</ul>
-<a name="makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>makeCollector</h4>
-<pre>protected&nbsp;<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&nbsp;makeCollector(java.util.Set&lt;<a href="../../../picard/analysis/MetricAccumulationLevel.html" title="enum in picard.analysis">MetricAccumulationLevel</a>&gt;&nbsp;accumulationLevels,
-                                          java.util.List&lt;htsjdk.samtools.SAMReadGroupRecord&gt;&nbsp;samRgRecords,
-                                          htsjdk.samtools.reference.ReferenceSequenceFile&nbsp;refFile,
-                                          java.io.File&nbsp;perTargetCoverage,
-                                          htsjdk.samtools.util.IntervalList&nbsp;targetIntervals,
-                                          htsjdk.samtools.util.IntervalList&nbsp;probeIntervals,
-                                          java.lang.String&nbsp;probeSetName,
-                                          int&nbsp;nearProbeDistance)</pre>
-<div class="block"><span class="descfrmTypeLabel">Description copied from class:&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">CollectTargetedMetrics</a></code></span></div>
-<div class="block">A factory method for the TargetMetricsCollector to use this time.  Examples of TargetMetricsCollector:
- (TargetedPcrMetricsCollector, HsMetricsCalculator)</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html#makeCollector-java.util.Set-java.util.List-htsjdk.samtools.reference.ReferenceSequenceFile-java.io.File-htsjdk.samtools.util.IntervalList-htsjdk.samtools.util.IntervalList-java.lang.String-int-">makeCollector</a></code>&nbsp;in class&nbsp;<code><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a>&lt;<a href="../../../picard/analysis/directed/HsMetrics.html" title="class in picard.analysis.directed">HsMetrics</a>,<a href="../../../picard/analysis/directed/HsMetricCollector.html" title="class in picard.analysis.directed">HsMetricCollector</a>&gt;</code></dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>A TargetMetricsCollector to which we will pass SAMRecords</dd>
-</dl>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 </li>
@@ -399,7 +338,7 @@ public&nbsp;java.lang.String BAIT_SET_NAME</pre>
 <div class="subNav">
 <ul class="navList">
 <li>Prev&nbsp;Class</li>
-<li><a href="../../../picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../picard/analysis/directed/CollectHsMetrics.html" title="class in picard.analysis.directed"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../index.html?picard/analysis/directed/CalculateHsMetrics.html" target="_top">Frames</a></li>
@@ -426,13 +365,13 @@ public&nbsp;java.lang.String BAIT_SET_NAME</pre>
 <li>Nested&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.summary">Method</a></li>
+<li><a href="#methods.inherited.from.class.picard.analysis.directed.CollectHsMetrics">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a name="skip.navbar.bottom">

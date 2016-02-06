@@ -6,6 +6,8 @@ picard.annotation
 picard.cmdline
 picard.cmdline.programgroups
 picard.fastq
+picard.filter
+picard.fingerprint
 picard.illumina
 picard.illumina.parser
 picard.illumina.parser.fakers

@@ -90,8 +90,11 @@
 <tr class="rowColor">
 <td class="colFirst"><a href="../../../htsjdk/samtools/sra/SRAAccession.html" title="class in htsjdk.samtools.sra">SRAAccession</a></td>
 <td class="colLast">
-<div class="block">Describes a single SRA accession
- Also provides app string functionality and allows to check if working SRA is supported on the running platform</div>
+<div class="block">Describes a single SRA accession for SRA read collection
+ Also provides app string functionality and allows to check if working SRA is supported on the running platform
+
+ Important: due to checks performed in SRAAccession.isValid(), we won't recognise any accessions other
+ than ones that follow the pattern "^[SED]RR[0-9]{6,9}$", e.g.</div>
 </td>
 </tr>
 <tr class="altColor">

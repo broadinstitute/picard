@@ -106,11 +106,20 @@ var activeTableTab = "activeTableTab";
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Implemented Interfaces:</dt>
+<dd>java.io.Serializable</dd>
+</dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">FastqRecord</span>
-extends java.lang.Object</pre>
+extends java.lang.Object
+implements java.io.Serializable</pre>
 <div class="block">Represents a fastq record, fairly literally, i.e. without any conversion.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../serialized-form.html#htsjdk.samtools.fastq.FastqRecord">Serialized Form</a></dd>
+</dl>
 </li>
 </ul>
 </div>
@@ -129,6 +138,11 @@ extends java.lang.Object</pre>
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/fastq/FastqRecord.html#FastqRecord-htsjdk.samtools.fastq.FastqRecord-">FastqRecord</a></span>(<a href="../../../htsjdk/samtools/fastq/FastqRecord.html" title="class in htsjdk.samtools.fastq">FastqRecord</a>&nbsp;other)</code>
+<div class="block">copy constructor</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/fastq/FastqRecord.html#FastqRecord-java.lang.String-java.lang.String-java.lang.String-java.lang.String-">FastqRecord</a></span>(java.lang.String&nbsp;seqHeaderPrefix,
            java.lang.String&nbsp;seqLine,
            java.lang.String&nbsp;qualHeaderPrefix,
@@ -208,13 +222,23 @@ extends java.lang.Object</pre>
 <a name="FastqRecord-java.lang.String-java.lang.String-java.lang.String-java.lang.String-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>FastqRecord</h4>
 <pre>public&nbsp;FastqRecord(java.lang.String&nbsp;seqHeaderPrefix,
                    java.lang.String&nbsp;seqLine,
                    java.lang.String&nbsp;qualHeaderPrefix,
                    java.lang.String&nbsp;qualLine)</pre>
+</li>
+</ul>
+<a name="FastqRecord-htsjdk.samtools.fastq.FastqRecord-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>FastqRecord</h4>
+<pre>public&nbsp;FastqRecord(<a href="../../../htsjdk/samtools/fastq/FastqRecord.html" title="class in htsjdk.samtools.fastq">FastqRecord</a>&nbsp;other)</pre>
+<div class="block">copy constructor</div>
 </li>
 </ul>
 </li>

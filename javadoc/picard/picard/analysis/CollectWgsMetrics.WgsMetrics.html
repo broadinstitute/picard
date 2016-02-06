@@ -144,6 +144,18 @@ extends htsjdk.samtools.metrics.MetricBase</pre>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>double</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#HET_SNP_Q">HET_SNP_Q</a></span></code>
+<div class="block">The Phred Scaled Q Score of the theoretical HET SNP sensitivity.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>double</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#HET_SNP_SENSITIVITY">HET_SNP_SENSITIVITY</a></span></code>
+<div class="block">The theoretical HET SNP sensitivity.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html#MAD_COVERAGE">MAD_COVERAGE</a></span></code>
 <div class="block">The median absolute deviation of coverage of the genome after all filters are applied.</div>
 </td>
@@ -599,11 +611,31 @@ extends htsjdk.samtools.metrics.MetricBase</pre>
 <a name="PCT_100X">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>PCT_100X</h4>
 <pre>public&nbsp;double PCT_100X</pre>
 <div class="block">The fraction of bases that attained at least 100X sequence coverage in post-filtering bases.</div>
+</li>
+</ul>
+<a name="HET_SNP_SENSITIVITY">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>HET_SNP_SENSITIVITY</h4>
+<pre>public&nbsp;double HET_SNP_SENSITIVITY</pre>
+<div class="block">The theoretical HET SNP sensitivity.</div>
+</li>
+</ul>
+<a name="HET_SNP_Q">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>HET_SNP_Q</h4>
+<pre>public&nbsp;double HET_SNP_Q</pre>
+<div class="block">The Phred Scaled Q Score of the theoretical HET SNP sensitivity.</div>
 </li>
 </ul>
 </li>
