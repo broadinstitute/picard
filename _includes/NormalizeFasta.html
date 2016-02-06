@@ -1,12 +1,12 @@
 <a id="NormalizeFasta"/>
 <h3>NormalizeFasta</h3>
 <section>
-<p>Takes any file that conforms to the fasta format and normalizes it so that all lines of sequence except the last line per named sequence are of the same length.</p>
+<p>Normalizes lines of sequence in a FASTA file to be of the same length.This tool takes any FASTA-formatted file and reformats the sequence to ensure that all of the sequence record lines are of the same length (with the exception of the last line). Although the default setting is 100 bases per line, a custom line_length can be specified by the user. In addition, record names can be truncated at the first instance of a whitespace character to ensure downstream compatibility.<br /><h4>Usage example:</h4><pre>java -jar picard.jar NormalizeFasta \<br />      I=input_sequence.fasta \<br />      O=normalized_sequence.fasta</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT (File)</td><td>The input fasta file to normalize.  Required. </td></tr>
-<tr><td>OUTPUT (File)</td><td>The output fasta file to write.  Required. </td></tr>
-<tr><td>LINE_LENGTH (Integer)</td><td>The line length to be used for the output fasta file.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INPUT (File)</td><td>The input FASTA file to normalize.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output FASTA file to write.  Required. </td></tr>
+<tr><td>LINE_LENGTH (Integer)</td><td>The line length to be used for the output FASTA file.  Default value: 100. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>TRUNCATE_SEQUENCE_NAMES_AT_WHITESPACE (Boolean)</td><td>Truncate sequence names at first whitespace.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>

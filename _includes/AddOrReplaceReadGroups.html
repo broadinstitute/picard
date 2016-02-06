@@ -1,14 +1,14 @@
 <a id="AddOrReplaceReadGroups"/>
 <h3>AddOrReplaceReadGroups</h3>
 <section>
-<p>Replaces all read groups in the INPUT file with a single new read group and assigns all reads to this read group in the OUTPUT BAM</p>
+<p>Replace read groups in a BAM file.This tool enables the user to replace all read groups in the INPUT file with a single new read group and assign all reads to this read group in the OUTPUT BAM file.<br /><br />For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br /> This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH) (see http://ga4gh.org/#/documentation).<h4>Usage example:</h4><pre>java -jar picard.jar AddOrReplaceReadGroups \<br />      I=input.bam \<br />      O=output.bam \<br />      RGID=4 \<br />      RGLB=lib1 \<br />      RGPL=illumina \<br />      RGPU=unit1 \<br />      RGSM=20</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT (String)</td><td>Input file (bam or sam or a GA4GH url).  Required. </td></tr>
-<tr><td>OUTPUT (File)</td><td>Output file (bam or sam).  Required. </td></tr>
+<tr><td>INPUT (String)</td><td>Input file (BAM or SAM or a GA4GH url).  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output file (BAM or SAM).  Required. </td></tr>
 <tr><td>SORT_ORDER (SortOrder)</td><td>Optional sort order to output in. If not supplied OUTPUT is in the same order as INPUT.  Default value: null. Possible values: {unsorted, queryname, coordinate, duplicate} </td></tr>
 <tr><td>RGID (String)</td><td>Read Group ID  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>RGLB (String)</td><td>Read Group Library  Required. </td></tr>
+<tr><td>RGLB (String)</td><td>Read Group library  Required. </td></tr>
 <tr><td>RGPL (String)</td><td>Read Group platform (e.g. illumina, solid)  Required. </td></tr>
 <tr><td>RGPU (String)</td><td>Read Group platform unit (eg. run barcode)  Required. </td></tr>
 <tr><td>RGSM (String)</td><td>Read Group sample name  Required. </td></tr>

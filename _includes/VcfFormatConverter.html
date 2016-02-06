@@ -1,12 +1,11 @@
 <a id="VcfFormatConverter"/>
 <h3>VcfFormatConverter</h3>
 <section>
-<p>Convert a VCF file to a BCF file, or BCF to VCF.
-Input and output formats are determined by file extension.</p>
+<p>Converts VCF to BCF or BCF to VCF.  This tool converts files between the plain-text VCF format and its binary compressed equivalent, BCF. Input and output formats are determined by file extensions specified in the file names. For best results, it is recommended to ensure that an index file is present and set the REQUIRE_INDEX option to true.<br /><h4>Usage example:</h4><pre>java -jar picard.jar VcfFormatConverter \<br />      I=input.vcf \<br />      O=output.bcf \<br />      REQUIRE_INDEX=true</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>INPUT (File)</td><td>The BCF or VCF input file. The file format is determined by file extension.  Required. </td></tr>
-<tr><td>OUTPUT (File)</td><td>The BCF or VCF output file. The file format is determined by file extension.  Required. </td></tr>
+<tr><td>INPUT (File)</td><td>The BCF or VCF input file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The BCF or VCF output file name.  Required. </td></tr>
 <tr><td>REQUIRE_INDEX (Boolean)</td><td>Fail if an index is not available for the input VCF/BCF  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 </table>
 </section>

@@ -1,7 +1,7 @@
 <a id="MergeSamFiles"/>
 <h3>MergeSamFiles</h3>
 <section>
-<p>Merges multiple SAM/BAM files into one file.</p>
+<p>Merges multiple SAM and/or BAM files into a single file.  This tool is used for combining SAM and/or BAM files from different runs or read groups, similarly to the "merge" function of Samtools (http://www.htslib.org/doc/samtools.html).  <br /><br />Note that to prevent errors in downstream processing, it is critical to identify/label read groups appropriately. If different samples contain identical read group IDs, this tool will avoid collisions by modifying the read group IDs to be unique. For more information about read groups, see the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6472'>GATK Dictionary entry.</a> <br /><br /><br /><h4>Usage example:</h4><pre>java -jar picard.jar MergeSamFiles \<br />      I=input_1.bam \<br />      I=input_2.bam \<br />      O=merged_files.bam</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>SAM or BAM input file  Default value: null. This option must be specified at least 1 times. </td></tr>
@@ -11,5 +11,6 @@
 <tr><td>MERGE_SEQUENCE_DICTIONARIES (Boolean)</td><td>Merge the sequence dictionaries  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>USE_THREADING (Boolean)</td><td>Option to create a background thread to encode, compress and write to disk the output file. The threaded version uses about 20% more CPU and decreases runtime by ~20% when writing out a compressed BAM file.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>COMMENT (String)</td><td>Comment(s) to include in the merged output file's header.  Default value: null. This option may be specified 0 or more times. </td></tr>
+<tr><td>INTERVALS (File)</td><td>An interval list file that contains the locations of the positions to merge. Assume bam are sorted and indexed. The resulting file will contain alignments that may overlap with genomic regions outside the requested region. Unmapped reads are discarded.  Default value: null. </td></tr>
 </table>
 </section>

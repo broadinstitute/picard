@@ -1,7 +1,7 @@
 <a id="ReplaceSamHeader"/>
 <h3>ReplaceSamHeader</h3>
 <section>
-<p>Replace the SAMFileHeader in a SAM file with the given header. Validation is minimal.  It is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header.  Sort order of the two input files must be the same.</p>
+<p>Replaces the SAMFileHeader in a SAM or BAM file.  This tool makes it possible to replace the header of a SAM or BAM file with the header of anotherfile, or a header block that has been edited manually (in a stub SAM file). The sort order (@SO) of the two input files must be the same.<br /><br />Note that validation is minimal, so it is up to the user to ensure that all the elements referred to in the SAMRecords are present in the new header. <br /><h4>Usage example:</h4><pre>java -jar picard.jar ReplaceSamHeader \<br />      I=input_1.bam \<br />      HEADER=input_2.bam \<br />      O=bam_with_new_head.bam</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>SAM file from which SAMRecords will be read.  Required. </td></tr>

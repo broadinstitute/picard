@@ -1,0 +1,15 @@
+<a id="CollectVariantCallingMetrics"/>
+<h3>CollectVariantCallingMetrics</h3>
+<section>
+<p>Collects per-sample and aggregate (spanning all samples) metrics from the provided VCF file.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Input vcf file for analysis  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Path (except for the file extension) of output metrics files to write.  Required. </td></tr>
+<tr><td>DBSNP (File)</td><td>Reference dbSNP file in dbSNP or VCF format.  Required. </td></tr>
+<tr><td>TARGET_INTERVALS (File)</td><td>Target intervals to restrict analysis to.  Default value: null. </td></tr>
+<tr><td>SEQUENCE_DICTIONARY (File)</td><td>If present, speeds loading of dbSNP file, will look for dictionary in vcf if not present here.  Default value: null. </td></tr>
+<tr><td>GVCF_INPUT (Boolean)</td><td>Set to true if running on a single-sample gvcf.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>THREAD_COUNT (Integer)</td><td>Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

@@ -1,14 +1,14 @@
-<a id="CalculateHsMetrics"/>
-<h3>CalculateHsMetrics</h3>
+<a id="CollectHsMetrics"/>
+<h3>CollectHsMetrics</h3>
 <section>
-<p>DEPRECATED: Use CollectHsMetrics instead. Calculates a set of Hybrid Selection specific metrics from an aligned SAMor BAM file. If a reference sequence is provided, AT/GC dropout metrics will be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and mean coverage information for every target.</p>
+<p>Collects a set of Hybrid Selection specific metrics from an aligned SAMor BAM file. If a reference sequence is provided, AT/GC dropout metrics will be calculated, and the PER_TARGET_COVERAGE option can be used to output GC and mean coverage information for every target.</p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
-<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute coverage.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>MINIMUM_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute coverage.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
-<tr><td>CLIP_OVERLAPPING_READS (Boolean)</td><td>True if we are to clip overlapping reads, false otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>BAIT_INTERVALS (File)</td><td>An interval list file that contains the locations of the baits used.  Default value: null. This option must be specified at least 1 times. </td></tr>
 <tr><td>BAIT_SET_NAME (String)</td><td>Bait set name. If not provided it is inferred from the filename of the bait intervals.  Default value: null. </td></tr>
+<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>CLIP_OVERLAPPING_READS (Boolean)</td><td>True if we are to clip overlapping reads, false otherwise.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>TARGET_INTERVALS (File)</td><td>An interval list file that contains the locations of the targets.  Default value: null. This option must be specified at least 1 times. </td></tr>
 <tr><td>INPUT (File)</td><td>An aligned SAM or BAM file.  Required. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output file to write the metrics to.  Required. </td></tr>

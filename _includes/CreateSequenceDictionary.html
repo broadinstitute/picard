@@ -1,8 +1,7 @@
 <a id="CreateSequenceDictionary"/>
 <h3>CreateSequenceDictionary</h3>
 <section>
-<p>Read fasta or fasta.gz containing reference sequences, and write as a SAM or BAM file with only sequence dictionary.
-</p>
+<p>Creates a sequence dictionary for a reference sequence.  This tool creates a sequence dictionary file (with ".dict" extension) from a reference sequence provided in FASTA format, which is required by many processing and analysis tools. The output file contains a header but no SAMRecords, and the header contains only sequence records.<br /><br />The reference sequence can be gzipped (both .fasta and .fasta.gz are supported).<h4>Usage example:</h4><pre>java -jar picard.jar CreateSequenceDictionary \ <br />      R=reference.fasta \ <br />      O=reference.dict</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>REFERENCE (File)</td><td>Input reference fasta or fasta.gz  Required. </td></tr>

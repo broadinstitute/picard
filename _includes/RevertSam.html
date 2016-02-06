@@ -1,7 +1,7 @@
 <a id="RevertSam"/>
 <h3>RevertSam</h3>
 <section>
-<p>Reverts SAM or BAM files to a previous state by removing certain types of information and/or substituting in the original quality scores when available.</p>
+<p>Reverts SAM or BAM files to a previous state.  This tool removes or restores certain properties of the SAM records, including alignment information, which can be used to produce an unmapped BAM (uBAM) from a previously aligned BAM. It is also capable of restoring the original quality scores of a BAM file that has already undergone base quality score recalibration (BQSR) if theoriginal qualities were retained.<h4>Usage example:</h4><pre>java -jar picard.jar RevertSam \<br />     I=input.bam \<br />     O=reverted.bam</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>The input SAM/BAM file to revert the state of.  Required. </td></tr>

@@ -1,8 +1,7 @@
 <a id="BamIndexStats"/>
 <h3>BamIndexStats</h3>
 <section>
-<p>Generates BAM index statistics, including the number of aligned and unaligned SAMRecords for each reference sequence, and the number of SAMRecords with no coordinate.Input BAM file must have a corresponding index file.
-</p>
+<p>Generate index statistics from a BAM fileThis tool calculates statistics from a BAM index (.bai) file, emulating the behavior of the "samtools idxstats" command. The statistics collected include counts of aligned and unaligned reads as well as all records with no start coordinate. The input to the tool is the BAM file name but it must be accompanied by a corresponding index file.<br /><h4>Usage example:</h4><pre>java -jar picard.jar BamIndexStats \<br />      I=input.bam \<br />      O=output</pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>A BAM file to process.  Required. </td></tr>
