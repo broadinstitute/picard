@@ -70,6 +70,7 @@ GA4GH_CLIENT_SECRETS=../client_secrets.json
 ```
 For Java 7 (as opposed to 8) use ```alpn-boot-7.1.3.v20150130.jar```.
 
+Picard is migrating to semantic versioning (http://semver.org/). We will eventually adhere to it strictly and bump our major version whenever there are breaking changes to our API, but until we more clearly define what constitutes our official API, clients should assume that every release potentially contains at least minor changes to public methods.
 
 Please see the [Picard Documentation](http://broadinstitute.github.io/picard) for more information.
 
