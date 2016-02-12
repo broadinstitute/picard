@@ -50,9 +50,9 @@ public abstract class AbstractOpticalDuplicateFinderCommandLineProgram extends C
             optional = true)
     public String READ_NAME_REGEX = OpticalDuplicateFinder.DEFAULT_READ_NAME_REGEX;
 
-    @Option(doc = "The maximum offset between two duplicte clusters in order to consider them optical duplicates. This " +
-            "should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the " +
-            "Illumina pipeline that multiply pixel values by 10, in which case 50-100 is more normal.")
+    @Option(doc = "The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default " +
+            "is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is more" +
+            "appropriate. For other platforms and models, users should experiment to find what works best.")
     public int OPTICAL_DUPLICATE_PIXEL_DISTANCE = OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
 
     // The tool with which to find optical duplicates
