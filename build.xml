@@ -93,8 +93,8 @@
                 <include name="**/*.jar"/>
             </fileset>
             <fileset dir="${lib}">
-        	    <include name="**/*.jar"/>
-        	  </fileset>
+                <include name="**/*.jar"/>
+            </fileset>
         </path>
         <path id="metrics.classpath">
             <pathelement path="${classpath}"/>
@@ -199,20 +199,20 @@
     <target name="test" depends="compile, set_excluded_test_groups" description="Run unit tests">
         <taskdef resource="testngtasks" classpathref="classpath"/>
         <jacoco:coverage destfile="jacoco.data" xmlns:jacoco="antlib:org.jacoco.ant">
-        <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
-                failureproperty="tests.failed" excludedgroups="${excludedTestGroups}" workingDir="${basedir}"
-                verbose="${testng.verbosity}">
-            <classpath>
-                <pathelement path="${classes}"/>
-                <pathelement path="${classes.test}"/>
-                <pathelement path="${scripts}"/>
-            </classpath>
-            <classfileset dir="${classes.test}">
-                <include name="**/Test*.class"/>
-                <include name="**/*Test.class"/>
-            </classfileset>
-            <jvmarg value="-Xmx2G"/>
-        </testng>
+            <testng suitename="picard-tests" classpathref="classpath" outputdir="${test.output}"
+                    failureproperty="tests.failed" excludedgroups="${excludedTestGroups}" workingDir="${basedir}"
+                    verbose="${testng.verbosity}">
+                <classpath>
+                    <pathelement path="${classes}"/>
+                    <pathelement path="${classes.test}"/>
+                    <pathelement path="${scripts}"/>
+                </classpath>
+                <classfileset dir="${classes.test}">
+                    <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
+                </classfileset>
+                <jvmarg value="-Xmx2G"/>
+            </testng>
         </jacoco:coverage>
 
         <junitreport todir="${dist}/test">
@@ -227,18 +227,18 @@
 
     <target name="test-coverage-report" depends="test" description="Runs tests and creates an HTML code coverage report">
         <jacoco:report xmlns:jacoco="antlib:org.jacoco.ant">
-        <executiondata>
-           <file file="jacoco.data"/>
-        </executiondata>
-        <structure name="Picard">
-          <classfiles>
-            <fileset dir="classes"/>
-          </classfiles>
-          <sourcefiles encoding="UTF-8">
-            <fileset dir="src"/>
-          </sourcefiles>
-        </structure>
-        <html destdir="report"/>
+            <executiondata>
+                <file file="jacoco.data"/>
+            </executiondata>
+            <structure name="Picard">
+                <classfiles>
+                    <fileset dir="classes"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="src"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="report"/>
         </jacoco:report>
     </target>
 
@@ -269,40 +269,40 @@
 
     <target name="process-external-jars" depends="clean-jar-opt, maybe-add-gatk-tools-java">
     </target>
-	
-	  <target name="clean-jar-opt">
-      <delete dir="${jar_opt}"/>
-	  	<mkdir dir="${jar_opt}"/>
+
+    <target name="clean-jar-opt">
+        <delete dir="${jar_opt}"/>
+        <mkdir dir="${jar_opt}"/>
     </target>
-	
-	  <target name="maybe-add-gatk-tools-java" if="addGATKToolsJava">
-    	<mkdir dir="${jar_opt}"/>
-      <unzip dest="${jar_opt}">
-    	  <fileset dir="${lib}/gatk-tools-java">
-    	    <include name="*.jar"/>
-    	  </fileset>
-    	</unzip>
+
+    <target name="maybe-add-gatk-tools-java" if="addGATKToolsJava">
+        <mkdir dir="${jar_opt}"/>
+        <unzip dest="${jar_opt}">
+            <fileset dir="${lib}/gatk-tools-java">
+                <include name="*.jar"/>
+            </fileset>
+        </unzip>
     </target>
-	
+
     <target name="picard-jar" depends="compile, process-external-jars"
-        description="Builds the main executable picard.jar">
-       <mkdir dir="${dist}"/>
-       <mkdir dir="${dist.tmp}"/>
-       <unjar dest="${dist.tmp}">
-           <fileset dir="${lib}">
-               <exclude name="**/jacocoant.jar"/> <!-- must exclude this jar from packing into picard - this is only used for testing -->
-           </fileset>
-           <fileset dir="${htsjdk_lib_dir}">
-               <include name="*.jar"/>
-           </fileset>
-       </unjar>
+            description="Builds the main executable picard.jar">
+        <mkdir dir="${dist}"/>
+        <mkdir dir="${dist.tmp}"/>
+        <unjar dest="${dist.tmp}">
+            <fileset dir="${lib}">
+                <exclude name="**/jacocoant.jar"/> <!-- must exclude this jar from packing into picard - this is only used for testing -->
+            </fileset>
+            <fileset dir="${htsjdk_lib_dir}">
+                <include name="*.jar"/>
+            </fileset>
+        </unjar>
 
         <jar destfile="${dist}/picard.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*, META-INF/**/*"/>
             <fileset dir="${src.scripts}" includes="**/*.R"/>
             <fileset dir="${htsjdk-classes}" includes ="${htsjdk}/*/**/*.*"/>
             <fileset dir="${dist.tmp}" includes="**/*"/>
-	          <fileset dir="${jar_opt}" includes="**/*"/>
+            <fileset dir="${jar_opt}" includes="**/*"/>
 
             <manifest>
                 <attribute name="Implementation-Version" value="${picard-version}(${repository.revision})"/>
@@ -317,7 +317,7 @@
     </target>
 
     <target name="picard-lib-jar" depends="compile"
-        description="Builds the library: picard-lib.jar">
+            description="Builds the library: picard-lib.jar">
         <mkdir dir="${dist}"/>
         <jar destfile="${dist}/picard-lib.jar" compress="no">
             <fileset dir="${classes}" includes="picard/**/*.*"/>
@@ -409,33 +409,49 @@
     </target>
 
     <target name="add-ga4gh-support">
-    	<property name="addGATKToolsJava" value="1"/>	
+        <property name="addGATKToolsJava" value="1"/>
     </target>
 
-	  <target name="package-commands-ga4gh" depends="add-ga4gh-support, compile, picard-jar" />
-	
+    <target name="package-commands-ga4gh" depends="add-ga4gh-support, compile, picard-jar" />
+
     <target name="package-commands" depends="compile, picard-jar">
         <delete dir="${command-line-html-dir}"/>
         <!-- If you don't want to generate on-line doc for a command, use package-command instead of document-command -->
         <document-command title="AddCommentsToBam"                  main-class="picard.sam.AddCommentsToBam"/>
         <document-command title="AddOrReplaceReadGroups"            main-class="picard.sam.AddOrReplaceReadGroups"/>
+        <document-command title="BaitDesigner"                      main-class="picard.util.BaitDesigner"/>
         <document-command title="BamToBfq"                          main-class="picard.fastq.BamToBfq"/>
         <document-command title="BamIndexStats"                     main-class="picard.sam.BamIndexStats"/>
         <document-command title="BedToIntervalList"                 main-class="picard.util.BedToIntervalList"/>
         <document-command title="BuildBamIndex"                     main-class="picard.sam.BuildBamIndex"/>
         <document-command title="CalculateHsMetrics"                main-class="picard.analysis.directed.CalculateHsMetrics"/>
+        <document-command title="CollectHsMetrics"                  main-class="picard.analysis.directed.CollectHsMetrics"/>
+        <document-command title="CalculateReadGroupChecksum"        main-class="picard.sam.CalculateReadGroupChecksum"/>
         <document-command title="CleanSam"                          main-class="picard.sam.CleanSam"/>
         <document-command title="CollectAlignmentSummaryMetrics"    main-class="picard.analysis.CollectAlignmentSummaryMetrics"/>
         <document-command title="CollectBaseDistributionByCycle"    main-class="picard.analysis.CollectBaseDistributionByCycle"/>
         <document-command title="CollectGcBiasMetrics"              main-class="picard.analysis.CollectGcBiasMetrics"/>
+        <document-command title="CollectHiSeqXPfFailMetrics"        main-class="picard.illumina.quality.CollectHiSeqXPfFailMetrics"/>
         <document-command title="CollectHsMetrics"                  main-class="picard.analysis.directed.CollectHsMetrics"/>
+        <document-command title="CollectIlluminaBasecallingMetrics" main-class="picard.illumina.CollectIlluminaBasecallingMetrics"/>
+        <document-command title="CollectIlluminaLaneMetrics"        main-class="picard.illumina.CollectIlluminaLaneMetrics"/>
         <document-command title="CollectInsertSizeMetrics"          main-class="picard.analysis.CollectInsertSizeMetrics"/>
+        <document-command title="CollectJumpingLibraryMetrics"      main-class="picard.analysis.CollectJumpingLibraryMetrics"/>
         <document-command title="CollectMultipleMetrics"            main-class="picard.analysis.CollectMultipleMetrics"/>
+        <document-command title="CollectOxoGMetrics"                main-class="picard.analysis.CollectOxoGMetrics"/>
+        <document-command title="CollectQualityYieldMetrics"        main-class="picard.analysis.CollectQualityYieldMetrics"/>
+        <document-command title="CollectRawWgsMetrics"              main-class="picard.analysis.CollectRawWgsMetrics"/>
         <document-command title="CollectTargetedPcrMetrics"         main-class="picard.analysis.directed.CollectTargetedPcrMetrics"/>
         <document-command title="CollectRnaSeqMetrics"              main-class="picard.analysis.CollectRnaSeqMetrics"/>
+        <document-command title="CollectRrbsMetrics"                main-class="picard.analysis.CollectRrbsMetrics"/>
+        <document-command title="CollectSequencingArtifactMetrics"  main-class="picard.analysis.artifacts.CollectSequencingArtifactMetrics"/>
         <document-command title="CollectVariantCallingMetrics"      main-class="picard.vcf.CollectVariantCallingMetrics"/>
         <document-command title="CollectWgsMetrics"                 main-class="picard.analysis.CollectWgsMetrics"/>
+        <document-command title="CollectWgsMetricsFromQuerySorted"  main-class="picard.analysis.CollectWgsMetricsFromQuerySorted"/>
+        <document-command title="CollectWgsMetricsFromSampledSites" main-class="picard.analysis.CollectWgsMetricsFromSampledSites"/>
+        <document-command title="CompareMetrics"                    main-class="picard.analysis.CompareMetrics"/>
         <document-command title="CompareSAMs"                       main-class="picard.sam.CompareSAMs"/>
+        <document-command title="ConvertSequencingArtifactToOxoG"   main-class="picard.analysis.artifacts.ConvertSequencingArtifactToOxoG"/>
         <document-command title="CreateSequenceDictionary"          main-class="picard.sam.CreateSequenceDictionary"/>
         <document-command title="DownsampleSam"                     main-class="picard.sam.DownsampleSam"/>
         <document-command title="ExtractIlluminaBarcodes"           main-class="picard.illumina.ExtractIlluminaBarcodes"/>
@@ -451,7 +467,9 @@
         <document-command title="IlluminaBasecallsToFastq"          main-class="picard.illumina.IlluminaBasecallsToFastq"/>
         <document-command title="IlluminaBasecallsToSam"            main-class="picard.illumina.IlluminaBasecallsToSam"/>
         <document-command title="CheckIlluminaDirectory"            main-class="picard.illumina.CheckIlluminaDirectory"/>
+        <document-command title="CheckTerminatorBlock"              main-class="picard.sam.CheckTerminatorBlock"/>
         <document-command title="IntervalListTools"                 main-class="picard.util.IntervalListTools"/>
+        <document-command title="LiftOverIntervalList"              main-class="picard.util.LiftOverIntervalList"/>
         <document-command title="LiftoverVcf"                       main-class="picard.vcf.LiftoverVcf"/>
         <document-command title="MakeSitesOnlyVcf"                  main-class="picard.vcf.MakeSitesOnlyVcf"/>
         <document-command title="MarkDuplicates"                    main-class="picard.sam.markduplicates.MarkDuplicates"/>
@@ -461,17 +479,20 @@
         <document-command title="MergeSamFiles"                     main-class="picard.sam.MergeSamFiles"/>
         <document-command title="MergeVcfs"                         main-class="picard.vcf.MergeVcfs"/>
         <document-command title="NormalizeFasta"                    main-class="picard.reference.NormalizeFasta"/>
+        <document-command title="PositionBasedDownsampleSam"        main-class="picard.sam.PositionBasedDownsampleSam"/>
         <document-command title="ExtractSequences"                  main-class="picard.reference.ExtractSequences"/>
         <document-command title="QualityScoreDistribution"          main-class="picard.analysis.QualityScoreDistribution"/>
+        <document-command title="RenameSampleInVcf"                 main-class="picard.vcf.RenameSampleInVcf"/>
         <document-command title="ReorderSam"                        main-class="picard.sam.ReorderSam"/>
         <document-command title="ReplaceSamHeader"                  main-class="picard.sam.ReplaceSamHeader"/>
         <document-command title="RevertSam"                         main-class="picard.sam.RevertSam"/>
-        <document-command title="RevertOriginalBaseQualitiesAndAddMateCigar"
-                                                                   main-class="picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
+        <document-command title="RevertOriginalBaseQualitiesAndAddMateCigar"    main-class="picard.sam.RevertOriginalBaseQualitiesAndAddMateCigar"/>
         <document-command title="SamFormatConverter"                main-class="picard.sam.SamFormatConverter"/>
         <document-command title="SamToFastq"                        main-class="picard.sam.SamToFastq"/>
+        <document-command title="ScatterIntervalsByNs"              main-class="picard.util.ScatterIntervalsByNs"/>
         <document-command title="SortSam"                           main-class="picard.sam.SortSam"/>
         <document-command title="SortVcf"                           main-class="picard.vcf.SortVcf"/>
+        <document-command title="SplitSamByLibrary"                 main-class="picard.sam.SplitSamByLibrary"/>
         <document-command title="UpdateVcfSequenceDictionary"       main-class="picard.vcf.UpdateVcfSequenceDictionary"/>
         <document-command title="VcfFormatConverter"                main-class="picard.vcf.VcfFormatConverter"/>
         <document-command title="MarkIlluminaAdapters"              main-class="picard.illumina.MarkIlluminaAdapters"/>
