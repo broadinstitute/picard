@@ -203,8 +203,8 @@ public class MMapBackedIteratorFactory {
     //TODO: Add test
     //TODO: Make a note that if you want to multithread over this then you have to copy the contents
     private static class ByteBufferMMapIterator extends MMapBackedIterator<ByteBuffer> {
-        private byte [] localBacking;
-        private ByteBuffer localBuffer;
+        private final byte [] localBacking;
+        private final ByteBuffer localBuffer;
         public ByteBufferMMapIterator(final byte[] header, final File file, final int elementBufferSize, final ByteBuffer buf) {
             super(header, file, elementBufferSize, buf);
             this.localBacking = new byte[elementBufferSize];

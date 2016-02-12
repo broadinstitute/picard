@@ -56,7 +56,7 @@ class BarcodeParser extends PerTileParser<BarcodeData> {
     }
 
     private static class BarcodeDataIterator implements CloseableIterator<BarcodeData>{
-        private BarcodeFileReader bfr;
+        private final BarcodeFileReader bfr;
         public BarcodeDataIterator(final File file) {
             bfr = new BarcodeFileReader(file);
         }

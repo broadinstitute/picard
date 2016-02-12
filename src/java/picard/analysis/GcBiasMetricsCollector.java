@@ -89,9 +89,9 @@ public class GcBiasMetricsCollector extends MultiLevelCollector<GcBiasMetrics, I
     /////////////////////////////////////////////////////////////////////////////
     public class PerUnitGcBiasMetricsCollector implements PerUnitMetricCollector<GcBiasMetrics, Integer, GcBiasCollectorArgs> {
         Map<String, GcObject> gcData = new HashMap<String, GcObject>();
-        private String sample = null;
-        private String library = null;
-        private String readGroup = null;
+        private final String sample;
+        private final String library;
+        private final String readGroup;
         private static final String allReads = "All_Reads";
 
         /////////////////////////////////////////////////////////////////////////////
