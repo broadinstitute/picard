@@ -29,7 +29,11 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picard.cmdline.programgroups.Testing;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -976,5 +980,163 @@ public class CommandLineParserTest {
         final OverridePropagation propsSet = (OverridePropagation) overrideClp.getCallerOptions();
         Assert.assertTrue(propsSet.STRING3.equals("String3Supplied"));
         Assert.assertTrue(((StaticParent) propsSet).STRING3.equals("String3Supplied"));
+    }
+
+
+    @DataProvider(name = "testHtmlEscapeData")
+    public Object[][] testHtmlEscapeData() {
+        final List<Object[]> retval = new ArrayList<>();
+
+        retval.add(new Object[]{"<", "&lt;"});
+        retval.add(new Object[]{"x<y", "x&lt;y"});
+        retval.add(new Object[]{"x<y<z", "x&lt;y&lt;z"});
+        retval.add(new Object[]{"\n", "<p>"});
+        retval.add(new Object[]{"<html> x<y </html> y< <strong> x </strong>","<html> x&lt;y </html> y&lt; <strong> x </strong>"});
+
+        return retval.toArray(new Object[0][]);
+    }
+
+//    @Test(dataProvider = "testHtmlEscapeData")
+//    public void testHtmlEscape(final String text, final String expected) {
+//        Assert.assertEquals(CommandLineParser.htmlEscape(text), expected, "problems");
+//    }
+
+    @Test(dataProvider = "testHtmlEscapeData")
+    public void testHtmlUnescape(final String expected, final String html) {
+        Assert.assertEquals(CommandLineParser.htmlUnescape(html), expected, "problems");
+    }
+
+    @DataProvider(name = "testHTMLConverter")
+    public Object[][] testHTMLConverterData() {
+        final List<Object[]> retval = new ArrayList<>();
+
+        retval.add(new Object[]{"hello", "hello"});
+        retval.add(new Object[]{"", ""});
+        retval.add(new Object[]{"hi</th>bye", "hi\tbye"});
+        retval.add(new Object[]{"hi<th>bye", "hibye"});
+        retval.add(new Object[]{"hi<li>bye", "hi - bye"});
+        retval.add(new Object[]{"hi<NOT_A_REAL_TAG>bye", "hibye"});
+        retval.add(new Object[]{"</h4><pre>", "\n\n"});
+        retval.add(new Object[]{"<a href=\"http://go.here.org\"> string</ a >", " string (http://go.here.org)"});
+        retval.add(new Object[]{"<a href=\"http://go.here.org\" > string</ a>", " string (http://go.here.org)"});
+        retval.add(new Object[]{"< a href=\"http://go.here.org\"> string<a />", " string (http://go.here.org)"});
+
+
+        //for some reason, the next test seems to break intelliJ, but it works on the commandline
+        retval.add(new Object[]{"hi</li>bye", "hi\nbye"});
+
+        retval.add(new Object[]{"Using read outputs from high throughput sequencing (HTS) technologies, this tool provides " +
+                "metrics regarding the quality of read alignments to a reference sequence, as well as the proportion of the reads " +
+                "that passed machine signal-to-noise threshold quality filters (Illumina)." +
+                "<h4>Usage example:</h4>" +
+                "<pre>" +
+                "    java -jar picard.jar CollectAlignmentSummaryMetrics \\<br />" +
+                "          R=reference_sequence.fasta \\<br />" +
+                "          I=input.bam \\<br />" +
+                "          O=output.txt" +
+                "</pre>" +
+                "Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics'>" +
+                "the AlignmentSummaryMetrics documentation</a> for detailed explanations of each metric. <br /> <br />" +
+                "Additional information about Illumina's quality filters can be found in the following documents on the Illumina website:" +
+                "<ul><li><a href=\"http://support.illumina.com/content/dam/illumina-marketing/documents/products/technotes/hiseq-x-percent-pf-technical-note-770-2014-043.pdf\">" +
+                "hiseq-x-percent-pf-technical-note</a></li>" +
+                "<li><a href=\"http://support.illumina.com/content/dam/illumina-support/documents/documentation/system_documentation/hiseqx/hiseq-x-system-guide-15050091-d.pdf\">" +
+                "hiseq-x-system-guide</a></li></ul>" +
+                "<hr />",
+
+                "Using read outputs from high throughput sequencing (HTS) technologies, this tool provides " +
+                        "metrics regarding the quality of read alignments to a reference sequence, as well as the proportion of the reads " +
+                        "that passed machine signal-to-noise threshold quality filters (Illumina)." +
+                        "\nUsage example:\n" +
+                        "\n" +
+                        "    java -jar picard.jar CollectAlignmentSummaryMetrics \\\n" +
+                        "          R=reference_sequence.fasta \\\n" +
+                        "          I=input.bam \\\n" +
+                        "          O=output.txt" +
+                        "\n" +
+                        "Please see the AlignmentSummaryMetrics documentation (http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics) for detailed explanations of each metric. \n \n" +
+                        "Additional information about Illumina's quality filters can be found in the following documents on the Illumina website:" +
+                        "\n" +
+                        " - hiseq-x-percent-pf-technical-note (http://support.illumina.com/content/dam/illumina-marketing/documents/products/technotes/hiseq-x-percent-pf-technical-note-770-2014-043.pdf)\n" +
+                        " - hiseq-x-system-guide (http://support.illumina.com/content/dam/illumina-support/documents/documentation/system_documentation/hiseqx/hiseq-x-system-guide-15050091-d.pdf)\n\n" +
+                        "\n"});
+
+        return retval.toArray(new Object[0][]);
+    }
+
+    @Test(dataProvider = "testHTMLConverter")
+    public void testHTMLConverter(String input, String expected) {
+        final String converted = CommandLineParser.convertFromHtml(input);
+        Assert.assertEquals(converted, expected, "common part:\"" + expected.substring(0, lengthOfCommonSubstring(converted, expected)) + "\"\n\n");
+    }
+
+    @CommandLineProgramProperties(
+            usage = TestParserFail.USAGE_SUMMARY + TestParserFail.USAGE_DETAILS,
+            usageShort = TestParserFail.USAGE_SUMMARY,
+            programGroup = Testing.class
+    )
+    protected class TestParserFail extends CommandLineProgram {
+
+        static public final String USAGE_DETAILS = "blah &blah; blah ";
+        static public final String USAGE_SUMMARY = "This tool offers.....";
+
+        @Override
+        protected int doWork() {return 0;}
+    }
+
+    @CommandLineProgramProperties(
+            usage = TestParserSucceed.USAGE_SUMMARY + TestParserSucceed.USAGE_DETAILS,
+            usageShort = TestParserSucceed.USAGE_SUMMARY,
+            programGroup = Testing.class
+    )
+
+    protected class TestParserSucceed extends CommandLineProgram {
+
+        static public final String USAGE_DETAILS = "This is the first row <p>And this is the second";
+        static public final String USAGE_SUMMARY = " X &lt; Y ";
+
+        @Override
+        protected int doWork() {return 0;}
+    }
+
+    @Test(expectedExceptions = AssertionError.class)
+    public void testNonAsciiAssertion() {
+        TestParserFail testparserFail = new TestParserFail();
+        testparserFail.parseArgs(new String[]{});
+
+        PrintStream stream = new PrintStream(new NullOutputStream());
+        testparserFail.getCommandLineParser().usage(stream, true);
+    }
+
+    @Test
+    public void testNonAsciiConverted() {
+        TestParserSucceed testparserSucceed = new TestParserSucceed();
+        testparserSucceed.parseArgs(new String[]{});
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PrintStream stream = new PrintStream(byteArrayOutputStream);
+        testparserSucceed.getCommandLineParser().usage(stream, true);
+
+        String expected = "USAGE: TestParserSucceed [options]\n" +
+                "\n" +
+                "Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#TestParserSucceed\n" +
+                "\n" +
+                " X < Y This is the first row \n" +
+                "And this is the second";
+        Assert.assertEquals(byteArrayOutputStream.toString().substring(0, expected.length()), expected);
+    }
+
+    static private int lengthOfCommonSubstring(String lhs, String rhs) {
+        int i = 0;
+        while (i < Math.min(lhs.length(), rhs.length()) && lhs.charAt(i) == rhs.charAt(i)) i++;
+
+        return i;
+    }
+
+    private class NullOutputStream extends OutputStream {
+        @Override
+        public void write(final int b) throws IOException {
+
+        }
     }
 }

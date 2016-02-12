@@ -63,7 +63,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             " nucleotides in a sample.  Regions of high and low G + C content have been shown to interfere with mapping/aligning," +
             " ultimately leading to fragmented genome assemblies and poor coverage in a phenomenon known as \"GC bias\".  " +
             "Detailed information on the effects of GC bias on the collection and analysis of sequencing data can be found at " +
-            "DOI: 10.1371/journal.pone.0062856/.<br /><br />." +
+            "DOI: 10.1371/journal.pone.0062856/.<br /><br />" +
             "" +
             "The GC bias statistics are always output in a detailed long-form version, but a summary can also be produced. Both the " +
             "detailed metrics and the summary metrics are output as tables (\".txt\" files) and an accompanying chart that plots the " +
@@ -85,7 +85,7 @@ public class CollectGcBiasMetrics extends SinglePassSamProgram {
             "AT_DROPOUT, and GC_DROPOUT.  While WINDOW_SIZE refers to the numbers of bases used for the distribution (see above), the " +
             "ALIGNED_READS and TOTAL_CLUSTERS are the total number of aligned reads and the total number of reads (after filtering) " +
             "produced in a run. In addition, the tool produces both AT_DROPOUT and GC_DROPOUT metrics, which indicate the percentage of " +
-            "misaligned reads that correlate with low (%-GC is < 50%) or high (%-GC is > 50%) GC content respectively.  <br /><br />" +
+            "misaligned reads that correlate with low (%-GC is &lt; 50%) or high (%-GC is &gt; 50%) GC content respectively.  <br /><br />" +
             "" +
             "The percentage of \"coverage\" or depth in a GC bin is calculated by dividing the number of reads of a particular GC content " +
             "by the mean number of reads of all GC bins.  A number of 1 represents mean coverage, a number less than 1 represents lower " +
