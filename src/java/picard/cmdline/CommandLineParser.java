@@ -23,6 +23,7 @@
  */
 package picard.cmdline;
 
+import com.google.common.base.CharMatcher;
 import htsjdk.samtools.util.CloserUtil;
 import htsjdk.samtools.util.CollectionUtil.MultiMap;
 import htsjdk.samtools.util.StringUtil;
@@ -230,9 +231,12 @@ public class CommandLineParser {
         } else {
             usagePreamble += defaultUsagePreambleWithPositionalArguments;
         }
+
         if (null != this.programVersion && 0 < this.programVersion.length()) {
             usagePreamble += "Version: " + getVersion() + "\n";
         }
+        checkForNonASCII(usagePreamble, "preamble");
+
         return usagePreamble;
     }
 
@@ -300,7 +304,7 @@ public class CommandLineParser {
      */
     public void usage(final PrintStream stream, final boolean printCommon) {
         if (prefix.isEmpty()) {
-            stream.print(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble());
+            stream.print(convertFromHtml(getStandardUsagePreamble(callerOptions.getClass()) + getUsagePreamble()));
             stream.println("\nVersion: " + getVersion());
             stream.println("\n\nOptions:\n");
 
@@ -338,6 +342,26 @@ public class CommandLineParser {
         for (final CommandLineParser childClp : childClps) {
             childClp.usage(stream, printCommon);
         }
+    }
+
+    private void checkForNonASCII(String documentationText, String location) {
+        if (!CharMatcher.ASCII.matchesAllOf(documentationText)) {
+            throw new AssertionError("Non-ASCII character used in documentation of "+callerOptions.getClass().getSimpleName()+" ("+location+"). Only ASCII characters are allowed.");
+        }
+    }
+
+    private String convertFromHtml(final String textToConvert) {
+
+        final String regex1 = "<br />|<p>|</p>|<table>|</table >|<a href='(.*)'>(.*)</a>|<h4>|<pre>|</pre>|<ul>|</ul>|</li>|</tr>|<hr />";
+        final String regex2 = "<li>";
+        final String regex3 = "</th>";
+        final String regex4 = "</h4>|<tbody>|</tbody>|<tr>|<th>|<.*?>";
+
+        return textToConvert
+                .replaceAll(regex1, "\n")
+                .replaceAll(regex2, " - ")
+                .replaceAll(regex3, "\t")
+                .replaceAll(regex4, "");
     }
 
     private Collection<CommandLineParser> getChildParsersForHelp() {
@@ -398,6 +422,9 @@ public class CommandLineParser {
      */
     private void htmlPrintOptionTableRows(final PrintStream stream, final boolean printCommon) {
         for (final OptionDefinition optionDefinition : optionDefinitions) {
+
+            checkForNonASCII(optionDefinition.doc, optionDefinition.name);
+
             if (!optionDefinition.isCommon || printCommon) {
                 printHtmlOptionUsage(stream, optionDefinition);
             }
