@@ -40,10 +40,10 @@ public class FourChannelIntensityData {
     /**
      * Major index: channel number; minor index: cycle number (zero based)
      */
-    private short [] a;
-    private short [] c;
-    private short [] g;
-    private short [] t;
+    private final short [] a;
+    private final short [] c;
+    private final short [] g;
+    private final short [] t;
 
     public FourChannelIntensityData(final int numberOfCycles) {
         a = new short[numberOfCycles];

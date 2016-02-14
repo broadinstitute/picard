@@ -352,7 +352,7 @@ public class ReadStructure {
     /** An iterator over a Substructure's ReadDescriptors */
     private class IndexedIterator implements Iterator<ReadDescriptor> {
         private int index;
-        private int [] indices;
+        private final int [] indices;
         public IndexedIterator(final int [] indices) {
             this.indices = indices;
             this.index = 0;
