@@ -1,5 +1,4 @@
-<a id="ValidateSamFile"/>
-<h3>ValidateSamFile</h3>
+<h3 id="ValidateSamFile">ValidateSamFile</h3>
 <section>
 <p>Validates a SAM or BAM file.  This tool reports on the validity of a SAM or BAM file relative to the SAM format specification (see http://samtools.github.io/hts-specs/SAMv1.pdf), which is useful for troubleshooting errors encountered with other tools that may be caused by improper formatting.<br /><br />By default, the tool runs in VERBOSE mode and will exit after finding 100 errors and output them to the console (stdout). It is often practical to start by running this tool with the SUMMARY mode option, which summarizes the "errors" and "warnings". Consequently, specific validation warnings or errors that are of lesser concern can be ignored using the IGNORE and/or IGNORE_WARNINGS arguments in order to focus on blocking errors. <br /><h4>Usage example:</h4><pre>java -jar picard.jar ValidateSamFile \<br />     I=input.bam \<br />     MODE=SUMMARY</pre><hr /></p>
 <table>

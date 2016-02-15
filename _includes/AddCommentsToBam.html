@@ -1,5 +1,4 @@
-<a id="AddCommentsToBam"/>
-<h3>AddCommentsToBam</h3>
+<h3 id="AddCommentsToBam">AddCommentsToBam</h3>
 <section>
 <p>Adds comments to the header of a BAM file.This tool makes a copy of the input bam file, with a modified header that includes the comments specified at the command line (prefixed by @CO). Use double quotes to wrap comments that include whitespace or special characters. <br /><br />Note that this tool cannot be run on SAM files.<br /><h4>Usage example:</h4><pre>java -jar picard.jar AddCommentsToBam \<br />      I=input.bam \<br />      O=modified_bam.bam \<br />      C=comment_1 \<br />      C="comment 2"</pre><hr /></p>
 <table>

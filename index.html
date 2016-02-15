@@ -8,68 +8,66 @@
 			{% include header.html %}
 
 			<section>
-				<p>Picard is a set of command line tools for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF.</p>
+				<p>Picard is a set of command line tools for manipulating high-throughput sequencing (HTS) data and formats such as SAM/BAM/CRAM and VCF. These file formats are defined in the <a href="http://samtools.github.io/hts-specs/">Hts-specs</a> repository. See especially the <a href="http://samtools.github.io/hts-specs/SAMv1.pdf">SAM specification</a> and the <a href="http://samtools.github.io/hts-specs/VCFv4.3.pdf">VCF specification</a>.</p>
 
-				<p>These file formats are defined in the <a href="http://samtools.github.io/hts-specs/">Hts-specs</a> repository. See especially the <a href="http://samtools.github.io/hts-specs/SAMv1.pdf"><strong>SAM specification</strong></a> and the <a href="http://samtools.github.io/hts-specs/VCFv4.3.pdf"><strong>VCF specification</strong></a>.</p>
+                <p>Note that the information on this page is targeted at end-users. For developers, the source code, building instructions and implementation/development resources are available on <a href="https://github.com/broadinstitute/picard">GitHub</a>.</p>
 
-				<p>Note that the information on this page is targeted at end-users. For developers, the source code, building instructions and implementation/development resources are available on <a href="https://github.com/broadinstitute/picard"> <strong>GitHub</strong></a>.</p>
-
-				<p> These tools are open-source under the <a href="https://tldrlegal.com/license/mit-license">MIT license</a> and free for all uses.</p>
+				<p> The Picard toolkit is open-source under the <a href="https://tldrlegal.com/license/mit-license">MIT license</a> and free for all uses.</p>
 
 				<p>Enjoy!</p>
 			</section>
 
 	        <!-- BEGIN OF THE MAIN BODY  -->
-			
+
 			<h2 id="QuickStart">Quick Start</h2>
 			<section>
 
-				<h3>Download Software</h3>
-				<p>The Picard command-line tools are provided as a single executable jar file. You can download a zipped package containing the jar file from the <a href="https://github.com/broadinstitute/picard/releases/latest"> <strong>Latest Release</strong></a> project page on Github. The file name will be of the format <strong>picard-tools-x.y.z.zip</strong>.
+				<h3 class='nodent'>Download Software</h3>
+				<p>The Picard command-line tools are provided as a single executable jar file. You can download a zipped package containing the jar file from the <a href="https://github.com/broadinstitute/picard/releases/latest"> Latest Release</a> project page on Github. The file name will be of the format <strong>picard-tools-x.y.z.zip</strong>.
 
-				<h3>Install</h3>
+				<h3 class='nodent'>Install</h3>
 				<p>Open the downloaded package and place the folder containing the jar file in a convenient directory on your hard drive (or server). Unlike C-compiled programs such as Samtools, Picard cannot simply be added to your PATH, so we recommend setting up an <a href="http://www.tutorialspoint.com/unix/unix-environment.htm">environment variable</a> to act as a shortcut.</p>
 				<p>For the tools to run properly, you must have Java 1.8 installed. To check your java version by open your terminal application and run the following command: </p>
 				<pre>java -version</pre>
-				<p>If the output looks like "java version "1.8.x"", you are good to go. If not, you may need to update your version; see the <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html"><strong>Oracle Java website</strong></a> to download the latest JDK.</p>
+				<p>If the output looks something like <code>java version "1.8.x"</code>, you are good to go. If not, you may need to update your version; see the <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java website</a> to download the latest JDK.</p>
 
-				<h3>Test Installation</h3>
-				<p>To test that you can run Picard tools, run the following command in your terminal application, providing either the full path to the picard.jar file or the environment variable that you set up as a shortcut (here we are using $PICARD).</p>
+				<h3 class='nodent'>Test Installation</h3>
+				<p>To test that you can run Picard tools, run the following command in your terminal application, providing either the full path to the picard.jar file:</p>
 				<pre>java -jar /path/to/picard.jar -h </pre>
-				or
+				<p>or the environment variable that you set up as a shortcut (here we are using <code>$PICARD</code>):</p>
 				<pre>java -jar $PICARD -h </pre>
 				<p>You should see a complete list of all the tools in the Picard toolkit. If you don't, read on to the section on Getting Help.</p>
 
-				<h3>Use Picard Tools</h3>
+				<h3 class='nodent'>Use Picard Tools</h3>
 				<p>The tools, which are all listed further below, are invoked as follows:
-				<pre>java <i>jvm-args</i> -jar picard.jar <i>PicardCommandName</i> OPTION1=value1 OPTION2=value2...</pre>
-				<p>See the <a href="http://broadinstitute.github.io/picard/command-line-overview.html"><strong>Tool Documentation</strong></a> for details on the <a href="http://broadinstitute.github.io/picard/command-line-overview.html#CommandSyntax">Picard command syntax</a> and <a href="http://broadinstitute.github.io/picard/command-line-overview.html#StandardOptions">standard options</a> as well as a complete <a href="http://broadinstitute.github.io/picard/command-line-overview.html#Tools">list of tools</a> with usage recommendations, options, and example commands.</p>
+				<pre>java jvm-args -jar picard.jar PicardToolName OPTION1=value1 OPTION2=value2...</pre>
+				<p>See the <a href="command-line-overview.html">Tool Documentation</a> for details on the <a href="command-line-overview.html#CommandSyntax">Picard command syntax</a> and <a href="command-line-overview.html#StandardOptions">standard options</a> as well as a complete <a href="command-line-overview.html#Tools">list of tools</a> with usage recommendations, options, and example commands.</p>
 
 			</section>
 
 			<h2 id="GettingHelp">Getting Help</h2>
 			<section>
 
-				<p>Picard is supported through the <a href="http://gatkforums.broadinstitute.org/gatk"><strong>GATK Forums</strong></a>. <a href="http://gatkforums.broadinstitute.org/gatk/entry/register?Target=categories%2Fgatk-support-forum">Register now</a> and you can <a href="http://gatkforums.broadinstitute.org/gatk/post/question"><strong>ask questions and report problems</strong></a> that you might encounter while using Picard and related tools such as GATK (for source code-related questions, post an issue on <a href="https://github.com/broadinstitute/picard/issues">Github</a> instead), with the following guidelines:</p>
+				<p>Picard is supported through the <a href="http://gatkforums.broadinstitute.org/gatk">GATK Forums</a>. <a href="http://gatkforums.broadinstitute.org/gatk/entry/register?Target=categories%2Fgatk-support-forum">Register now</a> and you can <a href="http://gatkforums.broadinstitute.org/gatk/post/question">ask questions and report problems</a> that you might encounter while using Picard and related tools such as GATK (for source code-related questions, post an issue on <a href="https://github.com/broadinstitute/picard/issues">Github</a> instead), with the following guidelines:</p>
 
-				<h3>Before Asking For Help</h3>
+				<h3 class='nodent'>Before Asking For Help</h3>
 				<p>Before posting to the Forum, please do the following:</p>
 				<ul>
-					<li>Try the <a href="https://github.com/broadinstitute/picard/releases/latest"><strong>latest version of Picard</strong></a>.</li>
+					<li>Try the <a href="https://github.com/broadinstitute/picard/releases/latest">latest version of Picard</a>.</li>
 					<li>See if your problem is covered discussed in
-						the <a href="http://broadinstitute.github.io/picard/faq.html"><strong>Frequently Asked Questions</strong></a>.</li>
-					<li>Search the <a href="http://gatkforums.broadinstitute.org/gatk"><strong>GATK Forums</strong></a> to see if a similar problem has previously been discussed there.</li>
+						the <a href="http://broadinstitute.github.io/picard/faq.html">Frequently Asked Questions</a>.</li>
+					<li>Search the <a href="http://gatkforums.broadinstitute.org/gatk">GATK Forums</a> to see if a similar problem has previously been discussed there.</li>
 					<li>Run
-					Picard <a href="http://broadinstitute.github.io/picard/command-line-overview.html#ValidateSamFile"><strong>ValidateSamFile</strong></a> with MODE=SUMMARY on your input SAM or BAM file (if applicable). Attempt to resolve or at least understand any problems reported.</li>
+					Picard <a href="command-line-overview.html#ValidateSamFile">ValidateSamFile</a> with MODE=SUMMARY on your input SAM or BAM file (if applicable). Attempt to resolve or at least understand any problems reported.</li>
 				</ul>
 
-				<h3>When Asking For Help</h3>
+				<h3 class='nodent'>When Asking For Help</h3>
 				<p>When asking a question about a problem, please include the following:</p>
 				<ul>
-					<li>Command line(s) you ran.</li>
-					<li>Program console output and metrics files. Repetitive console output may be abbreviated.</li>
-					<li>Entire stack trace if one was produced.</li>
-					<li>Version of JVM you are using (obtained by running 'java -version').</li>
+					<li>Command line(s) you ran</li>
+					<li>Program console output and metrics files. Repetitive console output may be abbreviated</li>
+					<li>Entire stack trace if one was produced</li>
+					<li>Version of JVM you are using (obtained by running 'java -version')</li>
 				</ul>
 
 			</section>
@@ -77,13 +75,12 @@
 			<h2 id="Resources">Additional Resources</h2>
 			<section>
 				<ul>
-					<li><a href="http://broadinstitute.github.io/picard/command-line-overview.html#Overview">Detailed tool documentation</a></li>
-					<li><a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html">Description of output of metrics programs</a></li>
-					<li><a href="http://broadinstitute.github.io/picard/sam-differences.html">SAM differences in Picard</a></li>
-					<li><a href="http://broadinstitute.github.io/picard/explain-flags.html">Explain SAM flags</a></li>
-					<li><a href="http://broadinstitute.github.io/picard/building.html#BuildingPicardUtilities">Building from source</a></li>
+					<li><a href="command-line-overview.html#Overview">Detailed tool documentation</a></li>
+					<li><a href="picard-metric-definitions.html">Description of output of metrics programs</a></li>
+					<li><a href="sam-differences.html">SAM differences in Picard</a></li>
+					<li><a href="explain-flags.html">Explain SAM flags</a></li>
 					<li><a href="http://broadinstitute.github.io/picard/javadoc/picard/index.html">Javadoc</a></li>
-					<li><a href="http://broadinstitute.github.io/picard/intel-deflater.html">Intel Deflater</a></li>
+					<li><a href="intel-deflater.html">Intel Deflater</a></li>
 				</ul>
 			</section>
 

@@ -1,93 +1,114 @@
- <html>
-    <head>
-        <title>Explain SAM Flags</title>
-        <script type="text/javascript">
-            lstFlags = [["read paired", 0x1],
-            ["read mapped in proper pair", 0x2],
-            ["read unmapped", 0x4],
-            ["mate unmapped", 0x8],
-            ["read reverse strand", 0x10],
-            ["mate reverse strand", 0x20],
-            ["first in pair", 0x40],
-            ["second in pair", 0x80],
-            ["not primary alignment", 0x100],
-            ["read fails platform/vendor quality checks", 0x200],
-            ["read is PCR or optical duplicate", 0x400],
-            ["supplementary alignment", 0x800]];
-function explainFlags() {
-    var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
-    var summary = "";
-    for(var i = 0; i < lstFlags.length; i++) {
-        var checkbox = document.getElementById('cb' + i)
+---
+---
+<!doctype html>
+<html>
+{% include head.html title="Explain SAM Flags" %}
+
+<script type="text/javascript">
+    lstFlags = [["read paired", 0x1],
+        ["read mapped in proper pair", 0x2],
+        ["read unmapped", 0x4],
+        ["mate unmapped", 0x8],
+        ["read reverse strand", 0x10],
+        ["mate reverse strand", 0x20],
+        ["first in pair", 0x40],
+        ["second in pair", 0x80],
+        ["not primary alignment", 0x100],
+        ["read fails platform/vendor quality checks", 0x200],
+        ["read is PCR or optical duplicate", 0x400],
+        ["supplementary alignment", 0x800]];
+    function explainFlags() {
+        var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
+        var summary = "";
+        for(var i = 0; i < lstFlags.length; i++) {
+            var checkbox = document.getElementById('cb' + i)
             if(lstFlags[i][1] & flagValue) {
                 summary  += " &nbsp; &nbsp; " + lstFlags[i][0] + "<br>";
                 checkbox.checked = true;
             } else {
                 checkbox.checked = false;
             }
-    }
-    document.getElementById('summary').innerHTML = summary;
-}
-function checkboxClicked() {
-    //compute the new flag value
-    var newFlagValue = 0;
-    for(var i = 0; i < lstFlags.length; i++) {
-        var checkBox = document.getElementById('cb' + i);
-        if(checkBox.checked) {
-            newFlagValue |= lstFlags[i][1];
         }
+        document.getElementById('summary').innerHTML = summary;
     }
-    var textbox = document.getElementById('tb');
-    textbox.value = newFlagValue;
-    explainFlags();
-}
-function switchToMate() {
-    swaps = [[2,3],[4,5],[6,7]]
+    function checkboxClicked() {
+        //compute the new flag value
+        var newFlagValue = 0;
+        for(var i = 0; i < lstFlags.length; i++) {
+            var checkBox = document.getElementById('cb' + i);
+            if(checkBox.checked) {
+                newFlagValue |= lstFlags[i][1];
+            }
+        }
+        var textbox = document.getElementById('tb');
+        textbox.value = newFlagValue;
+        explainFlags();
+    }
+    function switchToMate() {
+        swaps = [[2,3],[4,5],[6,7]]
         for( var i = 0 ; i<swaps.length ; i++){
             swap1=swaps[i][0]
-                swap2=swaps[i][1]
-                val1 = document.getElementById('cb' + swap1).checked;
+            swap2=swaps[i][1]
+            val1 = document.getElementById('cb' + swap1).checked;
             val2 = document.getElementById('cb' + swap2).checked;
             document.getElementById('cb' + swap1).checked=val2
-                document.getElementById('cb' + swap2).checked=val1
-                checkboxClicked()
+            document.getElementById('cb' + swap2).checked=val1
+            checkboxClicked()
         }
-}
+    }
 </script>
 
 <noscript>This page requires JavaScript. Please enable it in your browser settings.</noscript>
-</head>
+
 <body>
+<div class="wrapper">
+    {% include header.html %}
 
-    <h2>Explain SAM flags</h2>
+    <h2>Decoding SAM flags</h2>
+    <section>
 
-    <p>This utility makes it easy to identify what are the properties of a read based on its SAM flag value, or, conversely, to find what the value would be for a given combination of properties. It also allows switching easily from a read to its mate (toggle first in pair / second in pair).</p>
+    <p>This utility makes it easy to identify what are the properties of a read based on its SAM flag value, or conversely, to find what the SAM Flag value would be for a given combination of properties. </p>
 
     <form onSubmit="explainFlags(); return false;" action="">
-        <p>
-        Flag: &nbsp;
+
+        <p>To decode a given SAM flag value, just enter the number in the field below. The encoded properties will be listed under Summary below, to the right.</p>
+        SAM Flag: &nbsp;
         <input id="tb" type=text size=10 /> &nbsp; &nbsp; &nbsp;
-        <input type=submit value="Explain" /><br>
-        <br>
+        <input type=submit value="Explain" />
+        <br /><br />
         <div id="button" align="left">
-            <button onclick="switchToMate()">Switch to mate</button>
+            <button onclick="switchToMate()">Switch to mate</button> <small>Toggle first in pair / second in pair</small>
         </div>
-        </p>
+        <br />
+        <table style="table-layout: fixed">
+            <tr>
+                <td style="width: 50%;">
+                    <strong>Find SAM flag by property:</strong><br />
+                    <p><small>To find out what the SAM flag value would be for a given combination of properties, tick the boxes for those that you'd like to include. The flag value will be shown in the SAM Flag field above.</small></p>
+                    <script type="text/javascript">
+                        for(var i = 0; i < lstFlags.length; i++) {
+                            document.write("<input type=checkbox name=cb" + i + " id='cb" + i + "' onclick='checkboxClicked();'> &nbsp; " +lstFlags[i][0] + "</input><br />");
+                        }
+                    </script>
 
-        <p>
-        Explanation:<br>
-        <script type="text/javascript">
-            for(var i = 0; i < lstFlags.length; i++) {
-                document.write("<input type=checkbox name=cb" + i + " id='cb" + i + "' onclick='checkboxClicked();'> &nbsp; " +lstFlags[i][0] + "</input><br>");
-            }
-        </script>
-        <br>
-        Summary:<br>
-        <div id="summary">
+                    <br />
+                </td>
+                <td style="text-align: left; vertical-align: top; width: 50%">
+                    <strong>Summary:</strong><br />
+                    <div id="summary">
 
-        </div>
-        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <br />
+        <br />
+
     </form>
 
+    </section>
+
+</div>
+{% include footer.html %}
 </body>
 </html>
