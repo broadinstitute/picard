@@ -180,27 +180,5 @@ public class DuplicationMetrics extends MetricBase {
         for (Histogram<Double>.Bin bin : m.calculateRoiHistogram().values()) {
             System.out.println(bin.getId() + "\t" + bin.getValue());
         }
-
-//        DuplicationMetrics m = new DuplicationMetrics();
-//        m.READ_PAIRS_EXAMINED  = Long.parseLong(args[0]);
-//        m.READ_PAIR_DUPLICATES = Long.parseLong(args[1]);
-//        final long UNIQUE_READ_PAIRS = m.READ_PAIRS_EXAMINED - m.READ_PAIR_DUPLICATES;
-//        final double xCoverage = Double.parseDouble(args[2]);
-//        final double uniqueXCoverage = xCoverage * ((double) UNIQUE_READ_PAIRS / (double) m.READ_PAIRS_EXAMINED);
-//        final double oneOverCoverage = 1 / xCoverage;
-//
-//        m.calculateDerivedMetrics();
-//        System.out.println("Percent Duplication: " + m.PERCENT_DUPLICATION);
-//        System.out.println("Est. Library Size  : " + m.ESTIMATED_LIBRARY_SIZE);
-//        System.out.println();
-//
-//
-//        System.out.println("Coverage\tUnique Coverage\tDuplication");
-//        for (double d = oneOverCoverage; (int) (d*xCoverage)<=50; d+=oneOverCoverage) {
-//            double coverage = d * xCoverage;
-//            double uniqueCoverage = uniqueXCoverage * m.estimateRoi(m.ESTIMATED_LIBRARY_SIZE, d, m.READ_PAIRS_EXAMINED, UNIQUE_READ_PAIRS);
-//            double duplication = (coverage - uniqueCoverage) / coverage;
-//            System.out.println(coverage + "\t" + uniqueCoverage + "\t" + duplication);
-//        }
     }
 }

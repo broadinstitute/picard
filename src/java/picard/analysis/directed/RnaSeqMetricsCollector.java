@@ -341,16 +341,6 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
                         normalizedCoverageByNormalizedPosition.increment(percent, normalized / transcriptCount);
                     }
                 }
-
-                // Calculate gap bases per kilobase
-                //            {
-                //                int gapBases = 0;
-                //                final double minCoverage = mean * 0.1;
-                //                for (int i=0; i<coverage.length; ++i) {
-                //                    if (coverage[i] < minCoverage) ++gapBases;
-                //                }
-                //                gapBasesPerKb.increment(gapBases / (coverage.length / 1000d));
-                //            }
             }
 
             this.metrics.MEDIAN_CV_COVERAGE = cvs.getMedian();

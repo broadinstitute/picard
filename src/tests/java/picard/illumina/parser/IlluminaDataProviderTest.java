@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 
 import static htsjdk.samtools.util.CollectionUtil.makeList;
-//import static htsjdk.samtools.util.CollectionUtil.*;
 
 /**
  * @author jburke@broadinstitute.org

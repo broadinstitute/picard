@@ -32,6 +32,7 @@ import htsjdk.samtools.util.SamRecordTrackingBuffer;
 import picard.PicardException;
 import picard.sam.DuplicationMetrics;
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
+import htsjdk.samtools.util.Log;
 
 import java.util.Comparator;
 import java.util.Set;
@@ -46,7 +47,7 @@ import java.util.TreeSet;
  * read ends to arrive.  This reduces the memory footprint of this data structure.
  */
 public class MarkQueue {
-
+    private static final Log LOG = Log.getInstance(MarkQueue.class);
     /**
      * Comparator to order the mark queue nonDuplicateReadEndsSet.  The nonDuplicateReadEndsSet of all the read ends that are compared to be the same should
      * be used for duplicate marking.
@@ -225,7 +226,6 @@ public class MarkQueue {
             }
 
             // remove from the nonDuplicateReadEndsSet fragments and unpaired, which only have two possible orientations
-            //this.tmpReadEnds.orientation = orientation;
             if (this.nonDuplicateReadEndsSet.contains(this.tmpReadEnds)) { // found in the nonDuplicateReadEndsSet
                 // get the duplicate read end
                 final SortedSet<ReadEndsForMateCigar> sortedSet = this.nonDuplicateReadEndsSet.subSet(this.tmpReadEnds, true, this.tmpReadEnds, true);
@@ -352,8 +352,8 @@ public class MarkQueue {
             }
             this.nonDuplicateReadEndsSet.add(other);
         }
-        //System.err.println("\tSET SIZE=" + this.nonDuplicateReadEndsSet.size());
 
+        LOG.debug("\tSET SIZE=" + this.nonDuplicateReadEndsSet.size());
         // add to the physical locations for optical duplicate tracking
         final SAMRecord record = other.getRecord();
         if (record.getReadPairedFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag() && addToLocationSet) {
