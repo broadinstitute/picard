@@ -453,7 +453,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         return messages.toArray(new String[messages.size()]);
     }
 
-    private static class SAMFileWriterWrapper
+    private static final class SAMFileWriterWrapper
             implements IlluminaBasecallsConverter.ConvertedClusterDataWriter<SAMRecordsForCluster> {
         public final SAMFileWriter writer;
 

@@ -277,7 +277,7 @@ public class AdapterMarker {
         }
     }
 
-    private static class TruncatedAdapterPair implements AdapterPair {
+    private static final class TruncatedAdapterPair implements AdapterPair {
         String name;
         final String fivePrime, threePrime, fivePrimeReadOrder;
         final byte[]  fivePrimeBytes, threePrimeBytes, fivePrimeReadOrderBytes;

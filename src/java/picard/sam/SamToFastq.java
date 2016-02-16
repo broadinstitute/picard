@@ -438,7 +438,7 @@ public class SamToFastq extends CommandLineProgram {
      * Allows for lazy construction of the second-of-pair writer, since when we are in the "output per read group mode", we only wish to
      * generate a second-of-pair fastq if we encounter a second-of-pair read.
      */
-    static class FastqWriters {
+    static final class FastqWriters {
         private final FastqWriter firstOfPair, unpaired;
         private final Lazy<FastqWriter> secondOfPair;
 

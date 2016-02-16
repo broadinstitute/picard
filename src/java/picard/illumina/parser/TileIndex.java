@@ -134,7 +134,7 @@ public class TileIndex implements Iterable<TileIndex.TileIndexRecord> {
         throw new NoSuchElementException(String.format("Tile %d not found in %s", tileNumber, tileIndexFile));
     }
 
-    public static class TileIndexRecord {
+    public static final class TileIndexRecord {
         /**
          * Number of the tile, e.g. 11101.  These don't necessarily start at 0, and there may be gaps.
          */
