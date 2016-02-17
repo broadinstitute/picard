@@ -176,7 +176,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         // Note - If the user specifies to use INTERVALS, the code will fail if the vcfs are not indexed, so we set USE_VCF_INDEX to true and check that the vcfs are indexed.
         IOUtil.assertFileIsReadable(TRUTH_VCF);
         IOUtil.assertFileIsReadable(CALL_VCF);
-        final boolean usingIntervals = this.INTERVALS != null && this.INTERVALS.size() > 0;
+        final boolean usingIntervals = this.INTERVALS != null && !this.INTERVALS.isEmpty();
         final List<String> errors = new ArrayList<String>();
         if (usingIntervals) {
             USE_VCF_INDEX = true;
@@ -223,7 +223,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         IOUtil.assertFileIsWritable(detailedMetricsFile);
         IOUtil.assertFileIsWritable(contingencyMetricsFile);
 
-        final boolean usingIntervals = this.INTERVALS != null && this.INTERVALS.size() > 0;
+        final boolean usingIntervals = this.INTERVALS != null && !this.INTERVALS.isEmpty();
         IntervalList intervals = null;
         SAMSequenceDictionary intervalsSamSequenceDictionary = null;
         if (usingIntervals) {

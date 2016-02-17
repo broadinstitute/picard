@@ -109,7 +109,7 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
             errors.add("PROB_EXPLICIT_READS must be a probability, i.e., 0 <= PROB_EXPLICIT_READS <= 1");
         }
 
-        if (errors.size() > 0) {
+        if (!errors.isEmpty()) {
             return errors.toArray(new String[errors.size()]);
         } else {
             return super.customCommandLineValidation();

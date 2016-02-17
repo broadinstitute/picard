@@ -271,7 +271,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Set<String> missingColumns = new HashSet<String>(expectedCols);
         missingColumns.removeAll(actualCols);
 
-        if (missingColumns.size() > 0) {
+        if (!missingColumns.isEmpty()) {
             throw new PicardException(String.format(
                     "LIBRARY_PARAMS file %s is missing the following columns: %s.",
                     LIBRARY_PARAMS.getAbsolutePath(), StringUtil.join(", ", missingColumns
@@ -293,7 +293,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final Set<String> forbiddenHeaders = buildSamHeaderParameters(null).keySet();
         forbiddenHeaders.retainAll(rgTagColumns);
 
-        if (forbiddenHeaders.size() > 0) {
+        if (!forbiddenHeaders.isEmpty()) {
             throw new PicardException("Illegal ReadGroup tags in library params(barcode params) file(" + LIBRARY_PARAMS.getAbsolutePath() + ") Offending headers = " + StringUtil.join(", ", forbiddenHeaders));
         }
 
@@ -336,7 +336,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
             List<String> barcodeValues = null;
 
-            if (barcodeColumnLabels.size() > 0) {
+            if (!barcodeColumnLabels.isEmpty()) {
                 barcodeValues = new ArrayList<String>();
                 for (final String barcodeLabel : barcodeColumnLabels) {
                     barcodeValues.add(row.getField(barcodeLabel));
@@ -447,7 +447,7 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (READ_GROUP_ID == null) {
             READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
         }
-        if (messages.size() == 0) {
+        if (messages.isEmpty()) {
             return null;
         }
         return messages.toArray(new String[messages.size()]);

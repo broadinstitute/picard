@@ -168,7 +168,7 @@ public class IlluminaDataProviderFactory {
 
         //find if we have any IlluminaDataType with NO available file formats and, if any exist, throw an exception
         final Set<IlluminaDataType> unmatchedDataTypes = findUnmatchedTypes(dataTypes, formatToDataTypes);
-        if (unmatchedDataTypes.size() > 0) {
+        if (!unmatchedDataTypes.isEmpty()) {
             throw new PicardException("Could not find a format with available files for the following data types: " + StringUtil.join(", ", new ArrayList<IlluminaDataType>(unmatchedDataTypes)));
         }
 
@@ -224,7 +224,7 @@ public class IlluminaDataProviderFactory {
         if (requestedTiles == null) {
             requestedTiles = availableTiles;
         } else {
-            if (requestedTiles.size() == 0) {
+            if (requestedTiles.isEmpty()) {
                 throw new PicardException("Zero length tile list supplied to makeDataProvider, you must specify at least 1 tile OR pass NULL to use all available tiles");
             }
         }

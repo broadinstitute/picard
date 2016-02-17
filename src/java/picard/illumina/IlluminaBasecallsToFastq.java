@@ -257,7 +257,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         final Set<String> missingColumns = new HashSet<>(expectedCols);
         missingColumns.removeAll(actualCols);
 
-        if (missingColumns.size() > 0) {
+        if (!missingColumns.isEmpty()) {
             throw new PicardException(String.format(
                     "MULTIPLEX_PARAMS file %s is missing the following columns: %s.",
                     MULTIPLEX_PARAMS.getAbsolutePath(), StringUtil.join(", ", missingColumns
@@ -284,7 +284,7 @@ public class IlluminaBasecallsToFastq extends CommandLineProgram {
         for (final TabbedTextFileWithHeaderParser.Row row : libraryParamsParser) {
             List<String> sampleBarcodeValues = null;
 
-            if (sampleBarcodeColumnLabels.size() > 0) {
+            if (!sampleBarcodeColumnLabels.isEmpty()) {
                 sampleBarcodeValues = new ArrayList<>();
                 for (final String sampleBarcodeLabel : sampleBarcodeColumnLabels) {
                     sampleBarcodeValues.add(row.getField(sampleBarcodeLabel));

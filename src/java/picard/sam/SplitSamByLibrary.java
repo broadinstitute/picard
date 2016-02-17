@@ -106,7 +106,7 @@ public class SplitSamByLibrary extends CommandLineProgram {
             }
         }
 
-        if (libraryToRg.size() == 0) {
+        if (libraryToRg.isEmpty()) {
             log.error("No individual libraries are " +
                     "specified in the header of " + INPUT.getAbsolutePath());
             return NO_LIBRARIES_SPECIFIED_IN_HEADER;

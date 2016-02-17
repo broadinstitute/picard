@@ -353,10 +353,10 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 barcodeToMetrics.put(barcode, metric);
             }
         }
-        if (barcodeToMetrics.keySet().size() == 0) {
+        if (barcodeToMetrics.keySet().isEmpty()) {
             messages.add("No barcodes have been specified.");
         }
-        if (messages.size() == 0) {
+        if (messages.isEmpty()) {
             return null;
         }
         return messages.toArray(new String[messages.size()]);
