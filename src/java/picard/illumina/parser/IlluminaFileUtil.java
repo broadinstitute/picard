@@ -194,7 +194,7 @@ public class IlluminaFileUtil {
             throw new PicardException("Format list provided to getTiles was null!");
         }
 
-        if (formats.size() == 0) {
+        if (formats.isEmpty()) {
             throw new PicardException(
                     "0 Formats were specified.  You need to specify at least SupportedIlluminaFormat to use getTiles");
         }
@@ -233,7 +233,7 @@ public class IlluminaFileUtil {
 
 
     private String liToStr(final List<Integer> intList) {
-        if (intList.size() == 0) {
+        if (intList.isEmpty()) {
             return "";
         }
 

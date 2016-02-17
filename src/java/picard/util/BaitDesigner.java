@@ -355,7 +355,7 @@ public class BaitDesigner extends CommandLineProgram {
             errors.add("Right primer " + RIGHT_PRIMER + " is not a valid primer sequence.");
         }
 
-        if (errors.size() > 0) return errors.toArray(new String[errors.size()]);
+        if (!errors.isEmpty()) return errors.toArray(new String[errors.size()]);
         else return null;
     }
 

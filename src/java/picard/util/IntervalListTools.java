@@ -295,7 +295,7 @@ public class IntervalListTools extends CommandLineProgram {
         if (BREAK_BANDS_AT_MULTIPLES_OF < 0) {
             errorMsgs.add("BREAK_BANDS_AT_MULTIPLES_OF must be greater than or equal to 0.");
         }
-        return errorMsgs.size() == 0 ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
+        return errorMsgs.isEmpty() ? null : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     /**

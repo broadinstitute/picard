@@ -100,7 +100,7 @@ public class CheckIlluminaDirectoryTest extends CommandLineProgramTest {
             dataTypeArgs[i + 5] = "DT=" + dataTypes[i];
         }
 
-        if (filterTiles.size() > 0) {
+        if (!filterTiles.isEmpty()) {
             final int start = dataTypes.length + 5;
             for (int i = start; i < dataTypeArgs.length; i++) {
                 dataTypeArgs[i] = "T=" + filterTiles.get(i - start);

@@ -85,7 +85,7 @@ public class HaplotypeMap {
             final Map<String, HaplotypeBlock> anchorToHaplotype = new HashMap<String, HaplotypeBlock>();
 
             do {
-                if (line.trim().length() == 0) continue; // skip over blank lines
+                if (line.trim().isEmpty()) continue; // skip over blank lines
                 if (line.startsWith("#")) continue;      // ignore comments/headers
 
                 // Make sure we have the right number of fields

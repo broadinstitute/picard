@@ -72,7 +72,7 @@ public class MultiTileBclFileUtil extends ParameterizedFileUtil {
 
     @Override
     public boolean filesAvailable() {
-        return bci.exists() && cycleFileMap.size() > 0;
+        return bci.exists() && !cycleFileMap.isEmpty();
     }
 
     @Override

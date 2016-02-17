@@ -173,7 +173,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         if (MIN_IDENTICAL_BASES <= 0) {
             errorMsgs.add("MIN_IDENTICAL_BASES must be greater than 0");
         }
-        return errorMsgs.size() == 0 ? super.customCommandLineValidation() : errorMsgs.toArray(new String[errorMsgs.size()]);
+        return errorMsgs.isEmpty() ? super.customCommandLineValidation() : errorMsgs.toArray(new String[errorMsgs.size()]);
     }
 
     /**
@@ -540,7 +540,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                             }
                         }
 
-                        if (dupes.size() > 0) {
+                        if (!dupes.isEmpty()) {
                             dupes.add(lhs);
                             final int duplicateCount = dupes.size();
                             duplicationHisto.increment(duplicateCount);

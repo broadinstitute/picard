@@ -230,7 +230,7 @@ public class CommandLineParser {
         } else {
             usagePreamble += defaultUsagePreambleWithPositionalArguments;
         }
-        if (null != this.programVersion && 0 < this.programVersion.length()) {
+        if (null != this.programVersion && !this.programVersion.isEmpty()) {
             usagePreamble += "Version: " + getVersion() + "\n";
         }
         return usagePreamble;
@@ -446,7 +446,7 @@ public class CommandLineParser {
 
 
             final String[] pair = arg.split("=", 2);
-            if (pair.length == 2 && pair[1].length() == 0) {
+            if (pair.length == 2 && pair[1].isEmpty()) {
 
                 if (i < args.length - 1) {
                     pair[1] = args[++i];
@@ -725,7 +725,7 @@ public class CommandLineParser {
             reader = new BufferedReader(new FileReader(optionsFile));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("#") || line.trim().length() == 0) {
+                if (line.startsWith("#") || line.trim().isEmpty()) {
                     continue;
                 }
                 final String[] pair = line.split("=", 2);
@@ -771,7 +771,7 @@ public class CommandLineParser {
         if (type != null) optionLabel += "=" + type;
 
         stream.print(optionLabel);
-        if (shortName != null && shortName.length() > 0) {
+        if (shortName != null && !shortName.isEmpty()) {
             stream.println();
             optionLabel = prefixDot + shortName;
             if (type != null) optionLabel += "=" + type;
@@ -797,7 +797,7 @@ public class CommandLineParser {
 
     private String makeOptionDescription(final OptionDefinition optionDefinition) {
         final StringBuilder sb = new StringBuilder();
-        if (optionDefinition.doc.length() > 0) {
+        if (!optionDefinition.doc.isEmpty()) {
             sb.append(optionDefinition.doc);
             sb.append("  ");
         }
@@ -865,7 +865,7 @@ public class CommandLineParser {
                 }
 
                 sb.append(" ").append(mutextOptionDefinition.name);
-                if (mutextOptionDefinition.shortName.length() > 0) {
+                if (!mutextOptionDefinition.shortName.isEmpty()) {
                     sb.append(" (").append(mutextOptionDefinition.shortName).append(")");
                 }
             }
@@ -940,7 +940,7 @@ public class CommandLineParser {
             if (!optionDefinition.overridable && optionMap.containsKey(optionDefinition.name)) {
                 throw new CommandLineParserDefinitionException(optionDefinition.name + " has already been used.");
             }
-            if (optionDefinition.shortName.length() > 0) {
+            if (!optionDefinition.shortName.isEmpty()) {
                 if (optionMap.containsKey(optionDefinition.shortName)) {
                     if (!optionDefinition.overridable) {
                         throw new CommandLineParserDefinitionException(optionDefinition.shortName +

@@ -111,7 +111,7 @@ public class ReadStructure {
      * @param collection A collection of ReadDescriptors that describes this ReadStructure
      */
     public ReadStructure(final List<ReadDescriptor> collection) {
-        if(collection.size() == 0) { //If this changes, change hashcode
+        if(collection.isEmpty()) { //If this changes, change hashcode
             throw new IllegalArgumentException("ReadStructure does not support 0 length clusters!");
         }
 

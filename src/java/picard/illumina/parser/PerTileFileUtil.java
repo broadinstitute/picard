@@ -21,7 +21,7 @@ public class PerTileFileUtil extends ParameterizedFileUtil {
         final FileFaker faker, final int lane, final boolean skipEmptyFiles) {
         super(true, extension, base, faker, lane, skipEmptyFiles);
         this.fileMap = getTiledFiles(base, matchPattern);
-        if (fileMap.size() > 0) {
+        if (!fileMap.isEmpty()) {
             this.tiles = Collections.unmodifiableList(new ArrayList<Integer>(this.fileMap.keySet()));
         } else {
             this.tiles = new ArrayList<Integer>();
