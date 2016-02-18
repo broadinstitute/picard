@@ -9,7 +9,7 @@ import java.util.StringTokenizer;
  *
  */
 public class Test {
-    private final String text = "C0A69ACXX111213:6:1101:10000:144257\t83\t5\t128984606\t60\t76M\t=\t128984542\t-140\tAGTGTTAGAACTTCCTCCCCAAAGCATATACTTCAGTGGCAAGCTGTCCTGGATGAAGGTATGACCAACCAGATCA\t@FFFEECC>EFHBJIGIFGIEIJJJIHED<IEHIGIIJIIIGJIGJIIIIIJGGCJIIGIHHHBHGHFFDFFFC@@\tXT:A:U\tNM:i:0\tSM:i:37\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:0\tXO:i:0\tXG:i:0\tMD:Z:76";
+    private static final String TEXT = "C0A69ACXX111213:6:1101:10000:144257\t83\t5\t128984606\t60\t76M\t=\t128984542\t-140\tAGTGTTAGAACTTCCTCCCCAAAGCATATACTTCAGTGGCAAGCTGTCCTGGATGAAGGTATGACCAACCAGATCA\t@FFFEECC>EFHBJIGIFGIEIJJJIHED<IEHIGIIJIIIGJIGJIIIIIJGGCJIIGIHHHBHGHFFDFFFC@@\tXT:A:U\tNM:i:0\tSM:i:37\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:0\tXO:i:0\tXG:i:0\tMD:Z:76";
 
     public static void main(String[] args) {
         new Test().run();
@@ -22,7 +22,7 @@ public class Test {
 
         watch.start();
         for (int i=0; i<ITERATIONS; ++i) {
-            if (StringUtil.split(text, fields, '\t') > 100) {
+            if (StringUtil.split(TEXT, fields, '\t') > 100) {
                 System.out.println("Mama Mia that's a lot of tokens!!");
             }
         }
@@ -32,7 +32,7 @@ public class Test {
         
         watch.start();
         for (int i=0; i<ITERATIONS; ++i) {
-            if (split(text, fields, "\t") > 100) {
+            if (split(TEXT, fields, "\t") > 100) {
                 System.out.println("Mama Mia that's a lot of tokens!!");
             }
         }

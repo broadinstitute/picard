@@ -39,7 +39,7 @@ public class VcfFileSegmentGeneratorTest {
     final static Log LOG = Log.getInstance(VcfFileSegmentGeneratorTest.class);
     
     final File VCF_WITH_LOGS_OF_GAPS =  new File("testdata/picard/vcf/chunking/multi_allelic_at_10M.vcf");
-    final int TEN_MILLION = (int) 10e6;
+    static final int TEN_MILLION = (int) 10e6;
 
     @Test
     public void ensureOverlapExclusionTest() {

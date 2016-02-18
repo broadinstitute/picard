@@ -16,7 +16,7 @@ import java.io.InputStream;
  */
 public class BedToIntervalListTest {
 
-    private final String TEST_DATA_DIR = "testdata/picard/util/BedToIntervalListTest";
+    private static final String TEST_DATA_DIR = "testdata/picard/util/BedToIntervalListTest";
 
     private void doTest(final String inputBed, final String header) throws IOException, SAMException {
         final File outputFile  = File.createTempFile("bed_to_interval_list_test.", ".interval_list");

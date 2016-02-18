@@ -11,7 +11,7 @@ import java.util.List;
  * Tests for IntervalListToBed
  */
 public class IntervalListToBedTest {
-    private final String TEST_DATA_DIR = "testdata/picard/util/";
+    private static final String TEST_DATA_DIR = "testdata/picard/util/";
     private final File INTERVAL_LIST = new File(TEST_DATA_DIR, "interval_list_to_bed_test.interval_list");
     private final File BED_FILE      = new File(TEST_DATA_DIR, "interval_list_to_bed_test.bed");
 

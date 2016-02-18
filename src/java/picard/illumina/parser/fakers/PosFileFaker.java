@@ -6,11 +6,11 @@ import java.nio.ByteBuffer;
  * Created by jcarey on 3/13/14.
  */
 public class PosFileFaker extends FileFaker {
-    private final String posFileString = "102.0\t303.3\n";
+    private static final String POS_FILE_STRING = "102.0\t303.3\n";
 
     @Override
     protected void fakeFile(final ByteBuffer buffer) {
-        buffer.put(posFileString.getBytes());
+        buffer.put(POS_FILE_STRING.getBytes());
     }
 
     @Override
@@ -20,6 +20,6 @@ public class PosFileFaker extends FileFaker {
 
     @Override
     protected int bufferSize() {
-        return posFileString.getBytes().length;
+        return POS_FILE_STRING.getBytes().length;
     }
 }
