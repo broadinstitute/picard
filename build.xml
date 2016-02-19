@@ -529,9 +529,10 @@
             <java classname="picard.cmdline.CreateHtmlDocForStandardOptions"
                   output="${command-line-html-dir}/program_usage/standard-options.html"
                   failonerror="true">
-                <classpath>
-                    <pathelement location="${dist}/picard.jar"/>
-                </classpath>
+                  <classpath>
+                      <path refid="classpath"/>
+                      <pathelement location="${classes}"/>
+                  </classpath>
             </java>
         </sequential>
     </target>
@@ -550,9 +551,10 @@
             <java classname="picard.cmdline.CreateHtmlDocForProgram"
                   output="${command-line-html-dir}/program_usage/@{title}.html"
                   failonerror="true">
-                <classpath>
-                    <pathelement location="${dist}/picard.jar"/>
-                </classpath>
+                  <classpath>
+                      <path refid="classpath"/>
+                      <pathelement location="${classes}"/>
+                  </classpath>
                 <arg value="@{main-class}"/>
             </java>
 
