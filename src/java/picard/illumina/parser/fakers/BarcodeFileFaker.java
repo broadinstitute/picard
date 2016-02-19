@@ -6,11 +6,11 @@ import java.nio.ByteBuffer;
  * Created by jcarey on 3/13/14.
  */
 public class BarcodeFileFaker extends FileFaker {
-    private final String barcodeString = "1\tn\t \n";
+    private static final String BARCODE_STRING = "1\tn\t \n";
 
     @Override
     protected void fakeFile(final ByteBuffer buffer) {
-        buffer.put(barcodeString.getBytes());
+        buffer.put(BARCODE_STRING.getBytes());
     }
 
     @Override
@@ -20,6 +20,6 @@ public class BarcodeFileFaker extends FileFaker {
 
     @Override
     protected int bufferSize() {
-        return barcodeString.getBytes().length;
+        return BARCODE_STRING.getBytes().length;
     }
 }

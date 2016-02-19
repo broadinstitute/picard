@@ -42,7 +42,7 @@ public class FilterFileReader implements Iterator<Boolean> {
     private static final int HEADER_SIZE  = 12;
 
     /** Expected Version */
-    public final int EXPECTED_VERSION = 3;
+    public static final int EXPECTED_VERSION = 3;
 
     /** Iterator over each cluster in the FilterFile */
     private final BinaryFileIterator<Byte> bbIterator;
