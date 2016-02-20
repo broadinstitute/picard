@@ -1,5 +1,4 @@
-<a id="DownsampleSam"/>
-<h3>DownsampleSam</h3>
+<h3 id="DownsampleSam">DownsampleSam</h3>
 <section>
 <p>Downsample a SAM or BAM file.  This tool applies a random downsampling algorithm to a SAM or BAM file to retain only a random subset of the reads. Reads in a mate-pair are either both kept or both discarded. Reads marked as not primary alignments are all discarded. Each read is given a probability P of being retained so that runs performed with the exact same input in the same order and with the same value for RANDOM_SEED will produce the same results.All reads for a template are kept or discarded as a unit, with the goal of retaining readsfrom PROBABILITY * input templates. While this will usually result in approximately PROBABILITY * input reads being retained also, for very small PROBABILITIES this may not be the case.
 A number of different downsampling strategies are supported using the STRATEGY option:

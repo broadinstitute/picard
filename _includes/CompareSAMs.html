@@ -1,5 +1,4 @@
-<a id="CompareSAMs"/>
-<h3>CompareSAMs</h3>
+<h3 id="CompareSAMs">CompareSAMs</h3>
 <section>
 <p>Compare two input ".sam" or ".bam" files.  This tool initially compares the headers of SAM or BAM files.  If the file headers are comparable, the tool will examine and compare readUnmapped flag, reference name, start position and strand between the SAMRecords. The tool summarizes information on the number of read pairs that match or mismatch, and of reads that are missing or unmapped (stratified by direction: forward or reverse).<h4>Usage example:</h4><pre>java -jar picard.jar CompareSAMs \<br />      file_1.bam \<br />      file_2.bam</pre><hr /></p>
 </section>

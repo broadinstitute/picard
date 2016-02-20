@@ -1,5 +1,4 @@
-<a id="FastqToSam"/>
-<h3>FastqToSam</h3>
+<h3 id="FastqToSam">FastqToSam</h3>
 <section>
 <p>Converts a FASTQ file to an unaligned BAM or SAM file.  This tool extracts read sequences and base qualities from the input FASTQ file and writes them out to a new file in unaligned BAM (uBAM) format. Read group information can be provided on the command line. <br /><br />  Three versions of FASTQ quality scales are supported: FastqSanger, FastqSolexa and FastqIllumina (see http://maq.sourceforge.net/fastq.shtml for details). Input FASTQ files can be in GZip format (with .gz extension).<h4>Usage example:</h4><pre>java -jar picard.jar FastqToSam \<br />      F1=file_1.fastq \<br />      O=fastq_to_bam.bam \<br />      SM=for_tool_testing </pre><hr /></p>
 <table>

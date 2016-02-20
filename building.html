@@ -2,71 +2,17 @@
 ---
 <!doctype html>
 <html>
-    {% include head.html title="Building Picard From Source" %}
-    <body>
-        <div class="wrapper">
-            {% include header.html %}
+	{% include head.html title="Building Picard From Source" %}
+	<body>
+		<div class="wrapper">
+			{% include header.html %}
 
             <h2>Building Picard From Source</h2>
 
             <section>
-            See <a href="http://samtools.github.io/htsjdk/building.html">building HTSJDK from source</a>.
+            <p>To build Picard from source and for any other source code-related questions, please see the <a href="https://github.com/broadinstitute/picard/blob/master/README.md">README document</a> in the GitHub repository.</p>
             </section>
-                
-            <a id="Prerequisites"/>
-            <h3>Java version</h3>
-            <section>
-
-            <p>Building the Picard command-line utilities requires Java 1.6.  They may
-            be built with the Java 1.7 compiler, but for maximum compatibility with Java 1.6 JVM,
-            you should compile using the Java 1.6 libraries.  This can be done in one of the
-            following ways:</p>
-            <ul>
-                <li>Set an environment variable JAVA6_HOME that points to your Java 1.6
-                installation.</li>
-                <li>Pass to ant the argument -Djava6.home=<i>path</i>, where <i>path</i> is the directory of your Java
-                1.6 installation.</li>
-            </ul>
-            <p>If you do not have Java 1.6 installed on your build machine, you may supply the
-            location of you Java 1.7 installation instead, but there may be problems running code
-            compiled this way on Java 1.6 JVMs.
-            </p>
-            </section>
-
-            <a id="BuildingPicardUtilities"/>
-            <h3>Building Picard command-line utilities</h3>
-            <section>
-            <p>To build the command-line utilities, change to the root of the Picard source tree, and run the following command:</p>
-            <pre>ant -lib lib/ant package-commands</pre>
-            <p>This will create an executable jar called <i>picard.jar</i> in the dist subdirectory. See <a href="command-line-overview.html">this page</a>
-            for how to call commands using this jar.</p>
-            </section>
-
-            <a id="ga4gh-api"/>
-            <h3>GA4GH API</h3>
-            <section>
-            <p>It is possible to build a version of Picard that supports reading from the <a href="http://ga4gh.org/">GA4GH</a> API, e.g. Google Genomics:</p>
-            <ol>
-                <li><p>Fetch <code>gatk-tools-java</code> library from https://github.com/iliat/gatk-tools-java</p></li>
-
-                <li><p>Build:</p>
-                <pre><code>ant gatk-tools-java-picard-jar</code></pre></li>
-
-                <li><p>Copy the resulting jar to <code>lib/gatk-tools-java/</code> under the Picard folder, e.g.</p>
-                <pre><code>cp dist/gatk-tools-java-picard-1.0.jar ../picard/lib/gatk-tools-java/</code></pre></li>
-
-                <li><p>Build Picard:</p>
-                <pre><code>ant -lib lib/ant package-commands-ga4gh</code></pre></li>
-
-                <li><p>You can now run:</p>
-                <pre><code>java -jar dist/picard.jar ViewSam \
-                INPUT=https://www.googleapis.com/genomics/v1beta2/readgroupsets/CK256frpGBD44IWHwLP22R4/ \
-                GA4GH_CLIENT_SECRETS=../client_secrets.json</code></pre></li>
-            </ol>
-            </section>
-
-            <!-- END OF THE MAIN BODY  -->
-        </div>
-        {% include footer.html %}
+		</div>
+		{% include footer.html %}
     </body>
 </html>

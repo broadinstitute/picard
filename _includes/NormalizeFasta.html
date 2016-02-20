@@ -1,5 +1,4 @@
-<a id="NormalizeFasta"/>
-<h3>NormalizeFasta</h3>
+<h3 id="NormalizeFasta">NormalizeFasta</h3>
 <section>
 <p>Normalizes lines of sequence in a FASTA file to be of the same length.This tool takes any FASTA-formatted file and reformats the sequence to ensure that all of the sequence record lines are of the same length (with the exception of the last line). Although the default setting is 100 bases per line, a custom line_length can be specified by the user. In addition, record names can be truncated at the first instance of a whitespace character to ensure downstream compatibility.<br /><h4>Usage example:</h4><pre>java -jar picard.jar NormalizeFasta \<br />      I=input_sequence.fasta \<br />      O=normalized_sequence.fasta</pre><hr /></p>
 <table>

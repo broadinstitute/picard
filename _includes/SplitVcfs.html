@@ -1,5 +1,4 @@
-<a id="SplitVcfs"/>
-<h3>SplitVcfs</h3>
+<h3 id="SplitVcfs">SplitVcfs</h3>
 <section>
 <p>Splits SNPs and INDELs into separate files.  This tool reads in a VCF or BCF file and writes out the SNPs and INDELs it contains to separate files. The headers of the two output files will be identical and index files will be created for both outputs. If records other than SNPs or INDELs are present, set the STRICT option to "false", otherwise the tool will raise an exception and quit. <br /><h4>Usage example:</h4><pre>java -jar picard.jar SplitVcfs \<br />      I=input.vcf \<br />      SNP_OUTPUT=snp.vcf \<br />      INDEL_OUTPUT=indel.vcf \<br />      STRICT=false</pre><hr /></p>
 <table>
