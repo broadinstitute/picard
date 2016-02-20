@@ -674,15 +674,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 final String chrom = interval.getContig();
                 final int firstBase = interval.getStart();
 
-                final int[] cov = entry.getValue().getDepths();
-                for (int i = 0; i < cov.length; ++i) {
+                final int[] covLocal = entry.getValue().getDepths();
+                for (int i = 0; i < covLocal.length; ++i) {
                     out.print(chrom);
                     out.print('\t');
                     out.print(firstBase + i);
                     out.print('\t');
                     out.print(interval.getName());
                     out.print('\t');
-                    out.print(cov[i]);
+                    out.print(covLocal[i]);
                     out.println();
                 }
             }
@@ -714,7 +714,7 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
                 for (final Map.Entry<Interval,Coverage> entry : this.coverageByTarget.entrySet()) {
                     final Interval interval = entry.getKey();
-                    final Coverage cov = entry.getValue();
+                    final Coverage covLocal = entry.getValue();
 
                     if (interval.length() <= 0) {
                         log.warn("interval of length zero found: " + interval + " skipped.");
@@ -725,14 +725,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                     final int gc = (int) Math.round(gcDouble * 100);
 
                     targetBasesByGc[gc]  += interval.length();
-                    alignedBasesByGc[gc] += cov.getTotal();
+                    alignedBasesByGc[gc] += covLocal.getTotal();
 
                     if (out != null) {
-                        final double coverage = cov.getTotal() / (double) interval.length();
+                        final double coverage = covLocal.getTotal() / (double) interval.length();
                         double min = Integer.MAX_VALUE;
                         double max = Integer.MIN_VALUE;
                         double targetBasesAt0x = 0.0;
-                        for (final int d : cov.getDepths()) {
+                        for (final int d : covLocal.getDepths()) {
                             if (0 == d) targetBasesAt0x++;
                             if (d < min) min = d;
                             if (max < d) max = d;

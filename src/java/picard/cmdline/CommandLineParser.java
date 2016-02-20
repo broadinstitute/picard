@@ -646,10 +646,10 @@ public class CommandLineParser {
         // Save child options for later processing.
         final Integer prefixIndex = key.indexOf('.');
         if (prefixIndex != -1) {
-            final String prefix = key.substring(0, prefixIndex);
+            final String prefixLocal = key.substring(0, prefixIndex);
             final String subKey = key.substring(prefixIndex + 1);
             if (!subKey.isEmpty()) {
-                childOptionArguments.append(prefix, new ChildOptionArg(subKey, stringValue, optionsFile,
+                childOptionArguments.append(prefixLocal, new ChildOptionArg(subKey, stringValue, optionsFile,
                         precedenceSet));
                 return true;
             } else {
@@ -1247,9 +1247,9 @@ public class CommandLineParser {
         boolean retval = true;
 
         // Check for child options for which there is no parser
-        for (final String prefix : childOptionArguments.keySet()) {
-            if (!childOptionsMap.containsKey(prefix)) {
-                messageStream.println("ERROR: Option prefix '" + prefix + "' is not valid.");
+        for (final String prefixLocal : childOptionArguments.keySet()) {
+            if (!childOptionsMap.containsKey(prefixLocal)) {
+                messageStream.println("ERROR: Option prefix '" + prefixLocal + "' is not valid.");
                 retval = false;
             }
         }
@@ -1270,10 +1270,10 @@ public class CommandLineParser {
         }
 
         for (final Map.Entry<String, CommandLineParser> entry : childOptionsMap.entrySet()) {
-            final String prefix = entry.getKey();
+            final String prefixLocal = entry.getKey();
             final CommandLineParser childParser = entry.getValue();
             childParser.messageStream = this.messageStream;
-            final Collection<ChildOptionArg> childOptionArgs = this.childOptionArguments.get(prefix);
+            final Collection<ChildOptionArg> childOptionArgs = this.childOptionArguments.get(prefixLocal);
             if (childOptionArgs != null) {
                 for (final ChildOptionArg arg : childOptionArgs) {
                     childParser.parseOption(arg.name, arg.value, arg.fromFile, arg.precedenceSet);

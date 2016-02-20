@@ -113,13 +113,13 @@ public class FilterApplyingVariantIterator implements CloseableIterator<VariantC
         final List<Genotype> newGenotypes = new ArrayList<Genotype>(ctx.getNSamples());
         for (final Genotype gt : ctx.getGenotypes()) {
             final GenotypeBuilder gtBuilder = new GenotypeBuilder(gt);
-            final List<String> filters = gtFilterStrings.get(gt.getSampleName());
+            final List<String> filtersLocal = gtFilterStrings.get(gt.getSampleName());
 
-            if (filters == null || filters.isEmpty()) {
+            if (filtersLocal == null || filtersLocal.isEmpty()) {
                 gtBuilder.filter(PASS_FILTER);
             }
             else {
-                gtBuilder.filters(filters);
+                gtBuilder.filters(filtersLocal);
             }
             newGenotypes.add(gtBuilder.make());
         }

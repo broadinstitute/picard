@@ -77,32 +77,32 @@ class ClusterIntensityFileReader {
                 throw new PicardException("Bytes past to header constructor are too short excpected(" + HEADER_SIZE + ") received (" + headerBytes.length);
             }
 
-            ByteBuffer buf = ByteBuffer.allocate(headerBytes.length); //for doing some byte conversions
-            buf.order(ByteOrder.LITTLE_ENDIAN);
-            buf.put(headerBytes);
-            buf.position(0);
+            ByteBuffer bufLocal = ByteBuffer.allocate(headerBytes.length); //for doing some byte conversions
+            bufLocal.order(ByteOrder.LITTLE_ENDIAN);
+            bufLocal.put(headerBytes);
+            bufLocal.position(0);
 
             final byte[] identifierBuf = new byte[IDENTIFIER.length];
-            buf.get(identifierBuf);
+            bufLocal.get(identifierBuf);
             if (!Arrays.equals(identifierBuf, IDENTIFIER)) {
                 throw new PicardException("Cluster intensity file " + file + " contains unexpected header: " +
                         StringUtil.bytesToString(identifierBuf));
             }
-            final byte fileVersion = buf.get();
+            final byte fileVersion = bufLocal.get();
             if (fileVersion != FILE_VERSION) {
                 throw new PicardException("Cluster intensity file " + file + " contains unexpected version: " + fileVersion);
             }
-            elementSize = buf.get();
+            elementSize = bufLocal.get();
             if (elementSize < 1 || elementSize > 2) {
                 throw new PicardException("Cluster intensity file " + file + " contains unexpected element size: " + elementSize);
             }
             // convert these to unsigned
-            firstCycle = UnsignedTypeUtil.uShortToInt(buf.getShort());
-            numCycles = UnsignedTypeUtil.uShortToInt(buf.getShort());
+            firstCycle = UnsignedTypeUtil.uShortToInt(bufLocal.getShort());
+            numCycles = UnsignedTypeUtil.uShortToInt(bufLocal.getShort());
             if (numCycles == 0) {
                 throw new PicardException("Cluster intensity file " + file + " has zero cycles.");
             }
-            numClusters = buf.getInt();
+            numClusters = bufLocal.getInt();
             if (numClusters < 0) {
                 // It is possible for there to be no clusters in a tile.
                 throw new PicardException("Cluster intensity file " + file + " has negative number of clusters: " +numClusters);

@@ -341,11 +341,11 @@ public class ReadStructure {
          * (36T8S8B36T) and this substructure consists of all the non-skipped reads than toReadStructure would return
          * (36T8B36T) in ReadStructure form*/
         public ReadStructure toReadStructure() {
-            final List<ReadDescriptor> descriptors = new ArrayList<ReadDescriptor>(numDescriptors);
+            final List<ReadDescriptor> descriptorsLocal = new ArrayList<ReadDescriptor>(numDescriptors);
             for(final ReadDescriptor rd : this) {
-                descriptors.add(rd);
+                descriptorsLocal.add(rd);
             }
-            return new ReadStructure(descriptors);
+            return new ReadStructure(descriptorsLocal);
         }
     }
 
