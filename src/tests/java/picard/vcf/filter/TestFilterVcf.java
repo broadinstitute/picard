@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package picard.vcf;
+package picard.vcf.filter;
 
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.ListMap;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -50,10 +51,9 @@ public class TestFilterVcf {
 	private File quickJavascriptFilter(String content) throws Exception {
 		final File out = File.createTempFile("jsfilter", ".js");
 		out.deleteOnExit();
-		PrintWriter pw = new PrintWriter(out);
-		pw.println(content);
-		pw.flush();
-		pw.close();
+		try (final PrintWriter pw = new PrintWriter(out)) {
+			pw.println(content);
+		}
 		return out;
 	}
 
@@ -68,6 +68,19 @@ public class TestFilterVcf {
 
 		final int retval = filterer.doWork();
 		Assert.assertEquals(retval, 0);
+		
+		//count the number of reads
+		final int expectedNumber = 4;
+		int count=0;
+		VCFFileReader in = new VCFFileReader(filterer.OUTPUT, false);
+		CloseableIterator<VariantContext> iter = in.iterator();
+		while(iter.hasNext()) {
+			final VariantContext ctx = iter.next();
+			count += (ctx.isFiltered()?1:0);
+		}
+		iter.close();
+		in.close();
+		Assert.assertEquals(count, expectedNumber);
 	}
     
     /** Returns a sorted copy of the supplied set, for safer comparison. */

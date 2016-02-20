@@ -21,8 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  * 
- * History:
- *  2015-11: Pierre Lindenbaum added the javascript filter
  */
 
 /**
@@ -82,8 +80,8 @@ public class FilterSamReads extends CommandLineProgram {
             "For information on the SAM format, please see: http://samtools.sourceforge.net" +
             "<hr />";
     private static final Log log = Log.getInstance(FilterSamReads.class);
-
-    public static enum Filter {
+    
+    protected /* <- used in test */ enum Filter {
         includeAligned("OUTPUT SAM/BAM will contain aligned reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of paired reads must be aligned to be included in the OUTPUT SAM or BAM)"),
         excludeAligned("OUTPUT SAM/BAM will contain un-mapped reads only. INPUT SAM/BAM must be in queryname SortOrder. (Note that *both* first and second of pair must be aligned to be excluded from the OUTPUT SAM or BAM)"),
         includeReadList("OUTPUT SAM/BAM will contain reads that are supplied in the READ_LIST_FILE file"),
@@ -196,35 +194,38 @@ public class FilterSamReads extends CommandLineProgram {
             IOUtil.assertFileIsWritable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(INPUT);
             final SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
+            final FilteringIterator filteringIterator;
             
             switch (FILTER) {
                 case includeAligned:
-                    filterReads(new FilteringIterator(samReader.iterator(),
-                            new AlignedFilter(true), true));
+                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                            new AlignedFilter(true), true);
                     break;
                 case excludeAligned:
-                    filterReads(new FilteringIterator(samReader.iterator(),
-                            new AlignedFilter(false), true));
+                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                            new AlignedFilter(false), true);
                     break;
                 case includeReadList:
-                    filterReads(new FilteringIterator(samReader.iterator(),
-                            new ReadNameFilter(READ_LIST_FILE, true)));
+                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                            new ReadNameFilter(READ_LIST_FILE, true));
                     break;
                 case excludeReadList:
-                    filterReads(new FilteringIterator(samReader.iterator(),
-                            new ReadNameFilter(READ_LIST_FILE, false)));
+                	filteringIterator = new FilteringIterator(samReader.iterator(),
+                            new ReadNameFilter(READ_LIST_FILE, false));
                     break;
                 case includeJavascript:
-                    filterReads(new FilteringIterator(samReader.iterator(),
+                	filteringIterator = new FilteringIterator(samReader.iterator(),
                 			new JavascriptSamRecordFilter(
                 			        JAVASCRIPT_FILE,
                 					samReader.getFileHeader()
-                					)));
+                					));
                 	
                     break;
                 default:
                     throw new UnsupportedOperationException(FILTER.name() + " has not been implemented!");
             }
+            
+            filterReads(filteringIterator);
 
             IOUtil.assertFileIsReadable(OUTPUT);
             if (WRITE_READS_FILES) writeReadsFile(OUTPUT);

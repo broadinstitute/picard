@@ -24,11 +24,15 @@
 package picard.sam;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import picard.cmdline.CommandLineProgramTest;
 
 import java.io.File;
-import java.io.FileFilter;
 
 public class FilterSamReadsTest extends CommandLineProgramTest {
     @Override
@@ -36,27 +40,38 @@ public class FilterSamReadsTest extends CommandLineProgramTest {
         return FilterSamReads.class.getSimpleName();
     }
 
+    @DataProvider(name = "dataTestJsFilter")
+    public Object[][] dataTestJsFilter() {
+        return new Object[][]{
+                {"testdata/picard/sam/aligned.sam","testdata/picard/sam/FilterSamReads/filterOddStarts.js",3},
+                {"testdata/picard/sam/aligned.sam","testdata/picard/sam/FilterSamReads/filterReadsWithout5primeSoftClip.js", 0}
+        };
+    }
+    
     /**
-     * filters a SAM using the available javascript filters
+     * filters a SAM using a javascript filter
      */
-    @Test
-    public void testJavaScriptFilters() throws Exception {
+    @Test(dataProvider = "dataTestJsFilter")
+    public void testJavaScriptFilters(final String samFilename, final String javascriptFilename,final int expectNumber) throws Exception {
         // input as SAM file 
-        final File inputSam = new File("testdata/picard/sam/aligned.sam");
+        final File inputSam = new File(samFilename);
+        final File javascriptFile = new File(javascriptFilename);
         //loop over javascript filters
-        for(final File javascriptFile: new File("testdata/picard/sam/FilterSamReads").listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().endsWith(".js");
-			}}))
-        	{
-            final FilterSamReads program = new FilterSamReads();
-            program.INPUT = inputSam;
-            program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
-            program.OUTPUT.deleteOnExit();
-            program.FILTER = FilterSamReads.Filter.includeJavascript;
-            program.JAVASCRIPT_FILE = javascriptFile;
-            Assert.assertEquals(program.doWork(),0);
-        	}        
+        final FilterSamReads program = new FilterSamReads();
+        program.INPUT = inputSam;
+        program.OUTPUT = File.createTempFile("FilterSamReads.output.", ".sam");
+        program.OUTPUT.deleteOnExit();
+        program.FILTER = FilterSamReads.Filter.includeJavascript;
+        program.JAVASCRIPT_FILE = javascriptFile;
+        Assert.assertEquals(program.doWork(),0);
+        
+        //count reads
+        final SamReader samReader = SamReaderFactory.makeDefault().open(program.OUTPUT);
+        final SAMRecordIterator iter = samReader.iterator();
+        int count = 0;
+        while(iter.hasNext()) { iter.next(); ++ count; }
+        iter.close();
+        samReader.close();
+        Assert.assertEquals(count, expectNumber);
     	}
 	}

@@ -103,57 +103,59 @@ public class FilterVcf extends CommandLineProgram {
     }
 
     @Override
-    public int doWork() {
+    protected int doWork() {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
 
-        final VCFFileReader in = new VCFFileReader(INPUT, false);
-        final List<VariantFilter>  variantFilters = new ArrayList<VariantFilter>(4);
-        variantFilters.add(new AlleleBalanceFilter(MIN_AB));
-        variantFilters.add(new FisherStrandFilter(MAX_FS));
-        variantFilters.add(new QdFilter(MIN_QD));
-        if( JAVASCRIPT_FILE != null) {
-            try {
-                variantFilters.add(new VariantContextJavascriptFilter(JAVASCRIPT_FILE, in.getFileHeader()));
-            } catch(IOException error) {
-                CloserUtil.close(in);
-                throw new PicardException("javascript-related error", error);
-            }
+        VCFFileReader in = null;
+        VariantContextWriter out = null;
+        try {// try/finally used to close 'in' and 'out'
+	        in = new VCFFileReader(INPUT, false);
+	        final List<VariantFilter>  variantFilters = new ArrayList<VariantFilter>(4);
+	        variantFilters.add(new AlleleBalanceFilter(MIN_AB));
+	        variantFilters.add(new FisherStrandFilter(MAX_FS));
+	        variantFilters.add(new QdFilter(MIN_QD));
+	        if( JAVASCRIPT_FILE != null) {
+	            try {
+	                variantFilters.add(new VariantContextJavascriptFilter(JAVASCRIPT_FILE, in.getFileHeader()));
+	            } catch(final IOException error) {
+	                throw new PicardException("javascript-related error", error);
+	            }
+	        }
+	        final List<GenotypeFilter> genotypeFilters = CollectionUtil.makeList(new GenotypeQualityFilter(MIN_GQ), new DepthFilter(MIN_DP));
+	        @SuppressWarnings("resource")
+			final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
+	
+	        final VCFHeader header = in.getFileHeader();
+	        // If the user is writing to a .bcf or .vcf, VariantContextBuilderWriter requires a Sequence Dictionary.  Make sure that the
+	        // Input VCF has one.
+	        final VariantContextWriterBuilder variantContextWriterBuilder = new VariantContextWriterBuilder();
+	        if (isVcfOrBcf(OUTPUT)) {
+	            final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
+	            if (sequenceDictionary == null) {
+	                throw new PicardException("The input vcf must have a sequence dictionary in order to create indexed vcf or bcfs.");
+	            }
+	            variantContextWriterBuilder.setReferenceDictionary(sequenceDictionary);
+	        }
+	        out = variantContextWriterBuilder.setOutputFile(OUTPUT).build();
+	        header.addMetaDataLine(new VCFFilterHeaderLine("AllGtsFiltered", "Site filtered out because all genotypes are filtered out."));
+	        header.addMetaDataLine(new VCFFormatHeaderLine("FT", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Genotype filters."));
+	        for (final VariantFilter filter : variantFilters) {
+	            for (final VCFFilterHeaderLine line : filter.headerLines()) {
+	                header.addMetaDataLine(line);
+	            }
+	        }
+	
+	        out.writeHeader(in.getFileHeader());
+	
+	        while (iterator.hasNext()) {
+	            out.add(iterator.next());
+	        }
+	        return 0;
+        } finally {
+        	CloserUtil.close(out);
+        	CloserUtil.close(in);
         }
-        final List<GenotypeFilter> genotypeFilters = CollectionUtil.makeList(new GenotypeQualityFilter(MIN_GQ), new DepthFilter(MIN_DP));
-        @SuppressWarnings("resource")
-		final FilterApplyingVariantIterator iterator = new FilterApplyingVariantIterator(in.iterator(), variantFilters, genotypeFilters);
-
-        final VCFHeader header = in.getFileHeader();
-        // If the user is writing to a .bcf or .vcf, VariantContextBuilderWriter requires a Sequence Dictionary.  Make sure that the
-        // Input VCF has one.
-        final VariantContextWriterBuilder variantContextWriterBuilder = new VariantContextWriterBuilder();
-        if (isVcfOrBcf(OUTPUT)) {
-            final SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
-            if (sequenceDictionary == null) {
-            	in.close();
-                throw new PicardException("The input vcf must have a sequence dictionary in order to create indexed vcf or bcfs.");
-            }
-            variantContextWriterBuilder.setReferenceDictionary(sequenceDictionary);
-        }
-        final VariantContextWriter out = variantContextWriterBuilder.setOutputFile(OUTPUT).build();
-        header.addMetaDataLine(new VCFFilterHeaderLine("AllGtsFiltered", "Site filtered out because all genotypes are filtered out."));
-        header.addMetaDataLine(new VCFFormatHeaderLine("FT", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Genotype filters."));
-        for (final VariantFilter filter : variantFilters) {
-            for (final VCFFilterHeaderLine line : filter.headerLines()) {
-                header.addMetaDataLine(line);
-            }
-        }
-
-        out.writeHeader(in.getFileHeader());
-
-        while (iterator.hasNext()) {
-            out.add(iterator.next());
-        }
-
-        out.close();
-        in.close();
-        return 0;
     }
 
     private boolean isVcfOrBcf(final File file) {
@@ -169,18 +171,14 @@ public class FilterVcf extends CommandLineProgram {
         private final String filterName;
         /** script file */
         private final File scriptFile;
+        
         private VariantContextJavascriptFilter(final File scriptFile, final VCFHeader header) throws IOException {
            super(scriptFile, header);
            this.scriptFile = scriptFile;
            /* create filter name using file basename */
-           String fname = scriptFile.getName();
-            if (fname.toLowerCase().endsWith(".js")) {
-                fname = fname.substring(0, fname.length() - 3);
-            } else if (fname.toLowerCase().endsWith(".javascript")) {
-                fname = fname.substring(0, fname.length() - 11);
-            }
-            if(fname.isEmpty()) fname="JSFILTER";
-            this.filterName = fname;
+           String fname = IOUtil.basename(scriptFile);
+           if(fname.isEmpty()) fname="JSFILTER";
+           this.filterName = fname;
         }
 
         /**
