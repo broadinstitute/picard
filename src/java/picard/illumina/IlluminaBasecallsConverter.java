@@ -309,12 +309,12 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
             FileChannelJDKBugWorkAround.doBugWorkAround();
 
             // Generate the list of tiles that will be processed
-            final List<Tile> tiles = new ArrayList<Tile>();
+            final List<Tile> tilesLocal = new ArrayList<Tile>();
             for (final Integer tileNumber : this.tiles) {
-                tiles.add(new Tile(tileNumber));
+                tilesLocal.add(new Tile(tileNumber));
             }
 
-            final TileReadAggregator tileReadAggregator = new TileReadAggregator(tiles);
+            final TileReadAggregator tileReadAggregator = new TileReadAggregator(tilesLocal);
             tileReadAggregator.submit();
             try {
                 tileReadAggregator.awaitWorkComplete();

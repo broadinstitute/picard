@@ -260,12 +260,12 @@ public class PositionBasedDownsampleSam extends CommandLineProgram {
 
         final ProgressLogger progress = new ProgressLogger(log, (int) 1e7, "Read");
 
-        int total = 0;
+        int totalLocal = 0;
 
         for (final SAMRecord rec : in) {
-            if (STOP_AFTER != null && total >= STOP_AFTER) break;
+            if (STOP_AFTER != null && totalLocal >= STOP_AFTER) break;
 
-            total++;
+            totalLocal++;
             progress.record(rec);
             final PhysicalLocationInt location = getSamRecordLocation(rec);
 

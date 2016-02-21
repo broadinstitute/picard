@@ -583,7 +583,7 @@ public class BaitDesigner extends CommandLineProgram {
         BufferedWriter out = null;
         BufferedWriter agilentOut = null;
         final String prefix = DESIGN_NAME.substring(0, Math.min(DESIGN_NAME.length(), 8)) + "_"; // prefix for 15 digit bait id
-        final NumberFormat fmt = new DecimalFormat("000000");
+        final NumberFormat fmtLocal = new DecimalFormat("000000");
 
         try {
             for (int i = 0; i < copies; ++i) {
@@ -606,7 +606,7 @@ public class BaitDesigner extends CommandLineProgram {
 
                     writeBaitFasta(out, interval, rc);
                     if (OUTPUT_AGILENT_FILES) {
-                        agilentOut.append(prefix).append(fmt.format(baitId++));
+                        agilentOut.append(prefix).append(fmtLocal.format(baitId++));
                         agilentOut.append("\t");
                         agilentOut.append(getBaitSequence(bait, rc).toUpperCase());
                         agilentOut.newLine();
