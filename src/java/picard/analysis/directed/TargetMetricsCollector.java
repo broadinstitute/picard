@@ -604,8 +604,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             double totalCoverage = 0;
 
             // The "how many bases at at-least X" calculations.
-            final int targetBasesDepth[] = {0, 1, 2, 10, 20, 30, 40, 50, 100}; // NB: this should be in ascending order
-            final int targetBases[] = new int[targetBasesDepth.length]; // counts for how many target bases are at at least X coverage, where X corresponds to the value at the same offset in targetBasesDepth
+            final int[] targetBasesDepth = {0, 1, 2, 10, 20, 30, 40, 50, 100}; // NB: this should be in ascending order
+            final int[] targetBases = new int[targetBasesDepth.length]; // counts for how many target bases are at at least X coverage, where X corresponds to the value at the same offset in targetBasesDepth
 
             // consider all bases in calculating the mean, median etc.
             for (final Coverage c : this.coverageByTarget.values()) {

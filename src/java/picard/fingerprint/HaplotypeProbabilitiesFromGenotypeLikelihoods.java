@@ -50,7 +50,7 @@ public class HaplotypeProbabilitiesFromGenotypeLikelihoods extends HaplotypeProb
      * @param logGenotypeLikelihoods correspond to the logLikelihoods of [AA, AB, BB]. Log is assumed to be in base 10.
      */
 
-    public void addToLogLikelihoods(final Snp snp, final List<Allele> alleles, final double logGenotypeLikelihoods[]) {
+    public void addToLogLikelihoods(final Snp snp, final List<Allele> alleles, final double[] logGenotypeLikelihoods) {
         assertSnpPartOfHaplotype(snp);
 
         // only allow biallelic snps

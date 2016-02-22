@@ -291,7 +291,7 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
     private String getReadGroupDetails(final SAMReadGroupRecord readGroupRecord) {
         final List<String> elements = new ArrayList<>(5);
 
-        final String tmp[] = readGroupRecord.getPlatformUnit().split("\\.");    // Expect to look like: D047KACXX110901.1.ACCAACTG
+        final String[] tmp = readGroupRecord.getPlatformUnit().split("\\.");    // Expect to look like: D047KACXX110901.1.ACCAACTG
         String runBarcode = "?";
         String lane = "?";
         String molBarcode = "?";
