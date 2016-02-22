@@ -199,7 +199,7 @@ class MultiHitAlignedReadIterator implements CloseableIterator<HitsForInsert> {
             // Fix the cigar!
             elements = new ArrayList<CigarElement>(elements); // make it modifiable
             if (startHardClip > 0) elements.set(0, new CigarElement(first.getLength(), CigarOperator.S));
-            if (endHardClip   > 0) elements.set(elements.size()-1, new CigarElement(last.getLength(), CigarOperator.S));
+            if (endHardClip   > 0) elements.set(elements.size()-1, new CigarElement(last != null ? last.getLength() : null, CigarOperator.S));
 
             // Set the update structures on the new record
             rec.setReadBases(bases);

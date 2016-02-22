@@ -666,7 +666,9 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             if (numNoCalls + numMismatchesInBestBarcode < totalBarcodeReadBases) {
                 match.mismatches = numMismatchesInBestBarcode;
                 match.mismatchesToSecondBest = numMismatchesInSecondBestBarcode;
-                match.barcode = bestBarcodeMetric.BARCODE.toLowerCase().replaceAll(IlluminaUtil.BARCODE_DELIMITER, "");
+                if (bestBarcodeMetric != null) {
+                    match.barcode = bestBarcodeMetric.BARCODE.toLowerCase().replaceAll(IlluminaUtil.BARCODE_DELIMITER, "");
+                }
             } else {
                 match.mismatches = totalBarcodeReadBases;
                 match.barcode = "";
