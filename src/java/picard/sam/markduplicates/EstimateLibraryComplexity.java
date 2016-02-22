@@ -406,7 +406,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         log.info("Will store " + MAX_RECORDS_IN_RAM + " read pairs in memory before sorting.");
 
         final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
-        final int recordsRead = 0;
+        int recordsRead = 0;
         final SortingCollection<PairedReadSequence> sorter;
         final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
@@ -479,6 +479,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                     sorter.add(prs);
                 }
 
+                ++recordsRead;
                 progress.record(rec);
             }
             CloserUtil.close(in);
