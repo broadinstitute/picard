@@ -64,7 +64,7 @@ public class AlleleBalanceFilter implements VariantFilter {
         final Map<List<Allele>, Counts> countsMap = new HashMap<List<Allele>, Counts>();
 
         for (final Genotype gt : ctx.getGenotypesOrderedByName()) {
-            if (gt.isNoCall() || !gt.isHet()) continue;
+            if (gt.isNoCall() || !gt.isHet() || !gt.hasAD()) continue;
 
             final List<Allele> alleles = gt.getAlleles();
             Counts counts = countsMap.get(alleles);
