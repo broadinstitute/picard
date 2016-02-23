@@ -449,6 +449,7 @@
         <document-command title="CollectWgsMetrics"                 main-class="picard.analysis.CollectWgsMetrics"/>
         <document-command title="CollectWgsMetricsFromQuerySorted"  main-class="picard.analysis.CollectWgsMetricsFromQuerySorted"/>
         <document-command title="CollectWgsMetricsFromSampledSites" main-class="picard.analysis.CollectWgsMetricsFromSampledSites"/>
+        <document-command title="CollectWgsMetricsWithNonZeroCoverage" main-class="picard.analysis.CollectWgsMetricsWithNonZeroCoverage"/>
         <document-command title="CompareMetrics"                    main-class="picard.analysis.CompareMetrics"/>
         <document-command title="CompareSAMs"                       main-class="picard.sam.CompareSAMs"/>
         <document-command title="ConvertSequencingArtifactToOxoG"   main-class="picard.analysis.artifacts.ConvertSequencingArtifactToOxoG"/>
