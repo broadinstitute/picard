@@ -107,8 +107,8 @@ public class Tile {
                 tilePhasingValues.stream().collect(Collectors.groupingBy(TilePhasingValue::getTileTemplateRead));
 
         final Collection<TilePhasingValue> newTilePhasingValues = new LinkedList<>();
-        for (final TileTemplateRead read : partitionedMap.keySet()) {
-            newTilePhasingValues.add(CollectionUtil.getSoleElement(partitionedMap.get(read)));
+        for (final Map.Entry<TileTemplateRead, List<TilePhasingValue>> tileTemplateReadListEntry : partitionedMap.entrySet()) {
+            newTilePhasingValues.add(CollectionUtil.getSoleElement(tileTemplateReadListEntry.getValue()));
         }
 
         return newTilePhasingValues;

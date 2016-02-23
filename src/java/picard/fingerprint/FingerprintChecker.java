@@ -544,10 +544,10 @@ public class FingerprintChecker {
                 resultsList.add(results);
 
             } else {
-                for (final SAMReadGroupRecord rg : fingerprintsByReadGroup.keySet()) {
-                    final FingerprintResults results = new FingerprintResults(f, rg.getPlatformUnit());
+                for (final Map.Entry<SAMReadGroupRecord, Fingerprint> samReadGroupRecordFingerprintEntry : fingerprintsByReadGroup.entrySet()) {
+                    final FingerprintResults results = new FingerprintResults(f, samReadGroupRecordFingerprintEntry.getKey().getPlatformUnit());
                     for (final Fingerprint expectedFp : expectedFingerprints) {
-                        final MatchResults result = calculateMatchResults(fingerprintsByReadGroup.get(rg), expectedFp, 0, pLossofHet);
+                        final MatchResults result = calculateMatchResults(samReadGroupRecordFingerprintEntry.getValue(), expectedFp, 0, pLossofHet);
                         results.addResults(result);
                     }
 

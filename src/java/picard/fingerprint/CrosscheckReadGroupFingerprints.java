@@ -196,9 +196,9 @@ public class CrosscheckReadGroupFingerprints extends CommandLineProgram {
      */
     private void crossCheckLibraries(final Map<SAMReadGroupRecord,Fingerprint> fingerprints, final PrintStream out) {
         final List<Fingerprint> fixedFps = new ArrayList<>();
-        for (final SAMReadGroupRecord rg : fingerprints.keySet()) {
-            final Fingerprint old = fingerprints.get(rg);
-            final String name = rg.getSample() + "::" + rg.getLibrary();
+        for (final Map.Entry<SAMReadGroupRecord, Fingerprint> samReadGroupRecordFingerprintEntry : fingerprints.entrySet()) {
+            final Fingerprint old = samReadGroupRecordFingerprintEntry.getValue();
+            final String name = samReadGroupRecordFingerprintEntry.getKey().getSample() + "::" + samReadGroupRecordFingerprintEntry.getKey().getLibrary();
             final Fingerprint newFp = new Fingerprint(name, old.getSource(), old.getInfo());
             newFp.putAll(old);
 

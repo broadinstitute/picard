@@ -650,8 +650,8 @@ public class IlluminaBasecallsConverter<CLUSTER_OUTPUT_RECORD> {
              * (more negative) priority.
              */
             int priority = 0;
-            for (final Tile tile : this.tileRecords.keySet()) {
-                final TileReader reader = new TileReader(tile, this, this.tileRecords.get(tile));
+            for (final Map.Entry<Tile, TileProcessingRecord> tileTileProcessingRecordEntry : this.tileRecords.entrySet()) {
+                final TileReader reader = new TileReader(tileTileProcessingRecordEntry.getKey(), this, this.tileRecords.get(tileTileProcessingRecordEntry.getKey()));
                 this.prioritizingThreadPool.execute(new PriorityRunnable(--priority) {
                     @Override
                     public void run() {
