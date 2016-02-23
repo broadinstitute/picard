@@ -444,8 +444,10 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                     ++metrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
                 }
 
-                // Add the record for duplicate marking, which may in fact cause it to be duplicate marked or stored for later
-                toMarkQueue.add(readEnds, outputBuffer, getMetrics(readEnds.getRecord()));
+                if (readEnds != null) {
+                    // Add the record for duplicate marking, which may in fact cause it to be duplicate marked or stored for later
+                    toMarkQueue.add(readEnds, outputBuffer, getMetrics(readEnds.getRecord()));
+                }
             }
 
             // Check if there are any we can flush, which happens if we just performed duplicate marking

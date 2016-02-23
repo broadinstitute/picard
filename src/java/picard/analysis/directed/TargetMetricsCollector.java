@@ -226,13 +226,15 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             }
         }
 
-        for(int i = 0; i < targetKeys.length; i++) {
-            try {
-                final Field targetMetricField = TargetMetrics.class.getField(targetKeys[i]);
-                final Field outputMetricField = mtClass.getField(outputKeys[i]);
-                outputMetricField.set(outputMetrics, targetMetricField.get(targetMetrics));
-            } catch(final Exception exc) {
-                throw new PicardException("Exception while copying TargetMetrics." + targetKeys[i] + " to " + mtClass.getName() + "." + outputKeys[i], exc);
+        if (targetKeys != null) {
+            for (int i = 0; i < targetKeys.length; i++) {
+                try {
+                    final Field targetMetricField = TargetMetrics.class.getField(targetKeys[i]);
+                    final Field outputMetricField = mtClass.getField(outputKeys[i]);
+                    outputMetricField.set(outputMetrics, targetMetricField.get(targetMetrics));
+                } catch (final Exception exc) {
+                    throw new PicardException("Exception while copying TargetMetrics." + targetKeys[i] + " to " + mtClass.getName() + "." + outputKeys[i], exc);
+                }
             }
         }
     }

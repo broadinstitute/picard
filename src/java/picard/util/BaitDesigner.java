@@ -605,7 +605,7 @@ public class BaitDesigner extends CommandLineProgram {
                     }
 
                     writeBaitFasta(out, interval, rc);
-                    if (OUTPUT_AGILENT_FILES) {
+                    if (OUTPUT_AGILENT_FILES && agilentOut != null) {
                         agilentOut.append(prefix).append(fmtLocal.format(baitId++));
                         agilentOut.append("\t");
                         agilentOut.append(getBaitSequence(bait, rc).toUpperCase());
