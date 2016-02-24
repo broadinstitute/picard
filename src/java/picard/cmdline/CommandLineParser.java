@@ -1158,7 +1158,7 @@ public class CommandLineParser {
         }
     }
     
-    protected static class OptionDefinition {
+    protected static final class OptionDefinition {
         final Field field;
         final String name;
         final String shortName;
@@ -1209,7 +1209,7 @@ public class CommandLineParser {
     /**
      * Holds a command-line argument that is destined for a child parser.  Prefix has been stripped from name.
      */
-    private static class ChildOptionArg {
+    private static final class ChildOptionArg {
         final String name;
         final String value;
         final boolean fromFile;

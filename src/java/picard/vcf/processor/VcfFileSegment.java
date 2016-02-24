@@ -52,7 +52,7 @@ public abstract class VcfFileSegment {
         return new SequenceSizedChunk(sequence, vcf);
     }
     
-    static class SequenceSizedChunk extends VcfFileSegment {
+    static final class SequenceSizedChunk extends VcfFileSegment {
         final SAMSequenceRecord sequence;
         final File vcf;
 

@@ -118,7 +118,7 @@ public abstract class VcfFileSegmentGenerator {
      *
      * @author mccowan
      */
-    static class WidthLimitingDecorator extends VcfFileSegmentGenerator {
+    static final class WidthLimitingDecorator extends VcfFileSegmentGenerator {
         final VcfFileSegmentGenerator underlyingStrategy;
         final long width;
 
@@ -135,7 +135,7 @@ public abstract class VcfFileSegmentGenerator {
          * The thing that does the work; accepts a {@link VcfFileSegment} (produced by the parent {@link VcfFileSegmentGenerator}) and breaks
          * it down into subsegments.
          */
-        private class VcfFileSegmentSubdivider implements Iterable<VcfFileSegment> {
+        private final class VcfFileSegmentSubdivider implements Iterable<VcfFileSegment> {
             final VcfFileSegment basis;
 
             private VcfFileSegmentSubdivider(final VcfFileSegment basis) {

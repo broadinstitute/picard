@@ -97,7 +97,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
         System.exit(new MeanQualityByCycle().instanceMain(args));
     }
 
-    private static class HistogramGenerator {
+    private static final class HistogramGenerator {
         final boolean useOriginalQualities;
         int maxLengthSoFar = 0;
         double[] firstReadTotalsByCycle  = new double[maxLengthSoFar];
