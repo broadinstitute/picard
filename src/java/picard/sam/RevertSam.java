@@ -260,8 +260,8 @@ public class RevertSam extends CommandLineProgram {
                 readGroupToFormat.put(rg, QualityEncodingDetector.detect(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE, new FilteringIterator(reader.iterator(), filter), RESTORE_ORIGINAL_QUALITIES));
                 CloserUtil.close(reader);
             }
-            for (final SAMReadGroupRecord r : readGroupToFormat.keySet()) {
-                log.info("Detected quality format for " + r.getReadGroupId() + ": " + readGroupToFormat.get(r));
+            for (final Map.Entry<SAMReadGroupRecord, FastqQualityFormat> samReadGroupRecordFastqQualityFormatEntry : readGroupToFormat.entrySet()) {
+                log.info("Detected quality format for " + samReadGroupRecordFastqQualityFormatEntry.getKey().getReadGroupId() + ": " + samReadGroupRecordFastqQualityFormatEntry.getValue());
             }
             if (readGroupToFormat.values().contains(FastqQualityFormat.Solexa)) {
                 log.error("No quality score encoding conversion implemented for " + FastqQualityFormat.Solexa);

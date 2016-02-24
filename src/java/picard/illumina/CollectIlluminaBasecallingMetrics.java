@@ -39,6 +39,7 @@ import htsjdk.samtools.util.StringUtil;
 
 import java.io.File;
 import java.lang.Comparable;import java.lang.Double;import java.lang.Exception;import java.lang.Integer;import java.lang.Math;import java.lang.Override;import java.lang.String;import java.lang.StringBuilder;import java.text.DecimalFormat;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -180,8 +181,8 @@ public class CollectIlluminaBasecallingMetrics extends CommandLineProgram {
         try {
             final MetricsFile<IlluminaBasecallingMetrics, Comparable<?>> file = getMetricsFile();
             final IlluminaMetricCounts allLaneCounts = new IlluminaMetricCounts(null, null, LANE);
-            for (final String s : barcodeToMetricCounts.keySet()) {
-                final IlluminaMetricCounts counts = barcodeToMetricCounts.get(s);
+            for (final Map.Entry<String, IlluminaMetricCounts> stringIlluminaMetricCountsEntry : barcodeToMetricCounts.entrySet()) {
+                final IlluminaMetricCounts counts = stringIlluminaMetricCountsEntry.getValue();
                 counts.addMetricsToFile(file);
                 allLaneCounts.addIlluminaMetricCounts(counts);
             }

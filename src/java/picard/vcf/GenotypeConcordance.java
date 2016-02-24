@@ -373,8 +373,8 @@ public class GenotypeConcordance extends CommandLineProgram {
         genotypeConcordanceContingencyMetricsFile.addMetric(contingencyMetrics);
         genotypeConcordanceContingencyMetricsFile.write(contingencyMetricsFile);
 
-        for (final String condition : unClassifiedStatesMap.keySet()) {
-            log.info("Uncovered truth/call Variant Context Type Counts: " + condition + " " + unClassifiedStatesMap.get(condition));
+        for (final Map.Entry<String, Integer> stringIntegerEntry : unClassifiedStatesMap.entrySet()) {
+            log.info("Uncovered truth/call Variant Context Type Counts: " + stringIntegerEntry.getKey() + " " + stringIntegerEntry.getValue());
         }
 
         return 0;

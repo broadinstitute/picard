@@ -224,8 +224,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
 
         LOG.info("Processed " + extractors.size() + " tiles.");
         for (final PerTileBarcodeExtractor extractor : extractors) {
-            for (final String key : barcodeToMetrics.keySet()) {
-                barcodeToMetrics.get(key).merge(extractor.getMetrics().get(key));
+            for (final Map.Entry<String, BarcodeMetric> stringBarcodeMetricEntry : barcodeToMetrics.entrySet()) {
+                stringBarcodeMetricEntry.getValue().merge(extractor.getMetrics().get(stringBarcodeMetricEntry.getKey()));
             }
             noMatchMetric.merge(extractor.getNoMatchMetric());
             if (extractor.getException() != null) {
@@ -553,8 +553,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
             this.minMismatchDelta = minMismatchDelta;
             this.minimumBaseQuality = minimumBaseQuality;
             this.metrics = new LinkedHashMap<String, BarcodeMetric>(barcodeToMetrics.size());
-            for (final String key : barcodeToMetrics.keySet()) {
-                this.metrics.put(key, BarcodeMetric.copy(barcodeToMetrics.get(key)));
+            for (final Map.Entry<String, BarcodeMetric> stringBarcodeMetricEntry : barcodeToMetrics.entrySet()) {
+                this.metrics.put(stringBarcodeMetricEntry.getKey(), BarcodeMetric.copy(stringBarcodeMetricEntry.getValue()));
             }
             this.noMatch = BarcodeMetric.copy(noMatchMetric);
             this.provider = factory.makeDataProvider(Arrays.asList(tile));
