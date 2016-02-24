@@ -156,7 +156,7 @@ public class ClusterDataToSamConverter implements
         // Get and transform the unmatched barcode, if any, to store with the reads
         String unmatchedBarcode = null;
         if (hasSampleBarcode && cluster.getMatchedBarcode() == null) {
-            final byte barcode[][] = new byte[sampleBarcodeIndices.length][];
+            final byte[][] barcode = new byte[sampleBarcodeIndices.length][];
             for (int i = 0; i < sampleBarcodeIndices.length; i++) {
                 barcode[i] = cluster.getRead(sampleBarcodeIndices[i]).getBases();
             }
@@ -167,8 +167,8 @@ public class ClusterDataToSamConverter implements
         final String joinedMolecularIndexQ ;
         if (hasMolecularBarcode) {
             final StringBuilder joinedMolecularIndexQBuilder = new StringBuilder();
-            final byte molecularIndex[][] = new byte[molecularBarcodeIndices.length][];
-            final byte molecularIndexQ[][] = new byte[molecularBarcodeIndices.length][];
+            final byte[][] molecularIndex = new byte[molecularBarcodeIndices.length][];
+            final byte[][] molecularIndexQ = new byte[molecularBarcodeIndices.length][];
             for (int i = 0; i < molecularBarcodeIndices.length; i++) {
                 molecularIndex[i]  = cluster.getRead(molecularBarcodeIndices[i]).getBases();
                 molecularIndexQ[i] = cluster.getRead(molecularBarcodeIndices[i]).getQualities();

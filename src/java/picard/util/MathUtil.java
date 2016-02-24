@@ -370,7 +370,7 @@ final public class MathUtil {
 
         /** Returns the log-representation of the provided decimal array. */
         public double[] getLogValue(final double[] nonLogArray) {
-            final double logArray[] = new double[nonLogArray.length];
+            final double[] logArray = new double[nonLogArray.length];
             for (int i = 0; i < nonLogArray.length; i++) {
                 logArray[i] = getLogValue(nonLogArray[i]);
             }

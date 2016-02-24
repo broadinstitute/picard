@@ -386,7 +386,7 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
         final int numBarcodes = readStructure.sampleBarcodes.length();
         final Set<String> barcodes = new HashSet<String>();
         for (final TabbedTextFileWithHeaderParser.Row row : barcodesParser) {
-            final String bcStrings[] = new String[numBarcodes];
+            final String[] bcStrings = new String[numBarcodes];
             int barcodeNum = 1;
             for (final ReadDescriptor rd : readStructure.descriptors) {
                 if (rd.type != ReadType.Barcode) continue;
@@ -584,8 +584,8 @@ public class ExtractIlluminaBarcodes extends CommandLineProgram {
                 //(see customCommnandLineValidation), therefore we must use the outputReadStructure to index into the output cluster data
                 final int[] barcodeIndices = outputReadStructure.sampleBarcodes.getIndices();
                 final BufferedWriter writer = IOUtil.openFileForBufferedWriting(barcodeFile);
-                final byte barcodeSubsequences[][] = new byte[barcodeIndices.length][];
-                final byte qualityScores[][] = usingQualityScores ? new byte[barcodeIndices.length][] : null;
+                final byte[][] barcodeSubsequences = new byte[barcodeIndices.length][];
+                final byte[][] qualityScores = usingQualityScores ? new byte[barcodeIndices.length][] : null;
                 while (provider.hasNext()) {
                     // Extract the barcode from the cluster and write it to the file for the tile
                     final ClusterData cluster = provider.next();

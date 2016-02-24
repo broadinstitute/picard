@@ -166,8 +166,8 @@ public class BasicInputParser extends AbstractInputParser
         return currentLineNumber;
     }
 
-    private static InputStream[] filesToInputStreams(final File files[]) {
-        final InputStream result[] = new InputStream[files.length];
+    private static InputStream[] filesToInputStreams(final File[] files) {
+        final InputStream[] result = new InputStream[files.length];
         for (int i = 0; i < files.length; i++) {
             result[i] = IOUtil.openFileForReading(files[i]);
         }
