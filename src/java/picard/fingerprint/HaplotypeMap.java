@@ -323,7 +323,7 @@ public class HaplotypeMap {
             final StringBuilder sb = new StringBuilder();
 
             for (final String panel : panels) {
-                if (sb.length() > 0) sb.append(",");
+                if (sb.length() > 0) sb.append(',');
                 sb.append(panel);
             }
 

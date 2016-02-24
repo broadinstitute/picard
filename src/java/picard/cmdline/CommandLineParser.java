@@ -535,7 +535,7 @@ public class CommandLineParser {
                 for (final String mutexOption : optionDefinition.mutuallyExclusive) {
                     final OptionDefinition mutextOptionDef = optionMap.get(mutexOption);
                     if (mutextOptionDef != null && mutextOptionDef.hasBeenSet) {
-                        mutextOptionNames.append(" ").append(prefixDot).append(mutextOptionDef.name);
+                        mutextOptionNames.append(' ').append(prefixDot).append(mutextOptionDef.name);
                     }
                 }
                 if (optionDefinition.hasBeenSet && mutextOptionNames.length() > 0) {
@@ -572,13 +572,13 @@ public class CommandLineParser {
                     return false;
                 }
                 for (final Object posArg : c) {
-                    commandLineString.append(" ").append(posArg.toString());
+                    commandLineString.append(' ').append(posArg.toString());
                 }
             }
             //first, append args that were explicitly set
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if (optionDefinition.hasBeenSet) {
-                    commandLineString.append(" ").append(prefixDot).append(optionDefinition.name).append("=").append(
+                    commandLineString.append(' ').append(prefixDot).append(optionDefinition.name).append('=').append(
                             optionDefinition.field.get(callerOptions));
                 }
             }
@@ -586,7 +586,7 @@ public class CommandLineParser {
             //next, append args that weren't explicitly set, but have a default value
             for (final OptionDefinition optionDefinition : optionDefinitions) {
                 if (!optionDefinition.hasBeenSet && !optionDefinition.defaultValue.equals("null")) {
-                    commandLineString.append(" ").append(prefixDot).append(optionDefinition.name).append("=").append(
+                    commandLineString.append(' ').append(prefixDot).append(optionDefinition.name).append('=').append(
                             optionDefinition.defaultValue);
                 }
             }
@@ -859,7 +859,7 @@ public class CommandLineParser {
             final Boolean isClpEnum = enumConstants.length > 0 && (enumConstants[0] instanceof ClpEnum);
 
             sb.append("Possible values: {");
-            if (isClpEnum) sb.append("\n");
+            if (isClpEnum) sb.append('\n');
 
             for (int i = 0; i < enumConstants.length; ++i) {
                 if (i > 0 && !isClpEnum) {
@@ -903,9 +903,9 @@ public class CommandLineParser {
                             " doesn't match any known option.");
                 }
 
-                sb.append(" ").append(mutextOptionDefinition.name);
+                sb.append(' ').append(mutextOptionDefinition.name);
                 if (!mutextOptionDefinition.shortName.isEmpty()) {
-                    sb.append(" (").append(mutextOptionDefinition.shortName).append(")");
+                    sb.append(" (").append(mutextOptionDefinition.shortName).append(')');
                 }
             }
         }
@@ -915,7 +915,7 @@ public class CommandLineParser {
     private void printSpaces(final PrintStream stream, final int numSpaces) {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < numSpaces; ++i) {
-            sb.append(" ");
+            sb.append(' ');
         }
         stream.print(sb);
     }
