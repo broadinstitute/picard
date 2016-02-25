@@ -145,9 +145,9 @@ public class ReadEndsForMateCigar extends ReadEnds {
     /** Gets the read ends for optical duplicate tracking */
     public Set<ReadEnds> getReadEndSetForOpticalDuplicates() {
         if (null == this.locationSet) throw new PicardException("Already called getReadEndSetForOpticalDuplicates");
-        final Set<ReadEnds> locationSetLocal = this.locationSet.getReadEnds();
+        final Set<ReadEnds> locationSet = this.locationSet.getReadEnds();
         this.locationSet = null;
-        return locationSetLocal;
+        return locationSet;
     }
 
     public PhysicalLocationForMateCigarSet getLocationSet() {
@@ -155,9 +155,9 @@ public class ReadEndsForMateCigar extends ReadEnds {
     }
 
     public PhysicalLocationForMateCigarSet removeLocationSet() {
-        final PhysicalLocationForMateCigarSet locationSetLocal = this.locationSet;
+        final PhysicalLocationForMateCigarSet locationSet = this.locationSet;
         this.locationSet = null;
-        return locationSetLocal;
+        return locationSet;
     }
 
     public void setLocationSet(final PhysicalLocationForMateCigarSet locationSet) {
