@@ -28,6 +28,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.util.TestNGUtil;
 
 import java.io.File;
 import java.io.FileReader;
@@ -524,7 +525,10 @@ public class CollectAlignmentSummaryMetricsTest extends CommandLineProgramTest {
 
         for (final AlignmentSummaryMetrics metrics : output.getMetrics()) {
             if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.FIRST_OF_PAIR) {
-                Assert.assertEquals(metrics.PCT_CHIMERAS, 0.8);
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_CHIMERAS, 5D / 6, 0.0001);
+            }
+            if (metrics.CATEGORY == AlignmentSummaryMetrics.Category.SECOND_OF_PAIR) {
+                TestNGUtil.compareDoubleWithAccuracy(metrics.PCT_CHIMERAS, 3D / 6, 0.0001);
             }
         }
     }
