@@ -450,11 +450,9 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         final ArrayList<String> messages = new ArrayList<String>();
 
         readStructure = new ReadStructure(READ_STRUCTURE);
-        if (!readStructure.sampleBarcodes.isEmpty()) {
-            if (LIBRARY_PARAMS == null) {
-                messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
-                        " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
-            }
+        if (!readStructure.sampleBarcodes.isEmpty() && LIBRARY_PARAMS == null) {
+            messages.add("BARCODE_PARAMS or LIBRARY_PARAMS is missing.  If READ_STRUCTURE contains a B (barcode)" +
+                    " then either LIBRARY_PARAMS or BARCODE_PARAMS(deprecated) must be provided!");
         }
 
         if (READ_GROUP_ID == null) {

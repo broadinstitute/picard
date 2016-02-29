@@ -104,8 +104,8 @@ public class AdapterUtility {
             int errors = 0;
 
             for (int i=0; i<adapter.length; ++i) {
-                if (read[i] != adapter[i]) {
-                    if (++errors > MAX_ADAPTER_ERRORS) break;
+                if (read[i] != adapter[i] && ++errors > MAX_ADAPTER_ERRORS) {
+                    break;
                 }
             }
 

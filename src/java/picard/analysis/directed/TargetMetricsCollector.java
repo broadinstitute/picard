@@ -467,13 +467,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
             final Collection<Interval> probes  = probeDetector.getOverlaps(read);
 
             // Calculate the values we need for HS_LIBRARY_SIZE
-            if (!record.getSupplementaryAlignmentFlag()) {
-                if (record.getReadPairedFlag() && record.getFirstOfPairFlag() && !record.getReadUnmappedFlag() && !record.getMateUnmappedFlag()) {
-                    if (!probes.isEmpty()) {
-                        ++this.metrics.PF_SELECTED_PAIRS;
-                        if (!record.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
-                    }
-                }
+            if (!record.getSupplementaryAlignmentFlag() &&
+                    record.getReadPairedFlag() &&
+                    record.getFirstOfPairFlag() &&
+                    !record.getReadUnmappedFlag() &&
+                    !record.getMateUnmappedFlag() &&
+                    !probes.isEmpty()) {
+                ++this.metrics.PF_SELECTED_PAIRS;
+                if (!record.getDuplicateReadFlag()) ++this.metrics.PF_SELECTED_UNIQUE_PAIRS;
             }
 
             // Compute the bait-related metrics *before* applying the duplicate read
@@ -808,10 +809,8 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
 
         /** Adds a single point of depth at the desired offset into the coverage array. */
         public void addBase(final int offset) {
-            if (offset >= 0 && offset < this.depths.length) {
-                if (this.depths[offset] < Integer.MAX_VALUE) {
-                    this.depths[offset] += 1;
-                }
+            if (offset >= 0 && offset < this.depths.length && this.depths[offset] < Integer.MAX_VALUE) {
+                this.depths[offset] += 1;
             }
         }
 

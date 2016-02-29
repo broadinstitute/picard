@@ -235,10 +235,8 @@ public class CompareSAMs extends CommandLineProgram {
         // Any elements remaining in rightUnmatched are guaranteed not to be in leftUnmatched.
         missingLeft += rightUnmatched.size();
 
-        if (ret) {
-            if (missingLeft > 0 || missingRight > 0 || mappingsDiffer > 0 || unmappedLeft > 0 || unmappedRight > 0) {
-                ret = false;
-            }
+        if (ret && (missingLeft > 0 || missingRight > 0 || mappingsDiffer > 0 || unmappedLeft > 0 || unmappedRight > 0)) {
+            ret = false;
         }
         return ret;
     }

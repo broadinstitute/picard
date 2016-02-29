@@ -486,13 +486,10 @@ public class CommandLineParser {
             }
 
             final String[] pair = arg.split("=", 2);
-            if (pair.length == 2 && pair[1].isEmpty()) {
-
-                if (i < args.length - 1) {
+            if (pair.length == 2) {
+                if (pair[1].isEmpty() && i < args.length - 1) {
                     pair[1] = args[++i];
                 }
-            }
-            if (pair.length == 2) {
                 if (!parseOption(pair[0], pair[1], false)) {
                     messageStream.println();
                     usage(messageStream, true);
@@ -675,11 +672,9 @@ public class CommandLineParser {
             this.optionsThatCannotBeOverridden.add(optionDefinition.name);
         }
 
-        if (!optionDefinition.isCollection) {
-            if (optionDefinition.hasBeenSet && !optionDefinition.hasBeenSetFromOptionsFile) {
-                messageStream.println("ERROR: Option '" + key + "' cannot be specified more than once.");
-                return false;
-            }
+        if (!optionDefinition.isCollection && optionDefinition.hasBeenSet && !optionDefinition.hasBeenSetFromOptionsFile) {
+            messageStream.println("ERROR: Option '" + key + "' cannot be specified more than once.");
+            return false;
         }
         final Object value;
         try {

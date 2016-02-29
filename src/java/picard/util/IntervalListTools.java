@@ -331,10 +331,8 @@ public class IntervalListTools extends CommandLineProgram {
     }
 
     private static void createDirectoryOrFail(final File directory) {
-        if (!directory.exists()) {
-            if (!directory.mkdir()) {
-                throw new PicardException("Unable to create directory: " + directory.getAbsolutePath());
-            }
+        if (!directory.exists() && !directory.mkdir()) {
+            throw new PicardException("Unable to create directory: " + directory.getAbsolutePath());
         }
     }
 

@@ -174,10 +174,9 @@ public class IlluminaFileUtil {
         while (tileMetrics.hasNext()) {
             final TileMetricsOutReader.IlluminaTileMetrics tileMetric = tileMetrics.next();
 
-            if (tileMetric.getLaneNumber() == lane) {
-                if (!expectedTiles.contains(tileMetric.getTileNumber())) {
-                    expectedTiles.add(tileMetric.getTileNumber());
-                }
+            if (tileMetric.getLaneNumber() == lane && 
+                    !expectedTiles.contains(tileMetric.getTileNumber())) {
+                expectedTiles.add(tileMetric.getTileNumber());
             }
         }
 
