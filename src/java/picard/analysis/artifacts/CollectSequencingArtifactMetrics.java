@@ -120,6 +120,9 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
                   "However, the summary metrics output will still take all contexts into consideration.")
     public Set<String> CONTEXTS_TO_PRINT = new HashSet<String>();
 
+    @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.pre_adapter_summary_metrics.EXT). None if null", optional=true)
+    public String FILE_EXTENSION = null;
+
     private static final String UNKNOWN_LIBRARY = "UnknownLibrary";
     private static final String UNKNOWN_SAMPLE = "UnknownSample";
 
@@ -166,10 +169,11 @@ public class CollectSequencingArtifactMetrics extends SinglePassSamProgram {
 
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
-        preAdapterSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT);
-        preAdapterDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT);
-        baitBiasSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT);
-        baitBiasDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT);
+        final String outext = (null != FILE_EXTENSION) ? FILE_EXTENSION : ""; // Add a file extension if desired
+        preAdapterSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_SUMMARY_EXT + outext);
+        preAdapterDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.PRE_ADAPTER_DETAILS_EXT + outext);
+        baitBiasSummaryOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_SUMMARY_EXT + outext);
+        baitBiasDetailsOut = new File(OUTPUT + SequencingArtifactMetrics.BAIT_BIAS_DETAILS_EXT + outext);
 
         IOUtil.assertFileIsWritable(preAdapterSummaryOut);
         IOUtil.assertFileIsWritable(preAdapterDetailsOut);

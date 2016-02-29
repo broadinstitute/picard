@@ -86,7 +86,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             "</pre>" +
             "<hr />";
     public static interface ProgramInterface {
-        SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference,
+        SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference,
             final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals);
         public boolean needsReferenceSequence();
         public boolean supportsMetricAccumulationLevel();
@@ -103,9 +103,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectAlignmentSummaryMetrics program = new CollectAlignmentSummaryMetrics();
-                program.OUTPUT = new File(outbase + ".alignment_summary_metrics");
+                program.OUTPUT = new File(outbase + ".alignment_summary_metrics" + outext);
 
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -127,9 +127,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectInsertSizeMetrics program = new CollectInsertSizeMetrics();
-                program.OUTPUT = new File(outbase + ".insert_size_metrics");
+                program.OUTPUT = new File(outbase + ".insert_size_metrics" + outext);
                 program.Histogram_FILE = new File(outbase + ".insert_size_histogram.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -151,9 +151,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final QualityScoreDistribution program = new QualityScoreDistribution();
-                program.OUTPUT = new File(outbase + ".quality_distribution_metrics");
+                program.OUTPUT = new File(outbase + ".quality_distribution_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".quality_distribution.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -174,9 +174,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final MeanQualityByCycle program = new MeanQualityByCycle();
-                program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics");
+                program.OUTPUT = new File(outbase + ".quality_by_cycle_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".quality_by_cycle.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -197,9 +197,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectBaseDistributionByCycle program = new CollectBaseDistributionByCycle();
-                program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics");
+                program.OUTPUT = new File(outbase + ".base_distribution_by_cycle_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".base_distribution_by_cycle.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -220,10 +220,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectGcBiasMetrics program = new CollectGcBiasMetrics();
-                program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics");
-                program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics");
+                program.OUTPUT = new File(outbase + ".gc_bias.detail_metrics" + outext);
+                program.SUMMARY_OUTPUT = new File(outbase + ".gc_bias.summary_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".gc_bias.pdf");
 
                 program.INPUT = input;
@@ -250,9 +250,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return true;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectRnaSeqMetrics program = new CollectRnaSeqMetrics();
-                program.OUTPUT       = new File(outbase + ".rna_metrics");
+                program.OUTPUT       = new File(outbase + ".rna_metrics" + outext);
                 program.CHART_OUTPUT = new File(outbase + ".rna_coverage.pdf");
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
@@ -272,9 +272,10 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             @Override
             public boolean supportsMetricAccumulationLevel() { return false; }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectSequencingArtifactMetrics program = new CollectSequencingArtifactMetrics();
                 program.OUTPUT = new File(outbase);
+                program.FILE_EXTENSION = outext;
                 program.DB_SNP = dbSnp;
                 program.INTERVALS = intervals;
                 // Generally programs should not be accessing these directly but it might make things smoother
@@ -295,9 +296,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 return false;
             }
             @Override
-            public SinglePassSamProgram makeInstance(final String outbase, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
+            public SinglePassSamProgram makeInstance(final String outbase, final String outext, final File input, final File reference, final Set<MetricAccumulationLevel> metricAccumulationLevel, final File dbSnp, final File intervals) {
                 final CollectQualityYieldMetrics program = new CollectQualityYieldMetrics();
-                program.OUTPUT = new File(outbase + ".quality_yield_metrics");
+                program.OUTPUT = new File(outbase + ".quality_yield_metrics" + outext);
                 // Generally programs should not be accessing these directly but it might make things smoother
                 // to just set them anyway. These are set here to make sure that in case of a the derived class
                 // overrides
@@ -387,10 +388,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
                 log.warn("The " + program.toString() + " program does not support a metric accumulation level, but METRIC_ACCUMULATION_LEVEL" +
                         " was overridden in the command line. " + program.toString() + " will be run against the entire input.");
             }
-            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
 
-            // Add a file extension if desired
-            if (null != FILE_EXTENSION && !FILE_EXTENSION.isEmpty()) instance.OUTPUT = new File(instance.OUTPUT.getAbsolutePath() + FILE_EXTENSION);
+            final String outext = (null != FILE_EXTENSION) ? FILE_EXTENSION : ""; // Add a file extension if desired
+            final SinglePassSamProgram instance = program.makeInstance(OUTPUT, outext, INPUT, REFERENCE_SEQUENCE, METRIC_ACCUMULATION_LEVEL, DB_SNP, INTERVALS);
 
             // Generally programs should not be accessing these directly but it might make things smoother
             // to just set them anyway
