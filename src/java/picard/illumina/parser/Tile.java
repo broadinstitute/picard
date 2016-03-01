@@ -58,19 +58,19 @@ public class Tile {
 
         final Collection<TilePhasingValue> phasingValues = ensureSoleTilePhasingValuesPerRead(Arrays.asList(tilePhasingValues));
 
-        final Map<TileTemplateRead, Float> phasingMapLocal = new HashMap<TileTemplateRead, Float>();
-        final Map<TileTemplateRead, Float> prePhasingMapLocal = new HashMap<TileTemplateRead, Float>();
+        final Map<TileTemplateRead, Float> phasingMap = new HashMap<TileTemplateRead, Float>();
+        final Map<TileTemplateRead, Float> prePhasingMap = new HashMap<TileTemplateRead, Float>();
 
         /** For each of the TileReads, assign their phasing & prephasing values to the respective maps, which we will
          * use later to calculate the medians
          */
         for (final TilePhasingValue phasingValue : phasingValues) {
-            phasingMapLocal.put(phasingValue.getTileTemplateRead(), phasingValue.getPhasingValue());
-            prePhasingMapLocal.put(phasingValue.getTileTemplateRead(), phasingValue.getPrePhasingValue());
+            phasingMap.put(phasingValue.getTileTemplateRead(), phasingValue.getPhasingValue());
+            prePhasingMap.put(phasingValue.getTileTemplateRead(), phasingValue.getPrePhasingValue());
         }
 
-        this.phasingMap = Collections.unmodifiableMap(phasingMapLocal);
-        this.prePhasingMap = Collections.unmodifiableMap(prePhasingMapLocal);
+        this.phasingMap = Collections.unmodifiableMap(phasingMap);
+        this.prePhasingMap = Collections.unmodifiableMap(prePhasingMap);
     }
 
     /** Returns the number of this tile's parent lane. */

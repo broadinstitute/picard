@@ -40,8 +40,8 @@ public class LanePhasingMetricsCollector {
      * first and second (if available) reads
      */
     public LanePhasingMetricsCollector(final Collection<Tile> laneTiles) {
-        final Map<TileTemplateRead, Float> medianPhasingMapLocal = new TreeMap<TileTemplateRead, Float>();
-        final Map<TileTemplateRead, Float> medianPrePhasingMapLocal = new TreeMap<TileTemplateRead, Float>();
+        final Map<TileTemplateRead, Float> medianPhasingMap = new TreeMap<TileTemplateRead, Float>();
+        final Map<TileTemplateRead, Float> medianPrePhasingMap = new TreeMap<TileTemplateRead, Float>();
 
         final CollectionUtil.MultiMap<TileTemplateRead, Float> phasingValues = new CollectionUtil.MultiMap<TileTemplateRead, Float>();
         final CollectionUtil.MultiMap<TileTemplateRead, Float> prePhasingValues = new CollectionUtil.MultiMap<TileTemplateRead, Float>();
@@ -56,12 +56,12 @@ public class LanePhasingMetricsCollector {
 
         // Calculate the medians for the collected data
         for (final TileTemplateRead tileTemplateRead : phasingValues.keySet()) {
-            medianPhasingMapLocal.put(tileTemplateRead, medianPercentage(phasingValues.get(tileTemplateRead)));
-            medianPrePhasingMapLocal.put(tileTemplateRead, medianPercentage(prePhasingValues.get(tileTemplateRead)));
+            medianPhasingMap.put(tileTemplateRead, medianPercentage(phasingValues.get(tileTemplateRead)));
+            medianPrePhasingMap.put(tileTemplateRead, medianPercentage(prePhasingValues.get(tileTemplateRead)));
         }
 
-        this.medianPhasingMap = Collections.unmodifiableMap(medianPhasingMapLocal);
-        this.medianPrePhasingMap = Collections.unmodifiableMap(medianPrePhasingMapLocal);
+        this.medianPhasingMap = Collections.unmodifiableMap(medianPhasingMap);
+        this.medianPrePhasingMap = Collections.unmodifiableMap(medianPrePhasingMap);
     }
 
     public Map<TileTemplateRead, Float> getMedianPhasingMap() {

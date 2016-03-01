@@ -154,7 +154,7 @@ public class OutputMapping {
      */
     private TwoDIndex[] makeCycleToOutputIndexArray(final ReadStructure readStructure) {
         int totalCycles = readStructure.totalCycles;
-        final TwoDIndex[] cycleToOutputIndexLocal = new TwoDIndex[totalCycles + 1];
+        final TwoDIndex[] cycleToOutputIndex = new TwoDIndex[totalCycles + 1];
 
         final int [] outputCycles = getOutputCycles();
         final int [] outputLengths = getOutputReadLengths();
@@ -168,7 +168,7 @@ public class OutputMapping {
                     ++arrIndex;
                 }
 
-                cycleToOutputIndexLocal[i] = new TwoDIndex(arrIndex, elementIndex);
+                cycleToOutputIndex[i] = new TwoDIndex(arrIndex, elementIndex);
                 ++elementIndex;
                 ++outputCycleIndex;
             }
@@ -178,6 +178,6 @@ public class OutputMapping {
             throw new PicardException("Error in read structure outputCycles (" + StringUtil.intValuesToString(outputCycles) + ") and total cycles (" + totalCycles + ") OutputCycleIndex(" + outputCycleIndex + ")");
         }
 
-        return cycleToOutputIndexLocal;
+        return cycleToOutputIndex;
     }
 }

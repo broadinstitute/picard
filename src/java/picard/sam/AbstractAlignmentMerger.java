@@ -316,9 +316,9 @@ public abstract class AbstractAlignmentMerger {
             sink = new Sink(sorted1);
         }
         else { // catches queryname and unsorted
-            final SAMFileHeader headerLocal = this.header.clone();
-            headerLocal.setSortOrder(this.sortOrder);
-            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(headerLocal, true, this.targetBamFile);
+            final SAMFileHeader header = this.header.clone();
+            header.setSortOrder(this.sortOrder);
+            final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, this.targetBamFile);
             writer.setProgressLogger(new ProgressLogger(log, (int) 1e7, "Wrote", "records to output in queryname order"));
             sink = new Sink(writer);
         }
