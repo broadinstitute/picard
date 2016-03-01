@@ -46,10 +46,11 @@ import java.io.File;
                 "whole genome sequencing experiments, but only at a set of sampled positions.  " +
                 "It is important that the sampled positions be chosen so that they are spread out " +
                 "at least further than a read's length apart; otherwise, you run the risk of double-counting " +
-                "reads in the metrics.",
+                "reads in the metrics. If contig-sized intervals are needed, use INTERVALS argument in CollectWgsMetrics.",
         usageShort = "Writes whole genome sequencing-related metrics for a SAM or BAM file",
         programGroup = Metrics.class
 )
+
 public class CollectWgsMetricsFromSampledSites extends CollectWgsMetrics {
 
     @Option(shortName = "INTERVALS", doc = "An interval list file that contains the locations of the positions to assess.", optional = false)

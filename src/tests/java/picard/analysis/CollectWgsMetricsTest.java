@@ -171,4 +171,33 @@ public class CollectWgsMetricsTest extends CommandLineProgramTest {
         outfile = File.createTempFile("testWgsMetrics", ".txt");
         outfile.deleteOnExit();
     }
+
+    @Test
+    public void testLargeIntervals() throws IOException {
+        final File input = new File(TEST_DIR, "forMetrics.sam");
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        final File ref = new File(TEST_DIR, "merger.fasta");
+        final File intervals = new File(TEST_DIR, "largeIntervals.interval_list");
+        final int sampleSize = 1000;
+        outfile.deleteOnExit();
+        final String[] args = new String[] {
+                "INPUT="  + input.getAbsolutePath(),
+                "OUTPUT=" + outfile.getAbsolutePath(),
+                "REFERENCE_SEQUENCE=" + ref.getAbsolutePath(),
+                "INTERVALS=" + intervals.getAbsolutePath(),
+                "SAMPLE_SIZE=" + sampleSize
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 404);
+            Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.271403);
+            Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.182149);
+            Assert.assertEquals(metrics.PCT_EXC_UNPAIRED, 0.091075);
+
+        }
+    }
 }
