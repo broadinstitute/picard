@@ -39,6 +39,6 @@ public final class RrbsCpgDetailMetrics extends MultilevelMetrics {
 	public Integer TOTAL_SITES;
 	/** Number of times this CpG site was converted (TG for + strand, CA for - strand) */
 	public Integer CONVERTED_SITES;
-	/** TOTAL_BASES / CONVERTED_BASES */
+	/**  CpG CONVERTED_BASES / CpG TOTAL_BASES (fraction) */
 	public Double PCT_CONVERTED;
 }

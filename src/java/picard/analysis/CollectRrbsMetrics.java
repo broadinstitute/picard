@@ -63,41 +63,36 @@ import java.util.Set;
         programGroup = Metrics.class
 )
 public class CollectRrbsMetrics extends CommandLineProgram {
-    static final String USAGE_SUMMARY = "Collect metrics from reduced representation bisulfite sequencing (RRBS) data.  ";
-    static final String USAGE_DETAILS = "This tool collect metrics for RRBS data, based on the methylation status of cytosine (C) " +
-            "bases in both CpG and non-CpG sites across all reads of a BAM/SAM file. For a brief primer on bisulfite sequencing and " +
-            "cytosine methylation, see the " +
-            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6330'>GATK Dictionary</a>." +
-            "<br /><br />" +
-            "" +
-            "Since cytosine methylation is not exclusive for CpG \"hotspots\", the CollectRrbsMetrics tool outputs a summary table " +
-            "indicating the number of CpG and non-CpG cytosines as well as their conversion C -> T (+ strand) or G -> A (- strand) " +
-            "rates. The tool also outputs the numbers of reads having no CpG sites, and the numbers of reads discarded from the " +
-            "analysis due to inadequate size or excessive numbers of mismatches." +
-            "<br /><br />" +
-            "The tool also provides a table containing detailed information on CpG occurrence frequency, CpG conversion frequencies " +
-            "[C -> T (+ strand) or G -> A (- strand)], and the specific locations of the CpG sites in the genome. The conversion " +
-            "frequency helps determines the methylation status of a CpG site." +
-            "<br /><br />" +
-            "Finally, the tool provides graphical representation of four metrics in the form of a \".pdf\" document. These metrics " +
-            "are the bisulfite conversion rate for CpG and non-CpG cytosines, a distribution of the numbers of CpG sites as a " +
-            "function of CpG conversion rate, the distribution of CpG sites by read coverage, and the numbers of reads discarded due " +
-            "to high numbers of mismatches or inadequate read size." +
-            "" +
+    static final String USAGE_SUMMARY = "<b>Collects metrics from reduced representation bisulfite sequencing (Rrbs) data.</b>  ";
+    static final String USAGE_DETAILS = "<p>This tool uses reduced representation bisulfite sequencing (Rrbs) data to determine cytosine " +
+            "methylation status across all reads of a genomic DNA sequence.  For a primer on bisulfite sequencing and cytosine methylation, " +
+            "please see the corresponding <a href='https://www.broadinstitute.org/gatk/guide/article?id=6330'>GATK Dictionary entry</a>. </p>" +
+
+            "<p>Briefly, bisulfite reduction converts un-methylated cytosine (C) to uracil (U) bases.  Methylated sites are not converted " +
+            "because they are resistant to bisulfite reduction.  Subsequent to PCR amplification of the reaction products, bisulfite " +
+            "reduction manifests as [C -> T (+ strand) or G -> A (- strand)] base conversions.  Thus, conversion rates" +
+            " can be calculated from the reads as follows: [CR = converted/(converted + unconverted)]. Since methylated cytosines are " +
+            "protected against Rrbs-mediated conversion, the methylation rate (MR) is as follows:" +
+            "[MR = unconverted/(converted + unconverted) = (1 - CR)].</p>" +
+
+            "<p>The CpG CollectRrbsMetrics tool outputs three files including summary and detail metrics tables as well as a PDF file containing " +
+            "four graphs. These graphs are derived from the summary table and include a comparison of conversion rates for both CpG and non-CpG sites, " +
+            "the distribution of total numbers of CpG sites as a function of the CpG conversion rates, the distribution of CpG sites by the level of " +
+            "read coverage (depth), and the numbers of reads discarded resulting from either exceeding the mismatch rate or size (too short).  " +
+            "The detailed metrics table includes the coordinates of all of the CpG sites for the experiment as well as the conversion rates " +
+            "observed for each site.</p>" +
+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectRrbsMetrics \\<br />" +
+            "      R=reference_sequence.fasta \\<br />" +
             "      I=input.bam \\<br />" +
-            "      M=rrbs_metrics \\<br />" +
-            "      R=reference_sequence.fasta" +
+            "      M=basename_for_metrics_files" +
             "</pre>" +
-            "<hr />" +
-            "" +
-            "Please see " +
-            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsCpgDetailMetrics'>" +
-            "the RrbsCpgDetailMetrics documentation</a> and the " +
-            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsSummaryMetrics'>" +
-            "the RrbsSummaryMetrics documentation</a>for detailed explanations of the output metrics." +
+
+            "<p>Please see the CollectRrbsMetrics " +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#RrbsCpgDetailMetrics'>definitions</a>" +
+            " for a complete description of both the detail and summary metrics produced by this tool.</p>" +
             "<hr />";
 
 // Path to R file for plotting purposes

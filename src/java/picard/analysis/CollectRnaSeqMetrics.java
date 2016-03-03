@@ -49,12 +49,48 @@ import java.util.List;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = "Collect metrics about the alignment of RNA to various functional classes of loci in the genome:" +
-                "coding, intronic, UTR, intergenic, ribosomal. Also determines strand-specificity for strand-specific libraries.",
-        usageShort = "Produces RNA alignment metrics for a SAM or BAM file",
+        usage = CollectRnaSeqMetrics.USAGE_SUMMARY + CollectRnaSeqMetrics.USAGE_DETAILS,
+        usageShort = CollectRnaSeqMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 public class CollectRnaSeqMetrics extends SinglePassSamProgram {
+
+    static final String USAGE_SUMMARY = "<b>Produces RNA alignment metrics for a SAM or BAM file.</b>  ";
+    static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containing the aligned reads from an RNAseq experiment and " +
+            "produces metrics describing the distribution of the bases within the transcripts.  It calculates the total numbers and the " +
+            "percentages of nucleotides within specific genomic regions including untranslated regions (UTRs), introns, intergenic sequences " +
+            "(between discrete genes), and peptide-coding sequences (exons). This tool also determines the numbers of bases that pass " +
+            "quality filters that are specific to Illumina data (PF_BASES); for more information please see the corresponding " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>Dictionary</a>GATK entry.</p>" +
+
+            "<p>Other metrics include the median coverage (depth), 5'/3'-biases, and the numbers of reads with the correct/incorrect " +
+            "strand designation. The 5'/3'-bias results from errors introduced by reverse transcriptase enzymes during library construction, " +
+            "ultimately leading to the over-representation of either the 5' or 3' ends of transcripts.  Please see the CollectRnaSeqMetrics " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> for details on " +
+            "how these biases are calculated. </p>" +
+
+            "<p>The sequence input must be a valid SAM/BAM file containing RNAseq data aligned by an RNAseq-aware genome aligner such as " +
+            "<a href='http://github.com/alexdobin/STAR'>STAR</a> or <a href='http://ccb.jhu.edu/software/tophat/index.shtml'>TopHat</a>. " +
+            "The tool also requires a REF_FLAT file, a tab-delimited file containing information about the location of " +
+            "RNA transcripts, exon start and stop sites, etc. For more information on the REF_FLAT format, see the following " +
+            "<a href='http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat'>description</a>.  Build-specific REF_FLAT files " +
+            "can be obtained <a href='http://hgdownload.cse.ucsc.edu/goldenPath/'>here</a>.</p>"+
+
+            "<pre>" +
+            "<h4>Usage example:</h4>" +
+            "java -jar picard.jar CollectRnaSeqMetrics \\<br />" +
+            "      I=input.bam \\<br />" +
+            "      O=output.RNA_Metrics \\<br />" +
+            "      REF_FLAT=ref_flat.txt \\<br />" +
+            "      STRAND=SECOND_READ_TRANSCRIPTION_STRAND \\<br />" +
+            "      RIBOSOMAL_INTERVALS=ribosomal.interval_list <br />" +
+            "</pre>" +
+
+            "<p>Please see the CollectRnaSeqMetrics " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#RnaSeqMetrics'>definitions</a> " +
+            "for a complete description of the metrics produced by this tool.</p>" +
+            "<hr />";
+
     private static final Log LOG = Log.getInstance(CollectRnaSeqMetrics.class);
 
     @Option(doc="Gene annotations in refFlat form.  Format described here: http://genome.ucsc.edu/goldenPath/gbdDescriptionsOld.html#RefFlat")
@@ -62,7 +98,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
 
     @Option(doc="Location of rRNA sequences in genome, in interval_list format.  " +
             "If not specified no bases will be identified as being ribosomal.  " +
-            "Format described here: http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html", optional = true)
+            "Format described <a href=\"http://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalList.html\">here</a>:", optional = true)
     public File RIBOSOMAL_INTERVALS;
 
     @Option(shortName = "STRAND", doc="For strand-specific library prep. " +
@@ -79,7 +115,7 @@ public class CollectRnaSeqMetrics extends SinglePassSamProgram {
     "These reads are not counted as ")
     public Set<String> IGNORE_SEQUENCE = new HashSet<String>();
 
-    @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair by this must in order to be considered rRNA.")
+    @Option(doc="This percentage of the length of a fragment must overlap one of the ribosomal intervals for a read or read pair to be considered rRNA.")
     public double RRNA_FRAGMENT_PERCENTAGE = 0.8;
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")

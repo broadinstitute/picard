@@ -38,13 +38,13 @@ public final class RrbsSummaryMetrics extends MultilevelMetrics {
 	public Integer NON_CPG_BASES;
 	/** Number of times a non-CpG cytosine was converted (C->T for +, G->A for -) */
 	public Integer NON_CPG_CONVERTED_BASES;
-	/** NON_CPG_BASES / NON_CPG_CONVERTED_BASES */
+	/** NON_CPG_CONVERTED_BASES / NON_CPG_BASES (fraction) */
 	public Double PCT_NON_CPG_BASES_CONVERTED;
 	/** Number of CpG sites encountered */
 	public Integer CPG_BASES_SEEN;
 	/** Number of CpG sites that were converted (TG for +, CA for -) */
 	public Integer CPG_BASES_CONVERTED;
-	/** CPG_BASES_SEEN / CPG_BASES_CONVERTED */
+	/** CPG_BASES_CONVERTED / CPG_BASES_SEEN (fraction) */
 	public Double PCT_CPG_BASES_CONVERTED;
 	/** Mean coverage of CpG sites */
 	public Double MEAN_CPG_COVERAGE;

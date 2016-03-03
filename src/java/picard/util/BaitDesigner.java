@@ -39,11 +39,34 @@ import java.util.regex.Pattern;
  * @author Tim Fennell
  */
 @CommandLineProgramProperties(
-        usage = "Designs baits or oligos for hybrid selection reactions.",
-        usageShort = "Designs baits or oligos for hybrid selection reactions.",
-        programGroup = None.class
-)
+                usage = BaitDesigner.USAGE_SUMMARY + BaitDesigner.USAGE_DETAILS,
+                usageShort = BaitDesigner.USAGE_SUMMARY,
+                programGroup = None.class
+        )
 public class BaitDesigner extends CommandLineProgram {
+static final String USAGE_SUMMARY = "<b>Designs oligonucleotide baits for hybrid selection reactions.</b>  ";
+static final String USAGE_DETAILS = "<p>This tool is used to design custom bait sets for hybrid selection experiments. The following " +
+        "files are input into BaitDesigner: a (TARGET) interval list indicating the sequences of interest, e.g. exons with their " +
+        "respective coordinates, a reference sequence, and a unique identifier string (DESIGN_NAME). </p>" +
+
+        "<p>The tool will output interval_list files of both bait and target sequences as well as the actual bait sequences in " +
+        "FastA format. At least two baits are output for each target sequence, with greater numbers for larger intervals. Although " +
+        "the default values for both bait size  (120 bases) nd offsets (80 bases) are suitable for most applications, these values can " +
+        "be customized. Offsets represent the distance between sequential baits on a contiguous stretch of target DNA sequence. </p>"+
+
+        "<p>The tool will also output a pooled set of 55,000 (default) oligonucleotides representing all of the baits redundantly. " +
+        "This redundancy achieves a uniform concentration of oligonucleotides for synthesis by a vendor as well as equal numbers" +
+        "of each bait to prevent bias during the hybrid selection reaction. </p>" +
+
+        "<h4>Usage example:</h4>" +
+        "<pre>" +
+        "java -jar picard.jar BaitDesigner \\<br /> " +
+        "     TARGET=targets.interval_list \\<br /> " +
+        "     DESIGN_NAME=new_baits \\<br /> " +
+        "     R=reference_sequence.fasta " +
+        "</pre> " +
+        "<hr />";
+
     /**
      * Subclass of Interval for representing Baits, that caches the bait sequence.
      */
