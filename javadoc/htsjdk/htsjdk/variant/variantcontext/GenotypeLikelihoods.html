@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":10,"i2":41,"i3":9,"i4":9,"i5":9,"i6":9,"i7":41,"i8":10,"i9":10,"i10":10,"i11":10,"i12":9,"i13":10,"i14":42,"i15":10,"i16":9,"i17":9,"i18":10};
+var methods = {"i0":9,"i1":9,"i2":10,"i3":41,"i4":9,"i5":9,"i6":9,"i7":9,"i8":41,"i9":9,"i10":10,"i11":10,"i12":10,"i13":10,"i14":9,"i15":10,"i16":42,"i17":10,"i18":9,"i19":9,"i20":9,"i21":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -148,16 +148,22 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</a></span></code>
-<div class="block">The maximum number of alleles that we can represent as genotype likelihoods</div>
+<td class="colFirst"><code>protected static java.util.Map&lt;java.lang.Integer,java.util.List&lt;java.util.List&lt;java.lang.Integer&gt;&gt;&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#anyploidPloidyToPLIndexToAlleleIndices">anyploidPloidyToPLIndexToAlleleIndices</a></span></code>
+<div class="block">A cache of PL index to a list of alleles for any ploidy.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_PL">MAX_PL</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</a></span></code>
+<div class="block">The maximum number of diploid alternate alleles that we can represent as genotype likelihoods</div>
+</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_PL">MAX_PL</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>protected static int[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#PLindexConversion">PLindexConversion</a></span></code>&nbsp;</td>
 </tr>
@@ -177,91 +183,114 @@ extends java.lang.Object</pre>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>protected static java.util.List&lt;java.util.List&lt;java.lang.Integer&gt;&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#calculateAnyploidPLcache-int-int-">calculateAnyploidPLcache</a></span>(int&nbsp;altAlleles,
+                        int&nbsp;ploidy)</code>
+<div class="block">Calculate the cache of allele indices for each PL index for a ploidy.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#calculatePLindex-int-int-">calculatePLindex</a></span>(int&nbsp;allele1Index,
                 int&nbsp;allele2Index)</code>&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#equals-java.lang.Object-">equals</a></span>(java.lang.Object&nbsp;aThat)</code>&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#fromGLField-java.lang.String-">fromGLField</a></span>(java.lang.String&nbsp;GLs)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#fromLog10Likelihoods-double:A-">fromLog10Likelihoods</a></span>(double[]&nbsp;log10Likelihoods)</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#fromPLField-java.lang.String-">fromPLField</a></span>(java.lang.String&nbsp;PLs)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#fromPLs-int:A-">fromPLs</a></span>(int[]&nbsp;pls)</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.GenotypeLikelihoodsAllelePair.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods.GenotypeLikelihoodsAllelePair</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAllelePair-int-">getAllelePair</a></span>(int&nbsp;PLindex)</code>
-<div class="block">get the allele index pair for the given PL</div>
+<div class="block">Get the diploid allele index pair for the given PL index</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static <a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.GenotypeLikelihoodsAllelePair.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods.GenotypeLikelihoodsAllelePair</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAllelePairUsingDeprecatedOrdering-int-">getAllelePairUsingDeprecatedOrdering</a></span>(int&nbsp;PLindex)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
+<td class="colFirst"><code>static java.util.List&lt;java.lang.Integer&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAlleles-int-int-">getAlleles</a></span>(int&nbsp;PLindex,
+          int&nbsp;ploidy)</code>
+<div class="block">Get the allele ploidy indices for the given PL index
+ Must use the same ploidy as @see #initializeAnyploidPLIndexToAlleleIndices</div>
+</td>
+</tr>
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>java.util.EnumMap&lt;<a href="../../../htsjdk/variant/variantcontext/GenotypeType.html" title="enum in htsjdk.variant.variantcontext">GenotypeType</a>,java.lang.Double&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAsMap-boolean-">getAsMap</a></span>(boolean&nbsp;normalizeFromLog10)</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>int[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAsPLs--">getAsPLs</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAsString--">getAsString</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>double[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAsVector--">getAsVector</a></span>()</code>
-<div class="block">Returns the genotypes likelihoods in negative log10 vector format.</div>
+<div class="block">The genotypes likelihoods in -10log10(x) vector format.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getGQLog10FromLikelihoods-int-double:A-">getGQLog10FromLikelihoods</a></span>(int&nbsp;iOfChoosenGenotype,
                          double[]&nbsp;likelihoods)</code>&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getLog10GQ-htsjdk.variant.variantcontext.Genotype-java.util.List-">getLog10GQ</a></span>(<a href="../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;genotype,
           java.util.List&lt;<a href="../../../htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a>&gt;&nbsp;vcAlleles)</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getLog10GQ-htsjdk.variant.variantcontext.GenotypeType-">getLog10GQ</a></span>(<a href="../../../htsjdk/variant/variantcontext/GenotypeType.html" title="enum in htsjdk.variant.variantcontext">GenotypeType</a>&nbsp;genotype)</code>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getLog10GQ-htsjdk.variant.variantcontext.Genotype-htsjdk.variant.variantcontext.VariantContext-">getLog10GQ</a></span>(<a href="../../../htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a>&nbsp;genotype,
           <a href="../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;context)</code>&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static int[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getPLIndecesOfAlleles-int-int-">getPLIndecesOfAlleles</a></span>(int&nbsp;allele1Index,
                      int&nbsp;allele2Index)</code>
 <div class="block">get the PL indexes (AA, AB, BB) for the given allele pair; assumes allele1Index &lt;= allele2Index.</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i19" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#initializeAnyploidPLIndexToAlleleIndices-int-int-">initializeAnyploidPLIndexToAlleleIndices</a></span>(int&nbsp;altAlleles,
+                                        int&nbsp;ploidy)</code>
+<div class="block">Initialize cache of allele anyploid indices
+ If initialized multiple times with the same ploidy, the alternate alleles from the last initialization will be used</div>
+</td>
+</tr>
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#numLikelihoods-int-int-">numLikelihoods</a></span>(int&nbsp;numAlleles,
               int&nbsp;ploidy)</code>
@@ -270,7 +299,7 @@ extends java.lang.Object</pre>
  where P = ploidy (number of chromosomes) and N = total # of alleles.</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.html#toString--">toString</a></span>()</code>&nbsp;</td>
 </tr>
@@ -309,18 +338,30 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">
+<a name="MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</h4>
-<pre>public static final&nbsp;int MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</pre>
-<div class="block">The maximum number of alleles that we can represent as genotype likelihoods</div>
+<h4>MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</h4>
+<pre>public static final&nbsp;int MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</pre>
+<div class="block">The maximum number of diploid alternate alleles that we can represent as genotype likelihoods</div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
-<dd><a href="../../../constant-values.html#htsjdk.variant.variantcontext.GenotypeLikelihoods.MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">Constant Field Values</a></dd>
+<dd><a href="../../../constant-values.html#htsjdk.variant.variantcontext.GenotypeLikelihoods.MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">Constant Field Values</a></dd>
 </dl>
+</li>
+</ul>
+<a name="anyploidPloidyToPLIndexToAlleleIndices">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>anyploidPloidyToPLIndexToAlleleIndices</h4>
+<pre>protected static final&nbsp;java.util.Map&lt;java.lang.Integer,java.util.List&lt;java.util.List&lt;java.lang.Integer&gt;&gt;&gt; anyploidPloidyToPLIndexToAlleleIndices</pre>
+<div class="block">A cache of PL index to a list of alleles for any ploidy.
+ For example, for a ploidy of 3, the allele lists for each PL index is:
+ {0,0,0}, {0,0,1}, {0,1,1}, {1,1,1}, {0,0,2}, {0,1,2}, {1,1,2}, {0,2,2}, {1,2,2}, {2,2,2}</div>
 </li>
 </ul>
 <a name="PLindexConversion">
@@ -385,11 +426,12 @@ public static final&nbsp;<a href="../../../htsjdk/variant/variantcontext/Genotyp
 <li class="blockList">
 <h4>getAsVector</h4>
 <pre>public&nbsp;double[]&nbsp;getAsVector()</pre>
-<div class="block">Returns the genotypes likelihoods in negative log10 vector format.  pr{AA} = x, this
+<div class="block">The genotypes likelihoods in -10log10(x) vector format.  pr{AA} = x, this
  vector returns math.log10(x) for each of the genotypes.  Can return null if the
  genotype likelihoods are "missing".</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
+<dd>genotypes likelihoods in negative log10 vector format</dd>
 </dl>
 </li>
 </ul>
@@ -498,6 +540,25 @@ public&nbsp;double&nbsp;getLog10GQ(<a href="../../../htsjdk/variant/variantconte
                                                double[]&nbsp;likelihoods)</pre>
 </li>
 </ul>
+<a name="calculateAnyploidPLcache-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>calculateAnyploidPLcache</h4>
+<pre>protected static&nbsp;java.util.List&lt;java.util.List&lt;java.lang.Integer&gt;&gt;&nbsp;calculateAnyploidPLcache(int&nbsp;altAlleles,
+                                                                                            int&nbsp;ploidy)</pre>
+<div class="block">Calculate the cache of allele indices for each PL index for a ploidy.
+ Calculation in @see #calculatePLIndexToAlleleIndices</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>altAlleles</code> - Number of alternate alleles</dd>
+<dd><code>ploidy</code> - Number of chromosomes in set</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>PL index to the alleles of general ploidy over all possible alternate alleles</dd>
+</dl>
+</li>
+</ul>
 <a name="numLikelihoods-int-int-">
 <!--   -->
 </a>
@@ -553,12 +614,54 @@ public&nbsp;double&nbsp;getLog10GQ(<a href="../../../htsjdk/variant/variantconte
 <li class="blockList">
 <h4>getAllelePair</h4>
 <pre>public static&nbsp;<a href="../../../htsjdk/variant/variantcontext/GenotypeLikelihoods.GenotypeLikelihoodsAllelePair.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods.GenotypeLikelihoodsAllelePair</a>&nbsp;getAllelePair(int&nbsp;PLindex)</pre>
-<div class="block">get the allele index pair for the given PL</div>
+<div class="block">Get the diploid allele index pair for the given PL index</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>PLindex</code> - the PL index</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>the allele index pair</dd>
+<dd>the diploid allele index pair</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalStateException</code> - if PLindex is negative value or greater than the cache computed by @see #calculateDiploidPLcache</dd>
+</dl>
+</li>
+</ul>
+<a name="initializeAnyploidPLIndexToAlleleIndices-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>initializeAnyploidPLIndexToAlleleIndices</h4>
+<pre>public static&nbsp;void&nbsp;initializeAnyploidPLIndexToAlleleIndices(int&nbsp;altAlleles,
+                                                            int&nbsp;ploidy)</pre>
+<div class="block">Initialize cache of allele anyploid indices
+ If initialized multiple times with the same ploidy, the alternate alleles from the last initialization will be used</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>altAlleles</code> - number of alternate alleles</dd>
+<dd><code>ploidy</code> - number of chromosomes</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalArgumentException</code> - if altAlleles or ploidy &lt= 0</dd>
+</dl>
+</li>
+</ul>
+<a name="getAlleles-int-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getAlleles</h4>
+<pre>public static&nbsp;java.util.List&lt;java.lang.Integer&gt;&nbsp;getAlleles(int&nbsp;PLindex,
+                                                           int&nbsp;ploidy)</pre>
+<div class="block">Get the allele ploidy indices for the given PL index
+ Must use the same ploidy as @see #initializeAnyploidPLIndexToAlleleIndices</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>PLindex</code> - the PL index</dd>
+<dd><code>ploidy</code> - number of chromosomes</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the ploidy allele indices</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code>java.lang.IllegalStateException</code> - if @see #anyploidPloidyToPLIndexToAlleleIndices does not contain the requested ploidy or PL index</dd>
 </dl>
 </li>
 </ul>

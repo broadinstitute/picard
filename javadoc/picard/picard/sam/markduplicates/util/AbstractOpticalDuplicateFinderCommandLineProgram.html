@@ -263,7 +263,7 @@ public&nbsp;java.lang.String READ_NAME_REGEX</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>OPTICAL_DUPLICATE_PIXEL_DISTANCE</h4>
-<pre><a href="../../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../../picard/cmdline/Option.html#doc--">doc</a>="The maximum offset between two duplicte clusters in order to consider them optical duplicates. This should usually be set to some fairly small number (e.g. 5-10 pixels) unless using later versions of the Illumina pipeline that multiply pixel values by 10, in which case 50-100 is more normal.")
+<pre><a href="../../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../../picard/cmdline/Option.html#doc--">doc</a>="The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is moreappropriate. For other platforms and models, users should experiment to find what works best.")
 public&nbsp;int OPTICAL_DUPLICATE_PIXEL_DISTANCE</pre>
 </li>
 </ul>

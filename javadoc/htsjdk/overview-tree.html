@@ -515,7 +515,7 @@
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/LinearIndex.html" title="class in htsjdk.samtools"><span class="typeNameLink">LinearIndex</span></a></li>
 <li type="circle">htsjdk.tribble.index.linear.<a href="htsjdk/tribble/index/linear/LinearIndex.ChrIndex.html" title="class in htsjdk.tribble.index.linear"><span class="typeNameLink">LinearIndex.ChrIndex</span></a> (implements htsjdk.tribble.index.<a href="htsjdk/tribble/index/ChrIndex.html" title="interface in htsjdk.tribble.index">ChrIndex</a>)</li>
 <li type="circle">htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/LineReaderUtil.html" title="class in htsjdk.tribble.readers"><span class="typeNameLink">LineReaderUtil</span></a></li>
-<li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/LocusComparator.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">LocusComparator</span></a>&lt;T&gt; (implements java.util.Comparator&lt;T&gt;)</li>
+<li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/LocusComparator.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">LocusComparator</span></a>&lt;T&gt; (implements java.util.Comparator&lt;T&gt;, java.io.Serializable)</li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/LocusImpl.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">LocusImpl</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/Locus.html" title="interface in htsjdk.samtools.util">Locus</a>)</li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Log</span></a></li>
 <li type="circle">htsjdk.samtools.cram.io.<a href="htsjdk/samtools/cram/io/LTF8.html" title="class in htsjdk.samtools.cram.io"><span class="typeNameLink">LTF8</span></a></li>
@@ -530,7 +530,7 @@
 </ul>
 </li>
 <li type="circle">htsjdk.samtools.metrics.<a href="htsjdk/samtools/metrics/MetricsFile.html" title="class in htsjdk.samtools.metrics"><span class="typeNameLink">MetricsFile</span></a>&lt;BEAN,HKEY&gt; (implements java.io.Serializable)</li>
-<li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/Murmur3.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Murmur3</span></a></li>
+<li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/Murmur3.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">Murmur3</span></a> (implements java.io.Serializable)</li>
 <li type="circle">htsjdk.samtools.cram.common.<a href="htsjdk/samtools/cram/common/MutableInt.html" title="class in htsjdk.samtools.cram.common"><span class="typeNameLink">MutableInt</span></a></li>
 <li type="circle">htsjdk.samtools.filter.<a href="htsjdk/samtools/filter/NotPrimaryAlignmentFilter.html" title="class in htsjdk.samtools.filter"><span class="typeNameLink">NotPrimaryAlignmentFilter</span></a> (implements htsjdk.samtools.filter.<a href="htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>)</li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/NotPrimarySkippingIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">NotPrimarySkippingIterator</span></a></li>
@@ -621,7 +621,7 @@
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMTextWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMTextWriter</span></a></li>
 </ul>
 </li>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMHeaderRecordComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMHeaderRecordComparator</span></a>&lt;T&gt; (implements java.util.Comparator&lt;T&gt;)</li>
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMHeaderRecordComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMHeaderRecordComparator</span></a>&lt;T&gt; (implements java.util.Comparator&lt;T&gt;, java.io.Serializable)</li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SamInputResource.html" title="class in htsjdk.samtools"><span class="typeNameLink">SamInputResource</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMLineParser.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMLineParser</span></a></li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamLocusIterator.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">SamLocusIterator</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;T&gt;, java.lang.Iterable&lt;T&gt;)</li>
@@ -645,12 +645,12 @@
 </ul>
 </li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.SAMTagAndValue.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecord.SAMTagAndValue</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordCoordinateComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordCoordinateComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>)</li>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordDuplicateComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>)</li>
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordCoordinateComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordCoordinateComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>, java.io.Serializable)</li>
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordDuplicateComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>, java.io.Serializable)</li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/SamRecordIntervalIteratorFactory.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">SamRecordIntervalIteratorFactory</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordQueryNameComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>)
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordQueryNameComparator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>, java.io.Serializable)
 <ul>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordQueryHashComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordQueryHashComparator</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordQueryHashComparator.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordQueryHashComparator</span></a> (implements java.io.Serializable)</li>
 </ul>
 </li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordSetBuilder.html" title="class in htsjdk.samtools"><span class="typeNameLink">SAMRecordSetBuilder</span></a> (implements java.lang.Iterable&lt;T&gt;)</li>
@@ -781,7 +781,7 @@
 </li>
 <li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContext</span></a> (implements htsjdk.tribble.<a href="htsjdk/tribble/Feature.html" title="interface in htsjdk.tribble">Feature</a>, java.io.Serializable)</li>
 <li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextBuilder.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContextBuilder</span></a></li>
-<li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextComparator.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContextComparator</span></a> (implements java.util.Comparator&lt;T&gt;)</li>
+<li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextComparator.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContextComparator</span></a> (implements java.util.Comparator&lt;T&gt;, java.io.Serializable)</li>
 <li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextUtils.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContextUtils</span></a></li>
 <li type="circle">htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextUtils.JexlVCMatchExp.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">VariantContextUtils.JexlVCMatchExp</span></a></li>
 <li type="circle">htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html" title="class in htsjdk.variant.variantcontext.writer"><span class="typeNameLink">VariantContextWriterBuilder</span></a></li>

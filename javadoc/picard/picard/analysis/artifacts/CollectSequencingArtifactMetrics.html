@@ -166,34 +166,38 @@ extends <a href="../../../picard/analysis/SinglePassSamProgram.html" title="clas
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#DB_SNP">DB_SNP</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#FILE_EXTENSION">FILE_EXTENSION</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#INCLUDE_UNPAIRED">INCLUDE_UNPAIRED</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#INTERVALS">INTERVALS</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#MAXIMUM_INSERT_SIZE">MAXIMUM_INSERT_SIZE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#MINIMUM_INSERT_SIZE">MINIMUM_INSERT_SIZE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#MINIMUM_MAPPING_QUALITY">MINIMUM_MAPPING_QUALITY</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#MINIMUM_QUALITY_SCORE">MINIMUM_QUALITY_SCORE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#TANDEM_READS">TANDEM_READS</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#USE_OQ">USE_OQ</a></span></code>&nbsp;</td>
 </tr>
@@ -426,11 +430,23 @@ public&nbsp;int CONTEXT_SIZE</pre>
 <a name="CONTEXTS_TO_PRINT">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>CONTEXTS_TO_PRINT</h4>
 <pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="If specified, only print results for these contexts in the detail metrics output. However, the summary metrics output will still take all contexts into consideration.")
 public&nbsp;java.util.Set&lt;java.lang.String&gt; CONTEXTS_TO_PRINT</pre>
+</li>
+</ul>
+<a name="FILE_EXTENSION">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>FILE_EXTENSION</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="EXT",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Append the given file extension to all metric file names (ex. OUTPUT.pre_adapter_summary_metrics.EXT). None if null",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;java.lang.String FILE_EXTENSION</pre>
 </li>
 </ul>
 </li>

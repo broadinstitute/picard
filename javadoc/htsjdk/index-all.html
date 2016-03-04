@@ -629,6 +629,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFConstants.html#ANCESTRAL_ALLELE_KEY">ANCESTRAL_ALLELE_KEY</a></span> - Static variable in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFConstants.html" title="class in htsjdk.variant.vcf">VCFConstants</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#anyploidPloidyToPLIndexToAlleleIndices">anyploidPloidyToPLIndexToAlleleIndices</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
+<dd>
+<div class="block">A cache of PL index to a list of alleles for any ploidy.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/writer/Writer.html#AP_delta">AP_delta</a></span> - Variable in class htsjdk.samtools.cram.encoding.writer.<a href="htsjdk/samtools/cram/encoding/writer/Writer.html" title="class in htsjdk.samtools.cram.encoding.writer">Writer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/encoding/reader/AbstractReader.html#APDelta">APDelta</a></span> - Variable in class htsjdk.samtools.cram.encoding.reader.<a href="htsjdk/samtools/cram/encoding/reader/AbstractReader.html" title="class in htsjdk.samtools.cram.encoding.reader">AbstractReader</a></dt>
@@ -1568,6 +1572,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/VariantContextUtils.html#calculateAltAlleleFrequency-htsjdk.variant.variantcontext.VariantContext-">calculateAltAlleleFrequency(VariantContext)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextUtils.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils</a></dt>
 <dd>
 <div class="block">Computes the alternate allele frequency at the provided <a href="htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext"><code>VariantContext</code></a> by dividing its "AN" by its "AC".</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#calculateAnyploidPLcache-int-int-">calculateAnyploidPLcache(int, int)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
+<dd>
+<div class="block">Calculate the cache of allele indices for each PL index for a ploidy.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/VariantContextUtils.html#calculateChromosomeCounts-htsjdk.variant.variantcontext.VariantContext-java.util.Map-boolean-">calculateChromosomeCounts(VariantContext, Map&lt;String, Object&gt;, boolean)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContextUtils.html" title="class in htsjdk.variant.variantcontext">VariantContextUtils</a></dt>
 <dd>
@@ -5261,7 +5269,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAllelePair-int-">getAllelePair(int)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
 <dd>
-<div class="block">get the allele index pair for the given PL</div>
+<div class="block">Get the diploid allele index pair for the given PL index</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAllelePairUsingDeprecatedOrdering-int-">getAllelePairUsingDeprecatedOrdering(int)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
 <dd>
@@ -5271,6 +5279,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Genotype.html#getAlleles--">getAlleles()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Genotype.html" title="class in htsjdk.variant.variantcontext">Genotype</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAlleles-int-int-">getAlleles(int, int)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
+<dd>
+<div class="block">Get the allele ploidy indices for the given PL index
+ Must use the same ploidy as @see #initializeAnyploidPLIndexToAlleleIndices</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/VariantContext.html#getAlleles--">getAlleles()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a></dt>
 <dd>
 <div class="block">Gets the alleles.</div>
@@ -5310,7 +5323,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#getAsVector--">getAsVector()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
 <dd>
-<div class="block">Returns the genotypes likelihoods in negative log10 vector format.</div>
+<div class="block">The genotypes likelihoods in -10log10(x) vector format.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/AbstractSAMHeaderRecord.html#getAttribute-java.lang.String-">getAttribute(String)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/AbstractSAMHeaderRecord.html" title="class in htsjdk.samtools">AbstractSAMHeaderRecord</a></dt>
 <dd>&nbsp;</dd>
@@ -8827,6 +8840,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFSimpleHeaderLine.html#initialize-java.lang.String-java.util.Map-">initialize(String, Map&lt;String, String&gt;)</a></span> - Method in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFSimpleHeaderLine.html" title="class in htsjdk.variant.vcf">VCFSimpleHeaderLine</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#initializeAnyploidPLIndexToAlleleIndices-int-int-">initializeAnyploidPLIndexToAlleleIndices(int, int)</a></span> - Static method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
+<dd>
+<div class="block">Initialize cache of allele anyploid indices
+ If initialized multiple times with the same ploidy, the alternate alleles from the last initialization will be used</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#initializeCigar-htsjdk.samtools.Cigar-">initializeCigar(Cigar)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
 <dd>
 <div class="block">For setting the Cigar string when BAMRecord has decoded it.</div>
@@ -10560,10 +10578,6 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/bcf2/BCF2Utils.html#MAX_ALLELES_IN_GENOTYPES">MAX_ALLELES_IN_GENOTYPES</a></span> - Static variable in class htsjdk.variant.bcf2.<a href="htsjdk/variant/bcf2/BCF2Utils.html" title="class in htsjdk.variant.bcf2">BCF2Utils</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">MAX_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
-<dd>
-<div class="block">The maximum number of alleles that we can represent as genotype likelihoods</div>
-</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/GenomicIndexUtil.html#MAX_BINS">MAX_BINS</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/GenomicIndexUtil.html" title="class in htsjdk.samtools">GenomicIndexUtil</a></dt>
 <dd>
 <div class="block">Reports the maximum number of bins that can appear in a binning index.</div>
@@ -10572,6 +10586,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BlockCompressedStreamConstants.html#MAX_COMPRESSED_BLOCK_SIZE">MAX_COMPRESSED_BLOCK_SIZE</a></span> - Static variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BlockCompressedStreamConstants.html" title="class in htsjdk.samtools.util">BlockCompressedStreamConstants</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html#MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED">MAX_DIPLOID_ALT_ALLELES_THAT_CAN_BE_GENOTYPED</a></span> - Static variable in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext">GenotypeLikelihoods</a></dt>
+<dd>
+<div class="block">The maximum number of diploid alternate alleles that we can represent as genotype likelihoods</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/linear/LinearIndex.html#MAX_FEATURES_PER_BIN">MAX_FEATURES_PER_BIN</a></span> - Static variable in class htsjdk.tribble.index.linear.<a href="htsjdk/tribble/index/linear/LinearIndex.html" title="class in htsjdk.tribble.index.linear">LinearIndex</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFConstants.html#MAX_GENOTYPE_QUAL">MAX_GENOTYPE_QUAL</a></span> - Static variable in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFConstants.html" title="class in htsjdk.variant.vcf">VCFConstants</a></dt>
@@ -10807,8 +10825,6 @@
 </a>
 <h2 class="title">N</h2>
 <dl>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractProgressLogger.html#n">n</a></span> - Variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractProgressLogger.html" title="class in htsjdk.samtools.util">AbstractProgressLogger</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/SequenceUtil.html#n">n</a></span> - Static variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/SequenceUtil.html" title="class in htsjdk.samtools.util">SequenceUtil</a></dt>
 <dd>
 <div class="block">Byte typed variables for all normal bases.</div>
@@ -11123,8 +11139,6 @@
  WARNING: TO ENABLE THE LAZY VERSION OF THIS CLASS, NO METHODS SHOULD DIRECTLY
  ACCESS THIS VARIABLE.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractProgressLogger.html#noun">noun</a></span> - Variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractProgressLogger.html" title="class in htsjdk.samtools.util">AbstractProgressLogger</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFConstants.html#NULL_ALLELE">NULL_ALLELE</a></span> - Static variable in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFConstants.html" title="class in htsjdk.variant.vcf">VCFConstants</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#NULL_QUALS">NULL_QUALS</a></span> - Static variable in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
@@ -17275,8 +17289,6 @@ the order they are declared.</div>
 <dt><a href="htsjdk/variant/vcf/VCFUtils.html" title="class in htsjdk.variant.vcf"><span class="typeNameLink">VCFUtils</span></a> - Class in <a href="htsjdk/variant/vcf/package-summary.html">htsjdk.variant.vcf</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFUtils.html#VCFUtils--">VCFUtils()</a></span> - Constructor for class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFUtils.html" title="class in htsjdk.variant.vcf">VCFUtils</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractProgressLogger.html#verb">verb</a></span> - Variable in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractProgressLogger.html" title="class in htsjdk.samtools.util">AbstractProgressLogger</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/samtools/cram/common/Version.html" title="class in htsjdk.samtools.cram.common"><span class="typeNameLink">Version</span></a> - Class in <a href="htsjdk/samtools/cram/common/package-summary.html">htsjdk.samtools.cram.common</a></dt>
 <dd>

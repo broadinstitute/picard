@@ -108,16 +108,20 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd>java.util.Comparator&lt;T&gt;</dd>
+<dd>java.io.Serializable, java.util.Comparator&lt;T&gt;</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">SAMHeaderRecordComparator&lt;T extends <a href="../../htsjdk/samtools/AbstractSAMHeaderRecord.html" title="class in htsjdk.samtools">AbstractSAMHeaderRecord</a>&gt;</span>
 extends java.lang.Object
-implements java.util.Comparator&lt;T&gt;</pre>
+implements java.util.Comparator&lt;T&gt;, java.io.Serializable</pre>
 <div class="block">Provides ordering based on SAM header records' attribute values. Provide the list of attributes to use
  in the comparison to the constructor. Null attribute values (i.e., those attributes not present in the
  record) sort behind those that have values.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../serialized-form.html#htsjdk.samtools.SAMHeaderRecordComparator">Serialized Form</a></dd>
+</dl>
 </li>
 </ul>
 </div>

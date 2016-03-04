@@ -118,7 +118,7 @@ extends <a href="../../../picard/cmdline/CommandLineProgram.html" title="class i
 <div class="block">Applies a set of hard filters to Variants and to Genotypes within a VCF.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
-<dd>Tim Fennell</dd>
+<dd>Tim Fennell, Pierre Lindenbaum added the javascript filter in 2016</dd>
 </dl>
 </li>
 </ul>
@@ -143,26 +143,30 @@ extends <a href="../../../picard/cmdline/CommandLineProgram.html" title="class i
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#JAVASCRIPT_FILE">JAVASCRIPT_FILE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#MAX_FS">MAX_FS</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#MIN_AB">MIN_AB</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#MIN_DP">MIN_DP</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#MIN_GQ">MIN_GQ</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>double</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#MIN_QD">MIN_QD</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/filter/FilterVcf.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
@@ -311,11 +315,23 @@ public&nbsp;double MAX_FS</pre>
 <a name="MIN_QD">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>MIN_QD</h4>
 <pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#doc--">doc</a>="The minimum QD value to accept or otherwise filter out the variant.")
 public&nbsp;double MIN_QD</pre>
+</li>
+</ul>
+<a name="JAVASCRIPT_FILE">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>JAVASCRIPT_FILE</h4>
+<pre><a href="../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../picard/cmdline/Option.html#shortName--">shortName</a>="JS",
+        <a href="../../../picard/cmdline/Option.html#doc--">doc</a>="Filters a VCF file with a javascript expression interpreted by the java javascript engine.  The script puts the following variables in the script context:  \'variant\' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and  \'header\' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.",
+        <a href="../../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;java.io.File JAVASCRIPT_FILE</pre>
 </li>
 </ul>
 </li>

@@ -49,7 +49,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../picard/sam/FastqToSam.html" title="class in picard.sam"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../picard/sam/FixMateInformation.html" title="class in picard.sam"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../index.html?picard/sam/FilterSamReads.html" target="_top">Frames</a></li>
@@ -73,7 +73,7 @@ var activeTableTab = "activeTableTab";
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -125,6 +125,25 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="nested.class.summary">
+<!--   -->
+</a>
+<h3>Nested Class Summary</h3>
+<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Nested Class Summary table, listing nested classes, and an explanation">
+<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected static class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a></span></code>&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
 <!-- =========== FIELD SUMMARY =========== -->
 <ul class="blockList">
 <li class="blockList"><a name="field.summary">
@@ -138,7 +157,7 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>picard.sam.FilterSamReads.Filter</code></td>
+<td class="colFirst"><code><a href="../../picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#FILTER">FILTER</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
@@ -147,17 +166,21 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#JAVASCRIPT_FILE">JAVASCRIPT_FILE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#READ_LIST_FILE">READ_LIST_FILE</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>java.io.File</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#READ_LIST_FILE">READ_LIST_FILE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>htsjdk.samtools.SAMFileHeader.SortOrder</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#SORT_ORDER">SORT_ORDER</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/FilterSamReads.html#WRITE_READS_FILES">WRITE_READS_FILES</a></span></code>&nbsp;</td>
 </tr>
@@ -267,7 +290,7 @@ public&nbsp;java.io.File INPUT</pre>
 <h4>FILTER</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Filter.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=false)
-public&nbsp;picard.sam.FilterSamReads.Filter FILTER</pre>
+public&nbsp;<a href="../../picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a> FILTER</pre>
 </li>
 </ul>
 <a name="READ_LIST_FILE">
@@ -308,13 +331,25 @@ public&nbsp;boolean WRITE_READS_FILES</pre>
 <a name="OUTPUT">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>OUTPUT</h4>
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="SAM or BAM file to write read excluded results to",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=false,
         <a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="O")
 public&nbsp;java.io.File OUTPUT</pre>
+</li>
+</ul>
+<a name="JAVASCRIPT_FILE">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>JAVASCRIPT_FILE</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="JS",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="Filters a SAM or BAM file with a javascript expression using the java javascript-engine.  The script puts the following variables in the script context:  \'record\' a SamRecord ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMRecord.html ) and  \'header\' a SAMFileHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/SAMFileHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;java.io.File JAVASCRIPT_FILE</pre>
 </li>
 </ul>
 </li>
@@ -423,7 +458,7 @@ public&nbsp;java.io.File OUTPUT</pre>
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../picard/sam/FastqToSam.html" title="class in picard.sam"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../picard/sam/FixMateInformation.html" title="class in picard.sam"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../index.html?picard/sam/FilterSamReads.html" target="_top">Frames</a></li>
@@ -447,7 +482,7 @@ public&nbsp;java.io.File OUTPUT</pre>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

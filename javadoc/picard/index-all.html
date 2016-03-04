@@ -1687,6 +1687,10 @@
 <dd>
 <div class="block">Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/util/DbSnpBitSetUtil.html#createSnpAndIndelBitSets-java.io.File-htsjdk.samtools.SAMSequenceDictionary-htsjdk.samtools.util.IntervalList-">createSnpAndIndelBitSets(File, SAMSequenceDictionary, IntervalList)</a></span> - Static method in class picard.util.<a href="picard/util/DbSnpBitSetUtil.html" title="class in picard.util">DbSnpBitSetUtil</a></dt>
+<dd>
+<div class="block">Factory method to create both a SNP bitmask and an indel bitmask in a single pass of the VCF.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#CROSSCHECK_LIBRARIES">CROSSCHECK_LIBRARIES</a></span> - Variable in class picard.fingerprint.<a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html" title="class in picard.fingerprint">CrosscheckReadGroupFingerprints</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html#CROSSCHECK_SAMPLES">CROSSCHECK_SAMPLES</a></span> - Variable in class picard.fingerprint.<a href="picard/fingerprint/CrosscheckReadGroupFingerprints.html" title="class in picard.fingerprint">CrosscheckReadGroupFingerprints</a></dt>
@@ -1832,6 +1836,10 @@
 <div class="block">Constructor that creates a bit set with bits set to true for all variant types.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/util/DbSnpBitSetUtil.html#DbSnpBitSetUtil-java.io.File-htsjdk.samtools.SAMSequenceDictionary-java.util.Collection-">DbSnpBitSetUtil(File, SAMSequenceDictionary, Collection&lt;VariantType&gt;)</a></span> - Constructor for class picard.util.<a href="picard/util/DbSnpBitSetUtil.html" title="class in picard.util">DbSnpBitSetUtil</a></dt>
+<dd>
+<div class="block">Constructor that creates a bit set with bits set to true for the given variant types.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/util/DbSnpBitSetUtil.html#DbSnpBitSetUtil-java.io.File-htsjdk.samtools.SAMSequenceDictionary-java.util.Collection-htsjdk.samtools.util.IntervalList-">DbSnpBitSetUtil(File, SAMSequenceDictionary, Collection&lt;VariantType&gt;, IntervalList)</a></span> - Constructor for class picard.util.<a href="picard/util/DbSnpBitSetUtil.html" title="class in picard.util">DbSnpBitSetUtil</a></dt>
 <dd>
 <div class="block">Constructor.</div>
 </dd>
@@ -2297,7 +2305,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectAlignmentSummaryMetrics.html#EXPECTED_PAIR_ORIENTATIONS">EXPECTED_PAIR_ORIENTATIONS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectAlignmentSummaryMetrics.html" title="class in picard.analysis">CollectAlignmentSummaryMetrics</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="picard/illumina/parser/readers/FilterFileReader.html#EXPECTED_VERSION">EXPECTED_VERSION</a></span> - Variable in class picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/FilterFileReader.html" title="class in picard.illumina.parser.readers">FilterFileReader</a></dt>
+<dt><span class="memberNameLink"><a href="picard/illumina/parser/readers/FilterFileReader.html#EXPECTED_VERSION">EXPECTED_VERSION</a></span> - Static variable in class picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/FilterFileReader.html" title="class in picard.illumina.parser.readers">FilterFileReader</a></dt>
 <dd>
 <div class="block">Expected Version</div>
 </dd>
@@ -2411,6 +2419,8 @@
 <div class="block">Constructor that defaults to QUIET since Fifos don't do anything beyond buffering having their
  start/end information logged is often undesirable.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/analysis/artifacts/CollectSequencingArtifactMetrics.html#FILE_EXTENSION">FILE_EXTENSION</a></span> - Variable in class picard.analysis.artifacts.<a href="picard/analysis/artifacts/CollectSequencingArtifactMetrics.html" title="class in picard.analysis.artifacts">CollectSequencingArtifactMetrics</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectMultipleMetrics.html#FILE_EXTENSION">FILE_EXTENSION</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.html" title="class in picard.analysis">CollectMultipleMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="picard/util/FileChannelJDKBugWorkAround.html" title="class in picard.util"><span class="typeNameLink">FileChannelJDKBugWorkAround</span></a> - Class in <a href="picard/util/package-summary.html">picard.util</a></dt>
@@ -2520,6 +2530,8 @@
  $Id$</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/sam/FilterSamReads.html#FilterSamReads--">FilterSamReads()</a></span> - Constructor for class picard.sam.<a href="picard/sam/FilterSamReads.html" title="class in picard.sam">FilterSamReads</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam"><span class="typeNameLink">FilterSamReads.Filter</span></a> - Enum in <a href="picard/sam/package-summary.html">picard.sam</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/Fingerprint.html#filterSuspectSites--">filterSuspectSites()</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/Fingerprint.html" title="class in picard.fingerprint">Fingerprint</a></dt>
 <dd>
@@ -4945,6 +4957,10 @@
 </a>
 <h2 class="title">J</h2>
 <dl>
+<dt><span class="memberNameLink"><a href="picard/sam/FilterSamReads.html#JAVASCRIPT_FILE">JAVASCRIPT_FILE</a></span> - Variable in class picard.sam.<a href="picard/sam/FilterSamReads.html" title="class in picard.sam">FilterSamReads</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/filter/FilterVcf.html#JAVASCRIPT_FILE">JAVASCRIPT_FILE</a></span> - Variable in class picard.vcf.filter.<a href="picard/vcf/filter/FilterVcf.html" title="class in picard.vcf.filter">FilterVcf</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/JumpingLibraryMetrics.html#JUMP_DUPLICATE_PAIRS">JUMP_DUPLICATE_PAIRS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/JumpingLibraryMetrics.html" title="class in picard.analysis">JumpingLibraryMetrics</a></dt>
 <dd>
 <div class="block">The number of outward-facing pairs that are duplicates</div>
@@ -5479,7 +5495,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/directed/RnaSeqMetricsCollector.html#makeIgnoredSequenceIndicesSet-htsjdk.samtools.SAMFileHeader-java.util.Set-">makeIgnoredSequenceIndicesSet(SAMFileHeader, Set&lt;String&gt;)</a></span> - Static method in class picard.analysis.directed.<a href="picard/analysis/directed/RnaSeqMetricsCollector.html" title="class in picard.analysis.directed">RnaSeqMetricsCollector</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="picard/analysis/CollectMultipleMetrics.ProgramInterface.html#makeInstance-java.lang.String-java.io.File-java.io.File-java.util.Set-java.io.File-java.io.File-">makeInstance(String, File, File, Set&lt;MetricAccumulationLevel&gt;, File, File)</a></span> - Method in interface picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a></dt>
+<dt><span class="memberNameLink"><a href="picard/analysis/CollectMultipleMetrics.ProgramInterface.html#makeInstance-java.lang.String-java.lang.String-java.io.File-java.io.File-java.util.Set-java.io.File-java.io.File-">makeInstance(String, String, File, File, Set&lt;MetricAccumulationLevel&gt;, File, File)</a></span> - Method in interface picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/SinglePassSamProgram.html#makeItSo-java.io.File-java.io.File-boolean-long-java.util.Collection-">makeItSo(File, File, boolean, long, Collection&lt;SinglePassSamProgram&gt;)</a></span> - Static method in class picard.analysis.<a href="picard/analysis/SinglePassSamProgram.html" title="class in picard.analysis">SinglePassSamProgram</a></dt>
 <dd>&nbsp;</dd>
@@ -9217,6 +9233,8 @@
 <dd>
 <div class="block">Converts this object into a String using rules complementary to the single string constructor above.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/sam/FilterSamReads.Filter.html#toString--">toString()</a></span> - Method in enum picard.sam.<a href="picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/VcfFileSegment.html#toString--">toString()</a></span> - Method in class picard.vcf.processor.<a href="picard/vcf/processor/VcfFileSegment.html" title="class in picard.vcf.processor">VcfFileSegment</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectOxoGMetrics.CpcgMetrics.html#TOTAL_BASES">TOTAL_BASES</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectOxoGMetrics.CpcgMetrics.html" title="class in picard.analysis">CollectOxoGMetrics.CpcgMetrics</a></dt>
@@ -9577,6 +9595,10 @@
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/sam/FilterSamReads.Filter.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.sam.<a href="picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this type with the specified name.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicates.DuplicateTaggingPolicy.html" title="enum in picard.sam.markduplicates">MarkDuplicates.DuplicateTaggingPolicy</a></dt>
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
@@ -9720,6 +9742,11 @@ the order they are declared.</div>
 the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/pedigree/Sex.html#values--">values()</a></span> - Static method in enum picard.pedigree.<a href="picard/pedigree/Sex.html" title="enum in picard.pedigree">Sex</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum type, in
+the order they are declared.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/FilterSamReads.Filter.html#values--">values()</a></span> - Static method in enum picard.sam.<a href="picard/sam/FilterSamReads.Filter.html" title="enum in picard.sam">FilterSamReads.Filter</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>

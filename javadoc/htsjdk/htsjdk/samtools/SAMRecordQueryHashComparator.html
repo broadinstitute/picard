@@ -113,12 +113,13 @@ var activeTableTab = "activeTableTab";
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><a href="../../htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>, java.util.Comparator&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</dd>
+<dd><a href="../../htsjdk/samtools/SAMRecordComparator.html" title="interface in htsjdk.samtools">SAMRecordComparator</a>, java.io.Serializable, java.util.Comparator&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</dd>
 </dl>
 <hr>
 <br>
 <pre>public class <span class="typeNameLabel">SAMRecordQueryHashComparator</span>
-extends <a href="../../htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">SAMRecordQueryNameComparator</a></pre>
+extends <a href="../../htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">SAMRecordQueryNameComparator</a>
+implements java.io.Serializable</pre>
 <div class="block">SAMRecord comparator that provides an ordering based on a hash of the queryname. Has
  the useful property that reads with the same name will be grouped together, but that
  reads appear in an otherwise random order.  Useful for when the read names in a BAM
@@ -127,6 +128,8 @@ extends <a href="../../htsjdk/samtools/SAMRecordQueryNameComparator.html" title=
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>Tim Fennell</dd>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../serialized-form.html#htsjdk.samtools.SAMRecordQueryHashComparator">Serialized Form</a></dd>
 </dl>
 </li>
 </ul>

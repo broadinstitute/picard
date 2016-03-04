@@ -2807,7 +2807,7 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
  reference name does not appear in the new header's sequence dictionary, an IllegalArgumentException is thrown.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>header</code> - new header for this record. Can not be null.</dd>
+<dd><code>header</code> - new header for this record. May be null.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.lang.IllegalArgumentException</code> - if the record has reference or mate reference names that cannot be resolved
  to indices using the new header.</dd>

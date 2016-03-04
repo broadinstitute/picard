@@ -365,6 +365,26 @@
 </a>
 <h3>Class <a href="htsjdk/samtools/SAMFormatException.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMFormatException</a> extends <a href="htsjdk/samtools/SAMException.html" title="class in htsjdk.samtools">SAMException</a> implements Serializable</h3>
 </li>
+<li class="blockList"><a name="htsjdk.samtools.SAMHeaderRecordComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/SAMHeaderRecordComparator.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMHeaderRecordComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>attributes</h4>
+<pre>java.lang.String[] attributes</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="htsjdk.samtools.SAMProgramRecord">
 <!--   -->
 </a>
@@ -489,6 +509,72 @@
 </ul>
 </li>
 </ul>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.SAMRecordCoordinateComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/SAMRecordCoordinateComparator.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMRecordCoordinateComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.SAMRecordDuplicateComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMRecordDuplicateComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockList">
+<h4>libraryIds</h4>
+<pre>java.util.Map&lt;K,V&gt; libraryIds</pre>
+</li>
+<li class="blockList">
+<h4>nextLibraryId</h4>
+<pre>short nextLibraryId</pre>
+</li>
+<li class="blockListLast">
+<h4>scoringStrategy</h4>
+<pre><a href="htsjdk/samtools/DuplicateScoringStrategy.ScoringStrategy.html" title="enum in htsjdk.samtools">DuplicateScoringStrategy.ScoringStrategy</a> scoringStrategy</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.SAMRecordQueryHashComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/SAMRecordQueryHashComparator.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMRecordQueryHashComparator</a> extends <a href="htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">SAMRecordQueryNameComparator</a> implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>hasher</h4>
+<pre><a href="htsjdk/samtools/util/Murmur3.html" title="class in htsjdk.samtools.util">Murmur3</a> hasher</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.SAMRecordQueryNameComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/SAMRecordQueryNameComparator.html" title="class in htsjdk.samtools">htsjdk.samtools.SAMRecordQueryNameComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
 </li>
 <li class="blockList"><a name="htsjdk.samtools.SAMSequenceDictionary">
 <!--   -->
@@ -1140,6 +1226,35 @@
 </a>
 <h3>Class <a href="htsjdk/samtools/util/ListMap.html" title="class in htsjdk.samtools.util">htsjdk.samtools.util.ListMap</a> extends java.util.HashMap&lt;<a href="htsjdk/samtools/util/ListMap.html" title="type parameter in ListMap">K</a>,java.util.List&lt;<a href="htsjdk/samtools/util/ListMap.html" title="type parameter in ListMap">V</a>&gt;&gt; implements Serializable</h3>
 </li>
+<li class="blockList"><a name="htsjdk.samtools.util.LocusComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/util/LocusComparator.html" title="class in htsjdk.samtools.util">htsjdk.samtools.util.LocusComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+</li>
+<li class="blockList"><a name="htsjdk.samtools.util.Murmur3">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/samtools/util/Murmur3.html" title="class in htsjdk.samtools.util">htsjdk.samtools.util.Murmur3</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>seed</h4>
+<pre>int seed</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="blockList"><a name="htsjdk.samtools.util.RelativeIso8601Date">
 <!--   -->
 </a>
@@ -1567,6 +1682,26 @@
 <li class="blockListLast">
 <h4>monomorphic</h4>
 <pre>java.lang.Boolean monomorphic</pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="blockList"><a name="htsjdk.variant.variantcontext.VariantContextComparator">
+<!--   -->
+</a>
+<h3>Class <a href="htsjdk/variant/variantcontext/VariantContextComparator.html" title="class in htsjdk.variant.variantcontext">htsjdk.variant.variantcontext.VariantContextComparator</a> extends java.lang.Object implements Serializable</h3>
+<dl class="nameValue">
+<dt>serialVersionUID:</dt>
+<dd>1L</dd>
+</dl>
+<ul class="blockList">
+<li class="blockList">
+<h3>Serialized Fields</h3>
+<ul class="blockList">
+<li class="blockListLast">
+<h4>contigIndexLookup</h4>
+<pre>java.util.Map&lt;K,V&gt; contigIndexLookup</pre>
 </li>
 </ul>
 </li>
