@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The Broad Institute
+ * Copyright (c) 2014-2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,10 @@
 package picard.sam.markduplicates.util;
 
 import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.ProgressLogger;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.ReadNameParser;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -43,14 +42,28 @@ public class OpticalDuplicateFinder extends ReadNameParser {
     public int opticalDuplicatePixelDistance;
 
     public static final int DEFAULT_OPTICAL_DUPLICATE_DISTANCE = 100;
+    public static final int DEFAULT_BIG_DUPLICATE_SET_SIZE = 1000;
 
     /**
-     * Uses the default duplicate distance {@value DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
+     * Sets the size of a set that is big enough to log progress about.
+     * Defaults to {@value OpticalDuplicateFinder#DEFAULT_BIG_DUPLICATE_SET_SIZE}
+     *
+     * @param bigDuplicateSetSize the size of a set that is big enough to log progress about
+     */
+    public void setBigDuplicateSetSize(final int bigDuplicateSetSize) {
+        this.bigDuplicateSetSize = bigDuplicateSetSize;
+    }
+
+    private int bigDuplicateSetSize;
+
+    /**
+     * Uses the default duplicate distance {@value OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
      * {@link ReadNameParser#DEFAULT_READ_NAME_REGEX}.
      */
     public OpticalDuplicateFinder() {
         super();
         this.opticalDuplicatePixelDistance = DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
+        this.bigDuplicateSetSize = DEFAULT_BIG_DUPLICATE_SET_SIZE;
     }
 
     /**
@@ -87,20 +100,50 @@ public class OpticalDuplicateFinder extends ReadNameParser {
 
         final PhysicalLocation actualKeeper = keeperOrNull(list, keeper);
 
-        // First go through and compare all the reads to the keeper
-        if (actualKeeper != null) {
-            for (int i=0; i<length; ++i) {
-                final PhysicalLocation other = list.get(i);
-                opticalDuplicateFlags[i] = closeEnough(actualKeeper, other, distance);
-            }
+        final Log log;
+        final ProgressLogger progressLoggerForKeeper, progressLoggerForRest;
+        final boolean logProgress = length > bigDuplicateSetSize;
+
+        if (logProgress) {
+            log = Log.getInstance(OpticalDuplicateFinder.class);
+            progressLoggerForKeeper = new ProgressLogger(log, 10000, "compared", "ReadEnds to keeper");
+            progressLoggerForRest = new ProgressLogger(log, 1000, "compared", "ReadEnds to others");
+
+            log.info("Large duplicate set. size = " + length);
+            log.debug("About to compare to keeper:" + actualKeeper);
+        } else {
+            log = null;
+            progressLoggerForKeeper = null;
+            progressLoggerForRest = null;
         }
 
+        // First go through and compare all the reads to the keeper
+        if (actualKeeper != null) {
+            for (int i = 0; i < length; ++i) {
+                final PhysicalLocation other = list.get(i);
+                opticalDuplicateFlags[i] = closeEnough(actualKeeper, other, distance);
+
+                // The main point of adding this log and if statement (also below) is a workaround a bug in the JVM
+                // which causes a deep exception (https://github.com/broadinstitute/picard/issues/472).
+                // It seems that this is related to https://bugs.openjdk.java.net/browse/JDK-8033717 which
+                // was closed due to non-reproducibility. We came across a bam file that evoked this error
+                // every time we tried to duplicate-mark it. The problem seemed to be a duplicate-set of size 500,000,
+                // and this loop seemed to kill the JVM for some reason. This logging statement (and the one in the
+                // loop below) solved the problem.
+                if (logProgress) progressLoggerForKeeper.record(String.format("%d", other.getReadGroup()), other.getX());
+            }
+        }
+        if (logProgress) log.debug("Done with comparing to keeper, now the rest.");
+
         // Now go through and do each pairwise comparison not involving the actualKeeper
-        for (int i=0; i<length; ++i) {
+        for (int i = 0; i < length; ++i) {
             final PhysicalLocation lhs = list.get(i);
             if (lhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
 
-            for (int j =i+1; j<length; ++j) {
+            // logging here for same reason as above
+            if (logProgress) progressLoggerForRest.record(String.format("%d", lhs.getReadGroup()), lhs.getX());
+
+            for (int j = i + 1; j < length; ++j) {
                 final PhysicalLocation rhs = list.get(j);
                 if (rhs == actualKeeper) continue; // no comparisons to actualKeeper since those are all handled above
                 if (opticalDuplicateFlags[i] && opticalDuplicateFlags[j]) continue; // both already marked, no need to check
@@ -114,7 +157,7 @@ public class OpticalDuplicateFinder extends ReadNameParser {
                 }
             }
         }
-        
+
         return opticalDuplicateFlags;
     }
 
