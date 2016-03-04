@@ -1,0 +1,9 @@
+<h3 id="SplitSamByLibrary">SplitSamByLibrary</h3>
+<section>
+<p>Takes a SAM or BAM file and separates all the reads into one SAM or BAM file per library name.  Reads that do not have a read group specified or whose read group does not have a library name are written to a file called 'unknown.'  The format (SAM or BAM) of the  output files matches that of the input file.  </p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>The SAM or BAM file to be split.   Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The directory where the library SAM or BAM files should be written (defaults to the current directory).   Default value: /local/scratch/jc_picard_public/picard/.. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

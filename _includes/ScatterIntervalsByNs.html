@@ -1,0 +1,11 @@
+<h3 id="ScatterIntervalsByNs">ScatterIntervalsByNs</h3>
+<section>
+<p>Writes an interval list based on splitting the reference by Ns.  This tool identifies positions in the reference where the basecalls are Ns and writes out an interval list using the resulting coordinates (excluding the N bases). This can be used to create an interval list for whole genome sequence (WGS) for e.g. scatter-gather purposes, as an alternative to using fixed-length intervals. The number of contiguous Ns that can be tolerated before creating a break is adjustable from the command line.<br /><h4>Usage example:</h4><pre>java -jar picard.jar ScatterIntervalsByNs \<br />      R=reference_sequence.fasta \<br />      OT=BOTH \<br />      O=output.interval_list</pre><hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>REFERENCE (File)</td><td>Reference sequence to use.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output file for interval list.  Required. </td></tr>
+<tr><td>OUTPUT_TYPE (OutputType)</td><td>Type of intervals to output.  Default value: BOTH. This option can be set to 'null' to clear the default value. Possible values: {N, ACGT, BOTH} </td></tr>
+<tr><td>MAX_TO_MERGE (Integer)</td><td>Maximal number of contiguous N bases to tolerate, thereby continuing the current ACGT interval.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

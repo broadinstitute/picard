@@ -5,16 +5,16 @@
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>One or more interval lists. If multiple interval lists are provided the output is theresult of merging the inputs. Supported formats are interval_list and VCF.  Default value: null. This option must be specified at least 1 times. </td></tr>
 <tr><td>OUTPUT (File)</td><td>The output interval list file to write (if SCATTER_COUNT is 1) or the directory into which to write the scattered interval sub-directories (if SCATTER_COUNT > 1)  Default value: null. </td></tr>
-<tr><td>PADDING (Integer)</td><td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals &lt; 0 bases long will be removed. Padding is applied to the interval lists &lt;b> before &lt;/b> the ACTION is performed.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PADDING (Integer)</td><td>The amount to pad each end of the intervals by before other operations are undertaken. Negative numbers are allowed and indicate intervals should be shrunk. Resulting intervals < 0 bases long will be removed. Padding is applied to the interval lists <b> before </b> the ACTION is performed.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>UNIQUE (Boolean)</td><td>If true, merge overlapping and adjacent intervals to create a list of unique intervals. Implies SORT=true  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>SORT (Boolean)</td><td>If true, sort the resulting interval list by coordinate.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>ACTION (Action)</td><td>Action to take on inputs.  Default value: CONCAT. This option can be set to 'null' to clear the default value. Possible values: {
-<p>CONCAT (The concatenation of all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in an unsorted list unless requested otherwise.)
-<p>UNION (Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS.)
-<p>INTERSECT (The sorted, uniqued set of all loci that are contained in all of the INPUTs.)
-<p>SUBTRACT (Subtracts SECOND_INPUT from INPUT. The resulting loci are there in INPUT that are not in SECOND_INPUT)
-<p>SYMDIFF (Find loci that are in INPUT or SECOND_INPUT but are not in both.)
-<p>} </td></tr>
+CONCAT (The concatenation of all the INPUTs, no sorting or merging of overlapping/abutting intervals implied. Will result in an unsorted list unless requested otherwise.)
+UNION (Like CONCATENATE but with UNIQUE and SORT implied, the result being the set-wise union of all INPUTS.)
+INTERSECT (The sorted, uniqued set of all loci that are contained in all of the INPUTs.)
+SUBTRACT (Subtracts SECOND_INPUT from INPUT. The resulting loci are there in INPUT that are not in SECOND_INPUT)
+SYMDIFF (Find loci that are in INPUT or SECOND_INPUT but are not in both.)
+} </td></tr>
 <tr><td>SECOND_INPUT (File)</td><td>Second set of intervals for SUBTRACT and DIFFERENCE operations.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>COMMENT (String)</td><td>One or more lines of comment to add to the header of the output file.  Default value: null. This option may be specified 0 or more times. </td></tr>
 <tr><td>SCATTER_COUNT (Integer)</td><td>The number of files into which to scatter the resulting list by locus; in some situations, fewer intervals may be emitted.  Note - if > 1, the resultant scattered intervals will be sorted and uniqued.  The sort will be inverted if the INVERT flag is set.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>

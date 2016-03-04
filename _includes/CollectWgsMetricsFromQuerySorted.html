@@ -1,0 +1,14 @@
+<h3 id="CollectWgsMetricsFromQuerySorted">CollectWgsMetricsFromQuerySorted</h3>
+<section>
+<p>Computes a number of metrics that are useful for evaluating coverage and performance of sequencing experiments.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output metrics file.  Required. </td></tr>
+<tr><td>MINIMUM_USABLE_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute to usable coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_USABLE_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute to usable coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_RAW_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute to raw coverage.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_RAW_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute to raw coverage.  Default value: 3. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>GENOME_TERRITORY (Long)</td><td>The number of bases in the genome build of the input file to be used for calculating MEAN_COVERAGE. If not provided, we will assume that ALL bases in the genome should be used (including e.g. Ns)  Default value: null. </td></tr>
+</table>
+</section>

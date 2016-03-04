@@ -1,0 +1,12 @@
+<h3 id="LiftOverIntervalList">LiftOverIntervalList</h3>
+<section>
+<p>Lifts over an interval list from one reference build to another.  This tool adjusts the coordinates in an interval list derived from one reference to match a new reference, based on a chain file that describes the correspondence between the two references. It is based on the UCSC liftOver tool (see: http://genome.ucsc.edu/cgi-bin/hgLiftOver) and uses a UCSC chain file to guide its operation. It accepts both Picard interval_list files or VCF files as interval inputs.<br /><h4>Usage example:</h4><pre>java -jar picard.jar LiftOverIntervalList \<br />      I=input.interval_list \<br />      O=output.interval_list \<br />      SD=reference_sequence.dict \<br />      CHAIN=build.chain</pre><hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Interval list to be lifted over.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Where to write lifted-over interval list.  Required. </td></tr>
+<tr><td>SEQUENCE_DICTIONARY (File)</td><td>Sequence dictionary to write into the output interval list.  Required. </td></tr>
+<tr><td>CHAIN (File)</td><td>Chain file that guides LiftOver.  Required. </td></tr>
+<tr><td>MIN_LIFTOVER_PCT (Double)</td><td>Minimum percentage of bases in each input interval that must map to output interval.  Default value: 0.95. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

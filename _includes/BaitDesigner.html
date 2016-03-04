@@ -1,0 +1,24 @@
+<h3 id="BaitDesigner">BaitDesigner</h3>
+<section>
+<p>Designs baits or oligos for hybrid selection reactions.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>TARGETS (File)</td><td>The file with design parameters and targets  Required. </td></tr>
+<tr><td>DESIGN_NAME (String)</td><td>The name of the bait design  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>The reference sequence fasta file  Required. </td></tr>
+<tr><td>LEFT_PRIMER (String)</td><td>The left amplification primer to prepend to all baits for synthesis  Default value: ATCGCACCAGCGTGT. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>RIGHT_PRIMER (String)</td><td>The right amplification primer to prepend to all baits for synthesis  Default value: CACTGCGGCTCCTCA. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>DESIGN_STRATEGY (DesignStrategy)</td><td>The design strategy to use to layout baits across each target  Default value: FixedOffset. This option can be set to 'null' to clear the default value. Possible values: {CenteredConstrained, FixedOffset, Simple} </td></tr>
+<tr><td>BAIT_SIZE (Integer)</td><td>The length of each individual bait to design  Default value: 120. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_BAITS_PER_TARGET (Integer)</td><td>The minimum number of baits to design per target.  Default value: 2. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>BAIT_OFFSET (Integer)</td><td>The desired offset between the start of one bait and the start of another bait for the same target.  Default value: 80. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>PADDING (Integer)</td><td>Pad the input targets by this amount when designing baits. Padding is applied on both sides in this amount.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>REPEAT_TOLERANCE (Integer)</td><td>Baits that have more than REPEAT_TOLERANCE soft or hard masked bases will not be allowed  Default value: 50. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>POOL_SIZE (Integer)</td><td>The size of pools or arrays for synthesis. If no pool files are desired, can be set to 0.  Default value: 55000. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>FILL_POOLS (Boolean)</td><td>If true, fill up the pools with alternating fwd and rc copies of all baits. Equal copies of all baits will always be maintained  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>DESIGN_ON_TARGET_STRAND (Boolean)</td><td>If true design baits on the strand of the target feature, if false always design on the + strand of the genome.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>MERGE_NEARBY_TARGETS (Boolean)</td><td>If true merge targets that are 'close enough' that designing against a merged target would be more efficient.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>OUTPUT_AGILENT_FILES (Boolean)</td><td>If true also output .design.txt files per pool with one line per bait sequence  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>OUTPUT_DIRECTORY (File)</td><td>The output directory. If not provided then the DESIGN_NAME will be used as the output directory  Default value: null. </td></tr>
+</table>
+</section>

@@ -15,15 +15,15 @@ of the barcode read, starting with 1.</p>
 <tr><td>MACHINE_NAME (String)</td><td>The name of the machine on which the run was sequenced; required if emitting Casava1.8-style read name headers  Default value: null. </td></tr>
 <tr><td>FLOWCELL_BARCODE (String)</td><td>The barcode of the flowcell that was sequenced; required if emitting Casava1.8-style read name headers  Default value: null. </td></tr>
 <tr><td>READ_STRUCTURE (String)</td><td>A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of "28T8M8B8S28T" then the sequence may be split up into four reads:
-<p>* read one with 28 cycles (bases) of template
-<p>* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)
-<p>* read three with 8 cycles (bases) of sample barcode
-<p>* 8 cycles (bases) skipped.
-<p>* read four with 28 cycles (bases) of template
-<p>The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.  Required. </td></tr>
+* read one with 28 cycles (bases) of template
+* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)
+* read three with 8 cycles (bases) of sample barcode
+* 8 cycles (bases) skipped.
+* read four with 28 cycles (bases) of template
+The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.  Required. </td></tr>
 <tr><td>MULTIPLEX_PARAMS (File)</td><td>Tab-separated file for creating all output fastqs demultiplexed by barcode for a lane with single IlluminaBasecallsToFastq invocation.  The columns are OUTPUT_PREFIX, and BARCODE_1, BARCODE_2 ... BARCODE_X where X = number of barcodes per cluster (optional).  Row with BARCODE_1 set to 'N' is used to specify an output_prefix for no barcode match.  Required.  Cannot be used in conjuction with option(s) OUTPUT_PREFIX (O)</td></tr>
 <tr><td>ADAPTERS_TO_CHECK (IlluminaAdapterPair)</td><td>Which adapters to look for in the read.  Default value: [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM]. This option can be set to 'null' to clear the default value. Possible values: {PAIRED_END, INDEXED, SINGLE_END, NEXTERA_V1, NEXTERA_V2, DUAL_INDEXED, FLUIDIGM, TRUSEQ_SMALLRNA, ALTERNATIVE_SINGLE_END} This option may be specified 0 or more times. This option can be set to 'null' to clear the default list. </td></tr>
-<tr><td>NUM_PROCESSORS (Integer)</td><td>The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to the number of cores available on the machine. If NUM_PROCESSORS &lt; 0, then the number of cores used will be the number available on the machine less NUM_PROCESSORS.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>NUM_PROCESSORS (Integer)</td><td>The number of threads to run in parallel. If NUM_PROCESSORS = 0, number of cores is automatically set to the number of cores available on the machine. If NUM_PROCESSORS < 0, then the number of cores used will be the number available on the machine less NUM_PROCESSORS.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>FIRST_TILE (Integer)</td><td>If set, this is the first tile to be processed (used for debugging).  Note that tiles are not processed in numerical order.  Default value: null. </td></tr>
 <tr><td>TILE_LIMIT (Integer)</td><td>If set, process no more than this many tiles (used for debugging).  Default value: null. </td></tr>
 <tr><td>APPLY_EAMSS_FILTER (Boolean)</td><td>Apply EAMSS filtering to identify inappropriately quality scored bases towards the ends of reads and convert their quality scores to Q2.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>

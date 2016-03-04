@@ -1,0 +1,20 @@
+<h3 id="CollectOxoGMetrics">CollectOxoGMetrics</h3>
+<section>
+<p>Collect metrics to assess oxidative artifacts.This tool collects metrics quantifying the error rate resulting from oxidative artifacts. For a brief primer on oxidative artifacts, see <a href='http://gatkforums.broadinstitute.org/discussion/6328/oxog-oxidative-artifacts'>the GATK Dictionary</a>.<br /><br />This tool calculates the Phred-scaled probability that an alternate base call results from an oxidation artifact. This probability score is based on base context, sequencing read orientation, and the characteristic low allelic frequency (doi:10.1093/nar/gks1443). Lower probability values implicate artifacts resulting from 8-oxoguanine, while higher probability values suggest that an alternate base call is due to either some other type of artifact or is a real variant.<h4>Usage example:</h4><pre>java -jar picard.jar CollectOxoGMetrics \<br />      I=input.bam \<br />      O=oxoG_metrics.txt \<br />      R=reference_sequence.fasta</pre><hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Input BAM file for analysis.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Location of output metrics file to write.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>Reference sequence to which BAM is aligned.  Required. </td></tr>
+<tr><td>INTERVALS (File)</td><td>An optional list of intervals to restrict analysis to.  Default value: null. </td></tr>
+<tr><td>DB_SNP (File)</td><td>VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.  Default value: null. </td></tr>
+<tr><td>MINIMUM_QUALITY_SCORE (Integer)</td><td>The minimum base quality score for a base to be included in analysis.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>The minimum mapping quality score for a base to be included in analysis.  Default value: 30. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_INSERT_SIZE (Integer)</td><td>The minimum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.  Default value: 60. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MAXIMUM_INSERT_SIZE (Integer)</td><td>The maximum insert size for a read to be included in analysis. Set of 0 to allow unpaired reads.  Default value: 600. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>USE_OQ (Boolean)</td><td>When available, use original quality scores for filtering.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>CONTEXT_SIZE (Integer)</td><td>The number of context bases to include on each side of the assayed G/C base.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>CONTEXTS (String)</td><td>The optional set of sequence contexts to restrict analysis to. If not supplied all contexts are analyzed.  Default value: null. This option may be specified 0 or more times. </td></tr>
+<tr><td>STOP_AFTER (Integer)</td><td>For debugging purposes: stop after visiting this many sites with at least 1X coverage.  Default value: 2147483647. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

@@ -1,0 +1,9 @@
+<h3 id="ConvertSequencingArtifactToOxoG">ConvertSequencingArtifactToOxoG</h3>
+<section>
+<p>Extract OxoG metrics from generalized artifacts metricsThis tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics(a tool that provides detailed information on a variety of artifacts found in sequencing libraries) and converts them to the CollectOxoGMetrics tool's output format. This conveniently eliminates the need to run CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our pipeline. See the documentation for CollectSequencingArtifactsMetrics and CollectOxoGMetrics for additional information on these tools.<br /><br />.Note that only the base of the CollectSequencingArtifactsMetrics output file name is required for the file name input. For example, if the file name is artifact_metrics.txt.bait_bias_detail_metrics or artifact_metrics.txt.pre_adapter_detail_metrics, only the base of the file name "artifact_metrics" is required on the command line for "input".  An output file called "artifact_metrics.oxog_metrics" will be generated automatically.  A reference sequence is also required.<br /><h4>Usage example:</h4><pre>java -jar picard.jar ConvertSequencingArtifactToOxoG \<br />     I=artifact_metrics \<br />     R=reference.fasta</pre>For detailed explanations of the output metrics, please see:http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectOxoGMetrics.CpcgMetrics<hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT_BASE (File)</td><td>Basename of the input artifact metrics file (output by CollectSequencingArtifactMetrics)  Required. </td></tr>
+<tr><td>OUTPUT_BASE (File)</td><td>Basename for output OxoG metrics. Defaults to same basename as input metrics  Default value: null. </td></tr>
+</table>
+</section>

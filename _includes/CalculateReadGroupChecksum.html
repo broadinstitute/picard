@@ -1,0 +1,9 @@
+<h3 id="CalculateReadGroupChecksum">CalculateReadGroupChecksum</h3>
+<section>
+<p>Creates a hash code based on the read groups (RG).  This tool creates a hash code based on identifying information in the read groups (RG) of a ".BAM" or "SAM" file header.  Addition or removal of RGs changes the hash code, enabling the user to quickly determine if changes have been made to the read group information. <br /><h4>Usage example:</h4><pre>java -jar picard.jar CalculateReadGroupChecksum \<br />      I=input.bam</pre>Please see the AddOrReplaceReadGroups tool documentation for information regarding the addition, subtraction, or merging of read groups.<hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>The input SAM or BAM file.   Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The file to which the hash code should be written.  Default value: null. </td></tr>
+</table>
+</section>

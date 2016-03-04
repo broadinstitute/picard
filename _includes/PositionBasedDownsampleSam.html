@@ -1,0 +1,27 @@
+<h3 id="PositionBasedDownsampleSam">PositionBasedDownsampleSam</h3>
+<section>
+<p>Class to downsample a BAM file while respecting that we should either get rid of both ends of a pair or neither 
+end of the pair. In addition, this program uses the read-name and extracts the position within the tile whence 
+the read came from. The downsampling is based on this position. Results with the exact same input will produce the 
+same results.
+
+Note 1: This is technology and read-name dependent. If your read-names do not have coordinate information, or if your
+BAM contains reads from multiple technologies (flowcell versions, sequencing machines) this will not work properly. 
+This has been designed with Illumina MiSeq/HiSeq in mind.
+Note 2: The downsampling is not random. It is deterministically dependent on the position of the read within its tile.
+Note 3: Downsampling twice with this program is not supported.
+Note 4: You should call MarkDuplicates after downsampling.
+
+Finally, the code has been designed to simulate sequencing less as accurately as possible, not for getting an exact downsample 
+fraction. In particular, since the reads may be distributed non-evenly within the lanes/tiles, the resulting downsampling 
+percentage will not be accurately determined by the input argument FRACTION.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>The input SAM or BAM file to downsample.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The output, downsampled, SAM or BAM file to write.  Required. </td></tr>
+<tr><td>FRACTION (Double)</td><td>The (approximate) fraction of reads to be kept, between 0 and 1.  Required. </td></tr>
+<tr><td>STOP_AFTER (Long)</td><td>Stop after processing N reads, mainly for debugging.  Default value: null. </td></tr>
+<tr><td>ALLOW_MULTIPLE_DOWNSAMPLING_DESPITE_WARNINGS (Boolean)</td><td>Allow Downsampling again despite this being a bad idea with possibly unexpected results.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>REMOVE_DUPLICATE_INFORMATION (Boolean)</td><td>Determines whether the duplicate tag should be reset since the downsampling requires re-marking duplicates.  Default value: true. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+</table>
+</section>

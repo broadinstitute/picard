@@ -1,0 +1,19 @@
+<h3 id="CollectWgsMetricsFromSampledSites">CollectWgsMetricsFromSampledSites</h3>
+<section>
+<p>Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments, but only at a set of sampled positions.  It is important that the sampled positions be chosen so that they are spread out at least further than a read's length apart; otherwise, you run the risk of double-counting reads in the metrics.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INTERVALS (File)</td><td>An interval list file that contains the locations of the positions to assess.  Required. </td></tr>
+<tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output metrics file.  Required. </td></tr>
+<tr><td>REFERENCE_SEQUENCE (File)</td><td>The reference sequence fasta aligned to.  Required. </td></tr>
+<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>Minimum mapping quality for a read to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>MINIMUM_BASE_QUALITY (Integer)</td><td>Minimum base quality for a base to contribute coverage.  Default value: 20. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>COVERAGE_CAP (Integer)</td><td>Treat positions with coverage exceeding this value as if they had coverage at this value (but calculate the difference for PCT_EXC_CAPPED).  Default value: 250. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>LOCUS_ACCUMULATION_CAP (Integer)</td><td>At positions with coverage exceeding this value, completely ignore reads that accumulate beyond this value (so that they will not be considered for PCT_EXC_CAPPED).  Used to keep memory consumption in check, but could create bias if set too low  Default value: 100000. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>STOP_AFTER (Long)</td><td>For debugging purposes, stop after processing this many genomic bases.  Default value: -1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INCLUDE_BQ_HISTOGRAM (Boolean)</td><td>Determines whether to include the base quality histogram in the metrics file.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>COUNT_UNPAIRED (Boolean)</td><td>If true, count unpaired reads, and paired reads with one end unmapped  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>SAMPLE_SIZE (Integer)</td><td>Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.  Default value: 10000. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

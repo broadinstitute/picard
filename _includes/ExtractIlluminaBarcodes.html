@@ -16,12 +16,12 @@ Note 2: molecular barcodes (M in the read structure) are not the barcode being e
 <tr><td>OUTPUT_DIR (File)</td><td>Where to write _barcode.txt files.  By default, these are written to BASECALLS_DIR.  Default value: null. </td></tr>
 <tr><td>LANE (Integer)</td><td>Lane number.   Required. </td></tr>
 <tr><td>READ_STRUCTURE (String)</td><td>A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of "28T8M8B8S28T" then the sequence may be split up into four reads:
-<p>* read one with 28 cycles (bases) of template
-<p>* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)
-<p>* read three with 8 cycles (bases) of sample barcode
-<p>* 8 cycles (bases) skipped.
-<p>* read four with 28 cycles (bases) of template
-<p>The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.  Required. </td></tr>
+* read one with 28 cycles (bases) of template
+* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)
+* read three with 8 cycles (bases) of sample barcode
+* 8 cycles (bases) skipped.
+* read four with 28 cycles (bases) of template
+The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.  Required. </td></tr>
 <tr><td>BARCODE (String)</td><td>Barcode sequence.  These must be unique, and all the same length.  This cannot be used with reads that have more than one barcode; use BARCODE_FILE in that case.   Default value: null. This option may be specified 0 or more times.  Cannot be used in conjuction with option(s) BARCODE_FILE</td></tr>
 <tr><td>BARCODE_FILE (File)</td><td>Tab-delimited file of barcode sequences, barcode name and, optionally, library name.  Barcodes must be unique and all the same length.  Column headers must be 'barcode_sequence_1', 'barcode_sequence_2' (optional), 'barcode_name', and 'library_name'.  Required.  Cannot be used in conjuction with option(s) BARCODE</td></tr>
 <tr><td>METRICS_FILE (File)</td><td>Per-barcode and per-lane metrics written to this file.  Required. </td></tr>
@@ -31,6 +31,6 @@ Note 2: molecular barcodes (M in the read structure) are not the barcode being e
 <tr><td>MINIMUM_BASE_QUALITY (Integer)</td><td>Minimum base quality. Any barcode bases falling below this quality will be considered a mismatch even in the bases match.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MINIMUM_QUALITY (Integer)</td><td>The minimum quality (after transforming 0s to 1s) expected from reads.  If qualities are lower than this value, an error is thrown.The default of 2 is what the Illumina's spec describes as the minimum, but in practice the value has been observed lower.  Default value: 2. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>COMPRESS_OUTPUTS (Boolean)</td><td>Compress output s_l_t_barcode.txt files using gzip and append a .gz extension to the file names.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>NUM_PROCESSORS (Integer)</td><td>Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to the number of cores available on the machine. If NUM_PROCESSORS &lt; 0 then the number of cores used will be the number available on the machine less NUM_PROCESSORS.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>NUM_PROCESSORS (Integer)</td><td>Run this many PerTileBarcodeExtractors in parallel.  If NUM_PROCESSORS = 0, number of cores is automatically set to the number of cores available on the machine. If NUM_PROCESSORS < 0 then the number of cores used will be the number available on the machine less NUM_PROCESSORS.  Default value: 1. This option can be set to 'null' to clear the default value. </td></tr>
 </table>
 </section>

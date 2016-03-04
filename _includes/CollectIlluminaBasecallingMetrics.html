@@ -1,0 +1,18 @@
+<h3 id="CollectIlluminaBasecallingMetrics">CollectIlluminaBasecallingMetrics</h3>
+<section>
+<p>Given an Illumina basecalling and a lane, produces per-lane-barcode basecalling metrics</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>BASECALLS_DIR (File)</td><td>The Illumina basecalls output directory from which data are read  Required. </td></tr>
+<tr><td>LANE (Integer)</td><td>The lane whose data will be read  Required. </td></tr>
+<tr><td>INPUT (File)</td><td>The file containing barcodes to expect from the run - barcodeData.#  Default value: null. </td></tr>
+<tr><td>READ_STRUCTURE (String)</td><td>A description of the logical structure of clusters in an Illumina Run, i.e. a description of the structure IlluminaBasecallsToSam assumes the  data to be in. It should consist of integer/character pairs describing the number of cycles and the type of those cycles (B for Sample Barcode, M for molecular barcode, T for Template, and S for skip).  E.g. If the input data consists of 80 base clusters and we provide a read structure of "28T8M8B8S28T" then the sequence may be split up into four reads:
+* read one with 28 cycles (bases) of template
+* read two with 8 cycles (bases) of molecular barcode (ex. unique molecular barcode)
+* read three with 8 cycles (bases) of sample barcode
+* 8 cycles (bases) skipped.
+* read four with 28 cycles (bases) of template
+The skipped cycles would NOT be included in an output SAM/BAM file or in read groups therein.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>The file to which the collected metrics are written  Default value: null. </td></tr>
+</table>
+</section>

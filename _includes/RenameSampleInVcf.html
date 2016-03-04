@@ -1,0 +1,11 @@
+<h3 id="RenameSampleInVcf">RenameSampleInVcf</h3>
+<section>
+<p>Renames a sample within a VCF or BCF.  This tool enables the user to rename a sample in either a VCF or BCF file.  It is intended to change the name of a sample in a VCF prior to merging with VCF files in which one or more samples have similar names. Note that the input VCF file must be single-sample VCF and that the NEW_SAMPLE_NAME is required.<br /><h4>Usage example:</h4><pre>java -jar picard.jar RenameSampleInVcf \<br />      I=input.vcf \<br />      O=renamed.vcf \<br />      NEW_SAMPLE_NAME=sample123</pre><hr /></p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>Input single sample VCF.  Required. </td></tr>
+<tr><td>OUTPUT (File)</td><td>Output single sample VCF.  Required. </td></tr>
+<tr><td>OLD_SAMPLE_NAME (String)</td><td>Existing name of sample in VCF; if provided, asserts that that is the name of the extant sample name  Default value: null. </td></tr>
+<tr><td>NEW_SAMPLE_NAME (String)</td><td>New name to give sample in output VCF.  Required. </td></tr>
+</table>
+</section>

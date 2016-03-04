@@ -1,0 +1,12 @@
+<h3 id="CollectJumpingLibraryMetrics">CollectJumpingLibraryMetrics</h3>
+<section>
+<p>Collect jumping library metrics. This tool collects high-level metrics about the presence of outward-facing (jumping) and inward-facing (non-jumping) read pairs within a SAM or BAM file.<br /><br />For a brief primer on jumping libraries, see <a href='http://gatkforums.broadinstitute.org/discussion/6326/jumping-libraries'>the GATK Dictionary</a>.<br /><br />.This program gets all data for computation from the first read in each pair in which the mapping quality (MQ) tag is set with the mate's mapping quality.  If the MQ tag is not set, then the program assumes that the mate's MQ is greater than or equal to MINIMUM_MAPPING_QUALITY (default value is 0).<br /><br /> All the output metrics files are structured text files.<br /><br /><h4>Usage example:</h4><pre>java -jar picard.jar CollectJumpingLibraryMetrics \<br />      I=input.bam  \<br />      O=jumping_metrics.txt</pre><hr />Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#JumpingLibraryMetrics'>the JumpingLibraryMetrics documentation</a> for details and explanations of the output metrics.</p>
+<table>
+<tr><th>Option</th><th>Description</th></tr>
+<tr><td>INPUT (File)</td><td>BAM file(s) of reads with duplicates marked  Default value: null. This option may be specified 0 or more times. </td></tr>
+<tr><td>OUTPUT (File)</td><td>File to which metrics should be written  Required. </td></tr>
+<tr><td>MINIMUM_MAPPING_QUALITY (Integer)</td><td>Mapping quality minimum cutoff  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>TAIL_LIMIT (Integer)</td><td>When calculating mean and stdev stop when the bins in the tail of the distribution contain fewer than mode/TAIL_LIMIT items  Default value: 10000. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>CHIMERA_KB_MIN (Integer)</td><td>Jumps greater than or equal to the greater of this value or 2 times the mode of the outward-facing pairs are considered chimeras  Default value: 100000. This option can be set to 'null' to clear the default value. </td></tr>
+</table>
+</section>

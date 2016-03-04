@@ -10,5 +10,6 @@
 <tr><td>MIN_GQ (Integer)</td><td>The minimum genotype quality that must be achieved for a sample otherwise the genotype will be filtered out.  Default value: 0. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MAX_FS (Double)</td><td>The maximum phred scaled fisher strand value before a site will be filtered out.  Default value: 1.7976931348623157E308. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>MIN_QD (Double)</td><td>The minimum QD value to accept or otherwise filter out the variant.  Default value: 0.0. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>JAVASCRIPT_FILE (File)</td><td>Filters a VCF file with a javascript expression interpreted by the java javascript engine.  The script puts the following variables in the script context:  'variant' a VariantContext ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/variantcontext/VariantContext.html ) and  'header' a VCFHeader ( https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/variant/vcf/VCFHeader.html ). Last value of the script should be a boolean to tell wether we should accept or reject the record.  Default value: null. </td></tr>
 </table>
 </section>
