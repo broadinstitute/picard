@@ -406,7 +406,6 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
         log.info("Will store " + MAX_RECORDS_IN_RAM + " read pairs in memory before sorting.");
 
         final List<SAMReadGroupRecord> readGroups = new ArrayList<SAMReadGroupRecord>();
-        final int recordsRead = 0;
         final SortingCollection<PairedReadSequence> sorter;
         final boolean useBarcodes = (null != BARCODE_TAG || null != READ_ONE_BARCODE_TAG || null != READ_TWO_BARCODE_TAG);
 
@@ -494,7 +493,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
 
         int groupsProcessed = 0;
         long lastLogTime = System.currentTimeMillis();
-        final int meanGroupSize = Math.max(1, (recordsRead / 2) / (int) pow(4, MIN_IDENTICAL_BASES * 2));
+        final int meanGroupSize = (int) (Math.max(1, (progress.getCount() / 2) / (int) pow(4, MIN_IDENTICAL_BASES * 2)));
 
         while (iterator.hasNext()) {
             // Get the next group and split it apart by library
