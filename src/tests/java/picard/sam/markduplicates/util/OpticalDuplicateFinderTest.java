@@ -1,13 +1,10 @@
 package picard.sam.markduplicates.util;
 
-import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.Log;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.Assert;
 import picard.sam.util.PhysicalLocation;
 import picard.sam.util.PhysicalLocationInt;
-import picard.sam.util.PhysicalLocationShort;
 import picard.sam.util.ReadNameParser;
 
 import java.util.ArrayList;
