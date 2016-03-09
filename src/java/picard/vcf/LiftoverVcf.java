@@ -180,7 +180,7 @@ public class LiftoverVcf extends CommandLineProgram {
                 final String reason = (target == null) ? FILTER_NO_TARGET : FILTER_CANNOT_LIFTOVER_INDEL;
                 rejects.add(new VariantContextBuilder(ctx).filter(reason).make());
                 failedLiftover++;
-            } else if (!refSeqs.containsValue(target.getContig())) {
+            } else if (!refSeqs.containsKey(target.getContig())) {
                 rejects.add(new VariantContextBuilder(ctx).filter(FILTER_NO_TARGET).make());
                 failedLiftover++;
 
