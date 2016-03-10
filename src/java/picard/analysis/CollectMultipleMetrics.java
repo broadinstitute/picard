@@ -326,27 +326,29 @@ public class CollectMultipleMetrics extends CommandLineProgram {
     private final Set<MetricAccumulationLevel> accumLevelDefault = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
     @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
-    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = new HashSet<MetricAccumulationLevel>(accumLevelDefault);
+    public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = new HashSet<>(accumLevelDefault);
 
     @Option(shortName = "EXT", doc="Append the given file extension to all metric file names (ex. OUTPUT.insert_size_metrics.EXT). None if null", optional=true)
     public String FILE_EXTENSION = null;
 
-    @Option(doc = "List of metrics programs to apply during the pass through the SAM file.")
-    public List<Program> PROGRAM = CollectionUtil.makeList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
-            Program.CollectInsertSizeMetrics, Program.MeanQualityByCycle, Program.QualityScoreDistribution);
+    @Option(doc = "Set of metrics programs to apply during the pass through the SAM file.")
+    public Set<Program> PROGRAM = new LinkedHashSet<>(Arrays.asList(Program.CollectAlignmentSummaryMetrics, Program.CollectBaseDistributionByCycle,
+            Program.CollectInsertSizeMetrics, Program.MeanQualityByCycle, Program.QualityScoreDistribution));
 
-    @Option(doc = "An optional list of intervals to restrict analysis to.", optional = true)
+    @Option(doc = "An optional list of intervals to restrict analysis to. Only pertains to some of the PROGRAMs. Programs whose stand-alone CLP does not " +
+            "have an INTERVALS argument will silently ignore this argument.", optional = true)
     public File INTERVALS;
 
-    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.", optional = true)
+    @Option(doc = "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis " +
+            "by some PROGRAMs, PROGRAMS whose CLP doesn't allow for this argument will quetly ignore it.", optional = true)
     public File DB_SNP;
 
     /**
-     * Contents of PROGRAM list is transferred to this list during command-line validation, so that an outside
+     * Contents of PROGRAM set is transferred to this set during command-line validation, so that an outside
      * developer can invoke this class programmatically and provide alternative Programs to run by calling
      * setProgramsToRun().
      */
-    private List<ProgramInterface> programsToRun;
+    private Set<ProgramInterface> programsToRun;
 
     private static final Log log = Log.getInstance(CollectMultipleMetrics.class);
 
@@ -360,7 +362,7 @@ public class CollectMultipleMetrics extends CommandLineProgram {
         if (PROGRAM.isEmpty()) {
             return new String[]{"No programs specified with PROGRAM"};
         }
-        programsToRun = new ArrayList<ProgramInterface>(PROGRAM);
+        programsToRun = new LinkedHashSet<>(PROGRAM);
 
         return super.customCommandLineValidation();
     }
@@ -369,8 +371,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      * Use this method when invoking CollectMultipleMetrics programmatically to run programs other than the ones
      * available via enum.  This must be called before doWork().
      */
-    public void setProgramsToRun(final List<ProgramInterface> programsToRun) {
-        this.programsToRun = programsToRun;
+    public void setProgramsToRun(final Collection<ProgramInterface> programsToRun) {
+        this.programsToRun.clear();
+        this.programsToRun.addAll(programsToRun);
     }
 
     @Override
@@ -379,9 +382,9 @@ public class CollectMultipleMetrics extends CommandLineProgram {
             OUTPUT = OUTPUT.substring(0, OUTPUT.length() - 1);
         }
 
-        final List<SinglePassSamProgram> programs = new ArrayList<SinglePassSamProgram>();
-        for (final ProgramInterface program : new HashSet<ProgramInterface>(programsToRun)) {
-            if (program.needsReferenceSequence() && REFERENCE_SEQUENCE==null) {
+        final List<SinglePassSamProgram> programs = new ArrayList<>();
+        for (final ProgramInterface program : programsToRun) {
+            if (program.needsReferenceSequence() && REFERENCE_SEQUENCE == null) {
                 throw new PicardException("The " + program.toString() + " program needs a Reference Sequence, please set REFERENCE_SEQUENCE in the command line");
             }
             if (!accumLevelDefault.equals(METRIC_ACCUMULATION_LEVEL) && !program.supportsMetricAccumulationLevel()) {
