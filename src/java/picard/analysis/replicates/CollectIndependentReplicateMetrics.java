@@ -43,6 +43,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CollectionUtil;
 import htsjdk.samtools.util.ComparableTuple;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.variant.variantcontext.Allele;
@@ -150,6 +151,12 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Override
     protected int doWork() {
 
+        IOUtil.assertFileIsReadable(VCF);
+        IOUtil.assertFileIsReadable(INPUT);
+
+        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
 
         final VCFHeader vcfFileHeader = vcf.getFileHeader();
@@ -226,7 +233,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 if (!useLocus) {
                     metric.nThreeAllelesSites++;
                     if (++thirdAlleleInfos < 100) {
-                        log.info("Skipping a locus due to third allele: " + badAllele + " but expected " +
+                        log.debug("Skipping a locus due to third allele: " + badAllele + " but expected " +
                                 intervalAlleleMap.get(queryInterval) + " queryInterval " + queryInterval +
                                 " offending read name is : " + offendingReadName);
                     }
@@ -241,10 +248,14 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             while (queryIntervalIterator.hasNext() &&
                     (queryInterval == null || isCleanlyBefore(queryInterval, setRepsInterval))) {
                 // if we haven't seen either the reference or the alternate in the locus (subject to our stringent filters) do not use locus.
-                if(locusData.nReferenceReads == 0 || locusData.nAlternateReads == 0) useLocus = false;
+                if(locusData.nReferenceReads == 0 || locusData.nAlternateReads == 0){
+                    useLocus = false;
+                    log.debug("will not use this locus due to lack of evidence of het site.");
+                }
                 //Query interval didn't get killed by 3rd alleles and so we combine the results with the tally
                 if (useLocus && newLocus) {
                     metric.merge(locusData);
+                    log.debug("merging metric. total nSites so far: "+metric.nSites );
                     //calculate allele balance with faux counts
                     final byte alleleBalance = (byte) Math.round(100D * (locusData.nAlternateReads + 0.5) / (locusData.nAlternateReads + locusData.nReferenceReads + 1));
                     alleleBalanceCount.increment(alleleBalance);
@@ -257,6 +268,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 useLocus = true;
             }
             //we have a new locus, next time we should perhaps merge
+     //       log.info("got new locus: " + queryInterval == null ? "null" : queryInterval.toString());
             newLocus = true;
 
             // shouldn't happen, but being safe.
@@ -275,7 +287,10 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 locusData.nReadsInBigSets += setSize;
             }
 
+            log.debug("set size is: " + setSize);
             final List<Allele> allelesInVc = intervalAlleleMap.get(queryInterval);
+
+            log.debug("alleles in VC: " + allelesInVc);
 
             int nRef = 0, nAlt = 0, nOther = 0;
             for (final SAMRecord read : set.getRecords()) {
@@ -286,12 +301,14 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 if (offset == -1) {
                     //a labeled continue watch-out!
                     //This could be a deletion OR a clipped end. Get a new set.
+                    log.debug("got offset -1, getting new set");
                     continue set;
                 }
                 //a labeled continue watch-out!
                 //need to move to the next set since this set has a low quality base-quality.
 
                 if (read.getBaseQualities()[offset] <= MINIMUM_BQ) {
+                    log.debug("got low read quality, getting new set");
                     continue set;
                 }
 
@@ -317,6 +334,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
             final SetClassification classification = classifySet(nRef, nAlt, nOther);
 
+            log.debug("Classification of set is: " + classification);
             if (setSize == DOUBLETON_SIZE) {
 
                 boolean useBarcodes = !set.getRecords().stream()
@@ -327,17 +345,23 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                             return IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
                         }).anyMatch(a -> a);
 
+                log.debug("using barcodes?" + useBarcodes);
                 int unused = useBarcodes ? locusData.nGoodBarcodes++ : locusData.nBadBarcodes++;
 
                 final List<String> barcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_TAG))
                         .map(string -> string == null ? "" : string).collect(Collectors.toList());
 
+                log.debug("found UMIs:" + barcodes);
                 final boolean hasMultipleOrientations = set.getRecords().stream()
                         .map(SAMRecord::getFirstOfPairFlag) //must be paired, due to filter on sam Iterator
                         .distinct().count() != 1;
+                log.debug("reads have multiple orientation?" + hasMultipleOrientations);
+
 
                 final byte editDistance = calculateEditDistance(barcodes.get(0), barcodes.get(1));
+
+                log.debug("Edit distance between umi: " + editDistance);
 
                 if (useBarcodes && editDistance != 0) {
                     if (hasMultipleOrientations)
@@ -406,8 +430,10 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         }
         if (useLocus && newLocus) {
             metric.merge(locusData);
+            log.debug("Merged final metric. nSites:" + metric.nSites);
         } else {
             metric.nThreeAllelesSites++;
+            log.debug("didn't merge last metric, due to 3rd allele: nThreeAllelesSites =" + metric.nThreeAllelesSites);
         }
 
         log.info("Iteration done. Emitting metrics.");

@@ -3,6 +3,7 @@ package picard.analysis.replicates;
 import com.google.common.collect.ImmutableMap;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -69,9 +70,9 @@ public class CollectIndependentReplicatesMetricTest {
         {
             final Map<String, Object> map = new LinkedHashMap<>();
 
-            map.put("nSites", 4);
-            map.put("nDuplicateSets", 4);
-            map.put("nMismatchingUMIsInCoOrientedBiDups",3);
+            map.put("nSites", 3);
+            map.put("nDuplicateSets", 3);
+            map.put("nMismatchingUMIsInCoOrientedBiDups",2);
             map.put("nMismatchingUMIsInContraOrientedBiDups",1);
 
             tests.add(new Object[]{"multipleContigs.vcf", "twopairsWithUMIsMultipleOrientations", map});
@@ -191,11 +192,11 @@ public class CollectIndependentReplicatesMetricTest {
         est.INPUT = bams.get(bam);
         est.VCF = new File(testdir, vcf);
         est.OUTPUT = IOUtil.newTempFile("singleHet", ".duplication_metric", new File[]{bamOutDir});
-        est.OUTPUT.deleteOnExit();
-        est.MATRIX_OUTPUT= IOUtil.newTempFile("singleHet", ".duplication_matrix", new File[]{bamOutDir});
-        est.MATRIX_OUTPUT.deleteOnExit();
-
+        est.MATRIX_OUTPUT = IOUtil.newTempFile("singleHet", ".duplication_matrix", new File[]{bamOutDir});
         est.SAMPLE = "SAMPLE1";
+
+        est.OUTPUT.deleteOnExit();
+        est.MATRIX_OUTPUT.deleteOnExit();
 
         est.doWork();
 
