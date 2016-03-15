@@ -55,7 +55,7 @@ public class TheoreticalSensitivityTest {
         for (int n = 0; n < 10; n++) Assert.assertEquals(deterministicWheel.draw(), 1);
 
         //test the sums of this deterministic wheel: a sum of n 1's equals n
-        final List<ArrayList<Integer>> deterministicSums = deterministicWheel.sampleCumulativeSums(10, 1);
+        final List<ArrayList<Integer>> deterministicSums = deterministicWheel.sampleCumulativeSums(10, 1, false);
         for (int n = 0; n < 10; n++) Assert.assertEquals(deterministicSums.get(n).get(0), (Integer) n);
     }
 
@@ -119,7 +119,7 @@ public class TheoreticalSensitivityTest {
         final double sigma = Math.sqrt(numSummands) * sigmaSingleDraw;
 
         //test the sums of this deterministic wheel: a sum of n 1's equals n
-        final List<ArrayList<Integer>> sums = wheel.sampleCumulativeSums(numSummands, sampleSize);
+        final List<ArrayList<Integer>> sums = wheel.sampleCumulativeSums(numSummands, sampleSize, false);
         //we only want the last set of sums, those with numSummands summands
         sums.subList(0, sums.size() - 1).clear();
 
