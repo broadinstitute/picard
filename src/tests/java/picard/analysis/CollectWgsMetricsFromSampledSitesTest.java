@@ -27,10 +27,15 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import picard.cmdline.CommandLineProgramTest;
+import picard.cmdline.PicardCommandLine;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Tests CollectWgsMetricsFromSampledSites
@@ -99,6 +104,55 @@ public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTes
             Assert.assertEquals(metrics.PCT_EXC_MAPQ, 0.0);
             Assert.assertEquals(metrics.PCT_EXC_DUPE, 0.066667);
             Assert.assertEquals(metrics.HET_SNP_SENSITIVITY, 0.393802, .02);
+        }
+    }
+
+    /*
+     * Tests the same inputs for CollectWgsMetrics vs CollectWgsMetricsFromSampledSites in order to make sure the results are different.
+     */
+    @Test
+    public void testLargeIntervals() throws IOException {
+        final File input = new File(TEST_DATA_DIR, "forMetrics.sam");
+        final File outfile = File.createTempFile("test", ".wgs_metrics");
+        final File ref = new File(TEST_DATA_DIR, "merger.fasta");
+        final File intervals = new File(TEST_DATA_DIR, "largeIntervals.interval_list");
+        final int sampleSize = 1000;
+        outfile.deleteOnExit();
+
+        final Map<String, String> args = new HashMap<String, String>(5);
+        args.put("INPUT", "INPUT=" + input.getAbsolutePath());
+        args.put("REFERENCE_SEQUENCE", "REFERENCE_SEQUENCE=" + ref.getAbsolutePath());
+        args.put("INTERVALS", "INTERVALS=" + intervals.getAbsolutePath());
+        args.put("SAMPLE_SIZE", "SAMPLE_SIZE=" + sampleSize);
+
+        args.put("OUTPUT", "OUTPUT=" + outfile.getAbsolutePath());
+        Assert.assertEquals(runPicardCommandLine(args.values().toArray(new String[]{})), 0);
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> output = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        output.read(new FileReader(outfile));
+
+        final File collectWgsOutfile = File.createTempFile("collectWgsMetrics.test", ".wgs_metrics");
+        collectWgsOutfile.deleteOnExit();
+
+        /*
+         * Replace the output file in order to be able to run CollectWgsMetrics with a different output file but leave all
+         * other arguments the same.
+         */
+        args.put("OUTPUT", "OUTPUT=" + collectWgsOutfile.getAbsolutePath());
+
+        CollectWgsMetrics collectWgsMetrics = new CollectWgsMetrics();
+        collectWgsMetrics.instanceMain(args.values().toArray(new String[]{}));
+
+        final MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>> collectWgsMetricsOutput = new MetricsFile<CollectWgsMetrics.WgsMetrics, Comparable<?>>();
+        collectWgsMetricsOutput.read(new FileReader(collectWgsOutfile));
+
+        for (final CollectWgsMetrics.WgsMetrics metrics : output.getMetrics()) {
+            Assert.assertEquals(metrics.GENOME_TERRITORY, 404);
+            for (final CollectWgsMetrics.WgsMetrics collectWgsMetricsOut : collectWgsMetricsOutput.getMetrics()) {
+                Assert.assertNotEquals(metrics.PCT_EXC_MAPQ, collectWgsMetricsOut.PCT_EXC_MAPQ);
+                Assert.assertNotEquals(metrics.PCT_EXC_DUPE, collectWgsMetricsOut.PCT_EXC_DUPE);
+                Assert.assertNotEquals(metrics.PCT_EXC_UNPAIRED, collectWgsMetricsOut.PCT_EXC_UNPAIRED);
+            }
         }
     }
 }
