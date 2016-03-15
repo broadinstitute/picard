@@ -37,27 +37,41 @@ import java.util.List;
  * Created by David Benjamin on 5/13/15.
  */
 public class TheoreticalSensitivity {
-    /**
-     * @param the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
-     * @param the probability of quality q is qualityDistribution[q] for q = 0, 1. . . Q
-     * @param sample size is the number of random sums of quality scores for each m
-     * @param logOddsThreshold is the log_10 of the likelihood ratio required to call a SNP,
-     * for example 5 if the variant likelihood must be 10^5 times greater
-     */
+
     private static final Log log = Log.getInstance(TheoreticalSensitivity.class);
     private static final int SAMPLING_MAX = 600; //prevent 'infinite' loops
     private static final int MAX_CONSIDERED_DEPTH = 1000; //no point in looking any deeper than this, otherwise GC overhead is too high.
 
+    /**
+     * @param depthDistribution the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
+     * @param qualityDistribution the probability of quality q is qualityDistribution[q] for q = 0, 1. . . Q
+     * @param sampleSize sample size is the number of random sums of quality scores for each m
+     * @param logOddsThreshold is the log_10 of the likelihood ratio required to call a SNP,
+     * for example 5 if the variant likelihood must be 10^5 times greater
+     */
     public static double hetSNPSensitivity(final double[] depthDistribution, final double[] qualityDistribution,
                                            final int sampleSize, final double logOddsThreshold) {
+        return hetSNPSensitivity(depthDistribution, qualityDistribution, sampleSize, logOddsThreshold, true);
+    }
+
+    /**
+     * @param depthDistribution the probability of depth n is depthDistribution[n] for n = 0, 1. . . N - 1
+     * @param qualityDistribution the probability of quality q is qualityDistribution[q] for q = 0, 1. . . Q
+     * @param sampleSize sample size is the number of random sums of quality scores for each m
+     * @param logOddsThreshold is the log_10 of the likelihood ratio required to call a SNP,
+     * for example 5 if the variant likelihood must be 10^5 times greater.
+     * @param withLogging true to output log messages, false otherwise.
+     */
+    public static double hetSNPSensitivity(final double[] depthDistribution, final double[] qualityDistribution,
+                                           final int sampleSize, final double logOddsThreshold, final boolean withLogging) {
         final int N = Math.min(depthDistribution.length, MAX_CONSIDERED_DEPTH + 1);
 
-        log.info("Creating Roulette Wheel");
+        if (withLogging) log.info("Creating Roulette Wheel");
         final RouletteWheel qualitySampler = new RouletteWheel(qualityDistribution);
 
         //qualitySums[m] is a random sample of sums of m quality scores, for m = 0, 1, N - 1
-        log.info("Calculating quality sums from quality sampler");
-        final List<ArrayList<Integer>> qualitySums = qualitySampler.sampleCumulativeSums(N, sampleSize);
+        if (withLogging) log.info("Calculating quality sums from quality sampler");
+        final List<ArrayList<Integer>> qualitySums = qualitySampler.sampleCumulativeSums(N, sampleSize, withLogging);
 
         //if a quality sum of m qualities exceeds the quality sum threshold for n total reads, a SNP is called
         final ArrayList<Double> qualitySumThresholds = new ArrayList<>(N);
@@ -67,7 +81,7 @@ public class TheoreticalSensitivity {
 
         //probabilityToExceedThreshold[m][n] is the probability that the sum of m quality score
         //exceeds the nth quality sum threshold
-        log.info("Calculating theoretical het sensitivity");
+        if (withLogging) log.info("Calculating theoretical het sensitivity");
         final List<ArrayList<Double>> probabilityToExceedThreshold = proportionsAboveThresholds(qualitySums, qualitySumThresholds);
         final List<ArrayList<Double>> altDepthDistribution = hetAltDepthDistribution(N);
         double result = 0.0;
@@ -156,7 +170,7 @@ public class TheoreticalSensitivity {
         }
 
         //get samples of sums of 0, 1, 2,. . .  N - 1 draws
-        public List<ArrayList<Integer>> sampleCumulativeSums(final int maxNumberOfSummands, final int sampleSize) {
+        public List<ArrayList<Integer>> sampleCumulativeSums(final int maxNumberOfSummands, final int sampleSize, final boolean withLogging) {
             final List<ArrayList<Integer>> result = new ArrayList<>();
             for (int m = 0; m < maxNumberOfSummands; m++) result.add(new ArrayList<>());
 
@@ -166,7 +180,7 @@ public class TheoreticalSensitivity {
                     result.get(m).add(cumulativeSum);
                     cumulativeSum += draw();
                 }
-                if (iteration % 1000 == 0) {
+                if (withLogging && iteration % 1000 == 0) {
                     log.info(iteration + " sampling iterations completed");
                 }
             }
