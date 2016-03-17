@@ -1,6 +1,6 @@
 <h3 id="FilterSamReads">FilterSamReads</h3>
 <section>
-<p>Subset read data from a SAM or BAM fileThis tool takes a SAM or BAM file and subsets it to a new file that either excludes or only includes either aligned or unaligned reads (set using FILTER), or specific reads based on a list of reads names supplied in the READ_LIST_FILE.  <h4>Usage example:</h4><pre>java -jar picard.jar FilterSamReads \<br />       I=input.bam \ <br />       O=output.bam \<br />       READ_LIST_FILE=read_names.txt      FILTER=filter_value</pre> For information on the SAM format, please see: http://samtools.sourceforge.net<hr /></p>
+<p>Subset read data from a SAM or BAM fileThis tool takes a SAM or BAM file and subsets it to a new file that either excludes or only includes either aligned or unaligned reads (set using FILTER), or specific reads based on a list of reads names supplied in the READ_LIST_FILE.  <h4>Usage example:</h4><pre>java -jar picard.jar FilterSamReads \<br />      I=input.bam \ <br />      O=output.bam \<br />      READ_LIST_FILE=read_names.txt \ <br />      FILTER=filter_value</pre> For information on the SAM format, please see: http://samtools.sourceforge.net<hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>The SAM or BAM file that will be filtered.  Required. </td></tr>
