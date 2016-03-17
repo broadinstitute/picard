@@ -13,10 +13,7 @@ optionally removed (see REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES), and 
 in the 'DT' optional attribute. In addition, it also outputs a metrics file containing the numbers of
 READ_PAIRS_EXAMINED, UNMAPPED_READS, UNPAIRED_READS, UNPAIRED_READ DUPLICATES, READ_PAIR_DUPLICATES, and
 READ_PAIR_OPTICAL_DUPLICATES.
-
-Usage example: java -jar picard.jar MarkDuplicates I=input.bam \
-                 O=marked_duplicates.bam M=marked_dup_metrics.txt
-</p>
+<br /><h4>Usage example:</h4><pre>java -jar picard.jar MarkDuplicates I=input.bam \<br />      O=marked_duplicates.bam M=marked_dup_metrics.txt<br /></pre><hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP (Integer)</td><td>This option is obsolete. ReadEnds will always be spilled to disk.  Default value: 50000. This option can be set to 'null' to clear the default value. </td></tr>
