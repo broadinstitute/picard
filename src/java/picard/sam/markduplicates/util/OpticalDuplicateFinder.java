@@ -54,7 +54,7 @@ public class OpticalDuplicateFinder extends ReadNameParser {
         this.bigDuplicateSetSize = bigDuplicateSetSize;
     }
 
-    private int bigDuplicateSetSize;
+    private int bigDuplicateSetSize = DEFAULT_BIG_DUPLICATE_SET_SIZE;
 
     /**
      * Uses the default duplicate distance {@value OpticalDuplicateFinder#DEFAULT_OPTICAL_DUPLICATE_DISTANCE} and the default read name regex
@@ -63,7 +63,6 @@ public class OpticalDuplicateFinder extends ReadNameParser {
     public OpticalDuplicateFinder() {
         super();
         this.opticalDuplicatePixelDistance = DEFAULT_OPTICAL_DUPLICATE_DISTANCE;
-        this.bigDuplicateSetSize = DEFAULT_BIG_DUPLICATE_SET_SIZE;
     }
 
     /**
