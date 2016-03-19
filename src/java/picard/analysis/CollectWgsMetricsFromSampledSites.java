@@ -53,7 +53,7 @@ import java.io.File;
 
 public class CollectWgsMetricsFromSampledSites extends CollectWgsMetrics {
 
-    @Option(shortName = "INTERVALS", doc = "An interval list file that contains the locations of the positions to assess.", optional = false)
+    @Option(doc = "An interval list file that contains the locations of the positions to assess.", optional = false)
     public File INTERVALS = null;
 
     public static void main(final String[] args) {

@@ -979,7 +979,7 @@ public class CommandLineParser {
             if (!optionDefinition.overridable && optionMap.containsKey(optionDefinition.name)) {
                 throw new CommandLineParserDefinitionException(optionDefinition.name + " has already been used.");
             }
-            if (!optionDefinition.shortName.isEmpty()) {
+            if (!optionDefinition.shortName.isEmpty() && !optionDefinition.shortName.equals(optionDefinition.name)) {
                 if (optionMap.containsKey(optionDefinition.shortName)) {
                     if (!optionDefinition.overridable) {
                         throw new CommandLineParserDefinitionException(optionDefinition.shortName +
