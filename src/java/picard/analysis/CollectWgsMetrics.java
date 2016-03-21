@@ -116,7 +116,7 @@ public class CollectWgsMetrics extends CommandLineProgram {
     @Option(doc="Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.", optional = true)
     public int SAMPLE_SIZE=10000;
 
-    @Option(shortName = "INTERVALS", doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
+    @Option(doc = "An interval list file that contains the positions to restrict the assessment. Please note that " +
             "all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of " +
             "the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs. To " +
             "restrict the calculation just to individual positions without overlap, please see CollectWgsMetricsFromSampledSites.",

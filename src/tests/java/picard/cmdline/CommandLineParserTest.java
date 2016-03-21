@@ -121,6 +121,13 @@ public class CommandLineParserTest {
         public String frob;
     }
 
+    class OptionsWithSameShortName {
+        @Option(shortName = "SAME_SHORT_NAME", overridable = true, optional = true)
+        public String SAME_SHORT_NAME;
+        @Option(shortName = "SOMETHING_ELSE", overridable = true, optional = true)
+        public String DIFF_SHORT_NAME;
+    }
+
     class MutexOptions {
         @Option(mutex = {"M", "N", "Y", "Z"})
         public String A;
@@ -165,6 +172,24 @@ public class CommandLineParserTest {
         final CommandLineParser clp = new CommandLineParser(fo);
         clp.usage(System.out, true);
     }
+
+    /**
+     * If the short name is set to be the same as the long name we still want the argument to appear in the commandLine.
+     */
+    @Test
+    public void testForIdenticalShortName() {
+        final String[] args = {
+                "SAME_SHORT_NAME=FOO",
+                "SOMETHING_ELSE=BAR"
+        };
+        final OptionsWithSameShortName fo = new OptionsWithSameShortName();
+        final CommandLineParser clp = new CommandLineParser(fo);
+        clp.parseOptions(System.err, args);
+        final String commandLine = clp.getCommandLine();
+        Assert.assertTrue(commandLine.contains("DIFF_SHORT_NAME"));
+        Assert.assertTrue(commandLine.contains("SAME_SHORT_NAME"));
+    }
+
 
     @Test
     public void testPositive() {
