@@ -36,6 +36,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IterableAdapter;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.programgroups.Testing;
 import picard.sam.DuplicationMetrics;
@@ -101,8 +102,12 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
 
         // Create the output header
         final SAMFileHeader outputHeader = header.clone();
-        outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        for (final String comment : COMMENT) outputHeader.addComment(comment);
+
+        if (outputHeader.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException("This program requires inputs in coordinate SortOrder");
+        }
+
+        COMMENT.forEach(outputHeader::addComment);
         
         // Key: previous PG ID on a SAM Record (or null).  Value: New PG ID to replace it.
         final Map<String, String> chainedPgIds = getChainedPgIds(outputHeader);
@@ -127,24 +132,28 @@ public class SimpleMarkDuplicatesWithMateCigar extends MarkDuplicates {
         
         libraryIdGenerator = new LibraryIdGenerator(headerAndIterator.header);
         
-        for (final DuplicateSet duplicateSet : new IterableAdapter<DuplicateSet>(iterator)) {
+        for (final DuplicateSet duplicateSet : new IterableAdapter<>(iterator)) {
             final SAMRecord representative = duplicateSet.getRepresentative();
             final boolean doOpticalDuplicateTracking = (this.READ_NAME_REGEX != null) &&
                     isPairedAndBothMapped(representative) &&
                     representative.getFirstOfPairFlag();
-            final Set<String> duplicateReadEndsSeen = new HashSet<String>();
+            final Set<String> duplicateReadEndsSeen = new HashSet<>();
             
-            final List<ReadEnds> duplicateReadEnds = new ArrayList<ReadEnds>();
+            final List<ReadEnds> duplicateReadEnds = new ArrayList<>();
             for (final SAMRecord record : duplicateSet.getRecords()) {
 
-                if (!record.isSecondaryOrSupplementary()) {
-                    final String library = LibraryIdGenerator.getLibraryName(header, record);
-                    DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
-                    if (metrics == null) {
-                        metrics = new DuplicationMetrics();
-                        metrics.LIBRARY = library;
-                        libraryIdGenerator.addMetricsByLibrary(library, metrics);
-                    }
+                // get the metrics for the library of this read (creating a new one if needed)
+                final String library = LibraryIdGenerator.getLibraryName(header, record);
+                DuplicationMetrics metrics = libraryIdGenerator.getMetricsByLibrary(library);
+                if (metrics == null) {
+                    metrics = new DuplicationMetrics();
+                    metrics.LIBRARY = library;
+                    libraryIdGenerator.addMetricsByLibrary(library, metrics);
+                }
+
+                if (record.isSecondaryOrSupplementary()) {
+                    ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+                } else {
 
                     // First bring the simple metrics up to date
                     if (record.getReadUnmappedFlag()) {

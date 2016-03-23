@@ -38,6 +38,7 @@ public class StandardOptionDefinitions {
     public static final String SEQUENCE_DICTIONARY_SHORT_NAME = "SD";
     public static final String METRICS_FILE_SHORT_NAME = "M";
     public static final String ASSUME_SORTED_SHORT_NAME = "AS";
+    public static final String ASSUME_SORT_ORDER_SHORT_NAME = "ASO";
     public static final String PF_READS_ONLY_SHORT_NAME = "PF";
     public static final String MINIMUM_MAPPING_QUALITY_SHORT_NAME = "MQ";
     public static final String READ_GROUP_ID_SHORT_NAME = "RG";

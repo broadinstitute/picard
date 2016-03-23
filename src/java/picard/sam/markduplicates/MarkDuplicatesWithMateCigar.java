@@ -24,6 +24,7 @@
 
 package picard.sam.markduplicates;
 
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramProperties;
 import picard.cmdline.Option;
 import htsjdk.samtools.util.Histogram;
@@ -120,8 +121,11 @@ public class MarkDuplicatesWithMateCigar extends AbstractMarkDuplicatesCommandLi
 
         // Create the output header
         final SAMFileHeader outputHeader = header.clone();
-        outputHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        for (final String comment : COMMENT) outputHeader.addComment(comment);
+        if (outputHeader.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new PicardException("This program requires inputs in coordinate SortOrder");
+        }
+
+        COMMENT.forEach(outputHeader::addComment);
 
         // Since this is one-pass, unlike MarkDuplicates, we cannot only chain together program
         // group records we have seen, we have to assume all of them may be seen.  We can perhaps

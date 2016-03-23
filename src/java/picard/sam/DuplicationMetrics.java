@@ -41,10 +41,13 @@ public class DuplicationMetrics extends MetricBase {
      */
     public long UNPAIRED_READS_EXAMINED;
 
-    /** The number of mapped read pairs examined. */
+    /** The number of mapped read pairs examined. (Primary, non-supplemental) */
     public long READ_PAIRS_EXAMINED;
 
-    /** The total number of unmapped reads examined. */
+    /** The number of reads that were either secondary or supplementary */
+    public long SECONDARY_OR_SUPPLEMENTARY_RDS;
+
+    /** The total number of unmapped reads examined. (Primary, non-supplemental) */
     public long UNMAPPED_READS;
 
     /** The number of fragments that were marked as duplicates. */

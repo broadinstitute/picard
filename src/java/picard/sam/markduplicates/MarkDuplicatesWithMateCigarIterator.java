@@ -242,9 +242,12 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
                 !record.getMateUnmappedFlag() && null == SAMUtils.getMateCigar(record)) { // paired with one end unmapped and no mate cigar
 
             // NB: we are not truly examining these records. Do we want to count them?
-            if (!record.isSecondaryOrSupplementary()) {
+
+            final DuplicationMetrics metrics = getMetrics(record);
+            if (record.isSecondaryOrSupplementary()) {
+                ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+            } else {
                 // update metrics
-                final DuplicationMetrics metrics = getMetrics(record);
                 if (record.getReadUnmappedFlag()) {
                     ++metrics.UNMAPPED_READS;
                 } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
@@ -433,11 +436,14 @@ public class MarkDuplicatesWithMateCigarIterator implements SAMRecordIterator {
             backingIteratorRecordIndex++; // Each record is has an index and is emitted in the same order. This helps that.
 
             // We do not consider secondary, supplementary, or unmapped alignments for duplicate marking. We can thus mark that duplicate marking on them has been completed.
+            final DuplicationMetrics metrics = getMetrics(record);
             if (record.isSecondaryOrSupplementary() || record.getReadUnmappedFlag()) {
                 outputBuffer.setResultState(samRecordWithOrdinal, false);
+                if(record.isSecondaryOrSupplementary()){
+                    ++metrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+                }
             } else {
                 // Bring the simple metrics up to date
-                final DuplicationMetrics metrics = getMetrics(record);
                 if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
                     ++metrics.UNPAIRED_READS_EXAMINED;
                 } else {
