@@ -62,7 +62,7 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
         for (final VariantContext inputContext : rejectReader) {
             counter++;
         }
-        Assert.assertEquals(counter, 2, "the wrong number of rejected indels faile the liftover");
+        Assert.assertEquals(counter, 2, "the wrong number of rejected indels failed the liftover");
     }
 
     @Test
@@ -123,5 +123,48 @@ public class LiftoverVcfTest extends CommandLineProgramTest {
                 "WMC=" + warnOnMissingContext
         };
         Assert.assertEquals(runPicardCommandLine(argsWithWarnOnMissingContig), expectedReturnCode);
+    }
+
+    @DataProvider(name = "dataTestWriteOriginalPosition")
+    public Object[][] dataTestWriteOriginalPosition() {
+        return new Object[][]{
+                {false},
+                {true}
+        };
+    }
+
+    @Test(dataProvider = "dataTestWriteOriginalPosition")
+    public void testWriteOriginalPosition(boolean shouldWriteOriginalPosition) {
+        final File liftOutputFile = new File(OUTPUT_DATA_PATH, "lift-delete-me.vcf");
+        final File rejectOutputFile = new File(OUTPUT_DATA_PATH, "reject-delete-me.vcf");
+        final File input = new File(TEST_DATA_PATH, "testLiftover.vcf");
+
+        liftOutputFile.deleteOnExit();
+        rejectOutputFile.deleteOnExit();
+
+        final String[] args = new String[]{
+                "INPUT=" + input.getAbsolutePath(),
+                "OUTPUT=" + liftOutputFile.getAbsolutePath(),
+                "REJECT=" + rejectOutputFile.getAbsolutePath(),
+                "CHAIN=" + CHAIN_FILE,
+                "REFERENCE_SEQUENCE=" + REFERENCE_FILE,
+                "CREATE_INDEX=false",
+                "WRITE_ORIGINAL_POSITION=" + shouldWriteOriginalPosition
+        };
+
+        runPicardCommandLine(args);
+
+        try (VCFFileReader liftReader = new VCFFileReader(liftOutputFile, false)) {
+            for (VariantContext vc : liftReader) {
+                if (shouldWriteOriginalPosition) {
+                    Assert.assertNotNull(vc.getAttribute(LiftoverVcf.ORIGINAL_CONTIG));
+                    Assert.assertNotNull(vc.getAttribute(LiftoverVcf.ORIGINAL_START));
+                }
+                else {
+                    Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_CONTIG));
+                    Assert.assertFalse(vc.hasAttribute(LiftoverVcf.ORIGINAL_START));
+                }
+            }
+        }
     }
 }

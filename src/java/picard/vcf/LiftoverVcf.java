@@ -21,6 +21,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFRecordCodec;
 import picard.cmdline.CommandLineProgram;
 import picard.cmdline.CommandLineProgramProperties;
@@ -89,6 +91,13 @@ public class LiftoverVcf extends CommandLineProgram {
     @Option(shortName = "WMC", doc = "Warn on missing contig.", optional = true)
     public boolean WARN_ON_MISSING_CONTIG = false;
 
+    // Option on whether or not to write the original contig/position of the variant to the INFO field
+    @Option(doc = "Write the original contig/position for lifted variants to the INFO field.", optional = true)
+    public boolean WRITE_ORIGINAL_POSITION = false;
+
+    @Option(doc = "The minimum percent match required for a variant to be lifted.", optional = true)
+    public double LIFTOVER_MIN_MATCH = 1.0;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     protected static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
@@ -106,6 +115,18 @@ public class LiftoverVcf extends CommandLineProgram {
             new VCFFilterHeaderLine(FILTER_CANNOT_LIFTOVER_INDEL, "Indel falls into a reverse complemented region in the target genome."),
             new VCFFilterHeaderLine(FILTER_NO_TARGET, "Variant could not be lifted between genome builds."),
             new VCFFilterHeaderLine(FILTER_MISMATCHING_REF_ALLELE, "Reference allele does not match reference genome sequence after liftover.")
+    );
+
+    /** Attribute used to store the name of the source contig/chromosome prior to liftover. */
+    public static final String ORIGINAL_CONTIG = "OriginalContig";
+
+    /** Attribute used to store the position of the variant on the source contig prior to liftover. */
+    public static final String ORIGINAL_START = "OriginalStart";
+
+    /** Metadata to be added to the Passing file. */
+    private static final List<VCFInfoHeaderLine> ATTRS = CollectionUtil.makeList(
+            new VCFInfoHeaderLine(ORIGINAL_CONTIG, 1, VCFHeaderLineType.String, "The name of the source contig/chromosome prior to liftover."),
+            new VCFInfoHeaderLine(ORIGINAL_START, 1, VCFHeaderLineType.String, "The position of the variant on the source contig prior to liftover.")
     );
 
     private final Log log = Log.getInstance(LiftoverVcf.class);
@@ -143,6 +164,9 @@ public class LiftoverVcf extends CommandLineProgram {
         final VCFHeader inHeader = in.getFileHeader();
         final VCFHeader outHeader = new VCFHeader(inHeader);
         outHeader.setSequenceDictionary(walker.getSequenceDictionary());
+        if (WRITE_ORIGINAL_POSITION) {
+            for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
+        }
         final VariantContextWriter out = new VariantContextWriterBuilder().setOption(Options.INDEX_ON_THE_FLY)
                 .setOutputFile(OUTPUT).setReferenceDictionary(walker.getSequenceDictionary()).build();
         out.writeHeader(outHeader);
@@ -150,6 +174,9 @@ public class LiftoverVcf extends CommandLineProgram {
         final VariantContextWriter rejects = new VariantContextWriterBuilder().setOutputFile(REJECT).unsetOption(Options.INDEX_ON_THE_FLY).build();
         final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
         for (final VCFFilterHeaderLine line : FILTERS) rejectHeader.addMetaDataLine(line);
+        if (WRITE_ORIGINAL_POSITION) {
+            for (final VCFInfoHeaderLine line : ATTRS) rejectHeader.addMetaDataLine(line);
+        }
         rejects.writeHeader(rejectHeader);
 
 
@@ -173,7 +200,7 @@ public class LiftoverVcf extends CommandLineProgram {
         for (final VariantContext ctx : in) {
             ++total;
             final Interval source = new Interval(ctx.getContig(), ctx.getStart(), ctx.getEnd(), false, ctx.getContig() + ":" + ctx.getStart() + "-" + ctx.getEnd());
-            final Interval target = liftOver.liftOver(source, 1.0);
+            final Interval target = liftOver.liftOver(source, LIFTOVER_MIN_MATCH);
 
             // if the target is null OR (the target is reverse complemented AND the variant is an indel or mixed), then we cannot lift it over
             if (target == null || (target.isNegativeStrand() && (ctx.isMixed() || ctx.isIndel()))) {
@@ -217,6 +244,11 @@ public class LiftoverVcf extends CommandLineProgram {
 
                 builder.id(ctx.getID());
                 builder.attributes(ctx.getAttributes());
+
+                if (WRITE_ORIGINAL_POSITION) {
+                    builder.attribute(ORIGINAL_CONTIG, source.getContig());
+                    builder.attribute(ORIGINAL_START, source.getStart());
+                }
                 builder.genotypes(fixGenotypes(ctx.getGenotypes(), reverseComplementAlleleMap));
                 builder.filters(ctx.getFilters());
                 builder.log10PError(ctx.getLog10PError());
