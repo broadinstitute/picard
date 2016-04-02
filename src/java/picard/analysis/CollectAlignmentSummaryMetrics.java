@@ -78,10 +78,12 @@ import java.util.Set;
         programGroup = Metrics.class
 )
 public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
-    static final String USAGE_SUMMARY = "Produce a summary of alignment metrics from a SAM or BAM file";
-    static final String USAGE_DETAILS = "Using read outputs from high throughput sequencing (HTS) technologies, this tool provides " +
-            "metrics regarding the quality of read alignments to a reference sequence, as well as the proportion of the reads " +
-            "that passed machine signal-to-noise threshold quality filters (Illumina)."+
+    static final String USAGE_SUMMARY = "<b>Produces a summary of alignment metrics from a SAM or BAM file.</b>  ";
+    static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and produces metrics detailing the quality of the read " +
+            "alignments as well as the proportion of the reads that passed machine signal-to-noise threshold quality filters. " +
+            "Note that these quality filters are specific to Illumina data; for additional information, please see the corresponding " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>. </p>" +
+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "    java -jar picard.jar CollectAlignmentSummaryMetrics \\<br />" +
@@ -89,12 +91,12 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             "          I=input.bam \\<br />" +
             "          O=output.txt" +
             "</pre>"+
-            "Please see <a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics'>" +
-            "the AlignmentSummaryMetrics documentation</a> for detailed explanations of each metric. <br /> <br />" +
-            "Additional information about Illumina's quality filters can be found in the following documents on the Illumina website: " +
-            "<ul><li>http://support.illumina.com/content/dam/illumina-marketing/documents/products/technotes/hiseq-x-percent-pf-technical-note-770-2014-043.pdf</li> " +
-            "<li>http://support.illumina.com/content/dam/illumina-support/documents/documentation/system_documentation/hiseqx/hiseq-x-system-guide-15050091-d.pdf</li></ul>" +
+
+            "<p>Please see the CollectAlignmentSummaryMetrics " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics'>definitions</a> " +
+            "for a complete description of the metrics produced by this tool.</p>" +
             "<hr />";
+
     private static final Log log = Log.getInstance(CollectAlignmentSummaryMetrics.class);
 
     @Option(doc="Paired-end reads above this insert size will be considered chimeric along with inter-chromosomal pairs.")
@@ -103,13 +105,13 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
     @Option(doc="Paired-end reads that do not have this expected orientation will be considered chimeric.")
     public Set<PairOrientation> EXPECTED_PAIR_ORIENTATIONS = EnumSet.copyOf(ChimeraUtil.DEFAULT_EXPECTED_ORIENTATIONS);
 
-    @Option(doc="List of adapter sequences to use when processing the alignment metrics")
+    @Option(doc="List of adapter sequences to use when processing the alignment metrics.")
 	public List<String> ADAPTER_SEQUENCE = AdapterUtility.DEFAULT_ADAPTER_SEQUENCE;
 
-    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.  ")
+    @Option(shortName="LEVEL", doc="The level(s) at which to accumulate metrics.")
     public Set<MetricAccumulationLevel> METRIC_ACCUMULATION_LEVEL = CollectionUtil.makeSet(MetricAccumulationLevel.ALL_READS);
 
-    @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.  ")
+    @Option(shortName="BS", doc="Whether the SAM or BAM file consists of bisulfite sequenced reads.")
     public boolean IS_BISULFITE_SEQUENCED = false;
 
     //overridden to make it visible on the commandline and to change the doc.
