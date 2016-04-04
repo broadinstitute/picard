@@ -128,6 +128,11 @@ public class SamToFastq extends CommandLineProgram {
             "clipped region.", optional = true)
     public String CLIPPING_ACTION;
 
+    @Option(shortName = "CLIP_MIN", doc = "When performing clipping with the CLIPPING_ATTRIBUTE and CLIPPING_ACTION " +
+            "parameters, ensure that the resulting reads after clipping are at least CLIPPING_MIN_LENGTH bases long. " +
+            "If the original read is shorter than CLIPPING_MIN_LENGTH then the original read length will be maintained.")
+    public int CLIPPING_MIN_LENGTH = 0;
+
     @Option(shortName = "R1_TRIM", doc = "The number of bases to trim from the beginning of read 1.")
     public int READ1_TRIM = 0;
 
@@ -297,7 +302,11 @@ public class SamToFastq extends CommandLineProgram {
 
         // If we're clipping, do the right thing to the bases or qualities
         if (CLIPPING_ATTRIBUTE != null) {
-            final Integer clipPoint = (Integer) read.getAttribute(CLIPPING_ATTRIBUTE);
+            Integer clipPoint = (Integer) read.getAttribute(CLIPPING_ATTRIBUTE);
+            if (clipPoint != null && clipPoint < CLIPPING_MIN_LENGTH) {
+                clipPoint = Math.min(readString.length(), CLIPPING_MIN_LENGTH);
+            }
+
             if (clipPoint != null) {
                 if (CLIPPING_ACTION.equalsIgnoreCase("X")) {
                     readString = clip(readString, clipPoint, null, !read.getReadNegativeStrandFlag());
