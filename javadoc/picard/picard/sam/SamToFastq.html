@@ -149,66 +149,70 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#CLIPPING_ATTRIBUTE">CLIPPING_ATTRIBUTE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#CLIPPING_MIN_LENGTH">CLIPPING_MIN_LENGTH</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#FASTQ">FASTQ</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#INCLUDE_NON_PF_READS">INCLUDE_NON_PF_READS</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#INCLUDE_NON_PRIMARY_ALIGNMENTS">INCLUDE_NON_PRIMARY_ALIGNMENTS</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#INTERLEAVE">INTERLEAVE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#OUTPUT_DIR">OUTPUT_DIR</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#OUTPUT_PER_RG">OUTPUT_PER_RG</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.Integer</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#QUALITY">QUALITY</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#RE_REVERSE">RE_REVERSE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.Integer</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#READ1_MAX_BASES_TO_WRITE">READ1_MAX_BASES_TO_WRITE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#READ1_TRIM">READ1_TRIM</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.Integer</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#READ2_MAX_BASES_TO_WRITE">READ2_MAX_BASES_TO_WRITE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#READ2_TRIM">READ2_TRIM</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#RG_TAG">RG_TAG</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#SECOND_END_FASTQ">SECOND_END_FASTQ</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/SamToFastq.html#UNPAIRED_FASTQ">UNPAIRED_FASTQ</a></span></code>&nbsp;</td>
 </tr>
@@ -437,6 +441,17 @@ public&nbsp;java.lang.String CLIPPING_ATTRIBUTE</pre>
         <a href="../../picard/cmdline/Option.html#doc--">doc</a>="The action that should be taken with clipped reads: \'X\' means the reads and qualities should be trimmed at the clipped position; \'N\' means the bases should be changed to Ns in the clipped region; and any integer means that the base qualities should be set to that value in the clipped region.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.lang.String CLIPPING_ACTION</pre>
+</li>
+</ul>
+<a name="CLIPPING_MIN_LENGTH">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>CLIPPING_MIN_LENGTH</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#shortName--">shortName</a>="CLIP_MIN",
+        <a href="../../picard/cmdline/Option.html#doc--">doc</a>="When performing clipping with the CLIPPING_ATTRIBUTE and CLIPPING_ACTION parameters, ensure that the resulting reads after clipping are at least CLIPPING_MIN_LENGTH bases long. If the original read is shorter than CLIPPING_MIN_LENGTH then the original read length will be maintained.")
+public&nbsp;int CLIPPING_MIN_LENGTH</pre>
 </li>
 </ul>
 <a name="READ1_TRIM">

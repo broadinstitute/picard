@@ -1123,6 +1123,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SamToFastq.html#CLIPPING_ATTRIBUTE">CLIPPING_ATTRIBUTE</a></span> - Variable in class picard.sam.<a href="picard/sam/SamToFastq.html" title="class in picard.sam">SamToFastq</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SamToFastq.html#CLIPPING_MIN_LENGTH">CLIPPING_MIN_LENGTH</a></span> - Variable in class picard.sam.<a href="picard/sam/SamToFastq.html" title="class in picard.sam">SamToFastq</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="picard/util/ClippingUtility.html" title="class in picard.util"><span class="typeNameLink">ClippingUtility</span></a> - Class in <a href="picard/util/package-summary.html">picard.util</a></dt>
 <dd>
 <div class="block">Utilities to clip the adapater sequence from a SAMRecord read</div>
@@ -6123,6 +6125,10 @@
 <dd>
 <div class="block">The barcode sequence for which the metrics were calculated.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/IlluminaBasecallsToSam.html#MOLECULAR_INDEX_BASE_QUALITY_TAG">MOLECULAR_INDEX_BASE_QUALITY_TAG</a></span> - Variable in class picard.illumina.<a href="picard/illumina/IlluminaBasecallsToSam.html" title="class in picard.illumina">IlluminaBasecallsToSam</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/IlluminaBasecallsToSam.html#MOLECULAR_INDEX_TAG">MOLECULAR_INDEX_TAG</a></span> - Variable in class picard.illumina.<a href="picard/illumina/IlluminaBasecallsToSam.html" title="class in picard.illumina">IlluminaBasecallsToSam</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadStructure.html#molecularBarcode">molecularBarcode</a></span> - Variable in class picard.illumina.parser.<a href="picard/illumina/parser/ReadStructure.html" title="class in picard.illumina.parser">ReadStructure</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadType.html#MolecularIndex">MolecularIndex</a></span> - Static variable in enum picard.illumina.parser.<a href="picard/illumina/parser/ReadType.html" title="enum in picard.illumina.parser">ReadType</a></dt>
@@ -9090,6 +9096,8 @@
 <dd>&nbsp;</dd>
 <dt><a href="picard/util/TabbedTextFileWithHeaderParser.Row.html" title="class in picard.util"><span class="typeNameLink">TabbedTextFileWithHeaderParser.Row</span></a> - Class in <a href="picard/util/package-summary.html">picard.util</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/IlluminaBasecallsToSam.html#TAG_PER_MOLECULAR_INDEX">TAG_PER_MOLECULAR_INDEX</a></span> - Variable in class picard.illumina.<a href="picard/illumina/IlluminaBasecallsToSam.html" title="class in picard.illumina">IlluminaBasecallsToSam</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/MarkDuplicates.html#TAGGING_POLICY">TAGGING_POLICY</a></span> - Variable in class picard.sam.markduplicates.<a href="picard/sam/markduplicates/MarkDuplicates.html" title="class in picard.sam.markduplicates">MarkDuplicates</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectJumpingLibraryMetrics.html#TAIL_LIMIT">TAIL_LIMIT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectJumpingLibraryMetrics.html" title="class in picard.analysis">CollectJumpingLibraryMetrics</a></dt>
@@ -10110,9 +10118,21 @@ the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/VariantProcessor.Builder.html#withInput-java.io.File...-">withInput(File...)</a></span> - Method in class picard.vcf.processor.<a href="picard/vcf/processor/VariantProcessor.Builder.html" title="class in picard.vcf.processor">VariantProcessor.Builder</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/ClusterDataToSamConverter.html#withMolecularIndexQualityTag-java.lang.String-">withMolecularIndexQualityTag(String)</a></span> - Method in class picard.illumina.<a href="picard/illumina/ClusterDataToSamConverter.html" title="class in picard.illumina">ClusterDataToSamConverter</a></dt>
+<dd>
+<div class="block">Sets the SAM tag to use to store the molecular index base qualities.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/ClusterDataToSamConverter.html#withMolecularIndexTag-java.lang.String-">withMolecularIndexTag(String)</a></span> - Method in class picard.illumina.<a href="picard/illumina/ClusterDataToSamConverter.html" title="class in picard.illumina">ClusterDataToSamConverter</a></dt>
+<dd>
+<div class="block">Sets the SAM tag to use to store the molecular index bases.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/HaplotypeMap.html#withoutChromosomes-java.util.Set-">withoutChromosomes(Set&lt;String&gt;)</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/HaplotypeMap.html" title="class in picard.fingerprint">HaplotypeMap</a></dt>
 <dd>
 <div class="block">Returns a copy of this haplotype map that excludes haplotypes on the chromosomes provided.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/illumina/ClusterDataToSamConverter.html#withTagPerMolecularIndex-java.util.List-">withTagPerMolecularIndex(List&lt;String&gt;)</a></span> - Method in class picard.illumina.<a href="picard/illumina/ClusterDataToSamConverter.html" title="class in picard.illumina">ClusterDataToSamConverter</a></dt>
+<dd>
+<div class="block">Sets the SAM tags to use to store the bases each molecular index.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/artifacts/SequencingArtifactMetrics.BaitBiasSummaryMetrics.html#WORST_CXT">WORST_CXT</a></span> - Variable in class picard.analysis.artifacts.<a href="picard/analysis/artifacts/SequencingArtifactMetrics.BaitBiasSummaryMetrics.html" title="class in picard.analysis.artifacts">SequencingArtifactMetrics.BaitBiasSummaryMetrics</a></dt>
 <dd>
