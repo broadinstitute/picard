@@ -1,6 +1,6 @@
 <h3 id="CollectWgsMetrics">CollectWgsMetrics</h3>
 <section>
-<p>Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.This tool collects metrics about the percentages of reads that pass base- and mapping- quality filters as well as coverage (read-depth) levels. Both minimum base- and mapping-quality values as well as the maximum read depths (coverage cap) are user defined.<h4>Usage Example:</h4><pre>java -jar picard.jar CollectWgsMetrics \<br />       I=input.bam \<br />       O=collect_wgs_metrics.txt \<br />       R=reference_sequence.fasta </pre>Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>the WgsMetrics documentation</a>for detailed explanations of the output metrics.<hr /></p>
+<p>Collect metrics about coverage and performance of whole genome sequencing (WGS) experiments.This tool collects metrics about the percentages of reads that pass base- and mapping- quality filters as well as coverage (read-depth) levels. Both minimum base- and mapping-quality values as well as the maximum read depths (coverage cap) are user defined.<h4>Usage Example:</h4><pre>java -jar picard.jar CollectWgsMetrics \<br />       I=input.bam \<br />       O=collect_wgs_metrics.txt \<br />       R=reference_sequence.fasta </pre>Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics'>the WgsMetrics documentation</a> for detailed explanations of the output metrics.<hr /></p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
 <tr><td>INPUT (File)</td><td>Input SAM or BAM file.  Required. </td></tr>
@@ -14,5 +14,6 @@
 <tr><td>INCLUDE_BQ_HISTOGRAM (Boolean)</td><td>Determines whether to include the base quality histogram in the metrics file.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>COUNT_UNPAIRED (Boolean)</td><td>If true, count unpaired reads, and paired reads with one end unmapped  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
 <tr><td>SAMPLE_SIZE (Integer)</td><td>Sample Size used for Theoretical Het Sensitivity sampling. Default is 10000.  Default value: 10000. This option can be set to 'null' to clear the default value. </td></tr>
+<tr><td>INTERVALS (File)</td><td>An interval list file that contains the positions to restrict the assessment. Please note that all bases of reads that overlap these intervals will be considered, even if some of those bases extend beyond the boundaries of the interval. The ideal use case for this argument is to use it to restrict the calculation to a subset of (whole) contigs. To restrict the calculation just to individual positions without overlap, please see CollectWgsMetricsFromSampledSites.  Default value: null. </td></tr>
 </table>
 </section>

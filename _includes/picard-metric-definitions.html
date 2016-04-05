@@ -16,6 +16,7 @@
 <li><a href="#CollectWgsMetrics.WgsMetrics">CollectWgsMetrics.WgsMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#CollectWgsMetricsFromSampledSites.SampledWgsMetrics">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</a>: </li>
+<li><a href="#CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage">CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage</a>: Metrics for evaluating the performance of whole genome sequencing experiments.</li>
 <li><a href="#DuplicationMetrics">DuplicationMetrics</a>: Metrics that are calculated during the process of marking duplicates
  within a stream of SAMRecords.</li>
 <li><a href="#ExtractIlluminaBarcodes.BarcodeMetric">ExtractIlluminaBarcodes.BarcodeMetric</a>: Metrics produced by the ExtractIlluminaBarcodes program that is used to parse data in
@@ -185,6 +186,14 @@
 <table>
 <tr><th>Field</th><th>Description</th></tr>
 </table>
+</section>
+<a id="CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage"></a>
+<h2>CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage</h2>
+<section>
+<p>Metrics for evaluating the performance of whole genome sequencing experiments.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>CATEGORY</td><td>One of either WHOLE_GENOME or NON_ZERO_REGIONS</td></tr></table>
 </section>
 <a id="DuplicationMetrics"></a>
 <h2>DuplicationMetrics</h2>
@@ -443,7 +452,7 @@
 <p>Holds information about CpG sites encountered for RRBS processing QC</p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
-<tr><td>SEQUENCE_NAME</td><td>Sequence the CpG is seen in</td></tr><tr><td>POSITION</td><td>Position within the sequence of the CpG site</td></tr><tr><td>TOTAL_SITES</td><td>Number of times this CpG site was encountered</td></tr><tr><td>CONVERTED_SITES</td><td>Number of times this CpG site was converted (TG for + strand, CA for - strand)</td></tr><tr><td>PCT_CONVERTED</td><td>TOTAL_BASES / CONVERTED_BASES</td></tr></table>
+<tr><td>SEQUENCE_NAME</td><td>Sequence the CpG is seen in</td></tr><tr><td>POSITION</td><td>Position within the sequence of the CpG site</td></tr><tr><td>TOTAL_SITES</td><td>Number of times this CpG site was encountered</td></tr><tr><td>CONVERTED_SITES</td><td>Number of times this CpG site was converted (TG for + strand, CA for - strand)</td></tr><tr><td>PCT_CONVERTED</td><td>CpG CONVERTED_BASES / CpG TOTAL_BASES (fraction)</td></tr></table>
 </section>
 <a id="RrbsSummaryMetrics"></a>
 <h2>RrbsSummaryMetrics</h2>
@@ -451,7 +460,7 @@
 <p>Holds summary statistics from RRBS processing QC</p>
 <table>
 <tr><th>Field</th><th>Description</th></tr>
-<tr><td>READS_ALIGNED</td><td>Number of mapped reads processed</td></tr><tr><td>NON_CPG_BASES</td><td>Number of times a non-CpG cytosine was encountered</td></tr><tr><td>NON_CPG_CONVERTED_BASES</td><td>Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)</td></tr><tr><td>PCT_NON_CPG_BASES_CONVERTED</td><td>NON_CPG_BASES / NON_CPG_CONVERTED_BASES</td></tr><tr><td>CPG_BASES_SEEN</td><td>Number of CpG sites encountered</td></tr><tr><td>CPG_BASES_CONVERTED</td><td>Number of CpG sites that were converted (TG for +, CA for -)</td></tr><tr><td>PCT_CPG_BASES_CONVERTED</td><td>CPG_BASES_SEEN / CPG_BASES_CONVERTED</td></tr><tr><td>MEAN_CPG_COVERAGE</td><td>Mean coverage of CpG sites</td></tr><tr><td>MEDIAN_CPG_COVERAGE</td><td>Median coverage of CpG sites</td></tr><tr><td>READS_WITH_NO_CPG</td><td>Number of reads discarded for having no CpG sites</td></tr><tr><td>READS_IGNORED_SHORT</td><td>Number of reads discarded due to being too short</td></tr><tr><td>READS_IGNORED_MISMATCHES</td><td>Number of reads discarded for exceeding the mismatch threshold</td></tr></table>
+<tr><td>READS_ALIGNED</td><td>Number of mapped reads processed</td></tr><tr><td>NON_CPG_BASES</td><td>Number of times a non-CpG cytosine was encountered</td></tr><tr><td>NON_CPG_CONVERTED_BASES</td><td>Number of times a non-CpG cytosine was converted (C->T for +, G->A for -)</td></tr><tr><td>PCT_NON_CPG_BASES_CONVERTED</td><td>NON_CPG_CONVERTED_BASES / NON_CPG_BASES (fraction)</td></tr><tr><td>CPG_BASES_SEEN</td><td>Number of CpG sites encountered</td></tr><tr><td>CPG_BASES_CONVERTED</td><td>Number of CpG sites that were converted (TG for +, CA for -)</td></tr><tr><td>PCT_CPG_BASES_CONVERTED</td><td>CPG_BASES_CONVERTED / CPG_BASES_SEEN (fraction)</td></tr><tr><td>MEAN_CPG_COVERAGE</td><td>Mean coverage of CpG sites</td></tr><tr><td>MEDIAN_CPG_COVERAGE</td><td>Median coverage of CpG sites</td></tr><tr><td>READS_WITH_NO_CPG</td><td>Number of reads discarded for having no CpG sites</td></tr><tr><td>READS_IGNORED_SHORT</td><td>Number of reads discarded due to being too short</td></tr><tr><td>READS_IGNORED_MISMATCHES</td><td>Number of reads discarded for exceeding the mismatch threshold</td></tr></table>
 </section>
 <a id="SamFileValidator.ValidationMetrics"></a>
 <h2>SamFileValidator.ValidationMetrics</h2>
