@@ -44,6 +44,7 @@ import picard.cmdline.Option;
 import picard.cmdline.programgroups.Illumina;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.illumina.parser.ReadStructure;
+import picard.illumina.parser.ReadType;
 import picard.illumina.parser.readers.BclQualityEvaluationStrategy;
 import picard.util.IlluminaUtil;
 import picard.util.IlluminaUtil.IlluminaAdapterPair;
@@ -54,6 +55,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -206,6 +208,16 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             "BAMs for only a subset of the barcodes in a lane.", shortName="INGORE_UNEXPECTED")
     public boolean IGNORE_UNEXPECTED_BARCODES = false;
 
+    @Option(doc="The tag to use to store any molecular indexes.  If more than one molecular index is found, they will be concatenated and stored here.", optional=true)
+    public String MOLECULAR_INDEX_TAG = "RX";
+
+    @Option(doc="The tag to use to store any molecular index base qualities.  If more than one molecular index is found, their qualities will be concatenated and stored here " +
+            "(.i.e. the number of \"M\" operators in the READ_STRUCTURE)", optional=true)
+    public String MOLECULAR_INDEX_BASE_QUALITY_TAG = "QX";
+
+    @Option(doc="The list of tags to store each molecular index.  The number of tags should match the number of molecular indexes.", optional=true)
+    public List<String> TAG_PER_MOLECULAR_INDEX;
+
     private final Map<String, SAMFileWriterWrapper> barcodeSamWriterMap = new HashMap<String, SAMFileWriterWrapper>();
     private ReadStructure readStructure;
     IlluminaBasecallsConverter<SAMRecordsForCluster> basecallsConverter;
@@ -239,8 +251,6 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
             populateWritersFromLibraryParams();
         }
 
-        readStructure = new ReadStructure(READ_STRUCTURE);
-
         final int numOutputRecords = readStructure.templates.length();
 
         basecallsConverter = new IlluminaBasecallsConverter<SAMRecordsForCluster>(BASECALLS_DIR, BARCODES_DIR, LANE, readStructure,
@@ -255,7 +265,10 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
          * data which may be different from the input read structure (specifically if there are skips).
          */
         final ClusterDataToSamConverter converter = new ClusterDataToSamConverter(RUN_BARCODE, READ_GROUP_ID,
-                basecallsConverter.getFactory().getOutputReadStructure(), ADAPTERS_TO_CHECK);
+                basecallsConverter.getFactory().getOutputReadStructure(), ADAPTERS_TO_CHECK)
+                .withMolecularIndexTag(MOLECULAR_INDEX_TAG)
+                .withMolecularIndexQualityTag(MOLECULAR_INDEX_BASE_QUALITY_TAG)
+                .withTagPerMolecularIndex(TAG_PER_MOLECULAR_INDEX);
         basecallsConverter.setConverter(converter);
 
     }
@@ -447,6 +460,11 @@ public class IlluminaBasecallsToSam extends CommandLineProgram {
         if (READ_GROUP_ID == null) {
             READ_GROUP_ID = RUN_BARCODE.substring(0, 5) + "." + LANE;
         }
+
+        if (!TAG_PER_MOLECULAR_INDEX.isEmpty() && TAG_PER_MOLECULAR_INDEX.size() != readStructure.molecularBarcode.length()) {
+            messages.add("The number of tags given in TAG_PER_MOLECULAR_INDEX does not match the number of molecular indexes in READ_STRUCTURE");
+        }
+
         if (messages.isEmpty()) {
             return null;
         }

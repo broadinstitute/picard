@@ -64,14 +64,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         Assert.assertTrue(IlluminaBasecallsConverter.TILE_NUMBER_COMPARATOR.compare(10, 10) == 0, "");
     }
 
-
     @Test
     public void testNonBarcoded() throws Exception {
         final File outputBam = File.createTempFile("nonBarcoded.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
 
-        runPicardCommandLine(new String[]{
+        Assert.assertEquals(runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25S8S25T",
@@ -79,17 +78,17 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
-        });
+        }), 0);
         IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcoded.sam"));
     }
 
     @Test
-    public void testNonBarcodedWithMoleclarIndex() throws Exception {
+    public void testNonBarcodedWithMolecularIndex() throws Exception {
         final File outputBam = File.createTempFile("nonBarcodedWithMI.", ".sam");
         outputBam.deleteOnExit();
         final int lane = 1;
 
-        runPicardCommandLine(new String[]{
+        Assert.assertEquals(runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25S8M25T",
@@ -97,7 +96,26 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
-        });
+        }), 0);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex8M.sam"));
+    }
+
+    @Test
+    public void testNonBarcodedWithTagPerMolecularIndexIsNUll() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S8M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "TAG_PER_MOLECULAR_INDEX=null"
+        }), 0);
         IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex8M.sam"));
     }
 
@@ -107,7 +125,7 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         outputBam.deleteOnExit();
         final int lane = 1;
 
-        runPicardCommandLine(new String[]{
+        Assert.assertEquals(runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + BASECALLS_DIR,
                 "LANE=" + lane,
                 "READ_STRUCTURE=25S4M4M25T",
@@ -115,9 +133,97 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
                 "RUN_BARCODE=HiMom",
                 "SAMPLE_ALIAS=HiDad",
                 "LIBRARY_NAME=Hello, World"
-        });
+        }), 0);
         IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithMolecularIndex4M4M.sam"));
+    }
 
+    // This *should* store molecular indexes individually in ZA and ZB
+    @Test
+    public void testNonBarcodedWithTagPerMolecularIndexDual() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S4M4M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "TAG_PER_MOLECULAR_INDEX=ZA",
+                "TAG_PER_MOLECULAR_INDEX=ZB"
+
+        }), 0);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithTagPerMolecularIndex4M4M.sam"));
+    }
+
+    // Too many tags
+    @Test
+    public void testNonBarcodedWithTagPerMolecularIndexDualTooManyTags() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S4M4M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "TAG_PER_MOLECULAR_INDEX=ZA",
+                "TAG_PER_MOLECULAR_INDEX=ZB",
+                "TAG_PER_MOLECULAR_INDEX=ZC"
+
+        }), 1);
+    }
+
+    // Too few tags
+    @Test
+    public void testNonBarcodedWithTagPerMolecularIndexDualTooFewTags() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
+        outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S2M2M2M2M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "TAG_PER_MOLECULAR_INDEX=ZA",
+                "TAG_PER_MOLECULAR_INDEX=ZB",
+                "TAG_PER_MOLECULAR_INDEX=ZC"
+
+        }), 1);
+    }
+
+    // Just the right number of tags
+    @Test
+    public void testNonBarcodedWithTagPerMolecularIndexDualFourMolecularIndexes() throws Exception {
+        final File outputBam = File.createTempFile("nonBarcodedWithDualMI.", ".sam");
+        //outputBam.deleteOnExit();
+        final int lane = 1;
+
+        Assert.assertEquals(runPicardCommandLine(new String[]{
+                "BASECALLS_DIR=" + BASECALLS_DIR,
+                "LANE=" + lane,
+                "READ_STRUCTURE=25S2M2M2M2M25T",
+                "OUTPUT=" + outputBam,
+                "RUN_BARCODE=HiMom",
+                "SAMPLE_ALIAS=HiDad",
+                "LIBRARY_NAME=Hello, World",
+                "TAG_PER_MOLECULAR_INDEX=ZA",
+                "TAG_PER_MOLECULAR_INDEX=ZB",
+                "TAG_PER_MOLECULAR_INDEX=ZC",
+                "TAG_PER_MOLECULAR_INDEX=ZD"
+        }), 0);
+        IOUtil.assertFilesEqual(outputBam, new File(TEST_DATA_DIR, "nonBarcodedWithTagPerMolecularIndex2M2M2M2M.sam"));
     }
 
     @Test
@@ -203,13 +309,13 @@ public class IlluminaBasecallsToSamTest extends CommandLineProgramTest {
         writer.close();
         reader.close();
 
-        runPicardCommandLine(new String[]{
+        Assert.assertEquals(runPicardCommandLine(new String[]{
                 "BASECALLS_DIR=" + baseCallsDir,
                 "LANE=" + lane,
                 "RUN_BARCODE=HiMom",
                 "READ_STRUCTURE=" + readStructure,
                 "LIBRARY_PARAMS=" + libraryParams
-        });
+        }), 0);
 
         for (final File outputSam : samFiles) {
             IOUtil.assertFilesEqual(outputSam, new File(testDataDir, outputSam.getName()));

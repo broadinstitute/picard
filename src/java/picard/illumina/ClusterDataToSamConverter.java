@@ -29,6 +29,7 @@ import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SAMUtils;
 import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.filter.SolexaNoiseFilter;
+import picard.PicardException;
 import picard.fastq.IlluminaReadNameEncoder;
 import picard.fastq.ReadNameEncoder;
 import picard.illumina.parser.ClusterData;
@@ -38,6 +39,8 @@ import picard.util.AdapterMarker;
 import picard.util.AdapterPair;
 import picard.util.IlluminaUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,7 +54,6 @@ public class ClusterDataToSamConverter implements
         IlluminaBasecallsConverter.ClusterDataConverter<IlluminaBasecallsToSam.SAMRecordsForCluster> {
 
 
-    private final String runBarcode;
     private final String readGroupId;
     private final SamRecordFilter filters = new SolexaNoiseFilter();
     private final boolean isPairedEnd;
@@ -64,6 +66,15 @@ public class ClusterDataToSamConverter implements
     private final AdapterMarker adapterMarker;
     private final int outputRecordsPerCluster;
     private final ReadNameEncoder readNameEncoder;
+
+    // TODO: add RX and QX to the list of SAMTags and change this. initial discussion
+    // TODO: here:
+    // TODO: - https://github.com/broadinstitute/picard/issues/287
+    // TODO: - HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
+    // TODO: - https://github.com/samtools/hts-specs/pull/119
+    private String molecularIndexTag          = "RX";
+    private String molecularIndexQualityTag   = "QX";
+    private List<String> tagPerMolecularIndex = Collections.emptyList();
 
     /**
      * Constructor
@@ -78,7 +89,6 @@ public class ClusterDataToSamConverter implements
                                      final String readGroupId,
                                      final ReadStructure readStructure,
                                      final List<IlluminaUtil.IlluminaAdapterPair> adapters) {
-        this.runBarcode  = runBarcode;
         this.readGroupId = readGroupId;
         
         this.readNameEncoder = new IlluminaReadNameEncoder(runBarcode);
@@ -101,10 +111,42 @@ public class ClusterDataToSamConverter implements
     }
 
     /**
+     *  Sets the SAM tag to use to store the molecular index bases.  If multiple molecular indexes exist, it will concatenate them
+     * and store them in this tag.
+     */
+    public ClusterDataToSamConverter withMolecularIndexTag(final String molecularIndexTag) {
+        if (molecularIndexTag == null) throw new IllegalArgumentException("Molecular index tag was null");
+        this.molecularIndexTag = molecularIndexTag;
+        return this;
+    }
+
+    /**
+     * Sets the SAM tag to use to store the molecular index base qualities.  If multiple molecular indexes exist, it will concatenate them
+     * and store them in this tag.
+     */
+    public ClusterDataToSamConverter withMolecularIndexQualityTag(final String molecularIndexQualityTag) {
+        if (molecularIndexQualityTag == null) throw new IllegalArgumentException("Molecular index quality tag was null");
+        this.molecularIndexQualityTag = molecularIndexQualityTag;
+        return this;
+    }
+
+    /**
+     * Sets the SAM tags to use to store the bases each molecular index.  This will only be used if there are more than one molecular
+     * index. If fewer tags are given than molecular indexes found, then the remaining molecular indexes will be concatenated and stored
+     * in the last tag.  If more tags are provided than molecular indexes found, the additional tags will not be used.
+     */
+    public ClusterDataToSamConverter withTagPerMolecularIndex(final List<String> tagPerMolecularIndex) {
+        if (tagPerMolecularIndex == null) throw new IllegalArgumentException("Null given for tagPerMolecularIndex");
+        this.tagPerMolecularIndex = tagPerMolecularIndex;
+        return this;
+    }
+
+    /**
      * Creates a new SAM record from the basecall data
      */
     private SAMRecord createSamRecord(final ReadData readData, final String readName, final boolean isPf, final boolean firstOfPair,
-                                      final String unmatchedBarcode, final String molecularIndex, final String molecularIndexQ) {
+                                      final String unmatchedBarcode,
+                                      final List<String> molecularIndexes, final List<String> molecularIndexQualities) {
         final SAMRecord sam = new SAMRecord(null);
         sam.setReadName(readName);
         sam.setReadBases(readData.getBases());
@@ -134,12 +176,21 @@ public class ClusterDataToSamConverter implements
             sam.setAttribute(SAMTag.BC.name(), unmatchedBarcode);
         }
 
-        if (molecularIndex != null) {
-            //TODO: add RX and QX to the list of SAMTags and change this. initial discussion
-            //TODO: here: https://github.com/broadinstitute/picard/issues/287
-            //TODO: HTS-spec issue: https://github.com/samtools/hts-specs/issues/109
-            sam.setAttribute("RX", molecularIndex);
-            sam.setAttribute("QX", molecularIndexQ);
+        if (!molecularIndexes.isEmpty()) {
+            if (!this.molecularIndexTag.isEmpty()) {
+                sam.setAttribute(this.molecularIndexTag, String.join("", molecularIndexes));
+            }
+            if (!this.molecularIndexQualityTag.isEmpty()) {
+                sam.setAttribute(this.molecularIndexQualityTag, String.join("", molecularIndexQualities));
+            }
+            if (!this.tagPerMolecularIndex.isEmpty()) {
+                if (tagPerMolecularIndex.size() != molecularIndexes.size()) {
+                    throw new PicardException("Found " + molecularIndexes.size() + " molecular indexes but only " + tagPerMolecularIndex.size() + " SAM tags given.");
+                }
+                for (int i = 0; i < this.tagPerMolecularIndex.size(); i++) {
+                    sam.setAttribute(this.tagPerMolecularIndex.get(i), molecularIndexes.get(i));
+                }
+            }
         }
 
         return sam;
@@ -163,33 +214,29 @@ public class ClusterDataToSamConverter implements
             unmatchedBarcode = IlluminaUtil.barcodeSeqsToString(barcode).replace('.', 'N'); //TODO: This has a separator, where as in other places we do not use a separator
         }
 
-        final String joinedMolecularIndex ;
-        final String joinedMolecularIndexQ ;
+        final List<String> molecularIndexes;
+        final List<String> molecularIndexQualities;
         if (hasMolecularBarcode) {
-            final StringBuilder joinedMolecularIndexQBuilder = new StringBuilder();
-            final byte[][] molecularIndex = new byte[molecularBarcodeIndices.length][];
-            final byte[][] molecularIndexQ = new byte[molecularBarcodeIndices.length][];
+            molecularIndexes        = new ArrayList<>();
+            molecularIndexQualities = new ArrayList<>();
             for (int i = 0; i < molecularBarcodeIndices.length; i++) {
-                molecularIndex[i]  = cluster.getRead(molecularBarcodeIndices[i]).getBases();
-                molecularIndexQ[i] = cluster.getRead(molecularBarcodeIndices[i]).getQualities();
-                joinedMolecularIndexQBuilder.append(SAMUtils.phredToFastq(molecularIndexQ[i]));
+                molecularIndexes.add(new String(cluster.getRead(molecularBarcodeIndices[i]).getBases()).replace('.', 'N'));
+                molecularIndexQualities.add(SAMUtils.phredToFastq(cluster.getRead(molecularBarcodeIndices[i]).getQualities()));
             }
-            joinedMolecularIndex  = IlluminaUtil.byteArrayToString(molecularIndex, "").replace('.', 'N');
-            joinedMolecularIndexQ = joinedMolecularIndexQBuilder.toString();
         } else {
-            joinedMolecularIndex = null;
-            joinedMolecularIndexQ = null;
+            molecularIndexes        = Collections.emptyList();
+            molecularIndexQualities = Collections.emptyList();
         }
 
         final SAMRecord firstOfPair = createSamRecord(
-            cluster.getRead(templateIndices[0]), readName, cluster.isPf(), true, unmatchedBarcode, joinedMolecularIndex, joinedMolecularIndexQ);
+            cluster.getRead(templateIndices[0]), readName, cluster.isPf(), true, unmatchedBarcode, molecularIndexes, molecularIndexQualities);
         ret.records[0] = firstOfPair;
 
         SAMRecord secondOfPair = null;
 
         if(isPairedEnd) {
             secondOfPair  = createSamRecord(
-                cluster.getRead(templateIndices[1]), readName, cluster.isPf(), false, unmatchedBarcode, joinedMolecularIndex, joinedMolecularIndexQ);
+                cluster.getRead(templateIndices[1]), readName, cluster.isPf(), false, unmatchedBarcode, molecularIndexes, molecularIndexQualities);
             ret.records[1] = secondOfPair;
         }
 
