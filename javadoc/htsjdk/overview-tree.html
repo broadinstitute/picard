@@ -335,13 +335,13 @@
 <li type="circle">htsjdk.samtools.cram.<a href="htsjdk/samtools/cram/CRAIIndex.html" title="class in htsjdk.samtools.cram"><span class="typeNameLink">CRAIIndex</span></a></li>
 <li type="circle">htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/Cram2SamRecordFactory.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">Cram2SamRecordFactory</span></a></li>
 <li type="circle">htsjdk.samtools.cram.io.<a href="htsjdk/samtools/cram/io/CramArray.html" title="class in htsjdk.samtools.cram.io"><span class="typeNameLink">CramArray</span></a></li>
+<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/CRAMBAIIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMBAIIndexer</span></a></li>
 <li type="circle">htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.html" title="class in htsjdk.samtools.cram.structure"><span class="typeNameLink">CramCompressionRecord</span></a></li>
 <li type="circle">htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramCompressionRecord.BAM_FLAGS.html" title="class in htsjdk.samtools.cram.structure"><span class="typeNameLink">CramCompressionRecord.BAM_FLAGS</span></a></li>
 <li type="circle">htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramContainerIterator.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">CramContainerIterator</span></a> (implements java.util.Iterator&lt;E&gt;)</li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/CRAMContainerStreamWriter.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMContainerStreamWriter</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/CRAMFileReader.IntervalIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMFileReader.IntervalIterator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a>)</li>
 <li type="circle">htsjdk.samtools.cram.structure.<a href="htsjdk/samtools/cram/structure/CramHeader.html" title="class in htsjdk.samtools.cram.structure"><span class="typeNameLink">CramHeader</span></a></li>
-<li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/CRAMIndexer.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMIndexer</span></a></li>
 <li type="circle">htsjdk.samtools.cram.io.<a href="htsjdk/samtools/cram/io/CramInt.html" title="class in htsjdk.samtools.cram.io"><span class="typeNameLink">CramInt</span></a></li>
 <li type="circle">htsjdk.samtools.cram.build.<a href="htsjdk/samtools/cram/build/CramIO.html" title="class in htsjdk.samtools.cram.build"><span class="typeNameLink">CramIO</span></a></li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/CRAMIterator.html" title="class in htsjdk.samtools"><span class="typeNameLink">CRAMIterator</span></a> (implements htsjdk.samtools.<a href="htsjdk/samtools/SAMRecordIterator.html" title="interface in htsjdk.samtools">SAMRecordIterator</a>)</li>
@@ -399,8 +399,16 @@
 <li type="circle">htsjdk.samtools.fastq.<a href="htsjdk/samtools/fastq/FastqRecord.html" title="class in htsjdk.samtools.fastq"><span class="typeNameLink">FastqRecord</span></a> (implements java.io.Serializable)</li>
 <li type="circle">htsjdk.samtools.fastq.<a href="htsjdk/samtools/fastq/FastqWriterFactory.html" title="class in htsjdk.samtools.fastq"><span class="typeNameLink">FastqWriterFactory</span></a></li>
 <li type="circle">htsjdk.tribble.<a href="htsjdk/tribble/FeatureCodecHeader.html" title="class in htsjdk.tribble"><span class="typeNameLink">FeatureCodecHeader</span></a></li>
-<li type="circle">htsjdk.samtools.filter.<a href="htsjdk/samtools/filter/FilteringIterator.html" title="class in htsjdk.samtools.filter"><span class="typeNameLink">FilteringIterator</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;T&gt;)</li>
-<li type="circle">htsjdk.variant.variantcontext.filter.<a href="htsjdk/variant/variantcontext/filter/FilteringIterator.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">FilteringIterator</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;T&gt;, java.lang.Iterable&lt;T&gt;)</li>
+<li type="circle">htsjdk.samtools.filter.<a href="htsjdk/samtools/filter/FilteringSamIterator.html" title="class in htsjdk.samtools.filter"><span class="typeNameLink">FilteringSamIterator</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;T&gt;)
+<ul>
+<li type="circle">htsjdk.samtools.filter.<a href="htsjdk/samtools/filter/FilteringIterator.html" title="class in htsjdk.samtools.filter"><span class="typeNameLink">FilteringIterator</span></a></li>
+</ul>
+</li>
+<li type="circle">htsjdk.variant.variantcontext.filter.<a href="htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">FilteringVariantContextIterator</span></a> (implements htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;T&gt;, java.lang.Iterable&lt;T&gt;)
+<ul>
+<li type="circle">htsjdk.variant.variantcontext.filter.<a href="htsjdk/variant/variantcontext/filter/FilteringIterator.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">FilteringIterator</span></a></li>
+</ul>
+</li>
 <li type="circle">htsjdk.samtools.<a href="htsjdk/samtools/FixBAMFile.html" title="class in htsjdk.samtools"><span class="typeNameLink">FixBAMFile</span></a></li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/FormatUtil.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">FormatUtil</span></a></li>
 <li type="circle">htsjdk.samtools.util.ftp.<a href="htsjdk/samtools/util/ftp/FTPClient.html" title="class in htsjdk.samtools.util.ftp"><span class="typeNameLink">FTPClient</span></a></li>
@@ -566,6 +574,7 @@
 </li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/PeekIterator.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">PeekIterator</span></a>&lt;T&gt; (implements java.util.Iterator&lt;E&gt;)</li>
 <li type="circle">htsjdk.samtools.cram.lossy.<a href="htsjdk/samtools/cram/lossy/PreservationPolicy.html" title="class in htsjdk.samtools.cram.lossy"><span class="typeNameLink">PreservationPolicy</span></a></li>
+<li type="circle">htsjdk.samtools.example.<a href="htsjdk/samtools/example/PrintReadsExample.html" title="class in htsjdk.samtools.example"><span class="typeNameLink">PrintReadsExample</span></a></li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/ProcessExecutor.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">ProcessExecutor</span></a></li>
 <li type="circle">htsjdk.samtools.util.<a href="htsjdk/samtools/util/ProcessExecutor.ExitStatusAndOutput.html" title="class in htsjdk.samtools.util"><span class="typeNameLink">ProcessExecutor.ExitStatusAndOutput</span></a></li>
 <li type="circle">htsjdk.tribble.example.<a href="htsjdk/tribble/example/ProfileIndexReading.html" title="class in htsjdk.tribble.example"><span class="typeNameLink">ProfileIndexReading</span></a></li>

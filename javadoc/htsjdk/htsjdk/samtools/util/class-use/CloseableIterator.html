@@ -98,6 +98,10 @@
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="#htsjdk.variant.variantcontext.filter">htsjdk.variant.variantcontext.filter</a></td>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="#htsjdk.variant.vcf">htsjdk.variant.vcf</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -285,23 +289,30 @@
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">DuplicateSetIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                     boolean&nbsp;preSorted,
-                    <a href="../../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>
+                    <a href="../../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-htsjdk.samtools.util.Log-">DuplicateSetIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;preSorted,
+                    <a href="../../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator,
+                    <a href="../../../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log)</code>
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
                 boolean&nbsp;overlap)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/NotPrimarySkippingIterator.html#NotPrimarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">NotPrimarySkippingIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/SecondaryOrSupplementarySkippingIterator.html#SecondaryOrSupplementarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">SecondaryOrSupplementarySkippingIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
 </tbody>
@@ -336,6 +347,12 @@
 <tr class="altColor">
 <td class="colFirst"><code>class&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/FilteringIterator.html" title="class in htsjdk.samtools.filter">FilteringIterator</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/filter/FilteringSamIterator.html" title="class in htsjdk.samtools.filter">FilteringSamIterator</a></span></code>
 <div class="block">Filtering Iterator which takes a filter and an iterator and iterates through only those records
  which are not rejected by the filter.</div>
 </td>
@@ -468,6 +485,26 @@
 <td class="colFirst"><code>interface&nbsp;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/tribble/CloseableTribbleIterator.html" title="interface in htsjdk.tribble">CloseableTribbleIterator</a>&lt;T extends <a href="../../../../htsjdk/tribble/Feature.html" title="interface in htsjdk.tribble">Feature</a>&gt;</span></code>
 <div class="block">The basic iterator we use in Tribble, which allows closing and basic iteration.</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li class="blockList"><a name="htsjdk.variant.variantcontext.filter">
+<!--   -->
+</a>
+<h3>Uses of <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a> in <a href="../../../../htsjdk/variant/variantcontext/filter/package-summary.html">htsjdk.variant.variantcontext.filter</a></h3>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing classes, and an explanation">
+<caption><span>Classes in <a href="../../../../htsjdk/variant/variantcontext/filter/package-summary.html">htsjdk.variant.variantcontext.filter</a> that implement <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Class and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>class&nbsp;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter">FilteringVariantContextIterator</a></span></code>
+<div class="block">A filtering iterator for VariantContexts that takes a base iterator and a VariantContextFilter.</div>
 </td>
 </tr>
 </tbody>

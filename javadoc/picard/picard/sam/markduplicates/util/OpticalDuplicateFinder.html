@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10};
+var methods = {"i0":10,"i1":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -140,9 +140,13 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static int</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">DEFAULT_OPTICAL_DUPLICATE_DISTANCE</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_BIG_DUPLICATE_SET_SIZE">DEFAULT_BIG_DUPLICATE_SET_SIZE</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>static int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">DEFAULT_OPTICAL_DUPLICATE_DISTANCE</a></span></code>&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#opticalDuplicatePixelDistance">opticalDuplicatePixelDistance</a></span></code>&nbsp;</td>
 </tr>
@@ -169,7 +173,7 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
 </tr>
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#OpticalDuplicateFinder--">OpticalDuplicateFinder</a></span>()</code>
-<div class="block">Uses the default duplicate distance <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">100</a> and the default read name regex
+<div class="block">Uses the default duplicate distance  and the default read name regex
  <a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX"><code>ReadNameParser.DEFAULT_READ_NAME_REGEX</code></a>.</div>
 </td>
 </tr>
@@ -199,6 +203,12 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
                      <a href="../../../../picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a>&nbsp;keeper)</code>
 <div class="block">Finds which reads within the list of duplicates that are likely to be optical/co-localized duplicates of
  one another.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#setBigDuplicateSetSize-int-">setBigDuplicateSetSize</a></span>(int&nbsp;bigDuplicateSetSize)</code>
+<div class="block">Sets the size of a set that is big enough to log progress about.</div>
 </td>
 </tr>
 </table>
@@ -242,13 +252,26 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
 <a name="DEFAULT_OPTICAL_DUPLICATE_DISTANCE">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>DEFAULT_OPTICAL_DUPLICATE_DISTANCE</h4>
 <pre>public static final&nbsp;int DEFAULT_OPTICAL_DUPLICATE_DISTANCE</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../../constant-values.html#picard.sam.markduplicates.util.OpticalDuplicateFinder.DEFAULT_OPTICAL_DUPLICATE_DISTANCE">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="DEFAULT_BIG_DUPLICATE_SET_SIZE">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>DEFAULT_BIG_DUPLICATE_SET_SIZE</h4>
+<pre>public static final&nbsp;int DEFAULT_BIG_DUPLICATE_SET_SIZE</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../constant-values.html#picard.sam.markduplicates.util.OpticalDuplicateFinder.DEFAULT_BIG_DUPLICATE_SET_SIZE">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>
@@ -267,7 +290,7 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
 <li class="blockList">
 <h4>OpticalDuplicateFinder</h4>
 <pre>public&nbsp;OpticalDuplicateFinder()</pre>
-<div class="block">Uses the default duplicate distance <a href="../../../../picard/sam/markduplicates/util/OpticalDuplicateFinder.html#DEFAULT_OPTICAL_DUPLICATE_DISTANCE">100</a> and the default read name regex
+<div class="block">Uses the default duplicate distance  and the default read name regex
  <a href="../../../../picard/sam/util/ReadNameParser.html#DEFAULT_READ_NAME_REGEX"><code>ReadNameParser.DEFAULT_READ_NAME_REGEX</code></a>.</div>
 </li>
 </ul>
@@ -296,6 +319,21 @@ extends <a href="../../../../picard/sam/util/ReadNameParser.html" title="class i
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="setBigDuplicateSetSize-int-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>setBigDuplicateSetSize</h4>
+<pre>public&nbsp;void&nbsp;setBigDuplicateSetSize(int&nbsp;bigDuplicateSetSize)</pre>
+<div class="block">Sets the size of a set that is big enough to log progress about.
+ Defaults to </div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>bigDuplicateSetSize</code> - the size of a set that is big enough to log progress about</dd>
+</dl>
+</li>
+</ul>
 <a name="findOpticalDuplicates-java.util.List-picard.sam.util.PhysicalLocation-">
 <!--   -->
 </a>

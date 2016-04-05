@@ -170,20 +170,40 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><code>double</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#LIFTOVER_MIN_MATCH">LIFTOVER_MIN_MATCH</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#ORIGINAL_CONTIG">ORIGINAL_CONTIG</a></span></code>
+<div class="block">Attribute used to store the name of the source contig/chromosome prior to liftover.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#ORIGINAL_START">ORIGINAL_START</a></span></code>
+<div class="block">Attribute used to store the position of the variant on the source contig prior to liftover.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REFERENCE_SEQUENCE">REFERENCE_SEQUENCE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#REJECT">REJECT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#WARN_ON_MISSING_CONTIG">WARN_ON_MISSING_CONTIG</a></span></code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/vcf/LiftoverVcf.html#WRITE_ORIGINAL_POSITION">WRITE_ORIGINAL_POSITION</a></span></code>&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -335,6 +355,28 @@ public&nbsp;java.io.File REFERENCE_SEQUENCE</pre>
 public&nbsp;boolean WARN_ON_MISSING_CONTIG</pre>
 </li>
 </ul>
+<a name="WRITE_ORIGINAL_POSITION">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>WRITE_ORIGINAL_POSITION</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Write the original contig/position for lifted variants to the INFO field.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;boolean WRITE_ORIGINAL_POSITION</pre>
+</li>
+</ul>
+<a name="LIFTOVER_MIN_MATCH">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>LIFTOVER_MIN_MATCH</h4>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="The minimum percent match required for a variant to be lifted.",
+        <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
+public&nbsp;double LIFTOVER_MIN_MATCH</pre>
+</li>
+</ul>
 <a name="EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE">
 <!--   -->
 </a>
@@ -375,7 +417,7 @@ public&nbsp;boolean WARN_ON_MISSING_CONTIG</pre>
 <a name="FILTER_MISMATCHING_REF_ALLELE">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>FILTER_MISMATCHING_REF_ALLELE</h4>
 <pre>public static final&nbsp;java.lang.String FILTER_MISMATCHING_REF_ALLELE</pre>
@@ -383,6 +425,34 @@ public&nbsp;boolean WARN_ON_MISSING_CONTIG</pre>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../constant-values.html#picard.vcf.LiftoverVcf.FILTER_MISMATCHING_REF_ALLELE">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="ORIGINAL_CONTIG">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ORIGINAL_CONTIG</h4>
+<pre>public static final&nbsp;java.lang.String ORIGINAL_CONTIG</pre>
+<div class="block">Attribute used to store the name of the source contig/chromosome prior to liftover.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../constant-values.html#picard.vcf.LiftoverVcf.ORIGINAL_CONTIG">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a name="ORIGINAL_START">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>ORIGINAL_START</h4>
+<pre>public static final&nbsp;java.lang.String ORIGINAL_START</pre>
+<div class="block">Attribute used to store the position of the variant on the source contig prior to liftover.</div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../constant-values.html#picard.vcf.LiftoverVcf.ORIGINAL_START">Constant Field Values</a></dd>
 </dl>
 </li>
 </ul>

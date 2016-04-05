@@ -106,14 +106,47 @@
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>protected long</code></td>
-<td class="colLast"><span class="typeNameLabel">CollectWgsMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></span>(<a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</code>&nbsp;</td>
+<td class="colFirst"><code>protected void</code></td>
+<td class="colLast"><span class="typeNameLabel">CollectWgsMetrics.WgsMetricsCollector.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetrics.WgsMetricsCollector.html#addMetricsToFile-htsjdk.samtools.metrics.MetricsFile-picard.filter.CountingFilter-picard.filter.CountingFilter-picard.filter.CountingPairedFilter-">addMetricsToFile</a></span>(htsjdk.samtools.metrics.MetricsFile&lt;<a href="../../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a>,java.lang.Integer&gt;&nbsp;file,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;dupeFilter,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;mapqFilter,
+                <a href="../../../picard/filter/CountingPairedFilter.html" title="class in picard.filter">CountingPairedFilter</a>&nbsp;pairFilter)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="typeNameLabel">CollectWgsMetrics.WgsMetricsCollector.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetrics.WgsMetricsCollector.html#addToMetricsFile-htsjdk.samtools.metrics.MetricsFile-boolean-picard.filter.CountingFilter-picard.filter.CountingFilter-picard.filter.CountingPairedFilter-">addToMetricsFile</a></span>(htsjdk.samtools.metrics.MetricsFile&lt;<a href="../../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a>,java.lang.Integer&gt;&nbsp;file,
+                boolean&nbsp;includeBQHistogram,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;dupeFilter,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;mapqFilter,
+                <a href="../../../picard/filter/CountingPairedFilter.html" title="class in picard.filter">CountingPairedFilter</a>&nbsp;pairFilter)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><span class="typeNameLabel">CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverageCollector.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverageCollector.html#addToMetricsFile-htsjdk.samtools.metrics.MetricsFile-boolean-picard.filter.CountingFilter-picard.filter.CountingFilter-picard.filter.CountingPairedFilter-">addToMetricsFile</a></span>(htsjdk.samtools.metrics.MetricsFile&lt;<a href="../../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a>,java.lang.Integer&gt;&nbsp;file,
+                boolean&nbsp;includeBQHistogram,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;dupeFilter,
+                <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;mapqFilter,
+                <a href="../../../picard/filter/CountingPairedFilter.html" title="class in picard.filter">CountingPairedFilter</a>&nbsp;pairFilter)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected long</code></td>
+<td class="colLast"><span class="typeNameLabel">CollectWgsMetrics.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetrics.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></span>(<a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</code>
+<div class="block">If INTERVALS is specified, this will count bases beyond the interval list when the read overlaps the intervals and extends beyond the
+ edge.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><span class="typeNameLabel">CollectWgsMetricsFromSampledSites.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></span>(<a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</code>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.</div>
 </td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>protected <a href="../../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a></code></td>
+<td class="colLast"><span class="typeNameLabel">CollectWgsMetrics.WgsMetricsCollector.</span><code><span class="memberNameLink"><a href="../../../picard/analysis/CollectWgsMetrics.WgsMetricsCollector.html#getMetrics-htsjdk.samtools.util.Histogram-picard.filter.CountingFilter-picard.filter.CountingFilter-picard.filter.CountingPairedFilter-">getMetrics</a></span>(htsjdk.samtools.util.Histogram&lt;java.lang.Integer&gt;&nbsp;depthHistogram,
+          <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;dupeFilter,
+          <a href="../../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;mapqFilter,
+          <a href="../../../picard/filter/CountingPairedFilter.html" title="class in picard.filter">CountingPairedFilter</a>&nbsp;pairFilter)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

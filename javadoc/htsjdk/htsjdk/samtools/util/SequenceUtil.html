@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":41,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9,"i28":9,"i29":9,"i30":9,"i31":9,"i32":9,"i33":9,"i34":9,"i35":9,"i36":9,"i37":9,"i38":9,"i39":9,"i40":9,"i41":9,"i42":9,"i43":9,"i44":9,"i45":9,"i46":9,"i47":9,"i48":41,"i49":9,"i50":9};
+var methods = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":41,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9,"i28":9,"i29":9,"i30":9,"i31":9,"i32":9,"i33":9,"i34":9,"i35":9,"i36":9,"i37":9,"i38":9,"i39":9,"i40":9,"i41":9,"i42":9,"i43":9,"i44":9,"i45":9,"i46":9,"i47":9,"i48":9,"i49":41,"i50":9,"i51":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -468,11 +468,17 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i31" class="rowColor">
+<td class="colFirst"><code>static java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#getSamReadNameFromFastqHeader-java.lang.String-">getSamReadNameFromFastqHeader</a></span>(java.lang.String&nbsp;fastqHeader)</code>
+<div class="block">Returns a read name from a FASTQ header string suitable for use in a SAM/BAM file.</div>
+</td>
+</tr>
+<tr id="i32" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isBisulfiteConverted-byte-byte-">isBisulfiteConverted</a></span>(byte&nbsp;read,
                     byte&nbsp;reference)</code>&nbsp;</td>
 </tr>
-<tr id="i32" class="altColor">
+<tr id="i33" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isBisulfiteConverted-byte-byte-boolean-">isBisulfiteConverted</a></span>(byte&nbsp;read,
                     byte&nbsp;reference,
@@ -480,19 +486,19 @@ extends java.lang.Object</pre>
 <div class="block">Checks for bisulfite conversion, C->T on the positive strand and G->A on the negative strand.</div>
 </td>
 </tr>
-<tr id="i33" class="rowColor">
+<tr id="i34" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isNoCall-byte-">isNoCall</a></span>(byte&nbsp;base)</code>
 <div class="block">returns true if the value of base represents a no call</div>
 </td>
 </tr>
-<tr id="i34" class="altColor">
+<tr id="i35" class="rowColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#isValidBase-byte-">isValidBase</a></span>(byte&nbsp;b)</code>
 <div class="block">Returns true if the byte is in [acgtACGT].</div>
 </td>
 </tr>
-<tr id="i35" class="rowColor">
+<tr id="i36" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeCigarStringWithIndelPossibleClipping-int-int-int-int-int-">makeCigarStringWithIndelPossibleClipping</a></span>(int&nbsp;alignmentStart,
                                         int&nbsp;readLength,
@@ -502,7 +508,7 @@ extends java.lang.Object</pre>
 <div class="block">Create a cigar string for a gapped alignment, which may have soft clipping at either end</div>
 </td>
 </tr>
-<tr id="i36" class="altColor">
+<tr id="i37" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeCigarStringWithPossibleClipping-int-int-int-">makeCigarStringWithPossibleClipping</a></span>(int&nbsp;alignmentStart,
                                    int&nbsp;readLength,
@@ -510,18 +516,18 @@ extends java.lang.Object</pre>
 <div class="block">Create a simple ungapped cigar string, which might have soft clipping at either end</div>
 </td>
 </tr>
-<tr id="i37" class="rowColor">
+<tr id="i38" class="altColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeReferenceFromAlignment-htsjdk.samtools.SAMRecord-boolean-">makeReferenceFromAlignment</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;rec,
                           boolean&nbsp;includeReferenceBasesForDeletions)</code>
 <div class="block">Produce reference bases from an aligned SAMRecord with MD string and Cigar.</div>
 </td>
 </tr>
-<tr id="i38" class="altColor">
+<tr id="i39" class="rowColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#makeSoftClipCigar-int-">makeSoftClipCigar</a></span>(int&nbsp;clipLength)</code>&nbsp;</td>
 </tr>
-<tr id="i39" class="rowColor">
+<tr id="i40" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#readBaseMatchesRefBaseWithAmbiguity-byte-byte-">readBaseMatchesRefBaseWithAmbiguity</a></span>(byte&nbsp;readBase,
                                    byte&nbsp;refBase)</code>
@@ -529,45 +535,45 @@ extends java.lang.Object</pre>
  a reference sequence, using the reference code as a 'pattern' that the read base must match.</div>
 </td>
 </tr>
-<tr id="i40" class="altColor">
+<tr id="i41" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverse-byte:A-int-int-">reverse</a></span>(byte[]&nbsp;array,
        int&nbsp;offset,
        int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i41" class="rowColor">
+<tr id="i42" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-byte:A-">reverseComplement</a></span>(byte[]&nbsp;bases)</code>
 <div class="block">Reverses and complements the bases in place.</div>
 </td>
 </tr>
-<tr id="i42" class="altColor">
+<tr id="i43" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-byte:A-int-int-">reverseComplement</a></span>(byte[]&nbsp;bases,
                  int&nbsp;offset,
                  int&nbsp;len)</code>&nbsp;</td>
 </tr>
-<tr id="i43" class="rowColor">
+<tr id="i44" class="altColor">
 <td class="colFirst"><code>static java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseComplement-java.lang.String-">reverseComplement</a></span>(java.lang.String&nbsp;sequenceData)</code>
 <div class="block">Calculate the reverse complement of the specified sequence
  (Stolen from Reseq)</div>
 </td>
 </tr>
-<tr id="i44" class="altColor">
+<tr id="i45" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#reverseQualities-byte:A-">reverseQualities</a></span>(byte[]&nbsp;quals)</code>
 <div class="block">Reverses the quals in place.</div>
 </td>
 </tr>
-<tr id="i45" class="rowColor">
+<tr id="i46" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases)</code>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i46" class="altColor">
+<tr id="i47" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -575,7 +581,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i47" class="rowColor">
+<tr id="i48" class="altColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-byte:A-int-boolean-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         byte[]&nbsp;referenceBases,
@@ -584,7 +590,7 @@ extends java.lang.Object</pre>
 <div class="block">Calculates the sum of qualities for mismatched bases in the read.</div>
 </td>
 </tr>
-<tr id="i48" class="altColor">
+<tr id="i49" class="rowColor">
 <td class="colFirst"><code>static int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#sumQualitiesOfMismatches-htsjdk.samtools.SAMRecord-char:A-int-">sumQualitiesOfMismatches</a></span>(<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;read,
                         char[]&nbsp;referenceBases,
@@ -592,11 +598,11 @@ extends java.lang.Object</pre>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </td>
 </tr>
-<tr id="i49" class="rowColor">
+<tr id="i50" class="altColor">
 <td class="colFirst"><code>static byte</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#upperCase-byte-">upperCase</a></span>(byte&nbsp;base)</code>&nbsp;</td>
 </tr>
-<tr id="i50" class="altColor">
+<tr id="i51" class="rowColor">
 <td class="colFirst"><code>static byte[]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SequenceUtil.html#upperCase-byte:A-">upperCase</a></span>(byte[]&nbsp;bases)</code>&nbsp;</td>
 </tr>
@@ -1521,11 +1527,28 @@ public static&nbsp;int&nbsp;calculateSamNmTag(<a href="../../../htsjdk/samtools/
 <a name="generateAllKmers-int-">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>generateAllKmers</h4>
 <pre>public static&nbsp;java.util.List&lt;byte[]&gt;&nbsp;generateAllKmers(int&nbsp;length)</pre>
 <div class="block">Generates all possible unambiguous kmers (upper-case) of length and returns them as byte[]s.</div>
+</li>
+</ul>
+<a name="getSamReadNameFromFastqHeader-java.lang.String-">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>getSamReadNameFromFastqHeader</h4>
+<pre>public static&nbsp;java.lang.String&nbsp;getSamReadNameFromFastqHeader(java.lang.String&nbsp;fastqHeader)</pre>
+<div class="block">Returns a read name from a FASTQ header string suitable for use in a SAM/BAM file.  Any letters after the first space are ignored.
+ Ths method also strips trailing "/1" or "/2" so that paired end reads have the same name.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>fastqHeader</code> - the header from a <a href="../../../htsjdk/samtools/fastq/FastqRecord.html" title="class in htsjdk.samtools.fastq"><code>FastqRecord</code></a>.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>a read name appropriate for output in a SAM/BAM file.</dd>
+</dl>
 </li>
 </ul>
 </li>

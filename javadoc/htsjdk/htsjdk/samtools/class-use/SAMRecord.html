@@ -976,42 +976,49 @@
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                     <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
                     boolean&nbsp;preSorted,
-                    <a href="../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>
+                    <a href="../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator)</code>&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-htsjdk.samtools.util.Log-">DuplicateSetIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;preSorted,
+                    <a href="../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator,
+                    <a href="../../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log)</code>
 <div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/CRAMFileReader.IntervalIterator.html#IntervalIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.QueryInterval-boolean-">IntervalIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;delegate,
                 <a href="../../../htsjdk/samtools/QueryInterval.html" title="class in htsjdk.samtools">QueryInterval</a>&nbsp;interval,
                 boolean&nbsp;overlap)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/MergingSamRecordIterator.html#MergingSamRecordIterator-htsjdk.samtools.SamFileHeaderMerger-java.util.Map-boolean-">MergingSamRecordIterator</a></span>(<a href="../../../htsjdk/samtools/SamFileHeaderMerger.html" title="class in htsjdk.samtools">SamFileHeaderMerger</a>&nbsp;headerMerger,
                         java.util.Map&lt;<a href="../../../htsjdk/samtools/SamReader.html" title="interface in htsjdk.samtools">SamReader</a>,<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&gt;&nbsp;iterators,
                         boolean&nbsp;assumeSorted)</code>
 <div class="block">Add a set of SAM file iterators to the merging iterator.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/NotPrimarySkippingIterator.html#NotPrimarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">NotPrimarySkippingIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SecondaryOrSupplementarySkippingIterator.html#SecondaryOrSupplementarySkippingIterator-htsjdk.samtools.util.CloseableIterator-">SecondaryOrSupplementarySkippingIterator</a></span>(<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;underlyingIt)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator)</code>
 <div class="block">By default, the mate cigar tag is set</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-boolean-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                    boolean&nbsp;setMateCigar)</code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/SamPairUtil.SetMateInfoIterator.html#SetMateInfoIterator-java.util.Iterator-boolean-boolean-">SetMateInfoIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                    boolean&nbsp;setMateCigar,
                    boolean&nbsp;ignoreMissingMates)</code>&nbsp;</td>
@@ -1103,7 +1110,7 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></code></td>
-<td class="colLast"><span class="typeNameLabel">FilteringIterator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringIterator.html#next--">next</a></span>()</code>
+<td class="colLast"><span class="typeNameLabel">FilteringSamIterator.</span><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringSamIterator.html#next--">next</a></span>()</code>
 <div class="block">Returns the next element in the iteration.</div>
 </td>
 </tr>
@@ -1330,13 +1337,26 @@
 <tr class="altColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringIterator.html#FilteringIterator-java.util.Iterator-htsjdk.samtools.filter.SamRecordFilter-">FilteringIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                  <a href="../../../htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>&nbsp;filter)</code>
-<div class="block">Constructor</div>
-</td>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringIterator.html#FilteringIterator-java.util.Iterator-htsjdk.samtools.filter.SamRecordFilter-boolean-">FilteringIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
                  <a href="../../../htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>&nbsp;filter,
                  boolean&nbsp;filterByPair)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringSamIterator.html#FilteringSamIterator-java.util.Iterator-htsjdk.samtools.filter.SamRecordFilter-">FilteringSamIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>&nbsp;filter)</code>
+<div class="block">Constructor</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/filter/FilteringSamIterator.html#FilteringSamIterator-java.util.Iterator-htsjdk.samtools.filter.SamRecordFilter-boolean-">FilteringSamIterator</a></span>(java.util.Iterator&lt;<a href="../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../htsjdk/samtools/filter/SamRecordFilter.html" title="interface in htsjdk.samtools.filter">SamRecordFilter</a>&nbsp;filter,
+                    boolean&nbsp;filterByPair)</code>
 <div class="block">Constructor</div>
 </td>
 </tr>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9,"i3":9,"i4":9,"i5":10};
+var methods = {"i0":10,"i1":10,"i2":9,"i3":9,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -189,7 +189,9 @@ implements java.lang.Comparable&lt;<a href="../../../htsjdk/samtools/cram/CRAIEn
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#CRAIEntry--">CRAIEntry</a></span>()</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#CRAIEntry-java.lang.String-">CRAIEntry</a></span>(java.lang.String&nbsp;line)</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#CRAIEntry-java.lang.String-">CRAIEntry</a></span>(java.lang.String&nbsp;line)</code>
+<div class="block">Create a CRAI Entry from a serialized CRAI index line.</div>
+</td>
 </tr>
 </table>
 </li>
@@ -219,17 +221,19 @@ implements java.lang.Comparable&lt;<a href="../../../htsjdk/samtools/cram/CRAIEn
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#fromContainer-htsjdk.samtools.cram.structure.Container-">fromContainer</a></span>(<a href="../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container)</code>&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>static <a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#fromCraiLine-java.lang.String-">fromCraiLine</a></span>(java.lang.String&nbsp;line)</code>&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#intersect-htsjdk.samtools.cram.CRAIEntry-htsjdk.samtools.cram.CRAIEntry-">intersect</a></span>(<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;e0,
          <a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;e1)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#toString--">toString</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/cram/CRAIEntry.html#writeToStream-java.io.OutputStream-">writeToStream</a></span>(java.io.OutputStream&nbsp;os)</code>
+<div class="block">Serialize the entry to a CRAI index stream.</div>
+</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -359,7 +363,10 @@ implements java.lang.Comparable&lt;<a href="../../../htsjdk/samtools/cram/CRAIEn
 <h4>CRAIEntry</h4>
 <pre>public&nbsp;CRAIEntry(java.lang.String&nbsp;line)
           throws <a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></pre>
+<div class="block">Create a CRAI Entry from a serialized CRAI index line.</div>
 <dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>line</code> - string formatted as a CRAI index entry</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../../htsjdk/samtools/cram/CRAIIndex.CRAIIndexException.html" title="class in htsjdk.samtools.cram">CRAIIndex.CRAIIndexException</a></code></dd>
 </dl>
@@ -373,22 +380,18 @@ implements java.lang.Comparable&lt;<a href="../../../htsjdk/samtools/cram/CRAIEn
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a name="fromContainer-htsjdk.samtools.cram.structure.Container-">
+<a name="writeToStream-java.io.OutputStream-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>fromContainer</h4>
-<pre>public static&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;fromContainer(<a href="../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container)</pre>
-</li>
-</ul>
-<a name="fromCraiLine-java.lang.String-">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>fromCraiLine</h4>
-<pre>public static&nbsp;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&nbsp;fromCraiLine(java.lang.String&nbsp;line)</pre>
+<h4>writeToStream</h4>
+<pre>public&nbsp;void&nbsp;writeToStream(java.io.OutputStream&nbsp;os)</pre>
+<div class="block">Serialize the entry to a CRAI index stream.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>os</code> - stream to write to</dd>
+</dl>
 </li>
 </ul>
 <a name="toString--">
@@ -402,6 +405,15 @@ implements java.lang.Comparable&lt;<a href="../../../htsjdk/samtools/cram/CRAIEn
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code>toString</code>&nbsp;in class&nbsp;<code>java.lang.Object</code></dd>
 </dl>
+</li>
+</ul>
+<a name="fromContainer-htsjdk.samtools.cram.structure.Container-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>fromContainer</h4>
+<pre>public static&nbsp;java.util.List&lt;<a href="../../../htsjdk/samtools/cram/CRAIEntry.html" title="class in htsjdk.samtools.cram">CRAIEntry</a>&gt;&nbsp;fromContainer(<a href="../../../htsjdk/samtools/cram/structure/Container.html" title="class in htsjdk.samtools.cram.structure">Container</a>&nbsp;container)</pre>
 </li>
 </ul>
 <a name="compareTo-htsjdk.samtools.cram.CRAIEntry-">

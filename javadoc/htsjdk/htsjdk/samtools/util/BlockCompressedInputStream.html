@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":9,"i1":10,"i2":9,"i3":10,"i4":9,"i5":10,"i6":10,"i7":9,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10};
+var methods = {"i0":9,"i1":10,"i2":9,"i3":10,"i4":10,"i5":9,"i6":10,"i7":10,"i8":9,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -214,36 +214,40 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 </td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#endOfBlock--">endOfBlock</a></span>()</code>&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#getFileBlock-long-">getFileBlock</a></span>(long&nbsp;bgzfOffset)</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#getFilePointer--">getFilePointer</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#getPosition--">getPosition</a></span>()</code>
 <div class="block">The current offset, in bytes, of this stream/writer/file.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#isValidFile-java.io.InputStream-">isValidFile</a></span>(java.io.InputStream&nbsp;stream)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#read--">read</a></span>()</code>
 <div class="block">Reads the next byte of data from the input stream.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#read-byte:A-">read</a></span>(byte[]&nbsp;buffer)</code>
 <div class="block">Reads some number of bytes from the input stream and stores them into the buffer array b.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#read-byte:A-int-int-">read</a></span>(byte[]&nbsp;buffer,
     int&nbsp;offset,
@@ -251,19 +255,19 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
 <div class="block">Reads up to len bytes of data from the input stream into an array of bytes.</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#readLine--">readLine</a></span>()</code>
 <div class="block">Reads a whole line.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#seek-long-">seek</a></span>(long&nbsp;pos)</code>
 <div class="block">Seek to the given position in the file.</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/BlockCompressedInputStream.html#setCheckCrcs-boolean-">setCheckCrcs</a></span>(boolean&nbsp;check)</code>
 <div class="block">Determines whether or not the inflater will re-calculated the CRC on the decompressed data
@@ -394,6 +398,20 @@ implements <a href="../../../htsjdk/samtools/util/LocationAware.html" title="int
  may block in order to fill an internal buffer if it has been exhausted.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code>java.io.IOException</code></dd>
+</dl>
+</li>
+</ul>
+<a name="endOfBlock--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>endOfBlock</h4>
+<pre>public&nbsp;boolean&nbsp;endOfBlock()</pre>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd><code>true</code> if the stream is at the end of a BGZF block,
+ <code>false</code> otherwise.</dd>
 </dl>
 </li>
 </ul>

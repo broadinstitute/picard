@@ -115,11 +115,28 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><span class="typeNameLabel">CRAMIndexer.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMIndexer.html#createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-htsjdk.samtools.ValidationStringency-">createIndex</a></span>(<a href="../../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;stream,
+<td class="colLast"><span class="typeNameLabel">CRAMBAIIndexer.</span><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/CRAMBAIIndexer.html#createIndex-htsjdk.samtools.seekablestream.SeekableStream-java.io.File-htsjdk.samtools.util.Log-htsjdk.samtools.ValidationStringency-">createIndex</a></span>(<a href="../../../../htsjdk/samtools/seekablestream/SeekableStream.html" title="class in htsjdk.samtools.seekablestream">SeekableStream</a>&nbsp;stream,
            java.io.File&nbsp;output,
            <a href="../../../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log,
            <a href="../../../../htsjdk/samtools/ValidationStringency.html" title="enum in htsjdk.samtools">ValidationStringency</a>&nbsp;validationStringency)</code>
 <div class="block">Generates a BAI index file from an input CRAM stream</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
+<caption><span>Constructors in <a href="../../../../htsjdk/samtools/package-summary.html">htsjdk.samtools</a> with parameters of type <a href="../../../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/samtools/DuplicateSetIterator.html#DuplicateSetIterator-htsjdk.samtools.util.CloseableIterator-htsjdk.samtools.SAMFileHeader-boolean-htsjdk.samtools.SAMRecordDuplicateComparator-htsjdk.samtools.util.Log-">DuplicateSetIterator</a></span>(<a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;&nbsp;iterator,
+                    <a href="../../../../htsjdk/samtools/SAMFileHeader.html" title="class in htsjdk.samtools">SAMFileHeader</a>&nbsp;header,
+                    boolean&nbsp;preSorted,
+                    <a href="../../../../htsjdk/samtools/SAMRecordDuplicateComparator.html" title="class in htsjdk.samtools">SAMRecordDuplicateComparator</a>&nbsp;comparator,
+                    <a href="../../../../htsjdk/samtools/util/Log.html" title="class in htsjdk.samtools.util">Log</a>&nbsp;log)</code>
+<div class="block">Allows the user of this iterator to skip the sorting of the input if the input is already sorted.</div>
 </td>
 </tr>
 </tbody>

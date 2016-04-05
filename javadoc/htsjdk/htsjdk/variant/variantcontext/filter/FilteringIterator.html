@@ -17,12 +17,6 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
-var altColor = "altColor";
-var rowColor = "rowColor";
-var tableTab = "tableTab";
-var activeTableTab = "activeTableTab";
 </script>
 <noscript>
 <div>JavaScript is disabled on your browser.</div>
@@ -49,7 +43,7 @@ var activeTableTab = "activeTableTab";
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../htsjdk/variant/variantcontext/filter/CompoundFilter.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../htsjdk/variant/variantcontext/filter/GenotypeQualityFilter.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?htsjdk/variant/variantcontext/filter/FilteringIterator.html" target="_top">Frames</a></li>
@@ -76,13 +70,13 @@ var activeTableTab = "activeTableTab";
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.summary">Method</a></li>
+<li><a href="#methods.inherited.from.class.htsjdk.variant.variantcontext.filter.FilteringVariantContextIterator">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a name="skip.navbar.top">
@@ -99,7 +93,12 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
+<li><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter">htsjdk.variant.variantcontext.filter.FilteringVariantContextIterator</a></li>
+<li>
+<ul class="inheritance">
 <li>htsjdk.variant.variantcontext.filter.FilteringIterator</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -111,16 +110,19 @@ var activeTableTab = "activeTableTab";
 <dd><a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;, java.io.Closeable, java.lang.AutoCloseable, java.lang.Iterable&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;, java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</dd>
 </dl>
 <hr>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <br>
-<pre>public class <span class="typeNameLabel">FilteringIterator</span>
-extends java.lang.Object
-implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;, java.lang.Iterable&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</pre>
+<pre>@Deprecated
+public class <span class="typeNameLabel">FilteringIterator</span>
+extends <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter">FilteringVariantContextIterator</a></pre>
 <div class="block">A filtering iterator for VariantContexts that takes a base iterator and a VariantContextFilter.
 
  The iterator returns all the variantcontexts for which the filter's function "test" returns true (and only those)</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
-<dd>Yossi Farjoun</dd>
+<dd>Yossi Farjoun
+
+ use <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter"><code>FilteringVariantContextIterator</code></a> instead</dd>
 </dl>
 </li>
 </ul>
@@ -142,8 +144,8 @@ implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" tit
 <tr class="altColor">
 <td class="colOne"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#FilteringIterator-java.util.Iterator-htsjdk.variant.variantcontext.filter.VariantContextFilter-">FilteringIterator</a></span>(java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;&nbsp;iterator,
                  <a href="../../../../htsjdk/variant/variantcontext/filter/VariantContextFilter.html" title="interface in htsjdk.variant.variantcontext.filter">VariantContextFilter</a>&nbsp;filter)</code>
-<div class="block">Constructor of an iterator based on the provided iterator and predicate.</div>
-</td>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -154,41 +156,13 @@ implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" tit
 <!--   -->
 </a>
 <h3>Method Summary</h3>
-<table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colLast" scope="col">Method and Description</th>
-</tr>
-<tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#close--">close</a></span>()</code>&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#hasNext--">hasNext</a></span>()</code>
-<div class="block">Returns true if the iteration has more elements.</div>
-</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#iterator--">iterator</a></span>()</code>
-<div class="block">function to satisfy the Iterable interface</div>
-</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#next--">next</a></span>()</code>
-<div class="block">Returns the next element in the iteration.</div>
-</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringIterator.html#remove--">remove</a></span>()</code>
-<div class="block">Required method for Iterator API.</div>
-</td>
-</tr>
-</table>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.htsjdk.variant.variantcontext.filter.FilteringVariantContextIterator">
+<!--   -->
+</a>
+<h3>Methods inherited from class&nbsp;htsjdk.variant.variantcontext.filter.<a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter">FilteringVariantContextIterator</a></h3>
+<code><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html#close--">close</a>, <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html#hasNext--">hasNext</a>, <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html#iterator--">iterator</a>, <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html#next--">next</a>, <a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html#remove--">remove</a></code></li>
+</ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.lang.Object">
 <!--   -->
@@ -232,105 +206,7 @@ implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" tit
 <h4>FilteringIterator</h4>
 <pre>public&nbsp;FilteringIterator(java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;&nbsp;iterator,
                          <a href="../../../../htsjdk/variant/variantcontext/filter/VariantContextFilter.html" title="interface in htsjdk.variant.variantcontext.filter">VariantContextFilter</a>&nbsp;filter)</pre>
-<div class="block">Constructor of an iterator based on the provided iterator and predicate. The resulting
- records will be all those VariantContexts from iterator for which filter.test( . ) is true</div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>iterator</code> - the backing iterator</dd>
-<dd><code>filter</code> - the filter</dd>
-</dl>
-</li>
-</ul>
-</li>
-</ul>
-<!-- ============ METHOD DETAIL ========== -->
-<ul class="blockList">
-<li class="blockList"><a name="method.detail">
-<!--   -->
-</a>
-<h3>Method Detail</h3>
-<a name="close--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>close</h4>
-<pre>public&nbsp;void&nbsp;close()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../htsjdk/samtools/util/CloseableIterator.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></dd>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>close</code>&nbsp;in interface&nbsp;<code>java.io.Closeable</code></dd>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>close</code>&nbsp;in interface&nbsp;<code>java.lang.AutoCloseable</code></dd>
-</dl>
-</li>
-</ul>
-<a name="hasNext--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>hasNext</h4>
-<pre>public&nbsp;boolean&nbsp;hasNext()</pre>
-<div class="block">Returns true if the iteration has more elements.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>hasNext</code>&nbsp;in interface&nbsp;<code>java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>true if the iteration has more elements.  Otherwise returns false.</dd>
-</dl>
-</li>
-</ul>
-<a name="next--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>next</h4>
-<pre>public&nbsp;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&nbsp;next()
-                    throws java.util.NoSuchElementException</pre>
-<div class="block">Returns the next element in the iteration.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>next</code>&nbsp;in interface&nbsp;<code>java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>the next element in the iteration</dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.util.NoSuchElementException</code> - if there are no more elements to return</dd>
-</dl>
-</li>
-</ul>
-<a name="remove--">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>remove</h4>
-<pre>public&nbsp;void&nbsp;remove()</pre>
-<div class="block">Required method for Iterator API.</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>remove</code>&nbsp;in interface&nbsp;<code>java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></dd>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code>java.lang.UnsupportedOperationException</code> - since it is unsupported here.</dd>
-</dl>
-</li>
-</ul>
-<a name="iterator--">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>iterator</h4>
-<pre>public&nbsp;java.util.Iterator&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;&nbsp;iterator()</pre>
-<div class="block">function to satisfy the Iterable interface</div>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code>iterator</code>&nbsp;in interface&nbsp;<code>java.lang.Iterable&lt;<a href="../../../../htsjdk/variant/variantcontext/VariantContext.html" title="class in htsjdk.variant.variantcontext">VariantContext</a>&gt;</code></dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>itself since the class inherits from Iterator</dd>
-</dl>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 </li>
@@ -362,7 +238,7 @@ implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" tit
 <div class="subNav">
 <ul class="navList">
 <li><a href="../../../../htsjdk/variant/variantcontext/filter/CompoundFilter.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="../../../../htsjdk/variant/variantcontext/filter/GenotypeQualityFilter.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="../../../../htsjdk/variant/variantcontext/filter/FilteringVariantContextIterator.html" title="class in htsjdk.variant.variantcontext.filter"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
 <li><a href="../../../../index.html?htsjdk/variant/variantcontext/filter/FilteringIterator.html" target="_top">Frames</a></li>
@@ -389,13 +265,13 @@ implements <a href="../../../../htsjdk/samtools/util/CloseableIterator.html" tit
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.summary">Method</a></li>
+<li><a href="#methods.inherited.from.class.htsjdk.variant.variantcontext.filter.FilteringVariantContextIterator">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a name="skip.navbar.bottom">
