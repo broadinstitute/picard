@@ -476,16 +476,9 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 }
             }
 
-            ///////////////////////////////////////////////////////////////////
-            // Duplicate reads can be totally ignored beyond this point
-            ///////////////////////////////////////////////////////////////////
-            if (record.getDuplicateReadFlag()) {
-                this.metrics.PCT_EXC_DUPE += basesAlignedInRecord;
-                return;
-            }
-
-            // Compute the bait-related metrics *before* applying the overlap clipping and
-            // the map-q threshold, since those would skew the assay-related metrics
+            // Compute the bait-related metrics *before* applying the duplicate read
+            // filtering, overlap clipping and the map-q threshold, since those would
+            // skew the assay-related metrics
             {
                 final int mappedBases = basesAlignedInRecord;
                 int onBaitBases = 0;
@@ -506,6 +499,14 @@ public abstract class TargetMetricsCollector<METRIC_TYPE extends MultilevelMetri
                 } else {
                     this.metrics.OFF_PROBE_BASES += mappedBases;
                 }
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            // Duplicate reads can be totally ignored beyond this point
+            ///////////////////////////////////////////////////////////////////
+            if (record.getDuplicateReadFlag()) {
+                this.metrics.PCT_EXC_DUPE += basesAlignedInRecord;
+                return;
             }
 
             ///////////////////////////////////////////////////////////////////
