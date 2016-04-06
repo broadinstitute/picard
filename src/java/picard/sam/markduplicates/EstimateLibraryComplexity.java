@@ -339,8 +339,9 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
 
     /**
      * Comparator that orders read pairs on the first N bases of both reads.
+     * There is no tie-breaking, so any sort is stable, not total.
      */
-    class PairedReadComparator implements Comparator<PairedReadSequence> {
+    private class PairedReadComparator implements Comparator<PairedReadSequence> {
         final int BASES = EstimateLibraryComplexity.this.MIN_IDENTICAL_BASES;
 
         public int compare(final PairedReadSequence lhs, final PairedReadSequence rhs) {
@@ -356,7 +357,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                 if (retval != 0) return retval;
             }
 
-            return System.identityHashCode(lhs) - System.identityHashCode(rhs);
+            return 0;
         }
     }
 
