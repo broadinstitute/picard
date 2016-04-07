@@ -51,7 +51,7 @@ import java.io.File;
 )
 public class SortSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname  or some other property " +
+    static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname or some other property " +
             "of the SAMRecord. Input and output formats (SAM or BAM) are determined by the file extension." +
             "<br />" +
             "<h4>Usage example:</h4>" +
@@ -83,7 +83,11 @@ public class SortSam extends CommandLineProgram {
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
         ;
         reader.getFileHeader().setSortOrder(SORT_ORDER);
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
+        final SAMFileWriter writer = new SAMFileWriterFactory()
+                .setCreateIndex(CREATE_INDEX)
+                .setCreateMd5File(CREATE_MD5_FILE)
+                .makeSAMOrBAMWriter(reader.getFileHeader(), false, OUTPUT);
+
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records from a sorting collection"));
 
