@@ -506,7 +506,7 @@ public class EstimateLibraryComplexity extends AbstractOpticalDuplicateFinderCom
                         "Mean=" + meanGroupSize + ", Actual=" + group.size() + ". Prefixes: " +
                         StringUtil.bytesToString(prs.read1, 0, MIN_IDENTICAL_BASES) +
                         " / " +
-                        StringUtil.bytesToString(prs.read1, 0, MIN_IDENTICAL_BASES));
+                        StringUtil.bytesToString(prs.read2, 0, MIN_IDENTICAL_BASES));
             } else {
                 final Map<String, List<PairedReadSequence>> sequencesByLibrary = splitByLibrary(group, readGroups);
 
