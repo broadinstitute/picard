@@ -113,7 +113,7 @@ public class AlignmentSummaryMetrics extends MultilevelMetrics {
     public double PF_HQ_ERROR_RATE;
 
     /**
-     * The number of insertion and deletion events per 100 aligned bases.  Uses the number of events
+     * The rate of insertion and deletion events within aligned bases.  Uses the number of events
      * as the numerator, not the number of inserted or deleted bases.
      */
     public double PF_INDEL_RATE;

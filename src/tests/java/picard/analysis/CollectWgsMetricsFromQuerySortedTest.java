@@ -74,6 +74,8 @@ public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest
             Assert.assertEquals(row.PF_DUPE_PAIRS, 1);
             Assert.assertEquals(row.PF_READS_ALIGNED, 6);
             Assert.assertEquals(row.PF_ORIENTED_PAIRS, 2);
+            Assert.assertEquals(row.PF_ALIGNED_BASES, 606);
+            Assert.assertEquals(row.PF_INDELS, 1);
             Assert.assertEquals(row.MEAN_INSERT_SIZE, 118.0);
 
             final BigDecimal meanCov = new BigDecimal((double)row.PF_PASSING_BASES / genomeSize).setScale(6, RoundingMode.HALF_UP);

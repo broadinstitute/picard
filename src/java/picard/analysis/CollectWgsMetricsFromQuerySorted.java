@@ -94,6 +94,8 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         /** The number of duplicate read pairs, before any filters are applied. */
         public long PF_DUPE_PAIRS = 0;
 
+        /** The number of aligned bases, before any filters are applied. */
+        public long PF_ALIGNED_BASES = 0;
         /** The number of aligned reads, before any filters are applied. */
         public long PF_READS_ALIGNED = 0;
 
@@ -115,6 +117,11 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
          * start of the read.
          */
         public long PF_ADAPTER_READS = 0;
+
+        /**
+         * The number of insertion and deletion events.
+         */
+        public long PF_INDELS = 0;
 
         /** The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied. */
         public long PF_ORIENTED_PAIRS = 0;
@@ -213,12 +220,20 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
         metrics.metrics.PF_BASES += totalReadBases;
         if (isNoiseRead(pairToAnalyze.read1)) metrics.metrics.PF_NOISE_READS++;
 
-        if (!pairToAnalyze.read1.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+        if (!pairToAnalyze.read1.getReadUnmappedFlag()) {
+            metrics.metrics.PF_READS_ALIGNED++;
+            metrics.metrics.PF_ALIGNED_BASES += read1bases;
+            metrics.metrics.PF_INDELS += getNumIndels(pairToAnalyze.read1);
+        }
         else if (isAdapterRead(pairToAnalyze.read1)) metrics.metrics.PF_ADAPTER_READS++;
 
         if (isPaired) {
             metrics.metrics.PF_READ_PAIRS++;
-            if (!pairToAnalyze.read2.getReadUnmappedFlag()) metrics.metrics.PF_READS_ALIGNED++;
+            if (!pairToAnalyze.read2.getReadUnmappedFlag()) {
+                metrics.metrics.PF_READS_ALIGNED++;
+                metrics.metrics.PF_ALIGNED_BASES += read2bases;
+                metrics.metrics.PF_INDELS += getNumIndels(pairToAnalyze.read2);
+            }
             else if (isAdapterRead(pairToAnalyze.read2)) metrics.metrics.PF_ADAPTER_READS++;
 
             if (isChimericReadPair(pairToAnalyze, minimumMappingQuality)) metrics.metrics.PF_CHIMERIC_PAIRS++;
@@ -263,6 +278,20 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
                 metrics.insertSizeSum += insertSize;
             }
         }
+    }
+
+    /**
+     * Get the number of distinct indel events (not bases) for the given read
+     *
+     * @param read the read to use
+     */
+    private int getNumIndels(final SAMRecord read) {
+        int indels = 0;
+        for (final CigarElement elem : read.getCigar().getCigarElements()) {
+            final CigarOperator op = elem.getOperator();
+            if (op == CigarOperator.INSERTION || op == CigarOperator.DELETION) indels++;
+        }
+        return indels;
     }
 
     /**
