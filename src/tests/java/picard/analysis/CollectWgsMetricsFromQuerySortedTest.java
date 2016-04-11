@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author Eric Banks
  */
-
+@Deprecated
 public class CollectWgsMetricsFromQuerySortedTest extends CommandLineProgramTest {
 
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam");

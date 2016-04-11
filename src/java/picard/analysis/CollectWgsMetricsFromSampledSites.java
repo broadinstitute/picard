@@ -39,8 +39,11 @@ import java.io.File;
  * It is important that the sampled positions be chosen so that they are spread out at least further than a read's length apart;
  * otherwise, you run the risk of double-counting reads in the metrics.
  *
+ * This tool is deprecated; please use CollectWgsMetrics instead.
+ *
  * @author ebanks
  */
+@Deprecated
 @CommandLineProgramProperties(
         usage = "Computes a number of metrics that are useful for evaluating coverage and performance of " +
                 "whole genome sequencing experiments, but only at a set of sampled positions.  " +

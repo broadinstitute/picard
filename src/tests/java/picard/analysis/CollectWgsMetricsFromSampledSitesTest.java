@@ -40,6 +40,7 @@ import java.util.Map;
 /**
  * Tests CollectWgsMetricsFromSampledSites
  */
+@Deprecated
 public class CollectWgsMetricsFromSampledSitesTest extends CommandLineProgramTest {
     private static final File TEST_DATA_DIR = new File("testdata/picard/sam/");
 
