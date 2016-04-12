@@ -28,13 +28,11 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.ProgressLogger;
 import htsjdk.samtools.util.SequenceUtil;
 import htsjdk.tribble.Tribble;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.vcf.VCFFileReader;
 import picard.PicardException;
 import picard.cmdline.CommandLineProgram;
@@ -43,6 +41,7 @@ import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.VcfOrBcf;
 import picard.vcf.GenotypeConcordanceStates.*;
+import picard.vcf.PairedVariantSubContextIterator.VcfTuple;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,6 +49,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static htsjdk.variant.variantcontext.VariantContext.Type.*;
 
@@ -286,59 +286,23 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         log.info("Starting iteration over variants.");
         while (pairedIterator.hasNext()) {
-            final VcTuple tuple = pairedIterator.next();
+            final VcfTuple tuple = pairedIterator.next();
+            final VariantContext.Type truthVariantContextType = tuple.leftVariantContext.map(VariantContext::getType).orElse(NO_VARIATION);
+            final VariantContext.Type callVariantContextType  = tuple.rightVariantContext.map(VariantContext::getType).orElse(NO_VARIATION);
 
-            final VariantContext.Type truthVariantContextType = tuple.truthVariantContext != null ? tuple.truthVariantContext.getType() : NO_VARIATION;
-            final VariantContext.Type callVariantContextType =  tuple.callVariantContext != null ? tuple.callVariantContext.getType() : NO_VARIATION;
+            final boolean stateClassified = classifyVariants(tuple.leftVariantContext, TRUTH_SAMPLE,
+                    tuple.rightVariantContext, CALL_SAMPLE,
+                    Optional.of(snpCounter), Optional.of(indelCounter),
+                    MIN_GQ, MIN_DP);
 
-            // A flag to keep track of whether we have been able to successfully classify the Truth/Call States.
-            // Unclassified include MIXED/MNP/Symbolic...
-            boolean stateClassified = false;
-            final TruthAndCallStates truthAndCallStates = determineState(tuple.truthVariantContext, TRUTH_SAMPLE, tuple.callVariantContext, CALL_SAMPLE, MIN_GQ, MIN_DP);
-            if (truthVariantContextType == SNP) {
-                if ((callVariantContextType == SNP) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
-                    // Note.  If truth is SNP and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
-                    snpCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-            }
-            else if (truthVariantContextType == INDEL) {
-                // Note.  If truth is Indel and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
-                if ((callVariantContextType == INDEL) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
-                    indelCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-            }
-            else if (truthVariantContextType == MIXED) {
-                // Note.  If truth is MIXED and call is SNP, the event will be logged in the snpCounter, with column = MIXED
-                if (callVariantContextType == SNP) {
-                    snpCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-                // Note.  If truth is MIXED and call is INDEL, the event will be logged in the snpCounter, with column = MIXED
-                else if (callVariantContextType == INDEL) {
-                    indelCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-            }
-            else if (truthVariantContextType == NO_VARIATION) {
-                if (callVariantContextType == SNP) {
-                    snpCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-                else if (callVariantContextType == INDEL) {
-                    indelCounter.increment(truthAndCallStates);
-                    stateClassified = true;
-                }
-            }
             if (!stateClassified) {
                 final String condition = truthVariantContextType + " " + callVariantContextType;
-                Integer count = unClassifiedStatesMap.get(condition);
-                if (count == null) count = 0;
-                unClassifiedStatesMap.put(condition, ++count);
+                final Integer count = unClassifiedStatesMap.getOrDefault(condition, 0) + 1;
+                unClassifiedStatesMap.put(condition, count);
             }
 
-            final VariantContext variantContextForLogging = tuple.truthVariantContext != null ? tuple.truthVariantContext : tuple.callVariantContext;
+            //final VariantContext variantContextForLogging = tuple.leftVariantContext.orElseGet(tuple.rightVariantContext::get); // FIXME
+            final VariantContext variantContextForLogging = tuple.leftVariantContext.isPresent() ? tuple.leftVariantContext.get() : tuple.rightVariantContext.get();
             progress.record(variantContextForLogging.getContig(), variantContextForLogging.getStart());
         }
 
@@ -379,6 +343,82 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         return 0;
     }
+
+    public static boolean classifyVariants(final Optional<VariantContext> truthContext,
+                                           final String truthSample,
+                                           final Optional<VariantContext> callContext,
+                                           final String callSample,
+                                           final int minGq, final int minDp) {
+        return classifyVariants(truthContext, truthSample, callContext, callSample, Optional.empty(), Optional.empty(), minGq, minDp);
+    }
+
+    /**
+     * Attempts to determine the concordance state given the truth and all variant context and optionally increments the genotype concordance
+     * count for the given variant type (SNP or INDEL).  This will ignore cases where an indel was found in the truth and a SNP was found in
+     * the call, and vice versa.  We typically fail to classify Mixed, Symbolic variants, or MNPs.
+     *
+     * @param truthContext A variant context representing truth
+     * @param truthSample The name of the truth sample
+     * @param callContext A variant context representing the call
+     * @param callSample The name of the call sample
+     * @param snpCounter optionally a place to increment the counts for SNP truth/call states
+     * @param indelCounter optionally a place to increment the counts for INDEL truth/call states
+     * @param minGq Threshold for filtering by genotype attribute GQ
+     * @param minDp Threshold for filtering by genotype attribute DP
+     * @return true if the concordance state could be classified.
+     */
+    public static boolean classifyVariants(final Optional<VariantContext> truthContext,
+                                           final String truthSample,
+                                           final Optional<VariantContext> callContext,
+                                           final String callSample,
+                                           final Optional<GenotypeConcordanceCounts> snpCounter,
+                                           final Optional<GenotypeConcordanceCounts> indelCounter,
+                                           final int minGq, final int minDp) {
+        final VariantContext.Type truthVariantContextType = truthContext.map(VariantContext::getType).orElse(NO_VARIATION);
+        final VariantContext.Type callVariantContextType  = callContext.map(VariantContext::getType).orElse(NO_VARIATION);
+
+        // A flag to keep track of whether we have been able to successfully classify the Truth/Call States.
+        // Unclassified include MIXED/MNP/Symbolic...
+        final TruthAndCallStates truthAndCallStates = determineState(truthContext.orElse(null), truthSample, callContext.orElse(null), callSample, minGq, minDp);
+        if (truthVariantContextType == SNP) {
+            if ((callVariantContextType == SNP) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
+                // Note.  If truth is SNP and call is MIXED, the event will be logged in the snpCounter, with row = MIXED
+                snpCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+        }
+        else if (truthVariantContextType == INDEL) {
+            // Note.  If truth is Indel and call is MIXED, the event will be logged in the indelCounter, with row = MIXED
+            if ((callVariantContextType == INDEL) || (callVariantContextType == MIXED) || (callVariantContextType == NO_VARIATION)) {
+                indelCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+        }
+        else if (truthVariantContextType == MIXED) {
+            // Note.  If truth is MIXED and call is SNP, the event will be logged in the snpCounter, with column = MIXED
+            if (callVariantContextType == SNP) {
+                snpCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+            // Note.  If truth is MIXED and call is INDEL, the event will be logged in the indelCounter, with column = MIXED
+            else if (callVariantContextType == INDEL) {
+                indelCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+        }
+        else if (truthVariantContextType == NO_VARIATION) {
+            if (callVariantContextType == SNP) {
+                snpCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+            else if (callVariantContextType == INDEL) {
+                indelCounter.ifPresent(counter -> counter.increment(truthAndCallStates));
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.
@@ -433,7 +473,7 @@ public class GenotypeConcordance extends CommandLineProgram {
      * @param minDp Threshold for filtering by genotype attribute DP
      * @return TruthAndCallStates object containing the TruthState and CallState determined here.
      */
-    final TruthAndCallStates determineState(final VariantContext truthContext, final String truthSample, final VariantContext callContext, final String callSample, final int minGq, final int minDp) {
+    final public static TruthAndCallStates determineState(final VariantContext truthContext, final String truthSample, final VariantContext callContext, final String callSample, final int minGq, final int minDp) {
         TruthState truthState = null;
         CallState callState = null;
 
@@ -596,7 +636,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         return new TruthAndCallStates(truthState, callState);
     }
 
-    final String getStringSuffix(final String longerString, final String shorterString, final String errorMsg) {
+    final static String getStringSuffix(final String longerString, final String shorterString, final String errorMsg) {
         // Truth reference is shorter than call reference
         if (!longerString.startsWith(shorterString)) {
             throw new IllegalStateException(errorMsg);
@@ -620,73 +660,6 @@ class OrderedSet<T> extends ArrayList<T> {
             return add(o);
         }
         return false;
-    }
-}
-
-/** Little class to hold a pair of VariantContexts that are in sync with one another. */
-class VcTuple {
-    public final VariantContext truthVariantContext;
-    public final VariantContext callVariantContext;
-
-    VcTuple(final VariantContext truthVariantContext, final VariantContext callVariantContext) {
-        this.truthVariantContext = truthVariantContext;
-        this.callVariantContext = callVariantContext;
-    }
-}
-
-/** Iterator that takes a pair of iterators over VariantContexts and iterates over them in tandem. */
-class PairedVariantSubContextIterator implements Iterator<VcTuple> {
-    private final PeekableIterator<VariantContext> truthIterator;
-    private final String truthSample;
-    private final PeekableIterator<VariantContext> callIterator;
-    private final String callSample;
-    private final VariantContextComparator comparator;
-
-    PairedVariantSubContextIterator(final Iterator<VariantContext> truthIterator, final String truthSample,
-                                 final Iterator<VariantContext> callIterator, final String callSample,
-                                 final SAMSequenceDictionary dict) {
-        this.truthIterator = new PeekableIterator<VariantContext>(truthIterator);
-        this.truthSample = truthSample;
-        this.callIterator = new PeekableIterator<VariantContext>(callIterator);
-        this.callSample = callSample;
-        this.comparator = new VariantContextComparator(dict);
-    }
-
-    @Override
-    public boolean hasNext() {
-        return this.truthIterator.hasNext() || this.callIterator.hasNext();
-    }
-
-    @Override
-    public VcTuple next() {
-        if (!hasNext()) throw new IllegalStateException("next() called while hasNext() is false.");
-
-        final VariantContext truthVariantContext = this.truthIterator.hasNext() ? this.truthIterator.peek() : null;
-        final VariantContext callVariantContext = this.callIterator.hasNext() ? this.callIterator.peek() : null;
-
-        // If one or the other is null because there is no next, just return a one-sided tuple
-        if (truthVariantContext == null) {
-            return new VcTuple(null, this.callIterator.next().subContextFromSample(callSample));
-        }
-        else if (callVariantContext == null) {
-            return new VcTuple(this.truthIterator.next().subContextFromSample(truthSample), null);
-        }
-
-        // Otherwise check the ordering and do the right thing
-        final int ordering = this.comparator.compare(truthVariantContext, callVariantContext);
-        if (ordering == 0) {
-            return new VcTuple(this.truthIterator.next().subContextFromSample(truthSample), this.callIterator.next().subContextFromSample(callSample));
-        }
-        else if (ordering < 0) {
-            return new VcTuple(this.truthIterator.next().subContextFromSample(truthSample), null);
-        }
-        else {
-            return new VcTuple(null, this.callIterator.next().subContextFromSample(callSample));
-        }
-    }
-
-    @Override public void remove() {
-        throw new UnsupportedOperationException();
     }
 }
 

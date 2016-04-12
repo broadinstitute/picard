@@ -153,7 +153,7 @@ public class GenotypeConcordanceStates {
     /**
      * A minute class to store the truth and call state respectively.
      */
-    static class TruthAndCallStates implements Comparable<TruthAndCallStates>{
+    public static class TruthAndCallStates implements Comparable<TruthAndCallStates>{
         public final TruthState truthState;
         public final CallState callState;
 
