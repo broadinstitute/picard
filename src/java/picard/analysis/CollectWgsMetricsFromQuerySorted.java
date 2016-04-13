@@ -40,8 +40,11 @@ import java.util.List;
 /**
  * Computes a number of metrics that are useful for evaluating coverage and performance of sequencing experiments.
  *
+ * This tool is deprecated; please use CollectWgsMetrics instead.
+ *
  * @author ebanks
  */
+@Deprecated
 @CommandLineProgramProperties(
         usage = "Computes a number of metrics that are useful for evaluating coverage and performance of " +
                 "sequencing experiments.",
