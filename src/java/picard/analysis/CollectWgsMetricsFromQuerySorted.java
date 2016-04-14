@@ -275,15 +275,19 @@ public class CollectWgsMetricsFromQuerySorted extends CommandLineProgram {
      */
     private void finalizeMetrics(final IntermediateMetrics metrics) {
         setUnusedMetrics(metrics.metrics);
-        metrics.metrics.MEAN_COVERAGE = metrics.metrics.PF_PASSING_BASES / (double)metrics.metrics.GENOME_TERRITORY;
-        metrics.metrics.PCT_EXC_DUPE = metrics.basesExcludedByDupes / (double)metrics.metrics.PF_BASES;
-        metrics.metrics.PCT_EXC_MAPQ = metrics.basesExcludedByMapq / (double)metrics.metrics.PF_BASES;
-        metrics.metrics.PCT_EXC_UNPAIRED = metrics.basesExcludedByPairing / (double)metrics.metrics.PF_BASES;
-        metrics.metrics.PCT_EXC_BASEQ = metrics.basesExcludedByBaseq / (double)metrics.metrics.PF_BASES;
-        metrics.metrics.PCT_EXC_OVERLAP = metrics.basesExcludedByOverlap / (double)metrics.metrics.PF_BASES;
+        metrics.metrics.MEAN_COVERAGE = safeDivide(metrics.metrics.PF_PASSING_BASES, metrics.metrics.GENOME_TERRITORY);
+        metrics.metrics.PCT_EXC_DUPE = safeDivide(metrics.basesExcludedByDupes, metrics.metrics.PF_BASES);
+        metrics.metrics.PCT_EXC_MAPQ = safeDivide(metrics.basesExcludedByMapq, metrics.metrics.PF_BASES);
+        metrics.metrics.PCT_EXC_UNPAIRED = safeDivide(metrics.basesExcludedByPairing, metrics.metrics.PF_BASES);
+        metrics.metrics.PCT_EXC_BASEQ = safeDivide(metrics.basesExcludedByBaseq, metrics.metrics.PF_BASES);
+        metrics.metrics.PCT_EXC_OVERLAP = safeDivide(metrics.basesExcludedByOverlap, metrics.metrics.PF_BASES);
         final double totalExcludedBases = metrics.metrics.PF_BASES - metrics.metrics.PF_PASSING_BASES;
-        metrics.metrics.PCT_EXC_TOTAL = totalExcludedBases / metrics.metrics.PF_BASES;
-        metrics.metrics.MEAN_INSERT_SIZE = metrics.insertSizeSum / metrics.metrics.PF_ORIENTED_PAIRS;
+        metrics.metrics.PCT_EXC_TOTAL = safeDivide(totalExcludedBases, metrics.metrics.PF_BASES);
+        metrics.metrics.MEAN_INSERT_SIZE = safeDivide(metrics.insertSizeSum, metrics.metrics.PF_ORIENTED_PAIRS);
+    }
+
+    private Double safeDivide(final Number x, final Number y) {
+        return x.doubleValue() / y.doubleValue() == Double.POSITIVE_INFINITY ? 0 : x.doubleValue() / y.doubleValue();
     }
 
     /**
