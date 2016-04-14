@@ -496,12 +496,12 @@ public abstract class AbstractAlignmentMerger {
      *
      * @param record the record to be fixed
      * @param refSeqWalker a ReferenceSequenceWalker that will be used to traverse the reference
-     * @param isBisulfiteSequence a flagg indicating if the sequence cam from bisulfite-Sequencing which would imply a different
+     * @param isBisulfiteSequence a flag indicating whether the sequence came from bisulfite-sequencing which would imply a different
      * calculation of the NM tag.
      *
      * No return value, modifies the provided record.
      */
-    static public void fixNMandUQ(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence){
+    public static void fixNMandUQ(final SAMRecord record, final ReferenceSequenceFileWalker refSeqWalker, final boolean isBisulfiteSequence) {
         final byte[] referenceBases = refSeqWalker.get(refSeqWalker.getSequenceDictionary().getSequenceIndex(record.getReferenceName())).getBases();
         record.setAttribute(SAMTag.NM.name(), SequenceUtil.calculateSamNmTag(record, referenceBases, 0, isBisulfiteSequence));
 

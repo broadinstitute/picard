@@ -60,8 +60,8 @@ public class FixNmAndUqTags extends CommandLineProgram {
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar FixNmAndUqTags \\<br />" +
-            "      I=input.bam \\<br />" +
-            "      O=sorted.bam \\<br />"+
+            "      I=sorted.bam \\<br />" +
+            "      O=fixed.bam \\<br />"+
             "</pre>" +
             "<hr />";
     @Option(doc = "The BAM or SAM file to fix.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
@@ -96,13 +96,13 @@ public class FixNmAndUqTags extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
-        if( !ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+        if (!ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             throw new SAMException("Input must be coordinate-sorted, or ASSUME_SORTED must be true.");
         }
-        if( ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+        if (ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
             log.warn("File indicates sort-order " + reader.getFileHeader().getSortOrder() + " but ASSUME_SORTED is true, so continuing.");
         }
-        reader.getFileHeader().setSortOrder(SAMFileHeader.SortOrder.coordinate);
+
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
         writer.setProgressLogger(
                 new ProgressLogger(log, (int) 1e7, "Wrote", "records"));
