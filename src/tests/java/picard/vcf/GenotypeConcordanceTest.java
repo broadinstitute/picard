@@ -469,11 +469,7 @@ public class GenotypeConcordanceTest {
     private void testGenotypeConcordanceDetermineState(final VariantContext truthVariantContext, final TruthState expectedTruthState,
                                                        final VariantContext callVariantContext, final CallState expectedCallState,
                                                        final int minGq, final int minDp) {
-        final GenotypeConcordance genotypeConcordance = new GenotypeConcordance();
-        genotypeConcordance.TRUTH_SAMPLE = TRUTH_SAMPLE_NAME;
-        genotypeConcordance.CALL_SAMPLE = CALL_SAMPLE_NAME;
-
-        final TruthAndCallStates truthAndCallStates = genotypeConcordance.determineState(truthVariantContext, TRUTH_SAMPLE_NAME,
+        final TruthAndCallStates truthAndCallStates = GenotypeConcordance.determineState(truthVariantContext, TRUTH_SAMPLE_NAME,
                 callVariantContext, CALL_SAMPLE_NAME, minGq, minDp);
         Assert.assertEquals(truthAndCallStates.truthState, expectedTruthState);
         Assert.assertEquals(truthAndCallStates.callState, expectedCallState);
