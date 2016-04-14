@@ -192,7 +192,7 @@ public class GenotypeConcordance extends CommandLineProgram {
         }
         if (MISSING_SITES_HOM_REF) {
             //If you are using this flag you must include a high confidence interval list where missing sites are hom_ref.
-            if (!usingIntervals){
+            if (!usingIntervals) {
                 errors.add("You cannot use the MISSING_HOM option without also supplying an interval list over which missing " +
                         "sites are considered confident homozygous reference calls.");
             }
@@ -309,10 +309,10 @@ public class GenotypeConcordance extends CommandLineProgram {
         //snp counter add in X number of missing-missing hom ref's (truth and call state)
         //missing missing is total interval size minus number of iterations in while loop
         if (MISSING_SITES_HOM_REF) {
-            //need to know size of intervals to add missing-missing sites for NIST schema.
-            final long intervalBaseCount = intervals.getBaseCount();
-            addMissingTruthAndMissingCallStates(snpCounter.getCounterSize(), intervalBaseCount, snpCounter);
-            addMissingTruthAndMissingCallStates(indelCounter.getCounterSize(), intervalBaseCount, indelCounter);
+            // need to know size of region called over (intervals or whole genome) to add missing-missing sites for NIST schema.
+            final long baseCount = (intervals != null) ? intervals.getBaseCount() : truthReader.getFileHeader().getSequenceDictionary().getReferenceLength();
+            addMissingTruthAndMissingCallStates(snpCounter.getCounterSize(), baseCount, snpCounter);
+            addMissingTruthAndMissingCallStates(indelCounter.getCounterSize(), baseCount, indelCounter);
         }
 
         // Calculate and store the summary-level metrics
@@ -325,8 +325,8 @@ public class GenotypeConcordance extends CommandLineProgram {
 
         // Calculate and store the detailed metrics for both SNP and indels
         final MetricsFile<GenotypeConcordanceDetailMetrics,?> genotypeConcordanceDetailMetrics = getMetricsFile();
-        outputDetailMetricsFile(SNP, genotypeConcordanceDetailMetrics, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE);
-        outputDetailMetricsFile(INDEL, genotypeConcordanceDetailMetrics, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE);
+        outputDetailMetricsFile(SNP, genotypeConcordanceDetailMetrics, snpCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF, OUTPUT_ALL_ROWS);
+        outputDetailMetricsFile(INDEL, genotypeConcordanceDetailMetrics, indelCounter, TRUTH_SAMPLE, CALL_SAMPLE, MISSING_SITES_HOM_REF, OUTPUT_ALL_ROWS);
         genotypeConcordanceDetailMetrics.write(detailedMetricsFile);
 
         // Calculate and score the contingency metrics
@@ -423,7 +423,7 @@ public class GenotypeConcordance extends CommandLineProgram {
     /**
      * Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.
      */
-    private void addMissingTruthAndMissingCallStates(final double numVariants, final long intervalBaseCount, final GenotypeConcordanceCounts counter){
+    public static void addMissingTruthAndMissingCallStates(final double numVariants, final long intervalBaseCount, final GenotypeConcordanceCounts counter) {
         final double countMissingMissing = intervalBaseCount-numVariants;
         final TruthAndCallStates missingMissing = new TruthAndCallStates(TruthState.MISSING, CallState.MISSING);
         counter.increment(missingMissing, countMissingMissing);
@@ -432,16 +432,17 @@ public class GenotypeConcordance extends CommandLineProgram {
     /**
     * Outputs the detailed statistics tables for SNP and Indel match categories.
     **/
-    private void outputDetailMetricsFile(final VariantContext.Type variantType, final MetricsFile<GenotypeConcordanceDetailMetrics,?> genotypeConcordanceDetailMetricsFile,
-                                         final GenotypeConcordanceCounts counter, final String truthSampleName, final String callSampleName) {
+    public static void outputDetailMetricsFile(final VariantContext.Type variantType, final MetricsFile<GenotypeConcordanceDetailMetrics,?> genotypeConcordanceDetailMetricsFile,
+                                               final GenotypeConcordanceCounts counter, final String truthSampleName, final String callSampleName,
+                                               final boolean missingSitesHomRef, final boolean outputAllRows) {
         final GenotypeConcordanceSchemeFactory schemeFactory = new GenotypeConcordanceSchemeFactory();
-        final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(MISSING_SITES_HOM_REF);
+        final GenotypeConcordanceScheme scheme = schemeFactory.getScheme(missingSitesHomRef);
         scheme.validateScheme();
         for (final TruthState truthState : TruthState.values()) {
             for (final CallState callState : CallState.values()) {
                 final long count = counter.getCount(truthState, callState);
                 final String contingencyValues = scheme.getContingencyStateString(truthState, callState);
-                if (count > 0 || OUTPUT_ALL_ROWS) {
+                if (count > 0 || outputAllRows) {
                     final GenotypeConcordanceDetailMetrics detailMetrics = new GenotypeConcordanceDetailMetrics();
                     detailMetrics.VARIANT_TYPE = variantType;
                     detailMetrics.TRUTH_SAMPLE = truthSampleName;
