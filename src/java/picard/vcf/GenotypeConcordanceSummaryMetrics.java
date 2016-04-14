@@ -15,7 +15,7 @@ public class GenotypeConcordanceSummaryMetrics extends MetricBase {
     public GenotypeConcordanceSummaryMetrics() {
     }
 
-    GenotypeConcordanceSummaryMetrics(final VariantContext.Type variantType, final GenotypeConcordanceCounts concordanceCounts,
+    public GenotypeConcordanceSummaryMetrics(final VariantContext.Type variantType, final GenotypeConcordanceCounts concordanceCounts,
                                       final String truthSample, final String callSample, final boolean missingSitesFlag) {
         this.VARIANT_TYPE = variantType;
         this.TRUTH_SAMPLE = truthSample;

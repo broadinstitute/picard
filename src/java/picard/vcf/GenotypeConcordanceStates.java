@@ -67,7 +67,7 @@ public class GenotypeConcordanceStates {
      * a reference sequence.
      * The Enum constants must be in the same order as the truth state to allow for comparison.
      */
-    enum CallState {
+    public enum CallState {
         MISSING (MISSING_CODE.ordinal()),
         HOM_REF (HOM_REF_CODE.ordinal()), // ref/ref, valid for all TruthStates
         HET_REF_VAR1 (HET_REF_VAR1_CODE.ordinal()), // ref/var1, valid for all TruthStates
@@ -141,7 +141,7 @@ public class GenotypeConcordanceStates {
      * NA denotes an invalid state that should not be reachable by the code.
      * EMPTY denotes that no conclusion could be drawn from the data.
      */
-    enum ContingencyState {
+    public enum ContingencyState {
         TP,
         FP,
         TN,
