@@ -71,10 +71,6 @@ public class SetNmAndUqTags extends CommandLineProgram {
     @Option(doc = "The fixed BAM or SAM output file. ", shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME)
     public File OUTPUT;
 
-    @Option(doc = "If true, assume that the input files are in the same sort order as the requested output sort order, even if their headers say otherwise.",
-            shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME)
-    public boolean ASSUME_SORTED = false;
-
     @Option(doc = "Whether the file contains bisulfite sequence (used when calculating the NM tag).")
     public boolean IS_BISULFITE_SEQUENCE = false;
 
@@ -97,11 +93,8 @@ public class SetNmAndUqTags extends CommandLineProgram {
         IOUtil.assertFileIsWritable(OUTPUT);
         final SamReader reader = SamReaderFactory.makeDefault().referenceSequence(REFERENCE_SEQUENCE).open(INPUT);
 
-        if (!ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            throw new SAMException("Input must be coordinate-sorted, or ASSUME_SORTED must be true.");
-        }
-        if (ASSUME_SORTED && reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-            log.warn("File indicates sort-order " + reader.getFileHeader().getSortOrder() + " but ASSUME_SORTED is true, so continuing.");
+        if (reader.getFileHeader().getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
+            throw new SAMException("Input must be coordinate-sorted for this program to run. Found: " + reader.getFileHeader().getSortOrder());
         }
 
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(reader.getFileHeader(), true, OUTPUT);
