@@ -25,6 +25,7 @@
 package picard.sam.markduplicates;
 
 import htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SamReader;
@@ -52,8 +53,8 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
     final private File metricsFile;
     final DuplicationMetrics expectedMetrics;
 
-    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy) {
-        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy);
+    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy, SAMFileHeader.SortOrder sortOrder) {
+        super(50, true, SAMRecordSetBuilder.DEFAULT_CHROMOSOME_LENGTH, duplicateScoringStrategy, sortOrder);
 
         expectedMetrics = new DuplicationMetrics();
         expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES = 0;
@@ -63,6 +64,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         addArg("DUPLICATE_SCORING_STRATEGY=" + duplicateScoringStrategy.name());
     }
 
+    public AbstractMarkDuplicatesCommandLineProgramTester(final ScoringStrategy duplicateScoringStrategy) {
+        this(duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate);
+    }
 
     public AbstractMarkDuplicatesCommandLineProgramTester() {
         this(SAMRecordSetBuilder.DEFAULT_DUPLICATE_SCORING_STRATEGY);
@@ -81,7 +85,9 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
         final CloseableIterator<SAMRecord> inputRecordIterator = this.getRecordIterator();
         while (inputRecordIterator.hasNext()) {
             final SAMRecord record = inputRecordIterator.next();
-            if (!record.isSecondaryOrSupplementary()) {
+            if (record.isSecondaryOrSupplementary()) {
+                ++expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS;
+            } else {
                 final String key = samRecordToDuplicatesFlagsKey(record);
                 if (!this.duplicateFlags.containsKey(key)) {
                     System.err.println("DOES NOT CONTAIN KEY: " + key);
@@ -91,12 +97,10 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
                 // First bring the simple metricsFile up to date
                 if (record.getReadUnmappedFlag()) {
                     ++expectedMetrics.UNMAPPED_READS;
-                }
-                else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
+                } else if (!record.getReadPairedFlag() || record.getMateUnmappedFlag()) {
                     ++expectedMetrics.UNPAIRED_READS_EXAMINED;
                     if (isDuplicate) ++expectedMetrics.UNPAIRED_READ_DUPLICATES;
-                }
-                else {
+                } else {
                     ++expectedMetrics.READ_PAIRS_EXAMINED; // will need to be divided by 2 at the end
                     if (isDuplicate) ++expectedMetrics.READ_PAIR_DUPLICATES; // will need to be divided by 2 at the end
                 }
@@ -160,6 +164,7 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
             Assert.assertEquals(observedMetrics.READ_PAIR_OPTICAL_DUPLICATES, expectedMetrics.READ_PAIR_OPTICAL_DUPLICATES, "READ_PAIR_OPTICAL_DUPLICATES does not match expected");
             Assert.assertEquals(observedMetrics.PERCENT_DUPLICATION, expectedMetrics.PERCENT_DUPLICATION, "PERCENT_DUPLICATION does not match expected");
             Assert.assertEquals(observedMetrics.ESTIMATED_LIBRARY_SIZE, expectedMetrics.ESTIMATED_LIBRARY_SIZE, "ESTIMATED_LIBRARY_SIZE does not match expected");
+            Assert.assertEquals(observedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, expectedMetrics.SECONDARY_OR_SUPPLEMENTARY_RDS, "SECONDARY_OR_SUPPLEMENTARY_RDS does not match expected");
         } finally {
             TestUtil.recursiveDelete(getOutputDir());
         }
@@ -167,4 +172,3 @@ abstract public class AbstractMarkDuplicatesCommandLineProgramTester extends Sam
 
     abstract protected CommandLineProgram getProgram();
 }
-

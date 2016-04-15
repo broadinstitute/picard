@@ -23,21 +23,25 @@ import java.util.Map;
  */
 public abstract class SamFileTester extends CommandLineProgramTest {
 
-    public static final String TEST_DATA_BASE_DIR = "testdata/picard/sam/";
     private final SAMRecordSetBuilder samRecordSetBuilder;
-    protected final Map<String, Boolean> duplicateFlags = new HashMap<String, Boolean>();
+    protected final Map<String, Boolean> duplicateFlags = new HashMap<>();
     private File outputDir;
     private File output;
     private int readNameCounter = 0;
     private boolean noMateCigars = false;
     private boolean deleteOnExit = true;
-    private final ArrayList<String> args = new ArrayList<String>();
+    private final ArrayList<String> args = new ArrayList<>();
 
-    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy) {
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy, final SAMFileHeader.SortOrder sortOrder) {
         this.deleteOnExit = deleteOnExit;
-        this.samRecordSetBuilder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate, true, defaultChromosomeLength, duplicateScoringStrategy);
+        this.samRecordSetBuilder = new SAMRecordSetBuilder(true, sortOrder, true, defaultChromosomeLength, duplicateScoringStrategy);
         samRecordSetBuilder.setReadLength(readLength);
         setOutputDir();
+    }
+
+
+    public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength, final ScoringStrategy duplicateScoringStrategy) {
+        this(readLength, deleteOnExit, defaultChromosomeLength, duplicateScoringStrategy, SAMFileHeader.SortOrder.coordinate);
     }
 
     public SamFileTester(final int readLength, final boolean deleteOnExit, final int defaultChromosomeLength) {
@@ -53,7 +57,9 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     public void addRecord(final SAMRecord record) {
-        this.duplicateFlags.put(samRecordToDuplicatesFlagsKey(record), record.getDuplicateReadFlag());
+        final String key = samRecordToDuplicatesFlagsKey(record);
+        Assert.assertFalse(this.duplicateFlags.containsKey(key));
+        this.duplicateFlags.put(key, record.getDuplicateReadFlag());
         this.samRecordSetBuilder.addRecord(record);
     }
 
@@ -102,18 +108,30 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     protected String samRecordToDuplicatesFlagsKey(final SAMRecord record) {
-        String readName = record.getReadName()
-                + "-"
-                + record.getReadPairedFlag()
-                + "-";
-        if (record.getReadPairedFlag()) {
-            readName += record.getFirstOfPairFlag()
-                    + "-"
-                    + record.getSecondOfPairFlag();
+        final StringBuilder nameBuilder = new StringBuilder();
+        nameBuilder.append(record.getReadName());
+        nameBuilder.append("-");
+
+        if (record.getReadUnmappedFlag()) {
+            nameBuilder.append("Unmapped");
         } else {
-            readName += "false-false";
+            nameBuilder.append(record.getContig())
+                    .append("-")
+                    .append(record.getAlignmentStart());
         }
-        return readName;
+        nameBuilder.append("-")
+                .append(record.getReadPairedFlag())
+                .append("-").append(record.getNotPrimaryAlignmentFlag())
+                .append("-");
+
+        if (record.getReadPairedFlag()) {
+            nameBuilder.append(record.getFirstOfPairFlag())
+                    .append("-")
+                    .append(record.getSecondOfPairFlag());
+        } else {
+            nameBuilder.append("false-false");
+        }
+        return nameBuilder.toString();
     }
 
     // Below are a bunch of utility methods for adding records to the SAMRecordSetBuilder
@@ -151,6 +169,12 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                                   final String qualityString,
                                   final int defaultQualityScore) {
         addFragment(referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, false);
+    }
+
+    public void addMappedFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean isDuplicate, final String cigar,
+                                  final String qualityString, final boolean isSecondary, final boolean isSupplementary,
+                                  final int defaultQualityScore) {
+        addFragment(readName, referenceSequenceIndex, alignmentStart, false, isDuplicate, cigar, qualityString, defaultQualityScore, isSecondary, isSupplementary);
     }
 
     public void addMappedPair(final int referenceSequenceIndex,
@@ -192,20 +216,20 @@ public abstract class SamFileTester extends CommandLineProgramTest {
     }
 
     public void addMatePair(final int referenceSequenceIndex,
-                              final int alignmentStart1,
-                              final int alignmentStart2,
-                              final boolean record1Unmapped,
-                              final boolean record2Unmapped,
-                              final boolean isDuplicate1,
-                              final boolean isDuplicate2,
-                              final String cigar1,
-                              final String cigar2,
-                              final boolean strand1,
-                              final boolean strand2,
-                              final boolean firstOnly,
-                              final boolean record1NonPrimary,
-                              final boolean record2NonPrimary,
-                              final int defaultQualityScore) {
+                            final int alignmentStart1,
+                            final int alignmentStart2,
+                            final boolean record1Unmapped,
+                            final boolean record2Unmapped,
+                            final boolean isDuplicate1,
+                            final boolean isDuplicate2,
+                            final String cigar1,
+                            final String cigar2,
+                            final boolean strand1,
+                            final boolean strand2,
+                            final boolean firstOnly,
+                            final boolean record1NonPrimary,
+                            final boolean record2NonPrimary,
+                            final int defaultQualityScore) {
         addMatePair("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary,
                 defaultQualityScore);
@@ -213,10 +237,19 @@ public abstract class SamFileTester extends CommandLineProgramTest {
 
     private void addFragment(final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
                              final String qualityString, final int defaultQualityScore, final boolean isSecondary) {
-        final SAMRecord record = samRecordSetBuilder.addFrag("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart, false,
-                recordUnmapped, cigar, qualityString, defaultQualityScore, isSecondary);
+        addFragment("READ" + readNameCounter++, referenceSequenceIndex, alignmentStart, recordUnmapped, isDuplicate, cigar,
+                qualityString, defaultQualityScore, isSecondary, false);
+    }
 
-        this.duplicateFlags.put(samRecordToDuplicatesFlagsKey(record), isDuplicate);
+    private void addFragment(final String readName, final int referenceSequenceIndex, final int alignmentStart, final boolean recordUnmapped, final boolean isDuplicate, final String cigar,
+                             final String qualityString, final int defaultQualityScore, final boolean isSecondary, final boolean isSupplementary) {
+
+        final SAMRecord record = samRecordSetBuilder.addFrag(readName, referenceSequenceIndex, alignmentStart, false,
+                recordUnmapped, cigar, qualityString, defaultQualityScore, isSecondary, isSupplementary);
+
+        final String key = samRecordToDuplicatesFlagsKey(record);
+        Assert.assertFalse(this.duplicateFlags.containsKey(key));
+        this.duplicateFlags.put(key, isDuplicate);
     }
 
     public void addMatePair(final String readName,
@@ -251,8 +284,13 @@ public abstract class SamFileTester extends CommandLineProgramTest {
             samRecordSetBuilder.getRecords().remove(record2);
         }
 
-        this.duplicateFlags.put(samRecordToDuplicatesFlagsKey(record1), isDuplicate1);
-        this.duplicateFlags.put(samRecordToDuplicatesFlagsKey(record2), isDuplicate2);
+        final String key1 = samRecordToDuplicatesFlagsKey(record1);
+        Assert.assertFalse(this.duplicateFlags.containsKey(key1));
+        this.duplicateFlags.put(key1, isDuplicate1);
+
+        final String key2 = samRecordToDuplicatesFlagsKey(record2);
+        Assert.assertFalse(this.duplicateFlags.containsKey(key2));
+        this.duplicateFlags.put(key2, isDuplicate2);
     }
 
     public void addMatePair(final String readName,
@@ -271,7 +309,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
                             final boolean record1NonPrimary,
                             final boolean record2NonPrimary,
                             final int defaultQuality) {
-        addMatePair(readName, referenceSequenceIndex,referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
+        addMatePair(readName, referenceSequenceIndex, referenceSequenceIndex, alignmentStart1, alignmentStart2, record1Unmapped, record2Unmapped,
                 isDuplicate1, isDuplicate2, cigar1, cigar2, strand1, strand2, firstOnly, record1NonPrimary, record2NonPrimary, defaultQuality);
     }
 
@@ -294,9 +332,7 @@ public abstract class SamFileTester extends CommandLineProgramTest {
         // Create the input file
         final File input = new File(outputDir, "input.sam");
         final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(samRecordSetBuilder.getHeader(), true, input);
-        for (final SAMRecord record : samRecordSetBuilder.getRecords()) {
-            writer.addAlignment(record);
-        }
+        samRecordSetBuilder.getRecords().forEach(writer::addAlignment);
         writer.close();
         return input;
     }

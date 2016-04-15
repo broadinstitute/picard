@@ -36,11 +36,11 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Histogram;
+import htsjdk.samtools.util.Log;
 import picard.PicardException;
 import picard.cmdline.Option;
 import picard.cmdline.StandardOptionDefinitions;
 import picard.sam.DuplicationMetrics;
-import picard.sam.util.PhysicalLocation;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,13 +73,19 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     @Option(doc = "If true do not write duplicates to the output file instead of writing them with appropriate flags set.")
     public boolean REMOVE_DUPLICATES = false;
 
+    @Deprecated
     @Option(shortName = StandardOptionDefinitions.ASSUME_SORTED_SHORT_NAME,
-            doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise.")
+            doc = "If true, assume that the input file is coordinate sorted even if the header says otherwise. " +
+                    "Deprecated, used ASSUME_SORT_ORDER=coordinate instead.", mutex = {"ASSUME_SORT_ORDER"})
     public boolean ASSUME_SORTED = false;
+
+    @Option(shortName = StandardOptionDefinitions.ASSUME_SORT_ORDER_SHORT_NAME,
+            doc = "If not null, assume that the input file has this order even if the header says otherwise.",
+            optional = true, mutex = {"ASSUME_SORTED"})
+    public SAMFileHeader.SortOrder ASSUME_SORT_ORDER = null;
 
     @Option(shortName = "DS", doc = "The scoring strategy for choosing the non-duplicate among candidates.")
     public ScoringStrategy DUPLICATE_SCORING_STRATEGY = ScoringStrategy.TOTAL_MAPPED_REFERENCE_LENGTH;
-
     
     @Option(shortName = StandardOptionDefinitions.PROGRAM_RECORD_ID_SHORT_NAME,
             doc = "The program record ID for the @PG record(s) created by this program. Set to null to disable " +
@@ -105,10 +111,11 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     @Option(shortName = "CO",
             doc = "Comment(s) to include in the output file's header.",
             optional = true)
-    public List<String> COMMENT = new ArrayList<String>();
+    public List<String> COMMENT = new ArrayList<>();
 
     /** The program groups that have been seen during the course of examining the input records. */
-    protected final Set<String> pgIdsSeen = new HashSet<String>();
+    protected final Set<String> pgIdsSeen = new HashSet<>();
+
 
     /**
      * We have to re-chain the program groups based on this algorithm.  This returns the map from existing program group ID
@@ -125,7 +132,7 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
             if (PROGRAM_GROUP_COMMAND_LINE == null) {
                 PROGRAM_GROUP_COMMAND_LINE = this.getCommandLine();
             }
-            chainedPgIds = new HashMap<String, String>();
+            chainedPgIds = new HashMap<>();
             for (final String existingId : this.pgIdsSeen) {
                 final String newPgId = pgIdGenerator.getNonCollidingId(PROGRAM_RECORD_ID);
                 chainedPgIds.put(existingId, newPgId);
@@ -192,12 +199,12 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
     }
 
     /**
-     * Since this may read it's inputs more than once this method does all the opening
+     * Since this may read its inputs more than once this method does all the opening
      * and checking of the inputs.
      */
     protected SamHeaderAndIterator openInputs() {
-        final List<SAMFileHeader> headers = new ArrayList<SAMFileHeader>(INPUT.size());
-        final List<SamReader> readers = new ArrayList<SamReader>(INPUT.size());
+        final List<SAMFileHeader> headers = new ArrayList<>(INPUT.size());
+        final List<SamReader> readers = new ArrayList<>(INPUT.size());
 
         for (final String input : INPUT) {
             SamReader reader = SamReaderFactory.makeDefault()
@@ -205,19 +212,24 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
                 .open(SamInputResource.of(input));
             final SAMFileHeader header = reader.getFileHeader();
 
-            if (!ASSUME_SORTED && header.getSortOrder() != SAMFileHeader.SortOrder.coordinate) {
-                throw new PicardException("Input file " + input + " is not coordinate sorted.");
-            }
-
             headers.add(header);
             readers.add(reader);
+        }
+        if (ASSUME_SORT_ORDER != null || ASSUME_SORTED) {
+            if (ASSUME_SORT_ORDER == null) {
+                ASSUME_SORT_ORDER = SAMFileHeader.SortOrder.coordinate;
+                ASSUME_SORTED = false; // to maintain the "mutex" regarding these two arguments.
+            }
+
+            //if we assume a particular order, then the output will have that order in the header
+            headers.get(0).setSortOrder(ASSUME_SORT_ORDER);
         }
 
         if (headers.size() == 1) {
             return new SamHeaderAndIterator(headers.get(0), readers.get(0).iterator());
         } else {
-            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(SAMFileHeader.SortOrder.coordinate, headers, false);
-            final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORTED);
+            final SamFileHeaderMerger headerMerger = new SamFileHeaderMerger(headers.get(0).getSortOrder(), headers, false);
+            final MergingSamRecordIterator iterator = new MergingSamRecordIterator(headerMerger, readers, ASSUME_SORT_ORDER != null);
             return new SamHeaderAndIterator(headerMerger.getMergedHeader(), iterator);
         }
     }
@@ -246,8 +258,8 @@ public abstract class AbstractMarkDuplicatesCommandLineProgram extends AbstractO
         // Check if we need to partition since the orientations could have changed
         if (hasFR && hasRF) { // need to track them independently
             // Variables used for optical duplicate detection and tracking
-            final List<ReadEnds> trackOpticalDuplicatesF = new ArrayList<ReadEnds>();
-            final List<ReadEnds> trackOpticalDuplicatesR = new ArrayList<ReadEnds>();
+            final List<ReadEnds> trackOpticalDuplicatesF = new ArrayList<>();
+            final List<ReadEnds> trackOpticalDuplicatesR = new ArrayList<>();
 
             // Split into two lists: first of pairs and second of pairs, since they must have orientation and same starting end
             for (final ReadEnds end : ends) {

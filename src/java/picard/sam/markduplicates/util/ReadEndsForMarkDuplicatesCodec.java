@@ -28,7 +28,7 @@ import picard.PicardException;
 
 import java.io.*;
 
-/** Coded for ReadEnds that just outputs the primitive fields and reads them back. */
+/** Codec for ReadEnds that just outputs the primitive fields and reads them back. */
 public class ReadEndsForMarkDuplicatesCodec implements SortingCollection.Codec<ReadEndsForMarkDuplicates> {
     protected DataInputStream in;
     protected DataOutputStream out;
