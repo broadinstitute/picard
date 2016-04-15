@@ -492,7 +492,7 @@ public abstract class AbstractAlignmentMerger {
         log.info("Wrote " + aligned + " alignment records and " + (alignedReadsOnly ? 0 : unmapped) + " unmapped reads.");
     }
 
-    /** Recalculate and sets the NM and UQ tags from the record and the reference
+    /** Calculates and sets the NM and UQ tags from the record and the reference
      *
      * @param record the record to be fixed
      * @param refSeqWalker a ReferenceSequenceWalker that will be used to traverse the reference

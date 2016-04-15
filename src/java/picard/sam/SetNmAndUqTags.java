@@ -42,16 +42,17 @@ import picard.cmdline.StandardOptionDefinitions;
 import picard.cmdline.programgroups.SamOrBam;
 
 import java.io.File;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = FixNmAndUqTags.USAGE_SUMMARY + FixNmAndUqTags.USAGE_DETAILS,
-        usageShort = FixNmAndUqTags.USAGE_SUMMARY,
+        usage = SetNmAndUqTags.USAGE_SUMMARY + SetNmAndUqTags.USAGE_DETAILS,
+        usageShort = SetNmAndUqTags.USAGE_SUMMARY,
         programGroup = SamOrBam.class
 )
-public class FixNmAndUqTags extends CommandLineProgram {
+public class SetNmAndUqTags extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Fixes the UQ and NM tags in a SAM file.  ";
     static final String USAGE_DETAILS = "This tool takes in a SAM or BAM file (sorted by coordinate) and calculates the NM and UQ tags by comparing with the reference."+
             "<br />" +
@@ -59,7 +60,7 @@ public class FixNmAndUqTags extends CommandLineProgram {
                     "these tags then.<br />"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
-            "java -jar picard.jar FixNmAndUqTags \\<br />" +
+            "java -jar picard.jar SetNmAndUqTags \\<br />" +
             "      I=sorted.bam \\<br />" +
             "      O=fixed.bam \\<br />"+
             "</pre>" +
@@ -79,16 +80,16 @@ public class FixNmAndUqTags extends CommandLineProgram {
 
     @Override
     protected String[] customCommandLineValidation() {
-        if (REFERENCE_SEQUENCE == null)
-            return new String[]
-                    {"Must have a non-null REFERENCE_SEQUENCE"};
+        if (REFERENCE_SEQUENCE == null) {
+            return new String[]{"Must have a non-null REFERENCE_SEQUENCE"};
+        }
         return super.customCommandLineValidation();
     }
 
-    private final Log log = Log.getInstance(FixNmAndUqTags.class);
+    private final Log log = Log.getInstance(SetNmAndUqTags.class);
 
     public static void main(final String[] argv) {
-        new FixNmAndUqTags().instanceMainWithExit(argv);
+        new SetNmAndUqTags().instanceMainWithExit(argv);
     }
 
     protected int doWork() {
@@ -109,12 +110,9 @@ public class FixNmAndUqTags extends CommandLineProgram {
 
         final ReferenceSequenceFileWalker refSeq = new ReferenceSequenceFileWalker(REFERENCE_SEQUENCE);
 
-        for (final SAMRecord rec : reader) {
-            if (!rec.getReadUnmappedFlag()) {
-                AbstractAlignmentMerger.fixNMandUQ(rec, refSeq, IS_BISULFITE_SEQUENCE);
-            }
-            writer.addAlignment(rec);
-        }
+       StreamSupport.stream(reader.spliterator(),false)
+                .peek(rec->{if(!rec.getReadUnmappedFlag()) AbstractAlignmentMerger.fixNMandUQ(rec, refSeq, IS_BISULFITE_SEQUENCE);})
+                .forEach(writer::addAlignment);
 
         CloserUtil.close(reader);
         writer.close();

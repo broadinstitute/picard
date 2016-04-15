@@ -67,7 +67,8 @@ public class SamAlignmentMerger extends AbstractAlignmentMerger {
      *                                          alignment.  Alignments with more than this many gaps will be ignored.
      *                                          -1 means to allow any number of gaps.
      * @param attributesToRetain                attributes from the alignment record that should be
-     *                                          removed when merging.
+     *                                          retained when merging, overridden by attributesToRemove if they share
+     *                                          common tags.
      * @param attributesToRemove                attributes from the alignment record that should be
      *                                          removed when merging.  This overrides attributesToRetain if they share
      *                                          common tags.

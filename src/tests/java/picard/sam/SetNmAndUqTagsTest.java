@@ -7,10 +7,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Created by farjoun on 4/14/16.
- */
-public class FixNmAndUqTagsTest {
+public class SetNmAndUqTagsTest {
 
     private static final File fasta = new File("testdata/picard/sam/merger.fasta");
     @DataProvider(name="filesToFix")
@@ -67,7 +64,7 @@ public class FixNmAndUqTagsTest {
                 "OUTPUT="+output,
                 "REFERENCE_SEQUENCE="+reference };
 
-        FixNmAndUqTags fixNmAndUqTags = new FixNmAndUqTags();
-        Assert.assertEquals(fixNmAndUqTags.instanceMain(args), 0, "Fix did not succeed");
+        SetNmAndUqTags setNmAndUqTags = new SetNmAndUqTags();
+        Assert.assertEquals(setNmAndUqTags.instanceMain(args), 0, "Fix did not succeed");
     }
 }
