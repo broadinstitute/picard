@@ -114,6 +114,10 @@ public class CompareSAMsTest extends CommandLineProgramTest {
     }
 
     @Test
+    public void testGroupWithSameCoordinateSamePosition() {
+        testHelper("genomic_sorted_same_position.sam", "genomic_sorted_same_position.sam", 2, 0, 0, 0, 0, 0, 0, true);
+    }
+    @Test
     public void testGroupWithSameCoordinateAndNoMatchInOther() {
         testHelper("group_same_coord.sam", "diff_coords.sam", 0, 5, 0, 0, 0, 0, 0, false);
     }
