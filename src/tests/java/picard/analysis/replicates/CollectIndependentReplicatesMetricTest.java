@@ -30,10 +30,10 @@ import static org.testng.Assert.assertEquals;
  * Created by farjoun on 6/24/15.
  */
 public class CollectIndependentReplicatesMetricTest {
-    final static File testdir = new File("testdata/picard/independent_replicates");
-    final static File bamOutDir = IOUtil.createTempDir("convertSamToBam", "dir");
+    private final static File testdir = new File("testdata/picard/independent_replicates");
+    private final static File bamOutDir = IOUtil.createTempDir("convertSamToBam", "dir");
 
-    final static Map<String,String> sams = new ImmutableMap.Builder<String,String>()
+    private final static Map<String,String> sams = new ImmutableMap.Builder<String,String>()
             .put("twoPairs", "twopairs.sam")
             .put("twoPairsWithUMIs", "twopairsWithUMIs.sam")
             .put("twoPairsWithBadUMIs", "twopairsWithBadUMIs.sam")
@@ -42,7 +42,7 @@ public class CollectIndependentReplicatesMetricTest {
             .put("multipleContigs", "multipleContigs.sam")
             .put("twopairsWithUMIsMultipleOrientations","twopairsWithUMIsMultipleOrientations.sam").build();
 
-    final static Map<String, File> bams = new HashMap<>(sams.size());
+    private final static Map<String, File> bams = new HashMap<>(sams.size());
 
     @BeforeTest
     public void prepareBams() throws IOException {
@@ -77,7 +77,6 @@ public class CollectIndependentReplicatesMetricTest {
 
             tests.add(new Object[]{"multipleContigs.vcf", "twopairsWithUMIsMultipleOrientations", map});
         }
-
         {
             final Map<String, Object> map = new LinkedHashMap<>();
 
@@ -105,7 +104,6 @@ public class CollectIndependentReplicatesMetricTest {
 
             tests.add(new Object[]{"twoSamplesHet.vcf", "twoPairs", map});
         }
-
         {
             final Map<String, Object> map = new LinkedHashMap<>();
 
@@ -135,7 +133,6 @@ public class CollectIndependentReplicatesMetricTest {
 
             tests.add(new Object[]{"hets_pos20.vcf", "aTriple", map});
         }
-
         tests.add(new Object[]{"hets_pos21_HOMREF_G.vcf", "aTriple", Collections.singletonMap("nReferenceAllelesTriDups", 1)});
         tests.add(new Object[]{"hets_pos20.vcf", "twoPairs", Collections.singletonMap("nAlternateAllelesBiDups", 1)});
         tests.add(new Object[]{"hets_pos21_HOMREF_G.vcf", "twoPairs", Collections.singletonMap("nReferenceAllelesBiDups", 1)});
@@ -152,8 +149,7 @@ public class CollectIndependentReplicatesMetricTest {
         //This tests the BQ cutoff
         tests.add(new Object[]{"hets_pos22_IncorrectAlleles.vcf", "aTriple", Collections.singletonMap("nMismatchingAllelesTriDups", 0)});
 
-        // tests for UMIs
-        {
+        {// tests for UMIs
             final Map<String, Object> map = new LinkedHashMap<>();
 
             map.put("nSites", 1);
@@ -167,8 +163,7 @@ public class CollectIndependentReplicatesMetricTest {
 
             tests.add(new Object[]{"hets.vcf", "twoPairsWithUMIs", map});
         }
-        // tests for UMIs
-        {
+        {// tests for UMIs
             final Map<String, Object> map = new LinkedHashMap<>();
 
             map.put("nSites", 1);
@@ -178,7 +173,6 @@ public class CollectIndependentReplicatesMetricTest {
             map.put("nMatchingUMIsInSameBiDups", 0);
             map.put("nGoodBarcodes",0);
             map.put("nBadBarcodes",1);
-
 
             tests.add(new Object[]{"hets.vcf", "twoPairsWithBadUMIs", map});
         }
@@ -214,11 +208,8 @@ public class CollectIndependentReplicatesMetricTest {
     /**
      * Converts a sam-file to a bam-file changing the extension from .sam to .bam
      *
-     * @param sam
-     * @return the output bam File
-     * @throws IOException
      */
-    public static File convertSamToBam(final String sam) throws IOException {
+    private static File convertSamToBam(final String sam) throws IOException {
         final MergeSamFiles msf = new MergeSamFiles();
         final File bam = new File(bamOutDir, sam.replaceAll("sam$", "bam"));
         final int returnCode = msf.instanceMain(
