@@ -86,11 +86,17 @@ abstract class PerTileCycleParser<ILLUMINA_DATA extends IlluminaData> implements
     }
 
     /**
-     * For a given cycle, return a CycleFilesParser.
+     * For a given cycle, return a CycleFilesParser.  It will close the cycleFilesParser if not null.
      *
-     * @param file       The file to parse
+     * @param file             The file to parse
+     * @param cycleFilesParser The previous cycle file parser, null otherwise.
      * @return A CycleFilesParser that will populate the correct position in the IlluminaData object with that cycle's data.
      */
+    protected CycleFilesParser<ILLUMINA_DATA> makeCycleFileParser(final List<File> file, final CycleFilesParser<ILLUMINA_DATA> cycleFilesParser) {
+        if (cycleFilesParser != null) cycleFilesParser.close();
+        return makeCycleFileParser(file);
+    }
+
     protected abstract CycleFilesParser<ILLUMINA_DATA> makeCycleFileParser(final List<File> file);
 
     public abstract void initialize();
@@ -118,17 +124,13 @@ abstract class PerTileCycleParser<ILLUMINA_DATA extends IlluminaData> implements
     public void seekToTile(final int tile) {
         currentTile = tile;
 
-        if(cycleFilesParser != null) {
-            cycleFilesParser.close();
-        }
-
         int totalCycles = 0;
         final List<File> tileFiles = new ArrayList<File>();
         for (final Map.Entry<Integer, IlluminaFileMap> entry : cyclesToTileFiles.entrySet()) {
             tileFiles.add(entry.getValue().get(currentTile));
             ++totalCycles;
         }
-        cycleFilesParser = makeCycleFileParser(tileFiles);
+        cycleFilesParser = makeCycleFileParser(tileFiles, cycleFilesParser);
 
         if (totalCycles != outputMapping.getTotalOutputCycles()) {
             throw new PicardException("Number of cycle OUTPUT files found (" + totalCycles + ") does not equal the number expected (" + outputMapping.getTotalOutputCycles() + ")");
