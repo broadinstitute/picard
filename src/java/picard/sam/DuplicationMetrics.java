@@ -62,7 +62,7 @@ public class DuplicationMetrics extends MetricBase {
      */
     public long READ_PAIR_OPTICAL_DUPLICATES;
 
-    /** The percentage of mapped sequence that is marked as duplicate. */
+    /** The fraction of mapped sequence that is marked as duplicate. */
     public Double PERCENT_DUPLICATION;
 
     /** The estimated number of unique molecules in the library based on PE duplication. */

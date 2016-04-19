@@ -58,16 +58,18 @@ public class CollectMultipleMetrics extends CommandLineProgram {
      */
 
     static final String USAGE_SUMMARY ="Collect multiple classes of metrics.  ";
-    static final String USAGE_DETAILS ="This \"meta-metrics\" tool runs one or more of the metrics collection modules at the same time to cut down " +
-            "on the time spent reading in data from input files. Available modules include CollectAlignmentSummaryMetrics, " +
-            "CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, and CollectBaseDistributionByCycle.  " +
-            "The tool produces outputs of \".pdf\" and \".txt\" files for each module, except for the CollectAlignmentSummaryMetrics " +
-            "module, which outputs only a \".txt\" file. Output files are named by specifying a base name (without any file extensions)." +
-            "<br /><br />" +
+    static final String USAGE_DETAILS ="This 'meta-metrics' tool runs one or more of the metrics collection modules at the same" +
+            " time to cut down on the time spent reading in data from input files. Available modules include " +
+            "CollectAlignmentSummaryMetrics, CollectInsertSizeMetrics, QualityScoreDistribution,  MeanQualityByCycle, " +
+            "and CollectBaseDistributionByCycle.  The tool produces outputs of '.pdf' and '.txt' files for each module, except for the " +
+            "CollectAlignmentSummaryMetrics module, which outputs only a '.txt' file. Output files are named by specifying a base name " +
+            "(without any file extensions).<br /><br />" +
             "" +
-            "Currently all programs are run with default options and fixed output extensions, " +
-            "but this may become more flexible in future. Specifying a reference sequence file is required." +
-            "<br />" +
+            "<p>Currently all programs are run with default options and fixed output extensions, " +
+            "but this may become more flexible in future. Specifying a reference sequence file is required.</p>" +
+
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+            "" +
             "<h4>Usage example (all modules on by default):</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectMultipleMetrics \\<br />" +

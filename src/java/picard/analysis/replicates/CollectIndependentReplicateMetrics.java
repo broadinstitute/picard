@@ -76,7 +76,7 @@ import java.util.stream.IntStream;
 
 /**
  * A CLP that, given a BAM and a VCF with genotypes of the same sample, estimates the rate of independent replication of reads within the bam.
- * That is, it estimates the fraction of the reads which look like duplicates (in the MarkDuplicates sence of the word) but are actually
+ * That is, it estimates the fraction of the reads which look like duplicates (in the MarkDuplicates sense of the word) but are actually
  * independent observations of the data. In the presence of Unique Molecular Identifiers (UMIs), various metrics are collected regarding the
  * utility of the UMI's for the purpose of increasing coverage.
  * <p>

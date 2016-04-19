@@ -64,15 +64,27 @@ import static picard.util.IlluminaUtil.IlluminaAdapterPair;
  * @author Tim Fennell (adapted by mborkan@broadinstitute.org)
  */
 @CommandLineProgramProperties(
-        usage = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.\n" +
-                "Clear any existing adapter-trimming tags (XT:i:).\n" +
-                "Only works for unaligned files in query-name order.\n"+
-                "Note: This is a utility program and will not be run in the pipeline.\n",
-        usageShort = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags",
+
+        usage = MarkIlluminaAdapters.USAGE_SUMMARY + MarkIlluminaAdapters.USAGE_DETAILS,
+        usageShort = MarkIlluminaAdapters.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class MarkIlluminaAdapters extends CommandLineProgram {
 
+    static final String USAGE_SUMMARY = "Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  ";
+    static final String USAGE_DETAILS = "<p>Reads a SAM or BAM file and rewrites it with new adapter-trimming tags.  " +
+            "Initially will clear any existing adapter-trimming tags (XT:i:) in the optional tag region of a SAM file.  " +
+            "The SAM/BAM file must be sorted by query name.  You can use Picard's " +
+            "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#SortSam'>SortSam</a> tool to do this.</p> "+
+            "<p>Outputs a metrics file histogram showing counts of bases_clipped per read." +
+            "" +
+    "<h4>Usage example:</h4>" +
+            "<pre>" +
+            "INPUT=input.sam \\<br />" +
+            "METRICS=metrics.txt " +
+            "</pre>" +
+            "<hr />"
+            ;
     // The following attributes define the command-line arguments
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)

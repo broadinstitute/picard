@@ -79,6 +79,9 @@ public class MetricsDoclet {
                         firstSentence(doc) + "</li>");
         }
         out.println("</ol>");
+        out.println("Note: Metrics labeled as percentages (with 'percent' in the full metric name or 'PCT' in the name given in " +
+                "the output file) are actually expressed as fractions. For example, 'PCT_TARGET_BASES_20X = 0.85' should be " +
+                "interpreted as '85 percent of targeted bases are covered to 20X coverage or more'");
         out.println("</section>");
 
         // Now print out each class

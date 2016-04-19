@@ -47,17 +47,17 @@ public class CollectRawWgsMetrics extends CollectWgsMetrics{
             " minimal base- and mapping- quality filters as well as coverage (read-depth) levels. " +
             "<br /><br />  " +
             "The histogram output is optional and for a given run, displays two separate outputs on the y-axis while using a single set" +
-            " of values for the x-axis.  Specifically, the first column in the histogram table (x-axis) is labeled \"coverage\" and " +
+            " of values for the x-axis.  Specifically, the first column in the histogram table (x-axis) is labeled 'coverage' and " +
             "represents different possible coverage depths.  However, it also represents the range of values for the base quality scores " +
-            "and thus should probably be labeled \"sequence depth and base quality scores\". The second and third columns (y-axes) " +
-            "correspond to the numbers of bases at a specific sequence depth \"count\" and the numbers of bases at a particular base " +
-            "quality score \"baseq_count\" respectively." +
+            "and thus should probably be labeled 'sequence depth and base quality scores'. The second and third columns (y-axes) " +
+            "correspond to the numbers of bases at a specific sequence depth 'count' and the numbers of bases at a particular base " +
+            "quality score 'baseq_count' respectively." +
             "<br /><br />" +
             "Although similar to the CollectWgsMetrics tool, the default thresholds for CollectRawWgsMetrics are less stringent.  " +
-            "For example, the CollectRawWgsMetrics have base and mapping quality score thresholds set to \"3\" and \"0\" respectively, " +
-            "while the CollectWgsMetrics tool has the default threshold values set to \"20\" (at time of writing).  Nevertheless, both " +
+            "For example, the CollectRawWgsMetrics have base and mapping quality score thresholds set to '3' and '0' respectively, " +
+            "while the CollectWgsMetrics tool has the default threshold values set to '20' (at time of writing).  Nevertheless, both " +
             "tools enable the user to input specific threshold values." +
-            "" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectRawWgsMetrics \\<br />" +

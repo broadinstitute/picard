@@ -64,6 +64,7 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             "<a href='http://gatkforums.broadinstitute.org/discussion/44/base-quality-score-recalibration-bqsr'>GATK Base Recalibration</a> " +
             "and an OQ tag is available, this tool can be set to plot the OQ value as well as the primary quality value for the evaluation. " +
             "<br />" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage Example:</h4>" +
             "<pre>" +
             "java -jar picard.jar QualityScoreDistribution \\<br />" +

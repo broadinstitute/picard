@@ -50,43 +50,43 @@ import java.util.TreeSet;
         programGroup = Metrics.class
 )
 public class CollectHsMetrics extends CollectTargetedMetrics<HsMetrics, HsMetricCollector> {
-        static final String USAGE_SUMMARY = "<b>Collects hybrid-selection (HS) metrics for a SAM or BAM file.</b>  ";
-        static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and collects metrics that are specific for sequence " +
-                "datasets generated through hybrid-selection. Hybrid-selection (HS) is the most commonly used technique to capture " +
-                "exon-specific sequences for targeted sequencing experiments such as exome sequencing; for more information, please " +
-                "see the corresponding <a href='http://www.broadinstitute.org/gatk/guide/article?id=6331'>GATK Dictionary entry</a>. </p> "+
+static final String USAGE_SUMMARY = "Collects hybrid-selection (HS) metrics for a SAM or BAM file.  ";
+static final String USAGE_DETAILS = "This tool takes a SAM/BAM file input and collects metrics that are specific for sequence "+
+"datasets generated through hybrid-selection. Hybrid-selection (HS) is the most commonly used technique to capture "+
+"exon-specific sequences for targeted sequencing experiments such as exome sequencing; for more information, please " +
+"see the corresponding <a href='http://www.broadinstitute.org/gatk/guide/article?id=6331'>GATK Dictionary entry</a>. </p> "+
 
-                "<p>This tool requires an aligned SAM or BAM file as well as bait and target interval files in Picard interval_list format. " +
-                "You should use the bait and interval files that correspond to the capture kit that was used to generate the capture " +
-                "libraries for sequencing, which can generally be obtained from the manufacturer of the kit. If the baits and target " +
-                "intervals are provided in BED format, you can convert them to the Picard interval_list format using Picard's " +
-                "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#BedToIntervalList'>BedToInterval</a> tool. </p>" +
+"<p>This tool requires an aligned SAM or BAM file as well as bait and target interval files in Picard interval_list format. " +
+"You should use the bait and interval files that correspond to the capture kit that was used to generate the capture " +
+"libraries for sequencing, which can generally be obtained from the kit manufacturer. If the baits and target " +
+"intervals are provided in BED format, you can convert them to the Picard interval_list format using Picard's " +
+"<a href='http://broadinstitute.github.io/picard/command-line-overview.html#BedToIntervalList'>BedToInterval</a> tool. </p>" +
 
-                "<p>If a reference sequence is provided, this program will calculate both AT_DROPOUT and GC_DROPOUT metrics. Dropout " +
-                "metrics are an attempt to measure the reduced representation of reads, in regions that deviate from 50% G/C content. " +
-                "This reduction in the number of aligned reads is due to the increased numbers of errors associated with sequencing " +
-                "regions with excessive or deficient numbers of G/C bases, ultimately leading to poor mapping efficiencies and low" +
-                "coverage in the affected regions. </p>" +
+"<p>If a reference sequence is provided, this program will calculate both AT_DROPOUT and GC_DROPOUT metrics. Dropout " +
+"metrics are an attempt to measure the reduced representation of reads, in regions that deviate from 50% G/C content. " +
+"This reduction in the number of aligned reads is due to the increased numbers of errors associated with sequencing " +
+"regions with excessive or deficient numbers of G/C bases, ultimately leading to poor mapping efficiencies and low" +
+"coverage in the affected regions. </p>" +
 
-                "<p>If you are interested in getting G/C content and mean sequence depth information for every target interval, use the " +
-                "PER_TARGET_COVERAGE option. </p>" +
+"<p>If you are interested in getting G/C content and mean sequence depth information for every target interval, use the " +
+"PER_TARGET_COVERAGE option. </p>" +
 
-                "<p>Note that coverage measurements are capped at ~32K to constrain memory usage.</p>"+
+"<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>  "+
 
-                "<h4>Usage Example:</h4>"+
-                "<pre>" +
-                "java -jar picard.jar CollectHsMetrics \\<br />" +
-                "      I=input.bam \\<br />" +
-                "      O=hs_metrics.txt \\<br />" +
-                "      R=reference_sequence.fasta \\<br />" +
-                "      BAIT_INTERVALS=bait.interval_list \\<br />" +
-                "      TARGET_INTERVALS=target.interval_list" +
-                "</pre> "   +
-
-                "<p>Please see the CollectHsMetrics " +
-                "<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#HsMetrics'>definitions</a> for a " +
-                "complete description of the metrics produced by this tool.</p> "+
-                "<hr />";
+"<h4>Usage Example:</h4>"+
+"<pre>" +
+"java -jar picard.jar CollectHsMetrics \\<br />" +
+"      I=input.bam \\<br />" +
+"      O=hs_metrics.txt \\<br />" +
+"      R=reference_sequence.fasta \\<br />" +
+"      BAIT_INTERVALS=bait.interval_list \\<br />" +
+"      TARGET_INTERVALS=target.interval_list" +
+"</pre> "   +
+"<p>Please see " +
+"<a href='http://broadinstitute.github.io/picard/picard-metric-definitions.html#HsMetrics'>CollectHsMetrics</a> for " +
+"detailed descriptions of the output metrics produced by this tool.</p>" +
+"<hr />"
+;
 
     @Option(shortName = "BI", doc = "An interval list file that contains the locations of the baits used.", minElements=1)
     public List<File> BAIT_INTERVALS;

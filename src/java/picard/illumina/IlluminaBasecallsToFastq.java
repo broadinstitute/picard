@@ -68,15 +68,32 @@ import java.util.Map;
 import java.util.Set;
 
 @CommandLineProgramProperties(
-        usage = "Generate fastq file(s) from data in an Illumina basecalls output directory.\n" +
-                "Separate fastq file(s) are created for each template read, and for each barcode read, in the basecalls.\n" +
-                "Template fastqs have extensions like .<number>.fastq, where <number> is the number of the template read,\n" +
-                "starting with 1.  Barcode fastqs have extensions like .barcode_<number>.fastq, where <number> is the number\n" +
-                "of the barcode read, starting with 1.",
-        usageShort = "Generate fastq file(s) from data in an Illumina basecalls output directory",
-        programGroup = Illumina.class
+  usage = IlluminaBasecallsToFastq.USAGE_SUMMARY + IlluminaBasecallsToFastq.USAGE_DETAILS,
+  usageShort = IlluminaBasecallsToFastq.USAGE_SUMMARY,
+  programGroup = Illumina.class
 )
 public class IlluminaBasecallsToFastq extends CommandLineProgram {
+  static final String USAGE_SUMMARY = "Generate fastq file(s) from Illumina basecall read data.  ";
+  static final String USAGE_DETAILS = "<p>This tool generates fastq files from data in an Illumina basecalls (*.bcl) output directory.  " +
+          "Separate fastq files are created for each template, barcode, and index read.   In the absence of sample pooling (multiplexing) and/or barcodes, then an OUTPUT_PREFIX (file) must be provided as the sample identifier.  For multiplexed samples, a MULTIPLEX_PARAMS (file) must be used.  The MULTIPLEX_PARAMS file contains the list of sample barcodes used to sort template, barcode, and index reads.  It is essentially the same as the BARCODE_FILE used in the" +
+          "<a href='http://broadinstitute.github.io/picard/command-line-overview.html#ExtractIlluminaBarcodes'>ExtractIlluminaBarcodes</a> tool.     "+
+          "" +
+          "<p>Files from this tool use the following naming format: {prefix}.{type}_{number}.fastq with the {prefix} indicating the sample barcode, " +
+          "the {type} indicating the types of reads e.g. index, barcode, or blank (if it contains a template read).  The {number} indicates the" +
+          " read number, either first (1) or second (2) for paired-end sequencing.  " +
+
+"<h4>Usage example:</h4>" +
+"<pre>" +
+"java -jar picard.jar IlluminaBasecallsToFastq \\<br />"+
+"      READ_STRUCTURE=25T8B25T \\<br />"+
+"      BASECALLS_DIR=s_1_1101.bcl \\<br />"+
+"      LANE=001 \\<br />"+
+"      OUTPUT_PREFIX=noBarcode.1.fastq or MULTIPLEX_PARAMS=demultiplexed_output.txt \\<br />"+
+"      RUN_BARCODE=run15 \\<br />"+
+"      FLOWCELL_BARCODE=abcdeACXX (required if emitting Casava 1.8-style read name headers)" +
+"</pre>"+
+"<hr />"
+;
     // The following attributes define the command-line arguments
 
     @Option(doc = "The basecalls directory. ", shortName = "B")

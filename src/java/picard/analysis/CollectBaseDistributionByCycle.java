@@ -56,30 +56,34 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
                 "in order to enable assessment of systematic errors at specific positions in the reads.<br /><br />" +
                 "" +
                 "<h4>Interpretation notes</h4>" +
-                "Increased numbers of miscalled bases will be reflected in base distribution changes and increases in the number of Ns. " +
-                "In general, we expect that for any given cycle, or position within reads, the relative proportions of A, T, C and G " +
-                "should reflect the AT:GC content of the organism's genome.  Thus, for all four nucleotides, flattish lines would be " +
-                "expected.  Deviations from this expectation, for example a spike of A at a particular cycle (position within reads), " +
+                "Increased numbers of miscalled bases will be reflected in base distribution changes and increases in the number of Ns.  "+
+                "In general, we expect that for any given cycle, or position within reads, the relative proportions of A, T, C and G "+
+                "should reflect the AT:GC content of the organism's genome.  Thus, for all four nucleotides, flattish lines would be "+
+                "expected.  Deviations from this expectation, for example a spike of A at a particular cycle (position within reads), "+
                 "would suggest a systematic sequencing error."+
                 "" +
                 "<h4>Note on quality trimming</h4>" +
-                "In the past, many sequencing data processing workflows included discarding the low-quality tails of reads by applying " +
-                "hard-clipping at some arbitrary base quality threshold value. This is no longer useful because most sophisticated " +
-                "analysis tools (such as the GATK variant discovery tools) are quality-aware, meaning that they are able to take base " +
-                "quality into account when weighing evidence provided by sequencing reads. Unnecessary clipping may interfere with other " +
-                "quality control evaluations and may lower the quality of analysis results. For example, trimming reduces the " +
-                "effectiveness of the Base Recalibration (BQSR) pre-processing step of the " +
-                "<a href='https://www.broadinstitute.org/gatk/guide/best-practices'>GATK Best Practices for Variant Discovery</a>, " +
-                "which aims to correct some types of systematic biases that affect the accuracy of base quality scores. " +
-                "" +
-                "<br /><h4>Usage example:</h4>" +
+                "In the past, many sequencing data processing workflows included discarding the low-quality tails of reads by applying "+
+                "hard-clipping at some arbitrary base quality threshold value. This is no longer useful because most sophisticated "+
+                "analysis tools (such as the GATK variant discovery tools) are quality-aware, meaning that they are able to take base "+
+                "quality into account when weighing evidence provided by sequencing reads. Unnecessary clipping may interfere with other "+
+                "quality control evaluations and may lower the quality of analysis results. For example, trimming reduces the effectiveness "+
+                "of the Base Recalibration (BQSR) pre-processing step of the "+
+                "<a href='https://www.broadinstitute.org/gatk/guide/best-practices'>GATK Best Practices for Variant Discovery</a>, "+
+                "which aims to correct some types of systematic biases that affect the accuracy of base quality scores."+
+                
+                "<p>Note: For all Picard tools, headers that refer to PCT in the output metrics files are referring to a fraction, "+
+                "not percentage.</p>"+
+                
+                "<h4>Usage example:</h4>" +
                 "<pre>" +
                 "java -jar picard.jar CollectBaseDistributionByCycle \\<br />" +
                 "      CHART=collect_base_dist_by_cycle.pdf \\<br />" +
                 "      I=input.bam \\<br />" +
                 "      O=output.txt" +
                 "</pre>" +
-                "<hr />";
+                "<hr />"
+                ;
     @Option(shortName = "CHART", doc = "A file (with .pdf extension) to write the chart to.")
     public File CHART_OUTPUT;
 
