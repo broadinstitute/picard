@@ -56,11 +56,23 @@ public class GcBiasSummaryMetrics extends MultilevelMetrics {
     public double GC_DROPOUT;
 
     /**
-     * Normalized coverage over each quintile of GC content.
+     * Normalized coverage over quintile of GC content ranging from 0 - 19.
      */
     public double GC_NC_0_19;
+    /**
+     * Normalized coverage over each quintile of GC content ranging from 20 - 39.
+     */
     public double GC_NC_20_39;
+    /**
+     * Normalized coverage over each quintile of GC content ranging from 40 - 59.
+     */
     public double GC_NC_40_59;
+    /**
+     * Normalized coverage over each quintile of GC content ranging from 60 - 79.
+     */
     public double GC_NC_60_79;
+    /**
+     * Normalized coverage over each quintile of GC content ranging from 80 - 100.
+     */
     public double GC_NC_80_100;
 }

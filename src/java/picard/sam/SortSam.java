@@ -51,9 +51,16 @@ import java.io.File;
 )
 public class SortSam extends CommandLineProgram {
     static final String USAGE_SUMMARY = "Sorts a SAM or BAM file.  ";
-    static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname  or some other property " +
-            "of the SAMRecord. Input and output formats (SAM or BAM) are determined by the file extension." +
-            "<br />" +
+    static final String USAGE_DETAILS = "This tool sorts the input SAM or BAM file by coordinate, queryname (QNAME), or some other property " +
+            "of the SAM record. The SortOrder of a SAM/BAM file is found in the SAM file header tag @HD in the field labeled SO.  " +
+            "" +
+            "<p>For a coordinate sorted SAM/BAM file, read alignments are sorted first by the reference sequence name (RNAME) field using the " +
+            "reference sequence dictionary (@SQ tag).  Alignments within these subgroups are secondarily sorted using the left-most mapping " +
+            "position of the read (POS).  Subsequent to this sorting scheme, alignments are listed arbitrarily.</p>" +
+            "" +
+            "For queryname-sorted alignments, all alignments are grouped using the queryname field but the alignments are not necessarily sorted within these groups.  " +
+            "Reads having the same queryname are derived from the same template.  " +
+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar SortSam \\<br />" +
@@ -61,6 +68,7 @@ public class SortSam extends CommandLineProgram {
             "      O=sorted.bam \\<br />" +
             "      SORT_ORDER=coordinate" +
             "</pre>" +
+
             "<hr />";
     @Option(doc = "The BAM or SAM file to sort.", shortName = StandardOptionDefinitions.INPUT_SHORT_NAME)
     public File INPUT;

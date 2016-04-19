@@ -54,16 +54,18 @@ import java.util.List;
 )
 public class QualityScoreDistribution extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Chart the distribution of quality scores.  ";
-    static final String USAGE_DETAILS = "This tool is used for determining the overall \"quality\" for a library in a given run. To " +
+    static final String USAGE_DETAILS = "<p>This tool is used for determining the overall 'quality' for a library in a given run. To " +
             "that effect, it outputs a chart and tables indicating the range of quality scores and the total numbers of bases " +
             "corresponding to those scores. Options include plotting the distribution of all of the reads, only the aligned reads, " +
-            "or reads that have passed the Illumina Chastity filter thresholds as described <a href='http://gatkforums.broadinstitute.org/discussion/6329/pf-reads-illumina-chastity-filter'>here</a>." +
-            "<br /> <br />" +
+            "or reads that have passed the Illumina Chastity filter thresholds as described " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>here</a>.</p>" +
+            "" +
             "<h4>Note on base quality score options</h4>" +
-            "If the quality score of read bases has been modified in a previous data processing step such as " +
-            "<a href='http://gatkforums.broadinstitute.org/discussion/44/base-quality-score-recalibration-bqsr'>GATK Base Recalibration</a> " +
-            "and an OQ tag is available, this tool can be set to plot the OQ value as well as the primary quality value for the evaluation. " +
-            "<br />" +
+            "If the quality score of read bases has been modified in a previous data processing step such as GATK  " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=44'>Base Recalibration</a> " +
+            "and an OQ tag is available, this tool can be set to plot the OQ value as well as the primary quality value for the " +
+            "evaluation. <br />" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
             "<h4>Usage Example:</h4>" +
             "<pre>" +
             "java -jar picard.jar QualityScoreDistribution \\<br />" +

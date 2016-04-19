@@ -30,13 +30,28 @@ import java.util.TreeSet;
  * specified data type.  If NO data type is specified then the default data types used by IlluminaBasecallsToSam are used.
  */
 @CommandLineProgramProperties(
-        usage = "Check that the files to provide the data specified by DATA_TYPES are available, exist, and are reasonably sized for every tile/cycle.  " +
-                "Reasonably sized means non-zero sized for files that exist per tile and equal size for binary files that exist per cycle/per tile. " +
-                "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.",
-        usageShort = "Asserts the validity of the data in the specified Illumina basecalling data",
+        usage = CheckIlluminaDirectory.USAGE_SUMMARY + CheckIlluminaDirectory.USAGE_DETAILS,
+        usageShort = CheckIlluminaDirectory.USAGE_SUMMARY,
         programGroup = Illumina.class
 )
 public class CheckIlluminaDirectory extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Asserts the validity for specified Illumina basecalling data.  ";
+    static final String USAGE_DETAILS = "<p>This tool will check that the basecall directory and the internal files are available, exist, " +
+            "and are reasonably sized for every tile and cycle.  Reasonably sized means non-zero sized for files that exist per tile and " +
+            "equal size for binary files that exist per cycle or per tile. If DATA_TYPES {Position, BaseCalls, QualityScores, PF," +
+            " or Barcodes} are not specified, then the default data types used by IlluminaBasecallsToSam are used.  " +
+            "CheckIlluminaDirectory DOES NOT check that the individual records in a file are well-formed.</p>"     +
+            "" +
+            "<h4>Usage example:</h4> " +
+            "<pre>" +
+            "java -jar picard.jar CheckIlluminaDirectory \\<br />" +
+            "      BASECALLS_DIR=/BaseCalls/  \\<br />" +
+            "      READ_STRUCTURE=25T8B25T \\<br />" +
+            "      LANES=1 \\<br />" +
+            "      DATA_TYPES=BaseCalls " +
+            "</pre>" +
+            "<hr />"
+    ;
     private static final Log log = Log.getInstance(CheckIlluminaDirectory.class);
 
     // The following attributes define the command-line arguments
@@ -44,16 +59,19 @@ public class CheckIlluminaDirectory extends CommandLineProgram {
     @Option(doc = "The basecalls output directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
-    @Option(doc = "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are those " +
-            "required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary slightly depending on " +
-            "whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to IlluminaBasecallsToSam.  If this option " +
-            "is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully UNLESS the " +
+    @Option(doc = "The data types that should be checked for each tile/cycle.  If no values are provided then the data types checked are " +
+            "those required by IlluminaBaseCallsToSam (which is a superset of those used in ExtractIlluminaBarcodes).  These data types vary " +
+            "slightly depending on whether or not the run is barcoded so READ_STRUCTURE should be the same as that which will be passed to " +
+            "IlluminaBasecallsToSam.  " +
+            "If this option is left unspecified then both ExtractIlluminaBarcodes and IlluminaBaseCallsToSam should complete successfully " +
+            "UNLESS the " +
             "individual records of the files themselves are spurious.",
             shortName = "DT", optional = true)
     public final Set<IlluminaDataType> DATA_TYPES = new TreeSet<IlluminaDataType>();
 
-    @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or ExtractIlluminaBarcodes " +
-            "run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs for this run.",
+    @Option(doc = ReadStructure.PARAMETER_DOC + " Note:  If you want to check whether or not a future IlluminaBasecallsToSam or " +
+            "ExtractIlluminaBarcodes run will fail then be sure to use the exact same READ_STRUCTURE that you would pass to these programs " +
+            "for this run.",
             shortName = "RS")
     public String READ_STRUCTURE;
 

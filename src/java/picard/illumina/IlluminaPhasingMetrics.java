@@ -34,17 +34,21 @@ import java.util.Collection;
 
 /**
  * Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.
+ * Phasing refers to the fraction of molecules that fall behind or jump ahead (prephasing) during a read cycle.
  * For each lane/template read # (i.e. FIRST, SECOND) combination we will store the median values of both the phasing and prephasing
  * values for every tile in that lane/template read pair.
  *
  * @author jgentry
  */
 public class IlluminaPhasingMetrics extends MetricBase {
+    /** Illumina flowcell lane number */
     public long LANE;
+    /** Defines an Illumina template read number (first or second)  */
     public String TYPE_NAME;
+    /** Median phasing value across all tiles in a lane, applied to the first and second template reads */
     public double PHASING_APPLIED;
+    /** Median pre-phasing value across all tiles in a lane, applied to the first and second template reads */
     public double PREPHASING_APPLIED;
-
     /** Calculate the median phasing & prephasing values for a lane's tiles and create the appropriate IlluminaPhasingMetrics for them */
     public static Collection<IlluminaPhasingMetrics> getPhasingMetricsForTiles(final long lane, final Collection<Tile> tilesForLane) {
         final LanePhasingMetricsCollector lanePhasingMetricsCollector = new LanePhasingMetricsCollector(tilesForLane);

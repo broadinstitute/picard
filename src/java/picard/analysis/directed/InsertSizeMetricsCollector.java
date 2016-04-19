@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Collects InserSizeMetrics on the specified accumulationLevels using
+ * Collects InsertSizeMetrics on the specified accumulationLevels using
  */
 public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMetrics, Integer, InsertSizeCollectorArgs> {
     // When generating the Histogram, discard any data categories (out of FR, TANDEM, RF) that have fewer than this
@@ -26,7 +26,7 @@ public class InsertSizeMetricsCollector extends MultiLevelCollector<InsertSizeMe
     private final double minimumPct;
 
     // Generate mean, sd and plots by trimming the data down to MEDIAN + DEVIATIONS*MEDIAN_ABSOLUTE_DEVIATION.
-    // This is done because insert size data typically includes enough anomolous values from chimeras and other
+    // This is done because insert size data typically includes enough anomalous values from chimeras and other
     // artifacts to make the mean and sd grossly misleading regarding the real distribution.
     private final double deviations;
 

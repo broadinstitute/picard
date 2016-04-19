@@ -54,16 +54,18 @@ import java.util.Set;
 )
 public class CollectInsertSizeMetrics extends SinglePassSamProgram {
     static final String USAGE_BRIEF = "Collect metrics about the insert size distribution of a paired-end library.";
-    static final String USAGE_SUMMARY = "This tool provides useful metrics for validating library construction including " +
-            "the insert size distribution and read orientation of paired-end libraries. <br /><br />" +
+    static final String USAGE_SUMMARY = "<p>This tool provides useful metrics for validating library construction including " +
+            "the insert size distribution and read orientation of paired-end libraries.</p>" +
             "" +
             "The expected proportions of these metrics vary depending on the type of library preparation used, resulting from " +
-            "technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing and mate-pair reads, see <a href='http://gatkforums.broadinstitute.org/discussion/6327/paired-end-mate-pair'>the GATK Dictionary</a>" +
+            "technical differences between pair-end libraries and mate-pair libraries. For a brief primer on paired-end sequencing " +
+            "and mate-pair reads, see the " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6327'>GATK Dictionary</a>." +
             "" +
-            "<br /><br />The CollectInsertSizeMetrics tool outputs the percentages of read pairs in each of the three orientations " +
+            "<p>The CollectInsertSizeMetrics tool outputs the percentages of read pairs in each of the three orientations " +
             "(FR, RF, and TANDEM) as a histogram. In addition, the insert size distribution is output as both a histogram " +
-            "(.insert_size_Histogram.pdf) and as a data table (.insert_size_metrics.txt)." +
-            ""+
+            "(.insert_size_Histogram.pdf) and as a data table (.insert_size_metrics.txt).</p>" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>"+
             "<h4>Usage example:</h4>" +
             "<pre>" +
             "java -jar picard.jar CollectInsertSizeMetrics \\<br />" +
@@ -75,7 +77,7 @@ public class CollectInsertSizeMetrics extends SinglePassSamProgram {
             "Note: If processing a small file, set the minimum percentage option (M) to 0.5, otherwise an error may occur. "+
             "<br /><br />" +
             "Please see <a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#InsertSizeMetrics'>" +
-            "the InsertSizeMetrics documentation</a> for further explanations of each metric." +
+            "InsertSizeMetrics</a> for detailed explanations of each metric." +
             "<hr />";
 
     private static final Log log = Log.getInstance(CollectInsertSizeMetrics.class);

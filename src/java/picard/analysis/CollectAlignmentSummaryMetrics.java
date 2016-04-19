@@ -83,6 +83,8 @@ public class CollectAlignmentSummaryMetrics extends SinglePassSamProgram {
             "alignments as well as the proportion of the reads that passed machine signal-to-noise threshold quality filters. " +
             "Note that these quality filters are specific to Illumina data; for additional information, please see the corresponding " +
             "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>. </p>" +
+            "" +
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
 
             "<h4>Usage example:</h4>" +
             "<pre>" +

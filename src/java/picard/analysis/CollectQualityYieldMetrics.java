@@ -58,7 +58,8 @@ public class CollectQualityYieldMetrics extends SinglePassSamProgram {
     static final String USAGE_SUMMARY = "Collect metrics about reads that pass quality thresholds and Illumina-specific filters.  ";
     static final String USAGE_DETAILS = "This tool evaluates the overall quality of reads within a bam file containing one read group. " +
             "The output indicates the total numbers of bases within a read group that pass a minimum base quality score threshold and " +
-            "(in the case of Illumina data) pass Illumina quality filters as described in the <a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>. " +
+            "(in the case of Illumina data) pass Illumina quality filters as described in the " +
+            "<a href='https://www.broadinstitute.org/gatk/guide/article?id=6329'>GATK Dictionary entry</a>. " +
             "<br />" +
             "<h4>Note on base quality score options</h4>" +
             "If the quality score of read bases has been modified in a previous data processing step such as " +

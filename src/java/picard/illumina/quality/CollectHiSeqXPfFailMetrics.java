@@ -58,12 +58,73 @@ import java.util.concurrent.TimeUnit;
  * @author Yossi Farjoun
  */
 @CommandLineProgramProperties(
-        usage = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories. The classification is based on a heuristic that was derived by looking at a few titration experiments.",
-        usageShort = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into various categories.",
+        usage = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY + CollectHiSeqXPfFailMetrics.USAGE_DETAILS,
+        usageShort = CollectHiSeqXPfFailMetrics.USAGE_SUMMARY,
         programGroup = Metrics.class
 )
 
 public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
+    static final String USAGE_SUMMARY = "Classify PF-Failing reads in a HiSeqX Illumina Basecalling directory into " +
+            "various categories.";
+    static final String USAGE_DETAILS = "<p>This tool categorizes the reads that did not pass filter " +
+            "(PF-Failing) into four groups.  These groups are based on a heuristic that was derived by looking at a" +
+            " few titration experiments. </p>" +
+            "" +
+            "<p>After examining the called bases from the first 24 cycles of each read, the PF-Failed reads " +
+            "are grouped into the following four categories: " +
+            "<ul>" +
+            "<li>MISALIGNED - The first 24 basecalls of a read are uncalled (numNs~24).  " +
+            " These types of reads appear to be flow cell artifacts because reads were only found near tile boundaries " +
+            "and were concentration (library) independent</li> " +
+
+            "<li>EMPTY - All 24 bases are called (numNs~0) but the number of bases with quality scores" +
+            " greater than two is less than or equal to eight (numQGtTwo<=8).  These reads were location independent" +
+            " within the tiles and were inversely proportional to the library concentration</li>" +
+
+            "<li>POLYCLONAL - All 24 bases were called and numQGtTwo>=12, were independent of their location" +
+            " with the tiles, and were directly proportional to the library concentration.  These reads are likely" +
+            " the result of PCR artifacts </li>" +
+
+            "<li>UNKNOWN - The remaining reads that are PF-Failing but did not fit into any of the groups " +
+            "listed above</li>"   +
+            "</ul></p>  "+
+            "" +
+            "<p>The tool defaults to the SUMMARY output which indicates the number of PF-Failed reads per tile and" +
+            " groups them into the categories described above accordingly.</p> " +
+            "<p>A DETAILED metrics option is also available that subdivides the SUMMARY outputs by the x- y- position" +
+            " of these reads within each tile.  To obtain the DETAILED metric table, you must add the " +
+            "PROB_EXPLICIT_READS option to your command line and set the value between 0 and 1.  This value represents" +
+            " the fractional probability of PF-Failed reads to send to output.  For example, if PROB_EXPLICIT_READS=0, " +
+            "then no metrics will be output.  If PROB_EXPLICIT_READS=1, then it will " +
+            "provide detailed metrics for all (100%) of the reads.  It follows that setting the " +
+            "PROB_EXPLICIT_READS=0.5, will provide detailed metrics for half of the PF-Failed reads.</p> "+
+
+            "<p>Note: Metrics labeled as percentages are actually expressed as fractions!</p>" +
+            "" +
+            "<h4>Usage example: (SUMMARY Metrics)</h4> " +
+            "<pre>" +
+            "java -jar picard.jar CollectHiSeqXPfFailMetrics \\<br />" +
+            "      BASECALLS_DIR=/BaseCalls/ \\<br />" +
+            "      OUTPUT=/metrics/ \\<br />" +
+            "      LANE=001" +
+            "</pre>" +
+            "<h4>Usage example: (DETAILED Metrics)</h4>" +
+            "<pre>"+
+            "java -jar picard.jar CollectHiSeqXPfFailMetrics \\<br />" +
+            "      BASECALLS_DIR=/BaseCalls/ \\<br />" +
+            "      OUTPUT=/Detail_metrics/ \\<br />" +
+            "      LANE=001 \\<br />" +
+            "      PROB_EXPLICIT_READS=1" +
+            "</pre>" +
+            "" +
+            "Please see our documentation on the" +
+            "https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailSummaryMetric'>SUMMARY</a>" +
+            " and" +
+            "" +
+            "<a href='https://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectHiSeqXPfFailMetrics.PFFailDetailedMetric'>DETAILED</a> " +
+            "metrics for comprehensive explanations of the outputs produced by this tool." +
+            "<hr />";
+
     @Option(doc = "The Illumina basecalls directory. ", shortName = "B")
     public File BASECALLS_DIR;
 
@@ -365,19 +426,19 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
 
     /** a metric class for describing FP failing reads from an Illumina HiSeqX lane * */
     public static class PFFailDetailedMetric extends MetricBase {
-        // The Tile that is described by this metric.
+        /** The Tile that is described by this metric */
         public Integer TILE;
 
-        //The X coordinate of the read within the tile
+        /** The X coordinate of the read within the tile */
         public int X;
 
-        //The Y coordinate of the read within the tile
+        /** The Y coordinate of the read within the tile */
         public int Y;
 
-        //The number of Ns found in this read.
+        /** The number of Ns found in this read */
         public int NUM_N;
 
-        //The number of Quality scores greater than 2 found in this read
+        /** The number of Quality scores greater than 2 found in this read */
         public int NUM_Q_GT_TWO;
 
         /**
@@ -443,7 +504,8 @@ public class CollectHiSeqXPfFailMetrics extends CommandLineProgram {
         /** The fraction of non-PF reads in this tile that have not been classified (as fraction of all non-PF reads). */
         public double PCT_PF_FAIL_UNKNOWN = 0.0;
 
-        // constructor takes a String for tile since we want to have one instance with tile="All". This tile will contain the summary of all the tiles
+        //Constructor takes a String for tile since we want to have one instance with tile="All". This column will contain the
+        // summary of all the tiles
         public PFFailSummaryMetric(final String tile) {
             TILE = tile;
         }
