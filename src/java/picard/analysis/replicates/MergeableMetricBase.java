@@ -1,3 +1,26 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2016 The Broad Institute
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package picard.analysis.replicates;
 
 import htsjdk.samtools.metrics.MetricBase;
@@ -16,34 +39,32 @@ import java.lang.reflect.Field;
  *
  * merge-by-adding is only enabled for the following types: int, Integer, float, Float, double, Double, short, Short, long, Long, byte, Byte.
  * Overflow will be detected (for the short, and byte types) and an exception thrown.
+ *
+ * @author Yossi Farjoun
  */
 public class MergeableMetricBase extends MetricBase {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    protected @interface MergeByAdding {
-    }
+    protected @interface MergeByAdding {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    protected @interface MergeByAssertEquals {
-    }
+    protected @interface MergeByAssertEquals {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    protected @interface NoMergingIsDerived {
-    }
+    protected @interface NoMergingIsDerived {}
 
     /** checks if this instance can be merged with another
      *
      * Other must have all the fields that this instance has, and
      * the fields that are annotated as MergeByAssertEquals must contain the same value
      *
-     * @param other
-     * @return
+     * @param other metric that will be merged into this one.
+     * @return true if the other metric can be merged into this one.
      */
     public boolean canMerge(final MergeableMetricBase other) {
-
 
         try {
             for (final Field field : this.getClass().getDeclaredFields()) {
@@ -65,12 +86,14 @@ public class MergeableMetricBase extends MetricBase {
         return true;
     }
 
-    /** Merges another MergableMetricBase if possible
+    /**
+     * Merges another MergableMetricBase if possible
      *
      * @param other another MergableMetricBase instance to merge, must of the same class as this.
-     * @return
+     * @return true if the other metric can be merged into this one.
      */
     public boolean mergeIfCan(final MergeableMetricBase other) {
+
         if(canMerge(other)) {
             merge(other);
             return true;
@@ -80,8 +103,12 @@ public class MergeableMetricBase extends MetricBase {
         }
     }
 
+    /**
+     * Merge another metric into this one
+     *
+     * @param other metric to merge into this one.
+     */
     public void merge(final MergeableMetricBase other) {
-
 
         for (final Field field : this.getClass().getDeclaredFields()) {
             if(field.isSynthetic()) continue;
@@ -96,7 +123,6 @@ public class MergeableMetricBase extends MetricBase {
             final Annotation[] summableAnnotations = field.getAnnotationsByType(MergeByAdding.class);
             if (summableAnnotations.length != 0) {
                 try {
-
                     if (field.getType() == Integer.class) {
                         field.set(this, (Integer) field.get(this) + (Integer) field.get(other));
                     } else if (field.getType() == int.class) {
@@ -151,10 +177,13 @@ public class MergeableMetricBase extends MetricBase {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
-
             }
         }
     }
 
+    /**
+     * placeholder method that will calculate the derived fields from the other ones. classes that are derived from non-trivial base classes
+     * should consider calling super.calculateDerivedFields() as well.
+     */
      public void calculateDerivedFields(){}
 }

@@ -112,13 +112,13 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input (indexed) BAM file.")
     public File INPUT;
 
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file", optional = false)
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Write metrics to this file")
     public File OUTPUT;
 
-    @Option(shortName = "MO", doc = "Write the confusion matrix to this file", optional = false)
+    @Option(shortName = "MO", doc = "Write the confusion matrix (of UMIs) to this file", optional = true)
     public File MATRIX_OUTPUT;
 
-    @Option(shortName = "V", doc = "Input VCF file", optional = false)
+    @Option(shortName = "V", doc = "Input VCF file")
     public File VCF;
 
     @Option(shortName = "GQ", doc = "minimal value for the GQ field in the VCF to use variant site.", optional = true)
@@ -155,7 +155,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
 
         IOUtil.assertFileIsWritable(OUTPUT);
-        IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
+        if (MATRIX_OUTPUT != null) IOUtil.assertFileIsWritable(MATRIX_OUTPUT);
 
         final VCFFileReader vcf = new VCFFileReader(VCF, false);
 
@@ -204,7 +204,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final FilteringSamIterator filteredSamRecordIterator = new FilteringSamIterator(samRecordIterator, new AggregateFilter(samFilters));
         log.info("Queried BAM, getting duplicate sets.");
 
-        // get duplicate iterator from iterator above (this is where the magic happens!)
+        // get duplicate iterator from iterator above
         final DuplicateSetIterator duplicateSets = new DuplicateSetIterator(filteredSamRecordIterator, in.getFileHeader());
 
         QueryInterval queryInterval = null;
@@ -248,18 +248,18 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             while (queryIntervalIterator.hasNext() &&
                     (queryInterval == null || isCleanlyBefore(queryInterval, setRepsInterval))) {
                 // if we haven't seen either the reference or the alternate in the locus (subject to our stringent filters) do not use locus.
-                if(locusData.nReferenceReads == 0 || locusData.nAlternateReads == 0){
+                if (locusData.nReferenceReads == 0 || locusData.nAlternateReads == 0) {
                     useLocus = false;
                     log.debug("will not use this locus due to lack of evidence of het site.");
                 }
-                //Query interval didn't get killed by 3rd alleles and so we combine the results with the tally
+                // Query interval didn't get killed by 3rd alleles and so we combine the results with the tally
                 if (useLocus && newLocus) {
                     metric.merge(locusData);
-                    log.debug("merging metric. total nSites so far: "+metric.nSites );
+                    log.debug("merging metric. total nSites so far: " + metric.nSites);
                     //calculate allele balance with faux counts
                     final byte alleleBalance = (byte) Math.round(100D * (locusData.nAlternateReads + 0.5) / (locusData.nAlternateReads + locusData.nReferenceReads + 1));
                     alleleBalanceCount.increment(alleleBalance);
-                    //we have merged now, no need to merge the old locus data or update the nSites until out of this while.
+                    // we have merged now, no need to merge the old locus data or update the nSites until out of this while.
                     newLocus = false;
                 }
                 queryInterval = queryIntervalIterator.next();
@@ -267,8 +267,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 locusData.nSites = 1;
                 useLocus = true;
             }
-            //we have a new locus, next time we should perhaps merge
-     //       log.info("got new locus: " + queryInterval == null ? "null" : queryInterval.toString());
+            // we have a new locus, next time we should perhaps merge
             newLocus = true;
 
             // shouldn't happen, but being safe.
@@ -283,7 +282,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                 locusData.nExactlyDouble++;
             } else if (setSize == TRIPLETON_SIZE) {
                 locusData.nExactlyTriple++;
-            } else if (setSize > TRIPLETON_SIZE) {  //singletons are only counted in nTotalReads
+            } else if (setSize > TRIPLETON_SIZE) {  // singletons are only counted in nTotalReads
                 locusData.nReadsInBigSets += setSize;
             }
 
@@ -295,17 +294,17 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             int nRef = 0, nAlt = 0, nOther = 0;
             for (final SAMRecord read : set.getRecords()) {
 
-                //getReadPositionAtReferencePosition gives 1-based offset
+                // getReadPositionAtReferencePosition gives 1-based offset
                 final int offset = read.getReadPositionAtReferencePosition(queryInterval.start) - 1;
 
                 if (offset == -1) {
-                    //a labeled continue watch-out!
-                    //This could be a deletion OR a clipped end. Get a new set.
+                    // a labeled continue watch-out!
+                    // This could be a deletion OR a clipped end. Get a new set.
                     log.debug("got offset -1, getting new set");
                     continue set;
                 }
-                //a labeled continue watch-out!
-                //need to move to the next set since this set has a low quality base-quality.
+                // a labeled continue watch-out!
+                // need to move to the next set since this set has a low quality base-quality.
 
                 if (read.getBaseQualities()[offset] <= MINIMUM_BQ) {
                     log.debug("got low read quality, getting new set");
@@ -320,7 +319,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                     nAlt++;
                 } else {
                     nOther++;
-                    //if other alleles were found, toss out the whole locus! (but read the reads first)
+                    // if other alleles were found, toss out the whole locus! (but read the reads first)
                     useLocus = false;
                     badAllele = allele;
                     offendingReadName = read.getReadName();
@@ -337,16 +336,20 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             log.debug("Classification of set is: " + classification);
             if (setSize == DOUBLETON_SIZE) {
 
-                boolean useBarcodes = !set.getRecords().stream()
+                final boolean useBarcodes = !set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_BQ))
                         .map(string -> string == null ? "" : string).map(string ->
                         {
-                            byte[] bytes = SAMUtils.fastqToPhred(string);
+                            final byte[] bytes = SAMUtils.fastqToPhred(string);
                             return IntStream.range(0, bytes.length).map(i -> bytes[i]).anyMatch(q -> q < MINIMUM_BARCODE_BQ);
                         }).anyMatch(a -> a);
 
                 log.debug("using barcodes?" + useBarcodes);
-                int unused = useBarcodes ? locusData.nGoodBarcodes++ : locusData.nBadBarcodes++;
+
+                // need to assign this to a variable otherwise it's a compilation error.
+                {
+                    final int _ = useBarcodes ? locusData.nGoodBarcodes++ : locusData.nBadBarcodes++;
+                }
 
                 final List<String> barcodes = set.getRecords().stream()
                         .map(read -> read.getStringAttribute(BARCODE_TAG))
@@ -358,16 +361,13 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         .distinct().count() != 1;
                 log.debug("reads have multiple orientation?" + hasMultipleOrientations);
 
-
                 final byte editDistance = calculateEditDistance(barcodes.get(0), barcodes.get(1));
 
                 log.debug("Edit distance between umi: " + editDistance);
 
                 if (useBarcodes && editDistance != 0) {
-                    if (hasMultipleOrientations)
-                        locusData.nMismatchingUMIsInContraOrientedBiDups++;
-                    else
-                        locusData.nMismatchingUMIsInCoOrientedBiDups++;
+                    final int _ = hasMultipleOrientations ? locusData.nMismatchingUMIsInContraOrientedBiDups++ :
+                            locusData.nMismatchingUMIsInCoOrientedBiDups++;
                 }
 
                 // sanity check the number of distinct tags
@@ -376,22 +376,16 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                     if (useBarcodes) {
                         umiEditDistanceInDiffBiDups.increment(editDistance);
 
-                        if (editDistance == 0) {
-                            locusData.nMatchingUMIsInDiffBiDups++;
-                        } else { // editDistance > 0
-                            locusData.nMismatchingUMIsInDiffBiDups++;
-                        }
+                        final int _ = editDistance == 0 ? locusData.nMatchingUMIsInDiffBiDups++ :
+                                locusData.nMismatchingUMIsInDiffBiDups++;
                     }
 
-                    //we're going to toss out this locus.
+                    // we're going to toss out this locus.
                 } else if (classification == SetClassification.MISMATCHING_ALLELE) {
                     locusData.nMismatchingAllelesBiDups++;
                 } else { // the classification is either ALTERNATE_ALLELE or REFERENCE_ALLELE if we've reached here
-                    if (classification == SetClassification.ALTERNATE_ALLELE) {
-                        locusData.nAlternateAllelesBiDups++;
-                    } else { //classification == SetClassification.REFERENCE_ALLELE
+                    final int _ = classification == SetClassification.ALTERNATE_ALLELE ? locusData.nAlternateAllelesBiDups++:
                         locusData.nReferenceAllelesBiDups++;
-                    }
 
                     if (useBarcodes) {
 
@@ -400,11 +394,8 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
                         umiConfusionMatrix.increment(key);
                         if (!umiConfusionMatrixEditDistance.containsKey(key)) umiConfusionMatrixEditDistance.increment(key, editDistance);
 
-                        if (editDistance == 0) {
-                            locusData.nMatchingUMIsInSameBiDups++;
-                        } else { //editDistance > 0
+                        final int __ = editDistance == 0 ? locusData.nMatchingUMIsInSameBiDups++:
                             locusData.nMismatchingUMIsInSameBiDups++;
-                        }
                     }
                 }
             }
@@ -451,9 +442,11 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
         final MetricsFile<?, ComparableTuple<String, String>> confusionMetrics = getMetricsFile();
 
-        confusionMetrics.addHistogram(umiConfusionMatrix);
-        confusionMetrics.addHistogram(umiConfusionMatrixEditDistance);
-        confusionMetrics.write(MATRIX_OUTPUT);
+        if (MATRIX_OUTPUT != null) {
+            confusionMetrics.addHistogram(umiConfusionMatrix);
+            confusionMetrics.addHistogram(umiConfusionMatrixEditDistance);
+            confusionMetrics.write(MATRIX_OUTPUT);
+        }
 
         return 0;
     }
@@ -484,10 +477,10 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         // if we found both ref and alt alleles, this is a heterogeneous set
         if (nAlt > 0 && nRef > 0) return SetClassification.DIFFERENT_ALLELES;
 
-        //if we found no reference alleles, this is an "alternate" set
+        // if we found no reference alleles, this is an "alternate" set
         if (nRef == 0) return SetClassification.ALTERNATE_ALLELE;
 
-        //if we found no alternate alleles, this is a "reference" set.
+        // if we found no alternate alleles, this is a "reference" set.
         if (nAlt == 0) return SetClassification.REFERENCE_ALLELE;
 
         throw new IllegalAccessError("shouldn't be here!");
@@ -499,6 +492,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
 
     /** Gives the edit distance between this barcode and another of the same length. */
     private static byte calculateEditDistance(final String lhs, final String rhs) {
+        assert(lhs.length()==rhs.length());
         byte tmp = 0;
         for (int i = 0; i < rhs.length(); ++i) {
             if (rhs.charAt(i) != lhs.charAt(i)) ++tmp;
@@ -511,7 +505,8 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
         final Map<String, Integer> contigIndexMap = new HashMap<>();
         final VCFFileReader vcfReader = new VCFFileReader(vcf, false);
 
-        //We want to look at sites for which the sample is genotyped, as a het SNP, with high quality, and the site isn't filtered
+        // We want to look at unfiltered SNP sites for which the sample is genotyped as a het
+        // with high quality.
         final CompoundFilter compoundFilter = new CompoundFilter(true);
         compoundFilter.add(new SnpFilter());
         compoundFilter.add(new PassingVariantFilter());
@@ -524,7 +519,7 @@ public class CollectIndependentReplicateMetrics extends CommandLineProgram {
             contigIndexMap.put(vcfContig.getID(), vcfContig.getContigIndex());
         }
 
-        //return a TreeMap since the keys are comparable, and I want to use their order in the iteration
+        // return a TreeMap since the keys are comparable, and this will use their order in the iteration
         final SortedMap<QueryInterval, List<Allele>> map = new TreeMap<>();
 
         while (hetIterator.hasNext()) {
