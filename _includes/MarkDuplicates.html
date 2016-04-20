@@ -2,9 +2,9 @@
 <section>
 <p>Identifies duplicate reads.  This tool locates and tags duplicate reads (both PCR and optical/sequencing-driven) in a BAM or SAM file, where
 duplicate reads are defined as originating from the same original fragment of DNA. Duplicates are identified as read
-pairs having identical 5' positions (coordinate and strand) for both reads in a mate pair (and optinally, matching
+pairs having identical 5' positions (coordinate and strand) for both reads in a mate pair (and optionally, matching
 unique molecular identifier reads; see BARCODE_TAG option). Optical, or more broadly Sequencing, duplicates are
-duplicates that appear clustered together spatially during sequencing and can arise from optical/imagine-processing
+duplicates that appear clustered together spatially during sequencing and can arise from optical/image-processing
 artifacts or from bio-chemical processes during clonal amplification and sequencing; they are identified using the
 READ_NAME_REGEX and the OPTICAL_DUPLICATE_PIXEL_DISTANCE options.
 
@@ -16,6 +16,11 @@ READ_PAIR_OPTICAL_DUPLICATES.
 
 Usage example: java -jar picard.jar MarkDuplicates I=input.bam \
                  O=marked_duplicates.bam M=marked_dup_metrics.txt
+
+The program can take either coordinate-sorted or query-sorted input, however the behavior is slightly different.
+When the input is coordinate-sorted, unmapped mates of mapped records, and supplementary and secondary alignments are not
+marked as duplicates. When the input is query-sorted (actually query-grouped) then unmapped mates get marked as their mapped
+counter-parts, and secondary and supplementary reads get marked as the primary records with the same query-name.
 </p>
 <table>
 <tr><th>Option</th><th>Description</th></tr>
@@ -31,7 +36,8 @@ Usage example: java -jar picard.jar MarkDuplicates I=input.bam \
 <tr><td>OUTPUT (File)</td><td>The output file to write marked records to  Required. </td></tr>
 <tr><td>METRICS_FILE (File)</td><td>File to write duplication metrics to  Required. </td></tr>
 <tr><td>REMOVE_DUPLICATES (Boolean)</td><td>If true do not write duplicates to the output file instead of writing them with appropriate flags set.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
-<tr><td>ASSUME_SORTED (Boolean)</td><td>If true, assume that the input file is coordinate sorted even if the header says otherwise.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false} </td></tr>
+<tr><td>ASSUME_SORTED (Boolean)</td><td>If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.  Default value: false. This option can be set to 'null' to clear the default value. Possible values: {true, false}  Cannot be used in conjuction with option(s) ASSUME_SORT_ORDER (ASO)</td></tr>
+<tr><td>ASSUME_SORT_ORDER (SortOrder)</td><td>If not null, assume that the input file has this order even if the header says otherwise.  Default value: null. Possible values: {unsorted, queryname, coordinate, duplicate}  Cannot be used in conjuction with option(s) ASSUME_SORTED (AS)</td></tr>
 <tr><td>DUPLICATE_SCORING_STRATEGY (ScoringStrategy)</td><td>The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. This option can be set to 'null' to clear the default value. Possible values: {SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH} </td></tr>
 <tr><td>PROGRAM_RECORD_ID (String)</td><td>The program record ID for the @PG record(s) created by this program. Set to null to disable PG record creation.  This string may have a suffix appended to avoid collision with other program record IDs.  Default value: MarkDuplicates. This option can be set to 'null' to clear the default value. </td></tr>
 <tr><td>PROGRAM_GROUP_VERSION (String)</td><td>Value of VN tag of PG record to be created. If not specified, the version will be detected automatically.  Default value: null. </td></tr>
