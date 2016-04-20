@@ -3,7 +3,6 @@ package picard.analysis.replicates;
 import com.google.common.collect.ImmutableMap;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.TestUtil;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -33,7 +32,7 @@ public class CollectIndependentReplicatesMetricTest {
     private final static File testdir = new File("testdata/picard/independent_replicates");
     private final static File bamOutDir = IOUtil.createTempDir("convertSamToBam", "dir");
 
-    private final static Map<String,String> sams = new ImmutableMap.Builder<String,String>()
+    private final static Map<String, String> sams = new ImmutableMap.Builder<String, String>()
             .put("twoPairs", "twopairs.sam")
             .put("twoPairsWithUMIs", "twopairsWithUMIs.sam")
             .put("twoPairsWithBadUMIs", "twopairsWithBadUMIs.sam")
@@ -112,7 +111,6 @@ public class CollectIndependentReplicatesMetricTest {
             map.put("nDuplicateSets", 2);
             map.put("nAlternateReads", 2);
             map.put("nReferenceReads", 3);
-
 
             tests.add(new Object[]{"hets.vcf", "aTriple", map});
         }
