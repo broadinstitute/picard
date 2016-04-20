@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":9};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var methods = {"i0":42,"i1":42,"i2":42,"i3":41};
+var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -117,13 +117,17 @@ var activeTableTab = "activeTableTab";
 <ul class="blockList">
 <li class="blockList">
 <hr>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <br>
-<pre>public class <span class="typeNameLabel">CollectWgsMetricsFromSampledSites</span>
+<pre>@Deprecated
+public class <span class="typeNameLabel">CollectWgsMetricsFromSampledSites</span>
 extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></pre>
 <div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments,
  but only at a set of sampled positions.
  It is important that the sampled positions be chosen so that they are spread out at least further than a read's length apart;
- otherwise, you run the risk of double-counting reads in the metrics.</div>
+ otherwise, you run the risk of double-counting reads in the metrics.
+
+ This tool is deprecated; please use CollectWgsMetrics instead.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>ebanks</dd>
@@ -148,7 +152,9 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.SampledWgsMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.SampledWgsMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -174,7 +180,9 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#INTERVALS">INTERVALS</a></span></code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#INTERVALS">INTERVALS</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -205,7 +213,9 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 <th class="colOne" scope="col">Constructor and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colOne"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#CollectWgsMetricsFromSampledSites--">CollectWgsMetricsFromSampledSites</a></span>()</code>&nbsp;</td>
+<td class="colOne"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#CollectWgsMetricsFromSampledSites--">CollectWgsMetricsFromSampledSites</a></span>()</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -217,28 +227,35 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>protected <a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#generateWgsMetrics--">generateWgsMetrics</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#generateWgsMetrics--">generateWgsMetrics</a></span>()</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy</a></span>(<a href="../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.</div>
 </td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>protected htsjdk.samtools.util.SamLocusIterator</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator</a></span>(htsjdk.samtools.SamReader&nbsp;in)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator</a></span>(htsjdk.samtools.SamReader&nbsp;in)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectWgsMetricsFromSampledSites.html#main-java.lang.String:A-">main</a></span>(java.lang.String[]&nbsp;args)</code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -285,6 +302,7 @@ extends <a href="../../picard/analysis/CollectWgsMetrics.html" title="class in p
 <pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="An interval list file that contains the locations of the positions to assess.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=false)
 public&nbsp;java.io.File INTERVALS</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 </li>
@@ -302,6 +320,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <li class="blockList">
 <h4>CollectWgsMetricsFromSampledSites</h4>
 <pre>public&nbsp;CollectWgsMetricsFromSampledSites()</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 </li>
@@ -319,6 +338,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <li class="blockList">
 <h4>main</h4>
 <pre>public static&nbsp;void&nbsp;main(java.lang.String[]&nbsp;args)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 </li>
 </ul>
 <a name="getLocusIterator-htsjdk.samtools.SamReader-">
@@ -328,6 +348,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <li class="blockList">
 <h4>getLocusIterator</h4>
 <pre>protected&nbsp;htsjdk.samtools.util.SamLocusIterator&nbsp;getLocusIterator(htsjdk.samtools.SamReader&nbsp;in)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../picard/analysis/CollectWgsMetrics.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></code></dd>
@@ -341,6 +362,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <li class="blockList">
 <h4>getBasesExcludedBy</h4>
 <pre>protected&nbsp;long&nbsp;getBasesExcludedBy(<a href="../../picard/filter/CountingFilter.html" title="class in picard.filter">CountingFilter</a>&nbsp;filter)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.
  Therefore, we call filter.getFilteredRecords() so that only the bases in the pileup at a given position
  are included in the calculations (with filter.getFilteredBases() we would be including other bases in
@@ -358,6 +380,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <li class="blockList">
 <h4>generateWgsMetrics</h4>
 <pre>protected&nbsp;<a href="../../picard/analysis/CollectWgsMetrics.WgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics.WgsMetrics</a>&nbsp;generateWgsMetrics()</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../picard/analysis/CollectWgsMetrics.html#generateWgsMetrics--">generateWgsMetrics</a></code>&nbsp;in class&nbsp;<code><a href="../../picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></code></dd>

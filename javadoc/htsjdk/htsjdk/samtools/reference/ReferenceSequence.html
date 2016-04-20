@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -161,24 +161,30 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>java.lang.String</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/reference/ReferenceSequence.html#getBaseString--">getBaseString</a></span>()</code>
+<div class="block">Returns the bases represented by this ReferenceSequence as a String.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/reference/ReferenceSequence.html#getContigIndex--">getContigIndex</a></span>()</code>
 <div class="block">Gets the 0-based index of this contig in the source file from which it came.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/reference/ReferenceSequence.html#getName--">getName</a></span>()</code>
 <div class="block">Gets the set of names given to this sequence in the source file.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/reference/ReferenceSequence.html#length--">length</a></span>()</code>
 <div class="block">Gets the length of this reference sequence in bases.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/reference/ReferenceSequence.html#toString--">toString</a></span>()</code>&nbsp;</td>
 </tr>
@@ -251,6 +257,23 @@ extends java.lang.Object</pre>
  letter and possibly include masking information in the form of lower case
  letters.  This array is mutable (obviously!) and it NOT a clone of the array
  held interally.  Do not modify it!!!</div>
+</li>
+</ul>
+<a name="getBaseString--">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getBaseString</h4>
+<pre>public&nbsp;java.lang.String&nbsp;getBaseString()</pre>
+<div class="block">Returns the bases represented by this ReferenceSequence as a String. Since this will copy the bases
+ and convert them to two-byte characters, this should not be used on very long reference sequences,
+ but as a convenience when manipulating short sequences returned by
+ <a href="../../../htsjdk/samtools/reference/ReferenceSequenceFile.html#getSubsequenceAt-java.lang.String-long-long-"><code>ReferenceSequenceFile.getSubsequenceAt(String, long, long)</code></a></div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The set of bases represented by this ReferenceSequence, as a String</dd>
+</dl>
 </li>
 </ul>
 <a name="getContigIndex--">

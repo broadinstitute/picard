@@ -173,17 +173,23 @@ extends htsjdk.samtools.metrics.MetricBase</pre>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>long</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/DuplicationMetrics.html#SECONDARY_OR_SUPPLEMENTARY_RDS">SECONDARY_OR_SUPPLEMENTARY_RDS</a></span></code>
+<div class="block">The number of reads that were either secondary or supplementary</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/DuplicationMetrics.html#UNMAPPED_READS">UNMAPPED_READS</a></span></code>
 <div class="block">The total number of unmapped reads examined.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/DuplicationMetrics.html#UNPAIRED_READ_DUPLICATES">UNPAIRED_READ_DUPLICATES</a></span></code>
 <div class="block">The number of fragments that were marked as duplicates.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/DuplicationMetrics.html#UNPAIRED_READS_EXAMINED">UNPAIRED_READS_EXAMINED</a></span></code>
 <div class="block">The number of mapped reads examined which did not have a mapped mate pair,
@@ -315,7 +321,17 @@ extends htsjdk.samtools.metrics.MetricBase</pre>
 <li class="blockList">
 <h4>READ_PAIRS_EXAMINED</h4>
 <pre>public&nbsp;long READ_PAIRS_EXAMINED</pre>
-<div class="block">The number of mapped read pairs examined.</div>
+<div class="block">The number of mapped read pairs examined. (Primary, non-supplemental)</div>
+</li>
+</ul>
+<a name="SECONDARY_OR_SUPPLEMENTARY_RDS">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>SECONDARY_OR_SUPPLEMENTARY_RDS</h4>
+<pre>public&nbsp;long SECONDARY_OR_SUPPLEMENTARY_RDS</pre>
+<div class="block">The number of reads that were either secondary or supplementary</div>
 </li>
 </ul>
 <a name="UNMAPPED_READS">
@@ -325,7 +341,7 @@ extends htsjdk.samtools.metrics.MetricBase</pre>
 <li class="blockList">
 <h4>UNMAPPED_READS</h4>
 <pre>public&nbsp;long UNMAPPED_READS</pre>
-<div class="block">The total number of unmapped reads examined.</div>
+<div class="block">The total number of unmapped reads examined. (Primary, non-supplemental)</div>
 </li>
 </ul>
 <a name="UNPAIRED_READ_DUPLICATES">

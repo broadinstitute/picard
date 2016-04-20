@@ -107,6 +107,10 @@
 <div class="block">The state of the 'truth' sample (i.e.</div>
 </td>
 </tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a></code></td>
+<td class="colLast"><span class="typeNameLabel">GenotypeConcordanceStates.TruthAndCallStates.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#truthState">truthState</a></span></code>&nbsp;</td>
+</tr>
 </tbody>
 </table>
 <table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
@@ -148,23 +152,23 @@ the order they are declared.</div>
 </tr>
 <tbody>
 <tr class="altColor">
-<td class="colFirst"><code>picard.vcf.GenotypeConcordanceStates.ContingencyState[]</code></td>
+<td class="colFirst"><code><a href="../../../picard/vcf/GenotypeConcordanceStates.ContingencyState.html" title="enum in picard.vcf">GenotypeConcordanceStates.ContingencyState</a>[]</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceScheme.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceScheme.html#getConcordanceStateArray-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">getConcordanceStateArray</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
-                        picard.vcf.GenotypeConcordanceStates.CallState&nbsp;callState)</code>
+                        <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>
 <div class="block">Get the concordance state array associate with the given truth state and call state tuple.</div>
 </td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceScheme.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceScheme.html#getContingencyStateString-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">getContingencyStateString</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
-                         picard.vcf.GenotypeConcordanceStates.CallState&nbsp;callState)</code>
+                         <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>
 <div class="block">Get the contingency state array as a parse-able string</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceCounts.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceCounts.html#getCount-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">getCount</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
-        picard.vcf.GenotypeConcordanceStates.CallState&nbsp;callState)</code>
+        <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>
 <div class="block">Returns the count defined by the truth state set and call state set.</div>
 </td>
 </tr>
@@ -185,14 +189,14 @@ the order they are declared.</div>
 <tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceCounts.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceCounts.html#isMissing-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">isMissing</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
-         picard.vcf.GenotypeConcordanceStates.CallState&nbsp;callState)</code>
+         <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>
 <div class="block">Returns true if EITHER the truth or call state is MISSING.</div>
 </td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceCounts.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceCounts.html#isVar-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">isVar</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
-     picard.vcf.GenotypeConcordanceStates.CallState&nbsp;callState)</code>
+     <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>
 <div class="block">Returns true if EITHER the truth or call state is a VAR.</div>
 </td>
 </tr>
@@ -208,9 +212,21 @@ the order they are declared.</div>
 <tr class="altColor">
 <td class="colFirst"><code>long</code></td>
 <td class="colLast"><span class="typeNameLabel">GenotypeConcordanceCounts.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceCounts.html#getSum-java.util.Set-java.util.Set-">getSum</a></span>(java.util.Set&lt;<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&gt;&nbsp;truthStateSet,
-      java.util.Set&lt;picard.vcf.GenotypeConcordanceStates.CallState&gt;&nbsp;callStateSet)</code>
+      java.util.Set&lt;<a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&gt;&nbsp;callStateSet)</code>
 <div class="block">Returns the sum of all pairs of tuples defined by the truth state set and call state set.</div>
 </td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
+<caption><span>Constructors in <a href="../../../picard/vcf/package-summary.html">picard.vcf</a> with parameters of type <a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#TruthAndCallStates-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">TruthAndCallStates</a></span>(<a href="../../../picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a>&nbsp;truthState,
+                  <a href="../../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a>&nbsp;callState)</code>&nbsp;</td>
 </tr>
 </tbody>
 </table>

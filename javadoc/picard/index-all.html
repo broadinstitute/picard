@@ -357,6 +357,10 @@
 <dd>
 <div class="block">Any metrics collected will be added to the metric file provided.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#addMissingTruthAndMissingCallStates-double-long-picard.vcf.GenotypeConcordanceCounts-">addMissingTruthAndMissingCallStates(double, long, GenotypeConcordanceCounts)</a></span> - Static method in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
+<dd>
+<div class="block">Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.</div>
+</dd>
 <dt><a href="picard/sam/AddOrReplaceReadGroups.html" title="class in picard.sam"><span class="typeNameLink">AddOrReplaceReadGroups</span></a> - Class in <a href="picard/sam/package-summary.html">picard.sam</a></dt>
 <dd>
 <div class="block">Replaces read groups in a BAM file</div>
@@ -532,6 +536,10 @@
 <div class="block">Write into locusFunctions the function of each position from start to start + locusFunctions.length
  relative to this transcript.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#ASSUME_SORT_ORDER">ASSUME_SORT_ORDER</a></span> - Variable in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/cmdline/StandardOptionDefinitions.html#ASSUME_SORT_ORDER_SHORT_NAME">ASSUME_SORT_ORDER_SHORT_NAME</a></span> - Static variable in class picard.cmdline.<a href="picard/cmdline/StandardOptionDefinitions.html" title="class in picard.cmdline">StandardOptionDefinitions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectMultipleMetrics.html#ASSUME_SORTED">ASSUME_SORTED</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.html" title="class in picard.analysis">CollectMultipleMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectRrbsMetrics.html#ASSUME_SORTED">ASSUME_SORTED</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectRrbsMetrics.html" title="class in picard.analysis">CollectRrbsMetrics</a></dt>
@@ -541,7 +549,9 @@
 <dt><span class="memberNameLink"><a href="picard/sam/FixMateInformation.html#ASSUME_SORTED">ASSUME_SORTED</a></span> - Variable in class picard.sam.<a href="picard/sam/FixMateInformation.html" title="class in picard.sam">FixMateInformation</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#ASSUME_SORTED">ASSUME_SORTED</a></span> - Variable in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/MergeSamFiles.html#ASSUME_SORTED">ASSUME_SORTED</a></span> - Variable in class picard.sam.<a href="picard/sam/MergeSamFiles.html" title="class in picard.sam">MergeSamFiles</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/cmdline/StandardOptionDefinitions.html#ASSUME_SORTED_SHORT_NAME">ASSUME_SORTED_SHORT_NAME</a></span> - Static variable in class picard.cmdline.<a href="picard/cmdline/StandardOptionDefinitions.html" title="class in picard.cmdline">StandardOptionDefinitions</a></dt>
@@ -993,6 +1003,8 @@
 <dd>&nbsp;</dd>
 <dt><a href="picard/vcf/CallingMetricAccumulator.Result.html" title="class in picard.vcf"><span class="typeNameLink">CallingMetricAccumulator.Result</span></a> - Class in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#callState">callState</a></span> - Variable in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/RevertOriginalBaseQualitiesAndAddMateCigar.CanSkipSamFile.html#canSkip--">canSkip()</a></span> - Method in enum picard.sam.<a href="picard/sam/RevertOriginalBaseQualitiesAndAddMateCigar.CanSkipSamFile.html" title="enum in picard.sam">RevertOriginalBaseQualitiesAndAddMateCigar.CanSkipSamFile</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/RevertOriginalBaseQualitiesAndAddMateCigar.html#canSkipSAMFile-java.io.File-int-boolean-java.io.File-">canSkipSAMFile(File, int, boolean, File)</a></span> - Static method in class picard.sam.<a href="picard/sam/RevertOriginalBaseQualitiesAndAddMateCigar.html" title="class in picard.sam">RevertOriginalBaseQualitiesAndAddMateCigar</a></dt>
@@ -1095,6 +1107,13 @@
 <dd>
 <div class="block">The classification of this read: {EMPTY, POLYCLONAL, MISALIGNED, UNKNOWN}
  (See PFFailSummaryMetric for explanation regarding the possible classification.)</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#classifyVariants-java.util.Optional-java.lang.String-java.util.Optional-java.lang.String-int-int-">classifyVariants(Optional&lt;VariantContext&gt;, String, Optional&lt;VariantContext&gt;, String, int, int)</a></span> - Static method in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#classifyVariants-java.util.Optional-java.lang.String-java.util.Optional-java.lang.String-java.util.Optional-java.util.Optional-int-int-">classifyVariants(Optional&lt;VariantContext&gt;, String, Optional&lt;VariantContext&gt;, String, Optional&lt;GenotypeConcordanceCounts&gt;, Optional&lt;GenotypeConcordanceCounts&gt;, int, int)</a></span> - Static method in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
+<dd>
+<div class="block">Attempts to determine the concordance state given the truth and all variant context and optionally increments the genotype concordance
+ count for the given variant type (SNP or INDEL).</div>
 </dd>
 <dt><a href="picard/sam/CleanSam.html" title="class in picard.sam"><span class="typeNameLink">CleanSam</span></a> - Class in <a href="picard/sam/package-summary.html">picard.sam</a></dt>
 <dd>&nbsp;</dd>
@@ -1412,27 +1431,34 @@
 <dd>&nbsp;</dd>
 <dt><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromQuerySorted</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>
-<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of sequencing experiments.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#CollectWgsMetricsFromQuerySorted--">CollectWgsMetricsFromQuerySorted()</a></span> - Constructor for class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</span></a> - Enum in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">the various metrics types</div>
 </dd>
 <dt><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Metrics for evaluating the performance of whole genome sequencing experiments.</div>
 </dd>
 <dt><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromSampledSites</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>
-<div class="block">Computes a number of metrics that are useful for evaluating coverage and performance of whole genome sequencing experiments,
- but only at a set of sampled positions.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#CollectWgsMetricsFromSampledSites--">CollectWgsMetricsFromSampledSites()</a></span> - Constructor for class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="picard/analysis/CollectWgsMetricsFromSampledSites.SampledWgsMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html" title="class in picard.analysis"><span class="typeNameLink">CollectWgsMetricsWithNonZeroCoverage</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html#CollectWgsMetricsWithNonZeroCoverage--">CollectWgsMetricsWithNonZeroCoverage()</a></span> - Constructor for class picard.analysis.<a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html" title="class in picard.analysis">CollectWgsMetricsWithNonZeroCoverage</a></dt>
@@ -1552,6 +1578,8 @@
 <div class="block">Provides a natural sort so that better matches (by LOD) sort earlier.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/Snp.html#compareTo-picard.fingerprint.Snp-">compareTo(Snp)</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/Snp.html" title="class in picard.fingerprint">Snp</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#compareTo-picard.vcf.GenotypeConcordanceStates.TruthAndCallStates-">compareTo(GenotypeConcordanceStates.TruthAndCallStates)</a></span> - Method in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/ExtractIlluminaBarcodes.html#COMPRESS_OUTPUTS">COMPRESS_OUTPUTS</a></span> - Variable in class picard.illumina.<a href="picard/illumina/ExtractIlluminaBarcodes.html" title="class in picard.illumina">ExtractIlluminaBarcodes</a></dt>
 <dd>&nbsp;</dd>
@@ -1818,6 +1846,8 @@
 <dd>
 <div class="block">Put any custom command-line validation in an override of this method.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#customCommandLineValidation--">customCommandLineValidation()</a></span> - Method in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/ValidateSamFile.html#customCommandLineValidation--">customCommandLineValidation()</a></span> - Method in class picard.sam.<a href="picard/sam/ValidateSamFile.html" title="class in picard.sam">ValidateSamFile</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/ViewSam.html#customCommandLineValidation--">customCommandLineValidation()</a></span> - Method in class picard.sam.<a href="picard/sam/ViewSam.html" title="class in picard.sam">ViewSam</a></dt>
@@ -1967,6 +1997,10 @@
 
  Closes the reader(s) by side effect</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#determineState-htsjdk.variant.variantcontext.VariantContext-java.lang.String-htsjdk.variant.variantcontext.VariantContext-java.lang.String-int-int-">determineState(VariantContext, String, VariantContext, String, int, int)</a></span> - Static method in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
+<dd>
+<div class="block">A method to determine the truth and call states for a pair of variant contexts representing truth and call.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectInsertSizeMetrics.html#DEVIATIONS">DEVIATIONS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectInsertSizeMetrics.html" title="class in picard.analysis">CollectInsertSizeMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="picard/fingerprint/DiploidGenotype.html" title="enum in picard.fingerprint"><span class="typeNameLink">DiploidGenotype</span></a> - Enum in <a href="picard/fingerprint/package-summary.html">picard.fingerprint</a></dt>
@@ -2028,7 +2062,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#doWork--">doWork()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#doWork--">doWork()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html#doWork--">doWork()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html" title="class in picard.analysis">CollectWgsMetricsWithNonZeroCoverage</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CompareMetrics.html#doWork--">doWork()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CompareMetrics.html" title="class in picard.analysis">CompareMetrics</a></dt>
@@ -2146,6 +2182,8 @@
 <dt><span class="memberNameLink"><a href="picard/sam/SamFormatConverter.html#doWork--">doWork()</a></span> - Method in class picard.sam.<a href="picard/sam/SamFormatConverter.html" title="class in picard.sam">SamFormatConverter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SamToFastq.html#doWork--">doWork()</a></span> - Method in class picard.sam.<a href="picard/sam/SamToFastq.html" title="class in picard.sam">SamToFastq</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#doWork--">doWork()</a></span> - Method in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SortSam.html#doWork--">doWork()</a></span> - Method in class picard.sam.<a href="picard/sam/SortSam.html" title="class in picard.sam">SortSam</a></dt>
 <dd>&nbsp;</dd>
@@ -2275,6 +2313,8 @@
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadStructure.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class picard.illumina.parser.<a href="picard/illumina/parser/ReadStructure.html" title="class in picard.illumina.parser">ReadStructure</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util">PhysicalLocationForMateCigar</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#equals-java.lang.Object-">equals(Object)</a></span> - Method in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/GcBiasDetailMetrics.html#ERROR_BAR_WIDTH">ERROR_BAR_WIDTH</a></span> - Variable in class picard.analysis.<a href="picard/analysis/GcBiasDetailMetrics.html" title="class in picard.analysis">GcBiasDetailMetrics</a></dt>
 <dd>
@@ -2735,6 +2775,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/sam/FixMateInformation.html#FixMateInformation--">FixMateInformation()</a></span> - Constructor for class picard.sam.<a href="picard/sam/FixMateInformation.html" title="class in picard.sam">FixMateInformation</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/AbstractAlignmentMerger.html#fixNMandUQ-htsjdk.samtools.SAMRecord-htsjdk.samtools.reference.ReferenceSequenceFileWalker-boolean-">fixNMandUQ(SAMRecord, ReferenceSequenceFileWalker, boolean)</a></span> - Static method in class picard.sam.<a href="picard/sam/AbstractAlignmentMerger.html" title="class in picard.sam">AbstractAlignmentMerger</a></dt>
+<dd>
+<div class="block">Calculates and sets the NM and UQ tags from the record and the reference</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/Snp.html#flip--">flip()</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/Snp.html" title="class in picard.fingerprint">Snp</a></dt>
 <dd>
 <div class="block">Returns a new SNP object with the alleles swapped and MAF corrected.</div>
@@ -2989,7 +3033,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#generateWgsMetrics--">generateWgsMetrics()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#generateWgsMetrics--">generateWgsMetrics()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html#generateWgsMetrics--">generateWgsMetrics()</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html" title="class in picard.analysis">CollectWgsMetricsWithNonZeroCoverage</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/VariantProcessor.Builder.html#generatingAccumulatorsBy-picard.vcf.processor.VariantProcessor.AccumulatorGenerator-">generatingAccumulatorsBy(VariantProcessor.AccumulatorGenerator&lt;A, R&gt;)</a></span> - Static method in class picard.vcf.processor.<a href="picard/vcf/processor/VariantProcessor.Builder.html" title="class in picard.vcf.processor">VariantProcessor.Builder</a></dt>
@@ -3009,7 +3055,9 @@
 <div class="block">The number of non-N bases in the genome reference over which coverage will be evaluated.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#GENOME_TERRITORY">GENOME_TERRITORY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceSummaryMetrics.html#GENOTYPE_CONCORDANCE">GENOTYPE_CONCORDANCE</a></span> - Variable in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceSummaryMetrics.html" title="class in picard.vcf">GenotypeConcordanceSummaryMetrics</a></dt>
 <dd>
 <div class="block">The genotype concordance for all possible states.</div>
@@ -3031,6 +3079,8 @@
 <dd>
 <div class="block">Empty constructor - needed for unit tests</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceContingencyMetrics.html#GenotypeConcordanceContingencyMetrics-htsjdk.variant.variantcontext.VariantContext.Type-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-">GenotypeConcordanceContingencyMetrics(VariantContext.Type, GenotypeConcordanceCounts, String, String, boolean)</a></span> - Constructor for class picard.vcf.<a href="picard/vcf/GenotypeConcordanceContingencyMetrics.html" title="class in picard.vcf">GenotypeConcordanceContingencyMetrics</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceCounts</span></a> - Class in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
 <dd>
 <div class="block">A class to store the counts for various truth and call state classifications relative to a reference.</div>
@@ -3066,6 +3116,19 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.html#GenotypeConcordanceStates--">GenotypeConcordanceStates()</a></span> - Constructor for class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.html" title="class in picard.vcf">GenotypeConcordanceStates</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf"><span class="typeNameLink">GenotypeConcordanceStates.CallState</span></a> - Enum in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
+<dd>
+<div class="block">These states represent the relationship between the call genotype and the truth genotype relative to
+ a reference sequence.</div>
+</dd>
+<dt><a href="picard/vcf/GenotypeConcordanceStates.ContingencyState.html" title="enum in picard.vcf"><span class="typeNameLink">GenotypeConcordanceStates.ContingencyState</span></a> - Enum in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
+<dd>
+<div class="block">A specific state for a 2x2 contingency table.</div>
+</dd>
+<dt><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf"><span class="typeNameLink">GenotypeConcordanceStates.TruthAndCallStates</span></a> - Class in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
+<dd>
+<div class="block">A minute class to store the truth and call state respectively.</div>
+</dd>
 <dt><a href="picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf"><span class="typeNameLink">GenotypeConcordanceStates.TruthState</span></a> - Enum in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
 <dd>
 <div class="block">These states represent the relationship between a truth genotype and the reference sequence.</div>
@@ -3078,6 +3141,8 @@
 <dd>
 <div class="block">Empty constructor - needed for unit tests</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceSummaryMetrics.html#GenotypeConcordanceSummaryMetrics-htsjdk.variant.variantcontext.VariantContext.Type-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-">GenotypeConcordanceSummaryMetrics(VariantContext.Type, GenotypeConcordanceCounts, String, String, boolean)</a></span> - Constructor for class picard.vcf.<a href="picard/vcf/GenotypeConcordanceSummaryMetrics.html" title="class in picard.vcf">GenotypeConcordanceSummaryMetrics</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="picard/vcf/filter/GenotypeFilter.html" title="interface in picard.vcf.filter"><span class="typeNameLink">GenotypeFilter</span></a> - Interface in <a href="picard/vcf/filter/package-summary.html">picard.vcf.filter</a></dt>
 <dd>
 <div class="block">An interface for classes that perform Genotype filtration.</div>
@@ -3187,6 +3252,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#getBasesExcludedBy-picard.filter.CountingFilter-">getBasesExcludedBy(CountingFilter)</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">By design we want to count just those bases at the positions we care about, not across the entire read.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/readers/BclIndexReader.html#getBciFile--">getBciFile()</a></span> - Method in class picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/BclIndexReader.html" title="class in picard.illumina.parser.readers">BclIndexReader</a></dt>
@@ -3227,6 +3293,8 @@
 <dd>
 <div class="block">Returns the cluster density of this tile, in units of [cluster/mm^2].</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.CallState.html#getCode--">getCode()</a></span> - Method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthState.html#getCode--">getCode()</a></span> - Method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#getCollector-int-">getCollector(int)</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
@@ -3468,7 +3536,11 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/util/IntervalListTools.Action.html#getHelpDoc--">getHelpDoc()</a></span> - Method in enum picard.util.<a href="picard/util/IntervalListTools.Action.html" title="enum in picard.util">IntervalListTools.Action</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.CallState.html#getHet-int-int-">getHet(int, int)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/Snp.html#getHeterogyzousGenotype--">getHeterogyzousGenotype()</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/Snp.html" title="class in picard.fingerprint">Snp</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.CallState.html#getHom-int-">getHom(int)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthState.html#getHom-int-">getHom(int)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a></dt>
 <dd>&nbsp;</dd>
@@ -3563,7 +3635,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator(SamReader)</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#getLocusIterator-htsjdk.samtools.SamReader-">getLocusIterator(SamReader)</a></span> - Method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/MatchResults.html#getLocusResults--">getLocusResults()</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/MatchResults.html" title="class in picard.fingerprint">MatchResults</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/fingerprint/MatchResults.html#getLOD--">getLOD()</a></span> - Method in class picard.fingerprint.<a href="picard/fingerprint/MatchResults.html" title="class in picard.fingerprint">MatchResults</a></dt>
@@ -4255,6 +4329,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html#hashCode--">hashCode()</a></span> - Method in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/PhysicalLocationForMateCigar.html" title="class in picard.sam.markduplicates.util">PhysicalLocationForMateCigar</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#hashCode--">hashCode()</a></span> - Method in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/util/PhysicalLocation.html#hasLocation--">hasLocation()</a></span> - Method in interface picard.sam.util.<a href="picard/sam/util/PhysicalLocation.html" title="interface in picard.sam.util">PhysicalLocation</a></dt>
 <dd>
 <div class="block">Default implementation of a method to check whether real location data has been set.</div>
@@ -4292,6 +4368,8 @@
 <dt><span class="memberNameLink"><a href="picard/vcf/ByIntervalListVariantContextIterator.html#hasNext--">hasNext()</a></span> - Method in class picard.vcf.<a href="picard/vcf/ByIntervalListVariantContextIterator.html" title="class in picard.vcf">ByIntervalListVariantContextIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/filter/FilterApplyingVariantIterator.html#hasNext--">hasNext()</a></span> - Method in class picard.vcf.filter.<a href="picard/vcf/filter/FilterApplyingVariantIterator.html" title="class in picard.vcf.filter">FilterApplyingVariantIterator</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.html#hasNext--">hasNext()</a></span> - Method in class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf">PairedVariantSubContextIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html#hasNext--">hasNext()</a></span> - Method in class picard.vcf.processor.util.<a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html" title="class in picard.vcf.processor.util">PredicateFilterDecoratingClosableIterator</a></dt>
 <dd>&nbsp;</dd>
@@ -4671,7 +4749,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#INPUT">INPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#INPUT">INPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/directed/CollectTargetedMetrics.html#INPUT">INPUT</a></span> - Variable in class picard.analysis.directed.<a href="picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/SinglePassSamProgram.html#INPUT">INPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/SinglePassSamProgram.html" title="class in picard.analysis">SinglePassSamProgram</a></dt>
@@ -4731,6 +4811,8 @@
 <dt><span class="memberNameLink"><a href="picard/sam/SamFormatConverter.html#INPUT">INPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SamFormatConverter.html" title="class in picard.sam">SamFormatConverter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SamToFastq.html#INPUT">INPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SamToFastq.html" title="class in picard.sam">SamToFastq</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#INPUT">INPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SortSam.html#INPUT">INPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SortSam.html" title="class in picard.sam">SortSam</a></dt>
 <dd>&nbsp;</dd>
@@ -4857,7 +4939,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#INTERVALS">INTERVALS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#INTERVALS">INTERVALS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="picard/cmdline/programgroups/Intervals.html" title="class in picard.cmdline.programgroups"><span class="typeNameLink">Intervals</span></a> - Class in <a href="picard/cmdline/programgroups/package-summary.html">picard.cmdline.programgroups</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/cmdline/programgroups/Intervals.html#Intervals--">Intervals()</a></span> - Constructor for class picard.cmdline.programgroups.<a href="picard/cmdline/programgroups/Intervals.html" title="class in picard.cmdline.programgroups">Intervals</a></dt>
@@ -4877,6 +4961,8 @@
 <dt><span class="memberNameLink"><a href="picard/util/FifoBuffer.html#IO_SIZE">IO_SIZE</a></span> - Variable in class picard.util.<a href="picard/util/FifoBuffer.html" title="class in picard.util">FifoBuffer</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/MergeBamAlignment.html#IS_BISULFITE_SEQUENCE">IS_BISULFITE_SEQUENCE</a></span> - Variable in class picard.sam.<a href="picard/sam/MergeBamAlignment.html" title="class in picard.sam">MergeBamAlignment</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#IS_BISULFITE_SEQUENCE">IS_BISULFITE_SEQUENCE</a></span> - Variable in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectAlignmentSummaryMetrics.html#IS_BISULFITE_SEQUENCED">IS_BISULFITE_SEQUENCED</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectAlignmentSummaryMetrics.html" title="class in picard.analysis">CollectAlignmentSummaryMetrics</a></dt>
 <dd>&nbsp;</dd>
@@ -5108,6 +5194,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/util/BaitDesigner.html#LEFT_PRIMER">LEFT_PRIMER</a></span> - Variable in class picard.util.<a href="picard/util/BaitDesigner.html" title="class in picard.util">BaitDesigner</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.VcfTuple.html#leftVariantContext">leftVariantContext</a></span> - Variable in class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.VcfTuple.html" title="class in picard.vcf">PairedVariantSubContextIterator.VcfTuple</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/annotation/Gene.Transcript.html#length--">length()</a></span> - Method in class picard.annotation.<a href="picard/annotation/Gene.Transcript.html" title="class in picard.annotation">Gene.Transcript</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/Range.html#length">length</a></span> - Variable in class picard.illumina.parser.<a href="picard/illumina/parser/Range.html" title="class in picard.illumina.parser">Range</a></dt>
@@ -5303,9 +5391,13 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.html" title="class in picard.analysis">CollectWgsMetricsWithNonZeroCoverage</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CompareMetrics.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.analysis.<a href="picard/analysis/CompareMetrics.html" title="class in picard.analysis">CompareMetrics</a></dt>
@@ -5447,6 +5539,8 @@
 <dt><span class="memberNameLink"><a href="picard/sam/SamFormatConverter.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.sam.<a href="picard/sam/SamFormatConverter.html" title="class in picard.sam">SamFormatConverter</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SamToFastq.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.sam.<a href="picard/sam/SamToFastq.html" title="class in picard.sam">SamToFastq</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SortSam.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class picard.sam.<a href="picard/sam/SortSam.html" title="class in picard.sam">SortSam</a></dt>
 <dd>&nbsp;</dd>
@@ -5783,6 +5877,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#MEAN_INSERT_SIZE">MEAN_INSERT_SIZE</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The mean insert size, after filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/InsertSizeMetrics.html#MEAN_INSERT_SIZE">MEAN_INSERT_SIZE</a></span> - Variable in class picard.analysis.<a href="picard/analysis/InsertSizeMetrics.html" title="class in picard.analysis">InsertSizeMetrics</a></dt>
@@ -6096,15 +6191,23 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectOxoGMetrics.html#MINIMUM_QUALITY_SCORE">MINIMUM_QUALITY_SCORE</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectOxoGMetrics.html" title="class in picard.analysis">CollectOxoGMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#MINIMUM_RAW_BASE_QUALITY">MINIMUM_RAW_BASE_QUALITY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#MINIMUM_RAW_MAPPING_QUALITY">MINIMUM_RAW_MAPPING_QUALITY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectRrbsMetrics.html#MINIMUM_READ_LENGTH">MINIMUM_READ_LENGTH</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectRrbsMetrics.html" title="class in picard.analysis">CollectRrbsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#MINIMUM_USABLE_BASE_QUALITY">MINIMUM_USABLE_BASE_QUALITY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#MINIMUM_USABLE_MAPPING_QUALITY">MINIMUM_USABLE_MAPPING_QUALITY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#MISSING_SITES_HOM_REF">MISSING_SITES_HOM_REF</a></span> - Variable in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="picard/illumina/parser/readers/MMapBackedIteratorFactory.html" title="class in picard.illumina.parser.readers"><span class="typeNameLink">MMapBackedIteratorFactory</span></a> - Class in <a href="picard/illumina/parser/readers/package-summary.html">picard.illumina.parser.readers</a></dt>
@@ -6281,6 +6384,8 @@
 <div class="block">Provides the next record from the underlying iterator after applying filter strings generated
  by the set of filters in use by the iterator.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.html#next--">next()</a></span> - Method in class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf">PairedVariantSubContextIterator</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html#next--">next()</a></span> - Method in class picard.vcf.processor.util.<a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html" title="class in picard.vcf.processor.util">PredicateFilterDecoratingClosableIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectRrbsMetrics.html#NEXT_BASE_QUALITY_THRESHOLD">NEXT_BASE_QUALITY_THRESHOLD</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectRrbsMetrics.html" title="class in picard.analysis">CollectRrbsMetrics</a></dt>
@@ -6486,7 +6591,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#openInputs--">openInputs()</a></span> - Method in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram</a></dt>
 <dd>
-<div class="block">Since this may read it's inputs more than once this method does all the opening
+<div class="block">Since this may read its inputs more than once this method does all the opening
  and checking of the inputs.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html#OPTICAL_DUPLICATE_PIXEL_DISTANCE">OPTICAL_DUPLICATE_PIXEL_DISTANCE</a></span> - Variable in class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/AbstractOpticalDuplicateFinderCommandLineProgram.html" title="class in picard.sam.markduplicates.util">AbstractOpticalDuplicateFinderCommandLineProgram</a></dt>
@@ -6544,7 +6649,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetrics.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetrics.html" title="class in picard.analysis">CollectWgsMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/directed/CollectTargetedMetrics.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.analysis.directed.<a href="picard/analysis/directed/CollectTargetedMetrics.html" title="class in picard.analysis.directed">CollectTargetedMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/SinglePassSamProgram.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.analysis.<a href="picard/analysis/SinglePassSamProgram.html" title="class in picard.analysis">SinglePassSamProgram</a></dt>
@@ -6608,6 +6715,8 @@
 <dt><span class="memberNameLink"><a href="picard/sam/RevertSam.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/RevertSam.html" title="class in picard.sam">RevertSam</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SamFormatConverter.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SamFormatConverter.html" title="class in picard.sam">SamFormatConverter</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/SortSam.html#OUTPUT">OUTPUT</a></span> - Variable in class picard.sam.<a href="picard/sam/SortSam.html" title="class in picard.sam">SortSam</a></dt>
 <dd>&nbsp;</dd>
@@ -6677,6 +6786,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/util/ScatterIntervalsByNs.html#OUTPUT_TYPE">OUTPUT_TYPE</a></span> - Variable in class picard.util.<a href="picard/util/ScatterIntervalsByNs.html" title="class in picard.util">ScatterIntervalsByNs</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#outputDetailMetricsFile-htsjdk.variant.variantcontext.VariantContext.Type-htsjdk.samtools.metrics.MetricsFile-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-boolean-">outputDetailMetricsFile(VariantContext.Type, MetricsFile&lt;GenotypeConcordanceDetailMetrics, ?&gt;, GenotypeConcordanceCounts, String, String, boolean, boolean)</a></span> - Static method in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
+<dd>
+<div class="block">Outputs the detailed statistics tables for SNP and Indel match categories.</div>
+</dd>
 <dt><a href="picard/illumina/parser/OutputMapping.html" title="class in picard.illumina.parser"><span class="typeNameLink">OutputMapping</span></a> - Class in <a href="picard/illumina/parser/package-summary.html">picard.illumina.parser</a></dt>
 <dd>
 <div class="block">In multiple locations we need to know what cycles are output, as of now we output all non-skip cycles, but rather than sprinkle
@@ -6717,6 +6830,16 @@
 <dt><span class="memberNameLink"><a href="picard/sam/MergeBamAlignment.html#PAIRED_RUN">PAIRED_RUN</a></span> - Variable in class picard.sam.<a href="picard/sam/MergeBamAlignment.html" title="class in picard.sam">MergeBamAlignment</a></dt>
 <dd>
 <div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+</dd>
+<dt><a href="picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf"><span class="typeNameLink">PairedVariantSubContextIterator</span></a> - Class in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
+<dd>
+<div class="block">An iterator that takes a pair of iterators over VariantContexts and iterates over them in tandem.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.html#PairedVariantSubContextIterator-java.util.Iterator-java.lang.String-java.util.Iterator-java.lang.String-htsjdk.samtools.SAMSequenceDictionary-">PairedVariantSubContextIterator(Iterator&lt;VariantContext&gt;, String, Iterator&lt;VariantContext&gt;, String, SAMSequenceDictionary)</a></span> - Constructor for class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf">PairedVariantSubContextIterator</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="picard/vcf/PairedVariantSubContextIterator.VcfTuple.html" title="class in picard.vcf"><span class="typeNameLink">PairedVariantSubContextIterator.VcfTuple</span></a> - Class in <a href="picard/vcf/package-summary.html">picard.vcf</a></dt>
+<dd>
+<div class="block">Little class to hold a pair of VariantContexts that are in sync with one another.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadStructure.html#PARAMETER_DOC">PARAMETER_DOC</a></span> - Static variable in class picard.illumina.parser.<a href="picard/illumina/parser/ReadStructure.html" title="class in picard.illumina.parser">ReadStructure</a></dt>
 <dd>&nbsp;</dd>
@@ -7163,6 +7286,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_ADAPTER_READS">PF_ADAPTER_READS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of PF reads that are unaligned and match to a known adapter sequence right from the
  start of the read.</div>
 </dd>
@@ -7180,6 +7304,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_BASES">PF_BASES</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The total number of bases, before any filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/directed/TargetedPcrMetrics.html#PF_BASES">PF_BASES</a></span> - Variable in class picard.analysis.directed.<a href="picard/analysis/directed/TargetedPcrMetrics.html" title="class in picard.analysis.directed">TargetedPcrMetrics</a></dt>
@@ -7204,6 +7329,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_CHIMERIC_PAIRS">PF_CHIMERIC_PAIRS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of PF reads that map outside of a maximum insert size (100kb) or that have
  the two ends mapping to different chromosomes.</div>
 </dd>
@@ -7213,6 +7339,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_DUPE_PAIRS">PF_DUPE_PAIRS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of duplicate read pairs, before any filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/quality/CollectHiSeqXPfFailMetrics.PFFailSummaryMetric.html#PF_FAIL_EMPTY">PF_FAIL_EMPTY</a></span> - Variable in class picard.illumina.quality.<a href="picard/illumina/quality/CollectHiSeqXPfFailMetrics.PFFailSummaryMetric.html" title="class in picard.illumina.quality">CollectHiSeqXPfFailMetrics.PFFailSummaryMetric</a></dt>
@@ -7273,6 +7400,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_NOISE_READS">PF_NOISE_READS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of PF reads that are marked as noise reads.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html#PF_NORMALIZED_MATCHES">PF_NORMALIZED_MATCHES</a></span> - Variable in class picard.illumina.<a href="picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a></dt>
@@ -7285,10 +7413,12 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_ORIENTED_PAIRS">PF_ORIENTED_PAIRS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of read pairs with standard orientations from which to calculate mean insert size, after filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_PASSING_BASES">PF_PASSING_BASES</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of passing bases, after all filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html#PF_PCT_MATCHES">PF_PCT_MATCHES</a></span> - Variable in class picard.illumina.<a href="picard/illumina/ExtractIlluminaBarcodes.BarcodeMetric.html" title="class in picard.illumina">ExtractIlluminaBarcodes.BarcodeMetric</a></dt>
@@ -7317,6 +7447,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_READ_PAIRS">PF_READ_PAIRS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of read pairs, before all filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/AlignmentSummaryMetrics.html#PF_READS">PF_READS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/AlignmentSummaryMetrics.html" title="class in picard.analysis">AlignmentSummaryMetrics</a></dt>
@@ -7349,6 +7480,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#PF_READS_ALIGNED">PF_READS_ALIGNED</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">The number of aligned reads, before any filters are applied.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectBaseDistributionByCycle.html#PF_READS_ONLY">PF_READS_ONLY</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectBaseDistributionByCycle.html" title="class in picard.analysis">CollectBaseDistributionByCycle</a></dt>
@@ -7738,7 +7870,9 @@
 <dt><a href="picard/util/QuerySortedReadPairIteratorUtil.ReadPair.html" title="class in picard.util"><span class="typeNameLink">QuerySortedReadPairIteratorUtil.ReadPair</span></a> - Class in <a href="picard/util/package-summary.html">picard.util</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#QuerySortedSeqMetrics--">QuerySortedSeqMetrics()</a></span> - Constructor for class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/cmdline/CommandLineProgram.html#QUIET">QUIET</a></span> - Variable in class picard.cmdline.<a href="picard/cmdline/CommandLineProgram.html" title="class in picard.cmdline">CommandLineProgram</a></dt>
 <dd>&nbsp;</dd>
 </dl>
@@ -7930,7 +8064,7 @@
 <dd>&nbsp;</dd>
 <dt><a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesCodec.html" title="class in picard.sam.markduplicates.util"><span class="typeNameLink">ReadEndsForMarkDuplicatesCodec</span></a> - Class in <a href="picard/sam/markduplicates/util/package-summary.html">picard.sam.markduplicates.util</a></dt>
 <dd>
-<div class="block">Coded for ReadEnds that just outputs the primitive fields and reads them back.</div>
+<div class="block">Codec for ReadEnds that just outputs the primitive fields and reads them back.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesCodec.html#ReadEndsForMarkDuplicatesCodec--">ReadEndsForMarkDuplicatesCodec()</a></span> - Constructor for class picard.sam.markduplicates.util.<a href="picard/sam/markduplicates/util/ReadEndsForMarkDuplicatesCodec.html" title="class in picard.sam.markduplicates.util">ReadEndsForMarkDuplicatesCodec</a></dt>
 <dd>&nbsp;</dd>
@@ -8171,6 +8305,8 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/filter/FilterApplyingVariantIterator.html#remove--">remove()</a></span> - Method in class picard.vcf.filter.<a href="picard/vcf/filter/FilterApplyingVariantIterator.html" title="class in picard.vcf.filter">FilterApplyingVariantIterator</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.html#remove--">remove()</a></span> - Method in class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf">PairedVariantSubContextIterator</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html#remove--">remove()</a></span> - Method in class picard.vcf.processor.util.<a href="picard/vcf/processor/util/PredicateFilterDecoratingClosableIterator.html" title="class in picard.vcf.processor.util">PredicateFilterDecoratingClosableIterator</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/sam/RevertSam.html#REMOVE_ALIGNMENT_INFORMATION">REMOVE_ALIGNMENT_INFORMATION</a></span> - Variable in class picard.sam.<a href="picard/sam/RevertSam.html" title="class in picard.sam">RevertSam</a></dt>
@@ -8303,6 +8439,8 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectRnaSeqMetrics.html#RIBOSOMAL_INTERVALS">RIBOSOMAL_INTERVALS</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectRnaSeqMetrics.html" title="class in picard.analysis">CollectRnaSeqMetrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/util/BaitDesigner.html#RIGHT_PRIMER">RIGHT_PRIMER</a></span> - Variable in class picard.util.<a href="picard/util/BaitDesigner.html" title="class in picard.util">BaitDesigner</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/PairedVariantSubContextIterator.VcfTuple.html#rightVariantContext">rightVariantContext</a></span> - Variable in class picard.vcf.<a href="picard/vcf/PairedVariantSubContextIterator.VcfTuple.html" title="class in picard.vcf">PairedVariantSubContextIterator.VcfTuple</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="picard/analysis/RnaSeqMetrics.html" title="class in picard.analysis"><span class="typeNameLink">RnaSeqMetrics</span></a> - Class in <a href="picard/analysis/package-summary.html">picard.analysis</a></dt>
 <dd>
@@ -8439,7 +8577,9 @@
 <dt><span class="memberNameLink"><a href="picard/analysis/TheoreticalSensitivity.RouletteWheel.html#sampleCumulativeSums-int-int-boolean-">sampleCumulativeSums(int, int, boolean)</a></span> - Method in class picard.analysis.<a href="picard/analysis/TheoreticalSensitivity.RouletteWheel.html" title="class in picard.analysis">TheoreticalSensitivity.RouletteWheel</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromSampledSites.SampledWgsMetrics.html#SampledWgsMetrics--">SampledWgsMetrics()</a></span> - Constructor for class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromSampledSites.SampledWgsMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromSampledSites.SampledWgsMetrics</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</dd>
 <dt><a href="picard/metrics/SAMRecordAndReference.html" title="class in picard.metrics"><span class="typeNameLink">SAMRecordAndReference</span></a> - Class in <a href="picard/metrics/package-summary.html">picard.metrics</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/metrics/SAMRecordAndReference.html#SAMRecordAndReference-htsjdk.samtools.SAMRecord-htsjdk.samtools.reference.ReferenceSequence-">SAMRecordAndReference(SAMRecord, ReferenceSequence)</a></span> - Constructor for class picard.metrics.<a href="picard/metrics/SAMRecordAndReference.html" title="class in picard.metrics">SAMRecordAndReference</a></dt>
@@ -8530,6 +8670,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/util/IntervalListTools.html#SECOND_INPUT">SECOND_INPUT</a></span> - Variable in class picard.util.<a href="picard/util/IntervalListTools.html" title="class in picard.util">IntervalListTools</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/DuplicationMetrics.html#SECONDARY_OR_SUPPLEMENTARY_RDS">SECONDARY_OR_SUPPLEMENTARY_RDS</a></span> - Variable in class picard.sam.<a href="picard/sam/DuplicationMetrics.html" title="class in picard.sam">DuplicationMetrics</a></dt>
+<dd>
+<div class="block">The number of reads that were either secondary or supplementary</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/readers/BclReader.html#seek-java.util.List-picard.illumina.parser.TileIndex-int-">seek(List&lt;File&gt;, TileIndex, int)</a></span> - Method in class picard.illumina.parser.readers.<a href="picard/illumina/parser/readers/BclReader.html" title="class in picard.illumina.parser.readers">BclReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/IlluminaDataProvider.html#seekToTile-int-">seekToTile(int)</a></span> - Method in class picard.illumina.parser.<a href="picard/illumina/parser/IlluminaDataProvider.html" title="class in picard.illumina.parser">IlluminaDataProvider</a></dt>
@@ -8680,6 +8824,10 @@
 <dd>
 <div class="block">Sets the distance that is allowed between a read and the nearest probe for it to be considered "near probe" and "selected.</div>
 </dd>
+<dt><a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam"><span class="typeNameLink">SetNmAndUqTags</span></a> - Class in <a href="picard/sam/package-summary.html">picard.sam</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/sam/SetNmAndUqTags.html#SetNmAndUqTags--">SetNmAndUqTags()</a></span> - Constructor for class picard.sam.<a href="picard/sam/SetNmAndUqTags.html" title="class in picard.sam">SetNmAndUqTags</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadData.html#setNoise-picard.illumina.parser.FourChannelIntensityData-">setNoise(FourChannelIntensityData)</a></span> - Method in class picard.illumina.parser.<a href="picard/illumina/parser/ReadData.html" title="class in picard.illumina.parser">ReadData</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/directed/TargetMetricsCollector.html#setNoSideEffects-boolean-">setNoSideEffects(boolean)</a></span> - Method in class picard.analysis.directed.<a href="picard/analysis/directed/TargetMetricsCollector.html" title="class in picard.analysis.directed">TargetMetricsCollector</a></dt>
@@ -9443,8 +9591,13 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordance.html#TRUTH_VCF">TRUTH_VCF</a></span> - Variable in class picard.vcf.<a href="picard/vcf/GenotypeConcordance.html" title="class in picard.vcf">GenotypeConcordance</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#TruthAndCallStates-picard.vcf.GenotypeConcordanceStates.TruthState-picard.vcf.GenotypeConcordanceStates.CallState-">TruthAndCallStates(GenotypeConcordanceStates.TruthState, GenotypeConcordanceStates.CallState)</a></span> - Constructor for class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html#truthState">truthState</a></span> - Variable in class picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html#TYPE">TYPE</a></span> - Variable in class picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics.html" title="class in picard.analysis">CollectWgsMetricsFromQuerySorted.QuerySortedSeqMetrics</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Identifier for metrics type</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/illumina/parser/ReadDescriptor.html#type">type</a></span> - Variable in class picard.illumina.parser.<a href="picard/illumina/parser/ReadDescriptor.html" title="class in picard.illumina.parser">ReadDescriptor</a></dt>
@@ -9612,6 +9765,7 @@
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.Category.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.analysis.<a href="picard/analysis/CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.Category.html" title="enum in picard.analysis">CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.Category</a></dt>
@@ -9734,6 +9888,14 @@
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.CallState.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this type with the specified name.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.ContingencyState.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.ContingencyState.html" title="enum in picard.vcf">GenotypeConcordanceStates.ContingencyState</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this type with the specified name.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.TruthState.html#valueOf-java.lang.String-">valueOf(String)</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.TruthState.html" title="enum in picard.vcf">GenotypeConcordanceStates.TruthState</a></dt>
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
@@ -9750,6 +9912,7 @@ the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html#values--">values()</a></span> - Static method in enum picard.analysis.<a href="picard/analysis/CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY.html" title="enum in picard.analysis">CollectWgsMetricsFromQuerySorted.FILTERING_STRINGENCY</a></dt>
 <dd>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>
 </dd>
@@ -9899,6 +10062,16 @@ the order they are declared.</div>
 the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStateCodes.html#values--">values()</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStateCodes.html" title="enum in picard.vcf">GenotypeConcordanceStateCodes</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum type, in
+the order they are declared.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.CallState.html#values--">values()</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum type, in
+the order they are declared.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="picard/vcf/GenotypeConcordanceStates.ContingencyState.html#values--">values()</a></span> - Static method in enum picard.vcf.<a href="picard/vcf/GenotypeConcordanceStates.ContingencyState.html" title="enum in picard.vcf">GenotypeConcordanceStates.ContingencyState</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>

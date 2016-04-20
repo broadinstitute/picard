@@ -1995,7 +1995,7 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AbstractAsyncWriter.html#close--">close()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AbstractAsyncWriter.html" title="class in htsjdk.samtools.util">AbstractAsyncWriter</a></dt>
 <dd>
-<div class="block">Attempts to finishing draining the queue and then calls synchronoslyClose() to allow implementation
+<div class="block">Attempts to finish draining the queue and then calls synchronouslyClose() to allow implementation
  to do any one time clean up.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/AsciiWriter.html#close--">close()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/AsciiWriter.html" title="class in htsjdk.samtools.util">AsciiWriter</a></dt>
@@ -3293,10 +3293,8 @@
 <dd>
 <div class="block">Returns a deep copy of the SAM record, with the following exceptions:
 
-  - The header field, which shares the reference with the original record
-  - The file source field, which will always always be set to null in the copy
-
-  Note that some fields, i.e.</div>
+  - The header field, which shares the header reference with the original record
+  - The file source field, which will always always be set to null in the copy</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/index/linear/LinearIndexCreator.html#DEFAULT_BIN_WIDTH">DEFAULT_BIN_WIDTH</a></span> - Static variable in class htsjdk.tribble.index.linear.<a href="htsjdk/tribble/index/linear/LinearIndexCreator.html" title="class in htsjdk.tribble.index.linear">LinearIndexCreator</a></dt>
 <dd>&nbsp;</dd>
@@ -5106,6 +5104,10 @@
 <dd>
 <div class="block">Counts for each of the possible Genotype types in this context</div>
 </dd>
+<dt><a href="htsjdk/variant/variantcontext/GenotypeJEXLContext.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">GenotypeJEXLContext</span></a> - Class in <a href="htsjdk/variant/variantcontext/package-summary.html">htsjdk.variant.variantcontext</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeJEXLContext.html#GenotypeJEXLContext-htsjdk.variant.variantcontext.VariantContext-htsjdk.variant.variantcontext.Genotype-">GenotypeJEXLContext(VariantContext, Genotype)</a></span> - Constructor for class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeJEXLContext.html" title="class in htsjdk.variant.variantcontext">GenotypeJEXLContext</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">GenotypeLikelihoods</span></a> - Class in <a href="htsjdk/variant/variantcontext/package-summary.html">htsjdk.variant.variantcontext</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/variantcontext/GenotypeLikelihoods.GenotypeLikelihoodsAllelePair.html" title="class in htsjdk.variant.variantcontext"><span class="typeNameLink">GenotypeLikelihoods.GenotypeLikelihoodsAllelePair</span></a> - Class in <a href="htsjdk/variant/variantcontext/package-summary.html">htsjdk.variant.variantcontext</a></dt>
@@ -5222,6 +5224,8 @@
 <div class="block">Return an existing value, or create a new one if necessary.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/WholeGenomeReferenceSequenceMask.html#get-int-int-">get(int, int)</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/WholeGenomeReferenceSequenceMask.html" title="class in htsjdk.samtools.util">WholeGenomeReferenceSequenceMask</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypeJEXLContext.html#get-java.lang.String-">get(String)</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypeJEXLContext.html" title="class in htsjdk.variant.variantcontext">GenotypeJEXLContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/GenotypesContext.html#get-int-">get(int)</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/GenotypesContext.html" title="class in htsjdk.variant.variantcontext">GenotypesContext</a></dt>
 <dd>&nbsp;</dd>
@@ -5480,6 +5484,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#getBases--">getBases()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
 <dd>
 <div class="block">Return the DNA bases segregating in this allele.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/reference/ReferenceSequence.html#getBaseString--">getBaseString()</a></span> - Method in class htsjdk.samtools.reference.<a href="htsjdk/samtools/reference/ReferenceSequence.html" title="class in htsjdk.samtools.reference">ReferenceSequence</a></dt>
+<dd>
+<div class="block">Returns the bases represented by this ReferenceSequence as a String.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/Allele.html#getBaseString--">getBaseString()</a></span> - Method in class htsjdk.variant.variantcontext.<a href="htsjdk/variant/variantcontext/Allele.html" title="class in htsjdk.variant.variantcontext">Allele</a></dt>
 <dd>
@@ -8633,6 +8641,8 @@
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/bcf2/package-summary.html">htsjdk.variant.bcf2</a> - package htsjdk.variant.bcf2</dt>
 <dd>&nbsp;</dd>
+<dt><a href="htsjdk/variant/example/package-summary.html">htsjdk.variant.example</a> - package htsjdk.variant.example</dt>
+<dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/utils/package-summary.html">htsjdk.variant.utils</a> - package htsjdk.variant.utils</dt>
 <dd>&nbsp;</dd>
 <dt><a href="htsjdk/variant/variantcontext/package-summary.html">htsjdk.variant.variantcontext</a> - package htsjdk.variant.variantcontext</dt>
@@ -9229,9 +9239,14 @@
 <dd>
 <div class="block">Returns true if the operator is a M, a X or a EQ</div>
 </dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMBinaryTagAndValue.html#isAllowedAttributeValue-java.lang.Object-">isAllowedAttributeValue(Object)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndValue</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#isAllowedAttributeValue-java.lang.Object-">isAllowedAttributeValue(Object)</a></span> - Static method in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
 <dd>
-<div class="block">Checks if the value is allowed as an attribute value.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="block"><span class="deprecationComment">The attribute type and value checks have been moved directly into
+ <code>SAMBinaryTagAndValue</code>.</span></div>
+</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFHeaderVersion.html#isAtLeastAsRecentAs-htsjdk.variant.vcf.VCFHeaderVersion-">isAtLeastAsRecentAs(VCFHeaderVersion)</a></span> - Method in enum htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFHeaderVersion.html" title="enum in htsjdk.variant.vcf">VCFHeaderVersion</a></dt>
 <dd>
@@ -10334,6 +10349,8 @@
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/PositionalBufferedStream.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/PositionalBufferedStream.html" title="class in htsjdk.tribble.readers">PositionalBufferedStream</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/readers/TabixReader.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class htsjdk.tribble.readers.<a href="htsjdk/tribble/readers/TabixReader.html" title="class in htsjdk.tribble.readers">TabixReader</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/example/PrintVariantsExample.html#main-java.lang.String:A-">main(String[])</a></span> - Static method in class htsjdk.variant.example.<a href="htsjdk/variant/example/PrintVariantsExample.html" title="class in htsjdk.variant.example">PrintVariantsExample</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/cram/common/Version.html#major">major</a></span> - Variable in class htsjdk.samtools.cram.common.<a href="htsjdk/samtools/cram/common/Version.html" title="class in htsjdk.samtools.cram.common">Version</a></dt>
 <dd>&nbsp;</dd>
@@ -11915,6 +11932,10 @@
 <dt><span class="memberNameLink"><a href="htsjdk/tribble/example/ProfileIndexReading.html#printUsage--">printUsage()</a></span> - Static method in class htsjdk.tribble.example.<a href="htsjdk/tribble/example/ProfileIndexReading.html" title="class in htsjdk.tribble.example">ProfileIndexReading</a></dt>
 <dd>
 <div class="block">print usage information</div>
+</dd>
+<dt><a href="htsjdk/variant/example/PrintVariantsExample.html" title="class in htsjdk.variant.example"><span class="typeNameLink">PrintVariantsExample</span></a> - Class in <a href="htsjdk/variant/example/package-summary.html">htsjdk.variant.example</a></dt>
+<dd>
+<div class="block">This is a example program showing how to use Feature readers and (optionally) writers.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/BAMIndexer.html#processAlignment-htsjdk.samtools.SAMRecord-">processAlignment(SAMRecord)</a></span> - Method in class htsjdk.samtools.<a href="htsjdk/samtools/BAMIndexer.html" title="class in htsjdk.samtools">BAMIndexer</a></dt>
 <dd>

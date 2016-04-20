@@ -179,66 +179,84 @@
 </td>
 </tr>
 <tr class="altColor">
+<td class="colFirst"><a href="../../picard/vcf/GenotypeConcordanceStates.TruthAndCallStates.html" title="class in picard.vcf">GenotypeConcordanceStates.TruthAndCallStates</a></td>
+<td class="colLast">
+<div class="block">A minute class to store the truth and call state respectively.</div>
+</td>
+</tr>
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/GenotypeConcordanceSummaryMetrics.html" title="class in picard.vcf">GenotypeConcordanceSummaryMetrics</a></td>
 <td class="colLast">
 <div class="block">Class that holds summary metrics about Genotype Concordance</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../picard/vcf/GvcfMetricAccumulator.html" title="class in picard.vcf">GvcfMetricAccumulator</a></td>
 <td class="colLast">
 <div class="block">An accumulator for collecting metrics about a single-sample GVCF.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/LiftoverVcf.html" title="class in picard.vcf">LiftoverVcf</a></td>
 <td class="colLast">
 <div class="block">Tool for lifting over a VCF to another genome build and producing a properly header'd,
  sorted and indexed VCF in one go.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../picard/vcf/MakeSitesOnlyVcf.html" title="class in picard.vcf">MakeSitesOnlyVcf</a></td>
 <td class="colLast">
 <div class="block">Writes out a VCF that contains all the site-level information for all records in the input VCF and no per-sample information.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/MergeVcfs.html" title="class in picard.vcf">MergeVcfs</a></td>
 <td class="colLast">
 <div class="block">Combines multiple VCF files into a single file.</div>
 </td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../picard/vcf/PairedVariantSubContextIterator.html" title="class in picard.vcf">PairedVariantSubContextIterator</a></td>
+<td class="colLast">
+<div class="block">An iterator that takes a pair of iterators over VariantContexts and iterates over them in tandem.</div>
+</td>
+</tr>
 <tr class="rowColor">
+<td class="colFirst"><a href="../../picard/vcf/PairedVariantSubContextIterator.VcfTuple.html" title="class in picard.vcf">PairedVariantSubContextIterator.VcfTuple</a></td>
+<td class="colLast">
+<div class="block">Little class to hold a pair of VariantContexts that are in sync with one another.</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><a href="../../picard/vcf/RenameSampleInVcf.html" title="class in picard.vcf">RenameSampleInVcf</a></td>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/SortVcf.html" title="class in picard.vcf">SortVcf</a></td>
 <td class="colLast">
 <div class="block">Sorts one or more VCF files according to the order of the contigs in the header/sequence dictionary and then
  by coordinate.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../picard/vcf/SplitVcfs.html" title="class in picard.vcf">SplitVcfs</a></td>
 <td class="colLast">
 <div class="block">Splits the input VCF file into two, one for indels and one for SNPs.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/UpdateVcfSequenceDictionary.html" title="class in picard.vcf">UpdateVcfSequenceDictionary</a></td>
 <td class="colLast">
 <div class="block">Takes a VCF file and a Sequence Dictionary (from a variety of file types) and updates the Sequence Dictionary in VCF.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><a href="../../picard/vcf/VcfFormatConverter.html" title="class in picard.vcf">VcfFormatConverter</a></td>
 <td class="colLast">
 <div class="block">Converts an ASCII VCF file to a binary BCF or vice versa.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><a href="../../picard/vcf/VcfToIntervalList.html" title="class in picard.vcf">VcfToIntervalList</a></td>
 <td class="colLast">
 <div class="block">Creates an interval list from a VCF</div>
@@ -259,6 +277,19 @@
 <td class="colFirst"><a href="../../picard/vcf/GenotypeConcordanceStateCodes.html" title="enum in picard.vcf">GenotypeConcordanceStateCodes</a></td>
 <td class="colLast">
 <div class="block">Created by kbergin on 7/30/15.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><a href="../../picard/vcf/GenotypeConcordanceStates.CallState.html" title="enum in picard.vcf">GenotypeConcordanceStates.CallState</a></td>
+<td class="colLast">
+<div class="block">These states represent the relationship between the call genotype and the truth genotype relative to
+ a reference sequence.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><a href="../../picard/vcf/GenotypeConcordanceStates.ContingencyState.html" title="enum in picard.vcf">GenotypeConcordanceStates.ContingencyState</a></td>
+<td class="colLast">
+<div class="block">A specific state for a 2x2 contingency table.</div>
 </td>
 </tr>
 <tr class="rowColor">

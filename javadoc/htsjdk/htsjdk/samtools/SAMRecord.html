@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":10,"i26":10,"i27":10,"i28":10,"i29":10,"i30":10,"i31":10,"i32":10,"i33":10,"i34":10,"i35":10,"i36":10,"i37":10,"i38":10,"i39":10,"i40":10,"i41":10,"i42":10,"i43":10,"i44":10,"i45":10,"i46":10,"i47":10,"i48":10,"i49":10,"i50":10,"i51":10,"i52":10,"i53":9,"i54":10,"i55":10,"i56":10,"i57":10,"i58":10,"i59":9,"i60":10,"i61":10,"i62":10,"i63":10,"i64":10,"i65":10,"i66":10,"i67":10,"i68":10,"i69":10,"i70":10,"i71":10,"i72":10,"i73":10,"i74":10,"i75":10,"i76":10,"i77":10,"i78":10,"i79":10,"i80":10,"i81":10,"i82":9,"i83":10,"i84":10,"i85":10,"i86":10,"i87":10,"i88":9,"i89":9,"i90":10,"i91":10,"i92":10,"i93":10,"i94":10,"i95":10,"i96":10,"i97":10,"i98":10,"i99":10,"i100":10,"i101":10,"i102":10,"i103":10,"i104":10,"i105":10,"i106":10,"i107":10,"i108":10,"i109":10,"i110":10,"i111":10,"i112":10,"i113":10,"i114":10,"i115":10,"i116":10,"i117":10,"i118":10,"i119":10,"i120":10,"i121":42,"i122":10,"i123":10,"i124":10,"i125":10,"i126":10,"i127":10,"i128":10,"i129":10,"i130":10,"i131":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":10,"i26":10,"i27":10,"i28":10,"i29":10,"i30":10,"i31":10,"i32":10,"i33":10,"i34":10,"i35":10,"i36":10,"i37":10,"i38":10,"i39":10,"i40":10,"i41":10,"i42":10,"i43":10,"i44":10,"i45":10,"i46":10,"i47":10,"i48":10,"i49":10,"i50":10,"i51":10,"i52":10,"i53":9,"i54":10,"i55":10,"i56":10,"i57":10,"i58":10,"i59":9,"i60":10,"i61":10,"i62":10,"i63":10,"i64":10,"i65":10,"i66":10,"i67":10,"i68":10,"i69":10,"i70":10,"i71":10,"i72":10,"i73":10,"i74":10,"i75":10,"i76":10,"i77":10,"i78":10,"i79":10,"i80":10,"i81":10,"i82":41,"i83":10,"i84":10,"i85":10,"i86":10,"i87":10,"i88":9,"i89":9,"i90":10,"i91":10,"i92":10,"i93":10,"i94":10,"i95":10,"i96":10,"i97":10,"i98":10,"i99":10,"i100":10,"i101":10,"i102":10,"i103":10,"i104":10,"i105":10,"i106":10,"i107":10,"i108":10,"i109":10,"i110":10,"i111":10,"i112":10,"i113":10,"i114":10,"i115":10,"i116":10,"i117":10,"i118":10,"i119":10,"i120":10,"i121":42,"i122":10,"i123":10,"i124":10,"i125":10,"i126":10,"i127":10,"i128":10,"i129":10,"i130":10,"i131":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -355,10 +355,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#deepCopy--">deepCopy</a></span>()</code>
 <div class="block">Returns a deep copy of the SAM record, with the following exceptions:
 
-  - The header field, which shares the reference with the original record
-  - The file source field, which will always always be set to null in the copy
-
-  Note that some fields, i.e.</div>
+  - The header field, which shares the header reference with the original record
+  - The file source field, which will always always be set to null in the copy</div>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -783,7 +781,10 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <tr id="i82" class="altColor">
 <td class="colFirst"><code>protected static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMRecord.html#isAllowedAttributeValue-java.lang.Object-">isAllowedAttributeValue</a></span>(java.lang.Object&nbsp;value)</code>
-<div class="block">Checks if the value is allowed as an attribute value.</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;
+<div class="block"><span class="deprecationComment">The attribute type and value checks have been moved directly into
+ <code>SAMBinaryTagAndValue</code>.</span></div>
+</div>
 </td>
 </tr>
 <tr id="i83" class="rowColor">
@@ -2613,7 +2614,10 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <ul class="blockList">
 <li class="blockList">
 <h4>isAllowedAttributeValue</h4>
-<pre>protected static&nbsp;boolean&nbsp;isAllowedAttributeValue(java.lang.Object&nbsp;value)</pre>
+<pre>@Deprecated
+protected static&nbsp;boolean&nbsp;isAllowedAttributeValue(java.lang.Object&nbsp;value)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;<span class="deprecationComment">The attribute type and value checks have been moved directly into
+ <code>SAMBinaryTagAndValue</code>.</span></div>
 <div class="block">Checks if the value is allowed as an attribute value.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -3020,19 +3024,8 @@ implements java.lang.Cloneable, <a href="../../htsjdk/samtools/util/Locatable.ht
 <pre>public&nbsp;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&nbsp;deepCopy()</pre>
 <div class="block">Returns a deep copy of the SAM record, with the following exceptions:
 
-  - The header field, which shares the reference with the original record
-  - The file source field, which will always always be set to null in the copy
-
-  Note that some fields, i.e. the cigar elements, alignment blocks, and
-  indexing bin, are not explicitly populated in the copy since they are lazily
-  generated on demand.
-
-  Also note that this fails:
-
-     original.deepCopy().equals(original)
-
-  due to the fact that SAMBinaryTagAndValue.equals winds up calling object.equals on the
-  value field, which uses reference equality.</div>
+  - The header field, which shares the header reference with the original record
+  - The file source field, which will always always be set to null in the copy</div>
 </li>
 </ul>
 <a name="toString--">

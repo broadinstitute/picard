@@ -120,7 +120,10 @@ var activeTableTab = "activeTableTab";
 extends java.lang.Object
 implements java.io.Closeable</pre>
 <div class="block">Abstract class that is designed to be extended and specialized to provide an asynchronous
- wrapper around any kind of Writer class that takes an object and writes it out somehow.</div>
+ wrapper around any kind of Writer class that takes an object and writes it out somehow.
+
+ NOTE: Objects of subclasses of this class are not intended to be shared between threads.
+ In particular there must be only one thread that calls <a href="../../../htsjdk/samtools/util/AbstractAsyncWriter.html#write-T-"><code>write(T)</code></a> and <a href="../../../htsjdk/samtools/util/AbstractAsyncWriter.html#close--"><code>close()</code></a>.</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>Tim Fennell</dd>
@@ -187,7 +190,7 @@ implements java.io.Closeable</pre>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/AbstractAsyncWriter.html#close--">close</a></span>()</code>
-<div class="block">Attempts to finishing draining the queue and then calls synchronoslyClose() to allow implementation
+<div class="block">Attempts to finish draining the queue and then calls synchronouslyClose() to allow implementation
  to do any one time clean up.</div>
 </td>
 </tr>
@@ -324,7 +327,7 @@ implements java.io.Closeable</pre>
 <li class="blockList">
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
-<div class="block">Attempts to finishing draining the queue and then calls synchronoslyClose() to allow implementation
+<div class="block">Attempts to finish draining the queue and then calls synchronouslyClose() to allow implementation
  to do any one time clean up.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>

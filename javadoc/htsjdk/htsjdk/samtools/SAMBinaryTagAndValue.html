@@ -17,8 +17,8 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":9,"i9":10,"i10":10};
+var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -124,7 +124,12 @@ implements java.io.Serializable</pre>
  See SAMTagUtil to convert the tag to String form.
 
  Values associated with attribute tags must be of a type that implements <code>Serializable</code> or else
- serialization will fail.</div>
+ serialization will fail. Accepted types are String, scalar types Short, Integer, Character, Float,
+ and Long (see below); array types byte[], short[], int[] and float[]. Cannot be null.
+
+ Long valued attributes are constrained to the range [Integer.MIN_VALUE, BinaryCodec.MAX_UINT],
+ which includes the entire range of signed ints [Integer.MIN_VALUE, Integer.MAX_VALUE] and
+ the entire range of unsigned ints that can be stored per the BAM spec [0, (Integer.MAX_VALUE * 2) + 1].</div>
 <dl>
 <dt><span class="simpleTagLabel">Author:</span></dt>
 <dd>alecw@broadinstitute.org</dd>
@@ -193,7 +198,7 @@ implements java.io.Serializable</pre>
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary" border="0" cellpadding="3" cellspacing="0" summary="Method Summary table, listing methods, and an explanation">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colLast" scope="col">Method and Description</th>
@@ -239,10 +244,14 @@ implements java.io.Serializable</pre>
 </td>
 </tr>
 <tr id="i8" class="altColor">
+<td class="colFirst"><code>protected static boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html#isAllowedAttributeValue-java.lang.Object-">isAllowedAttributeValue</a></span>(java.lang.Object&nbsp;value)</code>&nbsp;</td>
+</tr>
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html#isUnsignedArray--">isUnsignedArray</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html" title="class in htsjdk.samtools">SAMBinaryTagAndValue</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SAMBinaryTagAndValue.html#remove-short-">remove</a></span>(short&nbsp;tag)</code>
 <div class="block">Removes a tag from the list and returns the new head of the list/sub-list.</div>
@@ -329,8 +338,8 @@ implements java.io.Serializable</pre>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>tag</code> - tagname (in binary form) for this attribute</dd>
-<dd><code>value</code> - value for this attribute (must be of a type that implements <code>Serializable</code> or else serialization will fail)
-              Cannot be null.</dd>
+<dd><code>value</code> - value for this attribute (must be of a type that implements <code>Serializable</code>
+              or else serialization will fail). Cannot be null.</dd>
 </dl>
 </li>
 </ul>
@@ -342,6 +351,15 @@ implements java.io.Serializable</pre>
 <!--   -->
 </a>
 <h3>Method Detail</h3>
+<a name="isAllowedAttributeValue-java.lang.Object-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isAllowedAttributeValue</h4>
+<pre>protected static&nbsp;boolean&nbsp;isAllowedAttributeValue(java.lang.Object&nbsp;value)</pre>
+</li>
+</ul>
 <a name="equals-java.lang.Object-">
 <!--   -->
 </a>

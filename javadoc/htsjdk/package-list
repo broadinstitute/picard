@@ -40,6 +40,7 @@ htsjdk.tribble.readers
 htsjdk.tribble.util
 htsjdk.tribble.util.popgen
 htsjdk.variant.bcf2
+htsjdk.variant.example
 htsjdk.variant.utils
 htsjdk.variant.variantcontext
 htsjdk.variant.variantcontext.filter

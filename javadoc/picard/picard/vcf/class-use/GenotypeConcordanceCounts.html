@@ -128,6 +128,94 @@
 </tr>
 </tbody>
 </table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Methods in <a href="../../../picard/vcf/package-summary.html">picard.vcf</a> with parameters of type <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><span class="typeNameLabel">GenotypeConcordance.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordance.html#addMissingTruthAndMissingCallStates-double-long-picard.vcf.GenotypeConcordanceCounts-">addMissingTruthAndMissingCallStates</a></span>(double&nbsp;numVariants,
+                                   long&nbsp;intervalBaseCount,
+                                   <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&nbsp;counter)</code>
+<div class="block">Method to add missing sites that are KNOWN to be HOM_REF in the case of the NIST truth data set.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><span class="typeNameLabel">GenotypeConcordance.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordance.html#outputDetailMetricsFile-htsjdk.variant.variantcontext.VariantContext.Type-htsjdk.samtools.metrics.MetricsFile-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-boolean-">outputDetailMetricsFile</a></span>(htsjdk.variant.variantcontext.VariantContext.Type&nbsp;variantType,
+                       htsjdk.samtools.metrics.MetricsFile&lt;<a href="../../../picard/vcf/GenotypeConcordanceDetailMetrics.html" title="class in picard.vcf">GenotypeConcordanceDetailMetrics</a>,?&gt;&nbsp;genotypeConcordanceDetailMetricsFile,
+                       <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&nbsp;counter,
+                       java.lang.String&nbsp;truthSampleName,
+                       java.lang.String&nbsp;callSampleName,
+                       boolean&nbsp;missingSitesHomRef,
+                       boolean&nbsp;outputAllRows)</code>
+<div class="block">Outputs the detailed statistics tables for SNP and Indel match categories.</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing methods, and an explanation">
+<caption><span>Method parameters in <a href="../../../picard/vcf/package-summary.html">picard.vcf</a> with type arguments of type <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colLast" scope="col">Method and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">GenotypeConcordance.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordance.html#classifyVariants-java.util.Optional-java.lang.String-java.util.Optional-java.lang.String-java.util.Optional-java.util.Optional-int-int-">classifyVariants</a></span>(java.util.Optional&lt;htsjdk.variant.variantcontext.VariantContext&gt;&nbsp;truthContext,
+                java.lang.String&nbsp;truthSample,
+                java.util.Optional&lt;htsjdk.variant.variantcontext.VariantContext&gt;&nbsp;callContext,
+                java.lang.String&nbsp;callSample,
+                java.util.Optional&lt;<a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&gt;&nbsp;snpCounter,
+                java.util.Optional&lt;<a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&gt;&nbsp;indelCounter,
+                int&nbsp;minGq,
+                int&nbsp;minDp)</code>
+<div class="block">Attempts to determine the concordance state given the truth and all variant context and optionally increments the genotype concordance
+ count for the given variant type (SNP or INDEL).</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<td class="colLast"><span class="typeNameLabel">GenotypeConcordance.</span><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordance.html#classifyVariants-java.util.Optional-java.lang.String-java.util.Optional-java.lang.String-java.util.Optional-java.util.Optional-int-int-">classifyVariants</a></span>(java.util.Optional&lt;htsjdk.variant.variantcontext.VariantContext&gt;&nbsp;truthContext,
+                java.lang.String&nbsp;truthSample,
+                java.util.Optional&lt;htsjdk.variant.variantcontext.VariantContext&gt;&nbsp;callContext,
+                java.lang.String&nbsp;callSample,
+                java.util.Optional&lt;<a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&gt;&nbsp;snpCounter,
+                java.util.Optional&lt;<a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&gt;&nbsp;indelCounter,
+                int&nbsp;minGq,
+                int&nbsp;minDp)</code>
+<div class="block">Attempts to determine the concordance state given the truth and all variant context and optionally increments the genotype concordance
+ count for the given variant type (SNP or INDEL).</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="useSummary" border="0" cellpadding="3" cellspacing="0" summary="Use table, listing constructors, and an explanation">
+<caption><span>Constructors in <a href="../../../picard/vcf/package-summary.html">picard.vcf</a> with parameters of type <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a></span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colOne" scope="col">Constructor and Description</th>
+</tr>
+<tbody>
+<tr class="altColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceContingencyMetrics.html#GenotypeConcordanceContingencyMetrics-htsjdk.variant.variantcontext.VariantContext.Type-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-">GenotypeConcordanceContingencyMetrics</a></span>(htsjdk.variant.variantcontext.VariantContext.Type&nbsp;variantType,
+                                     <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&nbsp;concordanceCounts,
+                                     java.lang.String&nbsp;truthSample,
+                                     java.lang.String&nbsp;callSample,
+                                     boolean&nbsp;missingSitesFlag)</code>&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/vcf/GenotypeConcordanceSummaryMetrics.html#GenotypeConcordanceSummaryMetrics-htsjdk.variant.variantcontext.VariantContext.Type-picard.vcf.GenotypeConcordanceCounts-java.lang.String-java.lang.String-boolean-">GenotypeConcordanceSummaryMetrics</a></span>(htsjdk.variant.variantcontext.VariantContext.Type&nbsp;variantType,
+                                 <a href="../../../picard/vcf/GenotypeConcordanceCounts.html" title="class in picard.vcf">GenotypeConcordanceCounts</a>&nbsp;concordanceCounts,
+                                 java.lang.String&nbsp;truthSample,
+                                 java.lang.String&nbsp;callSample,
+                                 boolean&nbsp;missingSitesFlag)</code>&nbsp;</td>
+</tr>
+</tbody>
+</table>
 </li>
 </ul>
 </li>

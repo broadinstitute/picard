@@ -170,52 +170,58 @@ extends <a href="../../../../picard/sam/markduplicates/util/AbstractOpticalDupli
 <th class="colLast" scope="col">Field and Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>boolean</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#ASSUME_SORTED">ASSUME_SORTED</a></span></code>&nbsp;</td>
+<td class="colFirst"><code>htsjdk.samtools.SAMFileHeader.SortOrder</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#ASSUME_SORT_ORDER">ASSUME_SORT_ORDER</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#ASSUME_SORTED">ASSUME_SORTED</a></span></code>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#COMMENT">COMMENT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>htsjdk.samtools.DuplicateScoringStrategy.ScoringStrategy</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#DUPLICATE_SCORING_STRATEGY">DUPLICATE_SCORING_STRATEGY</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.util.List&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#INPUT">INPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#METRICS_FILE">METRICS_FILE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.io.File</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected java.util.Set&lt;java.lang.String&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#pgIdsSeen">pgIdsSeen</a></span></code>
 <div class="block">The program groups that have been seen during the course of examining the input records.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#PROGRAM_GROUP_COMMAND_LINE">PROGRAM_GROUP_COMMAND_LINE</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#PROGRAM_GROUP_NAME">PROGRAM_GROUP_NAME</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#PROGRAM_GROUP_VERSION">PROGRAM_GROUP_VERSION</a></span></code>&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#PROGRAM_RECORD_ID">PROGRAM_RECORD_ID</a></span></code>&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#REMOVE_DUPLICATES">REMOVE_DUPLICATES</a></span></code>&nbsp;</td>
 </tr>
@@ -280,7 +286,7 @@ extends <a href="../../../../picard/sam/markduplicates/util/AbstractOpticalDupli
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>protected <a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.html#openInputs--">openInputs</a></span>()</code>
-<div class="block">Since this may read it's inputs more than once this method does all the opening
+<div class="block">Since this may read its inputs more than once this method does all the opening
  and checking of the inputs.</div>
 </td>
 </tr>
@@ -379,9 +385,25 @@ public&nbsp;boolean REMOVE_DUPLICATES</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>ASSUME_SORTED</h4>
-<pre><a href="../../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../../picard/cmdline/Option.html#shortName--">shortName</a>="AS",
-        <a href="../../../../picard/cmdline/Option.html#doc--">doc</a>="If true, assume that the input file is coordinate sorted even if the header says otherwise.")
+<pre>@Deprecated
+ <a href="../../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../../picard/cmdline/Option.html#shortName--">shortName</a>="AS",
+        <a href="../../../../picard/cmdline/Option.html#doc--">doc</a>="If true, assume that the input file is coordinate sorted even if the header says otherwise. Deprecated, used ASSUME_SORT_ORDER=coordinate instead.",
+        <a href="../../../../picard/cmdline/Option.html#mutex--">mutex</a>="ASSUME_SORT_ORDER")
 public&nbsp;boolean ASSUME_SORTED</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;</div>
+</li>
+</ul>
+<a name="ASSUME_SORT_ORDER">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ASSUME_SORT_ORDER</h4>
+<pre><a href="../../../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../../../picard/cmdline/Option.html#shortName--">shortName</a>="ASO",
+        <a href="../../../../picard/cmdline/Option.html#doc--">doc</a>="If not null, assume that the input file has this order even if the header says otherwise.",
+        <a href="../../../../picard/cmdline/Option.html#optional--">optional</a>=true,
+        <a href="../../../../picard/cmdline/Option.html#mutex--">mutex</a>="ASSUME_SORTED")
+public&nbsp;htsjdk.samtools.SAMFileHeader.SortOrder ASSUME_SORT_ORDER</pre>
 </li>
 </ul>
 <a name="DUPLICATE_SCORING_STRATEGY">
@@ -521,7 +543,7 @@ public&nbsp;java.util.List&lt;java.lang.String&gt; COMMENT</pre>
 <li class="blockList">
 <h4>openInputs</h4>
 <pre>protected&nbsp;<a href="../../../../picard/sam/markduplicates/util/AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator.html" title="class in picard.sam.markduplicates.util">AbstractMarkDuplicatesCommandLineProgram.SamHeaderAndIterator</a>&nbsp;openInputs()</pre>
-<div class="block">Since this may read it's inputs more than once this method does all the opening
+<div class="block">Since this may read its inputs more than once this method does all the opening
  and checking of the inputs.</div>
 </li>
 </ul>

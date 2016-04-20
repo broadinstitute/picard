@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":9,"i3":10,"i4":10,"i5":6,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10};
+var methods = {"i0":10,"i1":10,"i2":9,"i3":9,"i4":10,"i5":10,"i6":6,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -229,83 +229,91 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i3" class="rowColor">
+<td class="colFirst"><code>static void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#fixNMandUQ-htsjdk.samtools.SAMRecord-htsjdk.samtools.reference.ReferenceSequenceFileWalker-boolean-">fixNMandUQ</a></span>(htsjdk.samtools.SAMRecord&nbsp;record,
+          htsjdk.samtools.reference.ReferenceSequenceFileWalker&nbsp;refSeqWalker,
+          boolean&nbsp;isBisulfiteSequence)</code>
+<div class="block">Calculates and sets the NM and UQ tags from the record and the reference</div>
+</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>protected htsjdk.samtools.SAMFileHeader</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#getHeader--">getHeader</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>protected htsjdk.samtools.SAMProgramRecord</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#getProgramRecord--">getProgramRecord</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>protected abstract htsjdk.samtools.util.CloseableIterator&lt;htsjdk.samtools.SAMRecord&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#getQuerynameSortedAlignedRecords--">getQuerynameSortedAlignedRecords</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected htsjdk.samtools.SAMSequenceDictionary</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#getSequenceDictionary--">getSequenceDictionary</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>protected boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#ignoreAlignment-htsjdk.samtools.SAMRecord-">ignoreAlignment</a></span>(htsjdk.samtools.SAMRecord&nbsp;sam)</code>&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#isClipOverlappingReads--">isClipOverlappingReads</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>protected boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#isContaminant-picard.sam.HitsForInsert-">isContaminant</a></span>(picard.sam.HitsForInsert&nbsp;hits)</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#isKeepAlignerProperPairFlags--">isKeepAlignerProperPairFlags</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>protected boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#isReservedTag-java.lang.String-">isReservedTag</a></span>(java.lang.String&nbsp;tag)</code>&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#mergeAlignment-java.io.File-">mergeAlignment</a></span>(java.io.File&nbsp;referenceFasta)</code>
 <div class="block">Merges the alignment data with the non-aligned records from the source BAM file.</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#resetRefSeqFileWalker--">resetRefSeqFileWalker</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setClipOverlappingReads-boolean-">setClipOverlappingReads</a></span>(boolean&nbsp;clipOverlappingReads)</code>&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setIncludeSecondaryAlignments-boolean-">setIncludeSecondaryAlignments</a></span>(boolean&nbsp;includeSecondaryAlignments)</code>&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setKeepAlignerProperPairFlags-boolean-">setKeepAlignerProperPairFlags</a></span>(boolean&nbsp;keepAlignerProperPairFlags)</code>
 <div class="block">If true, keep the aligner's idea of proper pairs rather than letting alignment merger decide.</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setMaxRecordsInRam-int-">setMaxRecordsInRam</a></span>(int&nbsp;maxRecordsInRam)</code>
 <div class="block">Allows the caller to override the maximum records in RAM.</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setProgramRecord-htsjdk.samtools.SAMProgramRecord-">setProgramRecord</a></span>(htsjdk.samtools.SAMProgramRecord&nbsp;pg)</code>&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#setValuesFromAlignment-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">setValuesFromAlignment</a></span>(htsjdk.samtools.SAMRecord&nbsp;rec,
                       htsjdk.samtools.SAMRecord&nbsp;alignment)</code>
 <div class="block">Sets the values from the alignment record on the unaligned BAM record.</div>
 </td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/sam/AbstractAlignmentMerger.html#updateCigarForTrimmedOrClippedBases-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">updateCigarForTrimmedOrClippedBases</a></span>(htsjdk.samtools.SAMRecord&nbsp;rec,
                                    htsjdk.samtools.SAMRecord&nbsp;alignment)</code>&nbsp;</td>
@@ -471,6 +479,27 @@ extends java.lang.Object</pre>
 <h4>mergeAlignment</h4>
 <pre>public&nbsp;void&nbsp;mergeAlignment(java.io.File&nbsp;referenceFasta)</pre>
 <div class="block">Merges the alignment data with the non-aligned records from the source BAM file.</div>
+</li>
+</ul>
+<a name="fixNMandUQ-htsjdk.samtools.SAMRecord-htsjdk.samtools.reference.ReferenceSequenceFileWalker-boolean-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>fixNMandUQ</h4>
+<pre>public static&nbsp;void&nbsp;fixNMandUQ(htsjdk.samtools.SAMRecord&nbsp;record,
+                              htsjdk.samtools.reference.ReferenceSequenceFileWalker&nbsp;refSeqWalker,
+                              boolean&nbsp;isBisulfiteSequence)</pre>
+<div class="block">Calculates and sets the NM and UQ tags from the record and the reference</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>record</code> - the record to be fixed</dd>
+<dd><code>refSeqWalker</code> - a ReferenceSequenceWalker that will be used to traverse the reference</dd>
+<dd><code>isBisulfiteSequence</code> - a flag indicating whether the sequence came from bisulfite-sequencing which would imply a different
+ calculation of the NM tag.
+
+ No return value, modifies the provided record.</dd>
+</dl>
 </li>
 </ul>
 <a name="clipForOverlappingReads-htsjdk.samtools.SAMRecord-htsjdk.samtools.SAMRecord-">
