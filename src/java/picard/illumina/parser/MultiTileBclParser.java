@@ -66,6 +66,12 @@ public class MultiTileBclParser extends BclParser {
     }
 
     @Override
+    protected CycleFilesParser<BclData> makeCycleFileParser(final List<File> files, final CycleFilesParser<BclData> cycleFilesParser) {
+        // NB: do not close the underlying reader like the parent does just yet.
+        return makeCycleFileParser(files);
+    }
+
+    @Override
     protected CycleFilesParser<BclData> makeCycleFileParser(final List<File> files) {
         if (cycleFileParser == null) {
             cycleFileParser = new MultiTileBclDataCycleFileParser(files, currentTile);
@@ -97,7 +103,7 @@ public class MultiTileBclParser extends BclParser {
 
         @Override
         public void close() {
-            //underlyingIterator.close();
+            underlyingIterator.close();
         }
 
         @Override
