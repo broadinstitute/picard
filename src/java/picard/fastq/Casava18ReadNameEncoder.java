@@ -28,19 +28,16 @@ public class Casava18ReadNameEncoder implements ReadNameEncoder {
 
     @Override
     public String generateReadName(final ClusterData cluster, final Integer pairNumber) {
-        return String.format(
-                "%s:%s:%s:%d:%d:%d:%d %s:%s:%d:%s",
-                instrumentName,
-                runId,
-                flowcellId,
-                cluster.getLane(),
-                cluster.getTile(),
-                cluster.getX(),
-                cluster.getY(),
-                StringUtil.asEmptyIfNull(pairNumber),
-                IsFilteredLabel.get(cluster.isPf()),
-                CONTROL_FIELD_VALUE,
-                StringUtil.asEmptyIfNull(cluster.getMatchedBarcode())
-        );
+        return new StringBuilder().append(instrumentName).append(":")
+                .append(runId).append(":")
+                .append(flowcellId).append(":")
+                .append(cluster.getLane()).append(":")
+                .append(cluster.getTile()).append(":")
+                .append(cluster.getX()).append(":")
+                .append(cluster.getY()).append(" ")
+                .append(StringUtil.asEmptyIfNull(pairNumber)).append(":")
+                .append(IsFilteredLabel.get(cluster.isPf())).append(":")
+                .append(CONTROL_FIELD_VALUE).append(":")
+                .append(StringUtil.asEmptyIfNull(cluster.getMatchedBarcode())).toString();
     }
 }
