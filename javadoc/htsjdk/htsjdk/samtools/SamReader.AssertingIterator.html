@@ -163,7 +163,9 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReader.AssertingIterator.html#close--">close</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../htsjdk/samtools/SamReader.AssertingIterator.html#close--">close</a></span>()</code>
+<div class="block">Should be implemented to close/release any underlying resources.</div>
+</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
@@ -184,6 +186,13 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 </a>
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <code>clone, equals, finalize, getClass, hashCode, notify, notifyAll, toString, wait, wait, wait</code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.htsjdk.samtools.util.CloseableIterator">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;htsjdk.samtools.util.<a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></h3>
+<code><a href="../../htsjdk/samtools/util/CloseableIterator.html#stream--">stream</a>, <a href="../../htsjdk/samtools/util/CloseableIterator.html#toList--">toList</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.util.Iterator">
@@ -270,6 +279,8 @@ implements <a href="../../htsjdk/samtools/SAMRecordIterator.html" title="interfa
 <li class="blockList">
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../htsjdk/samtools/util/CloseableIterator.html#close--">CloseableIterator</a></code></span></div>
+<div class="block">Should be implemented to close/release any underlying resources.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../htsjdk/samtools/util/CloseableIterator.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a>&gt;</code></dd>

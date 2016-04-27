@@ -2017,7 +2017,9 @@
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/BufferedLineReader.html#close--">close()</a></span> - Method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/BufferedLineReader.html" title="class in htsjdk.samtools.util">BufferedLineReader</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/CloseableIterator.html#close--">close()</a></span> - Method in interface htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></dt>
-<dd>&nbsp;</dd>
+<dd>
+<div class="block">Should be implemented to close/release any underlying resources.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/CloserUtil.html#close-java.lang.Object-">close(Object)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloserUtil.html" title="class in htsjdk.samtools.util">CloserUtil</a></dt>
 <dd>
 <div class="block">Calls close() on <code>obj</code> if it implements Closeable</div>
@@ -10845,6 +10847,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#mMateReferenceIndex">mMateReferenceIndex</a></span> - Variable in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html#modifyOption-htsjdk.variant.variantcontext.writer.Options-boolean-">modifyOption(Options, boolean)</a></span> - Method in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html" title="class in htsjdk.variant.variantcontext.writer">VariantContextWriterBuilder</a></dt>
+<dd>
+<div class="block">Set or unset option depending on the boolean given</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMTagUtil.html#MQ">MQ</a></span> - Variable in class htsjdk.samtools.<a href="htsjdk/samtools/SAMTagUtil.html" title="class in htsjdk.samtools">SAMTagUtil</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/SAMRecord.html#mReferenceIndex">mReferenceIndex</a></span> - Variable in class htsjdk.samtools.<a href="htsjdk/samtools/SAMRecord.html" title="class in htsjdk.samtools">SAMRecord</a></dt>
@@ -15620,6 +15626,10 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/VCFConstants.html#STRAND_BIAS_KEY">STRAND_BIAS_KEY</a></span> - Static variable in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/VCFConstants.html" title="class in htsjdk.variant.vcf">VCFConstants</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/CloseableIterator.html#stream--">stream()</a></span> - Method in interface htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></dt>
+<dd>
+<div class="block">Returns a Stream that will consume from the underlying iterator.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html#STREAM_TYPES">STREAM_TYPES</a></span> - Static variable in class htsjdk.variant.variantcontext.writer.<a href="htsjdk/variant/variantcontext/writer/VariantContextWriterBuilder.html" title="class in htsjdk.variant.variantcontext.writer">VariantContextWriterBuilder</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/vcf/AbstractVCFCodec.html#stringCache">stringCache</a></span> - Variable in class htsjdk.variant.vcf.<a href="htsjdk/variant/vcf/AbstractVCFCodec.html" title="class in htsjdk.variant.vcf">AbstractVCFCodec</a></dt>
@@ -16014,6 +16024,10 @@
 </dd>
 <dt><span class="memberNameLink"><a href="htsjdk/samtools/util/StringUtil.html#toHexDigit-int-">toHexDigit(int)</a></span> - Static method in class htsjdk.samtools.util.<a href="htsjdk/samtools/util/StringUtil.html" title="class in htsjdk.samtools.util">StringUtil</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="htsjdk/samtools/util/CloseableIterator.html#toList--">toList()</a></span> - Method in interface htsjdk.samtools.util.<a href="htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></dt>
+<dd>
+<div class="block">Consumes the contents of the iterator and returns it as a List.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="htsjdk/variant/bcf2/BCF2Utils.html#toList-java.lang.Class-java.lang.Object-">toList(Class&lt;T&gt;, Object)</a></span> - Static method in class htsjdk.variant.bcf2.<a href="htsjdk/variant/bcf2/BCF2Utils.html" title="class in htsjdk.variant.bcf2">BCF2Utils</a></dt>
 <dd>
 <div class="block">Helper function that takes an object and returns a list representation

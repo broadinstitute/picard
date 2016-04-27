@@ -204,7 +204,9 @@ implements java.lang.Iterable&lt;<a href="../../../htsjdk/samtools/util/SamLocus
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#close--">close</a></span>()</code>&nbsp;</td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../htsjdk/samtools/util/SamLocusIterator.html#close--">close</a></span>()</code>
+<div class="block">Should be implemented to close/release any underlying resources.</div>
+</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>int</code></td>
@@ -291,6 +293,13 @@ implements java.lang.Iterable&lt;<a href="../../../htsjdk/samtools/util/SamLocus
 </a>
 <h3>Methods inherited from interface&nbsp;java.lang.Iterable</h3>
 <code>forEach, spliterator</code></li>
+</ul>
+<ul class="blockList">
+<li class="blockList"><a name="methods.inherited.from.class.htsjdk.samtools.util.CloseableIterator">
+<!--   -->
+</a>
+<h3>Methods inherited from interface&nbsp;htsjdk.samtools.util.<a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a></h3>
+<code><a href="../../../htsjdk/samtools/util/CloseableIterator.html#stream--">stream</a>, <a href="../../../htsjdk/samtools/util/CloseableIterator.html#toList--">toList</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a name="methods.inherited.from.class.java.util.Iterator">
@@ -390,6 +399,8 @@ implements java.lang.Iterable&lt;<a href="../../../htsjdk/samtools/util/SamLocus
 <li class="blockList">
 <h4>close</h4>
 <pre>public&nbsp;void&nbsp;close()</pre>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../../htsjdk/samtools/util/CloseableIterator.html#close--">CloseableIterator</a></code></span></div>
+<div class="block">Should be implemented to close/release any underlying resources.</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../../../htsjdk/samtools/util/CloseableIterator.html#close--">close</a></code>&nbsp;in interface&nbsp;<code><a href="../../../htsjdk/samtools/util/CloseableIterator.html" title="interface in htsjdk.samtools.util">CloseableIterator</a>&lt;<a href="../../../htsjdk/samtools/util/SamLocusIterator.LocusInfo.html" title="class in htsjdk.samtools.util">SamLocusIterator.LocusInfo</a>&gt;</code></dd>
