@@ -2,6 +2,7 @@ picard
 picard.analysis
 picard.analysis.artifacts
 picard.analysis.directed
+picard.analysis.replicates
 picard.annotation
 picard.cmdline
 picard.cmdline.programgroups

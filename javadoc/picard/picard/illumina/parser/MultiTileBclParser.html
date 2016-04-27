@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":9,"i8":10,"i9":10,"i10":10};
+var methods = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":9,"i9":10,"i10":10,"i11":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -233,17 +233,24 @@ extends java.lang.Object</pre>
 </td>
 </tr>
 <tr id="i5" class="rowColor">
+<td class="colFirst"><code>protected picard.illumina.parser.PerTileCycleParser.CycleFilesParser&lt;<a href="../../../picard/illumina/parser/BclData.html" title="class in picard.illumina.parser">BclData</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#makeCycleFileParser-java.util.List-picard.illumina.parser.PerTileCycleParser.CycleFilesParser-">makeCycleFileParser</a></span>(java.util.List&lt;java.io.File&gt;&nbsp;files,
+                   picard.illumina.parser.PerTileCycleParser.CycleFilesParser&lt;<a href="../../../picard/illumina/parser/BclData.html" title="class in picard.illumina.parser">BclData</a>&gt;&nbsp;cycleFilesParser)</code>
+<div class="block">For a given cycle, return a CycleFilesParser.</div>
+</td>
+</tr>
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../picard/illumina/parser/BclData.html" title="class in picard.illumina.parser">BclData</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#next--">next</a></span>()</code>
 <div class="block">Return the data for the next cluster by:
  1.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#remove--">remove</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>protected static void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#runEamssForReadInPlace-byte:A-byte:A-">runEamssForReadInPlace</a></span>(byte[]&nbsp;bases,
                       byte[]&nbsp;qualities)</code>
@@ -251,17 +258,17 @@ extends java.lang.Object</pre>
  their end and revising the quality to the masking quality (2) if this is the case.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#seekToTile-int-">seekToTile</a></span>(int&nbsp;tile)</code>
 <div class="block">Clear the current set of cycleFileParsers and replace them with the ones for the tile indicated by oneBasedTileNumber</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>java.util.Set&lt;<a href="../../../picard/illumina/parser/IlluminaDataType.html" title="enum in picard.illumina.parser">IlluminaDataType</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#supportedTypes--">supportedTypes</a></span>()</code>&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../picard/illumina/parser/MultiTileBclParser.html#verifyData-java.util.List-int:A-">verifyData</a></span>(java.util.List&lt;java.lang.Integer&gt;&nbsp;tiles,
           int[]&nbsp;cycles)</code>
@@ -369,6 +376,24 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>initialize</h4>
 <pre>public&nbsp;void&nbsp;initialize()</pre>
+</li>
+</ul>
+<a name="makeCycleFileParser-java.util.List-picard.illumina.parser.PerTileCycleParser.CycleFilesParser-">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>makeCycleFileParser</h4>
+<pre>protected&nbsp;picard.illumina.parser.PerTileCycleParser.CycleFilesParser&lt;<a href="../../../picard/illumina/parser/BclData.html" title="class in picard.illumina.parser">BclData</a>&gt;&nbsp;makeCycleFileParser(java.util.List&lt;java.io.File&gt;&nbsp;files,
+                                                                                                  picard.illumina.parser.PerTileCycleParser.CycleFilesParser&lt;<a href="../../../picard/illumina/parser/BclData.html" title="class in picard.illumina.parser">BclData</a>&gt;&nbsp;cycleFilesParser)</pre>
+<div class="block">For a given cycle, return a CycleFilesParser.  It will close the cycleFilesParser if not null.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>files</code> - The file to parse</dd>
+<dd><code>cycleFilesParser</code> - The previous cycle file parser, null otherwise.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A CycleFilesParser that will populate the correct position in the IlluminaData object with that cycle's data.</dd>
+</dl>
 </li>
 </ul>
 <a name="makeCycleFileParser-java.util.List-">

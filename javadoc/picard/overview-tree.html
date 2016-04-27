@@ -76,6 +76,7 @@
 <li><a href="picard/analysis/package-tree.html">picard.analysis</a>, </li>
 <li><a href="picard/analysis/artifacts/package-tree.html">picard.analysis.artifacts</a>, </li>
 <li><a href="picard/analysis/directed/package-tree.html">picard.analysis.directed</a>, </li>
+<li><a href="picard/analysis/replicates/package-tree.html">picard.analysis.replicates</a>, </li>
 <li><a href="picard/annotation/package-tree.html">picard.annotation</a>, </li>
 <li><a href="picard/cmdline/package-tree.html">picard.cmdline</a>, </li>
 <li><a href="picard/cmdline/programgroups/package-tree.html">picard.cmdline.programgroups</a>, </li>
@@ -210,6 +211,7 @@
 <li type="circle">picard.illumina.quality.<a href="picard/illumina/quality/CollectHiSeqXPfFailMetrics.html" title="class in picard.illumina.quality"><span class="typeNameLink">CollectHiSeqXPfFailMetrics</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/CollectIlluminaBasecallingMetrics.html" title="class in picard.illumina"><span class="typeNameLink">CollectIlluminaBasecallingMetrics</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/CollectIlluminaLaneMetrics.html" title="class in picard.illumina"><span class="typeNameLink">CollectIlluminaLaneMetrics</span></a></li>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/CollectIndependentReplicateMetrics.html" title="class in picard.analysis.replicates"><span class="typeNameLink">CollectIndependentReplicateMetrics</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/CollectJumpingLibraryMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectJumpingLibraryMetrics</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/CollectMultipleMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectMultipleMetrics</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/CollectOxoGMetrics.html" title="class in picard.analysis"><span class="typeNameLink">CollectOxoGMetrics</span></a></li>
@@ -420,6 +422,11 @@
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaLaneMetrics.html" title="class in picard.illumina"><span class="typeNameLink">IlluminaLaneMetrics</span></a></li>
 <li type="circle">picard.illumina.<a href="picard/illumina/IlluminaPhasingMetrics.html" title="class in picard.illumina"><span class="typeNameLink">IlluminaPhasingMetrics</span></a></li>
 <li type="circle">picard.analysis.<a href="picard/analysis/JumpingLibraryMetrics.html" title="class in picard.analysis"><span class="typeNameLink">JumpingLibraryMetrics</span></a></li>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/MergeableMetricBase.html" title="class in picard.analysis.replicates"><span class="typeNameLink">MergeableMetricBase</span></a>
+<ul>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/IndependentReplicateMetric.html" title="class in picard.analysis.replicates"><span class="typeNameLink">IndependentReplicateMetric</span></a></li>
+</ul>
+</li>
 <li type="circle">picard.metrics.<a href="picard/metrics/MultilevelMetrics.html" title="class in picard.metrics"><span class="typeNameLink">MultilevelMetrics</span></a>
 <ul>
 <li type="circle">picard.analysis.<a href="picard/analysis/AlignmentSummaryMetrics.html" title="class in picard.analysis"><span class="typeNameLink">AlignmentSummaryMetrics</span></a></li>
@@ -615,6 +622,9 @@
 </ul>
 <h2 title="Annotation Type Hierarchy">Annotation Type Hierarchy</h2>
 <ul>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/MergeableMetricBase.MergeByAdding.html" title="annotation in picard.analysis.replicates"><span class="typeNameLink">MergeableMetricBase.MergeByAdding</span></a> (implements java.lang.annotation.Annotation)</li>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/MergeableMetricBase.MergeByAssertEquals.html" title="annotation in picard.analysis.replicates"><span class="typeNameLink">MergeableMetricBase.MergeByAssertEquals</span></a> (implements java.lang.annotation.Annotation)</li>
+<li type="circle">picard.analysis.replicates.<a href="picard/analysis/replicates/MergeableMetricBase.NoMergingIsDerived.html" title="annotation in picard.analysis.replicates"><span class="typeNameLink">MergeableMetricBase.NoMergingIsDerived</span></a> (implements java.lang.annotation.Annotation)</li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/CommandLineProgramProperties.html" title="annotation in picard.cmdline"><span class="typeNameLink">CommandLineProgramProperties</span></a> (implements java.lang.annotation.Annotation)</li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/NestedOptions.html" title="annotation in picard.cmdline"><span class="typeNameLink">NestedOptions</span></a> (implements java.lang.annotation.Annotation)</li>
 <li type="circle">picard.cmdline.<a href="picard/cmdline/Option.html" title="annotation in picard.cmdline"><span class="typeNameLink">Option</span></a> (implements java.lang.annotation.Annotation)</li>

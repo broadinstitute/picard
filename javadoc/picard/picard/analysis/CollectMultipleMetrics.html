@@ -192,7 +192,7 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectMultipleMetrics.html#OUTPUT">OUTPUT</a></span></code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code>java.util.List&lt;<a href="../../picard/analysis/CollectMultipleMetrics.Program.html" title="enum in picard.analysis">CollectMultipleMetrics.Program</a>&gt;</code></td>
+<td class="colFirst"><code>java.util.Set&lt;<a href="../../picard/analysis/CollectMultipleMetrics.Program.html" title="enum in picard.analysis">CollectMultipleMetrics.Program</a>&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectMultipleMetrics.html#PROGRAM">PROGRAM</a></span></code>&nbsp;</td>
 </tr>
 <tr class="altColor">
@@ -256,7 +256,7 @@ extends <a href="../../picard/cmdline/CommandLineProgram.html" title="class in p
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectMultipleMetrics.html#setProgramsToRun-java.util.List-">setProgramsToRun</a></span>(java.util.List&lt;<a href="../../picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a>&gt;&nbsp;programsToRun)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../picard/analysis/CollectMultipleMetrics.html#setProgramsToRun-java.util.Collection-">setProgramsToRun</a></span>(java.util.Collection&lt;<a href="../../picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a>&gt;&nbsp;programsToRun)</code>
 <div class="block">Use this method when invoking CollectMultipleMetrics programmatically to run programs other than the ones
  available via enum.</div>
 </td>
@@ -362,8 +362,8 @@ public&nbsp;java.lang.String FILE_EXTENSION</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>PROGRAM</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="List of metrics programs to apply during the pass through the SAM file.")
-public&nbsp;java.util.List&lt;<a href="../../picard/analysis/CollectMultipleMetrics.Program.html" title="enum in picard.analysis">CollectMultipleMetrics.Program</a>&gt; PROGRAM</pre>
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="Set of metrics programs to apply during the pass through the SAM file.")
+public&nbsp;java.util.Set&lt;<a href="../../picard/analysis/CollectMultipleMetrics.Program.html" title="enum in picard.analysis">CollectMultipleMetrics.Program</a>&gt; PROGRAM</pre>
 </li>
 </ul>
 <a name="INTERVALS">
@@ -372,7 +372,7 @@ public&nbsp;java.util.List&lt;<a href="../../picard/analysis/CollectMultipleMetr
 <ul class="blockList">
 <li class="blockList">
 <h4>INTERVALS</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="An optional list of intervals to restrict analysis to.",
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="An optional list of intervals to restrict analysis to. Only pertains to some of the PROGRAMs. Programs whose stand-alone CLP does not have an INTERVALS argument will silently ignore this argument.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.io.File INTERVALS</pre>
 </li>
@@ -383,7 +383,7 @@ public&nbsp;java.io.File INTERVALS</pre>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>DB_SNP</h4>
-<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis.",
+<pre><a href="../../picard/cmdline/Option.html" title="annotation in picard.cmdline">@Option</a>(<a href="../../picard/cmdline/Option.html#doc--">doc</a>="VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis by some PROGRAMs, PROGRAMS whose CLP doesn\'t allow for this argument will quetly ignore it.",
         <a href="../../picard/cmdline/Option.html#optional--">optional</a>=true)
 public&nbsp;java.io.File DB_SNP</pre>
 </li>
@@ -442,13 +442,13 @@ public&nbsp;java.io.File DB_SNP</pre>
 </dl>
 </li>
 </ul>
-<a name="setProgramsToRun-java.util.List-">
+<a name="setProgramsToRun-java.util.Collection-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>setProgramsToRun</h4>
-<pre>public&nbsp;void&nbsp;setProgramsToRun(java.util.List&lt;<a href="../../picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a>&gt;&nbsp;programsToRun)</pre>
+<pre>public&nbsp;void&nbsp;setProgramsToRun(java.util.Collection&lt;<a href="../../picard/analysis/CollectMultipleMetrics.ProgramInterface.html" title="interface in picard.analysis">CollectMultipleMetrics.ProgramInterface</a>&gt;&nbsp;programsToRun)</pre>
 <div class="block">Use this method when invoking CollectMultipleMetrics programmatically to run programs other than the ones
  available via enum.  This must be called before doWork().</div>
 </li>
