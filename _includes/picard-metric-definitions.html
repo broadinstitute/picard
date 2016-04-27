@@ -35,6 +35,7 @@
 <li><a href="#IlluminaBasecallingMetrics">IlluminaBasecallingMetrics</a>: Metric for Illumina Basecalling that stores means and standard deviations on a per-barcode per-lane basis.</li>
 <li><a href="#IlluminaLaneMetrics">IlluminaLaneMetrics</a>: Embodies characteristics that describe a lane.</li>
 <li><a href="#IlluminaPhasingMetrics">IlluminaPhasingMetrics</a>: Metrics for Illumina Basecalling that stores median phasing and prephasing percentages on a per-template-read, per-lane basis.</li>
+<li><a href="#IndependentReplicateMetric">IndependentReplicateMetric</a>: A class to store information relevant for biological rate estimation</li>
 <li><a href="#InsertSizeMetrics">InsertSizeMetrics</a>: Metrics about the insert size distribution of a paired-end library, created by the
  CollectInsertSizeMetrics program and usually written to a file with the extension
  ".insert_size_metrics".</li>
@@ -42,6 +43,7 @@
  within a SAM file generated with a jumping library, produced by
  the CollectJumpingLibraryMetrics program and usually stored in a file with
  the extension ".jump_metrics".</li>
+<li><a href="#MergeableMetricBase">MergeableMetricBase</a>: An extension of MetricBase that knows how to merge-by-adding fields that are appropriately annotated.</li>
 <li><a href="#MultilevelMetrics">MultilevelMetrics</a>: </li>
 <li><a href="#RnaSeqMetrics">RnaSeqMetrics</a>: Metrics about the alignment of RNA-seq reads within a SAM file to genes, produced by the CollectRnaSeqMetrics
  program and usually stored in a file with the extension ".rna_metrics".</li>
@@ -388,6 +390,14 @@
 <tr><th>Field</th><th>Description</th></tr>
 <tr><td>LANE</td><td></td></tr><tr><td>TYPE_NAME</td><td></td></tr><tr><td>PHASING_APPLIED</td><td></td></tr><tr><td>PREPHASING_APPLIED</td><td></td></tr></table>
 </section>
+<a id="IndependentReplicateMetric"></a>
+<h2>IndependentReplicateMetric</h2>
+<section>
+<p>A class to store information relevant for biological rate estimation</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+<tr><td>nSites</td><td></td></tr><tr><td>nThreeAllelesSites</td><td></td></tr><tr><td>nTotalReads</td><td></td></tr><tr><td>nDuplicateSets</td><td></td></tr><tr><td>nExactlyTriple</td><td></td></tr><tr><td>nExactlyDouble</td><td></td></tr><tr><td>nReadsInBigSets</td><td></td></tr><tr><td>nDifferentAllelesBiDups</td><td></td></tr><tr><td>nReferenceAllelesBiDups</td><td></td></tr><tr><td>nAlternateAllelesBiDups</td><td></td></tr><tr><td>nDifferentAllelesTriDups</td><td></td></tr><tr><td>nMismatchingAllelesBiDups</td><td></td></tr><tr><td>nReferenceAllelesTriDups</td><td></td></tr><tr><td>nAlternateAllelesTriDups</td><td></td></tr><tr><td>nMismatchingAllelesTriDups</td><td></td></tr><tr><td>nReferenceReads</td><td></td></tr><tr><td>nAlternateReads</td><td></td></tr><tr><td>nMismatchingUMIsInDiffBiDups</td><td></td></tr><tr><td>nMatchingUMIsInDiffBiDups</td><td></td></tr><tr><td>nMismatchingUMIsInSameBiDups</td><td></td></tr><tr><td>nMatchingUMIsInSameBiDups</td><td></td></tr><tr><td>nMismatchingUMIsInCoOrientedBiDups</td><td></td></tr><tr><td>nMismatchingUMIsInContraOrientedBiDups</td><td></td></tr><tr><td>nBadBarcodes</td><td></td></tr><tr><td>nGoodBarcodes</td><td></td></tr><tr><td>biSiteHeterogeneityRate</td><td></td></tr><tr><td>triSiteHeterogeneityRate</td><td></td></tr><tr><td>biSiteHomogeneityRate</td><td></td></tr><tr><td>triSiteHomogeneityRate</td><td></td></tr><tr><td>independentReplicationRateFromBiDups</td><td></td></tr><tr><td>independentReplicationRateFromTriDups</td><td></td></tr><tr><td>pSameUmiInIndependentBiDup</td><td></td></tr><tr><td>pSameAlleleWhenMismatchingUmi</td><td></td></tr><tr><td>independentReplicationRateFromUmi</td><td></td></tr><tr><td>replicationRateFromReplicateSets</td><td></td></tr></table>
+</section>
 <a id="InsertSizeMetrics"></a>
 <h2>InsertSizeMetrics</h2>
 <section>
@@ -420,6 +430,19 @@
  inward-facing pairs, and chimeric pairs.</td></tr><tr><td>PCT_NONJUMPS</td><td>The number of inward-facing pairs expressed as a percentage of the total of all outward facing pairs,
  inward-facing pairs, and chimeric pairs.</td></tr><tr><td>PCT_CHIMERAS</td><td>The number of chimeric pairs expressed as a percentage of the total of all outward facing pairs,
  inward-facing pairs, and chimeric pairs.</td></tr></table>
+</section>
+<a id="MergeableMetricBase"></a>
+<h2>MergeableMetricBase</h2>
+<section>
+<p>An extension of MetricBase that knows how to merge-by-adding fields that are appropriately annotated. It also provides an interface
+ for calculating derived fields (and an annotation that informs that said fields are derived). Finally, it also allows for an annotation
+ that suggests that a field will be used as an ID and thus merging will simply require that these fields are equal.
+
+ merge-by-adding is only enabled for the following types: int, Integer, float, Float, double, Double, short, Short, long, Long, byte, Byte.
+ Overflow will be detected (for the short, and byte types) and an exception thrown.</p>
+<table>
+<tr><th>Field</th><th>Description</th></tr>
+</table>
 </section>
 <a id="MultilevelMetrics"></a>
 <h2>MultilevelMetrics</h2>
