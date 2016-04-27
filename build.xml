@@ -132,12 +132,27 @@
         </loadfile>
     </target>
 
-    <target name="clone-htsjdk" description="Clone HTS-JDK sources from Sourceforge">
-        <exec executable="git" failonerror="true">
+    <target name="clone-htsjdk" description="Clone HTS-JDK sources from Github">
+       <exec executable="git" failonerror="true">
             <arg value="clone"/>
             <arg value="${htsjdk_git_url}"/>
             <arg value="${htsjdk}"/>
         </exec>
+        <exec dir="${htsjdk}" executable="git" outputproperty="htsjdk_latest_raw_tag">
+            <arg value="rev-list"/>
+            <arg value="--tags"/>
+            <arg value="--max-count=1"/>
+        </exec>
+        <exec dir="${htsjdk}" executable="git" outputproperty="htsjdk_latest_tag">
+            <arg value="describe"/>
+            <arg value="--tags"/>
+            <arg value="${htsjdk_latest_raw_tag}"/>
+        </exec>
+        <echo message="Checking out HTSJDK tagged version [${htsjdk_latest_tag}]"/>
+        <exec dir="${htsjdk}" executable="git" failonerror="true">
+            <arg value="checkout"/>
+            <arg value="${htsjdk_latest_tag}"/>
+        </exec>      
     </target>
 
     <target name="compile-htsjdk" depends="set-htsjdk-version" description="Build HTS-JDK, and grab build jars">
