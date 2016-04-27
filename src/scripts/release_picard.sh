@@ -188,7 +188,7 @@ ant clone-htsjdk
 #by default clone will grab the latest release we need master
 cd htsjdk
 git checkout master
-cd..
+cd ..
 ant clean # clean shouldn't be necessary, but no harm
 
 # Since releases are lexically sorted, need to filter in order to have 1.1xx be at the bottom.
