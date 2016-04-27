@@ -98,6 +98,9 @@ public class LiftoverVcf extends CommandLineProgram {
     @Option(doc = "The minimum percent match required for a variant to be lifted.", optional = true)
     public double LIFTOVER_MIN_MATCH = 1.0;
 
+    @Option(doc = "Allow INFO and FORMAT in the records that are not found in the header", optional = true)
+    public boolean ALLOW_MISSING_FIELDS_IN_HEADER = false;
+
     // When a contig used in the chain is not in the reference, exit with this value instead of 0.
     protected static int EXIT_CODE_WHEN_CONTIG_NOT_IN_REFERENCE = 1;
 
@@ -168,10 +171,13 @@ public class LiftoverVcf extends CommandLineProgram {
             for (final VCFInfoHeaderLine line : ATTRS) outHeader.addMetaDataLine(line);
         }
         final VariantContextWriter out = new VariantContextWriterBuilder().setOption(Options.INDEX_ON_THE_FLY)
+                .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
                 .setOutputFile(OUTPUT).setReferenceDictionary(walker.getSequenceDictionary()).build();
         out.writeHeader(outHeader);
 
-        final VariantContextWriter rejects = new VariantContextWriterBuilder().setOutputFile(REJECT).unsetOption(Options.INDEX_ON_THE_FLY).build();
+        final VariantContextWriter rejects = new VariantContextWriterBuilder().setOutputFile(REJECT).unsetOption(Options.INDEX_ON_THE_FLY)
+                .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, ALLOW_MISSING_FIELDS_IN_HEADER)
+                .build();
         final VCFHeader rejectHeader = new VCFHeader(in.getFileHeader());
         for (final VCFFilterHeaderLine line : FILTERS) rejectHeader.addMetaDataLine(line);
         if (WRITE_ORIGINAL_POSITION) {
@@ -188,7 +194,7 @@ public class LiftoverVcf extends CommandLineProgram {
         log.info("Lifting variants over and sorting.");
 
         final SortingCollection<VariantContext> sorter = SortingCollection.newInstance(VariantContext.class,
-                new VCFRecordCodec(outHeader, VALIDATION_STRINGENCY != ValidationStringency.STRICT),
+                new VCFRecordCodec(outHeader, ALLOW_MISSING_FIELDS_IN_HEADER || VALIDATION_STRINGENCY != ValidationStringency.STRICT),
                 outHeader.getVCFRecordComparator(),
                 MAX_RECORDS_IN_RAM,
                 TMP_DIR);
