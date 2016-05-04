@@ -268,7 +268,7 @@ public class IntervalListTools extends CommandLineProgram {
         long totalUniqueBaseCount = 0;
         long intervalCount = 0;
         for (final IntervalList finalInterval : resultIntervals) {
-            totalUniqueBaseCount = finalInterval.getUniqueBaseCount();
+            totalUniqueBaseCount += finalInterval.getUniqueBaseCount();
             intervalCount += finalInterval.size();    
         }
 
