@@ -24,8 +24,6 @@
 
 package picard.fingerprint;
 
-import static picard.util.MathUtil.*;
-
 /**
  * Represents a set of HaplotypeProbabilities that were derived from a single SNP
  * genotype at a point in time.
@@ -54,19 +52,19 @@ public class HaplotypeProbabilitiesFromGenotype extends HaplotypeProbabilities {
         return likelihoods;
     }
 
-	@Override
-	public void merge(final HaplotypeProbabilities other) {
-		if (!this.getHaplotype().equals(other.getHaplotype())) {
-			throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
-					getHaplotype() + ", " + other.getHaplotype());
-		}
+    @Override
+    public void merge(final HaplotypeProbabilities other) {
+        if (!this.getHaplotype().equals(other.getHaplotype())) {
+            throw new IllegalArgumentException("Mismatched haplotypes in call to HaplotypeProbabilities.merge(): " +
+                    getHaplotype() + ", " + other.getHaplotype());
+        }
 
-		if (! (other instanceof HaplotypeProbabilitiesFromGenotype)) {
-			throw new IllegalArgumentException("Can only merge HaplotypeProbabilities of same class.");
-		}
+        if (!(other instanceof HaplotypeProbabilitiesFromGenotype)) {
+            throw new IllegalArgumentException("Can only merge HaplotypeProbabilities of same class.");
+        }
 
-		this.likelihoods[0] = this.likelihoods[0] * other.getLikelihoods()[0];
-		this.likelihoods[1] = this.likelihoods[1] * other.getLikelihoods()[1];
-		this.likelihoods[2] = this.likelihoods[2] * other.getLikelihoods()[2];
-	}
+        this.likelihoods[0] = this.likelihoods[0] * other.getLikelihoods()[0];
+        this.likelihoods[1] = this.likelihoods[1] * other.getLikelihoods()[1];
+        this.likelihoods[2] = this.likelihoods[2] * other.getLikelihoods()[2];
+    }
 }

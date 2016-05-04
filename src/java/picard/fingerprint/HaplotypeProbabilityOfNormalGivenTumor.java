@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010 The Broad Institute
+ * Copyright (c) 2016 The Broad Institute
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ public class HaplotypeProbabilityOfNormalGivenTumor extends HaplotypeProbabiliti
                 //This is P(g_t|g_n)
                 //tumor genotype are the columns.
                 {1,               0,        0},  //normal is hom_ref => tumor must be the same
-                {pLoH / 2, 1 - pLoH, pLoH / 2},  //normal is het     => tumor might transit
+                {pLoH / 2, 1 - pLoH, pLoH / 2},  //normal is het     => tumor may have transited
                 {0,               0,        1}}; //normal is hom_var => tumor must be the same
     }
 
@@ -55,18 +55,23 @@ public class HaplotypeProbabilityOfNormalGivenTumor extends HaplotypeProbabiliti
     // data given a particular _normal_ genotype, however, the likelihood as given is that where the
     // genotype is of the tumor (if that's what the data was measuring)
 
-    // P(D_t|g_n) = \sum_{g_n}  P(D_t|g_t,g_n) = \sum P(D_t|g_t) P(g_t|g_n) = hpOfTumor.getLikelihoods() * transitionMatrix
+    // P(D_t|g_n) = \sum_{g_t}  P(D_t|g_t,g_n)
+    //            = \sum P(D_t|g_t, g_n) P(g_t|g_n)
+    //            = \sum P(D_t|g_t) P(g_t|g_n)
+    //            = hpOfTumor.getLikelihoods() * transitionMatrix
+    // where the * operator is understood as linear algebra operation.
 
     @Override
     public double[] getLikelihoods() {
-        final double[] asTumorLikelihoods = new double[3];
-        final double[] asNormalLikelihoods = hpOfTumor.getLikelihoods();
+        final double[] normalHaplotypeLikelihoods = new double[3];
+        final double[] tumorHaplotypeLikelihoods = hpOfTumor.getLikelihoods();
         for (final Genotype g_n : Genotype.values()) {
+            normalHaplotypeLikelihoods[g_n.v] = 0D;
             for (final Genotype g_t : Genotype.values()) {
-                asTumorLikelihoods[g_t.v] += asNormalLikelihoods[g_n.v] * transitionMatrix[g_n.v][g_t.v];
+                normalHaplotypeLikelihoods[g_n.v] += tumorHaplotypeLikelihoods[g_t.v] * transitionMatrix[g_n.v][g_t.v];
             }
         }
-        return asTumorLikelihoods;
+        return normalHaplotypeLikelihoods;
     }
 
     @Override
